@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="10dp"
+    android:layout_height="match_parent" >
+    <android.support.v7.widget.CardView
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:descendantFocusability="blocksDescendants"
+        android:id="@+id/card_view"
+        android:clickable="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardCornerRadius="4dp">
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="125dp">
+            <RelativeLayout
+                android:id="@+id/notifHeader"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="80dp">
+                <FrameLayout
+                    android:layout_margin="10dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:background="@drawable/circular_background_dark"
+                    android:id="@+id/profilePhoto" >
+                    <TextView
+                        android:id="@+id/userInitials"
+                        android:textColor="@color/white"
+                        android:layout_gravity="center"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                    <ImageView
+                        android:id="@+id/profilePhotoList"
+                        android:src="@drawable/profile_pic_blue"
+                        android:layout_gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"/>
+                </FrameLayout>
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:visibility="invisible"
+                    android:id="@+id/libraryButton"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:id="@+id/libraryIcon"
+                        android:src="@drawable/library_white_50"
+                        android:background="@drawable/circular_background_pink"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="2dp"
+                        android:layout_width="30dp"
+                        android:padding="6dp"
+                        android:layout_height="30dp" />
+                    <TextView
+                        android:text="View"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_gravity="center_horizontal"
+                        android:textColor="@color/reach_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/userNameList"
+                    android:layout_toRightOf="@id/profilePhoto"
+                    android:layout_alignTop="@id/profilePhoto"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:text="Ashish Kumar"/>
+                <TextView
+                    android:id="@+id/notifType"
+                    android:text="wants to view your Library"
+                    android:layout_below="@id/userNameList"
+                    android:layout_alignLeft="@id/userNameList"
+                    android:textSize="14sp"
+                    android:textColor="@color/darkgrey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </RelativeLayout>
+            <LinearLayout
+                android:id="@+id/actionBlock"
+                android:orientation="vertical"
+                android:visibility="visible"
+                android:layout_below="@+id/notifHeader"
+                android:layout_width="match_parent"
+                android:layout_height="45dp" >
+                <View
+                    android:id="@+id/dividerHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#dcdcdcdc" />
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+                    <RelativeLayout
+                        android:id="@+id/acceptBlock"
+                        android:background="@drawable/number_text_selector"
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.5"
+                        android:layout_height="match_parent">
+                        <ImageView
+                            android:id="@+id/acceptIcon"
+                            android:src="@drawable/accept"
+                            android:padding="5dp"
+                            android:background="@drawable/circular_background_pink"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/reach_color"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:layout_alignTop="@id/acceptIcon"
+                            android:layout_marginTop="2dp"
+                            android:layout_toRightOf="@id/acceptIcon"
+                            android:layout_marginLeft="10dp"
+                            android:text="ACCEPT"/>
+                    </RelativeLayout>
+                    <View
+                        android:id="@+id/dividerMiddle"
+                        android:layout_below="@id/profilePhoto"
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="#dcdcdcdc" />
+                    <RelativeLayout
+                        android:id="@+id/rejectBlock"
+                        android:gravity="center"
+                        android:background="@drawable/number_text_selector"
+                        android:layout_width="0dp"
+                        android:layout_weight="0.5"
+                        android:layout_height="match_parent">
+                        <ImageView
+                            android:id="@+id/rejectIcon"
+                            android:src="@drawable/reject_white"
+                            android:padding="7dp"
+                            android:background="@drawable/circular_background_grey"
+                            android:layout_width="25dp"
+                            android:layout_height="25dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/darkgrey"
+                            android:layout_alignTop="@id/rejectIcon"
+                            android:layout_marginTop="2dp"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:layout_toRightOf="@id/rejectIcon"
+                            android:layout_marginLeft="10dp"
+                            android:text="REJECT"/>
+                    </RelativeLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+</RelativeLayout>

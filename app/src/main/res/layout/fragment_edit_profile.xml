@@ -1,0 +1,74 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context="reach.project.coreViews.EditProfileFragment">
+
+    <RelativeLayout
+        android:id="@+id/editProfilecontainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <FrameLayout
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="30dp"
+            android:id="@+id/profilePhotoContainer" >
+            <ImageView
+                android:id="@+id/profilePhoto"
+                android:background="@drawable/profile_pic_dark"
+                android:layout_margin="7dp"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <ImageView
+                android:id="@+id/circle"
+                android:background="@drawable/circular_background_blue"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <TextView
+                android:id="@+id/uploadText"
+                android:layout_gravity="center"
+                android:textColor="@color/white"
+                android:text="Edit\nPhoto"
+                android:textSize="22dp"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </FrameLayout>
+        <EditText
+            android:id="@+id/firstName"
+            android:padding="10dp"
+            android:textColor="#000"
+            android:layout_width="220dp"
+            android:layout_height="40dp"
+            android:layout_below="@id/profilePhotoContainer"
+            android:layout_centerHorizontal="true"
+            android:textSize="16sp"
+            android:background="@drawable/edittext_background"
+            android:hint="Enter Name"
+            android:inputType="textCapSentences"/>
+        <Button
+            android:id="@+id/editLibrary"
+            android:layout_width="220dp"
+            android:layout_height="40dp"
+            android:background="@drawable/number_button_selector"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="30dp"
+            android:text="Save Profile"
+            android:textAllCaps="false"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+    <ProgressBar
+        android:indeterminate="true"
+        android:id="@+id/loadingBar"
+        android:visibility="invisible"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</FrameLayout>

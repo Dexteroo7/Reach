@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_gravity="center"
+    android:layout_width="250dp"
+    android:background="@color/white"
+    android:layout_height="wrap_content">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:background="@drawable/dialog_bg"
+        android:layout_height="170dp">
+        <ImageView
+            android:id="@+id/image"
+            android:layout_centerInParent="true"
+            android:background="@drawable/circular_background"
+            android:src="@drawable/downbox"
+            android:padding="20dp"
+            android:scaleType="fitCenter"
+            android:layout_width="120dp"
+            android:layout_height="120dp" />
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/lowerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="150dp">
+        <TextView
+            android:id="@+id/text1"
+            android:text="Enter Reach Invite Code"
+            android:layout_marginTop="15dp"
+            android:layout_centerHorizontal="true"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/iCode"
+            android:layout_below="@id/text1"
+            android:background="@drawable/edittext_background"
+            android:layout_marginTop="10dp"
+            android:hint="XXXXXX"
+            android:gravity="center"
+            android:layout_alignLeft="@id/text1"
+            android:layout_alignRight="@id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp" />
+        <TextView
+            android:id="@+id/retry"
+            android:layout_below="@id/iCode"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/number_text_selector"
+            android:textColor="@color/darkblue"
+            android:text="Don't have an invite code?"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/done"
+            android:text="Done"
+            android:background="@drawable/number_text_selector"
+            android:textSize="16sp"
+            android:layout_margin="10dp"
+            android:textColor="@color/darkblue"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/exit"
+            android:text="Exit"
+            android:background="@drawable/number_text_selector"
+            android:textSize="16sp"
+            android:layout_margin="10dp"
+            android:textColor="@color/reach_color"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+</LinearLayout>

@@ -1,0 +1,67 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="reach.project.reachProcess.ReachQueueActivity">
+    <RelativeLayout
+        android:id="@+id/reachQueueContainer"
+        android:background="@color/white"
+        android:paddingTop="?attr/actionBarSize"
+        android:layout_width="match_parent"
+        android:layout_weight="0.86"
+        android:layout_height="0dp" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:background="@color/white"
+        android:layout_height="80dp">
+        <TextView
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_background_red"
+            android:text="999"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:gravity="center_horizontal"
+            android:paddingTop="3dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:id="@+id/player"
+            android:background="#42353e" >
+            <Button
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="@drawable/play_white_selector"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:id="@+id/pause_play"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="5dp"
+                android:id="@+id/songNamePlaying"
+                android:text="Song Name"
+                android:textSize="16sp"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@id/pause_play"
+                android:textColor="@color/white"
+                android:maxLines="1"/>
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:progressDrawable="@drawable/player_progressbar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:id="@+id/progressBar"
+                android:layout_marginRight="20dp"
+                android:layout_alignBottom="@id/pause_play"
+                android:layout_toLeftOf="@id/pause_play"
+                android:max="100"/>
+        </RelativeLayout>
+    </FrameLayout>
+</LinearLayout>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:descendantFocusability="blocksDescendants"
+    android:layout_width="match_parent"
+    android:layout_height="90dp">
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="15dp"
+        android:padding="10dp"
+        android:background="@drawable/button_background"
+        android:src="@drawable/note_white"/>
+    <TextView
+        android:id="@+id/songSize"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="15dp"
+        android:text="0MB"
+        android:textColor="@color/darkgrey"
+        android:maxLines="1"
+        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/songTitle"
+        android:layout_alignTop="@id/albumArt"
+        android:layout_toRightOf="@id/albumArt"
+        android:layout_toLeftOf="@id/songSize"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="3dp"
+        android:text="Title"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:textSize="16sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/userName"
+        android:layout_below="@id/songTitle"
+        android:layout_alignLeft="@id/songTitle"
+        android:layout_toLeftOf="@id/songSize"
+        android:layout_marginTop="3dp"
+        android:textColor="@color/darkgrey"
+        android:maxLines="1"
+        android:textSize="14sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <View
+        android:id="@+id/dividerFooter"
+        android:layout_width="match_parent"
+        android:layout_marginRight="15dp"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@id/albumArt"
+        android:layout_height="1dp"
+        android:layout_alignParentBottom="true"
+        android:background="#dcdcdcdc" />
+</RelativeLayout>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical"
+android:layout_gravity="center"
+android:layout_width="250dp"
+android:layout_height="wrap_content">
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:background="@drawable/dialog_bg"
+    android:layout_height="170dp">
+    <ImageView
+        android:id="@+id/checkImage"
+        android:layout_centerInParent="true"
+        android:src="@drawable/push_large"
+        android:layout_width="100dp"
+        android:layout_height="100dp" />
+</RelativeLayout>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="120dp">
+    <TextView
+        android:id="@+id/textMain"
+        android:layout_marginTop="25dp"
+        android:layout_marginRight="40dp"
+        android:layout_marginLeft="40dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="16sp"
+        android:text="3 songs selected"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <EditText
+        android:id="@+id/captionText"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="15sp"
+        android:layout_below="@id/textMain"
+        android:hint="Add a message (upto 50 chars)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/exit"
+        android:visibility="visible"
+        android:text="Go Back"
+        android:clickable="false"
+        android:background="@drawable/number_text_selector"
+        android:textSize="16sp"
+        android:layout_margin="10dp"
+        android:textColor="@color/reach_color"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/done"
+        android:visibility="visible"
+        android:text="Done"
+        android:clickable="false"
+        android:background="@drawable/number_text_selector"
+        android:textSize="16sp"
+        android:layout_margin="10dp"
+        android:textColor="@color/reach_blue_fade"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</RelativeLayout>
+</LinearLayout>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:background="@drawable/grid_bg_selector"
+    android:layout_height="230dp">
+    <ImageView
+        android:id="@+id/listImage"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:background="@color/reach_blue"
+        android:padding="30dp"
+        android:src="@drawable/note_white"/>
+    <TextView
+        android:id="@+id/listTitle"
+        android:layout_width="wrap_content"
+        android:maxLines="1"
+        android:layout_margin="10dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/listImage"
+        android:layout_alignLeft="@id/listImage"
+        android:layout_alignRight="@id/listImage"
+        android:textSize="14sp"
+        android:text="TITLE"/>
+    <TextView
+        android:id="@+id/listSubTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/darkgrey"
+        android:maxLines="1"
+        android:layout_alignLeft="@id/listTitle"
+        android:layout_alignRight="@id/listTitle"
+        android:layout_below="@id/listTitle"
+        android:textSize="13sp"
+        android:text="Album"/>
+    <RelativeLayout
+        android:layout_below="@id/listSubTitle"
+        android:layout_alignLeft="@id/listSubTitle"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/note"
+            android:src="@drawable/note60"
+            android:layout_centerVertical="true"
+            android:layout_width="15dp"
+            android:layout_height="15dp" />
+        <TextView
+            android:id="@+id/songs"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:text="0"/>
+    </RelativeLayout>
+
+</RelativeLayout>

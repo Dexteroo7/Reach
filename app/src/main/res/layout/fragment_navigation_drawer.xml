@@ -1,0 +1,158 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:paddingTop="?attr/actionBarSize"
+    android:layout_height="match_parent"
+    tools:context=".NavigationDrawerFragment"
+    android:clickable="true"
+    android:orientation="vertical"
+    android:background="@color/white">
+    <RelativeLayout
+        android:id="@+id/navHeader"
+        android:background="@drawable/nav_bg_selector"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.2">
+        <FrameLayout
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_centerVertical="true"
+            android:id="@+id/profilePhoto" >
+            <ImageView
+                android:id="@+id/userImageNav"
+                android:layout_margin="2dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/profile_pic_blue"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <ImageView
+                android:id="@+id/circle"
+                android:background="@drawable/circular_background_blue_small"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+        <RelativeLayout
+            android:layout_toRightOf="@id/profilePhoto"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/userNameNav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:textSize="20sp"
+                android:textColor="@color/reach_color" />
+            <RelativeLayout
+                android:id="@+id/songsButton"
+                android:layout_marginTop="5dp"
+                android:layout_below="@id/userNameNav"
+                android:layout_alignLeft="@id/userNameNav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+                <ImageView
+                    android:id="@+id/note"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="5dp"
+                    android:src="@drawable/note_pink"/>
+                <TextView
+                    android:id="@+id/numberOfSongsNav"
+                    android:layout_toRightOf="@id/note"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/reach_color"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 Songs"/>
+            </RelativeLayout>
+        </RelativeLayout>
+        <ImageView
+            android:layout_alignParentRight="true"
+            android:src="@drawable/edit_pencil"
+            android:background="@drawable/circular_background_pink"
+            android:padding="5dp"
+            android:layout_margin="10dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp" />
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.8">
+        <RelativeLayout
+            android:id="@+id/netSwitch"
+            android:background="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+            <TextView
+                android:id="@+id/netSwitchText"
+                android:layout_marginLeft="15dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="17sp"
+                android:text="Enable on mobile data"
+                android:layout_centerVertical="true" />
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/netToggle"
+                android:paddingLeft="15dp"
+                android:paddingRight="15dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/netSwitchText"
+                android:layout_centerVertical="true" />
+        </RelativeLayout>
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#808080"
+            android:layout_below="@id/netSwitch"
+            />
+        <ListView
+            android:paddingTop="10dp"
+            android:id="@+id/primaryListView"
+            android:layout_below="@id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="@null"
+            android:dividerHeight="0dp"/>
+        <FrameLayout
+            android:id="@+id/footer"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="80dp" >
+            <View
+                android:layout_width="match_parent"
+                android:layout_gravity="bottom"
+                android:background="@color/grey"
+                android:layout_height="60dp" />
+            <ImageView
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/star"
+                android:padding="5dp"
+                android:background="@drawable/circular_background_pink"
+                android:layout_width="35dp"
+                android:layout_height="35dp" />
+            <TextView
+                android:text="Rate our app"
+                android:layout_gravity="center_horizontal|bottom"
+                android:textSize="18sp"
+                android:layout_marginBottom="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </FrameLayout>
+    </RelativeLayout>
+</LinearLayout>

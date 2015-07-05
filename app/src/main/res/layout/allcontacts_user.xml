@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <FrameLayout
+        android:id="@+id/profilePhotoContainer"
+        android:background="@drawable/circular_background_dark"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_centerVertical="true"
+        android:layout_width="50dp"
+        android:layout_height="50dp">
+        <TextView
+            android:id="@+id/userInitials"
+            android:textColor="@color/white"
+            android:layout_gravity="center"
+            android:textSize="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/profilePhotoList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/userNameList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/profilePhotoContainer"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="50dp"
+        android:textSize="16sp"
+        android:text="TITLE"/>
+    <ImageView
+        android:id="@+id/listToggle"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="20dp"
+        android:src="@drawable/add_myreach"/>
+    <View
+        android:id="@+id/dividerFooter"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginRight="10dp"
+        android:layout_toRightOf="@id/profilePhotoContainer"
+        android:layout_alignParentBottom="true"
+        android:background="#dcdcdcdc" />
+
+</RelativeLayout>

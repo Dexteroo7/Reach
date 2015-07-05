@@ -1,0 +1,83 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".views.UserProfleView"
+    android:background="@color/white">
+    <FrameLayout
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="30dp"
+        android:id="@+id/profilePhoto" >
+        <ImageView
+            android:id="@+id/userImage"
+            android:background="@drawable/profile_pic_blue"
+            android:layout_margin="7dp"
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:id="@+id/circle"
+            android:background="@drawable/circular_background_blue"
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+    <TextView
+        android:id="@+id/userName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/profilePhoto"
+        android:text="Name"
+        android:textSize="26sp"
+        android:textColor="@color/reach_color"
+        android:layout_centerHorizontal="true"/>
+
+    <RelativeLayout
+        android:id="@+id/songsButton"
+        android:layout_margin="10dp"
+        android:layout_below="@id/userName"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+        <ImageView
+            android:id="@+id/note"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="5dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/note_pink"/>
+        <TextView
+            android:id="@+id/numberOfSongs"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/note"
+            android:textColor="@color/reach_color"
+            android:textSize="18sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 Songs"/>
+    </RelativeLayout>
+    <TextView
+        android:id="@+id/lastActive"
+        android:textSize="16sp"
+        android:layout_below="@id/songsButton"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Offline"
+        android:textColor="#737373" />
+    <Button
+        android:id="@+id/accessRequest"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:text="Request Access"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:textColor="@color/profile_text_selector"
+        android:background="@drawable/profile_button_selector"
+        android:layout_centerHorizontal="true"
+        android:layout_width="220dp"
+        android:layout_height="40dp" />
+
+</RelativeLayout>
