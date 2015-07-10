@@ -35,8 +35,9 @@ android {
 }
 
 dependencies {
-
-    compile fileTree(includes: ['*.jar'], dir: 'libs')
+    compile fileTree(dir: 'libs', includes: ['*.jar'])
+    // non-google stuff
+    // to remove
     compile 'com.google.apis:google-api-services-storage:v1-rev35-1.20.0'
     compile 'com.google.android.gms:play-services:7.5.0'
     compile 'com.google.code.gson:gson:2.3.1'
@@ -44,10 +45,8 @@ dependencies {
     compile 'com.android.support:support-v4:22.2.0'
     compile 'com.android.support:cardview-v7:22.2.0'
     compile 'com.android.support:multidex:1.0.1'
-    // non-google stuff
     compile 'com.crittercism:crittercism-android-agent:5.0.6'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    // to remove
     compile 'com.viewpagerindicator:library:2.4.1'
     compile 'com.melnykov:floatingactionbutton:1.3.0'
     compile 'com.sothree.slidinguppanel:library:3.0.0'

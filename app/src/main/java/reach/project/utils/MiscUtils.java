@@ -420,6 +420,216 @@ public enum MiscUtils {
         return new StartBulkDownloadOperation(reachDatabases, contentResolver);
     }
 
+    public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
+
+        return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
+            @Override
+            protected MyBoolean doWork() throws IOException {
+                Log.i("Downloader", "Sending message " + message);
+                return StaticData.messagingEndpoint.messagingEndpoint()
+                        .sendMessage(message, hostId, clientId).execute();
+            }
+        }, Optional.<Predicate<MyBoolean>>of(new Predicate<MyBoolean>() {
+            @Override
+            public boolean apply(@Nullable MyBoolean input) {
+                return input == null;
+            }
+        })).orNull();
+    }
+
+    public static File getReachDirectory() {
+
+        final File file = new File(Environment.getExternalStorageDirectory(), ".Reach");
+        if (file.isDirectory()) {
+            Log.i("Downloader", "Using getExternalStorageDirectory");
+            return file;
+        } else if (file.mkdir()) {
+            Log.i("Downloader", "Creating and using getExternalStorageDirectory");
+            return file;
+        }
+        return null;
+    }
+
+    public static long stringToLongHashCode(String string) {
+
+        long h = 1125899906842597L; // prime
+        int len = string.length();
+
+        for (int i = 0; i < len; i++) {
+            h = 31 * h + string.charAt(i);
+        }
+        return h;
+    }
+
+    public static String getInviteCode() {
+
+        final Random random = new Random();
+        final int lower = random.nextInt(14 - 2 + 1) + 2;
+        final int upper = random.nextInt(76 - 8 + 1) + 8;
+        return lower * 7 + "" + upper * 13;
+    }
+
+//    public static int getReachDatabaseCount(ContentResolver contentResolver) {
+//
+//        final Cursor countCursor;
+//        countCursor = contentResolver.query(
+//                ReachDatabaseProvider.CONTENT_URI,
+//                new String[]{ReachDatabaseHelper.COLUMN_ID},
+//                null, null, null);
+//        if(countCursor == null)
+//            return 0;
+//        try {
+//            return countCursor.getCount();
+//        } finally {
+//            countCursor.close();
+//        }
+//    }
+//
+//    /**
+//     * //TODO improve/fix/replace this hack
+//     * @return The current localIP
+//     * @throws IOException
+//     * @throws InterruptedException
+//     */
+//    public static InetAddress getLocalIp() throws IOException, InterruptedException {
+//
+//        final Socket temp = new Socket();
+//        final InetSocketAddress google = new InetSocketAddress("www.google.com", 80);
+//        final InetAddress localIpAddress;
+//        temp.connect(google);
+//        temp.setSoLinger(true, 1);
+//        temp.setReuseAddress(true);
+//        localIpAddress = temp.getLocalAddress();
+//        temp.close();
+//        Thread.sleep(1000L);
+//        return localIpAddress;
+//    }
+
+    public static boolean updateGCM(final long id, final WeakReference reference) {
+
+        final String regId = autoRetry(new DoWork<String>() {
+            @Override
+            protected String doWork() throws IOException {
+
+                final Context context = (Context) reference.get();
+                if (context == null)
+                    return "QUIT";
+                return GoogleCloudMessaging.getInstance(context)
+                        .register("528178870551");
+            }
+        }, Optional.<Predicate<String>>of(new Predicate<String>() {
+            @Override
+            public boolean apply(@Nullable String input) {
+                return TextUtils.isEmpty(input);
+            }
+        })).orNull();
+
+        if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
+            return false;
+        //if everything is fine, send to server
+        Log.i("Ayush", "Uploading newGcmId to server");
+        final Boolean result = autoRetry(new DoWork<Boolean>() {
+            @Override
+            protected Boolean doWork() throws IOException {
+
+                StaticData.userEndpoint.setGCMId(id, regId).execute();
+                Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
+                return true;
+            }
+        }, Optional.<Predicate<Boolean>>absent()).orNull();
+        //set locally
+        return !(result == null || !result);
+    }
+
+    /**
+     * Performs a task, retries upon failure with exponential back-off.
+     * Kindly don't use on UI thread.
+     *
+     * @param task      the task that needs to be performed
+     * @param predicate the extra condition for failure
+     * @param <T>       the return type of task
+     * @return the result/output of performing the task
+     */
+    public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
+                                            @NonNull final Optional<Predicate<T>> predicate) {
+
+        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+
+            try {
+
+                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                final T resultAfterWork = task.doWork();
+                /**
+                 * If the result was not
+                 * desirable we RETRY.
+                 */
+                if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                    continue;
+                /**
+                 * Else we return
+                 */
+                return Optional.fromNullable(resultAfterWork);
+            } catch (InterruptedException | UnknownHostException | NullPointerException e) {
+                e.printStackTrace();
+                return Optional.absent();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Optional.absent();
+    }
+
+    public static String getMusicStorageKey(long serverId) {
+
+        return serverId + "MUSIC";
+    }
+
+    public static String getHistoryStoragekey(long serverId) {
+        return serverId + "HISTORY";
+    }
+
+    /**
+     * Performs a task, retries upon failure with exponential back-off.
+     * This is to be used if returned value is of no importance other than checking for failure.
+     * Automatically delegates to separate thread.
+     *
+     * @param task      the task that needs to be performed
+     * @param predicate the extra condition for failure
+     * @param <T>       the return type of task
+     */
+    public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
+                                          @NonNull final Optional<Predicate<T>> predicate) {
+
+        StaticData.threadPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+
+                    try {
+
+                        Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                        final T resultAfterWork = task.doWork();
+                        /**
+                         * If the result was not
+                         * desirable we RETRY.
+                         */
+                        if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                            continue;
+                        /**
+                         * Else we return
+                         */
+                        return;
+                    } catch (InterruptedException | UnknownHostException e) {
+                        e.printStackTrace();
+                        return;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
     private static class StartBulkDownloadOperation implements Runnable {
 
         private final List<ReachDatabase> reachDatabases;
@@ -533,206 +743,5 @@ public enum MiscUtils {
                     ReachDatabaseHelper.COLUMN_ID + " = ?",
                     new String[]{reachDatabase.getId() + ""}));
         }
-    }
-
-    public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
-
-        return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
-            @Override
-            protected MyBoolean doWork() throws IOException {
-                Log.i("Downloader", "Sending message " + message);
-                return StaticData.messagingEndpoint.messagingEndpoint()
-                        .sendMessage(message, hostId, clientId).execute();
-            }
-        }, Optional.<Predicate<MyBoolean>>of(new Predicate<MyBoolean>() {
-            @Override
-            public boolean apply(@Nullable MyBoolean input) {
-                return input == null;
-            }
-        })).orNull();
-    }
-
-    public static File getReachDirectory() {
-
-        final File file = new File(Environment.getExternalStorageDirectory(), ".Reach");
-        if (file.isDirectory()) {
-            Log.i("Downloader", "Using getExternalStorageDirectory");
-            return file;
-        } else if (file.mkdir()) {
-            Log.i("Downloader", "Creating and using getExternalStorageDirectory");
-            return file;
-        }
-        return null;
-    }
-
-//    public static int getReachDatabaseCount(ContentResolver contentResolver) {
-//
-//        final Cursor countCursor;
-//        countCursor = contentResolver.query(
-//                ReachDatabaseProvider.CONTENT_URI,
-//                new String[]{ReachDatabaseHelper.COLUMN_ID},
-//                null, null, null);
-//        if(countCursor == null)
-//            return 0;
-//        try {
-//            return countCursor.getCount();
-//        } finally {
-//            countCursor.close();
-//        }
-//    }
-//
-//    /**
-//     * //TODO improve/fix/replace this hack
-//     * @return The current localIP
-//     * @throws IOException
-//     * @throws InterruptedException
-//     */
-//    public static InetAddress getLocalIp() throws IOException, InterruptedException {
-//
-//        final Socket temp = new Socket();
-//        final InetSocketAddress google = new InetSocketAddress("www.google.com", 80);
-//        final InetAddress localIpAddress;
-//        temp.connect(google);
-//        temp.setSoLinger(true, 1);
-//        temp.setReuseAddress(true);
-//        localIpAddress = temp.getLocalAddress();
-//        temp.close();
-//        Thread.sleep(1000L);
-//        return localIpAddress;
-//    }
-
-    public static long stringToLongHashCode(String string) {
-
-        long h = 1125899906842597L; // prime
-        int len = string.length();
-
-        for (int i = 0; i < len; i++) {
-            h = 31 * h + string.charAt(i);
-        }
-        return h;
-    }
-
-    public static String getInviteCode() {
-
-        final Random random = new Random();
-        final int lower = random.nextInt(14 - 2 + 1) + 2;
-        final int upper = random.nextInt(76 - 8 + 1) + 8;
-        return lower * 7 + "" + upper * 13;
-    }
-
-    public static boolean updateGCM(final long id, final WeakReference reference) {
-
-        final String regId = autoRetry(new DoWork<String>() {
-            @Override
-            protected String doWork() throws IOException {
-
-                final Context context = (Context) reference.get();
-                if (context == null)
-                    return "QUIT";
-                return GoogleCloudMessaging.getInstance(context)
-                        .register("528178870551");
-            }
-        }, Optional.<Predicate<String>>of(new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String input) {
-                return TextUtils.isEmpty(input);
-            }
-        })).orNull();
-
-        if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
-            return false;
-        //if everything is fine, send to server
-        Log.i("Ayush", "Uploading newGcmId to server");
-        final Boolean result = autoRetry(new DoWork<Boolean>() {
-            @Override
-            protected Boolean doWork() throws IOException {
-
-                StaticData.userEndpoint.setGCMId(id, regId).execute();
-                Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
-                return true;
-            }
-        }, Optional.<Predicate<Boolean>>absent()).orNull();
-        //set locally
-        return !(result == null || !result);
-    }
-
-    /**
-     * Performs a task, retries upon failure with exponential back-off.
-     * Kindly don't use on UI thread.
-     *
-     * @param task      the task that needs to be performed
-     * @param predicate the extra condition for failure
-     * @param <T>       the return type of task
-     * @return the result/output of performing the task
-     */
-    public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
-                                            @NonNull final Optional<Predicate<T>> predicate) {
-
-        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
-
-            try {
-
-                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
-                final T resultAfterWork = task.doWork();
-                /**
-                 * If the result was not
-                 * desirable we RETRY.
-                 */
-                if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
-                    continue;
-                /**
-                 * Else we return
-                 */
-                return Optional.fromNullable(resultAfterWork);
-            } catch (InterruptedException | UnknownHostException | NullPointerException e) {
-                e.printStackTrace();
-                return Optional.absent();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return Optional.absent();
-    }
-
-    /**
-     * Performs a task, retries upon failure with exponential back-off.
-     * This is to be used if returned value is of no importance other than checking for failure.
-     * Automatically delegates to separate thread.
-     *
-     * @param task      the task that needs to be performed
-     * @param predicate the extra condition for failure
-     * @param <T>       the return type of task
-     */
-    public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
-                                          @NonNull final Optional<Predicate<T>> predicate) {
-
-        StaticData.threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
-                for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
-
-                    try {
-
-                        Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
-                        final T resultAfterWork = task.doWork();
-                        /**
-                         * If the result was not
-                         * desirable we RETRY.
-                         */
-                        if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
-                            continue;
-                        /**
-                         * Else we return
-                         */
-                        return;
-                    } catch (InterruptedException | UnknownHostException e) {
-                        e.printStackTrace();
-                        return;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
     }
 }

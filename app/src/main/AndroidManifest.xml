@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="reach.project" >
+    package="reach.project">
 
     <permission
         android:name="reach.project.permission.C2D_MESSAGE"
@@ -24,14 +23,17 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="com.example.gcm.permission.C2D_MESSAGE" />
 
+    <permission
+        android:name="com.example.gcm.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
     <application
         android:name=".core.ReachApplication"
+        android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
-        android:allowBackup="false"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -39,12 +41,13 @@
         <activity
             android:name=".core.ReachActivity"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustPan"
             android:launchMode="singleTop"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="process_multiple" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -54,21 +57,21 @@
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
-
         <receiver android:name=".core.UpdateReceiver" >
             <intent-filter>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"    />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
         <service
             android:name=".core.GcmIntentService"
-            android:exported="false"/>
+            android:exported="false" />
         <service
             android:name=".utils.MusicScanner"
             android:exported="false">
@@ -104,7 +107,6 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Light.Dialog" >
         </activity>
-
         <activity
             android:name=".core.PushActivity"
             android:excludeFromRecents="true"
@@ -117,18 +119,18 @@
             android:name=".core.ReachActivity$PlayerUpdateListener"
             android:exported="false">
             <intent-filter>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION"/>
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" />
             </intent-filter>
         </receiver>
 
-         <!--Things on process :remote-->
+        <!-- Things on process :remote -->
 
         <provider
             android:name=".database.contentProvider.ReachDatabaseProvider"

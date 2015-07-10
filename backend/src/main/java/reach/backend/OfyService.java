@@ -4,9 +4,13 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 
-import reach.backend.Entities.FeedBack;
-import reach.backend.Entities.ReachInvite;
-import reach.backend.Entities.User;
+import reach.backend.Feedback.FeedBack;
+import reach.backend.Music.MusicVisibility;
+import reach.backend.Notifications.Notification;
+import reach.backend.User.CompletedOperations;
+import reach.backend.User.MusicSplitter;
+import reach.backend.User.ReachUser;
+import reach.backend.User.SplitMusicContainer;
 
 /**
  * Objectify service wrapper so we can statically register our persistence classes
@@ -15,9 +19,13 @@ import reach.backend.Entities.User;
 public class OfyService {
 
     static {
-        ObjectifyService.register(User.class);
-        ObjectifyService.register(ReachInvite.class);
+        ObjectifyService.register(ReachUser.class);
         ObjectifyService.register(FeedBack.class);
+        ObjectifyService.register(CompletedOperations.class);
+        ObjectifyService.register(SplitMusicContainer.class);
+        ObjectifyService.register(MusicSplitter.class);
+        ObjectifyService.register(MusicVisibility.class);
+        ObjectifyService.register(Notification.class);
     }
 
     public static Objectify ofy() {

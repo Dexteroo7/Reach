@@ -5,8 +5,22 @@ package reach.project.utils;
  */
 public final class TransferSong {
 
-    private final long size;
     private final long songId;
+    private final long size;
+    private final long duration;
+    private final String displayName;
+    private final String actualName;
+    private final String artistName;
+
+    public TransferSong(long size, long songId, long duration,
+                        String displayName, String actualName, String artistName) {
+        this.size = size;
+        this.songId = songId;
+        this.duration = duration;
+        this.artistName = artistName;
+        this.displayName = displayName;
+        this.actualName = actualName;
+    }
 
     public long getDuration() {
         return duration;
@@ -15,11 +29,6 @@ public final class TransferSong {
     public String getArtistName() {
         return artistName;
     }
-
-    private final long duration;
-    private final String displayName;
-    private final String actualName;
-    private final String artistName;
 
     public String getActualName() {
         return actualName;
@@ -35,17 +44,6 @@ public final class TransferSong {
 
     public long getSize() {
         return size;
-    }
-
-
-    public TransferSong(long size, long songId, long duration,
-                        String displayName, String actualName, String artistName) {
-        this.size = size;
-        this.songId = songId;
-        this.duration = duration;
-        this.artistName = artistName;
-        this.displayName = displayName;
-        this.actualName = actualName;
     }
 
     @Override

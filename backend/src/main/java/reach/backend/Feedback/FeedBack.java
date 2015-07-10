@@ -1,4 +1,4 @@
-package reach.backend.Entities;
+package reach.backend.Feedback;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
@@ -16,23 +16,8 @@ public class FeedBack {
     @Unindex private String reply1;
     @Unindex private String reply2;
     @Unindex private String reply3;
-    @Unindex private String clientId;
-
-    public void setReply1(String reply1) {
-        this.reply1 = reply1;
-    }
-
-    public void setReply2(String reply2) {
-        this.reply2 = reply2;
-    }
-
-    public void setReply3(String reply3) {
-        this.reply3 = reply3;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
+    @Unindex
+    private long clientId;
 
     public long getId() {
         return id;
@@ -42,16 +27,32 @@ public class FeedBack {
         return reply1;
     }
 
+    public void setReply1(String reply1) {
+        this.reply1 = reply1;
+    }
+
     public String getReply2() {
         return reply2;
+    }
+
+    public void setReply2(String reply2) {
+        this.reply2 = reply2;
     }
 
     public String getReply3() {
         return reply3;
     }
 
-    public String getClientId() {
+    public void setReply3(String reply3) {
+        this.reply3 = reply3;
+    }
+
+    public long getClientId() {
         return clientId;
+    }
+
+    public void setClientId(long clientId) {
+        this.clientId = clientId;
     }
 
 }

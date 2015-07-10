@@ -1,4 +1,4 @@
-package reach.backend.Endpoints;
+package reach.backend.User;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -7,6 +7,7 @@ import com.google.api.server.spi.response.CollectionResponse;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterator;
+import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.cmd.Query;
 
 import java.util.ArrayList;
@@ -15,8 +16,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
-
-import reach.backend.Entities.FeedBack;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -28,95 +27,101 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
  * DO NOT deploy this code unchanged as part of a real application to real users.
  */
 @Api(
-        name = "feedBackApi",
+        name = "musicSplitterApi",
         version = "v1",
-        resource = "feedBack",
+        resource = "musicSplitter",
         namespace = @ApiNamespace(
                 ownerDomain = "Entities.backend.reach",
                 ownerName = "Entities.backend.reach",
                 packagePath = ""
         )
 )
-public class FeedBackEndpoint {
+public class MusicSplitterEndpoint {
 
-    private static final Logger logger = Logger.getLogger(FeedBackEndpoint.class.getName());
+    private static final Logger logger = Logger.getLogger(MusicSplitterEndpoint.class.getName());
+
     private static final int DEFAULT_LIST_LIMIT = 20;
 
+    static {
+        // Typically you would register this inside an OfyServive wrapper. See: https://code.google.com/p/objectify-appengine/wiki/BestPractices
+        ObjectifyService.register(MusicSplitter.class);
+    }
+
     /**
-     * Returns the {@link FeedBack} with the corresponding ID.
+     * Returns the {@link MusicSplitter} with the corresponding ID.
      *
      * @param id the ID of the entity to be retrieved
      * @return the entity with the corresponding ID
-     * @throws NotFoundException if there is no {@code FeedBack} with the provided ID.
+     * @throws NotFoundException if there is no {@code MusicSplitter} with the provided ID.
      */
     @ApiMethod(
             name = "get",
-            path = "feedBack/{id}",
+            path = "musicSplitter/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public FeedBack get(@Named("id") Long id) throws NotFoundException {
-        logger.info("Getting FeedBack with ID: " + id);
-        FeedBack feedBack = ofy().load().type(FeedBack.class).id(id).now();
-        if (feedBack == null) {
-            throw new NotFoundException("Could not find FeedBack with ID: " + id);
+    public MusicSplitter get(@Named("id") Long id) throws NotFoundException {
+        logger.info("Getting MusicSplitter with ID: " + id);
+        MusicSplitter musicSplitter = ofy().load().type(MusicSplitter.class).id(id).now();
+        if (musicSplitter == null) {
+            throw new NotFoundException("Could not find MusicSplitter with ID: " + id);
         }
-        return feedBack;
+        return musicSplitter;
     }
 
     /**
-     * Inserts a new {@code FeedBack}.
+     * Inserts a new {@code MusicSplitter}.
      */
     @ApiMethod(
             name = "insert",
-            path = "feedBack",
+            path = "musicSplitter",
             httpMethod = ApiMethod.HttpMethod.POST)
-    public FeedBack insert(FeedBack feedBack) {
+    public MusicSplitter insert(MusicSplitter musicSplitter) {
         // Typically in a RESTful API a POST does not have a known ID (assuming the ID is used in the resource path).
-        // You should validate that feedBack.id has not been set. If the ID type is not supported by the
+        // You should validate that musicSplitter.id has not been set. If the ID type is not supported by the
         // Objectify ID generator, e.g. long or String, then you should generate the unique ID yourself prior to saving.
         //
         // If your client provides the ID then you should probably use PUT instead.
-        ofy().save().entity(feedBack).now();
-        logger.info("Created FeedBack with ID: " + feedBack.getId());
+        ofy().save().entity(musicSplitter).now();
+        logger.info("Created MusicSplitter with ID: " + musicSplitter.getId());
 
-        return ofy().load().entity(feedBack).now();
+        return ofy().load().entity(musicSplitter).now();
     }
 
     /**
-     * Updates an existing {@code FeedBack}.
+     * Updates an existing {@code MusicSplitter}.
      *
-     * @param id       the ID of the entity to be updated
-     * @param feedBack the desired state of the entity
+     * @param id            the ID of the entity to be updated
+     * @param musicSplitter the desired state of the entity
      * @return the updated version of the entity
      * @throws NotFoundException if the {@code id} does not correspond to an existing
-     *                           {@code FeedBack}
+     *                           {@code MusicSplitter}
      */
     @ApiMethod(
             name = "update",
-            path = "feedBack/{id}",
+            path = "musicSplitter/{id}",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public FeedBack update(@Named("id") Long id, FeedBack feedBack) throws NotFoundException {
+    public MusicSplitter update(@Named("id") Long id, MusicSplitter musicSplitter) throws NotFoundException {
         // TODO: You should validate your ID parameter against your resource's ID here.
         checkExists(id);
-        ofy().save().entity(feedBack).now();
-        logger.info("Updated FeedBack: " + feedBack);
-        return ofy().load().entity(feedBack).now();
+        ofy().save().entity(musicSplitter).now();
+        logger.info("Updated MusicSplitter: " + musicSplitter);
+        return ofy().load().entity(musicSplitter).now();
     }
 
     /**
-     * Deletes the specified {@code FeedBack}.
+     * Deletes the specified {@code MusicSplitter}.
      *
      * @param id the ID of the entity to delete
      * @throws NotFoundException if the {@code id} does not correspond to an existing
-     *                           {@code FeedBack}
+     *                           {@code MusicSplitter}
      */
     @ApiMethod(
             name = "remove",
-            path = "feedBack/{id}",
+            path = "musicSplitter/{id}",
             httpMethod = ApiMethod.HttpMethod.DELETE)
     public void remove(@Named("id") Long id) throws NotFoundException {
         checkExists(id);
-        ofy().delete().type(FeedBack.class).id(id).now();
-        logger.info("Deleted FeedBack with ID: " + id);
+        ofy().delete().type(MusicSplitter.class).id(id).now();
+        logger.info("Deleted MusicSplitter with ID: " + id);
     }
 
     /**
@@ -128,27 +133,27 @@ public class FeedBackEndpoint {
      */
     @ApiMethod(
             name = "list",
-            path = "feedBack",
+            path = "musicSplitter",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public CollectionResponse<FeedBack> list(@Nullable @Named("cursor") String cursor, @Nullable @Named("limit") Integer limit) {
+    public CollectionResponse<MusicSplitter> list(@Nullable @Named("cursor") String cursor, @Nullable @Named("limit") Integer limit) {
         limit = limit == null ? DEFAULT_LIST_LIMIT : limit;
-        Query<FeedBack> query = ofy().load().type(FeedBack.class).limit(limit);
+        Query<MusicSplitter> query = ofy().load().type(MusicSplitter.class).limit(limit);
         if (cursor != null) {
             query = query.startAt(Cursor.fromWebSafeString(cursor));
         }
-        QueryResultIterator<FeedBack> queryIterator = query.iterator();
-        List<FeedBack> feedBackList = new ArrayList<FeedBack>(limit);
+        QueryResultIterator<MusicSplitter> queryIterator = query.iterator();
+        List<MusicSplitter> musicSplitterList = new ArrayList<MusicSplitter>(limit);
         while (queryIterator.hasNext()) {
-            feedBackList.add(queryIterator.next());
+            musicSplitterList.add(queryIterator.next());
         }
-        return CollectionResponse.<FeedBack>builder().setItems(feedBackList).setNextPageToken(queryIterator.getCursor().toWebSafeString()).build();
+        return CollectionResponse.<MusicSplitter>builder().setItems(musicSplitterList).setNextPageToken(queryIterator.getCursor().toWebSafeString()).build();
     }
 
     private void checkExists(Long id) throws NotFoundException {
         try {
-            ofy().load().type(FeedBack.class).id(id).safe();
+            ofy().load().type(MusicSplitter.class).id(id).safe();
         } catch (com.googlecode.objectify.NotFoundException e) {
-            throw new NotFoundException("Could not find FeedBack with ID: " + id);
+            throw new NotFoundException("Could not find MusicSplitter with ID: " + id);
         }
     }
 }

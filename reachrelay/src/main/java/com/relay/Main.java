@@ -21,7 +21,8 @@ import sun.nio.ch.DirectBuffer;
 
 public final class Main {
 
-    private static final ConcurrentHashMap<String, SocketChannel> currentChannels = new ConcurrentHashMap<>(5000, 0.75f, 100);
+    private static final ConcurrentHashMap<String, SocketChannel> currentChannels =
+            new ConcurrentHashMap<>(5000, 0.75f, 100);
     private static final ExecutorService threadPool = Executors.newCachedThreadPool(new CustomThreadFactoryBuilder()
             .setPriority(Thread.MAX_PRIORITY)
             .setNamePrefix("relay_thread")
@@ -34,6 +35,7 @@ public final class Main {
      * @param closeables that need to be closed
      */
     private static void closeAndIgnore(Closeable... closeables) {
+
         for (Closeable closeable : closeables)
             if (closeable != null)
                 try {
@@ -67,7 +69,8 @@ public final class Main {
                 sanitize();
                 //relaxationPeriod
                 try {
-                    Thread.sleep(3000L);
+                    //Wait till gc finishes completely
+                    Thread.sleep(10 * 1000L);
                 } catch (InterruptedException e) {
 
                     //SUPER BAD !!
@@ -196,7 +199,10 @@ public final class Main {
 
             final String id, wantsToConnectTo, socketType;
 
+
             try {
+
+                socket.configureBlocking(true);
                 temp.setSoLinger(true, 1);
                 temp.setKeepAlive(true);
                 temp.setTrafficClass(0x10);
@@ -217,6 +223,7 @@ public final class Main {
             //busy wait till partner arrives
             if (poll(wantsToConnectTo)) {
 
+                //noinspection StatementWithEmptyBody
                 if (socketType.equals("Sender")) {
                     /**
                      * the socket needs to be kept alive till
@@ -268,6 +275,28 @@ public final class Main {
         private boolean daemon = false;
         private int priority = Thread.NORM_PRIORITY;
 
+        private static ThreadFactory build(CustomThreadFactoryBuilder builder) {
+
+            final String namePrefix = builder.namePrefix;
+            final Boolean daemon = builder.daemon;
+            final Integer priority = builder.priority;
+            final AtomicLong count = new AtomicLong(0);
+
+            //noinspection NullableProblems
+            return new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable runnable) {
+                    Thread thread = new Thread(runnable);
+                    if (namePrefix != null) {
+                        thread.setName(namePrefix + "-" + count.getAndIncrement());
+                    }
+                    thread.setDaemon(daemon);
+                    thread.setPriority(priority);
+                    return thread;
+                }
+            };
+        }
+
         public CustomThreadFactoryBuilder setNamePrefix(String namePrefix) {
             if (namePrefix == null) {
                 throw new NullPointerException();
@@ -295,27 +324,6 @@ public final class Main {
 
         public ThreadFactory build() {
             return build(this);
-        }
-
-        private static ThreadFactory build(CustomThreadFactoryBuilder builder) {
-
-            final String namePrefix = builder.namePrefix;
-            final Boolean daemon = builder.daemon;
-            final Integer priority = builder.priority;
-            final AtomicLong count = new AtomicLong(0);
-
-            return new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable runnable) {
-                    Thread thread = new Thread(runnable);
-                    if (namePrefix != null) {
-                        thread.setName(namePrefix + "-" + count.getAndIncrement());
-                    }
-                    thread.setDaemon(daemon);
-                    thread.setPriority(priority);
-                    return thread;
-                }
-            };
         }
     }
 }

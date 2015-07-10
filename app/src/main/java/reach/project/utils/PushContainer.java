@@ -6,13 +6,34 @@ package reach.project.utils;
 public class PushContainer {
 
     private final long receiverId, senderId;
-    private final String songData; //heavy shit
-    private final String userName;
-    private final String networkType;
+    private final String songData; //transferSongs container
+    private final String firstSongName;
+    private final short songCount;
     private final String receiverName;
+    private final String userName;
+    private final String userImage;
+    private final String networkType;
+    private String customMessage;
+
+    public PushContainer(long receiverId, long senderId, String songData, String userName, String receiverName,
+                         short songCount, String userImage, String firstSongName, String networkType) {
+        this.receiverId = receiverId;
+        this.senderId = senderId;
+        this.songData = songData;
+        this.userName = userName;
+        this.receiverName = receiverName;
+        this.networkType = networkType;
+        this.songCount = songCount;
+        this.userImage = userImage;
+        this.firstSongName = firstSongName;
+    }
 
     public String getCustomMessage() {
         return customMessage;
+    }
+
+    public void setCustomMessage(String customMessage) {
+        this.customMessage = customMessage;
     }
 
     public String getReceiverName() {
@@ -22,15 +43,6 @@ public class PushContainer {
     public String getNetworkType() {
         return networkType;
     }
-
-    public void setCustomMessage(String customMessage) {
-        this.customMessage = customMessage;
-    }
-
-    private String customMessage;
-    private final String userImage;
-    private final String firstSongName;
-    private final short songCount;
 
     public String getFirstSongName() {
         return firstSongName;
@@ -58,19 +70,6 @@ public class PushContainer {
 
     public long getReceiverId() {
         return receiverId;
-    }
-
-    public PushContainer(long receiverId, long senderId, String songData, String userName, String receiverName,
-                         short songCount, String userImage, String firstSongName, String networkType) {
-        this.receiverId = receiverId;
-        this.senderId = senderId;
-        this.songData = songData;
-        this.userName = userName;
-        this.receiverName = receiverName;
-        this.networkType = networkType;
-        this.songCount = songCount;
-        this.userImage = userImage;
-        this.firstSongName = firstSongName;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package reach.backend.Endpoints;
+package reach.backend.Feedback;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -16,8 +16,6 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
-import reach.backend.Entities.ReachInvite;
-
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 /**
@@ -28,95 +26,95 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
  * DO NOT deploy this code unchanged as part of a real application to real users.
  */
 @Api(
-        name = "reachInviteApi",
+        name = "feedBackApi",
         version = "v1",
-        resource = "reachInvite",
+        resource = "feedBack",
         namespace = @ApiNamespace(
                 ownerDomain = "Entities.backend.reach",
                 ownerName = "Entities.backend.reach",
                 packagePath = ""
         )
 )
-public class ReachInviteEndpoint {
+public class FeedBackEndpoint {
 
-    private static final Logger logger = Logger.getLogger(ReachInviteEndpoint.class.getName());
+    private static final Logger logger = Logger.getLogger(FeedBackEndpoint.class.getName());
     private static final int DEFAULT_LIST_LIMIT = 20;
 
     /**
-     * Returns the {@link ReachInvite} with the corresponding ID.
+     * Returns the {@link FeedBack} with the corresponding ID.
      *
      * @param id the ID of the entity to be retrieved
      * @return the entity with the corresponding ID
-     * @throws NotFoundException if there is no {@code ReachInvite} with the provided ID.
+     * @throws NotFoundException if there is no {@code FeedBack} with the provided ID.
      */
     @ApiMethod(
             name = "get",
-            path = "reachInvite/{id}",
+            path = "feedBack/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public ReachInvite get(@Named("id") Long id) throws NotFoundException {
-        logger.info("Getting ReachInvite with ID: " + id);
-        ReachInvite reachInvite = ofy().load().type(ReachInvite.class).id(id).now();
-        if (reachInvite == null) {
-            throw new NotFoundException("Could not find ReachInvite with ID: " + id);
+    public FeedBack get(@Named("id") Long id) throws NotFoundException {
+        logger.info("Getting FeedBack with ID: " + id);
+        FeedBack feedBack = ofy().load().type(FeedBack.class).id(id).now();
+        if (feedBack == null) {
+            throw new NotFoundException("Could not find FeedBack with ID: " + id);
         }
-        return reachInvite;
+        return feedBack;
     }
 
     /**
-     * Inserts a new {@code ReachInvite}.
+     * Inserts a new {@code FeedBack}.
      */
     @ApiMethod(
             name = "insert",
-            path = "reachInvite",
+            path = "feedBack",
             httpMethod = ApiMethod.HttpMethod.POST)
-    public ReachInvite insert(ReachInvite reachInvite) {
+    public FeedBack insert(FeedBack feedBack) {
         // Typically in a RESTful API a POST does not have a known ID (assuming the ID is used in the resource path).
-        // You should validate that reachInvite.id has not been set. If the ID type is not supported by the
+        // You should validate that feedBack.id has not been set. If the ID type is not supported by the
         // Objectify ID generator, e.g. long or String, then you should generate the unique ID yourself prior to saving.
         //
         // If your client provides the ID then you should probably use PUT instead.
-        ofy().save().entity(reachInvite).now();
-        logger.info("Created ReachInvite with ID: " + reachInvite.getId());
+        ofy().save().entity(feedBack).now();
+        logger.info("Created FeedBack with ID: " + feedBack.getId());
 
-        return ofy().load().entity(reachInvite).now();
+        return ofy().load().entity(feedBack).now();
     }
 
     /**
-     * Updates an existing {@code ReachInvite}.
+     * Updates an existing {@code FeedBack}.
      *
-     * @param id          the ID of the entity to be updated
-     * @param reachInvite the desired state of the entity
+     * @param id       the ID of the entity to be updated
+     * @param feedBack the desired state of the entity
      * @return the updated version of the entity
      * @throws NotFoundException if the {@code id} does not correspond to an existing
-     *                           {@code ReachInvite}
+     *                           {@code FeedBack}
      */
     @ApiMethod(
             name = "update",
-            path = "reachInvite/{id}",
+            path = "feedBack/{id}",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public ReachInvite update(@Named("id") Long id, ReachInvite reachInvite) throws NotFoundException {
+    public FeedBack update(@Named("id") Long id, FeedBack feedBack) throws NotFoundException {
         // TODO: You should validate your ID parameter against your resource's ID here.
         checkExists(id);
-        ofy().save().entity(reachInvite).now();
-        logger.info("Updated ReachInvite: " + reachInvite);
-        return ofy().load().entity(reachInvite).now();
+        ofy().save().entity(feedBack).now();
+        logger.info("Updated FeedBack: " + feedBack);
+        return ofy().load().entity(feedBack).now();
     }
 
     /**
-     * Deletes the specified {@code ReachInvite}.
+     * Deletes the specified {@code FeedBack}.
      *
      * @param id the ID of the entity to delete
      * @throws NotFoundException if the {@code id} does not correspond to an existing
-     *                           {@code ReachInvite}
+     *                           {@code FeedBack}
      */
     @ApiMethod(
             name = "remove",
-            path = "reachInvite/{id}",
+            path = "feedBack/{id}",
             httpMethod = ApiMethod.HttpMethod.DELETE)
     public void remove(@Named("id") Long id) throws NotFoundException {
         checkExists(id);
-        ofy().delete().type(ReachInvite.class).id(id).now();
-        logger.info("Deleted ReachInvite with ID: " + id);
+        ofy().delete().type(FeedBack.class).id(id).now();
+        logger.info("Deleted FeedBack with ID: " + id);
     }
 
     /**
@@ -128,27 +126,27 @@ public class ReachInviteEndpoint {
      */
     @ApiMethod(
             name = "list",
-            path = "reachInvite",
+            path = "feedBack",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public CollectionResponse<ReachInvite> list(@Nullable @Named("cursor") String cursor, @Nullable @Named("limit") Integer limit) {
+    public CollectionResponse<FeedBack> list(@Nullable @Named("cursor") String cursor, @Nullable @Named("limit") Integer limit) {
         limit = limit == null ? DEFAULT_LIST_LIMIT : limit;
-        Query<ReachInvite> query = ofy().load().type(ReachInvite.class).limit(limit);
+        Query<FeedBack> query = ofy().load().type(FeedBack.class).limit(limit);
         if (cursor != null) {
             query = query.startAt(Cursor.fromWebSafeString(cursor));
         }
-        QueryResultIterator<ReachInvite> queryIterator = query.iterator();
-        List<ReachInvite> reachInviteList = new ArrayList<ReachInvite>(limit);
+        QueryResultIterator<FeedBack> queryIterator = query.iterator();
+        List<FeedBack> feedBackList = new ArrayList<FeedBack>(limit);
         while (queryIterator.hasNext()) {
-            reachInviteList.add(queryIterator.next());
+            feedBackList.add(queryIterator.next());
         }
-        return CollectionResponse.<ReachInvite>builder().setItems(reachInviteList).setNextPageToken(queryIterator.getCursor().toWebSafeString()).build();
+        return CollectionResponse.<FeedBack>builder().setItems(feedBackList).setNextPageToken(queryIterator.getCursor().toWebSafeString()).build();
     }
 
     private void checkExists(Long id) throws NotFoundException {
         try {
-            ofy().load().type(ReachInvite.class).id(id).safe();
+            ofy().load().type(FeedBack.class).id(id).safe();
         } catch (com.googlecode.objectify.NotFoundException e) {
-            throw new NotFoundException("Could not find ReachInvite with ID: " + id);
+            throw new NotFoundException("Could not find FeedBack with ID: " + id);
         }
     }
 }
