@@ -1,0 +1,46 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF"
+    tools:context="reach.project.coreViews.EditProfileFragment">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/question3"
+            android:textColor="@color/reach_color"
+            android:textSize="18sp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Any feedback or queries?" />
+        <EditText
+            android:id="@+id/query"
+            android:gravity="top"
+            android:padding="10dp"
+            android:layout_centerHorizontal="true"
+            android:hint="Click to type"
+            android:textSize="16sp"
+            android:layout_margin="20dp"
+            android:background="@drawable/edittext_background"
+            android:layout_below="@id/question3"
+            android:layout_width="match_parent"
+            android:layout_height="200dp" />
+        <Button
+            android:id="@+id/send_feedback"
+            android:layout_below="@id/query"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="30dp"
+            android:layout_width="220dp"
+            android:layout_height="40dp"
+            android:padding="0dp"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:background="@drawable/number_button_selector"
+            android:textColor="#FFFFFF"
+            android:text="Send Feedback"/>
+    </RelativeLayout>
+</RelativeLayout>

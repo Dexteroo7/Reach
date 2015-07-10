@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@android:color/transparent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:id="@+id/done"
+        android:orientation="horizontal"
+        android:background="@drawable/number_text_selector"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:padding="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="Request Invite"
+            android:textSize="18sp"
+            android:layout_gravity="center_vertical"
+            android:textColor="@color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/next_white"
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/exit"
+        android:orientation="horizontal"
+        android:background="@drawable/number_text_selector"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:padding="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/prev_white"
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
+        <TextView
+            android:text="Back"
+            android:textSize="18sp"
+            android:layout_gravity="center_vertical"
+            android:textColor="@color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/text2"
+        android:visibility="invisible"
+        android:gravity="center"
+        android:text="We will send you the invite over email within 6 hours"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/exit"
+        android:layout_marginBottom="5dp"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content" />
+    <EditText
+        android:id="@+id/iCode"
+        android:layout_width="wrap_content"
+        android:layout_above="@id/text2"
+        android:layout_marginBottom="5dp"
+        android:layout_height="40dp"
+        android:inputType="textEmailAddress"
+        android:layout_centerHorizontal="true"
+        android:textCursorDrawable="@null"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:background="@drawable/edittext_white"
+        android:padding="10dp"
+        android:textSize="18sp"
+        android:textColorHint="#b2b2b2"
+        android:hint="Email address" />
+</RelativeLayout>

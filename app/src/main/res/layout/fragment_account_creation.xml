@@ -1,0 +1,202 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="reach.project.onBoarding.SplashFragment">
+    <ImageView
+        android:src="@drawable/playstore_2"
+        android:scaleType="centerCrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:layout_weight="0.7">
+            <TextView
+                android:id="@+id/tourText"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="30dp"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="Create your profile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <FrameLayout
+                android:id="@+id/profilePhoto"
+                android:layout_below="@id/tourText"
+                android:src="@drawable/hide"
+                android:textColor="@color/reach_blue"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_centerHorizontal="true"
+                android:layout_margin="30dp" >
+                <ImageView
+                    android:id="@+id/circle"
+                    android:background="@drawable/abc"
+                    android:layout_gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+                <ImageView
+                    android:id="@+id/displayPic"
+                    android:layout_margin="6dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+                <TextView
+                    android:id="@+id/uploadText"
+                    android:text="Upload\nPhoto"
+                    android:layout_gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </FrameLayout>
+        </RelativeLayout>
+        <FrameLayout
+            android:layout_weight="0.3"
+            android:background="#90000000"
+            android:layout_width="match_parent"
+            android:layout_height="0dp">
+            <RelativeLayout
+                android:id="@+id/bottomPart1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <LinearLayout
+                    android:id="@+id/importMusic"
+                    android:background="@drawable/number_text_selector"
+                    android:orientation="horizontal"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:padding="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="NEXT"
+                        android:textSize="18sp"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <ImageView
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/next_white"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp" />
+                </LinearLayout>
+                <EditText
+                    android:id="@+id/firstName"
+                    android:layout_above="@id/importMusic"
+                    android:layout_width="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:layout_height="40dp"
+                    android:textCursorDrawable="@null"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:background="@drawable/edittext_white"
+                    android:padding="10dp"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:lines="1"
+                    android:inputType="text"
+                    android:textColorHint="#b2b2b2"
+                    android:hint="     Enter your name     " />
+                <EditText
+                    android:id="@+id/rCode"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:textCursorDrawable="@null"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:background="@drawable/edittext_white"
+                    android:padding="7dp"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:lines="1"
+                    android:inputType="text"
+                    android:textColorHint="#b2b2b2"
+                    android:hint="Promo code" />
+            </RelativeLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:gravity="center"
+                android:id="@+id/bottomPart2"
+                android:visibility="invisible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <TextView
+                    android:id="@+id/syncStatus"
+                    android:text="Searching for music"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <ProgressBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <RelativeLayout
+                android:id="@+id/bottomPart3"
+                android:visibility="invisible"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <LinearLayout
+                    android:id="@+id/nextBtn"
+                    android:orientation="horizontal"
+                    android:background="@drawable/number_text_selector"
+                    android:visibility="visible"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:padding="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="NEXT"
+                        android:textSize="18sp"
+                        android:layout_gravity="center_vertical"
+                        android:textColor="@color/white"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <ImageView
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/next_white"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/referralCode"
+                    android:layout_above="@id/nextBtn"
+                    android:layout_marginBottom="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:text="found on your device"/>
+                <TextView
+                    android:id="@+id/telephoneNumber"
+                    android:layout_above="@id/referralCode"
+                    android:layout_width="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:text="250 songs" />
+            </RelativeLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

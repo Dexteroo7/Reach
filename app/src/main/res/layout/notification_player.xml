@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="10dp"
+    android:id="@+id/Nplayer"
+    android:background="@drawable/border_shadow_black">
+    <RelativeLayout
+        android:id="@+id/Nbuttons"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+        <ImageView
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:src="@drawable/rwd_selector"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:id="@+id/NprevTrack"/>
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/pause_white_selector"
+            android:layout_centerInParent="true"
+            android:layout_toRightOf="@id/NprevTrack"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:id="@+id/Npause_play"/>
+        <ImageView
+            android:id="@+id/NnextTrack"
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:layout_toRightOf="@id/Npause_play"
+            android:src="@drawable/fwd_selector" />
+        <ImageButton
+            android:id="@+id/NcloseButton"
+            android:src="@drawable/close_button"
+            android:scaleType="fitCenter"
+            android:background="@drawable/close_selector"
+            android:layout_toRightOf="@id/NnextTrack"
+            android:padding="7dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp" />
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="2dp"
+        android:id="@+id/NsongNamePlaying"
+        android:text="Song Name"
+        android:textSize="17sp"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/Nbuttons"
+        android:textColor="@color/white"
+        android:ellipsize="marquee"
+        android:singleLine="true"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/NartistName"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/Nbuttons"
+        android:text="Artist Name"
+        android:layout_below="@id/NsongNamePlaying"
+        android:textSize="14sp"
+        android:visibility="visible"
+        android:textColor="#cccccc"
+        android:singleLine="true"
+        android:ellipsize="marquee"/>
+</RelativeLayout>
