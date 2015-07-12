@@ -26,7 +26,7 @@ import com.viewpagerindicator.CirclePageIndicator;
 
 import java.io.IOException;
 
-import reach.backend.entities.userApi.model.OldUserContainer;
+import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.DoWork;
@@ -147,21 +147,21 @@ public class NumberVerification extends Fragment {
             bottomPart2.setVisibility(View.VISIBLE);
         }
 
-        final class GetOldAccount extends AsyncTask<String, Void, Pair<OldUserContainer, String>> {
+        final class GetOldAccount extends AsyncTask<String, Void, Pair<OldUserContainerNew, String>> {
 
             @Override
-            protected final Pair<OldUserContainer, String> doInBackground (final String... params) {
+            protected final Pair<OldUserContainerNew, String> doInBackground (final String... params) {
 
-                return new Pair<>(MiscUtils.autoRetry(new DoWork<OldUserContainer>() {
+                return new Pair<>(MiscUtils.autoRetry(new DoWork<OldUserContainerNew>() {
                     @Override
-                    protected OldUserContainer doWork () throws IOException {
-                        return StaticData.userEndpoint.isAccountPresent(params[0]).execute();
+                    protected OldUserContainerNew doWork () throws IOException {
+                        return StaticData.userEndpoint.isAccountPresentNew(params[0]).execute();
                     }
-                }, Optional.<Predicate<OldUserContainer>> absent()).orNull(), params[0]);
+                }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull(), params[0]);
             }
 
             @Override
-            protected void onPostExecute (final Pair<OldUserContainer, String> pair) {
+            protected void onPostExecute (final Pair<OldUserContainerNew, String> pair) {
 
                 super.onPostExecute(pair);
 

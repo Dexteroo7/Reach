@@ -4,7 +4,7 @@ import com.google.common.base.Optional;
 
 import java.util.HashSet;
 
-import reach.backend.entities.userApi.model.OldUserContainer;
+import reach.backend.entities.userApi.model.OldUserContainerNew;
 
 /**
  * Created by Dexter on 13-04-2015.
@@ -48,11 +48,9 @@ public interface SuperInterface {
                         String artistName,
                         long duration); //MusicListFragment
 
-    void startAccountCreation(Optional<OldUserContainer> container); //NumberVerificationFragment
+    void startAccountCreation(Optional<OldUserContainerNew> container); //NumberVerificationFragment
 
     void startMusicListFragment(long id, String albumName, String artistName, String playListName, int type);
-
-    void onNextClicked(); //InviteFragment
 
 //    void OnSplash(); //SplashFragment
 

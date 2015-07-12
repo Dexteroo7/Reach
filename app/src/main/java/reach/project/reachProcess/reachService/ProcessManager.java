@@ -521,8 +521,6 @@ public class ProcessManager extends Service implements
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
         final String toSend = new Gson().toJson(musicData, MusicData.class);
-        Log.i("Downloader", "UPDATING SONG DETAILS");
-        sendMessage(this, Optional.of(toSend), REPLY_LATEST_MUSIC);
         SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS).edit(), toSend);
         switch (notificationState) {
 
@@ -591,7 +589,7 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
-        sendMessage(this, Optional.<MusicData>absent(), REPLY_PAUSED);
+        sendMessage(this, Optional.absent(), REPLY_PAUSED);
     }
 
     @Override
@@ -600,14 +598,14 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
-        sendMessage(this, Optional.<MusicData>absent(), REPLY_UN_PAUSED);
+        sendMessage(this, Optional.absent(), REPLY_UN_PAUSED);
     }
 
     @Override
     public void musicPlayerDead() {
 
         musicHandler.close();
-        sendMessage(this, Optional.<MusicData>absent(), REPLY_MUSIC_DEAD);
+        sendMessage(this, Optional.absent(), REPLY_MUSIC_DEAD);
         Log.i("Downloader", "Sent music player dead");
         switch (notificationState) {
 
@@ -1007,7 +1005,7 @@ public class ProcessManager extends Service implements
     public void errorReport(String songName, String missType) {
 
 //        pushNextSong(nextSong(Optional.<MusicData>absent(), false));
-        sendMessage(this, Optional.<MusicData>absent(), REPLY_ERROR);
+        sendMessage(this, Optional.absent(), REPLY_ERROR);
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(missType)

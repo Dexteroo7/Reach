@@ -5,8 +5,13 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.PropertyProjection;
+import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultIterator;
-import com.google.appengine.api.datastore.RawValue;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
@@ -330,56 +335,53 @@ public class ReachUserEndpoint {
     public DataCall getStatsNew(@Named("cursor") String cursor) {
 
         final ImmutableList.Builder<DataCall.Statistics> builder = new ImmutableList.Builder<>();
+        final DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
         final QueryResultIterator<ReachUser> userQueryResultIterator;
-        final QueryResultIterator friendsCount;
+        final Iterator<Entity> friendsIterator;
+        final Query friendsQuery = new Query();
+        friendsQuery.addProjection(new PropertyProjection("myReach", ReachUser.class));
 
         if (cursor != null && !cursor.trim().equals("")) {
 
             userQueryResultIterator = ofy().load().type(ReachUser.class)
                     .startAt(Cursor.fromWebSafeString(cursor))
                     .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
-                    .limit(100)
+                    .limit(200)
                     .iterator();
-            friendsCount = ofy().load().type(ReachUser.class)
-                    .startAt(Cursor.fromWebSafeString(cursor))
-                    .project("myReach")
-                    .limit(100)
-                    .iterator();
-        }
-        else {
+            friendsIterator = datastoreService.prepare(friendsQuery).asIterator(FetchOptions.Builder
+                    .withLimit(200)
+                    .startCursor(Cursor.fromWebSafeString(cursor)));
+        } else {
             userQueryResultIterator = ofy().load().type(ReachUser.class)
                     .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
-                    .limit(100)
+                    .limit(200)
                     .iterator();
-            friendsCount = ofy().load().type(ReachUser.class)
-                    .project("myReach")
-                    .limit(100)
-                    .iterator();
+            friendsIterator = datastoreService.prepare(friendsQuery).asIterator(FetchOptions.Builder.withLimit(200));
         }
         ReachUser reachUser;
         int count = 0;
 
-        while (userQueryResultIterator.hasNext() && friendsCount.hasNext()) {
+        while (userQueryResultIterator.hasNext() && friendsIterator.hasNext()) {
 
             reachUser = userQueryResultIterator.next();
-            final RawValue rawValue = (RawValue) friendsCount.next();
-            final int friends;
-            if(rawValue == null)
-                friends = 0;
+            final Entity friend = friendsIterator.next();
+            final int friendsCount;
+            if (friend == null)
+                friendsCount = 0;
             else {
 
-                final Iterator ff = ((Iterable)rawValue.asType(Iterable.class)).iterator();
+                final Iterator ff = ((Iterable) friend.getProperty("myReach")).iterator();
                 int i = 0;
                 while (ff.hasNext() && ff.next() != null)
                     i++;
-                friends = i;
+                friendsCount = i;
             }
 
             builder.add(new DataCall.Statistics(
                     reachUser.getUserName(),
                     reachUser.getPhoneNumber(),
                     reachUser.getNumberOfSongs(),
-                    friends,
+                    friendsCount,
                     reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
             count++;
         }
@@ -387,7 +389,7 @@ public class ReachUserEndpoint {
         //if no more friends return null cursor
         return new DataCall(
                 builder.build(),
-                (count == 100) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
+                (count == 200) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
     }
 
     @ApiMethod(
@@ -666,23 +668,32 @@ public class ReachUserEndpoint {
     }
 
     @ApiMethod(
-            name = "isAccountPresent",
-            path = "user/isAccountPresent/{phoneNumber}",
+            name = "isAccountPresentNew",
+            path = "user/isAccountPresentNew/{phoneNumber}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public OldUserContainer isAccountPresent(@Named("phoneNumber") String phoneNumber) {
+    public OldUserContainerNew isAccountPresentNew(@Named("phoneNumber") String phoneNumber) {
 
         final ReachUser oldUser = ofy().load().type(ReachUser.class)
-                .filter("phoneNumber in", Collections.singletonList(phoneNumber)).first().now();
-        if (oldUser != null) {
-            final String[] userName = oldUser.getUserName().trim().split(" ");
-            if (userName.length == 0)
-                return null;
-            if (userName.length == 1)
-                return new OldUserContainer(userName[0], "", oldUser.getImageId());
-            else
-                return new OldUserContainer(userName[0], userName[1], oldUser.getImageId());
-        }
+                .filter("phoneNumber in", Collections.singletonList(phoneNumber))
+                .first().now();
+        if (oldUser != null)
+            return new OldUserContainerNew(
+                    oldUser.getUserName(), oldUser.getPromoCode(), oldUser.getImageId());
         return null;
+    }
+
+    @ApiMethod(
+            name = "storePromoCode",
+            path = "user/storePromoCode/{id}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public MyString storePromoCode(@Named("id") long id, @Named("promoCode") String promoCode) {
+
+        final ReachUser oldUser = ofy().load().type(ReachUser.class).id(id).now();
+        if (oldUser == null)
+            return new MyString("false");
+        oldUser.setPromoCode(promoCode);
+        ofy().save().entity(oldUser).now();
+        return new MyString("true");
     }
 
     @ApiMethod(
@@ -760,5 +771,26 @@ public class ReachUserEndpoint {
                 .param("total", 0 + "")
                 .retryOptions(RetryOptions.Builder.withTaskRetryLimit(0)));
         return new MyString("submitted");
+    }
+
+    ///stuff to remove
+    @ApiMethod(
+            name = "isAccountPresent",
+            path = "user/isAccountPresent/{phoneNumber}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public OldUserContainer isAccountPresent(@Named("phoneNumber") String phoneNumber) {
+
+        final ReachUser oldUser = ofy().load().type(ReachUser.class)
+                .filter("phoneNumber in", Collections.singletonList(phoneNumber)).first().now();
+        if (oldUser != null) {
+            final String[] userName = oldUser.getUserName().trim().split(" ");
+            if (userName.length == 0)
+                return null;
+            if (userName.length == 1)
+                return new OldUserContainer(userName[0], "", oldUser.getImageId());
+            else
+                return new OldUserContainer(userName[0], userName[1], oldUser.getImageId());
+        }
+        return null;
     }
 }

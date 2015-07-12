@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,9 +27,7 @@ import java.lang.ref.WeakReference;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
 
 
 public class InviteFragment extends Fragment {
@@ -45,21 +42,6 @@ public class InviteFragment extends Fragment {
             Log.i("Ayush", "Reusing invite fragment object :)");
         }
         return fragment;
-    }
-
-    public InviteFragment() {
-    }
-    private SuperInterface mListener;
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (SuperInterface) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnInviteDialogListener");
-        }
     }
 
     private class InviteListAdapter extends ArrayAdapter<String>{
@@ -125,13 +107,7 @@ public class InviteFragment extends Fragment {
         if(actionBar != null)
             actionBar.setTitle("Invite Friends");
         final ListView inviteList = (ListView) rootView.findViewById(R.id.listView);
-
         final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
-        final String [] refCode = new String[]{SharedPrefUtils.getInviteCode(preferences)};
-        if(TextUtils.isEmpty(refCode[0]))
-            SharedPrefUtils.storeInviteCode(preferences.edit(), (refCode[0] = MiscUtils.getInviteCode()));
-        ((TextView)rootView.findViewById(R.id.refCode)).setText(refCode[0]);
-
         final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};
         final String [] packageNames = {"com.whatsapp","com.facebook.orca","com.twitter.android","com.google.android.apps.plus"};
 
@@ -154,7 +130,7 @@ public class InviteFragment extends Fragment {
                 final Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT,
-                        "Hey! Checkout and download my phone music collection with just a click! Use my invite code " + refCode[0] +
+                        "Hey! Checkout and download my phone music collection with just a click!" +
                                 ".\nhttp://letsreach.co/app\n--\n"+SharedPrefUtils.getUserName(preferences));
                 sendIntent.setType("text/plain");
                 sendIntent.setPackage(packageNames[position]);
@@ -167,11 +143,5 @@ public class InviteFragment extends Fragment {
             }
         });
         return rootView;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 }

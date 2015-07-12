@@ -165,7 +165,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     {
         SendSMS smsObj = new SendSMS();
         smsObj.setparams("alerts.sinfini.com","sms","Aed8065339b18aedfbad998aeec2ce9b3","REACHM");
-        smsObj.send_sms(number, "Hey! Checkout and download my phone music collection with just a click! Use my invite code "+MiscUtils.getInviteCode()+".\nhttp://letsreach.co/app\n--\n"+ SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)), "dlr_url");
+        smsObj.send_sms(number, "Hey! Checkout and download my phone music collection with just a click!"+".\nhttp://letsreach.co/app\n--\n"+ SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)), "dlr_url");
         /*smsObj.schedule_sms("99xxxxxxxx", "message", "http://www.yourdomainname.domain/yourdlrpage&custom=XX",
                 "YYYY-MM-DD HH:MM:SS");
         smsObj.unicode_sms("99xxxxxxxx", "message", "http://www.yourdomainname.domain/yourdlrpage&custom=XX","1");

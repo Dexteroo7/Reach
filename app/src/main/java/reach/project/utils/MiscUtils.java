@@ -43,7 +43,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -86,7 +85,7 @@ public enum MiscUtils {
                 (minutes == 0 ? "00" : minutes < 10 ? minutes : minutes) + ":" +
                 (seconds == 0 ? "00" : seconds < 10 ? seconds : seconds);
 
-        return toSend.startsWith(":00") ? toSend.substring(3) : toSend;
+        return toSend.startsWith("00:") ? toSend.substring(3) : toSend;
     }
 
     public static int dpToPx(int dp) {
@@ -461,14 +460,6 @@ public enum MiscUtils {
         return h;
     }
 
-    public static String getInviteCode() {
-
-        final Random random = new Random();
-        final int lower = random.nextInt(14 - 2 + 1) + 2;
-        final int upper = random.nextInt(76 - 8 + 1) + 8;
-        return lower * 7 + "" + upper * 13;
-    }
-
 //    public static int getReachDatabaseCount(ContentResolver contentResolver) {
 //
 //        final Cursor countCursor;
@@ -545,9 +536,9 @@ public enum MiscUtils {
      * Performs a task, retries upon failure with exponential back-off.
      * Kindly don't use on UI thread.
      *
+     * @param <T>       the return type of task
      * @param task      the task that needs to be performed
      * @param predicate the extra condition for failure
-     * @param <T>       the return type of task
      * @return the result/output of performing the task
      */
     public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,

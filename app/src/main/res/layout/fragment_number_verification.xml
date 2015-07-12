@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/splash_bg"
-    android:theme="@style/AppTheme"
-    tools:context="reach.project.onBoarding.SplashFragment">
+    android:theme="@style/AppTheme">
 
     <ImageView
         android:id="@+id/reach_logo"
