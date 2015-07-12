@@ -189,8 +189,11 @@ public class GcmIntentService extends IntentService {
             final String[] splitter = message.split("`");
 
             final Intent viewIntent;
-            viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            viewIntent = new Intent(this, PushActivity.class);
+            viewIntent.putExtra("type",3);
+            viewIntent.putExtra("manual_title", splitter[2].trim());
+            viewIntent.putExtra("manual_text", splitter[3].trim());
+            viewIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, message.hashCode(), viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             final NotificationCompat.Builder notificationBuilder =

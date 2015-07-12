@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -119,6 +118,13 @@ public class PushActivity extends Activity {
             else if (type == 2) {
                 userName.setText("Click and Grab!");
                 textView1.setText("You can add multiple songs instantly to your Reach Queue by just clicking on the songs here.");
+            }
+            else if (type == 3) {
+                Picasso.with(PushActivity.this)
+                        .load(R.drawable.icon_plain)
+                        .into(userImageView);
+                userName.setText(getIntent().getStringExtra("manual_title"));
+                textView1.setText(getIntent().getStringExtra("manual_text"));
             }
         }
     }
