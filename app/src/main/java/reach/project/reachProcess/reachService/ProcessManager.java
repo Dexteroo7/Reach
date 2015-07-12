@@ -47,7 +47,6 @@ import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.database.sql.ReachSongHelper;
-import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.SharedPrefUtils;
@@ -522,7 +521,9 @@ public class ProcessManager extends Service implements
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
         final String toSend = new Gson().toJson(musicData, MusicData.class);
-        SharedPrefUtils.storeLastPlayed(getSharedPreferences("Reach - Player", MODE_MULTI_PROCESS).edit(), toSend);
+        Log.i("Downloader", "UPDATING SONG DETAILS");
+        sendMessage(this, Optional.of(toSend), REPLY_LATEST_MUSIC);
+        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS).edit(), toSend);
         switch (notificationState) {
 
             case Network:
@@ -581,7 +582,6 @@ public class ProcessManager extends Service implements
 
     @Override
     public void updateDuration(String formattedDuration) {
-        //TODO ayushNoob
         sendMessage(this, Optional.of(formattedDuration), REPLY_DURATION);
     }
 

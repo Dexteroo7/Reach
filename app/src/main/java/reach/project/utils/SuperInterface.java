@@ -1,6 +1,10 @@
 package reach.project.utils;
 
+import com.google.common.base.Optional;
+
 import java.util.HashSet;
+
+import reach.backend.entities.userApi.model.OldUserContainer;
 
 /**
  * Created by Dexter on 13-04-2015.
@@ -11,7 +15,7 @@ public interface SuperInterface {
 
     void onAccountCreated(); //AccountCreationFragment
 
-    void startNumberVerification();
+    void accountCreationError();
 
     /**
      * ContactsListFragment
@@ -44,13 +48,13 @@ public interface SuperInterface {
                         String artistName,
                         long duration); //MusicListFragment
 
-    void startAccountCreation(); //NumberVerificationFragment
+    void startAccountCreation(Optional<OldUserContainer> container); //NumberVerificationFragment
 
     void startMusicListFragment(long id, String albumName, String artistName, String playListName, int type);
 
     void onNextClicked(); //InviteFragment
 
-    void OnSplash(); //SplashFragment
+//    void OnSplash(); //SplashFragment
 
     void onOpenProfile();
 
@@ -59,5 +63,4 @@ public interface SuperInterface {
     void onPushNext(HashSet<TransferSong> songsList); //PushSongFragment
 
     void goLibrary(long id); //UserProfileView
-
 }

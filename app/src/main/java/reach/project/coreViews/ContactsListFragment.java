@@ -77,7 +77,6 @@ import reach.project.adapter.ReachAllContactsAdapter;
 import reach.project.adapter.ReachContactsAdapter;
 import reach.project.core.NotificationActivity;
 import reach.project.core.PushActivity;
-import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.database.ReachAlbumDatabase;
 import reach.project.database.ReachArtistDatabase;

@@ -23,7 +23,7 @@ public class SplashFragment extends Fragment {
         rootView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mListener.OnSplash();
+                //mListener.OnSplash();
             }
         }, 2500);
         return rootView;

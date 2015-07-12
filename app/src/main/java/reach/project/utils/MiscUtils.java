@@ -28,6 +28,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -70,7 +71,8 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
  */
 
 //TODO fix nonsense string wraps
-public enum  MiscUtils {;
+public enum MiscUtils {
+    ;
 
     public static String combinationFormatter(final long millis) {
 
@@ -80,13 +82,11 @@ public enum  MiscUtils {;
                 - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
         final long hours = TimeUnit.MILLISECONDS.toHours(millis);
 
-        final String toSend = (hours == 0 ? "00" : hours < 10 ? String.valueOf("0" + hours) :
-                String.valueOf(hours)) + ":" + (minutes == 0 ? "00" : minutes < 10 ? String.valueOf("0" + minutes) :
-                String.valueOf(minutes)) + ":" + (seconds == 0 ? "00" : seconds < 10 ? String.valueOf("0" + seconds) :
-                String.valueOf(seconds));
+        final String toSend = (hours == 0 ? "00" : hours < 10 ? hours : hours) + ":" +
+                (minutes == 0 ? "00" : minutes < 10 ? minutes : minutes) + ":" +
+                (seconds == 0 ? "00" : seconds < 10 ? seconds : seconds);
 
-        if(toSend.startsWith("00:")) return toSend.substring(3);
-        return toSend;
+        return toSend.startsWith(":00") ? toSend.substring(3) : toSend;
     }
 
     public static int dpToPx(int dp) {
@@ -103,16 +103,24 @@ public enum  MiscUtils {;
                 new Date(seconds));
     }
 
+    public static void closeAndIgnore(Closeable... closeables) {
+        for (Closeable closeable : closeables)
+            if (closeable != null)
+                try {
+                    closeable.close();
+                } catch (IOException ignored) {
+                }
+    }
+
     public static String generateInitials(String name) {
 
         try {
-            final String [] splitter = name.trim().split(" ");
+            final String[] splitter = name.trim().split(" ");
             if (splitter.length > 1)
                 return (String.valueOf(splitter[0].charAt(0)) + splitter[1].charAt(0)).toUpperCase();
             else
                 return String.valueOf(splitter[0].charAt(0)).toUpperCase();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return "A";
@@ -140,7 +148,7 @@ public enum  MiscUtils {;
     }
 
     private static boolean regionMatches(CharSequence cs, boolean ignoreCase, int thisStart,
-                                             CharSequence substring, int start, int length)    {
+                                         CharSequence substring, int start, int length) {
         if (cs instanceof String && substring instanceof String) {
             return ((String) cs).regionMatches(ignoreCase, thisStart, (String) substring, start, length);
         } else {
@@ -150,13 +158,13 @@ public enum  MiscUtils {;
 
     public static void setEmptyTextforListView(ListView listView, String emptyText) {
 
-        if(listView.getContext() == null)
+        if (listView.getContext() == null)
             return;
         final TextView emptyTextView = new TextView(listView.getContext());
         emptyTextView.setText(emptyText);
 
         final ViewParent parent = listView.getParent();
-        if(parent == null ||
+        if (parent == null ||
                 parent.getClass() == null ||
                 TextUtils.isEmpty(parent.getClass().getName()))
             return;
@@ -168,8 +176,7 @@ public enum  MiscUtils {;
             final FrameLayout frameLayout = (FrameLayout) parent;
             frameLayout.removeViewAt(1);
             frameLayout.addView(emptyTextView);
-        }
-        else if (parentType.equals("android.widget.RelativeLayout")) {
+        } else if (parentType.equals("android.widget.RelativeLayout")) {
 
             final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
@@ -183,13 +190,13 @@ public enum  MiscUtils {;
 
     public static void setEmptyTextforGridView(GridView gridView, String emptyText) {
 
-        if(gridView.getContext() == null)
+        if (gridView.getContext() == null)
             return;
         final TextView emptyTextView = new TextView(gridView.getContext());
         emptyTextView.setText(emptyText);
 
         final ViewParent parent = gridView.getParent();
-        if(parent == null ||
+        if (parent == null ||
                 parent.getClass() == null ||
                 TextUtils.isEmpty(parent.getClass().getName()))
             return;
@@ -201,8 +208,7 @@ public enum  MiscUtils {;
             final FrameLayout frameLayout = (FrameLayout) parent;
             frameLayout.removeViewAt(1);
             frameLayout.addView(emptyTextView);
-        }
-        else if (parentType.equals("android.widget.RelativeLayout")) {
+        } else if (parentType.equals("android.widget.RelativeLayout")) {
 
             final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
@@ -216,15 +222,15 @@ public enum  MiscUtils {;
 
     public static ListView addLoadingToListView(ListView listView) {
 
-        if(listView.getContext() == null)
+        if (listView.getContext() == null)
             return listView;
         final ProgressBar loading = new ProgressBar(listView.getContext());
         loading.setIndeterminate(true);
 
         final ViewParent parent = listView.getParent();
-        if(parent == null ||
-           parent.getClass() == null ||
-           TextUtils.isEmpty(parent.getClass().getName()))
+        if (parent == null ||
+                parent.getClass() == null ||
+                TextUtils.isEmpty(parent.getClass().getName()))
             return listView;
         final String parentType = parent.getClass().getName();
 
@@ -233,8 +239,7 @@ public enum  MiscUtils {;
             listView.setEmptyView(loading);
             final FrameLayout frameLayout = (FrameLayout) parent;
             frameLayout.addView(loading);
-        }
-        else if (parentType.equals("android.widget.RelativeLayout")) {
+        } else if (parentType.equals("android.widget.RelativeLayout")) {
 
             final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
@@ -257,8 +262,7 @@ public enum  MiscUtils {;
             gridView.setEmptyView(loading);
             final FrameLayout frameLayout = (FrameLayout) parent;
             frameLayout.addView(loading);
-        }
-        else if (parentType.equals("android.widget.RelativeLayout")) {
+        } else if (parentType.equals("android.widget.RelativeLayout")) {
 
             final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
@@ -293,32 +297,33 @@ public enum  MiscUtils {;
         contentResolver.delete(
                 ReachPlayListProvider.CONTENT_URI,
                 ReachPlayListHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId+""});
+                new String[]{userId + ""});
     }
 
     public static void bulkInsertSongs(HashSet<ReachSong> reachSongDatabases,
-                                      Collection<ReachAlbumDatabase> reachAlbumDatabases,
-                                      Collection<ReachArtistDatabase> reachArtistDatabases,
-                                      ContentResolver contentResolver) {
+                                       Collection<ReachAlbumDatabase> reachAlbumDatabases,
+                                       Collection<ReachArtistDatabase> reachArtistDatabases,
+                                       ContentResolver contentResolver) {
 
         //Add all songs
-        final ContentValues [] songs = new ContentValues[reachSongDatabases.size()];
-        final ContentValues [] albums = new ContentValues[reachAlbumDatabases.size()];
-        final ContentValues [] artists = new ContentValues[reachArtistDatabases.size()];
+        final ContentValues[] songs = new ContentValues[reachSongDatabases.size()];
+        final ContentValues[] albums = new ContentValues[reachAlbumDatabases.size()];
+        final ContentValues[] artists = new ContentValues[reachArtistDatabases.size()];
 
         int i = 0;
-        for(ReachSong reachSongDatabase : reachSongDatabases) {
+        for (ReachSong reachSongDatabase : reachSongDatabases) {
             songs[i++] = ReachSongHelper.contentValuesCreator(reachSongDatabase);
-        } i = 0;
+        }
+        i = 0;
         Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
 
-        if(reachAlbumDatabases.size() > 0) {
+        if (reachAlbumDatabases.size() > 0) {
             for (ReachAlbumDatabase reachAlbumDatabase : reachAlbumDatabases)
                 albums[i++] = ReachAlbumHelper.contentValuesCreator(reachAlbumDatabase);
             Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
             i = 0;
         }
-        if(reachArtistDatabases.size() > 0) {
+        if (reachArtistDatabases.size() > 0) {
             for (ReachArtistDatabase reachArtistDatabase : reachArtistDatabases)
                 artists[i++] = ReachArtistHelper.contentValuesCreator(reachArtistDatabase);
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
@@ -327,12 +332,12 @@ public enum  MiscUtils {;
     }
 
     public static void bulkInsertPlayLists(HashSet<ReachPlayList> reachPlayListDatabases,
-                                          ContentResolver contentResolver) {
+                                           ContentResolver contentResolver) {
 
-        if(reachPlayListDatabases != null && !reachPlayListDatabases.isEmpty()) {
+        if (reachPlayListDatabases != null && !reachPlayListDatabases.isEmpty()) {
 
             final ContentValues[] playLists = new ContentValues[reachPlayListDatabases.size()];
-            int i=0;
+            int i = 0;
             for (ReachPlayList reachPlayListDatabase : reachPlayListDatabases) {
                 playLists[i++] = ReachPlayListHelper.contentValuesCreator(reachPlayListDatabase);
             }
@@ -348,11 +353,11 @@ public enum  MiscUtils {;
 
         for (ReachSong reachSong : reachSongs) {
 
-            if(reachSong.getAlbum() != null && !reachSong.getAlbum().equals("")) {
+            if (reachSong.getAlbum() != null && !reachSong.getAlbum().equals("")) {
 
                 final ReachAlbumDatabase reachAlbumDatabase;
 
-                if(reachAlbumDatabaseHashMap.containsKey(reachSong.getAlbum()))
+                if (reachAlbumDatabaseHashMap.containsKey(reachSong.getAlbum()))
                     reachAlbumDatabase = reachAlbumDatabaseHashMap.get(reachSong.getAlbum());
                 else {
                     reachAlbumDatabase = new ReachAlbumDatabase();
@@ -364,11 +369,11 @@ public enum  MiscUtils {;
                 reachAlbumDatabaseHashMap.put(reachAlbumDatabase.getAlbumName(), reachAlbumDatabase);
             }
 
-            if(reachSong.getArtist() != null && !reachSong.getArtist().equals("")) {
+            if (reachSong.getArtist() != null && !reachSong.getArtist().equals("")) {
 
                 final ReachArtistDatabase reachArtistDatabase;
 
-                if(reachArtistDatabaseHashMap.containsKey(reachSong.getArtist()))
+                if (reachArtistDatabaseHashMap.containsKey(reachSong.getArtist()))
                     reachArtistDatabase = reachArtistDatabaseHashMap.get(reachSong.getArtist());
                 else {
                     reachArtistDatabase = new ReachArtistDatabase();
@@ -386,11 +391,11 @@ public enum  MiscUtils {;
 
     public static void keyCleanUp(SelectionKey selectionKey) {
 
-        if(selectionKey == null || !selectionKey.isValid())
+        if (selectionKey == null || !selectionKey.isValid())
             return;
         Log.i("Downloader", "Running cleanUp");
         try {
-            if(selectionKey.channel() != null)
+            if (selectionKey.channel() != null)
                 selectionKey.channel().close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -403,7 +408,7 @@ public enum  MiscUtils {;
         return ContentProviderOperation
                 .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
                 .withValues(contentValues)
-                .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " + ReachDatabaseHelper.COLUMN_STATUS + " != ?", new String[]{id+"", ""+ReachDatabase.PAUSED_BY_USER})
+                .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " + ReachDatabaseHelper.COLUMN_STATUS + " != ?", new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER})
                 .build();
     }
 
@@ -411,8 +416,218 @@ public enum  MiscUtils {;
         return new StartDownloadOperation(reachDatabase, contentResolver);
     }
 
-    public synchronized static Runnable startBulkDownloadOperation (List<ReachDatabase> reachDatabases, ContentResolver contentResolver) {
+    public synchronized static Runnable startBulkDownloadOperation(List<ReachDatabase> reachDatabases, ContentResolver contentResolver) {
         return new StartBulkDownloadOperation(reachDatabases, contentResolver);
+    }
+
+    public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
+
+        return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
+            @Override
+            protected MyBoolean doWork() throws IOException {
+                Log.i("Downloader", "Sending message " + message);
+                return StaticData.messagingEndpoint.messagingEndpoint()
+                        .sendMessage(message, hostId, clientId).execute();
+            }
+        }, Optional.<Predicate<MyBoolean>>of(new Predicate<MyBoolean>() {
+            @Override
+            public boolean apply(@Nullable MyBoolean input) {
+                return input == null;
+            }
+        })).orNull();
+    }
+
+    public static File getReachDirectory() {
+
+        final File file = new File(Environment.getExternalStorageDirectory(), ".Reach");
+        if (file.isDirectory()) {
+            Log.i("Downloader", "Using getExternalStorageDirectory");
+            return file;
+        } else if (file.mkdir()) {
+            Log.i("Downloader", "Creating and using getExternalStorageDirectory");
+            return file;
+        }
+        return null;
+    }
+
+    public static long stringToLongHashCode(String string) {
+
+        long h = 1125899906842597L; // prime
+        int len = string.length();
+
+        for (int i = 0; i < len; i++) {
+            h = 31 * h + string.charAt(i);
+        }
+        return h;
+    }
+
+    public static String getInviteCode() {
+
+        final Random random = new Random();
+        final int lower = random.nextInt(14 - 2 + 1) + 2;
+        final int upper = random.nextInt(76 - 8 + 1) + 8;
+        return lower * 7 + "" + upper * 13;
+    }
+
+//    public static int getReachDatabaseCount(ContentResolver contentResolver) {
+//
+//        final Cursor countCursor;
+//        countCursor = contentResolver.query(
+//                ReachDatabaseProvider.CONTENT_URI,
+//                new String[]{ReachDatabaseHelper.COLUMN_ID},
+//                null, null, null);
+//        if(countCursor == null)
+//            return 0;
+//        try {
+//            return countCursor.getCount();
+//        } finally {
+//            countCursor.close();
+//        }
+//    }
+//
+//    /**
+//     * //TODO improve/fix/replace this hack
+//     * @return The current localIP
+//     * @throws IOException
+//     * @throws InterruptedException
+//     */
+//    public static InetAddress getLocalIp() throws IOException, InterruptedException {
+//
+//        final Socket temp = new Socket();
+//        final InetSocketAddress google = new InetSocketAddress("www.google.com", 80);
+//        final InetAddress localIpAddress;
+//        temp.connect(google);
+//        temp.setSoLinger(true, 1);
+//        temp.setReuseAddress(true);
+//        localIpAddress = temp.getLocalAddress();
+//        temp.close();
+//        Thread.sleep(1000L);
+//        return localIpAddress;
+//    }
+
+    public static boolean updateGCM(final long id, final WeakReference reference) {
+
+        final String regId = autoRetry(new DoWork<String>() {
+            @Override
+            protected String doWork() throws IOException {
+
+                final Context context = (Context) reference.get();
+                if (context == null)
+                    return "QUIT";
+                return GoogleCloudMessaging.getInstance(context)
+                        .register("528178870551");
+            }
+        }, Optional.<Predicate<String>>of(new Predicate<String>() {
+            @Override
+            public boolean apply(@Nullable String input) {
+                return TextUtils.isEmpty(input);
+            }
+        })).orNull();
+
+        if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
+            return false;
+        //if everything is fine, send to server
+        Log.i("Ayush", "Uploading newGcmId to server");
+        final Boolean result = autoRetry(new DoWork<Boolean>() {
+            @Override
+            protected Boolean doWork() throws IOException {
+
+                StaticData.userEndpoint.setGCMId(id, regId).execute();
+                Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
+                return true;
+            }
+        }, Optional.<Predicate<Boolean>>absent()).orNull();
+        //set locally
+        return !(result == null || !result);
+    }
+
+    /**
+     * Performs a task, retries upon failure with exponential back-off.
+     * Kindly don't use on UI thread.
+     *
+     * @param task      the task that needs to be performed
+     * @param predicate the extra condition for failure
+     * @param <T>       the return type of task
+     * @return the result/output of performing the task
+     */
+    public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
+                                            @NonNull final Optional<Predicate<T>> predicate) {
+
+        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+
+            try {
+
+                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                final T resultAfterWork = task.doWork();
+                /**
+                 * If the result was not
+                 * desirable we RETRY.
+                 */
+                if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                    continue;
+                /**
+                 * Else we return
+                 */
+                return Optional.fromNullable(resultAfterWork);
+            } catch (InterruptedException | UnknownHostException | NullPointerException e) {
+                e.printStackTrace();
+                return Optional.absent();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Optional.absent();
+    }
+
+    public static String getMusicStorageKey(long serverId) {
+
+        return serverId + "MUSIC";
+    }
+
+    public static String getHistoryStoragekey(long serverId) {
+        return serverId + "HISTORY";
+    }
+
+    /**
+     * Performs a task, retries upon failure with exponential back-off.
+     * This is to be used if returned value is of no importance other than checking for failure.
+     * Automatically delegates to separate thread.
+     *
+     * @param task      the task that needs to be performed
+     * @param predicate the extra condition for failure
+     * @param <T>       the return type of task
+     */
+    public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
+                                          @NonNull final Optional<Predicate<T>> predicate) {
+
+        StaticData.threadPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+
+                    try {
+
+                        Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                        final T resultAfterWork = task.doWork();
+                        /**
+                         * If the result was not
+                         * desirable we RETRY.
+                         */
+                        if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                            continue;
+                        /**
+                         * Else we return
+                         */
+                        return;
+                    } catch (InterruptedException | UnknownHostException e) {
+                        e.printStackTrace();
+                        return;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
     }
 
     private static class StartBulkDownloadOperation implements Runnable {
@@ -431,13 +646,13 @@ public enum  MiscUtils {;
             final ArrayList<ContentProviderOperation> operations =
                     new ArrayList<>();
 
-            for(ReachDatabase reachDatabase : reachDatabases) {
+            for (ReachDatabase reachDatabase : reachDatabases) {
 
                 final ContentValues values = new ContentValues();
-                if(reachDatabase.getProcessed() >= reachDatabase.getLength()) {
+                if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
 
                     values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                    operations.add(getUpdateOperation(values, reachDatabase.getId()) );
+                    operations.add(getUpdateOperation(values, reachDatabase.getId()));
                     continue;
                 }
 
@@ -455,20 +670,20 @@ public enum  MiscUtils {;
                                 reachDatabase.getLogicalClock(), ""));
 
                 final MyBoolean myBoolean = sendGCM(message, reachDatabase.getSenderId(), reachDatabase.getReceiverId());
-                if(myBoolean == null) {
+                if (myBoolean == null) {
                     Log.i("Ayush", "GCM sending resulted in shit");
                     values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                } else if(myBoolean.getGcmexpired()) {
+                } else if (myBoolean.getGcmexpired()) {
                     Log.i("Ayush", "GCM re-registry needed");
                     values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                } else if(myBoolean.getOtherGCMExpired()) {
+                } else if (myBoolean.getOtherGCMExpired()) {
                     Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
                     values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
                 } else {
                     Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
                     values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
                 }
-                operations.add(getUpdateOperation(values, reachDatabase.getId()) );
+                operations.add(getUpdateOperation(values, reachDatabase.getId()));
             }
             try {
                 Log.i("Downloader", "Starting Download op " + operations.size());
@@ -509,13 +724,13 @@ public enum  MiscUtils {;
             final ContentValues values = new ContentValues();
             values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
 
-            if(myBoolean == null) {
+            if (myBoolean == null) {
                 Log.i("Ayush", "GCM sending resulted in shit");
                 values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-            } else if(myBoolean.getGcmexpired()) {
+            } else if (myBoolean.getGcmexpired()) {
                 Log.i("Ayush", "GCM re-registry needed");
                 values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-            } else if(myBoolean.getOtherGCMExpired()) {
+            } else if (myBoolean.getOtherGCMExpired()) {
                 Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
                 values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
             } else {
@@ -529,278 +744,4 @@ public enum  MiscUtils {;
                     new String[]{reachDatabase.getId() + ""}));
         }
     }
-
-    public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
-
-        return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
-            @Override
-            protected MyBoolean doWork() throws IOException {
-                Log.i("Downloader", "Sending message " + message);
-                return StaticData.messagingEndpoint.messagingEndpoint()
-                        .sendMessage(message, hostId, clientId).execute();
-            }
-        }, Optional.<Predicate<MyBoolean>>of(new Predicate<MyBoolean>() {
-            @Override
-            public boolean apply(@Nullable MyBoolean input) {
-                return input == null;
-            }
-        })).orNull();
-    }
-
-    public static File getReachDirectory() {
-
-        final File file = new File(Environment.getExternalStorageDirectory(), ".Reach");
-        if(file.isDirectory()) {
-            Log.i("Downloader", "Using getExternalStorageDirectory");
-            return file;
-        } else if(file.mkdir()) {
-            Log.i("Downloader", "Creating and using getExternalStorageDirectory");
-            return file;
-        }
-        return null;
-    }
-
-//    public static int getReachDatabaseCount(ContentResolver contentResolver) {
-//
-//        final Cursor countCursor;
-//        countCursor = contentResolver.query(
-//                ReachDatabaseProvider.CONTENT_URI,
-//                new String[]{ReachDatabaseHelper.COLUMN_ID},
-//                null, null, null);
-//        if(countCursor == null)
-//            return 0;
-//        try {
-//            return countCursor.getCount();
-//        } finally {
-//            countCursor.close();
-//        }
-//    }
-//
-//    /**
-//     * //TODO improve/fix/replace this hack
-//     * @return The current localIP
-//     * @throws IOException
-//     * @throws InterruptedException
-//     */
-//    public static InetAddress getLocalIp() throws IOException, InterruptedException {
-//
-//        final Socket temp = new Socket();
-//        final InetSocketAddress google = new InetSocketAddress("www.google.com", 80);
-//        final InetAddress localIpAddress;
-//        temp.connect(google);
-//        temp.setSoLinger(true, 1);
-//        temp.setReuseAddress(true);
-//        localIpAddress = temp.getLocalAddress();
-//        temp.close();
-//        Thread.sleep(1000L);
-//        return localIpAddress;
-//    }
-
-    public static long stringToLongHashCode(String string) {
-
-        long h = 1125899906842597L; // prime
-        int len = string.length();
-
-        for (int i = 0; i < len; i++) {
-            h = 31*h + string.charAt(i);
-        }
-        return h;
-    }
-
-    public static String getInviteCode() {
-
-        final Random random = new Random();
-        final int lower = random.nextInt(14 - 2 + 1) + 2;
-        final int upper = random.nextInt(76 - 8 + 1) + 8;
-        return lower*7+""+upper*13;
-    }
-
-    public static boolean isInviteCodeValid(String code) {
-        try {
-            return code.length() >= 5 && Short.parseShort(code.substring(0, 2)) % 7 < 1 && Short.parseShort(code.substring(2, 5)) % 13 < 1;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public static boolean updateGCM(final long id, final WeakReference reference) {
-
-        final String regId = autoRetry(new DoWork<String>() {
-            @Override
-            protected String doWork() throws IOException {
-
-                final Context context = (Context) reference.get();
-                if(context == null)
-                    return "QUIT";
-                return GoogleCloudMessaging.getInstance(context)
-                        .register("528178870551");
-            }
-        }, Optional.<Predicate<String>>of(new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String input) {
-                return TextUtils.isEmpty(input);
-            }
-        })).orNull();
-
-        if(TextUtils.isEmpty(regId) || regId.equals("QUIT"))
-            return false;
-        //if everything is fine, send to server
-        Log.i("Ayush", "Uploading newGcmId to server");
-        final Boolean result = autoRetry(new DoWork<Boolean>() {
-            @Override
-            protected Boolean doWork() throws IOException {
-
-                StaticData.userEndpoint.setGCMId(id, regId).execute();
-                Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
-                return true;
-            }
-        }, Optional.<Predicate<Boolean>>absent()).orNull();
-        //set locally
-        return !(result == null || !result);
-    }
-
-    /**
-     * Performs a task, retries upon failure with exponential back-off.
-     * Kindly don't use on UI thread.
-     * @param task the task that needs to be performed
-     * @param predicate the extra condition for failure
-     * @param <T> the return type of task
-     * @return the result/output of performing the task
-     */
-    public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task, @NonNull final Optional<Predicate<T>> predicate) {
-
-        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
-
-            try {
-
-                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
-                final T resultAfterWork = task.doWork();
-                /**
-                 * If the result was not
-                 * desirable we RETRY.
-                  */
-                if(predicate.isPresent() && predicate.get().apply(resultAfterWork))
-                    continue;
-                /**
-                 * Else we return
-                 */
-                return Optional.fromNullable(resultAfterWork);
-            } catch (InterruptedException | UnknownHostException e) {
-                e.printStackTrace();
-                return Optional.absent();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return Optional.absent();
-    }
-
-    /**
-     * Performs a task, retries upon failure with exponential back-off.
-     * This is to be used if returned value is of no importance other than checking for failure.
-     * Automatically delegates to separate thread.
-     * @param task the task that needs to be performed
-     * @param predicate the extra condition for failure
-     * @param <T> the return type of task
-     */
-    public static <T> void autoRetryAsync(@NonNull final DoWork<T> task, @NonNull final Optional<Predicate<T>> predicate) {
-
-        StaticData.threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
-                for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
-
-                    try {
-
-                        Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
-                        final T resultAfterWork = task.doWork();
-                        /**
-                         * If the result was not
-                         * desirable we RETRY.
-                         */
-                        if(predicate.isPresent() && predicate.get().apply(resultAfterWork))
-                            continue;
-                        /**
-                         * Else we return
-                         */
-                        return;
-                    } catch (InterruptedException | UnknownHostException e) {
-                        e.printStackTrace();
-                        return;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-    }
-//    private final AtomicBoolean cancelled = new AtomicBoolean(false);
-//    private Future<?> sourceFuture, sinkFuture;
-//    public void sendToRemote(Iterator<String> data, OutputStream remote) {
-//
-//        final WritableByteChannel wrapped = Channels.newChannel(remote);
-//
-//        try {
-//            System.out.println("##### staring sending");
-//            /**
-//             * We will use a pipe to reRoute the data and
-//             * achieve micro level control over when to close
-//             */
-//            final Pipe reRoute = Pipe.open();
-//            final Pipe.SinkChannel sinkChannel = reRoute.sink();
-//            final Pipe.SourceChannel sourceChannel = reRoute.source();
-//            sinkChannel.configureBlocking(false);
-//            sourceChannel.configureBlocking(false);
-//
-//            final ByteBuffer sinkBuffer = ByteBuffer.allocateDirect(1400);
-//            final ByteBuffer sourceBuffer = ByteBuffer.allocateDirect(1400);
-//
-//            final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-//
-//            final Runnable pickFromIterator = new Runnable() {
-//                @Override
-//                public void run() {
-//
-//                    while (!cancelled.get() && data.hasNext() && sinkChannel.isOpen()) {
-//
-//                        final String toWrite = data.next();
-//                        sinkBuffer.clear();
-//                        sinkBuffer.put(toWrite.getBytes());
-//                        sinkBuffer.flip();
-//
-//                        while (!cancelled.get() && sinkBuffer.hasRemaining())
-//                            sinkChannel.write(sinkBuffer);
-//                    }
-//                    sinkChannel.close();
-//                }
-//            };
-//
-//            final Runnable writeToOutput = new Runnable() {
-//                @Override
-//                public void run() {
-//
-//                    while (!cancelled.get() && sourceChannel.isOpen()) {
-//
-//                        sourceBuffer.clear();
-//                        sourceChannel.read(sourceBuffer);
-//                        sourceBuffer.flip();
-//                        while (!cancelled.get() && sourceBuffer.hasRemaining())
-//                            wrapped.write(sourceBuffer);
-//                    }
-//                    sourceChannel.close();
-//                }
-//            };
-//
-//            sourceFuture = threadPool.submit(pickFromIterator);
-//            sinkFuture = threadPool.submit(writeToOutput);
-//
-//            System.out.println("##### finished sending");
-//            System.out.println("");
-//        } catch(Throwable e) {
-//            e.printStackTrace();
-//        } finally {
-//            remote.close();
-//        }
-//    }
 }

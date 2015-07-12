@@ -38,17 +38,6 @@ import reach.project.utils.CustomThreadFactoryBuilder;
  */
 public class Player {
 
-    public Player(DecoderHandler handlerInterface) {
-        this.handlerInterface = handlerInterface;
-    }
-
-    //which player is playing
-    private enum WhichPlayer {
-
-        AudioTrack, //we are streaming
-        MediaPlayer //static playBack (seek-able)
-    }
-
     //Single threaded executor to avoid fuck ups
     private final ExecutorService decoderService = Executors.newSingleThreadExecutor(
             new CustomThreadFactoryBuilder()
@@ -58,11 +47,14 @@ public class Player {
                     .build());
     private final AtomicBoolean stopDecoding = new AtomicBoolean(true), pauseDecoding = new AtomicBoolean(false);
     private final DecoderHandler handlerInterface;
-
     private WhichPlayer whichPlayer = WhichPlayer.MediaPlayer;
     private AudioTrack audioTrack;
     private MediaPlayer mediaPlayer;
     private Future decodeFuture;
+
+    public Player(DecoderHandler handlerInterface) {
+        this.handlerInterface = handlerInterface;
+    }
 
     public boolean isNull() {
         return (mediaPlayer == null && audioTrack == null) || whichPlayer == null;
@@ -86,6 +78,7 @@ public class Player {
         if (audioTrack != null) {
             audioTrack.pause();
             audioTrack.flush();
+            audioTrack.stop();
         }
         if (mediaPlayer != null)
             mediaPlayer.reset();
@@ -143,6 +136,14 @@ public class Player {
         audioTrack.setStereoVolume(duck_volume, duck_volume);
     }
 
+    public void seekTo(int i) throws UnsupportedOperationException {
+
+        Log.i("Downloader", "Seeking to " + i);
+        if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
+            mediaPlayer.seekTo(i);
+        else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
+    }
+
 //    /**
 //         * @param data the bytes to be fed
 //         * @return true : successfully fed the data
@@ -170,14 +171,6 @@ public class Player {
 //                result == AudioTrack.ERROR_BAD_VALUE || //-2
 //                result == AudioTrack.ERROR); //-1
 //    }
-
-    public void seekTo(int i) throws UnsupportedOperationException {
-
-        Log.i("Downloader", "Seeking to " + i);
-        if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
-            mediaPlayer.seekTo(i);
-        else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
-    }
 
     public void cleanUp() {
 
@@ -277,6 +270,22 @@ public class Player {
 
         decodeFuture = decoderService.submit(new Decode(bitstream, frameHeader, contentLength, mono, sampleFrequency * 2));
         return duration;
+    }
+
+    //which player is playing
+    private enum WhichPlayer {
+
+        AudioTrack, //we are streaming
+        MediaPlayer //static playBack (seek-able)
+    }
+
+    ///////////////////////////////////////
+    public interface DecoderHandler {
+        long getProcessed();
+
+        void updateSecondaryProgress(short progress);
+
+        void onCompletion(MediaPlayer player);
     }
 
     private final class Decode implements Runnable {
@@ -401,14 +410,5 @@ public class Player {
                 e.printStackTrace();
             }
         }
-    }
-
-    ///////////////////////////////////////
-    public interface DecoderHandler {
-        long getProcessed();
-
-        void updateSecondaryProgress(short progress);
-
-        void onCompletion(MediaPlayer player);
     }
 }

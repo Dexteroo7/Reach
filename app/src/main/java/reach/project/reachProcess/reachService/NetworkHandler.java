@@ -79,7 +79,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
     private final ConcurrentLinkedQueue<String> pendingNetworkRequests = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Pair<SocketChannel, Connection>> pendingLanRequests = new ConcurrentLinkedQueue<>(); //needs closing
 
-    private final ByteBuffer transferBuffer = ByteBuffer.allocateDirect(5000);
+    private final ByteBuffer transferBuffer = ByteBuffer.allocateDirect(4096);
     private final InetSocketAddress vmAddress = new InetSocketAddress("104.199.154.0", 60001);
 
     private File reachDirectory = null;
@@ -1195,7 +1195,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 }
                 else {
                     try {
-                        bytesChanged = fileChannel.transferFrom(socketChannel, bundle.getBytesProcessed(), 5000);
+                        bytesChanged = fileChannel.transferFrom(socketChannel, bundle.getBytesProcessed(), 4096);
                     } catch (IOException e) {
                         bundle.setBytesProcessed(DOWNLOAD_FAIL); //close this channel and resetWorkingMode
                         e.printStackTrace();

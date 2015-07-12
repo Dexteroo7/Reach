@@ -47,8 +47,7 @@ public class InputStreamSource implements Source
 	public int read(byte[] b, int offs, int len)
 		throws IOException
 	{
-		int read = in.read(b, offs, len);
-		return read;
+		return in.read(b, offs, len);
 	}
 	
 	public boolean willReadBlock()

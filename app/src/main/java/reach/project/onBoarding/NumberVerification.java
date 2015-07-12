@@ -3,17 +3,13 @@ package reach.project.onBoarding;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,18 +22,9 @@ import android.widget.Toast;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.viewpagerindicator.CirclePageIndicator;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import reach.backend.entities.userApi.model.OldUserContainer;
 import reach.project.R;
@@ -49,172 +36,74 @@ import reach.project.utils.SuperInterface;
 
 public class NumberVerification extends Fragment {
 
-    private final String[] tourTexts = new String[]{
-            "Browse and Access files\nof your Network",
-            "Easy file transfer logs\nthrough Reach Queue",
-            "Privacy and security\noptions",
-            "Synced media files\n"};
-    private final int[] tourImages = new int[]{
-            R.drawable.library_view,
-            R.drawable.reach_queue,
-            R.drawable.my_reach,
-            R.drawable.hide
-    };
-
     private SuperInterface mListener;
-    private View bottomPart1, bottomPart2;
-    private EditText telephoneNumber;
 
-    public static NumberVerification newInstance() {
+    public static NumberVerification newInstance () {
         return new NumberVerification();
     }
 
-    private final ArrayList<String> codeList = new ArrayList<>();
-
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView (LayoutInflater inflater, ViewGroup container,
+                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
-        final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
-        final CirclePageIndicator circlePageIndicator = (CirclePageIndicator) rootView.findViewById(R.id.circles);
 
-        telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber);
-        bottomPart1 = rootView.findViewById(R.id.bottomPart1);
-        bottomPart2 = rootView.findViewById(R.id.bottomPart2);
-        viewPager.setAdapter(new TourPagerAdapter(getActivity()));
-        circlePageIndicator.setFillColor(getResources().getColor(R.color.reach_color));
-        circlePageIndicator.setPageColor(getResources().getColor(R.color.white));
-        circlePageIndicator.setRadius(10f);
-        circlePageIndicator.setStrokeColor(0);
-        circlePageIndicator.setViewPager(viewPager);
-        telephoneNumber.requestFocus();
+        rootView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
 
-        rootView.findViewById(R.id.verify).setOnClickListener(listener);
+                rootView.setBackgroundResource(0);
+                rootView.findViewById(R.id.reach_logo).setVisibility(View.GONE);
+                rootView.findViewById(R.id.otherStuff).setVisibility(View.VISIBLE);
+                rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
 
+                final View telephone = rootView.findViewById(R.id.telephoneNumber);
+                final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
+
+                telephone.requestFocus();
+                viewPager.setAdapter(new TourPagerAdapter(getActivity()));
+                ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
+
+                rootView.findViewById(R.id.verify).setOnClickListener(new ClickListener(
+                        rootView.findViewById(R.id.bottomPart1),
+                        rootView.findViewById(R.id.bottomPart2),
+                        telephone));
+            }
+        }, 2000);
         return rootView;
     }
 
-    private final View.OnClickListener listener = new View.OnClickListener() {
+    private final class TourPagerAdapter extends PagerAdapter {
 
-        @Override
-        public void onClick(View view) {
-
-            final String phoneNumber = telephoneNumber.getText().toString();
-            if (TextUtils.isEmpty(phoneNumber) || phoneNumber.length() < 10) {
-                Toast.makeText(getActivity(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            new GetOldAccount(StaticData.threadPool.submit(getCodes)).executeOnExecutor(StaticData.threadPool, phoneNumber.replaceAll("[^0-9]", ""));
-            bottomPart1.setVisibility(View.INVISIBLE);
-            bottomPart2.setVisibility(View.VISIBLE);
-        }
-
-        private final Callable<List<String>> getCodes = new Callable<List<String>>() {
-            @Override
-            public List<String> call() throws IOException {
-
-                final URL url = new URL("https://www.dropbox.com/s/fhfvodxoce2qum9/codes.txt?dl=1");
-                final BufferedReader r = new BufferedReader(new InputStreamReader(url.openStream()));
-                final ImmutableList.Builder<String> builder = ImmutableList.builder();
-                String line;
-                while (!TextUtils.isEmpty(line = r.readLine()))
-                    builder.add(line);
-                r.close();
-                return builder.build();
-            }
-        };
-
-        final class GetOldAccount extends AsyncTask<String, Void, Pair<OldUserContainer, String>> {
-
-            private final Future<List<String>> codes;
-            private GetOldAccount(Future<List<String>> codes) {
-                this.codes = codes;
-            }
-
-            private void proceed(Pair<OldUserContainer, String> pair) {
-
-                final SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
-                SharedPrefUtils.purgeReachUser(sharedPreferences);
-                SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
-
-                if (pair.first != null) {
-                    SharedPrefUtils.storeOldFirstName(sharedPreferences, pair.first.getFirstName());
-                    SharedPrefUtils.storeOldLastName(sharedPreferences, pair.first.getLastName());
-                    SharedPrefUtils.storeOldImageId(sharedPreferences, pair.first.getImageId());
-                }
-
-                mListener.startAccountCreation();
-            }
-
-            @Override
-            protected final Pair<OldUserContainer, String> doInBackground(final String... params) {
-
-                final OldUserContainer container = MiscUtils.autoRetry(new DoWork<OldUserContainer>() {
-                    @Override
-                    protected OldUserContainer doWork() throws IOException {
-                        return StaticData.userEndpoint.isAccountPresent(params[0]).execute();
-                    }
-                }, Optional.<Predicate<OldUserContainer>>absent()).orNull();
-
-                if (container == null)
-                    try {
-                        codeList.addAll(codes.get());
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                return new Pair<>(container, params[0]);
-            }
-
-            @Override
-            protected void onPostExecute(final Pair<OldUserContainer, String> pair) {
-
-                super.onPostExecute(pair);
-                final FragmentActivity activity = getActivity();
-                if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing())
-                    return;
-
-                if (pair.first != null) {
-                    proceed(pair);
-                    return;
-                }
-
-                try {
-
-                    final SharedPreferences editor = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
-                    SharedPrefUtils.purgeReachUser(editor);
-                    SharedPrefUtils.storePhoneNumber(editor, pair.second);
-                    mListener.startAccountCreation();
-
-                } catch (Exception ignored) {
-                    proceed(pair);
-                }
-            }
-        }
-    };
-
-    private class TourPagerAdapter extends PagerAdapter {
+        private final String[] tourTexts = new String[]{"Browse and Access files\nof your Network",
+                                                               "Easy file transfer logs\nthrough Reach Queue",
+                                                               "Privacy and security\noptions",
+                                                               "Synced media files\n"};
+        private final int[] tourImages = new int[]{R.drawable.library_view,
+                                                          R.drawable.reach_queue,
+                                                          R.drawable.my_reach,
+                                                          R.drawable.hide};
 
         private final Context mContext;
         private final LayoutInflater mLayoutInflater;
 
-        public TourPagerAdapter(Context context) {
+        public TourPagerAdapter (Context context) {
             mContext = context;
             mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
-        public int getCount() {
+        public int getCount () {
             return tourTexts.length;
         }
 
         @Override
-        public boolean isViewFromObject(View view, Object object) {
+        public boolean isViewFromObject (View view, Object object) {
             return view == object;
         }
 
         @Override
-        public Object instantiateItem(ViewGroup container, int position) {
+        public Object instantiateItem (ViewGroup container, int position) {
 
             final View itemView = mLayoutInflater.inflate(R.layout.tour_item, container, false);
             ((TextView) itemView.findViewById(R.id.tour_text)).setText(tourTexts[position]);
@@ -225,24 +114,82 @@ public class NumberVerification extends Fragment {
         }
 
         @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
+        public void destroyItem (ViewGroup container, int position, Object object) {
             container.removeView((LinearLayout) object);
         }
     }
 
+    private final class ClickListener implements View.OnClickListener {
+
+        private final View bottomPart1, bottomPart2;
+        private final EditText telephoneNumber;
+
+        private ClickListener (View ... views) {
+            this.bottomPart1 = views[0];
+            this.bottomPart2 = views[1];
+            this.telephoneNumber = (EditText) views[2];
+        }
+
+        @Override
+        public void onClick (View view) {
+
+            final String phoneNumber = telephoneNumber.getText().toString();
+            final String parsed;
+            if (TextUtils.isEmpty(phoneNumber) || (parsed = phoneNumber.replaceAll("[^0-9]", "")).length() < 10) {
+                Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            final int length = parsed.length();
+            //take last 10 digits
+            new GetOldAccount().executeOnExecutor(StaticData.threadPool, parsed.substring(length - 10, length));
+            bottomPart1.setVisibility(View.INVISIBLE);
+            bottomPart2.setVisibility(View.VISIBLE);
+        }
+
+        final class GetOldAccount extends AsyncTask<String, Void, Pair<OldUserContainer, String>> {
+
+            @Override
+            protected final Pair<OldUserContainer, String> doInBackground (final String... params) {
+
+                return new Pair<>(MiscUtils.autoRetry(new DoWork<OldUserContainer>() {
+                    @Override
+                    protected OldUserContainer doWork () throws IOException {
+                        return StaticData.userEndpoint.isAccountPresent(params[0]).execute();
+                    }
+                }, Optional.<Predicate<OldUserContainer>> absent()).orNull(), params[0]);
+            }
+
+            @Override
+            protected void onPostExecute (final Pair<OldUserContainer, String> pair) {
+
+                super.onPostExecute(pair);
+
+                final FragmentActivity activity = getActivity();
+                if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing())
+                    return;
+
+                final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+                sharedPreferences.edit().clear().apply();
+                SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
+                mListener.startAccountCreation(Optional.of(pair.first));
+            }
+        }
+    }
+
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach (Activity activity) {
         super.onAttach(activity);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
+                                                 + " must implement OnFragmentInteractionListener");
         }
     }
 
     @Override
-    public void onDetach() {
+    public void onDetach () {
         super.onDetach();
         mListener = null;
     }

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteException;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,6 +14,7 @@ import android.os.Messenger;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,23 +22,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
 import com.squareup.picasso.Picasso;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
+import java.io.InputStream;
 
 import reach.backend.entities.userApi.model.MyString;
+import reach.backend.entities.userApi.model.OldUserContainer;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
 import reach.project.core.ReachActivity;
@@ -58,87 +58,77 @@ import reach.project.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
 
-    public AccountCreation() {
+    //    private static WeakReference<AccountCreation> reference;
+    public static Fragment newInstance(Optional<OldUserContainer> container) {
+
+        final AccountCreation fragment = new AccountCreation();
+
+        if (container.isPresent()) {
+
+            final Bundle bundle = new Bundle(2);
+            final OldUserContainer userContainer = container.get();
+            bundle.putStringArray("oldData", new String[]{
+                    (TextUtils.isEmpty(userContainer.getFirstName()) ? "" : userContainer.getFirstName()) +
+                            (TextUtils.isEmpty(userContainer.getLastName()) ? "" : userContainer.getLastName()),
+                    userContainer.getImageId()
+            });
+            fragment.setArguments(bundle);
+        }
+//        reference = new WeakReference<>(fragment);
+        return fragment;
     }
 
-    public static Fragment newInstance() {
-        return new AccountCreation();
-    }
-
-    private String oldImageId;
-    private SuperInterface mListener;
-    private FrameLayout imageView;
-    private Bitmap bitmap;
-    private TextView progress,tele,uploadText;
-    private LinearLayout bottomPart2,next;
-    private RelativeLayout bottomPart3;
-    private boolean dpDisabled = false;
     private final int IMAGE_PICKER_SELECT = 999;
-    private IncomingHandler incomingHandler;
-    private static WeakReference<AccountCreation> accountCreationWeakReference;
+    private String imageId = "hello_world";
+
+    private SuperInterface mListener;
+    //    private IncomingHandler incomingHandler;
+    private TextView uploadText;
+    private View profilePhotoSelector;
 
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
-        Log.i("Ayush", "inflating contacts view");
         final View rootView = inflater.inflate(R.layout.fragment_account_creation, container, false);
-        final EditText firstName = (EditText) rootView.findViewById(R.id.firstName);
-        final LinearLayout importMusic = (LinearLayout) rootView.findViewById(R.id.importMusic);
-        progress = (TextView) rootView.findViewById(R.id.syncStatus);
-        bottomPart2 = (LinearLayout) rootView.findViewById(R.id.bottomPart2);
-        bottomPart3 = (RelativeLayout) rootView.findViewById(R.id.bottomPart3);
-        tele = (TextView) rootView.findViewById(R.id.telephoneNumber);
-        next = (LinearLayout) rootView.findViewById(R.id.nextBtn);
+        final EditText userName = (EditText) rootView.findViewById(R.id.firstName);
+        final TextView progress = (TextView) rootView.findViewById(R.id.syncStatus);
+
         uploadText = (TextView) rootView.findViewById(R.id.uploadText);
+        profilePhotoSelector = rootView.findViewById(R.id.profilePhoto);
+        profilePhotoSelector.setOnClickListener(imagePicker);
+        userName.requestFocus();
+
         final SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final Bundle arguments;
+        final String[] oldData;
+        if ((arguments = getArguments()) != null &&
+                (oldData = arguments.getStringArray("oldData")) != null &&
+                oldData.length == 2) {
 
-        imageView = (FrameLayout) rootView.findViewById(R.id.profilePhoto);
+//            oldData[0] = name;
+//            oldData[1] = imageId;
+            if (!TextUtils.isEmpty(oldData[0]))
+                userName.setText(oldData[0]);
 
-        final String oldFirstName = SharedPrefUtils.getOldFirstName(sharedPreferences);
-        final String oldLastName = SharedPrefUtils.getOldLastName(sharedPreferences);
-        oldImageId = SharedPrefUtils.getOldImageId(sharedPreferences);
+            if (!TextUtils.isEmpty(oldData[1])) {
 
-        if(!TextUtils.isEmpty(oldFirstName)) {
-
-            if(!TextUtils.isEmpty(oldLastName))
-                firstName.setText(oldFirstName + " " + oldLastName);
-            else
-                firstName.setText(oldFirstName);
+                imageId = oldData[1];
+                Picasso.with(getActivity())
+                        .load(StaticData.cloudStorageImageBaseUrl + imageId)
+                        .resize(350, 350)
+                        .centerCrop()
+                        .transform(new CircleTransform())
+                        .into((ImageView) profilePhotoSelector.findViewById(R.id.displayPic));
+            }
         }
 
-        if(!TextUtils.isEmpty(oldImageId))
-            Picasso.with(getActivity())
-                    .load(StaticData.cloudStorageImageBaseUrl + oldImageId)
-                    .resize(350, 350)
-                    .centerCrop()
-                    .transform(new CircleTransform())
-                    .into((ImageView) imageView.findViewById(R.id.displayPic));
-
-        firstName.requestFocus();
-        imageView.setOnClickListener(new View.OnClickListener() {
+        rootView.findViewById(R.id.importMusic).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                if (!dpDisabled) {
-                    final Intent intent = new Intent(Intent.ACTION_PICK,
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    intent.setType("image/*");
-                    // intent.setAction(Intent.ACTION_GET_CONTENT);
-                    startActivityForResult(Intent.createChooser(intent, "Select Photo"),
-                            IMAGE_PICKER_SELECT);
-                }
-            }
-        });
-
-        accountCreationWeakReference = new WeakReference<>(this);
-
-        importMusic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (firstName.length() == 0 ) {
+                if (userName.length() == 0) {
 
                     Toast.makeText(getActivity(), "Please enter your name", Toast.LENGTH_SHORT).show();
                 } else {
@@ -146,32 +136,39 @@ public class AccountCreation extends Fragment {
                     final InputMethodManager inputMethodManager =
                             (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     final String phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
-                    inputMethodManager.hideSoftInputFromWindow(firstName.getWindowToken(), 0);
+                    inputMethodManager.hideSoftInputFromWindow(userName.getWindowToken(), 0);
 
                     if (TextUtils.isEmpty(phoneNumber)) {
                         Log.i("Downloader", "Account creation could not find number");
-                        mListener.startNumberVerification();
+                        mListener.accountCreationError();
                         return;
                     }
-                    importMusic.setEnabled(false);
 
-                    if(isRemoving() || isDetached())
+                    view.setOnClickListener(null);
+                    view.setEnabled(false);
+                    if (isRemoving() || isDetached())
                         return;
                     /*try {
                         importDialog.show(getChildFragmentManager(), "import_dialog");
                     } catch (IllegalStateException ignored) {}*/
                     //reset the whole databases
-                    SharedPrefUtils.purgeReachUser(sharedPreferences);
+                    sharedPreferences.edit().clear().apply();
                     resetDatabases();
                     Log.i("Ayush", "Cleared everything : AccountCreation underway");
-                    dpDisabled = true;
+                    profilePhotoSelector.setOnClickListener(null);
                     uploadText.setVisibility(View.GONE);
-                    ((TextView)rootView.findViewById(R.id.tourText)).setText(firstName.getText().toString().trim());
+                    ((TextView) rootView.findViewById(R.id.tourText)).setText(userName.getText().toString().trim());
                     rootView.findViewById(R.id.bottomPart1).setVisibility(View.INVISIBLE);
                     rootView.findViewById(R.id.bottomPart2).setVisibility(View.VISIBLE);
-                    new SaveUserData().executeOnExecutor(
+                    progress.setText("Starting Profile Creation");
+                    new SaveUserData(
+                            rootView.findViewById(R.id.bottomPart2),
+                            rootView.findViewById(R.id.bottomPart3),
+                            rootView.findViewById(R.id.nextBtn),
+                            (TextView) rootView.findViewById(R.id.telephoneNumber),
+                            progress).executeOnExecutor(
                             StaticData.threadPool,
-                            firstName.getText().toString().trim(),
+                            userName.getText().toString().trim(),
                             phoneNumber);
                 }
             }
@@ -179,7 +176,28 @@ public class AccountCreation extends Fragment {
         return rootView;
     }
 
+    private final View.OnClickListener imagePicker = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            final Intent intent = new Intent(Intent.ACTION_PICK,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            intent.setType("image/*");
+            // intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Photo"),
+                    IMAGE_PICKER_SELECT);
+        }
+    };
+
+    private final View.OnClickListener proceed = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListener.onAccountCreated();
+        }
+    };
+
     private void resetDatabases() {
+
+        //TODO reset notifications
 
         try {
             getActivity().getContentResolver().delete(ReachFriendsProvider.CONTENT_URI, 1 + "", null);
@@ -209,72 +227,87 @@ public class AccountCreation extends Fragment {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, final Intent data) {
 
-        if (requestCode == IMAGE_PICKER_SELECT  && resultCode == Activity.RESULT_OK) {
-            final Uri mImageUri = data.getData();
-            if(mImageUri != null)
-                new ImageBitmapExtractor().executeOnExecutor(StaticData.threadPool, data.getData());
+        final FragmentActivity activity;
+        if ((activity = getActivity()) == null ||
+                activity.isFinishing()) return;
+        final Uri mImageUri;
+        if (requestCode != IMAGE_PICKER_SELECT ||
+                resultCode != Activity.RESULT_OK ||
+                (mImageUri = data.getData()) == null) {
+
+            Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
+            return;
         }
-    }
 
-    private class ImageBitmapExtractor extends AsyncTask<Uri, Void, Bitmap> {
+        final InputStream stream;
+        try {
+            stream = activity.getAssets().open("key.p12");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
-        Uri temp;
-        @Override
-        protected Bitmap doInBackground(Uri... uris) {
+        final File tempFile;
+        try {
+            tempFile = File.createTempFile("profilePhoto", ".jpg");
+            Files.copy(new InputSupplier<InputStream>() {
+                @Override
+                public InputStream getInput() throws IOException {
+                    return activity.getContentResolver().openInputStream(mImageUri);
+                }
+            }, tempFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            MiscUtils.closeAndIgnore(stream);
+            return;
+        }
 
-            if(uris == null || uris.length == 0) return null;
-            temp = uris[0];
-            try {
-                return Picasso.with(getActivity())
-                              .load(uris[0])
-                              .resize(350, 350)
-                              .centerInside()
-                              .get();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+        StaticData.threadPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
+                if (newImage.isPresent())
+                    imageId = newImage.get();
+                else
+                    imageId = "hello_world";
             }
-        }
+        });
 
-        @Override
-        protected void onPostExecute(Bitmap resultBitmap) {
-            super.onPostExecute(resultBitmap);
-
-            if(isCancelled() || getActivity() == null || getActivity().isFinishing())
-                return;
-
-            if(resultBitmap == null)
-                Toast.makeText(getActivity(), "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
-            else {
-                bitmap = resultBitmap;
-                uploadText.setVisibility(View.INVISIBLE);
-                Picasso.with(getActivity())
-                        .load(temp)
-                        .resize(350, 350)
-                        .centerCrop()
-                        .transform(new CircleTransform())
-                        .into((ImageView) imageView.findViewById(R.id.displayPic));
-                //displayPic.setImageBitmap(bitmap);
-            }
-        }
+        uploadText.setVisibility(View.INVISIBLE);
+        Picasso.with(activity)
+                .load(mImageUri)
+                .resize(350, 350)
+                .centerCrop()
+                .transform(new CircleTransform())
+                .into((ImageView) profilePhotoSelector.findViewById(R.id.displayPic));
     }
 
     private class SaveUserData extends AsyncTask<String, String, ReachUser> {
 
+        final View bottomPart2, bottomPart3, next ;
+        final TextView phoneNumber, progress;
+
+        private SaveUserData(View bottomPart2, View bottomPart3, View next, TextView phoneNumber, TextView progress) {
+            this.bottomPart2 = bottomPart2;
+            this.bottomPart3 = bottomPart3;
+            this.next = next;
+            this.phoneNumber = phoneNumber;
+            this.progress = progress;
+        }
+
         @Override
         protected ReachUser doInBackground(String... strings) {
 
-            publishProgress("Starting profile creation");
             final String gcmId = MiscUtils.autoRetry(new DoWork<String>() {
                 @Override
                 protected String doWork() throws IOException {
 
-                    if (getActivity() == null)
+                    final FragmentActivity activity = getActivity();
+                    if (activity == null || activity.isFinishing())
                         return "QUIT";
-
-                    return GoogleCloudMessaging.getInstance(getActivity())
+                    return GoogleCloudMessaging.getInstance(activity)
                             .register("528178870551");
                 }
             }, Optional.<Predicate<String>>of(new Predicate<String>() {
@@ -283,30 +316,19 @@ public class AccountCreation extends Fragment {
                     return TextUtils.isEmpty(input);
                 }
             })).orNull();
-            //0 means total network failure, kill the app
-            if(TextUtils.isEmpty(gcmId) || gcmId.equals("QUIT"))
-                return null;
-            //1 means reInsert photo
-            //if(bitmap == null) return null;
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            if(bitmap != null)
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream);
 
+            final FragmentActivity activity = getActivity();
+            if (activity == null || activity.isFinishing() || TextUtils.isEmpty(gcmId) || gcmId.equals("QUIT"))
+                return null;
             final ReachUser user = new ReachUser();
-            user.setDeviceId(SharedPrefUtils.getDeviceId(getActivity()).trim().replace(" ", "-"));
+            user.setDeviceId(SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"));
             user.setMegaBytesReceived(0L);
             user.setMegaBytesSent(0L);
             user.setStatusSong("hello_world");
             user.setGcmId(gcmId);
             user.setUserName(strings[0]);
-            user.setPhoneNumber(strings[1].replaceAll("[^0-9]", ""));
-            if(bitmap != null)
-                user.setImageId(CloudStorageUtils.uploadFile(byteArrayOutputStream.toByteArray(), true));
-            else if(!TextUtils.isEmpty(oldImageId))
-                user.setImageId(oldImageId);
-            else
-                user.setImageId("hello_world");
-            //publishProgress("Uploading UserData");
+            user.setPhoneNumber(strings[1]);
+            user.setImageId(imageId);
             //insert user-object and get the userID
             final long id;
             final String toParse;
@@ -316,17 +338,14 @@ public class AccountCreation extends Fragment {
                     return StaticData.userEndpoint.insert(user).execute();
                 }
             }, Optional.<Predicate<MyString>>absent()).orNull();
-            Log.i("Ayush", "Testing");
-            if(dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()))
+            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()))
                 id = 0;
             else
                 id = Long.parseLong(toParse);
-
             Log.i("Ayush", "Id received = " + id);
-            if(id == 0) return null;
+            if (id == 0) return null;
             //finally set the userID, probably unnecessary
             user.setId(id);
-            Log.i("Ayush", "Temporary user uploaded");
             return user;
         }
 
@@ -334,43 +353,49 @@ public class AccountCreation extends Fragment {
         protected void onPostExecute(ReachUser user) {
 
             super.onPostExecute(user);
-
-            if(isCancelled() || getActivity() == null || getActivity().isFinishing())
+            final FragmentActivity activity = getActivity();
+            if (isCancelled() || isRemoving() || activity == null || activity.isFinishing())
                 return;
-
-            if(user == null) {
+            if (user == null) {
                 Toast.makeText(getActivity(), "Network failed !", Toast.LENGTH_LONG).show();
-                getActivity().finish();
+                activity.finish();
                 return;
             }
-            final ReachUser reachUserDatabase = new ReachUser();
-            reachUserDatabase.setDeviceId(user.getDeviceId());
-            reachUserDatabase.setMegaBytesReceived(user.getMegaBytesReceived());
-            reachUserDatabase.setMegaBytesSent(user.getMegaBytesSent());
-            reachUserDatabase.setStatusSong(user.getStatusSong());
-            reachUserDatabase.setGcmId(user.getGcmId());
-            reachUserDatabase.setImageId(user.getImageId());
-            reachUserDatabase.setId(user.getId());
-            reachUserDatabase.setPhoneNumber(user.getPhoneNumber());
-            reachUserDatabase.setUserName(user.getUserName());
 
             ReachActivity.serverId = user.getId();
-            SharedPrefUtils.storeReachUser(getActivity()
-                            .getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS).edit(), reachUserDatabase);
-
-            final Intent intent = new Intent(getActivity(), MusicScanner.class);
-            intent.putExtra("messenger", new Messenger(incomingHandler = new IncomingHandler()));
-            getActivity().startService(intent);
+            SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS).edit(), user);
+            final Intent intent = new Intent(activity, MusicScanner.class);
+            intent.putExtra("messenger", messenger);
+            activity.startService(intent);
         }
 
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            if(isCancelled() || getActivity() == null || getActivity().isFinishing())
-                return;
-            if(accountCreationWeakReference.get() != null)
-                accountCreationWeakReference.get().progress.setText(values[0]);
-        }
+        private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
+
+            long songs = 0, playLists = 0;
+
+            @Override
+            public boolean handleMessage(Message message) {
+
+                if (message == null)
+                    return false;
+                if (message.what == MusicScanner.FINISHED) {
+
+                    bottomPart2.setVisibility(View.INVISIBLE);
+                    bottomPart3.setVisibility(View.VISIBLE);
+                    phoneNumber.setText(songs + " songs");
+                    next.setOnClickListener(proceed);
+                } else if (message.what == MusicScanner.SONGS) {
+                    progress.setText("Found " + message.arg1 + " songs");
+                    songs = message.arg1 + 1;
+                } else if (message.what == MusicScanner.PLAY_LISTS) {
+
+                    progress.setText("Found " + message.arg1 + " playLists");
+                    playLists = message.arg1 + 1;
+                } else if (message.what == MusicScanner.ALBUM_ARTIST)
+                    progress.setText("Creating account");
+                return true;
+            }
+        }));
     }
 
     @Override
@@ -390,46 +415,40 @@ public class AccountCreation extends Fragment {
         mListener = null;
     }
 
-    public static class IncomingHandler extends Handler {
+//    public static class IncomingHandler extends Handler {
+//
+//        long songs = 0, playLists = 0;
+//
+//        @Override
+//        public void handleMessage(Message message) {
+//
+//            final AccountCreation creation = reference.get();
+//            if (message == null || creation == null)
+//                return;
+//            if (message.what == MusicScanner.FINISHED) {
+//
+//                creation.bottomPart2.setVisibility(View.INVISIBLE);
+//                creation.bottomPart3.setVisibility(View.VISIBLE);
+//                creation.phoneNumber.setText(songs + " songs");
+//                creation.next.setOnClickListener(creation.proceed);
+//            } else if (message.what == MusicScanner.SONGS) {
+//
+//                creation.progress.setText("Found " + message.arg1 + " songs");
+//                songs = message.arg1 + 1;
+//            } else if (message.what == MusicScanner.PLAY_LISTS) {
+//
+//                creation.progress.setText("Found " + message.arg1 + " playLists");
+//                playLists = message.arg1 + 1;
+//            } else if (message.what == MusicScanner.ALBUM_ARTIST)
+//                creation.progress.setText("Creating account");
+//        }
+//    }
 
-        long songs = 0, playLists = 0;
-        @Override
-        public void handleMessage(Message message) {
-
-            if(message == null || accountCreationWeakReference.get() == null)
-                return;
-            if(message.what == MusicScanner.FINISHED) {
-
-                accountCreationWeakReference.get().bottomPart2.setVisibility(View.INVISIBLE);
-                accountCreationWeakReference.get().bottomPart3.setVisibility(View.VISIBLE);
-                accountCreationWeakReference.get().tele.setText(songs + " songs");
-                accountCreationWeakReference.get().next.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(accountCreationWeakReference.get() != null)
-                            accountCreationWeakReference.get().mListener.onAccountCreated();
-                    }
-                });
-            } else if(message.what == MusicScanner.SONGS) {
-
-                accountCreationWeakReference.get().progress.setText("Found " + message.arg1 + " songs");
-                songs = message.arg1 + 1;
-            }
-            else if(message.what == MusicScanner.PLAY_LISTS) {
-
-                accountCreationWeakReference.get().progress.setText("Found " + message.arg1 + " playLists");
-                playLists = message.arg1 + 1;
-            }
-            else if(message.what == MusicScanner.ALBUM_ARTIST)
-                accountCreationWeakReference.get().progress.setText("Creating account");
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        if(incomingHandler != null)
-            incomingHandler.removeCallbacksAndMessages(null);
-        incomingHandler = null;
-        super.onDestroy();
-    }
+//    @Override
+//    public void onDestroy() {
+//        if (incomingHandler != null)
+//            incomingHandler.removeCallbacksAndMessages(null);
+//        incomingHandler = null;
+//        super.onDestroy();
+//    }
 }

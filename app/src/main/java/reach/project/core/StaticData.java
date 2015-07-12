@@ -4,10 +4,11 @@ import android.support.v4.util.LongSparseArray;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.apache.ApacheHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -25,35 +26,17 @@ import reach.project.utils.CloudEndPointsUtils;
 public final class StaticData {
 
     static {
-        //////////////////////////////////////////////////
-        final UserApi.Builder user = new UserApi.Builder(
-                new ApacheHttpTransport(), new JacksonFactory(), new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
 
-                request.setReadTimeout(request.getReadTimeout() * 10);
-            }
-        });
-        userEndpoint = CloudEndPointsUtils.updateBuilder(user).build();
-        //////////////////////////////////////////////////
-        final Messaging.Builder message = new Messaging.Builder(
-                new ApacheHttpTransport(), new JacksonFactory(), new HttpRequestInitializer() {
+        final HttpTransport transport = new NetHttpTransport();
+        final JsonFactory factory = new JacksonFactory();
+        final HttpRequestInitializer initialize = new HttpRequestInitializer() {
             @Override
             public void initialize(HttpRequest request) throws IOException {
-                request.setReadTimeout(request.getReadTimeout() * 10);
             }
-        });
-        messagingEndpoint = CloudEndPointsUtils.updateBuilder(message).build();
-        //////////////////////////////////////////////////
-        final FeedBackApi.Builder feedBack = new FeedBackApi.Builder(
-                new ApacheHttpTransport(), new JacksonFactory(), new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-                request.setReadTimeout(request.getReadTimeout() * 10);
-            }
-        });
-        feedBackApi = CloudEndPointsUtils.updateBuilder(feedBack).build();
-        //////////////////////////////////////////////////
+        };
+        userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
+        messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build();
+        feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
     }
 
     public static final String [] DOWNLOADED_LIST = new String[]{ //count = 14
@@ -141,7 +124,6 @@ public final class StaticData {
     public static final int MINIMUM_FREE_SPACE = 100 * 1024 * 1024; //100mb
 
     public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
-
     public static final short MUSIC_PLAYER = 12;
 
     public static final UserApi userEndpoint;
@@ -157,6 +139,4 @@ public final class StaticData {
 
     ////meant for release
     public static boolean debugMode = true;
-
-    public static File keyFile;
 }

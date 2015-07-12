@@ -1,17 +1,11 @@
 package reach.project.coreViews;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,17 +14,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
-
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import reach.project.R;
-import reach.project.core.ReachApplication;
-import reach.project.core.StaticData;
-import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
 
 /**
  * Created by ashish on 03/07/15.
@@ -78,9 +64,7 @@ public class PromoCodeDialog extends DialogFragment {
             public void afterTextChanged(final Editable s) {
 
                 final String text = s.toString().trim();
-                if (!(TextUtils.isEmpty(text)) &&
-
-                        (MiscUtils.isInviteCodeValid(s.toString().trim()))) {
+                if (!TextUtils.isEmpty(text)) {
 
                     iCode.setTextColor(getResources().getColor(R.color.reach_color));
                     done.setOnClickListener(new View.OnClickListener() {

@@ -83,15 +83,19 @@ public class ArtistListFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onDestroyView() {
+
         getLoaderManager().destroyLoader(StaticData.ARTIST_LOADER);
+
         if(reachArtistsAdapter != null && reachArtistsAdapter.getCursor() != null && !reachArtistsAdapter.getCursor().isClosed())
             reachArtistsAdapter.getCursor().close();
-        reachArtistsAdapter = null;
 
         artistGrid.setOnItemClickListener(null);
+
+        artistGrid = null;
+        reachArtistsAdapter = null;
         reachArtistsAdapter = null;
         rootView = null;
-        artistGrid = null;
+
         super.onDestroyView();
     }
 

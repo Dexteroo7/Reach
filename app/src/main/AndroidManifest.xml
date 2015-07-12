@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="reach.project" >
+    package="reach.project">
 
     <permission
         android:name="reach.project.permission.C2D_MESSAGE"
@@ -125,18 +124,18 @@
             android:name=".core.ReachActivity$PlayerUpdateListener"
             android:exported="false">
             <intent-filter>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR"/>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION"/>
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" />
+                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" />
             </intent-filter>
         </receiver>
 
-         <!--Things on process :remote-->
+        <!-- Things on process :remote -->
 
         <provider
             android:name=".database.contentProvider.ReachDatabaseProvider"

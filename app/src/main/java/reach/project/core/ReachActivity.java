@@ -58,20 +58,16 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import reach.backend.entities.userApi.model.MyString;
+import reach.backend.entities.userApi.model.OldUserContainer;
 import reach.project.R;
 import reach.project.adapter.ReachMusicAdapter;
 import reach.project.adapter.ReachQueueAdapter;
@@ -116,15 +112,106 @@ public class ReachActivity extends ActionBarActivity implements
         SearchView.OnQueryTextListener,
         SearchView.OnCloseListener {
 
+    public static long serverId = 0;
+    private static WeakReference<ReachActivity> reference = null;
+    private final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser)
+                ProcessManager.submitMusicRequest(seekBar.getContext(), Optional.of(progress + ""), MusicHandler.ACTION_SEEK);
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+        }
+    };
+    private final View.OnClickListener repeatClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            if (SharedPrefUtils.toggleRepeat(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+                repeatBtn.setSelected(true);
+            else
+                repeatBtn.setSelected(false);
+        }
+    };
+    private final View.OnClickListener nextClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            ProcessManager.submitMusicRequest(
+                    v.getContext(),
+                    Optional.<String>absent(),
+                    MusicHandler.ACTION_NEXT);
+        }
+    };
+    private final View.OnClickListener previousClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            ProcessManager.submitMusicRequest(
+                    v.getContext(),
+                    Optional.<String>absent(),
+                    MusicHandler.ACTION_PREVIOUS);
+        }
+    };
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
+
+    private FragmentManager fragmentManager;
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private DrawerLayout mDrawerLayout;
     private int navPos = 99;
     private SearchView searchView;
     private FrameLayout.LayoutParams params;
     private ImageView upArrow;
+    private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
+        @Override
+        public void onPanelSlide(View view, float v) {
+
+            final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
+            if (actionBar.isPresent()) {
+                if (v > 0.85f) {
+                    params.setMargins(0, 0, 0, 0);
+                    actionBar.get().hide();
+                    upArrow.setVisibility(View.GONE);
+                    findViewById(R.id.player).setVisibility(View.GONE);
+                    searchView.setVisibility(View.VISIBLE);
+                } else if (v < 0.85f) {
+                    params.setMargins(0, MiscUtils.dpToPx(10), 0, 0);
+                    actionBar.get().show();
+                    upArrow.setVisibility(View.VISIBLE);
+                    findViewById(R.id.player).setVisibility(View.VISIBLE);
+                    searchView.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        @Override
+        public void onPanelCollapsed(View view) {
+            if (fragmentManager.getBackStackEntryCount() == 0)
+                toggleDrawer(false);
+        }
+
+        @Override
+        public void onPanelExpanded(View view) {
+            if (fragmentManager.getBackStackEntryCount() == 0)
+                toggleDrawer(true);
+        }
+
+        @Override
+        public void onPanelAnchored(View view) {
+        }
+
+        @Override
+        public void onPanelHidden(View view) {
+        }
+    };
     private String selectionDownloader, selectionMyLibrary, mCurFilter;
     private String[] selectionArgumentsDownloader;
     private String[] selectionArgumentsMyLibrary;
@@ -134,6 +221,60 @@ public class ReachActivity extends ActionBarActivity implements
     private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private MusicData currentPlaying;
+    private final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            if (currentPlaying == null || currentPlaying.getType() == 1)
+                return;
+            if (toggleLiked()) {
+
+                final Cursor cursor = getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + currentPlaying.getSenderId()),
+                        new String[]{ReachFriendsHelper.COLUMN_USER_NAME, ReachFriendsHelper.COLUMN_IMAGE_ID},
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                        new String[]{currentPlaying.getSenderId() + ""}, null);
+
+                if (cursor == null)
+                    return;
+                if (!cursor.moveToFirst()) {
+                    cursor.close();
+                    return;
+                }
+
+                MiscUtils.autoRetryAsync(new DoWork<reach.backend.entities.messaging.model.MyString>() {
+                    @Override
+                    protected reach.backend.entities.messaging.model.MyString doWork() throws IOException {
+
+                        return StaticData.messagingEndpoint.messagingEndpoint().sendManualNotification(
+                                currentPlaying.getSenderId(), 0, "likes " + currentPlaying.getDisplayName(),
+                                SharedPrefUtils.getUserName(getSharedPreferences("Reach", MODE_MULTI_PROCESS))).execute();
+                    }
+                }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>absent());
+                currentPlaying.setIsLiked(true);
+                likeButton.setImageResource(R.drawable.like_pink);
+            } else {
+                likeButton.setImageResource(R.drawable.like_white);
+                currentPlaying.setIsLiked(false);
+            }
+        }
+    };
+    private final View.OnClickListener pauseClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            if (currentPlaying != null)
+                ProcessManager.submitMusicRequest(
+                        v.getContext(),
+                        Optional.of(new Gson().toJson(currentPlaying, MusicData.class)),
+                        MusicHandler.ACTION_PLAY_PAUSE);
+            else
+                ProcessManager.submitMusicRequest(
+                        v.getContext(),
+                        Optional.<String>absent(),
+                        MusicHandler.ACTION_PLAY_PAUSE);
+        }
+    };
     ////////////////////////////////////////
     private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
     private TextView playerPos;
@@ -141,14 +282,104 @@ public class ReachActivity extends ActionBarActivity implements
     private SeekBar progressBarMinimized;
     private ListView queueListView;
     private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+    private final View.OnClickListener shuffleClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            if (SharedPrefUtils.toggleShuffle(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+                shuffleBtn.setSelected(true);
+            else
+                shuffleBtn.setSelected(false);
+        }
+    };
     private ImageButton pausePlayMinimized; //small
     private SwipeRefreshLayout downloadRefresh;
+    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            new RefreshOperations().execute(downloadRefresh);
+        }
+    };
+    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(AbsListView absListView, int i) {
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
+            boolean enable = false;
+            if (queueListView.getChildCount() > 0) {
+                final boolean firstItemVisible = queueListView.getFirstVisiblePosition() == 0;
+                final boolean topOfFirstItemVisible = queueListView.getChildAt(0).getTop() == 0;
+                enable = firstItemVisible && topOfFirstItemVisible;
+            }
+            downloadRefresh.setEnabled(enable);
+        }
+    };
     private MergeAdapter combinedAdapter = null;
+    private final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
+
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+
+            final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
+            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length) {
+
+                final long senderId = cursor.getLong(8);
+                final String artistName;
+                final long duration;
+                final Cursor artistCursor = getContentResolver().query(
+                        ReachSongProvider.CONTENT_URI,
+                        new String[]{ReachSongHelper.COLUMN_ID,
+                                ReachSongHelper.COLUMN_USER_ID,
+                                ReachSongHelper.COLUMN_SONG_ID,
+                                ReachSongHelper.COLUMN_ARTIST,
+                                ReachSongHelper.COLUMN_DURATION},
+                        ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+                                ReachSongHelper.COLUMN_SONG_ID + " = ?",
+                        new String[]{senderId + "", cursor.getLong(10) + ""}, null);
+
+                if (artistCursor == null) {
+                    artistName = "";
+                    duration = 0;
+                } else if (!artistCursor.moveToFirst()) {
+                    artistName = "";
+                    duration = 0;
+                    artistCursor.close();
+                } else {
+                    artistName = artistCursor.getString(3);
+                    duration = artistCursor.getLong(4);
+                    artistCursor.close();
+                }
+                playSong(
+                        cursor.getLong(0),    //id
+                        cursor.getLong(1),    //length
+                        senderId,             //senderId
+                        cursor.getLong(3),    //processed
+                        cursor.getString(4),  //path
+                        cursor.getString(5),  //displayName
+                        artistName,           //artistName
+                        (byte) 0,
+                        cursor.getString(14),
+                        duration);
+                return;
+            }
+            playSong(
+                    cursor.getLong(7),    //id
+                    cursor.getLong(0),    //length
+                    serverId,             //senderId
+                    cursor.getLong(0),    //processed = length
+                    cursor.getString(1),  //path
+                    cursor.getString(2),  //displayName
+                    cursor.getString(5), //artistName
+                    (byte) 1, //type
+                    "false", //isLiked
+                    cursor.getLong(4)); //duration
+        }
+    };
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
-
-    private static WeakReference<ReachActivity> reference = null;
-    public static long serverId = 0;
 
     @Override
     protected void onDestroy() {
@@ -202,14 +433,14 @@ public class ReachActivity extends ActionBarActivity implements
             switch (id) {
 
                 case android.R.id.home: {
-                    if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    if (fragmentManager.getBackStackEntryCount() > 0) {
                         switch (item.getItemId()) {
                             case android.R.id.home:
-                                getSupportFragmentManager().popBackStack();
+                                fragmentManager.popBackStack();
                                 return true;
                         }
                     }
-                    if (getSupportFragmentManager().getBackStackEntryCount() == 0 && navPos > 0) {
+                    if (fragmentManager.getBackStackEntryCount() == 0 && navPos > 0) {
                         onBackPressed();
                         return true;
                     }
@@ -285,29 +516,23 @@ public class ReachActivity extends ActionBarActivity implements
             switch (position) {
 
                 case 0: {
-                    if (navPos > 0) {
-                        /////Verify User data
-                        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
-                        if (TextUtils.isEmpty(SharedPrefUtils.getUserNumber(sharedPreferences))) {
-                            //fire number verification
-                            Log.i("Downloader", "USER NUMBER EMPTY OPEN SPLASH");
-                            getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.container, new SplashFragment(), "splash").commit();
-                        } else if (TextUtils.isEmpty(SharedPrefUtils.getUserName(sharedPreferences))) {
-                            //fire account creation
-                            getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.container, AccountCreation.newInstance(), "account_creation").commit();
-                        } else {
-                            enablePadding = true;
-                            getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
+                    final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
+                    if (SharedPrefUtils.isUserAbsent(sharedPreferences)) {
 
-                        }
+                        //fire number verification
+                        Log.i("Downloader", "USER NUMBER EMPTY OPEN SPLASH");
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, NumberVerification.newInstance(), "number_verification").commit();
+                    } else if(navPos > 0) {
+
+                        enablePadding = true;
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
                     }
                     break;
                 }
                 case 1: {
-                    getSupportFragmentManager()
+                    fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
                     break;
@@ -319,19 +544,19 @@ public class ReachActivity extends ActionBarActivity implements
                 }
                 case 3: {
                     //upload history
-                    getSupportFragmentManager()
+                    fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
                     break;
                 }
                 case 4: {
-                    getSupportFragmentManager()
+                    fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                     break;
                 }
                 case 5: {
-                    getSupportFragmentManager()
+                    fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
                     break;
@@ -348,7 +573,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .addToBackStack(null).replace(R.id.container, EditProfileFragment.newInstance(), "edit_profile_fragment").commit();
         } catch (IllegalStateException ignored) {
         }
@@ -364,7 +589,7 @@ public class ReachActivity extends ActionBarActivity implements
             if (optional.isPresent())
                 optional.get().show();
             slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.container, PrivacyFragment.newInstance(true), "privacy_fragment").commit();
         } catch (IllegalStateException ignored) {
@@ -372,13 +597,13 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     @Override
-    public void startNumberVerification() {
+    public void accountCreationError() {
 
         if (isFinishing())
             return;
         try {
             Log.i("Downloader", "Start number verification");
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .replace(R.id.container, NumberVerification.newInstance(), "number_verification").commit();
         } catch (IllegalStateException ignored) {
         }
@@ -395,17 +620,16 @@ public class ReachActivity extends ActionBarActivity implements
                 slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
                 return;
             }
-            if (getSupportFragmentManager().getBackStackEntryCount() == 0 && navPos > 0) {
+            if (fragmentManager.getBackStackEntryCount() == 0 && navPos > 0) {
 
                 navPos = 0;
-                getSupportFragmentManager()
+                fragmentManager
                         .beginTransaction()
                         .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right, R.anim.slide_in_right, R.anim.slide_out_left)
                         .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
             } else
                 super.onBackPressed();
-        } catch (IllegalStateException ignored) {
-        }
+        } catch (IllegalStateException ignored) {}
     }
 
     @Override
@@ -419,7 +643,7 @@ public class ReachActivity extends ActionBarActivity implements
             getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
             getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
             slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.container, ContactsListFragment.newInstance(true), "my_reach").commit();
         } catch (IllegalStateException ignored) {
@@ -432,7 +656,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .addToBackStack(null).replace(R.id.container, ContactsChooserFragment.newInstance(songsList), "contacts_chooser").commit();
         } catch (IllegalStateException ignored) {
@@ -444,9 +668,9 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right).addToBackStack(null)
-                    .addToBackStack(null).replace(R.id.container, UserProfileView.newInstance(id)).commit();
+                    .addToBackStack(null).replace(R.id.container, UserProfileView.newInstance(id), "user_profile").commit();
         } catch (IllegalStateException ignored) {
         }
     }
@@ -456,7 +680,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library").commit();
         } catch (IllegalStateException ignored) {
@@ -468,7 +692,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .addToBackStack(null).replace(R.id.container, PushSongsFragment.newInstance(), "push_library").commit();
         } catch (IllegalStateException ignored) {
         }
@@ -543,21 +767,14 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     @Override
-    public void startAccountCreation() {
+    public void startAccountCreation(Optional<OldUserContainer> container) {
 
         if (isFinishing())
             return;
         try {
-            if (TextUtils.isEmpty(SharedPrefUtils.getUserNumber(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))) {
-                Log.i("Downloader", "User number is empty start number verify");
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.container, NumberVerification.newInstance(), "number_verification").commit();
-            } else {
-                Log.i("Downloader", "User number found start account creation");
-                getSupportFragmentManager().beginTransaction()
-                        .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                        .replace(R.id.container, AccountCreation.newInstance(), "account_creation").commit();
-            }
+            fragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                    .replace(R.id.container, AccountCreation.newInstance(container), "account_creation").commit();
         } catch (IllegalStateException ignored) {
         }
     }
@@ -568,7 +785,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .addToBackStack(null)
                     .replace(R.id.container, MusicListFragment.newTypeInstance(id, albumName, artistName, playListName, type), "now_playing")
@@ -583,32 +800,18 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.container, ContactsListFragment.newInstance(true), "my_reach").commit();
         } catch (IllegalStateException ignored) {
         }
     }
 
-    @Override
-    public void OnSplash() {
-
-        if (isFinishing())
-            return;
-        try {
-            getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.container, NumberVerification.newInstance(), "number_verfication").commit();
-        } catch (IllegalStateException ignored) {
-        }
-    }
-
-    @Override
     public void goLibrary(long id) {
         if (isFinishing())
             return;
         try {
-            getSupportFragmentManager().beginTransaction()
+            fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library").commit();
         } catch (IllegalStateException ignored) {
@@ -617,7 +820,7 @@ public class ReachActivity extends ActionBarActivity implements
 
     @Override
     public void onBackStackChanged() {
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+        if (fragmentManager.getBackStackEntryCount() > 0) {
             if (searchView != null)
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                         .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
@@ -694,67 +897,6 @@ public class ReachActivity extends ActionBarActivity implements
         getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         Log.i("Downloader", "SEARCH SUBMITTED !");
         return true;
-    }
-
-    private class CheckUpdate extends AsyncTask<Void, Void, String> {
-
-        @Override
-        protected String doInBackground(Void... params) {
-
-            BufferedReader reader = null;
-            try {
-
-                reader = new BufferedReader(new InputStreamReader(new URL(StaticData.dropBox).openStream()));
-                final StringBuilder total = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    total.append(line);
-                }
-                final String result = total.toString();
-                return result.trim();
-            } catch (Exception ignored) {
-            } finally {
-                if (reader != null)
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-            super.onPostExecute(result);
-            if (isCancelled() || isFinishing() || TextUtils.isEmpty(result))
-                return;
-
-            final int currentVersion;
-            try {
-                currentVersion = Integer.parseInt(result);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                return;
-            }
-            final int version;
-            try {
-                version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-                return;
-            }
-            if (version < currentVersion && !isFinishing()) {
-
-                final UpdateFragment updateFragment = new UpdateFragment();
-                updateFragment.setCancelable(false);
-                try {
-                    updateFragment.show(getSupportFragmentManager(), "update");
-                } catch (IllegalStateException ignored) {
-                }
-            }
-        }
     }
 
     private void initialize(final SharedPreferences sharedPreferences) {
@@ -858,20 +1000,6 @@ public class ReachActivity extends ActionBarActivity implements
                 // Check for play services
                 if (!checkPlayServices(reference.get()))
                     Log.i("GCM_UTILS", "No valid Google Play Services APK found.");
-                try {
-                    final ReadableByteChannel reader = Channels.newChannel(getAssets().open("key.p12"));
-                    final FileChannel writer = new FileOutputStream
-                            ((StaticData.keyFile = File.createTempFile(".key", ".tmp", getCacheDir()))).getChannel();
-                    StaticData.keyFile.deleteOnExit();
-                    long read = 0;
-                    while ((read = writer.transferFrom(reader, read, 1733)) > 0)
-                        Log.i("Ayush", "READING KEY FILE " + read);
-                    reader.close();
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
                 /////Verify User data
                 if (!TextUtils.isEmpty(phoneNumber) || !TextUtils.isEmpty(userName)) {
                     //check if gcmID is present on server
@@ -901,11 +1029,14 @@ public class ReachActivity extends ActionBarActivity implements
 
         //getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my);
 
+        //possibility of serverId not being set ?
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
         reference = new WeakReference<>(this);
+        fragmentManager = getSupportFragmentManager();
+
+        setContentView(R.layout.activity_my);
         initialize(sharedPreferences);
 
         final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
@@ -948,8 +1079,8 @@ public class ReachActivity extends ActionBarActivity implements
 
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        getSupportFragmentManager().addOnBackStackChangedListener(this);
+                fragmentManager.findFragmentById(R.id.navigation_drawer);
+        fragmentManager.addOnBackStackChangedListener(this);
 
         findViewById(R.id.fwdBtn).setOnClickListener(nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(previousClick);
@@ -997,7 +1128,7 @@ public class ReachActivity extends ActionBarActivity implements
                 ReachMusicAdapter.PLAYER));
         queueListView.setAdapter(combinedAdapter);
 
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("Reach - Player", MODE_MULTI_PROCESS)).orNull();
+        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
         if (currentPlaying != null) {
             songNameMinimized.setText(currentPlaying.getDisplayName());
             songNameMaximized.setText(currentPlaying.getDisplayName());
@@ -1086,56 +1217,6 @@ public class ReachActivity extends ActionBarActivity implements
             queueAdapter.swapCursor(null);
     }
 
-    private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
-        @Override
-        public void onPanelSlide(View view, float v) {
-
-            final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
-            if (actionBar.isPresent()) {
-                if (v > 0.85f) {
-                    params.setMargins(0, 0, 0, 0);
-                    actionBar.get().hide();
-                    upArrow.setVisibility(View.GONE);
-                    findViewById(R.id.player).setVisibility(View.GONE);
-                    searchView.setVisibility(View.VISIBLE);
-                } else if (v < 0.85f) {
-                    params.setMargins(0, MiscUtils.dpToPx(10), 0, 0);
-                    actionBar.get().show();
-                    upArrow.setVisibility(View.VISIBLE);
-                    findViewById(R.id.player).setVisibility(View.VISIBLE);
-                    searchView.setVisibility(View.GONE);
-                }
-            }
-        }
-
-        @Override
-        public void onPanelCollapsed(View view) {
-            if (getSupportFragmentManager().getBackStackEntryCount() == 0)
-                toggleDrawer(false);
-        }
-
-        @Override
-        public void onPanelExpanded(View view) {
-            if (getSupportFragmentManager().getBackStackEntryCount() == 0)
-                toggleDrawer(true);
-        }
-
-        @Override
-        public void onPanelAnchored(View view) {
-        }
-
-        @Override
-        public void onPanelHidden(View view) {
-        }
-    };
-
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
-            new RefreshOperations().execute(downloadRefresh);
-        }
-    };
-
     //id = -1 : disk else downloader
     public boolean playSong(long id, long length, long senderId, long processed, String path,
                             String displayName, String artistName, byte type, String isLiked, long duration) {
@@ -1161,45 +1242,6 @@ public class ReachActivity extends ActionBarActivity implements
         return true;
     }
 
-    private final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            if (currentPlaying == null || currentPlaying.getType() == 1)
-                return;
-            if (toggleLiked()) {
-
-                final Cursor cursor = getContentResolver().query(
-                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + currentPlaying.getSenderId()),
-                        new String[]{ReachFriendsHelper.COLUMN_USER_NAME, ReachFriendsHelper.COLUMN_IMAGE_ID},
-                        ReachFriendsHelper.COLUMN_ID + " = ?",
-                        new String[]{currentPlaying.getSenderId() + ""}, null);
-
-                if (cursor == null)
-                    return;
-                if (!cursor.moveToFirst()) {
-                    cursor.close();
-                    return;
-                }
-
-                MiscUtils.autoRetryAsync(new DoWork<reach.backend.entities.messaging.model.MyString>() {
-                    @Override
-                    protected reach.backend.entities.messaging.model.MyString doWork() throws IOException {
-
-                        return StaticData.messagingEndpoint.messagingEndpoint().sendManualNotification(
-                                currentPlaying.getSenderId(), 0, "likes " + currentPlaying.getDisplayName(),
-                                SharedPrefUtils.getUserName(getSharedPreferences("Reach", MODE_MULTI_PROCESS))).execute();
-                    }
-                }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>absent());
-                currentPlaying.setIsLiked(true);
-                likeButton.setImageResource(R.drawable.like_pink);
-            } else {
-                likeButton.setImageResource(R.drawable.like_white);
-                currentPlaying.setIsLiked(false);
-            }
-        }
-    };
-
     private boolean toggleLiked() {
 
         final ContentValues values = new ContentValues();
@@ -1212,162 +1254,7 @@ public class ReachActivity extends ActionBarActivity implements
                 new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
     }
 
-    private final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
-
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-            if (combinedAdapter.getItem(position) instanceof TextView)
-                return;
-            final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
-            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length) {
-
-                final long senderId = cursor.getLong(8);
-                final String artistName;
-                final long duration;
-                final Cursor artistCursor = getContentResolver().query(
-                        ReachSongProvider.CONTENT_URI,
-                        new String[]{ReachSongHelper.COLUMN_ID,
-                                ReachSongHelper.COLUMN_USER_ID,
-                                ReachSongHelper.COLUMN_SONG_ID,
-                                ReachSongHelper.COLUMN_ARTIST,
-                                ReachSongHelper.COLUMN_DURATION},
-                        ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                                ReachSongHelper.COLUMN_SONG_ID + " = ?",
-                        new String[]{senderId + "", cursor.getLong(10) + ""}, null);
-
-                if (artistCursor == null) {
-                    artistName = "";
-                    duration = 0;
-                } else if (!artistCursor.moveToFirst()) {
-                    artistName = "";
-                    duration = 0;
-                    artistCursor.close();
-                } else {
-                    artistName = artistCursor.getString(3);
-                    duration = artistCursor.getLong(4);
-                    artistCursor.close();
-                }
-                playSong(
-                        cursor.getLong(0),    //id
-                        cursor.getLong(1),    //length
-                        senderId,             //senderId
-                        cursor.getLong(3),    //processed
-                        cursor.getString(4),  //path
-                        cursor.getString(5),  //displayName
-                        artistName,           //artistName
-                        (byte) 0,
-                        cursor.getString(14),
-                        duration);
-                return;
-            }
-            playSong(
-                    cursor.getLong(7),    //id
-                    cursor.getLong(0),    //length
-                    serverId,             //senderId
-                    cursor.getLong(0),    //processed = length
-                    cursor.getString(1),  //path
-                    cursor.getString(2),  //displayName
-                    cursor.getString(5), //artistName
-                    (byte) 1, //type
-                    "false", //isLiked
-                    cursor.getLong(4)); //duration
-        }
-    };
-
-    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(AbsListView absListView, int i) {
-        }
-
-        @Override
-        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-
-            boolean enable = false;
-            if (queueListView.getChildCount() > 0) {
-                final boolean firstItemVisible = queueListView.getFirstVisiblePosition() == 0;
-                final boolean topOfFirstItemVisible = queueListView.getChildAt(0).getTop() == 0;
-                enable = firstItemVisible && topOfFirstItemVisible;
-            }
-            downloadRefresh.setEnabled(enable);
-        }
-    };
-
-    private final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if (fromUser)
-                ProcessManager.submitMusicRequest(seekBar.getContext(), Optional.of(progress + ""), MusicHandler.ACTION_SEEK);
-        }
-
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-        }
-    };
-
-    private final View.OnClickListener pauseClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            if (currentPlaying != null)
-                ProcessManager.submitMusicRequest(
-                        v.getContext(),
-                        Optional.of(currentPlaying),
-                        MusicHandler.ACTION_PLAY_PAUSE);
-            else
-                ProcessManager.submitMusicRequest(
-                        v.getContext(),
-                        Optional.<MusicData>absent(),
-                        MusicHandler.ACTION_PLAY_PAUSE);
-        }
-    };
-
-    private final View.OnClickListener shuffleClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            if (SharedPrefUtils.toggleShuffle(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
-                shuffleBtn.setSelected(true);
-            else
-                shuffleBtn.setSelected(false);
-        }
-    };
-
-    private final View.OnClickListener repeatClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            if (SharedPrefUtils.toggleRepeat(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
-                repeatBtn.setSelected(true);
-            else
-                repeatBtn.setSelected(false);
-        }
-    };
-
-    private final View.OnClickListener nextClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            ProcessManager.submitMusicRequest(
-                    v.getContext(),
-                    Optional.<MusicData>absent(),
-                    MusicHandler.ACTION_NEXT);
-        }
-    };
-    private final View.OnClickListener previousClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            ProcessManager.submitMusicRequest(
-                    v.getContext(),
-                    Optional.<MusicData>absent(),
-                    MusicHandler.ACTION_PREVIOUS);
-        }
-    };
-
+    //TODO rework
     private void processMultiple(Intent intent) {
 
         final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
@@ -1375,12 +1262,11 @@ public class ReachActivity extends ActionBarActivity implements
                 pushContainer.getSongData(),
                 new TypeToken<HashSet<TransferSong>>() {
                 }.getType());
-        final long senderId = pushContainer.getSenderId();
 
         for (TransferSong transferSong : transferSongs) {
 
             addSongToQueue(transferSong.getSongId(),
-                    senderId,
+                    pushContainer.getSenderId(),
                     transferSong.getSize(),
                     transferSong.getDisplayName(),
                     transferSong.getActualName(),
@@ -1390,7 +1276,7 @@ public class ReachActivity extends ActionBarActivity implements
                     pushContainer.getNetworkType(),
                     transferSong.getArtistName(),
                     transferSong.getDuration());
-        } // No intent
+        }
     }
 
     @Override
@@ -1492,71 +1378,6 @@ public class ReachActivity extends ActionBarActivity implements
                     .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                     .setValue(1)
                     .build());
-        }
-    }
-
-    private class RefreshOperations extends AsyncTask<SwipeRefreshLayout, Void, SwipeRefreshLayout> {
-        @Override
-        protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
-
-            final ContentResolver contentResolver = getContentResolver();
-            if (contentResolver == null) {
-                if (params != null && params.length == 1)
-                    return params[0];
-                return null;
-            }
-//            final ContentValues database = new ContentValues();
-//            database.put(ReachDatabaseHelper.COLUMN_NETWORK_TYPE, -1);
-//            database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-//            contentResolver.update(
-//                    ReachDatabaseProvider.CONTENT_URI,
-//                    database,
-//                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-//                    new String[]{ReachDatabase.FINISHED + ""});
-            final Cursor cursor = contentResolver.query(
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.projection,
-                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                    new String[]{"0", ""+ReachDatabase.FINISHED, ""+ReachDatabase.PAUSED_BY_USER}, null);
-            if (cursor == null) {
-                if (params != null && params.length == 1)
-                    return params[0];
-                return null;
-            }
-
-            final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
-            while (cursor.moveToNext()) {
-
-                reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
-//                final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
-//                //If the service is running, we tread carefully
-//                if (reachDatabase.getProcessed() < reachDatabase.getLength() &&
-//                        (reachDatabase.getStatus() == ReachDatabase.NOT_WORKING || //not working
-//                                reachDatabase.getStatus() == ReachDatabase.GCM_FAILED || //gcm failed
-//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_FOUND || //file not found on host
-//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_CREATED)) { //disk error
-//                    reachDatabaseList.add(reachDatabase);
-//                }
-            }
-            cursor.close();
-            if (reachDatabaseList.size() > 0)
-                MiscUtils.startBulkDownloadOperation(reachDatabaseList, contentResolver).run();
-
-            if (params != null && params.length == 1)
-                return params[0];
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(SwipeRefreshLayout refreshLayout) {
-
-            super.onPostExecute(refreshLayout);
-            if (isCancelled() || isFinishing() || refreshLayout == null)
-                return;
-            if (refreshLayout.isRefreshing())
-                refreshLayout.setRefreshing(false);
         }
     }
 
@@ -1738,6 +1559,132 @@ public class ReachActivity extends ActionBarActivity implements
                 }
             }
 
+        }
+    }
+
+    private class CheckUpdate extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected String doInBackground(Void... params) {
+
+            BufferedReader reader = null;
+            try {
+
+                reader = new BufferedReader(new InputStreamReader(new URL(StaticData.dropBox).openStream()));
+                final StringBuilder total = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    total.append(line);
+                }
+                final String result = total.toString();
+                return result.trim();
+            } catch (Exception ignored) {
+            } finally {
+                if (reader != null)
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            super.onPostExecute(result);
+            if (isCancelled() || isFinishing() || TextUtils.isEmpty(result))
+                return;
+
+            final int currentVersion;
+            try {
+                currentVersion = Integer.parseInt(result);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return;
+            }
+            final int version;
+            try {
+                version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
+            if (version < currentVersion && !isFinishing()) {
+
+                final UpdateFragment updateFragment = new UpdateFragment();
+                updateFragment.setCancelable(false);
+                try {
+                    updateFragment.show(fragmentManager, "update");
+                } catch (IllegalStateException ignored) {
+                }
+            }
+        }
+    }
+
+    private class RefreshOperations extends AsyncTask<SwipeRefreshLayout, Void, SwipeRefreshLayout> {
+        @Override
+        protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
+
+            final ContentResolver contentResolver = getContentResolver();
+            if (contentResolver == null) {
+                if (params != null && params.length == 1)
+                    return params[0];
+                return null;
+            }
+//            final ContentValues database = new ContentValues();
+//            database.put(ReachDatabaseHelper.COLUMN_NETWORK_TYPE, -1);
+//            database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+//            contentResolver.update(
+//                    ReachDatabaseProvider.CONTENT_URI,
+//                    database,
+//                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+//                    new String[]{ReachDatabase.FINISHED + ""});
+            final Cursor cursor = contentResolver.query(
+                    ReachDatabaseProvider.CONTENT_URI,
+                    ReachDatabaseHelper.projection,
+                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
+                            ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                    new String[]{"0", "" + ReachDatabase.FINISHED, "" + ReachDatabase.PAUSED_BY_USER}, null);
+            if (cursor == null) {
+                if (params != null && params.length == 1)
+                    return params[0];
+                return null;
+            }
+
+            final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
+            while (cursor.moveToNext()) {
+
+                reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
+//                final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
+//                //If the service is running, we tread carefully
+//                if (reachDatabase.getProcessed() < reachDatabase.getLength() &&
+//                        (reachDatabase.getStatus() == ReachDatabase.NOT_WORKING || //not working
+//                                reachDatabase.getStatus() == ReachDatabase.GCM_FAILED || //gcm failed
+//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_FOUND || //file not found on host
+//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_CREATED)) { //disk error
+//                    reachDatabaseList.add(reachDatabase);
+//                }
+            }
+            cursor.close();
+            if (reachDatabaseList.size() > 0)
+                MiscUtils.startBulkDownloadOperation(reachDatabaseList, contentResolver).run();
+
+            if (params != null && params.length == 1)
+                return params[0];
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(SwipeRefreshLayout refreshLayout) {
+
+            super.onPostExecute(refreshLayout);
+            if (isCancelled() || isFinishing() || refreshLayout == null)
+                return;
+            if (refreshLayout.isRefreshing())
+                refreshLayout.setRefreshing(false);
         }
     }
 }

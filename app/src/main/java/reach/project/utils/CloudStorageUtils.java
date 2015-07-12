@@ -1,5 +1,6 @@
 package reach.project.utils;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -7,123 +8,120 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
-import com.google.api.client.http.apache.ApacheHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.SecurityUtils;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
-import com.google.api.services.storage.model.StorageObject;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URLConnection;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
+import java.security.PrivateKey;
 import java.util.Collections;
-import java.util.List;
-
-import javax.net.ssl.SSLPeerUnverifiedException;
 
 import reach.project.core.StaticData;
 
 /**
  * Created by Dexter on 28-03-2015.
  */
-public enum CloudStorageUtils {;
+public enum CloudStorageUtils {
+    ;
 
-    private static Storage storage = null;
-    public static final String APPLICATION_NAME_PROPERTY = "Reach";
-    public static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
-    public static final String BUCKET_NAME = "able-door-616.appspot.com";
+    private static final String APPLICATION_NAME_PROPERTY = "Reach";
+    private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
+    private static final String BUCKET_NAME = "able-door-616.appspot.com";
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
-    public static String uploadFile(final byte [] data, boolean returnNow) {
+    public static Optional<String> uploadFile(final File file, InputStream key) {
 
-        if(data == null || data.length == 0) return "";
-
-        final String fileName;
-
+        final FileInputStream stream;
         try {
-            final MessageDigest md = MessageDigest.getInstance("MD5");
-            //TODO reduce memory usage
-            final byte [] digested = md.digest(data);
-            final StringBuilder stringBuilder = new StringBuilder(digested.length);
-            for (final byte aDigested : digested) {
-                stringBuilder.append(Integer.toString((aDigested & 0xff) + 0x100, 16).substring(1));
-            }
-            fileName = stringBuilder.toString();
-        } catch (NoSuchAlgorithmException e) {
+            stream = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return "";
+            return Optional.absent();
         }
 
-        if(fileName.equals("")) return fileName;
-        else {
-
-            if (returnNow) {
-
-                StaticData.threadPool.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        verify(fileName, data, 0);
-                    }
-                });
-                return fileName;
-            } else {
-
-                verify(fileName, data, 0);
-                return fileName;
-            }
-        }
-    }
-
-    private static short genericUpload(final String fileName, final byte [] data, int retry) {
+        String fileName;
         try {
-            getStorage();
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
-            final String contentType = URLConnection.guessContentTypeFromStream
-                    (byteArrayInputStream);
-            final InputStreamContent content = new InputStreamContent(contentType, byteArrayInputStream);
-
-            final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME, null, content);
-            insert.setPredefinedAcl("publicRead");
-            insert.setName(fileName);
-
-            try {
-                Log.i("Ayush", "uploading photo size " + data.length);
-                insert.execute();
-            } catch (Exception e) {
-
-                e.printStackTrace();
-                byteArrayInputStream.close();
-            } finally {
-                byteArrayInputStream.close();
-            }
+            fileName = Files.hash(file, Hashing.md5()).toString();
         } catch (IOException e) {
             e.printStackTrace();
+            fileName = null;
         }
-        return verify(fileName, data, retry);
+
+        if (TextUtils.isEmpty(fileName)) {
+            MiscUtils.closeAndIgnore(stream);
+            return Optional.absent();
+        }
+
+        final Optional<Storage> storage = getStorage(key);
+        if (!storage.isPresent()) {
+            MiscUtils.closeAndIgnore(stream);
+            return Optional.absent();
+        }
+
+        Log.i("Ayush", "Uploading file name " + fileName);
+        StaticData.threadPool.submit(new UploadIfNotPresent(storage.get(), fileName, stream));
+        return Optional.of(fileName);
     }
 
-    private static short verify(String fileName, byte[] data, int retry) {
+    private static final class UploadIfNotPresent implements Runnable {
 
-        if(retry > 4) return 0;
-        Log.i("Ayush", "Verifying upload of " + fileName + " " + retry++);
-        getStorage();
-        try {
-            storage.objects().get(BUCKET_NAME, fileName).executeMediaAsInputStream();
-        } catch (SSLPeerUnverifiedException e) {
+        final Storage storage;
+        final String fileName;
+        final InputStream inputStream;
 
-            e.printStackTrace();
-            return verify(fileName, data, retry);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.i("Ayush", "Retrying upload of " + fileName);
-            return genericUpload(fileName, data, retry);
+        private UploadIfNotPresent(Storage storage, String fileName, InputStream inputStream) {
+            this.storage = storage;
+            this.fileName = fileName;
+            this.inputStream = inputStream;
         }
-        return 1;
+
+        @Override
+        public void run() {
+
+
+            InputStream check = null;
+            try {
+                check = storage.objects().get(BUCKET_NAME, fileName).executeMediaAsInputStream();
+                Log.i("Ayush", "File found" + fileName);
+                return;
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                MiscUtils.closeAndIgnore(check);
+            }
+
+            Log.i("Ayush", "File not found, Uploading " + fileName);
+            final InputStreamContent content;
+            content = new InputStreamContent(
+                    "image/",
+                    inputStream);
+
+            //file not present
+            MiscUtils.autoRetry(
+                    new DoWork<Void>() {
+                        @Override
+                        protected Void doWork() throws IOException {
+                            final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME, null, content);
+                            insert.setPredefinedAcl("publicRead");
+                            insert.setName(fileName);
+                            insert.execute();
+                            Log.i("Ayush", "Upload complete");
+                            return null;
+                        }
+                    }, Optional.<Predicate<Void>>absent());
+        }
     }
 
 //    public byte [] downloadFile(String fileName) {
@@ -189,22 +187,22 @@ public enum CloudStorageUtils {;
 //        }
 //    }
 
-    public static void deleteFile(String fileName) {
+//    public static void deleteFile(String fileName) {
+//
+//        getStorage();
+//        try {
+//            storage.objects().delete(BUCKET_NAME, fileName).execute();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-        getStorage();
-        try {
-            storage.objects().delete(BUCKET_NAME, fileName).execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void deleteAllFiles() {
-
-        getStorage();
-        List<String> stringList = listBucket(BUCKET_NAME);
-        for(String a : stringList) deleteFile(a);
-    }
+//    public static void deleteAllFiles() {
+//
+//        getStorage();
+//        List<String> stringList = listBucket(BUCKET_NAME);
+//        for (String a : stringList) deleteFile(a);
+//    }
 
 //    public void createBucket(String bucketName) {
 //
@@ -228,23 +226,23 @@ public enum CloudStorageUtils {;
 //        }
 //    }
 
-    public static List<String> listBucket(String bucketName) {
-
-        getStorage();
-        List<String> list = new ArrayList<>();
-        List<StorageObject> objects = null;
-        try {
-            objects = storage.objects().list(bucketName).execute().getItems();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if(objects != null) {
-            for(StorageObject o : objects) {
-                list.add(o.getName());
-            }
-        }
-        return list;
-    }
+//    public static List<String> listBucket(String bucketName) {
+//
+//        final Storage storage = getStorage();
+//        List<String> list = new ArrayList<>();
+//        List<StorageObject> objects = null;
+//        try {
+//            objects = storage.objects().list(bucketName).execute().getItems();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        if (objects != null) {
+//            for (StorageObject o : objects) {
+//                list.add(o.getName());
+//            }
+//        }
+//        return list;
+//    }
 
 //    public List<String> listBuckets() {
 //
@@ -264,38 +262,43 @@ public enum CloudStorageUtils {;
 //        return list;
 //    }
 
-    private static Storage getStorage() {
+    private static Optional<Storage> getStorage(InputStream stream) {
 
-        if (storage == null) {
-
-            HttpTransport httpTransport = new ApacheHttpTransport();
-            JsonFactory jsonFactory = new JacksonFactory();
-
-            try {
-
-                storage = new Storage.Builder(
-                        httpTransport,
-                        jsonFactory,
-                        new GoogleCredential.Builder()
-                                .setTransport(httpTransport)
-                                .setJsonFactory(jsonFactory)
-                                .setServiceAccountId(ACCOUNT_ID_PROPERTY)
-                                .setServiceAccountPrivateKeyFromP12File(StaticData.keyFile)
-                                .setServiceAccountScopes(Collections.singletonList(StorageScopes.DEVSTORAGE_FULL_CONTROL))
-                                .setRequestInitializer(new HttpRequestInitializer() {
-                                    @Override
-                                    public void initialize(HttpRequest request) throws IOException {
-                                        request.setReadTimeout(request.getReadTimeout() * 2);
-                                        request.setConnectTimeout(request.getConnectTimeout()*2);
-                                        request.setNumberOfRetries(request.getNumberOfRetries()*2);
-                                    }
-                                }).build())
-                        .setApplicationName(APPLICATION_NAME_PROPERTY)
-                        .build();
-            } catch (GeneralSecurityException | IOException e) {
-                e.printStackTrace();
+        final HttpTransport transport = new NetHttpTransport();
+        final JsonFactory factory = new JacksonFactory();
+        final HttpRequestInitializer initializer = new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest request) throws IOException {
             }
+        };
+
+        final PrivateKey key;
+
+        try {
+            key = SecurityUtils.loadPrivateKeyFromKeyStore(
+                    SecurityUtils.getPkcs12KeyStore(),
+                    stream,
+                    "notasecret", "privatekey", "notasecret");
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+            try {
+                transport.shutdown();
+            } catch (IOException ignored) {
+            }
+            MiscUtils.closeAndIgnore(stream);
+            return Optional.absent();
         }
-        return storage;
+
+        final GoogleCredential googleCredential = new GoogleCredential.Builder()
+                .setTransport(transport)
+                .setJsonFactory(factory)
+                .setServiceAccountId(ACCOUNT_ID_PROPERTY)
+                .setServiceAccountPrivateKey(key)
+                .setServiceAccountScopes(Collections.singletonList(StorageScopes.DEVSTORAGE_FULL_CONTROL))
+                .setRequestInitializer(initializer).build();
+
+        return Optional.of(new Storage.Builder(transport, factory, googleCredential)
+                .setApplicationName(APPLICATION_NAME_PROPERTY)
+                .build());
     }
 }

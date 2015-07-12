@@ -32,7 +32,6 @@ import java.lang.ref.WeakReference;
 import reach.backend.entities.userApi.model.ReachFriend;
 import reach.project.R;
 import reach.project.core.PushActivity;
-import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
