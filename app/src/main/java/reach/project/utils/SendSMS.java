@@ -94,14 +94,16 @@ public class SendSMS {
 			{ 	
 				// checking for valid working key
 							 method=mt;
-			}
+								return;
+							}
 							
 		    
 		    // function to set Api url
 	      public static  void setapi_url(String ap)
 			{   
 				//checking for valid url format
-				String str= ap.substring(0, 7);
+				String check= ap;
+				String str=check.substring(0,7);
 //			    System.out.println(""+str );
 				String t="http://";
 				String s="https:/";
@@ -109,17 +111,17 @@ public class SendSMS {
 				if(str.equals(t))
 					 { 
 					 	start=t;
-						api_url= ap.substring(7);
+						api_url=check.substring(7);
 					}
-				else if(ap.substring(0, 8).equals(st))
+				else if(check.substring(0,8).equals(st))
 				{ 
 				start=st;
-                api_url= ap.substring(8);
+                api_url=check.substring(8);
 				}
 				else if(str.equals(s))
 					{ 
 					start=st;
-	                api_url= ap.substring(7);
+	                api_url=check.substring(7);
 					}
 			 	else
 				   { 

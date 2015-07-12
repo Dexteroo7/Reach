@@ -1,14 +1,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:padding="20dp"
+    android:layout_height="match_parent"
     android:background="@color/white"
     tools:context="reach.project.core.ReachNotificationActivity">
     <RelativeLayout
         android:id="@+id/userContainer"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <ImageView
@@ -20,6 +18,7 @@
         <TextView
             android:id="@+id/userName"
             android:text="Name"
+            android:textColor="@color/reach_color"
             android:textSize="20sp"
             android:layout_marginLeft="10dp"
             android:layout_centerVertical="true"
@@ -30,56 +29,74 @@
     <TextView
         android:id="@+id/textView1"
         android:layout_below="@id/userContainer"
-        android:layout_alignRight="@+id/reject"
         android:layout_alignLeft="@id/userContainer"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:text="wants you to listen to"
         android:textSize="15sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
     <LinearLayout
-        android:id="@+id/accept"
-        android:clickable="false"
+        android:id="@+id/btnContainer"
         android:layout_below="@id/textView1"
-        android:layout_marginTop="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginBottom="20dp"
-        android:layout_alignLeft="@id/userContainer"
-        android:layout_width="110dp"
-        android:layout_height="30dp"
-        android:gravity="center"
-        android:background="@drawable/tour_button_selector">
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/accept"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:layout_marginLeft="10dp"
-            android:text="Accept"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/accept"
+            android:clickable="false"
+            android:layout_marginRight="20dp"
+            android:layout_alignLeft="@id/userContainer"
+            android:layout_width="110dp"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:background="@drawable/tour_button_selector">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/accept"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:layout_marginLeft="10dp"
+                android:text="Accept"/>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/reject"
+            android:clickable="false"
+            android:layout_toRightOf="@id/accept"
+            android:layout_alignBottom="@id/accept"
+            android:layout_width="110dp"
+            android:layout_height="30dp"
+            android:background="@drawable/reject_button_selector"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/reject_white"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:layout_marginLeft="10dp"
+                android:text="Reject"/>
+        </LinearLayout>
     </LinearLayout>
-    <LinearLayout
-        android:id="@id/reject"
-        android:clickable="false"
-        android:layout_toRightOf="@id/accept"
-        android:layout_alignBottom="@id/accept"
-        android:layout_marginRight="20dp"
-        android:layout_width="110dp"
-        android:layout_height="30dp"
-        android:background="@drawable/reject_button_selector"
-        android:gravity="center">
-        <ImageView
-            android:layout_width="15dp"
-            android:layout_height="15dp"
-            android:src="@drawable/reject_white"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:layout_marginLeft="10dp"
-            android:text="Reject"/>
-    </LinearLayout>
+    <TextView
+        android:id="@+id/exit"
+        android:visibility="gone"
+        android:text="Ok! I got it"
+        android:background="@drawable/number_text_selector"
+        android:textColor="@color/reach_blue"
+        android:paddingRight="5dp"
+        android:paddingLeft="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:layout_below="@id/textView1"
+        android:layout_alignRight="@id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </RelativeLayout>

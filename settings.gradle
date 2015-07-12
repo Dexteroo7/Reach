@@ -1,1 +1,1 @@
-include ':app', ':reachrelay', ':backend'
+include ':app'

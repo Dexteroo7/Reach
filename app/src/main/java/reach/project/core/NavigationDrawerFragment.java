@@ -135,11 +135,13 @@ public class NavigationDrawerFragment extends Fragment {
                 getString(R.string.title_section2),
                 getString(R.string.title_section3),
                 getString(R.string.title_section4),
-                getString(R.string.title_section5)
+                getString(R.string.title_section5),
+                getString(R.string.title_section6)
         };
         int priImageRes[] = {
                 R.drawable.icon_grey,
                 R.drawable.audio_grey,
+                R.drawable.promo,
                 R.drawable.clock,
                 R.drawable.add_icon_grey,
                 R.drawable.sheet_grey

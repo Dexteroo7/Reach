@@ -104,7 +104,7 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
 //            final short onlineStatus = Short.parseShort(cursor.getString(12));
             short networkType = -1;
             try {
-                if (!cursor.getString(13).equals("hello_world"))
+                if (cursor.getString(13)!=null && !cursor.getString(13).equals("hello_world"))
                     networkType = Short.parseShort(cursor.getString(13));
             } catch (NumberFormatException e) {
                 e.printStackTrace();

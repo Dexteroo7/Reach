@@ -31,7 +31,7 @@ import java.lang.ref.WeakReference;
 
 import reach.backend.entities.userApi.model.ReachFriend;
 import reach.project.R;
-import reach.project.core.ReachActivity;
+import reach.project.core.PushActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
@@ -126,9 +126,9 @@ public class UserMusicLibrary extends Fragment {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        Intent intent = new Intent(getActivity(), ReachActivity.class);
-                        //intent.putExtra("notifID", 99911);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        Intent intent = new Intent(getActivity(), PushActivity.class);
+                        intent.putExtra("type", 2);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity())
                                 .setAutoCancel(true)

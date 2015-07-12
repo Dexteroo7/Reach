@@ -1,80 +1,13 @@
 package reach.project.reachProcess.auxiliaryClasses;
 
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachSongHelper;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by Dexter on 15-05-2015.
  */
-public class MusicData {
 
-    public static final String [] DOWNLOADED_LIST = new String[]{ //count = 14
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_LENGTH, //1
-            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //2
-            ReachDatabaseHelper.COLUMN_PROCESSED, //3
-            ReachDatabaseHelper.COLUMN_PATH, //4
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
-
-            ReachDatabaseHelper.COLUMN_STATUS, //6
-            ReachDatabaseHelper.COLUMN_OPERATION_KIND, //7
-            ReachDatabaseHelper.COLUMN_SENDER_ID, //8
-            ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK,//9
-            ReachDatabaseHelper.COLUMN_SONG_ID, //10
-
-            ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
-            ReachDatabaseHelper.COLUMN_ONLINE_STATUS, //12
-            ReachDatabaseHelper.COLUMN_NETWORK_TYPE, //13
-            ReachDatabaseHelper.COLUMN_IS_LIKED}; //14
-
-    public static final String [] DISK_LIST = new String[] { //count = 8
-            ReachSongHelper.COLUMN_SIZE,
-            ReachSongHelper.COLUMN_PATH,
-            ReachSongHelper.COLUMN_DISPLAY_NAME,
-            ReachSongHelper.COLUMN_ID,
-            ReachSongHelper.COLUMN_DURATION,
-            ReachSongHelper.COLUMN_ARTIST,
-            ReachSongHelper.COLUMN_ALBUM,
-            ReachSongHelper.COLUMN_SONG_ID,
-    };
-
-    public static final String [] DOWNLOADED_PARTIAL = new String[]{
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_LENGTH, //1
-            ReachDatabaseHelper.COLUMN_SENDER_ID, //2
-            ReachDatabaseHelper.COLUMN_PROCESSED, //3
-            ReachDatabaseHelper.COLUMN_PATH, //4
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
-            ReachDatabaseHelper.COLUMN_IS_LIKED, //6
-            ReachDatabaseHelper.COLUMN_SONG_ID}; //7
-
-    public static final String [] DISK_PARTIAL = new String[]{
-            ReachSongHelper.COLUMN_ARTIST, //0
-            ReachSongHelper.COLUMN_SONG_ID, //1
-            ReachSongHelper.COLUMN_SIZE, //2
-            ReachSongHelper.COLUMN_PATH, //3
-            ReachSongHelper.COLUMN_DISPLAY_NAME, //4
-            ReachSongHelper.COLUMN_ID, //5
-    ReachSongHelper.COLUMN_DURATION}; //6
-
-    public static final String[] DISK_COMPLETE_NO_PATH =
-            {
-                    ReachSongHelper.COLUMN_ID,
-
-                    ReachSongHelper.COLUMN_SONG_ID,
-                    ReachSongHelper.COLUMN_USER_ID,
-
-                    ReachSongHelper.COLUMN_DISPLAY_NAME,
-                    ReachSongHelper.COLUMN_ACTUAL_NAME,
-
-                    ReachSongHelper.COLUMN_ARTIST,
-                    ReachSongHelper.COLUMN_ALBUM,
-
-                    ReachSongHelper.COLUMN_DURATION,
-                    ReachSongHelper.COLUMN_SIZE,
-
-                    ReachSongHelper.COLUMN_VISIBILITY,
-            };
+public class MusicData implements Parcelable {
 
     private final String displayName;
     private final String path;
@@ -102,7 +35,7 @@ public class MusicData {
     private boolean isLiked; //toggled by user
     private long processed; //changes
     private int currentPosition; //changes
-    private short primaryProgress; //changes
+    private int primaryProgress; //changes
 
     public void setDuration(long duration) {
         this.duration = duration;
@@ -128,23 +61,23 @@ public class MusicData {
         return type;
     }
 
-    public short getSecondaryProgress() {
+    public int getSecondaryProgress() {
         return secondaryProgress;
     }
 
-    public void setSecondaryProgress(short secondaryProgress) {
+    public void setSecondaryProgress(int secondaryProgress) {
         this.secondaryProgress = secondaryProgress;
     }
 
-    public short getPrimaryProgress() {
+    public int getPrimaryProgress() {
         return primaryProgress;
     }
 
-    public void setPrimaryProgress(short primaryProgress) {
+    public void setPrimaryProgress(int primaryProgress) {
         this.primaryProgress = primaryProgress;
     }
 
-    private short secondaryProgress;
+    private int secondaryProgress;
 
     public int getCurrentPosition() {
         return currentPosition;
@@ -212,4 +145,54 @@ public class MusicData {
         result = 31 * result + (int) (duration ^ (duration >>> 32));
         return result;
     }
+
+    protected MusicData(Parcel in) {
+        displayName = in.readString();
+        path = in.readString();
+        artistName = in.readString();
+        id = in.readLong();
+        length = in.readLong();
+        senderId = in.readLong();
+        type = in.readByte();
+        duration = in.readLong();
+        isLiked = in.readByte() != 0;
+        processed = in.readLong();
+        currentPosition = in.readInt();
+        primaryProgress = in.readInt();
+        secondaryProgress = in.readInt();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(displayName);
+        dest.writeString(path);
+        dest.writeString(artistName);
+        dest.writeLong(id);
+        dest.writeLong(length);
+        dest.writeLong(senderId);
+        dest.writeByte(type);
+        dest.writeLong(duration);
+        dest.writeByte((byte) (isLiked ? 1 : 0));
+        dest.writeLong(processed);
+        dest.writeInt(currentPosition);
+        dest.writeInt(primaryProgress);
+        dest.writeInt(secondaryProgress);
+    }
+
+    public static final Parcelable.Creator<MusicData> CREATOR = new Parcelable.Creator<MusicData>() {
+        @Override
+        public MusicData createFromParcel(Parcel in) {
+            return new MusicData(in);
+        }
+
+        @Override
+        public MusicData[] newArray(int size) {
+            return new MusicData[size];
+        }
+    };
 }

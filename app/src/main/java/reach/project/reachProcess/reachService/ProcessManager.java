@@ -79,12 +79,16 @@ public class ProcessManager extends Service implements
     public static final String REPLY_MUSIC_DEAD = "reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD";
     public static final String REPLY_ERROR = "reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR";
 
-    private void sendMessage(Context context, Optional<String> message, String action) {
+    private void sendMessage(Context context, Optional<?> message, String action) {
 
         final Intent intent = new Intent(context, ReachActivity.PlayerUpdateListener.class);
         intent.setAction(action);
-        if (message.isPresent())
-            intent.putExtra("message", message.get());
+        if (message.isPresent()) {
+            if (message.get() instanceof String)
+                intent.putExtra("message", (String) message.get());
+            else if (message.get() instanceof MusicData)
+                intent.putExtra("message", (MusicData) message.get());
+        }
         context.sendBroadcast(intent);
     }
 
@@ -109,16 +113,20 @@ public class ProcessManager extends Service implements
         helper(context, Optional.of(message), NetworkHandler.ACTION_NETWORK_MESSAGE);
     }
 
-    public static void submitMusicRequest(@NonNull Context context, @NonNull Optional<String> message, @NonNull String action) {
+    public static void submitMusicRequest(@NonNull Context context, @NonNull Optional<?> message, @NonNull String action) {
         helper(context, message, action);
     }
 
-    private static void helper(@NonNull Context context, @NonNull Optional<String> message, @NonNull String action) {
+    private static void helper(@NonNull Context context, @NonNull Optional<?> message, @NonNull String action) {
 
         final Intent intent = new Intent(context, ProcessManager.class);
         intent.setAction(action);
-        if (message.isPresent())
-            intent.putExtra("message", message.get());
+        if (message.isPresent()) {
+            if (message.get() instanceof String)
+                intent.putExtra("message", (String) message.get());
+            else if (message.get() instanceof MusicData)
+                intent.putExtra("message", (MusicData) message.get());
+        }
         context.startService(intent);
     }
     //////////////////////////////////
@@ -220,14 +228,14 @@ public class ProcessManager extends Service implements
         if (lastSong.type == 0)
             cursor = getContentResolver().query(
                     Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + lastSong.id),
-                    MusicData.DOWNLOADED_PARTIAL,
+                    StaticData.DOWNLOADED_PARTIAL,
                     ReachDatabaseHelper.COLUMN_ID + " = ? and " +
                             ReachDatabaseHelper.COLUMN_PROCESSED + " > ?",
                     new String[]{lastSong.id + "", "0"}, null);
         else
             cursor = getContentResolver().query(
                     ReachSongProvider.CONTENT_URI,
-                    MusicData.DISK_PARTIAL,
+                    StaticData.DISK_PARTIAL,
                     ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                             ReachSongHelper.COLUMN_SONG_ID + " = ?",
                     new String[]{serverId + "", lastSong.id + ""}, null);
@@ -242,7 +250,7 @@ public class ProcessManager extends Service implements
         if (type == 0) {
             reachSongCursor = getContentResolver().query(
                     ReachDatabaseProvider.CONTENT_URI,
-                    MusicData.DOWNLOADED_PARTIAL,
+                    StaticData.DOWNLOADED_PARTIAL,
                     ReachDatabaseHelper.COLUMN_ID + " != ? and " +
                             ReachDatabaseHelper.COLUMN_PROCESSED + " > ?", //all except that id
                     new String[]{id + "", "0"}, null);
@@ -251,7 +259,7 @@ public class ProcessManager extends Service implements
             reachSongCursor = getReachDatabaseCursor();
             myLibraryCursor = getContentResolver().query(
                     ReachSongProvider.CONTENT_URI,
-                    MusicData.DISK_PARTIAL,
+                    StaticData.DISK_PARTIAL,
                     ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                             ReachSongHelper.COLUMN_SONG_ID + " != ?",
                     new String[]{serverId + "", id + ""}, null);
@@ -394,7 +402,8 @@ public class ProcessManager extends Service implements
         remoteViews.setTextViewText(R.id.NsongNamePlaying, generateNotificationText(totalDownloads, totalUploads));
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        foreGround.putExtra("openPlayer", true);
+        if (totalUploads == 0)
+            foreGround.putExtra("openPlayer", true);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
@@ -471,7 +480,8 @@ public class ProcessManager extends Service implements
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.pause_white_selector);
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        foreGround.putExtra("openPlayer", true);
+        if (totalUploads == 0)
+            foreGround.putExtra("openPlayer", true);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
@@ -508,6 +518,8 @@ public class ProcessManager extends Service implements
     @Override
     public void updateSongDetails(MusicData musicData) {
         //insert music player into notification
+        Log.i("Downloader", "UPDATING SONG DETAILS");
+        sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
         final String toSend = new Gson().toJson(musicData, MusicData.class);
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(toSend), REPLY_LATEST_MUSIC);
@@ -579,7 +591,7 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
-        sendMessage(this, Optional.<String>absent(), REPLY_PAUSED);
+        sendMessage(this, Optional.<MusicData>absent(), REPLY_PAUSED);
     }
 
     @Override
@@ -588,14 +600,14 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
-        sendMessage(this, Optional.<String>absent(), REPLY_UN_PAUSED);
+        sendMessage(this, Optional.<MusicData>absent(), REPLY_UN_PAUSED);
     }
 
     @Override
     public void musicPlayerDead() {
 
         musicHandler.close();
-        sendMessage(this, Optional.<String>absent(), REPLY_MUSIC_DEAD);
+        sendMessage(this, Optional.<MusicData>absent(), REPLY_MUSIC_DEAD);
         Log.i("Downloader", "Sent music player dead");
         switch (notificationState) {
 
@@ -718,7 +730,7 @@ public class ProcessManager extends Service implements
                 musicHandler.userUnPause();
                 MusicData data;
                 try {
-                    data = new Gson().fromJson(intent.getStringExtra("message"), MusicData.class);
+                    data = intent.getParcelableExtra("message");
                 } catch (IllegalStateException | JsonSyntaxException e) {
                     e.printStackTrace();
                     data = null;
@@ -749,7 +761,7 @@ public class ProcessManager extends Service implements
                 Log.i("Downloader", "ACTION_PLAY_PAUSE");
                 if (!musicHandler.processPlayPause())
                     break;
-                final Optional<MusicData> history = Optional.fromNullable(new Gson().fromJson(intent.getStringExtra("message"), MusicData.class));
+                final Optional<MusicData> history = Optional.fromNullable((MusicData)intent.getParcelableExtra("message"));
                 if(history.isPresent())
                     pushNextSong(history);
                 else {
@@ -796,7 +808,7 @@ public class ProcessManager extends Service implements
     private Cursor getReachDatabaseCursor() {
         return getContentResolver().query(
                 ReachDatabaseProvider.CONTENT_URI,
-                MusicData.DOWNLOADED_PARTIAL,
+                StaticData.DOWNLOADED_PARTIAL,
                 ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         ReachDatabaseHelper.COLUMN_PROCESSED + " > ?",
                 new String[]{"0", "0"},
@@ -806,7 +818,7 @@ public class ProcessManager extends Service implements
     private Cursor getMyLibraryCursor() {
         return getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
-                MusicData.DISK_PARTIAL,
+                StaticData.DISK_PARTIAL,
                 ReachSongHelper.COLUMN_USER_ID + " = ?",
                 new String[]{serverId + ""},
                 ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
@@ -995,7 +1007,7 @@ public class ProcessManager extends Service implements
     public void errorReport(String songName, String missType) {
 
 //        pushNextSong(nextSong(Optional.<MusicData>absent(), false));
-        sendMessage(this, Optional.<String>absent(), REPLY_ERROR);
+        sendMessage(this, Optional.<MusicData>absent(), REPLY_ERROR);
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(missType)

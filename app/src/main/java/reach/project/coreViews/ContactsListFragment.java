@@ -32,6 +32,7 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -41,6 +42,7 @@ import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -73,7 +75,8 @@ import reach.backend.entities.userApi.model.ReachFriendCollection;
 import reach.project.R;
 import reach.project.adapter.ReachAllContactsAdapter;
 import reach.project.adapter.ReachContactsAdapter;
-import reach.project.core.ReachActivity;
+import reach.project.core.NotificationActivity;
+import reach.project.core.PushActivity;
 import reach.project.core.StaticData;
 import reach.project.database.ReachAlbumDatabase;
 import reach.project.database.ReachArtistDatabase;
@@ -158,11 +161,11 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             }
         }
     };
-    public static void sendSMS(String number) throws Exception
+    public void sendSMS(String number) throws Exception
     {
         SendSMS smsObj = new SendSMS();
         smsObj.setparams("alerts.sinfini.com","sms","Aed8065339b18aedfbad998aeec2ce9b3","REACHM");
-        smsObj.send_sms(number, "Hey! Checkout and download my phone music collection with just a click! Use my invite code "+MiscUtils.getInviteCode()+". https://play.google.com/store/apps/details?id=reach.project", "dlr_url");
+        smsObj.send_sms(number, "Hey! Checkout and download my phone music collection with just a click! Use my invite code "+MiscUtils.getInviteCode()+".\nhttp://letsreach.co/app\n--\n"+ SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)), "dlr_url");
         /*smsObj.schedule_sms("99xxxxxxxx", "message", "http://www.yourdomainname.domain/yourdlrpage&custom=XX",
                 "YYYY-MM-DD HH:MM:SS");
         smsObj.unicode_sms("99xxxxxxxx", "message", "http://www.yourdomainname.domain/yourdlrpage&custom=XX","1");
@@ -288,18 +291,19 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
                         public void run() {
                             Bitmap bmp = null;
                             NotificationManagerCompat managerCompat = NotificationManagerCompat.from(getActivity());
+                            int px = MiscUtils.dpToPx(64);
                             try {
                                 bmp = Picasso.with(getActivity())
                                         .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
                                         .centerCrop()
-                                        .resize(96, 96)
+                                        .resize(px, px)
                                         .get();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            Intent intent = new Intent(getActivity(), ReachActivity.class);
-                            //intent.putExtra("notifID",99910);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                            Intent intent = new Intent(getActivity(), PushActivity.class);
+                            intent.putExtra("type",1);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
                             NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity())
                                     .setAutoCancel(true)
@@ -393,7 +397,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             actionBar.setTitle("My Reach");
             mListener.setUpNavigationViews();
         }
-        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         inviteSentTo.clear();
         inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<String>()));
         /**
@@ -839,43 +843,29 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             return;
 
         menu.clear();
-        inflater.inflate(R.menu.search_menu, menu);
-        /*final MenuItem notifButton = menu.findItem(R.id.notif_button);
-        if(notifButton == null)
-            return;
-        notifButton.setActionView(R.layout.reach_queue_counter);
-
-        final FrameLayout rqContainer = (FrameLayout)notifButton.getActionView().findViewById(R.id.counterContainer);
-        if(rqContainer == null)
-            return;
-
-        rqContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListener.startInvitation();
-            }
-        });*/
-
+        inflater.inflate(R.menu.myreach_menu, menu);
         searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
         if(searchView == null)
             return;
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
-    }
 
-    /*@Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
+        final MenuItem notifButton = menu.findItem(R.id.notif_button);
+        if(notifButton == null)
+            return;
+        notifButton.setActionView(R.layout.reach_queue_counter);
 
-        final int id = item.getItemId();
-        switch(id){
-
-            case R.id.notif_button: {
-                mListener.startInvitation();
-                break;
+        final FrameLayout rqContainer = (FrameLayout)notifButton.getActionView().findViewById(R.id.counterContainer);
+        rqContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), NotificationActivity.class);
+                startActivity(intent);
             }
-        }
-        return super.onOptionsItemSelected(item);
-    }*/
+        });
+        final TextView rqCount = (TextView) rqContainer.findViewById(R.id.reach_q_count);
+        rqCount.setText("0");
+    }
 
     @Override
     public void onAttach(Activity activity) {

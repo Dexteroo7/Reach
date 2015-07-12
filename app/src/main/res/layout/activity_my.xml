@@ -76,7 +76,7 @@
                     android:id="@+id/downloadRefresh"
                     android:background="#e3e3e3"
                     android:layout_width="match_parent"
-                    android:layout_weight="0.73"
+                    android:layout_weight="0.7"
                     android:layout_height="0dp">
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -91,7 +91,7 @@
                 </android.support.v4.widget.SwipeRefreshLayout>
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_weight="0.27"
+                    android:layout_weight="0.3"
                     android:clickable="true"
                     android:layout_height="0dp">
                     <LinearLayout

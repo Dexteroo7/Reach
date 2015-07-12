@@ -106,7 +106,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         if(getActivity() == null) return null;
         return new CursorLoader(getActivity(),
                 ReachSongProvider.CONTENT_URI,
-                MusicData.DISK_COMPLETE_NO_PATH,
+                StaticData.DISK_COMPLETE_NO_PATH,
                 selection,
                 selectionArguments,
                 ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");

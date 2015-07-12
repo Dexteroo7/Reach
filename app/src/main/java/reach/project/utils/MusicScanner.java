@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.zip.GZIPOutputStream;
 
 import reach.backend.entities.userApi.model.MusicContainer;
 import reach.backend.entities.userApi.model.ReachPlayList;
@@ -527,6 +529,68 @@ public class MusicScanner extends IntentService {
         final Future<?> musicUpdate = StaticData.threadPool.submit(new Runnable() {
             @Override
             public void run() {
+                try {
+                    List<Song> songList = new ArrayList<>();
+                    for (ReachSong reachSong : songArray) {
+                        boolean vis = reachSong.getVisibility() != 0;
+                        songList.add(new Song.Builder()
+                                .songId(reachSong.getSongId())
+                                .size(reachSong.getSize())
+                                .visibility(vis)
+                                .year(reachSong.getYear())
+                                .dateAdded(reachSong.getDateAdded())
+                                .duration(reachSong.getDuration())
+                                .genre(reachSong.getGenre())
+                                .displayName(reachSong.getDisplayName())
+                                .actualName(reachSong.getActualName())
+                                .artist(reachSong.getArtist())
+                                .album(reachSong.getAlbum())
+                                .albumArtUrl(reachSong.getAlbumArtUrl())
+                                .formattedDataAdded(reachSong.getFormattedDataAdded())
+                                .fileHash(reachSong.getFileHash())
+                                .path(reachSong.getPath())
+                                .build());
+                    }
+                    List<Playlist> playlistList = new ArrayList<>();
+                    for (ReachPlayList reachPlayList : playListSet) {
+                        List<Long> reachSongsList = new ArrayList<>();
+                        List<String> reachSongsStringList = reachPlayList.getReachSongs();
+                        for (String reachSongString : reachSongsStringList) {
+                            reachSongsList.add(Long.valueOf(reachSongString));
+                        }
+                        boolean vis = reachPlayList.getVisibility() != 0;
+                        playlistList.add(new Playlist.Builder()
+                                .visibility(vis)
+                                .dateModified(reachPlayList.getDateModified())
+                                .playlistName(reachPlayList.getPlaylistName())
+                                .reachSongs(reachSongsList)
+                                .build());
+                    }
+                    List<String> genreList = new ArrayList<>();
+                    genreList.add(genres);
+                    MusicList musicList = new MusicList.Builder()
+                            .clientId(serverId)
+                            .genres(genreList)
+                            .song(songList)
+                            .playlist(playlistList)
+                            .build();
+
+                    byte[] data = musicList.toByteArray();
+
+                    Log.d("Ashish", data.length + " - orig size");
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(data.length);
+
+                    GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
+                    gzipOutputStream.write(data);
+                    gzipOutputStream.close();
+
+                    Log.d("Ashish", byteArrayOutputStream.toByteArray().length + " - compr size");
+                    byteArrayOutputStream.close();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 //update Music onServer, yes shit load of boiler-plate code
                 final MusicContainer musicContainer = new MusicContainer();
                 musicContainer.setClientId(serverId);

@@ -78,6 +78,7 @@ import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MusicListFragment;
 import reach.project.coreViews.PrivacyFragment;
+import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.PushSongsFragment;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UploadHistory;
@@ -92,6 +93,7 @@ import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.onBoarding.AccountCreation;
 import reach.project.onBoarding.NumberVerification;
+import reach.project.onBoarding.SplashFragment;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
@@ -322,7 +324,7 @@ public class ReachActivity extends ActionBarActivity implements
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
             final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
-            if (cursor.getColumnCount() == MusicData.DOWNLOADED_LIST.length) {
+            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length) {
 
                 final long senderId = cursor.getLong(8);
                 final String artistName;
@@ -486,10 +488,12 @@ public class ReachActivity extends ActionBarActivity implements
         }*/
 
         if (getIntent().getBooleanExtra("openPlayer", false)) {
+
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
+                    if (slidingUpPanelLayout!=null)
+                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }
             }, 1500);
         }
@@ -512,7 +516,6 @@ public class ReachActivity extends ActionBarActivity implements
             switch (position) {
 
                 case 0: {
-
                     final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
                     if (SharedPrefUtils.isUserAbsent(sharedPreferences)) {
 
@@ -535,19 +538,24 @@ public class ReachActivity extends ActionBarActivity implements
                     break;
                 }
                 case 2: {
+                    //promo code dialog
+                    new PromoCodeDialog().show(getSupportFragmentManager(),"promo_dialog");
+                    break;
+                }
+                case 3: {
                     //upload history
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
                     break;
                 }
-                case 3: {
+                case 4: {
                     fragmentManager
                             .beginTransaction()
-                            .replace(R.id.container, InviteFragment.newInstance(false), "invite_fragment").commit();
+                            .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                     break;
                 }
-                case 4: {
+                case 5: {
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
@@ -634,13 +642,14 @@ public class ReachActivity extends ActionBarActivity implements
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
             getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
             getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
-
+            slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.container, ContactsListFragment.newInstance(true), "my_reach").commit();
         } catch (IllegalStateException ignored) {
         }
     }
+
 
     @Override
     public void onPushNext(HashSet<TransferSong> songsList) {
@@ -653,19 +662,6 @@ public class ReachActivity extends ActionBarActivity implements
         } catch (IllegalStateException ignored) {
         }
     }
-
-//    @Override
-//    public void OnSplash() {
-//
-//        if (isFinishing())
-//            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-//                    .replace(R.id.container, NumberVerification.newInstance(), "number_verfication").commit();
-//        } catch (IllegalStateException ignored) {
-//        }
-//    }
 
     @Override
     public void onOpenProfileView(long id) {
@@ -725,14 +721,16 @@ public class ReachActivity extends ActionBarActivity implements
         new Handler().post(new Runnable() {
             @Override
             public void run() {
-                if (show) {
-                    slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
-                    slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(70));
-                    slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                } else {
-                    slidingUpPanelLayout.getChildAt(1).setVisibility(View.GONE);
-                    slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(0));
-                    slidingUpPanelLayout.setPanelState(PanelState.HIDDEN);
+                if (slidingUpPanelLayout!=null) {
+                    if (show) {
+                        slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
+                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(70));
+                        slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
+                    } else {
+                        slidingUpPanelLayout.getChildAt(1).setVisibility(View.GONE);
+                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(0));
+                        slidingUpPanelLayout.setPanelState(PanelState.HIDDEN);
+                    }
                 }
             }
         });
@@ -740,7 +738,8 @@ public class ReachActivity extends ActionBarActivity implements
 
     @Override
     public void anchorFooter(boolean first) {
-
+        if (slidingUpPanelLayout==null)
+            return;
         if (first)
             slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
         else {
@@ -749,9 +748,11 @@ public class ReachActivity extends ActionBarActivity implements
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED)
-                        slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                    slidingUpPanelLayout.setAnchorPoint(1f);
+                        if (slidingUpPanelLayout==null)
+                            return;
+                        if (slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED)
+                            slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
+                        slidingUpPanelLayout.setAnchorPoint(1f);
                 }
             }, 2000);
         }
@@ -806,7 +807,6 @@ public class ReachActivity extends ActionBarActivity implements
         }
     }
 
-    @Override
     public void goLibrary(long id) {
         if (isFinishing())
             return;
@@ -970,10 +970,11 @@ public class ReachActivity extends ActionBarActivity implements
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
-                            final Context context = reference.get();
-                            if (context != null)
-                                Toast.makeText(context, "Network error, GCM failed", Toast.LENGTH_SHORT).show();
+                            if (reference!=null) {
+                                final Context context = reference.get();
+                                if (context != null)
+                                    Toast.makeText(context, "Network error, GCM failed", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
                 } else if (gcmId.equals("user_deleted")) {
@@ -983,10 +984,11 @@ public class ReachActivity extends ActionBarActivity implements
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
-                            final Context context = reference.get();
-                            if (context != null)
-                                Toast.makeText(context, "Network error, GCM failed", Toast.LENGTH_SHORT).show();
+                            if (reference!=null) {
+                                final Context context = reference.get();
+                                if (context != null)
+                                    Toast.makeText(context, "Network error, GCM failed", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
                 }
@@ -1043,9 +1045,9 @@ public class ReachActivity extends ActionBarActivity implements
             actionBar.get().hide();
         }
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
         if (!enablePadding)
             slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
-        topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
         toggleSliding(false);
 
         upArrow = (ImageView) findViewById(R.id.upArrow);
@@ -1170,14 +1172,14 @@ public class ReachActivity extends ActionBarActivity implements
         if (id == StaticData.DOWNLOAD_LOADER)
             return new CursorLoader(this,
                     ReachDatabaseProvider.CONTENT_URI,
-                    MusicData.DOWNLOADED_LIST,
+                    StaticData.DOWNLOADED_LIST,
                     selectionDownloader,
                     selectionArgumentsDownloader,
                     ReachDatabaseHelper.COLUMN_ADDED + " DESC");
 
         return new CursorLoader(this,
                 ReachSongProvider.CONTENT_URI,
-                MusicData.DISK_LIST,
+                StaticData.DISK_LIST,
                 selectionMyLibrary,
                 selectionArgumentsMyLibrary,
                 ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
@@ -1234,7 +1236,7 @@ public class ReachActivity extends ActionBarActivity implements
         final MusicData data = new MusicData(displayName, path, artistName, id, length,
                 senderId, processed, type, isLiked.equals("true"), duration);
         ProcessManager.submitMusicRequest(this,
-                Optional.of(new Gson().toJson(data, MusicData.class)),
+                Optional.of(data),
                 MusicHandler.ACTION_NEW_SONG);
         /////////////////////////////////////////////////////
         return true;
@@ -1429,7 +1431,17 @@ public class ReachActivity extends ActionBarActivity implements
                         } else
                             activity.likeButton.setVisibility(View.GONE);
                     }
-
+                    /**
+                     * GA stuff
+                     */
+                    if (!StaticData.debugMode) {
+                        ((ReachApplication)activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Play song")
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setLabel("Song - " + data.getDisplayName())
+                                .setValue(1)
+                                .build());
+                    }
                 }
             });
             updatePrimaryProgress(data.getPrimaryProgress(), data.getCurrentPosition(), activity);
@@ -1437,7 +1449,7 @@ public class ReachActivity extends ActionBarActivity implements
             togglePlayPause(paused, activity);
         }
 
-        private synchronized void updatePrimaryProgress(final short progress, final int pos, final ReachActivity activity) {
+        private synchronized void updatePrimaryProgress(final int progress, final int pos, final ReachActivity activity) {
 
             activity.runOnUiThread(new Runnable() {
                 @Override
@@ -1454,7 +1466,7 @@ public class ReachActivity extends ActionBarActivity implements
 //                togglePlayPause(false, activity);
         }
 
-        private synchronized void updateSecondaryProgress(final short progress, final ReachActivity activity) {
+        private synchronized void updateSecondaryProgress(final int progress, final ReachActivity activity) {
 
             activity.runOnUiThread(new Runnable() {
                 @Override
@@ -1497,7 +1509,7 @@ public class ReachActivity extends ActionBarActivity implements
                     Log.i("Downloader", "REPLY_LATEST_MUSIC received");
                     if (intent.getStringExtra("message") != null) {
                         //update the currentPlaying for like and such
-                        activity.currentPlaying = new Gson().fromJson(intent.getStringExtra("message"), MusicData.class);
+                        activity.currentPlaying = intent.getParcelableExtra("message");
                         updateMusic(activity.currentPlaying, false, activity);
                     }
                     break;

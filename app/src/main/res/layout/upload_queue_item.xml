@@ -55,5 +55,5 @@
         android:layout_toRightOf="@id/albumArt"
         android:layout_height="1dp"
         android:layout_alignParentBottom="true"
-        android:background="#dcdcdcdc" />
+        android:background="@color/darkgrey" />
 </RelativeLayout>

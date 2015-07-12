@@ -16,6 +16,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
+import reach.project.database.sql.ReachDatabaseHelper;
+import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -36,6 +38,74 @@ public final class StaticData {
         messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build();
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
     }
+
+    public static final String [] DOWNLOADED_LIST = new String[]{ //count = 14
+            ReachDatabaseHelper.COLUMN_ID, //0
+            ReachDatabaseHelper.COLUMN_LENGTH, //1
+            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //2
+            ReachDatabaseHelper.COLUMN_PROCESSED, //3
+            ReachDatabaseHelper.COLUMN_PATH, //4
+            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
+
+            ReachDatabaseHelper.COLUMN_STATUS, //6
+            ReachDatabaseHelper.COLUMN_OPERATION_KIND, //7
+            ReachDatabaseHelper.COLUMN_SENDER_ID, //8
+            ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK,//9
+            ReachDatabaseHelper.COLUMN_SONG_ID, //10
+
+            ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
+            ReachDatabaseHelper.COLUMN_ONLINE_STATUS, //12
+            ReachDatabaseHelper.COLUMN_NETWORK_TYPE, //13
+            ReachDatabaseHelper.COLUMN_IS_LIKED}; //14
+
+    public static final String [] DISK_LIST = new String[] { //count = 8
+            ReachSongHelper.COLUMN_SIZE,
+            ReachSongHelper.COLUMN_PATH,
+            ReachSongHelper.COLUMN_DISPLAY_NAME,
+            ReachSongHelper.COLUMN_ID,
+            ReachSongHelper.COLUMN_DURATION,
+            ReachSongHelper.COLUMN_ARTIST,
+            ReachSongHelper.COLUMN_ALBUM,
+            ReachSongHelper.COLUMN_SONG_ID,
+    };
+
+    public static final String [] DOWNLOADED_PARTIAL = new String[]{
+            ReachDatabaseHelper.COLUMN_ID, //0
+            ReachDatabaseHelper.COLUMN_LENGTH, //1
+            ReachDatabaseHelper.COLUMN_SENDER_ID, //2
+            ReachDatabaseHelper.COLUMN_PROCESSED, //3
+            ReachDatabaseHelper.COLUMN_PATH, //4
+            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
+            ReachDatabaseHelper.COLUMN_IS_LIKED, //6
+            ReachDatabaseHelper.COLUMN_SONG_ID}; //7
+
+    public static final String [] DISK_PARTIAL = new String[]{
+            ReachSongHelper.COLUMN_ARTIST, //0
+            ReachSongHelper.COLUMN_SONG_ID, //1
+            ReachSongHelper.COLUMN_SIZE, //2
+            ReachSongHelper.COLUMN_PATH, //3
+            ReachSongHelper.COLUMN_DISPLAY_NAME, //4
+            ReachSongHelper.COLUMN_ID, //5
+            ReachSongHelper.COLUMN_DURATION}; //6
+
+    public static final String[] DISK_COMPLETE_NO_PATH =
+            {
+                    ReachSongHelper.COLUMN_ID,
+
+                    ReachSongHelper.COLUMN_SONG_ID,
+                    ReachSongHelper.COLUMN_USER_ID,
+
+                    ReachSongHelper.COLUMN_DISPLAY_NAME,
+                    ReachSongHelper.COLUMN_ACTUAL_NAME,
+
+                    ReachSongHelper.COLUMN_ARTIST,
+                    ReachSongHelper.COLUMN_ALBUM,
+
+                    ReachSongHelper.COLUMN_DURATION,
+                    ReachSongHelper.COLUMN_SIZE,
+
+                    ReachSongHelper.COLUMN_VISIBILITY,
+            };
 
     public static final short ALBUM_LOADER = 0;
     public static final short ARTIST_LOADER = 1;
@@ -67,5 +137,6 @@ public final class StaticData {
 
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
 
+    ////meant for release
     public static boolean debugMode = true;
 }

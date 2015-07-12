@@ -312,7 +312,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
 
         return new CursorLoader(getActivity(),
                 ReachSongProvider.CONTENT_URI,
-                MusicData.DISK_COMPLETE_NO_PATH,
+                StaticData.DISK_COMPLETE_NO_PATH,
                 whereClause,
                 whereArgs,
                 ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");

@@ -11,9 +11,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -23,11 +20,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
+import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
@@ -36,19 +36,14 @@ import reach.project.utils.SuperInterface;
 public class InviteFragment extends Fragment {
 
     private static WeakReference<InviteFragment> reference = null;
-    public static InviteFragment newInstance(boolean first) {
-
-        final Bundle args;
+    public static InviteFragment newInstance() {
         InviteFragment fragment;
         if(reference == null || (fragment = reference.get()) == null) {
             reference = new WeakReference<>(fragment = new InviteFragment());
-            fragment.setArguments(args = new Bundle());
         }
         else {
             Log.i("Ayush", "Reusing invite fragment object :)");
-            args = fragment.getArguments();
         }
-        args.putBoolean("first", first);
         return fragment;
     }
 
@@ -59,7 +54,6 @@ public class InviteFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        setHasOptionsMenu(true);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
@@ -146,11 +140,22 @@ public class InviteFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+                /**
+                 * GA stuff
+                 */
+                if (!StaticData.debugMode) {
+                    ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Invite Page")
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setLabel(inviteOptions[position])
+                            .setValue(1)
+                            .build());
+                }
                 final Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT,
                         "Hey! Checkout and download my phone music collection with just a click! Use my invite code " + refCode[0] +
-                                ". https://play.google.com/store/apps/details?id=reach.project");
+                                ".\nhttp://letsreach.co/app\n--\n"+SharedPrefUtils.getUserName(preferences));
                 sendIntent.setType("text/plain");
                 sendIntent.setPackage(packageNames[position]);
                 try{
@@ -168,27 +173,5 @@ public class InviteFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        menu.clear();
-        if (getArguments()!=null&&getArguments().getBoolean("first"))
-            inflater.inflate(R.menu.invite_menu, menu);
-        else
-            inflater.inflate(R.menu.menu, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        final int id = item.getItemId();
-        switch(id){
-
-            case R.id.next_button: {
-                mListener.onNextClicked();
-                break;
-            }
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

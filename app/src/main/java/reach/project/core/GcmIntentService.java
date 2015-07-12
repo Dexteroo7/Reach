@@ -190,9 +190,6 @@ public class GcmIntentService extends IntentService {
 
             final Intent viewIntent;
             viewIntent = new Intent(this, ReachActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putBoolean("oP", true);
-            viewIntent.putExtras(bundle);
             viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, message.hashCode(), viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -217,6 +214,7 @@ public class GcmIntentService extends IntentService {
 
             final int notification_id = message.hashCode();
             final Intent viewIntent = new Intent(this, PushActivity.class);
+            viewIntent.putExtra("type",0);
             viewIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             final String unCompressed;
             try {

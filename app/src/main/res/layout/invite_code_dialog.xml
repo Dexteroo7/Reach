@@ -14,8 +14,8 @@
             android:id="@+id/image"
             android:layout_centerInParent="true"
             android:background="@drawable/circular_background"
-            android:src="@drawable/downbox"
-            android:padding="20dp"
+            android:src="@drawable/promo_pink"
+            android:padding="25dp"
             android:scaleType="fitCenter"
             android:layout_width="120dp"
             android:layout_height="120dp" />
@@ -23,10 +23,10 @@
     <RelativeLayout
         android:id="@+id/lowerContainer"
         android:layout_width="match_parent"
-        android:layout_height="150dp">
+        android:layout_height="125dp">
         <TextView
             android:id="@+id/text1"
-            android:text="Enter Reach Invite Code"
+            android:text="Enter Reach Promo Code"
             android:layout_marginTop="15dp"
             android:layout_centerHorizontal="true"
             android:textSize="16sp"
@@ -43,17 +43,6 @@
             android:layout_alignRight="@id/text1"
             android:layout_width="wrap_content"
             android:layout_height="40dp" />
-        <TextView
-            android:id="@+id/retry"
-            android:layout_below="@id/iCode"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
-            android:background="@drawable/number_text_selector"
-            android:textColor="@color/darkblue"
-            android:text="Don't have an invite code?"
-            android:textSize="13sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
         <TextView
             android:id="@+id/done"
             android:text="Done"

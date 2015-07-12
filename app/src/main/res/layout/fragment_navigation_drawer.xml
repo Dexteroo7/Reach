@@ -122,7 +122,7 @@
             android:layout_below="@id/netSwitch"
             />
         <ListView
-            android:paddingTop="10dp"
+            android:paddingTop="8dp"
             android:id="@+id/primaryListView"
             android:layout_below="@id/divider"
             android:layout_width="match_parent"
