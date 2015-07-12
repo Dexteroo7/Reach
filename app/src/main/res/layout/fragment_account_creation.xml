@@ -2,8 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="reach.project.onBoarding.SplashFragment">
+    android:layout_height="match_parent">
     <ImageView
         android:src="@drawable/playstore_2"
         android:scaleType="centerCrop"

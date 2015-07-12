@@ -668,23 +668,32 @@ public class ReachUserEndpoint {
     }
 
     @ApiMethod(
-            name = "isAccountPresent",
-            path = "user/isAccountPresent/{phoneNumber}",
+            name = "isAccountPresentNew",
+            path = "user/isAccountPresentNew/{phoneNumber}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public OldUserContainer isAccountPresent(@Named("phoneNumber") String phoneNumber) {
+    public OldUserContainerNew isAccountPresentNew(@Named("phoneNumber") String phoneNumber) {
 
         final ReachUser oldUser = ofy().load().type(ReachUser.class)
-                .filter("phoneNumber in", Collections.singletonList(phoneNumber)).first().now();
-        if (oldUser != null) {
-            final String[] userName = oldUser.getUserName().trim().split(" ");
-            if (userName.length == 0)
-                return null;
-            if (userName.length == 1)
-                return new OldUserContainer(userName[0], "", oldUser.getImageId());
-            else
-                return new OldUserContainer(userName[0], userName[1], oldUser.getImageId());
-        }
+                .filter("phoneNumber in", Collections.singletonList(phoneNumber))
+                .first().now();
+        if (oldUser != null)
+            return new OldUserContainerNew(
+                    oldUser.getUserName(), oldUser.getPromoCode(), oldUser.getImageId());
         return null;
+    }
+
+    @ApiMethod(
+            name = "storePromoCode",
+            path = "user/storePromoCode/{id}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public MyString storePromoCode(@Named("id") long id, @Named("promoCode") String promoCode) {
+
+        final ReachUser oldUser = ofy().load().type(ReachUser.class).id(id).now();
+        if (oldUser == null)
+            return new MyString("false");
+        oldUser.setPromoCode(promoCode);
+        ofy().save().entity(oldUser).now();
+        return new MyString("true");
     }
 
     @ApiMethod(
@@ -762,5 +771,26 @@ public class ReachUserEndpoint {
                 .param("total", 0 + "")
                 .retryOptions(RetryOptions.Builder.withTaskRetryLimit(0)));
         return new MyString("submitted");
+    }
+
+    ///stuff to remove
+    @ApiMethod(
+            name = "isAccountPresent",
+            path = "user/isAccountPresent/{phoneNumber}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public OldUserContainer isAccountPresent(@Named("phoneNumber") String phoneNumber) {
+
+        final ReachUser oldUser = ofy().load().type(ReachUser.class)
+                .filter("phoneNumber in", Collections.singletonList(phoneNumber)).first().now();
+        if (oldUser != null) {
+            final String[] userName = oldUser.getUserName().trim().split(" ");
+            if (userName.length == 0)
+                return null;
+            if (userName.length == 1)
+                return new OldUserContainer(userName[0], "", oldUser.getImageId());
+            else
+                return new OldUserContainer(userName[0], userName[1], oldUser.getImageId());
+        }
+        return null;
     }
 }

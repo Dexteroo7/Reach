@@ -67,7 +67,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import reach.backend.entities.userApi.model.MyString;
-import reach.backend.entities.userApi.model.OldUserContainer;
+import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.adapter.ReachMusicAdapter;
 import reach.project.adapter.ReachQueueAdapter;
@@ -93,7 +93,6 @@ import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.onBoarding.AccountCreation;
 import reach.project.onBoarding.NumberVerification;
-import reach.project.onBoarding.SplashFragment;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
@@ -113,6 +112,7 @@ public class ReachActivity extends ActionBarActivity implements
         SearchView.OnCloseListener {
 
     public static long serverId = 0;
+
     private static WeakReference<ReachActivity> reference = null;
     private final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
         @Override
@@ -748,11 +748,11 @@ public class ReachActivity extends ActionBarActivity implements
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                        if (slidingUpPanelLayout==null)
-                            return;
-                        if (slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED)
-                            slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                        slidingUpPanelLayout.setAnchorPoint(1f);
+                    if (slidingUpPanelLayout == null)
+                        return;
+                    if (slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED)
+                        slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
+                    slidingUpPanelLayout.setAnchorPoint(1f);
                 }
             }, 2000);
         }
@@ -767,7 +767,7 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     @Override
-    public void startAccountCreation(Optional<OldUserContainer> container) {
+    public void startAccountCreation(Optional<OldUserContainerNew> container) {
 
         if (isFinishing())
             return;
@@ -790,19 +790,6 @@ public class ReachActivity extends ActionBarActivity implements
                     .addToBackStack(null)
                     .replace(R.id.container, MusicListFragment.newTypeInstance(id, albumName, artistName, playListName, type), "now_playing")
                     .commit();
-        } catch (IllegalStateException ignored) {
-        }
-    }
-
-    @Override
-    public void onNextClicked() {
-
-        if (isFinishing())
-            return;
-        try {
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.container, ContactsListFragment.newInstance(true), "my_reach").commit();
         } catch (IllegalStateException ignored) {
         }
     }
@@ -1431,17 +1418,13 @@ public class ReachActivity extends ActionBarActivity implements
                         } else
                             activity.likeButton.setVisibility(View.GONE);
                     }
-                    /**
-                     * GA stuff
-                     */
-                    if (!StaticData.debugMode) {
-                        ((ReachApplication)activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Play song")
-                                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                .setLabel("Song - " + data.getDisplayName())
-                                .setValue(1)
-                                .build());
-                    }
+
+                    ((ReachApplication)activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Play song")
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setLabel("Song - " + data.getDisplayName())
+                            .setValue(1)
+                            .build());
                 }
             });
             updatePrimaryProgress(data.getPrimaryProgress(), data.getCurrentPosition(), activity);
@@ -1507,11 +1490,9 @@ public class ReachActivity extends ActionBarActivity implements
 
                 case ProcessManager.REPLY_LATEST_MUSIC: {
                     Log.i("Downloader", "REPLY_LATEST_MUSIC received");
-                    if (intent.getStringExtra("message") != null) {
-                        //update the currentPlaying for like and such
-                        activity.currentPlaying = intent.getParcelableExtra("message");
-                        updateMusic(activity.currentPlaying, false, activity);
-                    }
+                    //update the currentPlaying for like and such
+                    activity.currentPlaying = intent.getParcelableExtra("message");
+                    updateMusic(activity.currentPlaying, false, activity);
                     break;
                 }
                 case ProcessManager.REPLY_MUSIC_DEAD: {

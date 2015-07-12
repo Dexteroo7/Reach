@@ -24,38 +24,14 @@
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
             android:textSize="18sp"
-            android:text="Share your referral code"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:id="@+id/refCode"
-            android:textColor="#fff"
-            android:textSize="18sp"
-            android:layout_marginBottom="5dp"
-            android:textStyle="bold"
-            android:text="XXXXXX"
+            android:text="Invite your friends using"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
-    <RelativeLayout
+    <ListView
+        android:id="@+id/listView"
+        android:divider="@null"
+        android:dividerHeight="0dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/text1"
-            android:textColor="@color/reach_color"
-            android:layout_marginTop="10dp"
-            android:layout_centerHorizontal="true"
-            android:textSize="17sp"
-            android:gravity="center"
-            android:text="Invite via"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <ListView
-            android:id="@+id/listView"
-            android:divider="@null"
-            android:dividerHeight="0dp"
-            android:layout_below="@id/text1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
+        android:layout_height="wrap_content"/>
 </LinearLayout>
