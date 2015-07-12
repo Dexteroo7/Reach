@@ -6,6 +6,7 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterator;
+import com.google.appengine.api.datastore.RawValue;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -305,6 +307,73 @@ public class ReachUserEndpoint {
                 friends = reachUser.getMyReach().size();
             else
                 friends = 0;
+
+            builder.add(new DataCall.Statistics(
+                    reachUser.getUserName(),
+                    reachUser.getPhoneNumber(),
+                    reachUser.getNumberOfSongs(),
+                    friends,
+                    reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
+            count++;
+        }
+
+        //if no more friends return null cursor
+        return new DataCall(
+                builder.build(),
+                (count == 100) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
+    }
+
+    @ApiMethod(
+            name = "getStatsNew",
+            path = "user/getStatsNew",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public DataCall getStatsNew(@Named("cursor") String cursor) {
+
+        final ImmutableList.Builder<DataCall.Statistics> builder = new ImmutableList.Builder<>();
+        final QueryResultIterator<ReachUser> userQueryResultIterator;
+        final QueryResultIterator friendsCount;
+
+        if (cursor != null && !cursor.trim().equals("")) {
+
+            userQueryResultIterator = ofy().load().type(ReachUser.class)
+                    .startAt(Cursor.fromWebSafeString(cursor))
+                    .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
+                    .limit(100)
+                    .iterator();
+            friendsCount = ofy().load().type(ReachUser.class)
+                    .startAt(Cursor.fromWebSafeString(cursor))
+                    .project("myReach")
+                    .limit(100)
+                    .iterator();
+        }
+        else {
+            userQueryResultIterator = ofy().load().type(ReachUser.class)
+                    .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
+                    .limit(100)
+                    .iterator();
+            friendsCount = ofy().load().type(ReachUser.class)
+                    .project("myReach")
+                    .limit(100)
+                    .iterator();
+        }
+        ReachUser reachUser;
+        int count = 0;
+
+        while (userQueryResultIterator.hasNext() && friendsCount.hasNext()) {
+
+            reachUser = userQueryResultIterator.next();
+            final RawValue rawValue = (RawValue) friendsCount.next();
+            final int friends;
+            if(rawValue == null)
+                friends = 0;
+            else {
+
+                final Iterator ff = ((Iterable)rawValue.asType(Iterable.class)).iterator();
+                int i = 0;
+                while (ff.hasNext() && ff.next() != null)
+                    i++;
+                friends = i;
+            }
 
             builder.add(new DataCall.Statistics(
                     reachUser.getUserName(),

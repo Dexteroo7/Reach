@@ -130,7 +130,7 @@ public final class Main {
          */
         private boolean poll(String wantsToConnectTo) {
 
-            //we poll check every 5 seconds, for 60 seconds
+            //we poll check every 2 seconds, for 60 seconds
             final int fixedWait = 2 * 1000;
             final int maximumWait = 60 * 1000;
 
