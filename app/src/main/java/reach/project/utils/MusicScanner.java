@@ -39,8 +39,8 @@ import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.ReachAlbumDatabase;
-import reach.project.database.ReachArtistDatabase;
+import reach.project.database.ReachAlbum;
+import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachPlayListHelper;
@@ -462,10 +462,10 @@ public class MusicScanner extends IntentService {
             }
         }
         ////////////////////Adding albums and artists
-        final Pair<Collection<ReachAlbumDatabase>, Collection<ReachArtistDatabase>>
+        final Pair<Collection<ReachAlbum>, Collection<ReachArtist>>
                 albums_artists = MiscUtils.getAlbumsAndArtists(songHashSet);
-        final Collection<ReachAlbumDatabase> reachAlbumDatabases = albums_artists.first;
-        final Collection<ReachArtistDatabase> reachArtistDatabases = albums_artists.second;
+        final Collection<ReachAlbum> reachAlbums = albums_artists.first;
+        final Collection<ReachArtist> reachArtists = albums_artists.second;
         ////////////////////Albums and artists added
         ////////////////////Adding playLists
         final ReachPlayList defaultPlayList = new ReachPlayList();
@@ -619,8 +619,8 @@ public class MusicScanner extends IntentService {
         //save to database
         MiscUtils.bulkInsertSongs(
                 songHashSet,
-                reachAlbumDatabases,
-                reachArtistDatabases,
+                reachAlbums,
+                reachArtists,
                 getContentResolver());
 
         if(playListSet.hashCode() != playListHash) {
@@ -643,8 +643,8 @@ public class MusicScanner extends IntentService {
             songSparse.clear();
             songHashSet.clear();
             songArray.clear();
-            reachAlbumDatabases.clear();
-            reachArtistDatabases.clear();
+            reachAlbums.clear();
+            reachArtists.clear();
             reachPlayListVisibility.clear();
             reachSongVisibility.clear();
         }

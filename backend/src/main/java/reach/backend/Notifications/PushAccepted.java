@@ -1,8 +1,13 @@
 package reach.backend.Notifications;
 
+import com.googlecode.objectify.annotation.Subclass;
+
+import reach.backend.User.ReachUser;
+
 /**
  * Created by dexter on 08/07/15.
  */
+@Subclass (name = "PushAccepted")
 public class PushAccepted extends NotificationBase {
 
     private String firstSongName = "";
@@ -75,6 +80,16 @@ public class PushAccepted extends NotificationBase {
     @Override
     public void setHostId(long hostId) {
         super.setHostId(hostId);
+    }
+
+    @Override
+    public void addBasicData(ReachUser user) {
+        super.addBasicData(user);
+    }
+
+    @Override
+    public short getRead() {
+        return super.getRead();
     }
 
     @Override

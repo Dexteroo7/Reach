@@ -50,8 +50,8 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.StaticData;
-import reach.project.database.ReachAlbumDatabase;
-import reach.project.database.ReachArtistDatabase;
+import reach.project.database.ReachAlbum;
+import reach.project.database.ReachArtist;
 import reach.project.database.ReachDatabase;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
@@ -300,14 +300,14 @@ public enum MiscUtils {
     }
 
     public static void bulkInsertSongs(HashSet<ReachSong> reachSongDatabases,
-                                       Collection<ReachAlbumDatabase> reachAlbumDatabases,
-                                       Collection<ReachArtistDatabase> reachArtistDatabases,
+                                       Collection<ReachAlbum> reachAlbums,
+                                       Collection<ReachArtist> reachArtists,
                                        ContentResolver contentResolver) {
 
         //Add all songs
         final ContentValues[] songs = new ContentValues[reachSongDatabases.size()];
-        final ContentValues[] albums = new ContentValues[reachAlbumDatabases.size()];
-        final ContentValues[] artists = new ContentValues[reachArtistDatabases.size()];
+        final ContentValues[] albums = new ContentValues[reachAlbums.size()];
+        final ContentValues[] artists = new ContentValues[reachArtists.size()];
 
         int i = 0;
         for (ReachSong reachSongDatabase : reachSongDatabases) {
@@ -316,15 +316,15 @@ public enum MiscUtils {
         i = 0;
         Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
 
-        if (reachAlbumDatabases.size() > 0) {
-            for (ReachAlbumDatabase reachAlbumDatabase : reachAlbumDatabases)
-                albums[i++] = ReachAlbumHelper.contentValuesCreator(reachAlbumDatabase);
+        if (reachAlbums.size() > 0) {
+            for (ReachAlbum reachAlbum : reachAlbums)
+                albums[i++] = ReachAlbumHelper.contentValuesCreator(reachAlbum);
             Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
             i = 0;
         }
-        if (reachArtistDatabases.size() > 0) {
-            for (ReachArtistDatabase reachArtistDatabase : reachArtistDatabases)
-                artists[i++] = ReachArtistHelper.contentValuesCreator(reachArtistDatabase);
+        if (reachArtists.size() > 0) {
+            for (ReachArtist reachArtist : reachArtists)
+                artists[i++] = ReachArtistHelper.contentValuesCreator(reachArtist);
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
         }
 
@@ -344,44 +344,44 @@ public enum MiscUtils {
         } else Log.i("Ayush", "NO playLists to save");
     }
 
-    public static Pair<Collection<ReachAlbumDatabase>, Collection<ReachArtistDatabase>> getAlbumsAndArtists
+    public static Pair<Collection<ReachAlbum>, Collection<ReachArtist>> getAlbumsAndArtists
             (HashSet<ReachSong> reachSongs) {
 
-        final Map<String, ReachAlbumDatabase> reachAlbumDatabaseHashMap = new HashMap<>();
-        final Map<String, ReachArtistDatabase> reachArtistDatabaseHashMap = new HashMap<>();
+        final Map<String, ReachAlbum> reachAlbumDatabaseHashMap = new HashMap<>();
+        final Map<String, ReachArtist> reachArtistDatabaseHashMap = new HashMap<>();
 
         for (ReachSong reachSong : reachSongs) {
 
             if (reachSong.getAlbum() != null && !reachSong.getAlbum().equals("")) {
 
-                final ReachAlbumDatabase reachAlbumDatabase;
+                final ReachAlbum reachAlbum;
 
                 if (reachAlbumDatabaseHashMap.containsKey(reachSong.getAlbum()))
-                    reachAlbumDatabase = reachAlbumDatabaseHashMap.get(reachSong.getAlbum());
+                    reachAlbum = reachAlbumDatabaseHashMap.get(reachSong.getAlbum());
                 else {
-                    reachAlbumDatabase = new ReachAlbumDatabase();
-                    reachAlbumDatabase.setAlbumName(reachSong.getAlbum());
-                    reachAlbumDatabase.setUserId(reachSong.getUserId());
-                    reachAlbumDatabase.setArtist(reachSong.getArtist());
+                    reachAlbum = new ReachAlbum();
+                    reachAlbum.setAlbumName(reachSong.getAlbum());
+                    reachAlbum.setUserId(reachSong.getUserId());
+                    reachAlbum.setArtist(reachSong.getArtist());
                 }
-                reachAlbumDatabase.incrementSize();
-                reachAlbumDatabaseHashMap.put(reachAlbumDatabase.getAlbumName(), reachAlbumDatabase);
+                reachAlbum.incrementSize();
+                reachAlbumDatabaseHashMap.put(reachAlbum.getAlbumName(), reachAlbum);
             }
 
             if (reachSong.getArtist() != null && !reachSong.getArtist().equals("")) {
 
-                final ReachArtistDatabase reachArtistDatabase;
+                final ReachArtist reachArtist;
 
                 if (reachArtistDatabaseHashMap.containsKey(reachSong.getArtist()))
-                    reachArtistDatabase = reachArtistDatabaseHashMap.get(reachSong.getArtist());
+                    reachArtist = reachArtistDatabaseHashMap.get(reachSong.getArtist());
                 else {
-                    reachArtistDatabase = new ReachArtistDatabase();
-                    reachArtistDatabase.setArtistName(reachSong.getArtist());
-                    reachArtistDatabase.setUserID(reachSong.getUserId());
-                    reachArtistDatabase.setAlbum(reachSong.getAlbum());
+                    reachArtist = new ReachArtist();
+                    reachArtist.setArtistName(reachSong.getArtist());
+                    reachArtist.setUserID(reachSong.getUserId());
+                    reachArtist.setAlbum(reachSong.getAlbum());
                 }
-                reachArtistDatabase.incrementSize();
-                reachArtistDatabaseHashMap.put(reachArtistDatabase.getArtistName(), reachArtistDatabase);
+                reachArtist.incrementSize();
+                reachArtistDatabaseHashMap.put(reachArtist.getArtistName(), reachArtist);
             }
         }
         ///////////////////////

@@ -1,8 +1,14 @@
 package reach.backend.Notifications;
 
+import com.googlecode.objectify.annotation.Subclass;
+
+import reach.backend.User.ReachUser;
+
 /**
  * Created by dexter on 08/07/15.
  */
+
+@Subclass (name = "BecameFriends")
 public class BecameFriends extends NotificationBase {
 
     @Override
@@ -55,5 +61,15 @@ public class BecameFriends extends NotificationBase {
     @Override
     public void setHostId(long hostId) {
         super.setHostId(hostId);
+    }
+
+    @Override
+    public void addBasicData(ReachUser user) {
+        super.addBasicData(user);
+    }
+
+    @Override
+    public short getRead() {
+        return super.getRead();
     }
 }

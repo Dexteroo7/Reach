@@ -1,13 +1,10 @@
-package reach.backend.Notifications;
+package reach.project.database.notifications;
 
-import com.googlecode.objectify.annotation.Subclass;
-
-import reach.backend.User.ReachUser;
+import reach.backend.entities.userApi.model.ReachUser;
 
 /**
  * Created by dexter on 06/07/15.
  */
-@Subclass (name = "Like")
 public class Like extends NotificationBase {
 
     private String songName = "";

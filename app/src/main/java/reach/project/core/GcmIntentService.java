@@ -217,11 +217,14 @@ public class GcmIntentService extends IntentService {
 
             final int notification_id = message.hashCode();
             final Intent viewIntent = new Intent(this, PushActivity.class);
-            viewIntent.putExtra("type",0);
+            viewIntent.putExtra("type", 0);
             viewIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            final String payLoad = message.substring(4);
+
             final String unCompressed;
             try {
-                unCompressed = StringCompress.decompress(Base64.decode(message.substring(4), Base64.DEFAULT));
+                unCompressed = StringCompress.decompress(Base64.decode(payLoad, Base64.DEFAULT));
             } catch (IOException e) {
                 e.printStackTrace();
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
@@ -235,7 +238,7 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("sender_id", pushContainer.getSenderId());
             viewIntent.putExtra("user_image", pushContainer.getUserImage());
             viewIntent.putExtra("first_song", pushContainer.getFirstSongName());
-            //TODO
+            viewIntent.putExtra("hash", payLoad.hashCode()); //hash of compressed String
             viewIntent.putExtra("custom_message", pushContainer.getCustomMessage());
 
             String cMsg = pushContainer.getCustomMessage();

@@ -1,24 +1,11 @@
-package reach.backend.Notifications;
+package reach.project.database.notifications;
 
-import com.googlecode.objectify.annotation.Subclass;
-
-import reach.backend.User.ReachUser;
+import reach.backend.entities.userApi.model.ReachUser;
 
 /**
- * Created by dexter on 06/07/15.
+ * Created by dexter on 08/07/15.
  */
-@Subclass (name = "Like")
-public class Like extends NotificationBase {
-
-    private String songName = "";
-
-    public String getSongName() {
-        return songName;
-    }
-
-    public void setSongName(String songName) {
-        this.songName = songName;
-    }
+public class BecameFriends extends NotificationBase {
 
     @Override
     public Types getTypes() {
@@ -27,7 +14,7 @@ public class Like extends NotificationBase {
 
     @Override
     public void setTypes(Types types) {
-        if (types != Types.LIKE)
+        if (types != Types.BECAME_FRIENDS)
             throw new IllegalStateException("Illegal type");
         super.setTypes(types);
     }
@@ -80,24 +67,5 @@ public class Like extends NotificationBase {
     @Override
     public short getRead() {
         return super.getRead();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Like)) return false;
-        if (!super.equals(o)) return false;
-
-        Like like = (Like) o;
-
-        return !(songName != null ? !songName.equals(like.songName) : like.songName != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (songName != null ? songName.hashCode() : 0);
-        return result;
     }
 }

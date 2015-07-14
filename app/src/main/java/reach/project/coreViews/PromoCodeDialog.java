@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,6 +57,7 @@ public class PromoCodeDialog extends DialogFragment {
                 new VerifyPromoCode(promoCode).executeOnExecutor
                         (StaticData.threadPool, promoCode.getText().toString());
                 promoCode.setEnabled(false);
+                promoCode.setTextColor(Color.RED);
             }
         });
 
@@ -75,7 +77,7 @@ public class PromoCodeDialog extends DialogFragment {
             if(TextUtils.isEmpty(params[0]))
                 return false;
 
-            return MiscUtils.autoRetry(
+            final boolean result = MiscUtils.autoRetry(
 
                     new DoWork<Boolean>() {
                         @Override
@@ -84,29 +86,36 @@ public class PromoCodeDialog extends DialogFragment {
                             final MyString isValid = StaticData.userEndpoint.storePromoCode(
                                     ReachActivity.serverId, params[0]).execute();
 
-                            if(isValid == null || TextUtils.isEmpty(isValid.getString()) ||
-                                    isValid.getString().equals("false"))
-                                return false;
-
-                            SharedPrefUtils.storePromoCode(
-                                    getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS),
-                                    params[0]);
-                            return true;
+                            return !(isValid == null || TextUtils.isEmpty(isValid.getString()) ||
+                                    isValid.getString().equals("false"));
                         }
                     }, Optional.<Predicate<Boolean>>absent()).get();
+
+            if(result)
+                SharedPrefUtils.storePromoCode(
+                        getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS),
+                        params[0]);
+            return result;
         }
 
         @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
+        protected void onPostExecute(Boolean result) {
 
-            if(!aBoolean) {
+            super.onPostExecute(result);
+
+            final FragmentActivity activity = getActivity();
+            if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing())
+                return;
+
+            if(!result) {
+
                 promoCode.setTextColor(Color.BLACK);
-                Toast.makeText(getActivity(), "Please enter a valid code", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "Please enter a valid code", Toast.LENGTH_SHORT).show();
                 promoCode.setEnabled(true);
                 return;
             }
-            Toast.makeText(getActivity(), "OK", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(activity, "OK", Toast.LENGTH_SHORT).show();
             dismiss();
         }
     }

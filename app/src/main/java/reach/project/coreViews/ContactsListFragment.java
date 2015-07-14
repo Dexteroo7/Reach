@@ -82,8 +82,8 @@ import reach.project.adapter.ReachContactsAdapter;
 import reach.project.core.NotificationActivity;
 import reach.project.core.PushActivity;
 import reach.project.core.StaticData;
-import reach.project.database.ReachAlbumDatabase;
-import reach.project.database.ReachArtistDatabase;
+import reach.project.database.ReachAlbum;
+import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.DoWork;
@@ -821,13 +821,13 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
                     //All the songs got deleted
                     MiscUtils.deleteSongs(hostId, getActivity().getContentResolver());
                 else {
-                    final Pair<Collection<ReachAlbumDatabase>, Collection<ReachArtistDatabase>> pair =
+                    final Pair<Collection<ReachAlbum>, Collection<ReachArtist>> pair =
                             MiscUtils.getAlbumsAndArtists(new HashSet<>(musicContainer.getReachSongs()));
-                    final Collection<ReachAlbumDatabase> reachAlbumDatabases = pair.first;
-                    final Collection<ReachArtistDatabase> reachArtistDatabases = pair.second;
+                    final Collection<ReachAlbum> reachAlbums = pair.first;
+                    final Collection<ReachArtist> reachArtists = pair.second;
                     MiscUtils.bulkInsertSongs(new HashSet<>(musicContainer.getReachSongs()),
-                            reachAlbumDatabases,
-                            reachArtistDatabases,
+                            reachAlbums,
+                            reachArtists,
                             getActivity().getContentResolver());
                 }
                 SharedPrefUtils.storeSongCodeForUser(hostId, musicContainer.getSongsHash(), sharedPreferences.edit());

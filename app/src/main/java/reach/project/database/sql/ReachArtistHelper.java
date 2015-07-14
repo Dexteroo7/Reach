@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import reach.project.database.ReachArtistDatabase;
+import reach.project.database.ReachArtist;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -42,27 +42,27 @@ public class ReachArtistHelper extends SQLiteOpenHelper {
                     COLUMN_SIZE
             };
 
-    public static ReachArtistDatabase cursorToProcess(Cursor cursor) {
+    public static ReachArtist cursorToProcess(Cursor cursor) {
 
-        final ReachArtistDatabase reachArtistDatabase = new ReachArtistDatabase();
-        reachArtistDatabase.setId(cursor.getLong(0));
-        reachArtistDatabase.setAlbum(cursor.getString(1));
-        reachArtistDatabase.setArtistName(cursor.getString(2));
-        reachArtistDatabase.setUserID(cursor.getLong(3));
-        reachArtistDatabase.setSize(cursor.getInt(4));
-        return reachArtistDatabase;
+        final ReachArtist reachArtist = new ReachArtist();
+        reachArtist.setId(cursor.getLong(0));
+        reachArtist.setAlbum(cursor.getString(1));
+        reachArtist.setArtistName(cursor.getString(2));
+        reachArtist.setUserID(cursor.getLong(3));
+        reachArtist.setSize(cursor.getInt(4));
+        return reachArtist;
     }
 
-    public static ContentValues contentValuesCreator(ReachArtistDatabase reachArtistDatabase) {
+    public static ContentValues contentValuesCreator(ReachArtist reachArtist) {
 
         final ContentValues values = new ContentValues();
-        if(reachArtistDatabase.getId() != -1)
-            values.put(COLUMN_ID, reachArtistDatabase.getId());
+        if(reachArtist.getId() != -1)
+            values.put(COLUMN_ID, reachArtist.getId());
 
-        values.put(COLUMN_ALBUM, reachArtistDatabase.getAlbum());
-        values.put(COLUMN_ARTIST, reachArtistDatabase.getArtistName());
-        values.put(COLUMN_SIZE, reachArtistDatabase.getSize());
-        values.put(COLUMN_USER_ID, reachArtistDatabase.getUserID());
+        values.put(COLUMN_ALBUM, reachArtist.getAlbum());
+        values.put(COLUMN_ARTIST, reachArtist.getArtistName());
+        values.put(COLUMN_SIZE, reachArtist.getSize());
+        values.put(COLUMN_USER_ID, reachArtist.getUserID());
         return values;
     }    
 

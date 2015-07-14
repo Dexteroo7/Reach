@@ -172,7 +172,7 @@ public class NumberVerification extends Fragment {
                 final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
                 sharedPreferences.edit().clear().apply();
                 SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
-                mListener.startAccountCreation(Optional.of(pair.first));
+                mListener.startAccountCreation(Optional.fromNullable(pair.first));
             }
         }
     }

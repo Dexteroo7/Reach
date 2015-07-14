@@ -67,9 +67,9 @@ public class AccountCreation extends Fragment {
             final Bundle bundle = new Bundle(2);
             final OldUserContainerNew userContainer = container.get();
             bundle.putStringArray("oldData", new String[]{
-                    TextUtils.isEmpty(userContainer.getName()) ? "" : userContainer.getName(),
-                    TextUtils.isEmpty(userContainer.getImageId()) ? "" : userContainer.getImageId(),
-                    TextUtils.isEmpty(userContainer.getPromoCode()) ? "" : userContainer.getPromoCode()});
+                    userContainer.getName() == null ? "" : userContainer.getName(),
+                    userContainer.getImageId() == null ? "" : userContainer.getImageId(),
+                    userContainer.getPromoCode() == null ? "" : userContainer.getPromoCode()});
             fragment.setArguments(bundle);
         }
         return fragment;

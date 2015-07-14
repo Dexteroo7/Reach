@@ -3,13 +3,21 @@ package reach.backend.Notifications;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
-import com.google.api.server.spi.response.NotFoundException;
+import com.google.appengine.repackaged.com.google.common.cache.CacheBuilder;
+import com.google.appengine.repackaged.com.google.common.cache.CacheLoader;
+import com.google.appengine.repackaged.com.google.common.cache.LoadingCache;
 import com.google.appengine.repackaged.com.google.common.collect.EvictingQueue;
+import com.google.appengine.repackaged.com.google.common.collect.ImmutableList;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
 import javax.inject.Named;
+
+import reach.backend.User.ReachUser;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -35,133 +43,208 @@ public class NotificationEndpoint {
 
     private static final Logger logger = Logger.getLogger(NotificationEndpoint.class.getName());
 
-    private static final int DEFAULT_LIST_LIMIT = 30;
-
     /**
      * Returns the {@link Notification} with the corresponding ID.
      *
      * @param id the ID of the entity to be retrieved
      * @return the entity with the corresponding ID
-     * @throws NotFoundException if there is no {@code Notification} with the provided ID.
      */
     @ApiMethod(
             name = "get",
             path = "notification/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public EvictingQueue<NotificationBase> get(@Named("id") long id) throws NotFoundException {
+    public List<NotificationBase> get(@Named("id") long id) {
+
         logger.info("Getting Notification with ID: " + id);
-        Notification notification = ofy().load().type(Notification.class).id(id).now();
-        if (notification == null) {
-            throw new NotFoundException("Could not find Notification with ID: " + id);
+        final Notification notification = ofy().load().type(Notification.class).id(id).now();
+        if (notification == null || notification.getNotifications() == null)
+            return null;
+
+        final LoadingCache<Long, ReachUser> cache = CacheBuilder.newBuilder()
+                .maximumSize(30)
+                .initialCapacity(10)
+                .build(new CacheLoader<Long, ReachUser>() {
+                    public ReachUser load(@Nonnegative @Nonnull Long id) {
+                        return ofy().load().type(ReachUser.class).id(id).now();
+                    }
+                });
+
+        final ImmutableList.Builder<NotificationBase> builder = new ImmutableList.Builder<>();
+        final List<NotificationBase> toReturn;
+        boolean needToSave = false;
+
+        for (NotificationBase notificationBase : notification.getNotifications()) {
+
+            final ReachUser reachUser;
+            try {
+                reachUser = cache.get(notificationBase.getHostId());
+                if (reachUser == null)
+                    continue;
+            } catch (Exception e) {
+                logger.info("Error getting notifications " + e.getLocalizedMessage());
+                continue;
+            }
+            //update the notifications
+            if(!notificationBase.getImageId().equals(reachUser.getImageId())) {
+                notificationBase.setImageId(reachUser.getImageId()); //can change
+                needToSave = true;
+            }
+
+            if(!notificationBase.getHostName().equals(reachUser.getUserName())) {
+                notificationBase.setHostName(reachUser.getUserName()); //can change
+                needToSave = true;
+            }
+
+            //very imp else if
+            if(notificationBase.getRead() == -1) {
+                notificationBase.setRead((short) 0); //mark unread but fetched
+                needToSave = true;
+            } else if(notificationBase.getRead() == 0) {
+                notificationBase.setRead((short) 1); //mark read
+                needToSave = true;
+            }
+
+            builder.add(notificationBase);
         }
-        return notification.getNotifications();
+        toReturn = builder.build();
+        //mark all notifications as read
+        if (needToSave)
+            ofy().save().entity(notification);
+
+        cache.cleanUp();
+        return toReturn;
     }
 
     /**
-     * Adds a like notification to the list
-     *
-     * @param id   person whose notification will be added
-     * @param like the notification
+     * @param receiverId the person whose song was liked
+     * @param senderId   the person who liked the song
+     * @param songName   the name of the liked song
      */
     @ApiMethod(
             name = "addLike",
             path = "notification/addLike",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void addLike(Like like, @Named("id") long id) {
+    public void addLike(@Named("receiverId") long receiverId,
+                        @Named("senderId") long senderId,
+                        @Named("songName") String songName) {
 
-        Notification notification = ofy().load().type(Notification.class).id(id).now();
-        if (notification == null) {
-            notification = new Notification();
-            notification.setId(id);
-            notification.setNotifications(EvictingQueue.<NotificationBase>create(DEFAULT_LIST_LIMIT));
-        }
-        notification.getNotifications().add(like);
-        ofy().save().entity(notification).now();
-        logger.info("Adding Notification with ID " + notification.getId());
+        final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
+        final Like like = new Like();
+        like.addBasicData(sender);
+        like.setTypes(Types.LIKE);
+        like.setSongName(songName);
+
+        ofy().save().entity(getNotification(receiverId, like)).now();
+        logger.info("Adding like " + sender.getUserName() + " " + songName);
     }
 
     /**
-     * Adds a push notification to the list
-     *
-     * @param id   person whose notification will be added
-     * @param push the notification
+     * @param receiverId the person who will receive the push
+     * @param senderId   the person who sent the push
+     * @param container  blob of required data
      */
     @ApiMethod(
             name = "addPush",
             path = "notification/addPush",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void addPush(Push push, @Named("id") long id) {
+    public void addPush(@Named("container") String container,
+                        @Named("receiverId") long receiverId,
+                        @Named("senderId") long senderId) {
 
-        Notification notification = ofy().load().type(Notification.class).id(id).now();
-        if (notification == null) {
-            notification = new Notification();
-            notification.setId(id);
-            notification.setNotifications(EvictingQueue.<NotificationBase>create(DEFAULT_LIST_LIMIT));
-        }
-        notification.getNotifications().add(push);
-        ofy().save().entity(notification).now();
-        logger.info("Adding Notification with ID " + notification.getId());
+        final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
+        final Push push = new Push();
+        push.addBasicData(sender);
+        push.setTypes(Types.PUSH);
+        push.setPushContainer(container);
+
+        ofy().save().entity(getNotification(receiverId, push)).now();
+        logger.info("Adding push " + sender.getUserName());
     }
 
     /**
-     * Adds a becameFriends notification to the list
-     *
-     * @param id            person whose notification will be added
-     * @param becameFriends the notification
+     * @param senderId   id of the person who sent the request
+     * @param receiverId if of the person who accepted the request
      */
     @ApiMethod(
             name = "addBecameFriends",
             path = "notification/addBecameFriends",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void addBecameFriends(BecameFriends becameFriends, @Named("id") long id) {
+    public void addBecameFriends(@Named("receiver") long receiverId,
+                                 @Named("sender") long senderId) {
 
-        Notification notification = ofy().load().type(Notification.class).id(id).now();
-        if (notification == null) {
-            notification = new Notification();
-            notification.setId(id);
-            notification.setNotifications(EvictingQueue.<NotificationBase>create(DEFAULT_LIST_LIMIT));
-        }
-        notification.getNotifications().add(becameFriends);
-        ofy().save().entity(notification).now();
-        logger.info("Adding Notification with ID " + notification.getId());
+        final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
+        final ReachUser receiver = ofy().load().type(ReachUser.class).id(receiverId).now();
+
+        final BecameFriends forSender = new BecameFriends();
+        forSender.addBasicData(receiver);
+        forSender.setTypes(Types.BECAME_FRIENDS);
+
+        final BecameFriends forReceiver = new BecameFriends();
+        forReceiver.addBasicData(sender);
+        forReceiver.setTypes(Types.BECAME_FRIENDS);
+
+        //save the notification not the user !!
+        ofy().save().entities(getNotification(receiverId, forReceiver),
+                getNotification(senderId, forSender)).now();
+        logger.info("Adding became friends " + forReceiver.getHostName() + " " + forSender.getHostName());
     }
 
     /**
-     * Adds a pushAccepted notification to the list
-     *
-     * @param id           person whose notification will be added
-     * @param oldHash      person whose notification will be added
-     * @param pushAccepted the notification
+     * @param receiverId    the person who accepted the push
+     * @param senderId      the person who had made the push
+     * @param firstSongName to display in UI
+     * @param size          to display in UI
      */
     @ApiMethod(
             name = "pushAccepted",
             path = "notification/pushAccepted",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void pushAccepted(PushAccepted pushAccepted,
+    public void pushAccepted(@Named("receiverId") long receiverId,
+                             @Named("senderId") long senderId,
+                             @Named("size") int size,
                              @Named("oldHash") int oldHash,
-                             @Named("id") long id) {
+                             @Named("firstSongName") String firstSongName) {
 
-        Notification notification = ofy().load().type(Notification.class).id(id).now();
-        if (notification == null) {
-            notification = new Notification();
-            notification.setId(id);
-            notification.setNotifications(EvictingQueue.<NotificationBase>create(DEFAULT_LIST_LIMIT));
-        }
+        final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
+        final PushAccepted pushAccepted = new PushAccepted();
+        pushAccepted.addBasicData(sender);
+        pushAccepted.setTypes(Types.PUSH_ACCEPTED);
+        pushAccepted.setFirstSongName(firstSongName);
+        pushAccepted.setSize(size);
 
-        //first remove old shit
-        final Iterator<NotificationBase> baseIterator = notification.getNotifications().iterator();
-        while (baseIterator.hasNext()) {
+        final Notification notification = getNotification(receiverId, pushAccepted);
+        final Iterator<NotificationBase> queue = notification.getNotifications().iterator();
+        while (queue.hasNext()) {
 
-            logger.info("iterating notifications");
-            if (baseIterator.next().hashCode() == oldHash) {
-                baseIterator.remove();
-                logger.info("found and removed old push");
+            final NotificationBase base = queue.next();
+            if(base instanceof Push) {
+                final int hash = ((Push) base).getPushContainer().hashCode();
+                logger.info("iterating " + hash + " " + oldHash);
+                if (hash == oldHash) {
+                    queue.remove();
+                    break;
+                }
             }
         }
-
-        notification.getNotifications().add(pushAccepted);
         ofy().save().entity(notification).now();
-        logger.info("Adding Notification with ID " + notification.getId());
+        logger.info("Adding push " + sender.getUserName() + " " + firstSongName + " " + size);
     }
 
+    /**
+     * @param id               of the person who will receive this notification
+     * @param notificationBase the notification
+     * @return the notification entity
+     */
+    private Notification getNotification(long id, NotificationBase notificationBase) {
+
+        Notification receiverNotification = ofy().load().type(Notification.class).id(id).now();
+        if (receiverNotification == null || receiverNotification.getNotifications() == null) {
+            receiverNotification = new Notification();
+            receiverNotification.setId(id);
+            receiverNotification.setNotifications(EvictingQueue.<NotificationBase>create(NotificationBase.DEFAULT_LIST_LIMIT));
+        }
+
+        receiverNotification.getNotifications().add(notificationBase);
+        return receiverNotification;
+    }
 }

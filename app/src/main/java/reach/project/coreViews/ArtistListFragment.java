@@ -20,7 +20,7 @@ import java.util.concurrent.Future;
 import reach.project.R;
 import reach.project.adapter.ReachArtistsAdapter;
 import reach.project.core.StaticData;
-import reach.project.database.ReachArtistDatabase;
+import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.sql.ReachArtistHelper;
 import reach.project.utils.MiscUtils;
@@ -37,12 +37,12 @@ public class ArtistListFragment extends Fragment implements LoaderManager.Loader
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            final ReachArtistDatabase reachArtistDatabase =
+            final ReachArtist reachArtist =
                     ReachArtistHelper.cursorToProcess((Cursor) reachArtistsAdapter.getItem(position));
             mListener.startMusicListFragment(
-                    reachArtistDatabase.getUserID(),
+                    reachArtist.getUserID(),
                     "",
-                    reachArtistDatabase.getArtistName(),
+                    reachArtist.getArtistName(),
                     "",
                     2);
         }

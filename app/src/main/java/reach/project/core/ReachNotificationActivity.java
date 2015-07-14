@@ -81,6 +81,9 @@ public class ReachNotificationActivity extends Activity {
             final MyString myString = MiscUtils.autoRetry(new DoWork<MyString>() {
                 @Override
                 protected MyString doWork() throws IOException {
+
+                    StaticData.notificationApi.addBecameFriends(clientId, hostId).execute();
+
                     return StaticData.messagingEndpoint.messagingEndpoint().handleReply(clientId, hostId, message).execute();
                 }
             }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {
