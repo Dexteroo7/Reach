@@ -14,6 +14,7 @@ import android.view.Window;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
@@ -23,6 +24,7 @@ import java.lang.ref.WeakReference;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
 import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.DoWork;
 import reach.project.utils.MiscUtils;
@@ -66,7 +68,8 @@ public class PromoCodeDialog extends DialogFragment {
 
     private final class VerifyPromoCode extends AsyncTask<String, Void, Boolean> {
 
-        final EditText promoCode;
+        private final EditText promoCode;
+        private String pCode;
         private VerifyPromoCode(EditText promoCode) {
             this.promoCode = promoCode;
         }
@@ -77,6 +80,7 @@ public class PromoCodeDialog extends DialogFragment {
             if(TextUtils.isEmpty(params[0]))
                 return false;
 
+            pCode = params[0];
             final boolean result = MiscUtils.autoRetry(
 
                     new DoWork<Boolean>() {
@@ -113,6 +117,15 @@ public class PromoCodeDialog extends DialogFragment {
                 Toast.makeText(activity, "Please enter a valid code", Toast.LENGTH_SHORT).show();
                 promoCode.setEnabled(true);
                 return;
+            }
+
+            if (!StaticData.debugMode) {
+                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Promo Code")
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setLabel("Code - " + pCode)
+                        .setValue(1)
+                        .build());
             }
 
             Toast.makeText(activity, "OK", Toast.LENGTH_SHORT).show();

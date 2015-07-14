@@ -138,7 +138,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                         .setAction("User - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setLabel("Receiver - " + pushContainer.getCustomMessage() + ", Songs - " + pushContainer.getSongCount())
-                        .setValue(1)
+                        .setValue(pushContainer.getSongCount())
                         .build());
             }
             if(isRemoving() || isDetached())

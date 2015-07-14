@@ -92,7 +92,7 @@ public class PushActivity extends Activity {
                                 .setAction("User - " + SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                 .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                 .setLabel("Sender - " + getIntent().getStringExtra("user_name") + ", Songs - " + song_count)
-                                .setValue(1)
+                                .setValue(song_count)
                                 .build());
                     }
                     pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
