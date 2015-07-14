@@ -29,7 +29,7 @@
             android:textSize="12sp"
             android:layout_width="80dp"
             android:layout_height="wrap_content" />
-        <FrameLayout
+        <RelativeLayout
             android:id="@+id/progressFrame"
             android:layout_marginBottom="2dp"
             android:layout_above="@id/progressText"
@@ -46,24 +46,17 @@
                 android:secondaryProgress="100"
                 android:max="100"
                 android:progressDrawable="@drawable/circle_progress_red" />
-            <ImageButton
-                android:id="@+id/play_pause"
-                android:tag="paused"
-                android:background="@null"
-                android:src="@drawable/stop_brown"
-                android:scaleType="fitCenter"
-                android:padding="10dp"
-                android:layout_width="45dp"
-                android:layout_height="45dp" />
             <TextView
                 android:id="@+id/songSize"
-                android:layout_gravity="center"
+                android:layout_centerInParent="true"
                 android:textColor="@color/darkgrey"
                 android:maxLines="1"
-                android:textSize="14sp"
+                android:text="99%"
+                android:textStyle="bold"
+                android:textSize="13sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-        </FrameLayout>
+        </RelativeLayout>
         <ImageButton
             android:id="@+id/delete_btn"
             android:layout_toRightOf="@id/progressFrame"

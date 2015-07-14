@@ -1,9 +1,11 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -42,8 +44,10 @@ import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -145,27 +149,58 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             else if (object instanceof Contact){
                 final Contact contact = (Contact) object;
                 if (contact.isInviteSent()) return;
-                StaticData.threadPool.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            sendSMS(contact.getPhoneNumber());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                contact.setInviteSent(true);
-                adapter.notifyDataSetChanged();
-                inviteSentTo.add(contact.toString());
+                String msg = "Hey! Checkout and download my phone music collection with just a click!"+".\nhttp://letsreach.co/app\n--\n"+ SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                final EditText input = new EditText(getActivity());
+                input.setBackgroundResource(0);
+                input.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
+                input.setTextColor(getResources().getColor(R.color.darkgrey));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                input.setLayoutParams(lp);
+                input.setText(msg);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder
+                        .setMessage("Send an invite to " + contact.getUserName() + " ?")
+                        .setView(input)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                StaticData.threadPool.execute(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            String txt = input.getText().toString();
+                                            if (!TextUtils.isEmpty(txt))
+                                                sendSMS(contact.getPhoneNumber(), txt);
+                                            else
+                                                Toast.makeText(getActivity(),"Please enter an invite message",Toast.LENGTH_SHORT).show();
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+                                contact.setInviteSent(true);
+                                adapter.notifyDataSetChanged();
+                                inviteSentTo.add(contact.toString());
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         }
     };
-    public void sendSMS(String number) throws Exception
+    public void sendSMS(String number,String msg) throws Exception
     {
         SendSMS smsObj = new SendSMS();
         smsObj.setparams("alerts.sinfini.com","sms","Aed8065339b18aedfbad998aeec2ce9b3","REACHM");
-        smsObj.send_sms(number, "Hey! Checkout and download my phone music collection with just a click!"+".\nhttp://letsreach.co/app\n--\n"+ SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)), "dlr_url");
+        smsObj.send_sms(number, msg, "dlr_url");
         /*smsObj.schedule_sms("99xxxxxxxx", "message", "http://www.yourdomainname.domain/yourdlrpage&custom=XX",
                 "YYYY-MM-DD HH:MM:SS");
         smsObj.unicode_sms("99xxxxxxxx", "message", "http://www.yourdomainname.domain/yourdlrpage&custom=XX","1");
@@ -289,6 +324,8 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
                     StaticData.threadPool.execute(new Runnable() {
                         @Override
                         public void run() {
+                            if (getActivity()==null)
+                                return;
                             Bitmap bmp = null;
                             NotificationManagerCompat managerCompat = NotificationManagerCompat.from(getActivity());
                             int px = MiscUtils.dpToPx(64);

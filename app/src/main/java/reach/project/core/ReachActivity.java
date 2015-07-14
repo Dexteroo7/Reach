@@ -1,6 +1,7 @@
 package reach.project.core;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8,6 +9,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
@@ -318,6 +320,74 @@ public class ReachActivity extends ActionBarActivity implements
         }
     };
     private MergeAdapter combinedAdapter = null;
+    private final AdapterView.OnItemLongClickListener myLibraryLongClickListener = new AdapterView.OnItemLongClickListener() {
+        @Override
+        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long viewId) {
+            final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
+            final short status = cursor.getShort(6);
+            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length && status!=ReachDatabase.FINISHED) {
+                final long id = cursor.getLong(0);
+                final short operationKind = cursor.getShort(7);
+                final short logicalClock = cursor.getShort(9);
+                final long senderId = cursor.getLong(8);
+                final long receiverId = cursor.getLong(2);
+                final long songId = cursor.getLong(10);
+                final long processed = cursor.getLong(3);
+                final long length = cursor.getLong(1);
+
+                String txt;
+                if (status != ReachDatabase.PAUSED_BY_USER)
+                    txt = "Pause download";
+                else
+                    txt = "Resume download";
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ReachActivity.this);
+                builder.setPositiveButton(txt, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
+
+                        if (status != ReachDatabase.PAUSED_BY_USER) {
+
+                            final ContentValues values = new ContentValues();
+                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
+                            getContentResolver().update(uri, values,
+                                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                    new String[]{id + ""});
+                            Log.i("Ayush", "Pausing");
+                        } else if (operationKind == 1) {
+
+                            getContentResolver().delete(uri, ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                    new String[]{id + ""});
+                        } else {
+
+                            final ContentValues values = new ContentValues();
+                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+                            values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, logicalClock + 1);
+                            getContentResolver().update(uri, values,
+                                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                    new String[]{id + ""});
+                            final ReachDatabase reachDatabase = new ReachDatabase();
+                            reachDatabase.setSenderId(senderId);
+                            reachDatabase.setReceiverId(receiverId);
+                            reachDatabase.setSongId(songId);
+                                    reachDatabase.setProcessed(processed);
+                                    reachDatabase.setLength(length);
+                                    reachDatabase.setLogicalClock(logicalClock);
+                                    reachDatabase.setId(id);
+                                    StaticData.threadPool.submit(MiscUtils.startDownloadOperation(reachDatabase, getContentResolver()));
+                                    Log.i("Ayush", "Un-pausing");
+                                }
+                                dialog.dismiss();
+                            }
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+            return true;
+        }
+    };
     private final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
 
         @Override
@@ -505,7 +575,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
 
-        if (position > 0) {
+        if (position > 0 && position!=2) {
 
             final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null)
@@ -543,16 +613,15 @@ public class ReachActivity extends ActionBarActivity implements
                     break;
                 }
                 case 3: {
-                    //upload history
                     fragmentManager
                             .beginTransaction()
-                            .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
+                            .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                     break;
                 }
                 case 4: {
                     fragmentManager
                             .beginTransaction()
-                            .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
+                            .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
                     break;
                 }
                 case 5: {
@@ -790,17 +859,6 @@ public class ReachActivity extends ActionBarActivity implements
                     .addToBackStack(null)
                     .replace(R.id.container, MusicListFragment.newTypeInstance(id, albumName, artistName, playListName, type), "now_playing")
                     .commit();
-        } catch (IllegalStateException ignored) {
-        }
-    }
-
-    public void goLibrary(long id) {
-        if (isFinishing())
-            return;
-        try {
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library").commit();
         } catch (IllegalStateException ignored) {
         }
     }
@@ -1074,6 +1132,7 @@ public class ReachActivity extends ActionBarActivity implements
         pausePlayMaximized.setOnClickListener(pauseClick);
         pausePlayMinimized.setOnClickListener(pauseClick);
         queueListView.setOnItemClickListener(myLibraryClickListener);
+        queueListView.setOnItemLongClickListener(myLibraryLongClickListener);
         queueListView.setOnScrollListener(scrollListener);
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(shuffleClick);
@@ -1217,7 +1276,7 @@ public class ReachActivity extends ActionBarActivity implements
         }
 
         if (processed == 0) {
-            Toast.makeText(this, "Streaming Has Not Started Yet", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
             return false;
         }
         final MusicData data = new MusicData(displayName, path, artistName, id, length,

@@ -76,7 +76,7 @@ public class NumberVerification extends Fragment {
     private final class TourPagerAdapter extends PagerAdapter {
 
         private final String[] tourTexts = new String[]{"Browse and Access files\nof your Network",
-                                                               "Easy file transfer logs\nthrough Reach Queue",
+                                                               "Build your Reach by\ninviting friends",
                                                                "Privacy and security\noptions",
                                                                "Synced media files\n"};
         private final int[] tourImages = new int[]{R.drawable.library_view,

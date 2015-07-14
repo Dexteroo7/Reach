@@ -142,8 +142,8 @@ public class NavigationDrawerFragment extends Fragment {
                 R.drawable.icon_grey,
                 R.drawable.audio_grey,
                 R.drawable.promo,
-                R.drawable.clock,
                 R.drawable.add_icon_grey,
+                R.drawable.clock,
                 R.drawable.sheet_grey
         };
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

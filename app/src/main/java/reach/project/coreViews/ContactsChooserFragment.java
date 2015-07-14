@@ -262,7 +262,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     stringBuilder2.append(" song");
                     if(sCount > 1)
                         stringBuilder2.append("s");
-                    stringBuilder2.append(" have been pushed to <font color=\"#f33b5b\"><b>");
+                    stringBuilder2.append(" pushed to <font color=\"#f33b5b\"><b>");
                     stringBuilder2.append(getArguments().getString("receiverName"));
                     stringBuilder2.append("</b></font>");
                     textMain.setText(Html.fromHtml(stringBuilder2.toString()), TextView.BufferType.SPANNABLE);
@@ -332,7 +332,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        rootView = inflater.inflate(R.layout.choose_contact, container, false);
+        rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
         if (actionBar!=null) {
             actionBar.show();
@@ -344,7 +344,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
         selectionArguments = new String[]{2+""};
 
-        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.contactsList));
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setDivider(null);
         listView.setDividerHeight(0);
         listView.setOnItemClickListener(clickListener);

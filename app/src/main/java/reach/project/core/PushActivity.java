@@ -120,9 +120,6 @@ public class PushActivity extends Activity {
                 textView1.setText("You can add multiple songs instantly to your Reach Queue by just clicking on the songs here.");
             }
             else if (type == 3) {
-                Picasso.with(PushActivity.this)
-                        .load(R.drawable.icon_plain)
-                        .into(userImageView);
                 userName.setText(getIntent().getStringExtra("manual_title"));
                 textView1.setText(getIntent().getStringExtra("manual_text"));
             }
