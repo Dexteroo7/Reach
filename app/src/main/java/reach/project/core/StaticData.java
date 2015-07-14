@@ -33,6 +33,8 @@ public final class StaticData {
         final HttpRequestInitializer initialize = new HttpRequestInitializer() {
             @Override
             public void initialize(HttpRequest request) throws IOException {
+                request.setConnectTimeout(request.getConnectTimeout() * 2);
+                request.setReadTimeout(request.getReadTimeout() * 2);
             }
         };
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();

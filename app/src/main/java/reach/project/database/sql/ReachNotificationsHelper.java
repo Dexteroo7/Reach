@@ -9,7 +9,11 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
+import java.util.List;
+
+import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.database.notifications.BecameFriends;
 import reach.project.database.notifications.Like;
 import reach.project.database.notifications.Push;
@@ -80,6 +84,47 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
                     COLUMN_FIRST_SONG_NAME, //9
                     COLUMN_SIZE, //10
             };
+
+    public static ImmutableList<ContentValues> exractValues(List<NotificationBase> dataFromServer) {
+
+        final ImmutableList.Builder<ContentValues> builder = new ImmutableList.Builder<>();
+
+        for (NotificationBase base : dataFromServer) {
+
+            if(base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
+
+                final BecameFriends becameFriends = new BecameFriends();
+                becameFriends.portData(base);
+                builder.add(contentValuesCreator(becameFriends));
+
+            } else if(base.getTypes().equals(Types.LIKE.name())) {
+
+                final Like like = new Like();
+                like.portData(base);
+                like.setSongName((String) base.get("songName"));
+                builder.add(contentValuesCreator(like));
+
+            } else if(base.getTypes().equals(Types.PUSH.name())) {
+
+                final Push push = new Push();
+                push.portData(base);
+                push.setPushContainer((String) base.get("pushContainer"));
+                builder.add(contentValuesCreator(push));
+
+            } else if(base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
+
+                final PushAccepted accepted = new PushAccepted();
+                accepted.portData(base);
+                accepted.setFirstSongName((String) base.get("firstSongName"));
+                accepted.setSize(Integer.parseInt((String) base.get("size")));
+                builder.add(contentValuesCreator(accepted));
+
+            } else
+                Log.i("Ayush", "ILLEGAL NOTIFICATION RECEIVED");
+        }
+        return builder.build();
+    }
+
 
     public static ContentValues contentValuesCreator(Like like) {
 
