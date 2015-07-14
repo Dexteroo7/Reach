@@ -124,7 +124,7 @@ public class UserProfileView extends Fragment {
             access.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mListener.goLibrary(userId);
+                    //mListener.goLibrary(userId);
                 }
             });
         } else {

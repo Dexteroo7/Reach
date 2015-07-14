@@ -1,11 +1,17 @@
 package reach.project.core;
 
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.widget.ListView;
 
 import reach.project.R;
+import reach.project.coreViews.FriendRequestFragment;
+import reach.project.coreViews.NotificationFragment;
+import reach.project.viewHelpers.SlidingTabLayout;
+import reach.project.viewHelpers.ViewPagerReusable;
 
 
 public class NotificationActivity extends ActionBarActivity {
@@ -17,7 +23,21 @@ public class NotificationActivity extends ActionBarActivity {
         final ActionBar actionBar = getSupportActionBar();
         if(actionBar != null)
             actionBar.setTitle("Notifications");
-        final ListView notificationsList = (ListView) findViewById(R.id.notificationsList);
-        //ReachNotificationAdapter reachNotificationAdapter = new ReachNotificationAdapter(this,R.layout.notification_item, , )
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewPager);
+        viewPager.setAdapter(new ViewPagerReusable(
+                getSupportFragmentManager(),
+                new String[]{"Friend Requests", "Other Notifications"},
+                new Fragment[]{
+                        FriendRequestFragment.newInstance(),
+                        NotificationFragment.newInstance()}));
+
+        SlidingTabLayout slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
+        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return Color.parseColor("#FFCC0000");
+            }
+        });
+        slidingTabLayout.setViewPager(viewPager);
     }
 }

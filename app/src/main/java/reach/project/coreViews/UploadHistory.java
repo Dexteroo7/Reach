@@ -43,7 +43,6 @@ import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -126,11 +125,11 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View rootView = inflater.inflate(R.layout.fragment_reach_queue, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
         if (actionBar!=null)
             actionBar.setTitle("Upload History");
-        uploadList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.uploadList));
+        uploadList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
 
         long myId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
         if(myId == 0)

@@ -37,7 +37,6 @@ import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
@@ -168,8 +167,8 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.fragment_music, container, false);
-        musicList  = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.musicList));
+        rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        musicList  = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
         final int type = getArguments().getInt("type");
 

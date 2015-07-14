@@ -138,6 +138,10 @@ public class PushActivity extends Activity {
                 userName.setText("Click and Grab!");
                 textView1.setText("You can add multiple songs instantly to your Reach Queue by just clicking on the songs here.");
             }
+            else if (type == 3) {
+                userName.setText(getIntent().getStringExtra("manual_title"));
+                textView1.setText(getIntent().getStringExtra("manual_text"));
+            }
         }
     }
 }

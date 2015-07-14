@@ -112,8 +112,8 @@ public enum SharedPrefUtils {
         editor.putString("last_played", data).apply();
     }
 
-    public static boolean getMobileData(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getBoolean("mobileDataOn", true);
+    public static boolean getMobileData (SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean("mobileDataOn", false);
     }
 
     public static boolean getFirstIntroSeen(SharedPreferences sharedPreferences) {

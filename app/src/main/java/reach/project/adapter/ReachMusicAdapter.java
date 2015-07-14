@@ -78,10 +78,12 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         if (viewHolder.listToggle != null) {
             //Privacy Fragment stuff
             if (visibility == 0) { //visibility
+                viewHolder.songDuration.setText("Invisible");
                 Picasso.with(context).load(R.drawable.ic_action_visibility_off).noFade().into(viewHolder.listToggle);
                 view.setAlpha(0.4f);
             }
             else {
+                viewHolder.songDuration.setText(" Visible ");
                 Picasso.with(context).load(R.drawable.ic_action_visibility_on).noFade().into(viewHolder.listToggle);
                 view.setAlpha(1f);
             }

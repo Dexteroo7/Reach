@@ -52,13 +52,10 @@ public interface SuperInterface {
 
     void startMusicListFragment(long id, String albumName, String artistName, String playListName, int type);
 
-//    void OnSplash(); //SplashFragment
-
     void onOpenProfile();
 
     void onPrivacyDone(); //PrivacyFragment
 
     void onPushNext(HashSet<TransferSong> songsList); //PushSongFragment
 
-    void goLibrary(long id); //UserProfileView
 }

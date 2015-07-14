@@ -5,8 +5,8 @@
     <string name="title_section1">My Reach</string>
     <string name="title_section2">Hide Songs</string>
     <string name="title_section3">Promo Code</string>
-    <string name="title_section4">Upload History</string>
-    <string name="title_section5">Invite Friends</string>
+    <string name="title_section4">Invite Friends</string>
+    <string name="title_section5">Upload History</string>
     <string name="title_section6">Contact Us</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -19,28 +19,5 @@
     <string name="title_activity_notifications">Notifications</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_reach_notification">ReachNotificationActivity</string>
-    <string-array name="sports_array">
-        <item>Shuttle Badminton</item>
-        <item>Tennis</item>
-        <item>FootBall</item>
-        <item>Basket Ball</item>
-        <item>Table Tennis</item>
-        <item>Chess</item>
-        <item>Hockey</item>
-        <item>Shuttle Badminton</item>
-        <item>Tennis</item>
-        <item>FootBall</item>
-        <item>Basket Ball</item>
-        <item>Table Tennis</item>
-        <item>Chess</item>
-        <item>Hockey</item>
-        <item>Shuttle Badminton</item>
-        <item>Tennis</item>
-        <item>FootBall</item>
-        <item>Basket Ball</item>
-        <item>Table Tennis</item>
-        <item>Chess</item>
-        <item>Hockey</item>
-    </string-array>
 
 </resources>
