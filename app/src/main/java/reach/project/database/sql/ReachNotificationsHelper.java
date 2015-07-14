@@ -9,7 +9,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
@@ -85,31 +84,32 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
                     COLUMN_SIZE, //10
             };
 
-    public static ImmutableList<ContentValues> exractValues(List<NotificationBase> dataFromServer) {
+    public static ContentValues [] extractValues(List<NotificationBase> dataFromServer) {
 
-        final ImmutableList.Builder<ContentValues> builder = new ImmutableList.Builder<>();
+        final ContentValues [] values = new ContentValues[dataFromServer.size()];
 
+        int i = 0;
         for (NotificationBase base : dataFromServer) {
 
             if(base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
 
                 final BecameFriends becameFriends = new BecameFriends();
                 becameFriends.portData(base);
-                builder.add(contentValuesCreator(becameFriends));
+                values[i++] =  contentValuesCreator(becameFriends);
 
             } else if(base.getTypes().equals(Types.LIKE.name())) {
 
                 final Like like = new Like();
                 like.portData(base);
                 like.setSongName((String) base.get("songName"));
-                builder.add(contentValuesCreator(like));
+                values[i++] =  contentValuesCreator(like);
 
             } else if(base.getTypes().equals(Types.PUSH.name())) {
 
                 final Push push = new Push();
                 push.portData(base);
                 push.setPushContainer((String) base.get("pushContainer"));
-                builder.add(contentValuesCreator(push));
+                values[i++] =  contentValuesCreator(push);
 
             } else if(base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
 
@@ -117,12 +117,11 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
                 accepted.portData(base);
                 accepted.setFirstSongName((String) base.get("firstSongName"));
                 accepted.setSize(Integer.parseInt((String) base.get("size")));
-                builder.add(contentValuesCreator(accepted));
+                values[i++] =  contentValuesCreator(accepted);
 
-            } else
-                Log.i("Ayush", "ILLEGAL NOTIFICATION RECEIVED");
+            } else throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
         }
-        return builder.build();
+        return values;
     }
 
 

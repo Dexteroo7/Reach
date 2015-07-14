@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.util.Arrays;
@@ -19,16 +20,16 @@ import reach.project.database.sql.ReachNotificationsHelper;
  */
 public class ReachNotificationsProvider extends ContentProvider {
 
-    public static final int DATABASE = 17;
-    private static final int DATABASE_ID = 27; //+10
+    public static final int NOTIFICATIONS = 17;
+    private static final int NOTIFICATIONS_ID = 27; //+10
     private static final String BASE_PATH = "database/contentProvider/ReachNotificationsProvider";
     public static final String AUTHORITY = "reach.project.database.contentProvider.ReachNotificationsProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
     static {
         sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        sURIMatcher.addURI(AUTHORITY, BASE_PATH, DATABASE);
-        sURIMatcher.addURI(AUTHORITY, BASE_PATH + "/#", DATABASE_ID);
+        sURIMatcher.addURI(AUTHORITY, BASE_PATH, NOTIFICATIONS);
+        sURIMatcher.addURI(AUTHORITY, BASE_PATH + "/#", NOTIFICATIONS_ID);
     }
 
     private ReachNotificationsHelper reachNotificationsHelper;
@@ -50,9 +51,9 @@ public class ReachNotificationsProvider extends ContentProvider {
         int uriType = sURIMatcher.match(uri);
         switch (uriType) {
 
-            case DATABASE:
+            case NOTIFICATIONS:
                 break;
-            case DATABASE_ID:
+            case NOTIFICATIONS_ID:
                 // adding the ID to the original query
                 queryBuilder.appendWhere(ReachNotificationsHelper.COLUMN_ID + "="
                         + uri.getLastPathSegment());
@@ -81,7 +82,7 @@ public class ReachNotificationsProvider extends ContentProvider {
         SQLiteDatabase sqlDB = reachNotificationsHelper.getWritableDatabase();
         long id;
         switch (uriType) {
-            case DATABASE:
+            case NOTIFICATIONS:
                 id = sqlDB.insert(ReachNotificationsHelper.NOTIFICATIONS_TABLE, null, values);
                 break;
             default:
@@ -92,9 +93,35 @@ public class ReachNotificationsProvider extends ContentProvider {
     }
 
 //    @Override
-//    public int bulkInsert(Uri uri, ContentValues[] values) {
-//        return super.bulkInsert(uri, values);
-//    }
+@Override
+public int bulkInsert(Uri uri, @NonNull ContentValues[] values) {
+
+    int done = 0;
+    int uriType = sURIMatcher.match(uri);
+    SQLiteDatabase sqlDB = reachNotificationsHelper.getWritableDatabase();
+    switch (uriType) {
+
+        case NOTIFICATIONS:
+            sqlDB.beginTransaction();
+            try {
+                //delete everything
+                sqlDB.delete(ReachNotificationsHelper.NOTIFICATIONS_TABLE, null, null);
+                //bulk insert
+                for(ContentValues contentValues : values) {
+                    sqlDB.insert(ReachNotificationsHelper.NOTIFICATIONS_TABLE, null, contentValues);
+                    done++;
+                }
+                sqlDB.setTransactionSuccessful();
+            } finally {
+                sqlDB.endTransaction();
+            }
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown URI: " + uri);
+    }
+    getContext().getContentResolver().notifyChange(uri, null);
+    return done;
+}
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
@@ -103,11 +130,11 @@ public class ReachNotificationsProvider extends ContentProvider {
         SQLiteDatabase sqlDB = reachNotificationsHelper.getWritableDatabase();
         int rowsDeleted;
         switch (uriType) {
-            case DATABASE:
+            case NOTIFICATIONS:
                 rowsDeleted = sqlDB.delete(ReachNotificationsHelper.NOTIFICATIONS_TABLE, selection,
                         selectionArgs);
                 break;
-            case DATABASE_ID:
+            case NOTIFICATIONS_ID:
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
                     rowsDeleted = sqlDB.delete(ReachNotificationsHelper.NOTIFICATIONS_TABLE,
@@ -133,13 +160,13 @@ public class ReachNotificationsProvider extends ContentProvider {
         SQLiteDatabase sqlDB = reachNotificationsHelper.getWritableDatabase();
         int rowsUpdated;
         switch (uriType) {
-            case DATABASE:
+            case NOTIFICATIONS:
                 rowsUpdated = sqlDB.update(ReachNotificationsHelper.NOTIFICATIONS_TABLE,
                         values,
                         selection,
                         selectionArgs);
                 break;
-            case DATABASE_ID:
+            case NOTIFICATIONS_ID:
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
                     rowsUpdated = sqlDB.update(ReachNotificationsHelper.NOTIFICATIONS_TABLE,

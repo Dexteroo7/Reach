@@ -756,7 +756,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             reachFriends.clear();
             for(ContentValues values : contentValues)
                 values.clear();
-            refreshing.set(false);
             return contentValues.length;
         }
 
@@ -770,6 +769,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
                 } else
                     mergeAdapter.setActive(emptyTV1, false);
             }
+            refreshing.set(false);
         }
     }
 

@@ -119,6 +119,7 @@ public final class StaticData {
     public static final short DOWNLOAD_LOADER = 5;
     public static final short UPLOAD_LOADER = 6;
     public static final short MY_LIBRARY_LOADER = 7;
+    public static final short NOTIFICATIONS_LOADER = 8;
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616.appspot.com/";
