@@ -1,24 +1,21 @@
-package reach.backend.Notifications;
+package reach.project.database.notifications;
 
-import com.googlecode.objectify.annotation.Subclass;
-
-import reach.backend.User.ReachUser;
+import reach.backend.entities.userApi.model.ReachUser;
 
 /**
  * Created by dexter on 06/07/15.
  */
-@Subclass (name = "Like")
-public class Like extends NotificationBase {
+public class Push extends NotificationBase {
 
-    private String songName = "";
-
-    public String getSongName() {
-        return songName;
+    public String getPushContainer() {
+        return pushContainer;
     }
 
-    public void setSongName(String songName) {
-        this.songName = songName;
+    public void setPushContainer(String pushContainer) {
+        this.pushContainer = pushContainer;
     }
+
+    private String pushContainer = ""; //pushContainer compressed
 
     @Override
     public Types getTypes() {
@@ -26,8 +23,8 @@ public class Like extends NotificationBase {
     }
 
     @Override
-    public void setTypes(Types types) {
-        if (types != Types.LIKE)
+    public void setTypes(Types types) { //fix ?
+        if (types != Types.PUSH)
             throw new IllegalStateException("Illegal type");
         super.setTypes(types);
     }
@@ -85,19 +82,19 @@ public class Like extends NotificationBase {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Like)) return false;
+        if (!(o instanceof Push)) return false;
         if (!super.equals(o)) return false;
 
-        Like like = (Like) o;
+        Push push = (Push) o;
 
-        return !(songName != null ? !songName.equals(like.songName) : like.songName != null);
+        return !(pushContainer != null ? !pushContainer.equals(push.pushContainer) : push.pushContainer != null);
 
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (songName != null ? songName.hashCode() : 0);
+        result = 31 * result + (pushContainer != null ? pushContainer.hashCode() : 0);
         return result;
     }
 }

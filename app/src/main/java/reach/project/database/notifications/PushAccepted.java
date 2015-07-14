@@ -1,23 +1,29 @@
-package reach.backend.Notifications;
+package reach.project.database.notifications;
 
-import com.googlecode.objectify.annotation.Subclass;
-
-import reach.backend.User.ReachUser;
+import reach.backend.entities.userApi.model.ReachUser;
 
 /**
- * Created by dexter on 06/07/15.
+ * Created by dexter on 08/07/15.
  */
-@Subclass (name = "Like")
-public class Like extends NotificationBase {
+public class PushAccepted extends NotificationBase {
 
-    private String songName = "";
+    private String firstSongName = "";
+    private int size = 0;
 
-    public String getSongName() {
-        return songName;
+    public int getSize() {
+        return size;
     }
 
-    public void setSongName(String songName) {
-        this.songName = songName;
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public String getFirstSongName() {
+        return firstSongName;
+    }
+
+    public void setFirstSongName(String firstSongName) {
+        this.firstSongName = firstSongName;
     }
 
     @Override
@@ -27,7 +33,8 @@ public class Like extends NotificationBase {
 
     @Override
     public void setTypes(Types types) {
-        if (types != Types.LIKE)
+
+        if (types != Types.PUSH_ACCEPTED)
             throw new IllegalStateException("Illegal type");
         super.setTypes(types);
     }
@@ -85,19 +92,21 @@ public class Like extends NotificationBase {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Like)) return false;
+        if (!(o instanceof PushAccepted)) return false;
         if (!super.equals(o)) return false;
 
-        Like like = (Like) o;
+        PushAccepted that = (PushAccepted) o;
 
-        return !(songName != null ? !songName.equals(like.songName) : like.songName != null);
+        if (size != that.size) return false;
+        return !(firstSongName != null ? !firstSongName.equals(that.firstSongName) : that.firstSongName != null);
 
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (songName != null ? songName.hashCode() : 0);
+        result = 31 * result + (firstSongName != null ? firstSongName.hashCode() : 0);
+        result = 31 * result + size;
         return result;
     }
 }

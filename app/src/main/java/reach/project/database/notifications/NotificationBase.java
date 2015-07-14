@@ -1,30 +1,18 @@
-package reach.backend.Notifications;
+package reach.project.database.notifications;
 
-import reach.backend.User.ReachUser;
+import reach.backend.entities.userApi.model.ReachUser;
 
 /**
  * Created by dexter on 08/07/15.
  */
-public class NotificationBase {
-
-    public static final int DEFAULT_LIST_LIMIT = 30;
+public abstract class NotificationBase {
 
     private Types types = Types.DEFAULT;
     private long hostId = 0;
     private long systemTime = 0;
     private String hostName = "";
     private String imageId = "";
-    /**
-     * initially will be -1 for unread notifications
-     * 0 will signal that the notification was delivered to the centre
-     * 1 will confirm read
-     *
-     * 1) First set to -1 for all new/unread notifications
-     * 2) In the subsequent sync by the notification centre all -1's are marked as 0
-     *    and sent to the centre and updated here.
-     * 3) In the next call, all 0's are marked as 1's and sent thus making them read
-     */
-    private short read = -1;
+    private short read = 0;
 
     public Types getTypes() {
         return types;
@@ -75,7 +63,7 @@ public class NotificationBase {
     }
 
     public void addBasicData(ReachUser user) {
-        setRead((short) -1);
+        setRead((short) 0);
         setSystemTime(System.currentTimeMillis());
         setImageId(user.getImageId());
         setHostId(user.getId());

@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
+import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.CloudEndPointsUtils;
@@ -37,6 +38,7 @@ public final class StaticData {
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
         messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build();
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
+        notificationApi = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
     }
 
     public static final String [] DOWNLOADED_LIST = new String[]{ //count = 14
@@ -129,6 +131,7 @@ public final class StaticData {
     public static final UserApi userEndpoint;
     public static final FeedBackApi feedBackApi;
     public static final Messaging messagingEndpoint;
+    public static final NotificationApi notificationApi;
 
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
 

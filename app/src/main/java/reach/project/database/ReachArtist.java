@@ -3,7 +3,7 @@ package reach.project.database;
 /**
  * Created by dexter on 30/12/14.
  */
-public class ReachArtistDatabase {
+public class ReachArtist {
 
     private String artistName;
     private long userId;

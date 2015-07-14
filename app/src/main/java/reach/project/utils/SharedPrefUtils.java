@@ -49,11 +49,21 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("promoCode", promoCode).apply();
     }
 
-    public static boolean isUserAbsent(SharedPreferences sharedPreferences) {
+    /**
+     *
+     * @param sharedPreferences for accessing the prefs
+     * @return 0 : start numberVerification, 1 : start account creation, 2 : OK normal
+     */
+    public static short isUserAbsent(SharedPreferences sharedPreferences) {
 
-        return TextUtils.isEmpty(sharedPreferences.getString("userName", "")) ||
-                TextUtils.isEmpty(sharedPreferences.getString("phoneNumber", "")) ||
-                sharedPreferences.getLong("serverId", 0) == 0;
+        if(TextUtils.isEmpty(sharedPreferences.getString("phoneNumber", "")))
+            return 0;
+
+        if(TextUtils.isEmpty(sharedPreferences.getString("userName", "")) ||
+                sharedPreferences.getLong("serverId", 0) == 0)
+            return 1;
+
+        return 2;
     }
 
     public static void storePhoneNumber(SharedPreferences sharedPreferences, String number) {

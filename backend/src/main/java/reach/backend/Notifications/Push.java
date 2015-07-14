@@ -1,21 +1,24 @@
 package reach.backend.Notifications;
 
-import com.google.appengine.api.datastore.Blob;
+import com.googlecode.objectify.annotation.Subclass;
+
+import reach.backend.User.ReachUser;
 
 /**
  * Created by dexter on 06/07/15.
  */
+@Subclass (name = "Push")
 public class Push extends NotificationBase {
 
-    private Blob pushContainer = new Blob(new byte[]{}); //pushContainer compressed
-
-    public Blob getPushContainer() {
+    public String getPushContainer() {
         return pushContainer;
     }
 
-    public void setPushContainer(Blob pushContainer) {
+    public void setPushContainer(String pushContainer) {
         this.pushContainer = pushContainer;
     }
+
+    private String pushContainer = "";
 
     @Override
     public Types getTypes() {
@@ -67,6 +70,16 @@ public class Push extends NotificationBase {
     @Override
     public void setHostId(long hostId) {
         super.setHostId(hostId);
+    }
+
+    @Override
+    public void addBasicData(ReachUser user) {
+        super.addBasicData(user);
+    }
+
+    @Override
+    public short getRead() {
+        return super.getRead();
     }
 
     @Override

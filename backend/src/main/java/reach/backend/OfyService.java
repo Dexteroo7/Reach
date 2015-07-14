@@ -6,7 +6,11 @@ import com.googlecode.objectify.ObjectifyService;
 
 import reach.backend.Feedback.FeedBack;
 import reach.backend.Music.MusicVisibility;
+import reach.backend.Notifications.BecameFriends;
+import reach.backend.Notifications.Like;
 import reach.backend.Notifications.Notification;
+import reach.backend.Notifications.Push;
+import reach.backend.Notifications.PushAccepted;
 import reach.backend.User.CompletedOperations;
 import reach.backend.User.MusicSplitter;
 import reach.backend.User.ReachUser;
@@ -26,6 +30,11 @@ public class OfyService {
         ObjectifyService.register(MusicSplitter.class);
         ObjectifyService.register(MusicVisibility.class);
         ObjectifyService.register(Notification.class);
+
+        ObjectifyService.register(Like.class);
+        ObjectifyService.register(BecameFriends.class);
+        ObjectifyService.register(Push.class);
+        ObjectifyService.register(PushAccepted.class);
     }
 
     public static Objectify ofy() {

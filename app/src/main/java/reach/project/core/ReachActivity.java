@@ -241,10 +241,13 @@ public class ReachActivity extends ActionBarActivity implements
                     cursor.close();
                     return;
                 }
-
                 MiscUtils.autoRetryAsync(new DoWork<reach.backend.entities.messaging.model.MyString>() {
                     @Override
                     protected reach.backend.entities.messaging.model.MyString doWork() throws IOException {
+
+                        StaticData.notificationApi.addLike(currentPlaying.getSenderId(),
+                                serverId,
+                                currentPlaying.getDisplayName()).execute();
 
                         return StaticData.messagingEndpoint.messagingEndpoint().sendManualNotification(
                                 currentPlaying.getSenderId(), 0, "likes " + currentPlaying.getDisplayName(),
@@ -516,18 +519,20 @@ public class ReachActivity extends ActionBarActivity implements
             switch (position) {
 
                 case 0: {
-                    final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
-                    if (SharedPrefUtils.isUserAbsent(sharedPreferences)) {
+                    final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
 
-                        //fire number verification
-                        Log.i("Downloader", "USER NUMBER EMPTY OPEN SPLASH");
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.container, NumberVerification.newInstance(), "number_verification").commit();
-                    } else if(navPos > 0) {
+                    switch (action) {
+                        case 0:accountCreationError();break;
+                        case 1:startAccountCreation(Optional.<OldUserContainerNew>absent());break;
+                        default: {
 
-                        enablePadding = true;
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
+                            if(navPos > 0) {
+
+                                enablePadding = true;
+                                fragmentManager.beginTransaction()
+                                        .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
+                            }
+                        }
                     }
                     break;
                 }
@@ -539,7 +544,7 @@ public class ReachActivity extends ActionBarActivity implements
                 }
                 case 2: {
                     //promo code dialog
-                    new PromoCodeDialog().show(getSupportFragmentManager(),"promo_dialog");
+                    PromoCodeDialog.newInstance().show(getSupportFragmentManager(), "promo_dialog");
                     break;
                 }
                 case 3: {
@@ -563,8 +568,7 @@ public class ReachActivity extends ActionBarActivity implements
                 }
 
             }
-        } catch (IllegalStateException ignored) {
-        }
+        } catch (IllegalStateException ignored) {}
         navPos = position;
     }
 

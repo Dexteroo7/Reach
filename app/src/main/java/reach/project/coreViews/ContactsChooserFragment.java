@@ -226,16 +226,30 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     @Override
                     protected MyBoolean doInBackground(PushContainer... params) {
 
+                        final String pushContainer;
                         try {
-                            return MiscUtils.sendGCM(
-                                    "PUSH" + Base64.encodeToString(StringCompress.compress(new Gson().toJson(params[0], PushContainer.class)), Base64.DEFAULT),
-                                    params[0].getReceiverId(),
-                                    params[0].getSenderId()
-                            );
+                            pushContainer = Base64.encodeToString(StringCompress.compress(new Gson().toJson(params[0], PushContainer.class)), Base64.DEFAULT);
                         } catch (IOException e) {
                             e.printStackTrace();
+                            return null;
                         }
-                        return null;
+
+                        //TODO retry !!
+                        try {
+                            StaticData.notificationApi.addPush(
+                                    pushContainer,
+                                    params[0].getReceiverId(),
+                                    params[0].getSenderId()).execute();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return null;
+                        }
+
+                        return MiscUtils.sendGCM(
+                                "PUSH" + pushContainer,
+                                params[0].getReceiverId(),
+                                params[0].getSenderId()
+                        );
                     }
 
                     @Override
