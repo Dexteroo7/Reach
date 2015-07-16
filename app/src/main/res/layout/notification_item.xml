@@ -81,10 +81,9 @@
                     android:layout_height="wrap_content"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:text="Ashish Kumar"/>
+                    android:text="Name"/>
                 <TextView
                     android:id="@+id/notifType"
-                    android:text="wants to view your Library"
                     android:layout_below="@id/userNameList"
                     android:layout_alignLeft="@id/userNameList"
                     android:textSize="14sp"

@@ -5,14 +5,14 @@
     android:background="@color/grey"
     android:layout_gravity="center"
     android:layout_width="match_parent"
-    android:paddingTop="10dp"
+    android:paddingTop="?attr/actionBarSize"
     android:layout_height="match_parent">
     <reach.project.viewHelpers.SlidingTabLayout
         android:id="@+id/sliding_tabs"
         android:background="@color/reach_light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    <android.support.v4.view.ViewPager
+    <reach.project.viewHelpers.CustomViewPager
         android:id="@+id/viewPager"
         android:background="@color/white"
         android:layout_width="match_parent"

@@ -3,6 +3,7 @@ package reach.project.adapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -11,6 +12,8 @@ import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+
+import java.io.IOException;
 
 import reach.project.R;
 import reach.project.database.notifications.BecameFriends;
@@ -21,6 +24,7 @@ import reach.project.database.notifications.Types;
 import reach.project.database.sql.ReachNotificationsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.PushContainer;
+import reach.project.utils.StringCompress;
 
 /**
  * Created by ashish on 10/07/15.
@@ -80,11 +84,10 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
         final int a = MiscUtils.dpToPx(80);
         final int b = MiscUtils.dpToPx(125);
 
-
-        Types type = Types.DEFAULT;
+        Types type = Types.valueOf(cursor.getString(1));
         switch (type) {
             case DEFAULT:
-                break;
+                throw new IllegalArgumentException();
             case LIKE:
                 Like like = ReachNotificationsHelper.getLike(cursor).get();
                 viewHolder.userName.setText(like.getHostName());
@@ -98,7 +101,15 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                 open = true;
                 viewHolder.userName.setText(push.getHostName());
 
-                final PushContainer pushContainer = new Gson().fromJson(push.getPushContainer(), PushContainer.class);
+                final String unCompressed;
+                try {
+                    unCompressed = StringCompress.decompress(Base64.decode(push.getPushContainer(), Base64.DEFAULT));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
+                }
+
+                final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
 
                 String cMsg = pushContainer.getCustomMessage();
                 String msg;
@@ -170,45 +181,6 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                 break;
         }
 
-        /*viewHolder.userName.setText();
-        if () {
-            open = true;
-            viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (!open) {
-                        expand(viewHolder.linearLayout,a,b);
-                        open = true;
-                    }
-                    else {
-                        expand(viewHolder.linearLayout,b,a);
-                        open = false;
-                    }
-                }
-            });
-            viewHolder.accept.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    viewHolder.linearLayout.setClickable(false);
-                    expand(viewHolder.linearLayout,b,a);
-                    viewHolder.actionBlock.setVisibility(View.GONE);
-                    viewHolder.librarayBtn.setVisibility(View.VISIBLE);
-                    viewHolder.notifType.setText("added to your friends");
-                }
-            });
-            viewHolder.reject.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //delete entry
-                }
-            });
-        }
-        else {
-            viewHolder.linearLayout.getLayoutParams().height = a;
-            viewHolder.actionBlock.setVisibility(View.GONE);
-            viewHolder.librarayBtn.setVisibility(View.VISIBLE);
-            viewHolder.notifType.setText("added to your friends");
-        }*/
     }
 
     @Override

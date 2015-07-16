@@ -49,7 +49,7 @@ public class FriendRequestFragment extends Fragment {
         final ListView listView = (ListView) rootView.findViewById(R.id.listView);
 
         ReachFriendRequestAdapter reachFriendRequestAdapter = new ReachFriendRequestAdapter(getActivity(),R.layout.notification_item,null);
-        listView.setAdapter(reachFriendRequestAdapter);
+        //listView.setAdapter(reachFriendRequestAdapter);
         listView.setOnItemClickListener(itemClickListener);
         return rootView;
     }
@@ -61,7 +61,7 @@ public class FriendRequestFragment extends Fragment {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement SuperInterface");
         }
     }
 

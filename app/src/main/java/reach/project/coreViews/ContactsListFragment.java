@@ -79,7 +79,6 @@ import reach.backend.entities.userApi.model.ReachFriendCollection;
 import reach.project.R;
 import reach.project.adapter.ReachAllContactsAdapter;
 import reach.project.adapter.ReachContactsAdapter;
-import reach.project.core.NotificationActivity;
 import reach.project.core.PushActivity;
 import reach.project.core.StaticData;
 import reach.project.database.ReachAlbum;
@@ -896,8 +895,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         rqContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), NotificationActivity.class);
-                startActivity(intent);
+                mListener.onOpenNotificationDrawer();
+                //Intent intent = new Intent(getActivity(), NotificationCenterFragment.class);
+                //startActivity(intent);
             }
         });
         final TextView rqCount = (TextView) rqContainer.findViewById(R.id.reach_q_count);

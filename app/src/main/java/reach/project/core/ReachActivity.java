@@ -32,6 +32,7 @@ import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -457,6 +458,8 @@ public class ReachActivity extends ActionBarActivity implements
     @Override
     protected void onDestroy() {
 
+        super.onDestroy();
+
         if (reference!=null)
             reference.clear();
         reference = null;
@@ -492,8 +495,6 @@ public class ReachActivity extends ActionBarActivity implements
         shuffleBtn = repeatBtn = pausePlayMaximized = null;
         pausePlayMinimized = null;
         downloadRefresh = null;
-
-        super.onDestroy();
     }
 
     @Override
@@ -559,7 +560,6 @@ public class ReachActivity extends ActionBarActivity implements
             Log.d("Ashish", "1stNotif");
             managerCompat.cancel(nID);
         }*/
-
         if (getIntent().getBooleanExtra("openPlayer", false)) {
 
             new Handler().postDelayed(new Runnable() {
@@ -570,6 +570,7 @@ public class ReachActivity extends ActionBarActivity implements
                 }
             }, 1500);
         }
+        processIntent(getIntent());
     }
 
     @Override
@@ -650,6 +651,14 @@ public class ReachActivity extends ActionBarActivity implements
                     .addToBackStack(null).replace(R.id.container, EditProfileFragment.newInstance(), "edit_profile_fragment").commit();
         } catch (IllegalStateException ignored) {
         }
+    }
+
+    @Override
+    public void onOpenNotificationDrawer() {
+        if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
+            mDrawerLayout.openDrawer(Gravity.RIGHT);
+        else
+            mDrawerLayout.closeDrawer(Gravity.RIGHT);
     }
 
     @Override
@@ -1067,9 +1076,11 @@ public class ReachActivity extends ActionBarActivity implements
     protected void onNewIntent(Intent intent) {
 
         Log.d("Downloader", "Received new Intent");
-        if (intent != null && !TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple"))
+        if (intent != null && !TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
             processMultiple(intent);
-        new RefreshOperations().execute();
+            new RefreshOperations().execute();
+        }
+        processIntent(intent);
         super.onNewIntent(intent);
     }
 
@@ -1194,6 +1205,16 @@ public class ReachActivity extends ActionBarActivity implements
         new RefreshOperations().executeOnExecutor(StaticData.threadPool);
         getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
+    }
+
+    private void processIntent(Intent intent) {
+
+        if (intent != null&&intent.getBooleanExtra("openNotificationFragment", false)) {
+            onOpenNotificationDrawer();
+            setIntent(null);
+        }
+        else
+            onNavigationDrawerItemSelected(0);
     }
 
     private TextView getDownloadedTextView() {
