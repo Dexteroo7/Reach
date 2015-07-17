@@ -116,7 +116,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
                 final PushAccepted accepted = new PushAccepted();
                 accepted.portData(base);
                 accepted.setFirstSongName((String) base.get("firstSongName"));
-                accepted.setSize(Integer.parseInt((String) base.get("size")));
+                accepted.setSize(Integer.parseInt(base.get("size").toString()));
                 values[i++] =  contentValuesCreator(accepted);
 
             } else throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
@@ -225,7 +225,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         final String storedType = cursor.getString(1);
         if(TextUtils.isEmpty(storedType))
             throw new IllegalArgumentException("Wrong Type ! type is empty");
-        if(!storedType.equals(Types.LIKE.name()))
+        if(!storedType.equals(Types.BECAME_FRIENDS.name()))
             throw new IllegalArgumentException("Wrong Type ! type is " + storedType);
 
         final BecameFriends becameFriends = new BecameFriends();
@@ -243,7 +243,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         final String storedType = cursor.getString(1);
         if(TextUtils.isEmpty(storedType))
             throw new IllegalArgumentException("Wrong Type ! type is empty");
-        if(!storedType.equals(Types.LIKE.name()))
+        if(!storedType.equals(Types.PUSH_ACCEPTED.name()))
             throw new IllegalArgumentException("Wrong Type ! type is " + storedType);
 
         final PushAccepted pushAccepted = new PushAccepted();

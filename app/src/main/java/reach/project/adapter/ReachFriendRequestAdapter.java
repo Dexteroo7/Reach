@@ -58,6 +58,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReachFriend> {
         final ImageView profilePhoto = (ImageView) convertView.findViewById(R.id.profilePhotoList);
         final TextView userName = (TextView) convertView.findViewById(R.id.userNameList);
         final TextView notifType = (TextView) convertView.findViewById(R.id.notifType);
+        final TextView userInitials = (TextView) convertView.findViewById(R.id.userInitials);
         final LinearLayout librarayBtn = (LinearLayout) convertView.findViewById(R.id.libraryButton);
         final LinearLayout actionBlock = (LinearLayout) convertView.findViewById(R.id.actionBlock);
         final LinearLayout linearLayout = (LinearLayout) convertView.findViewById(R.id.linearLayout);
@@ -71,6 +72,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReachFriend> {
 
         Picasso.with(ctx).load(StaticData.cloudStorageImageBaseUrl + reachFriend.getImageId()).transform(new CircleTransform()).into(profilePhoto);
         userName.setText(reachFriend.getUserName());
+        userInitials.setText(MiscUtils.generateInitials(reachFriend.getUserName()));
         open = true;
         linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override

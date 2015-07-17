@@ -1208,7 +1208,6 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     private void processIntent(Intent intent) {
-
         if (intent != null&&intent.getBooleanExtra("openNotificationFragment", false)) {
             onOpenNotificationDrawer();
             setIntent(null);
