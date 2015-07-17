@@ -92,7 +92,7 @@ public class NotificationActivity extends ActionBarActivity implements LoaderMan
                     new DoWork<ImmutableList<NotificationBase>>() {
                         @Override
                         protected ImmutableList<NotificationBase> doWork() throws IOException {
-                            return null;
+                            return StaticData.notificationApi.get().execute().getItems();
                         }
                     }, Optional.<Predicate<ImmutableList<NotificationBase>>>absent());
 

@@ -202,8 +202,7 @@ public class MessagingEndpoint {
                 host.setMyReach(new HashSet<Long>());
             log.info("Adding MyReach To " + host.getUserName() + " " + host.getMyReach().add(clientId));
         }
-        ofy().save().entities(client).now();
-        ofy().save().entities(host).now();
+        ofy().save().entities(client,host).now();
 
         if (host.getGcmId() == null || host.getGcmId().equals("")) {
             log.info("Error handling reply " + hostId + " " + clientId);

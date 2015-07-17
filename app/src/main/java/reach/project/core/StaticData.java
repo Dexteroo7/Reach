@@ -35,6 +35,8 @@ public final class StaticData {
             public void initialize(HttpRequest request) throws IOException {
                 request.setConnectTimeout(request.getConnectTimeout() * 2);
                 request.setReadTimeout(request.getReadTimeout() * 2);
+//                connection.setRequestProperty("Accept-Encoding", "gzip");
+//                connection.setRequestProperty("User-Agent", "gzip");
             }
         };
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
@@ -122,7 +124,6 @@ public final class StaticData {
     public static final short NOTIFICATIONS_LOADER = 8;
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616.appspot.com/";
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout
     public static final short NETWORK_CALL_WAIT = 300;
     public static final short NETWORK_RETRY = 5;
@@ -130,6 +131,8 @@ public final class StaticData {
 
     public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
+
+    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616.appspot.com/";
 
     public static final UserApi userEndpoint;
     public static final FeedBackApi feedBackApi;

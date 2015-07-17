@@ -149,8 +149,6 @@ public class UserMusicLibrary extends Fragment {
                 SharedPrefUtils.setSecondIntroSeen(sharedPreferences.edit());
             }
         }
-        if(reachFriend == null)
-            return rootView;
         actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
         if(actionBar!= null) {
 

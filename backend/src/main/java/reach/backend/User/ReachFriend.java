@@ -9,8 +9,9 @@ public class ReachFriend {
     private final int numberofSongs;
     private final String phoneNumber;
     private final String userName;
-    private final String statusSong;
     private final String imageId;
+    private final String statusSong;
+
     private final String genres;
     private short status = 3;
     /*

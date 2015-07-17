@@ -20,13 +20,10 @@ public class ReachUser {
 
     @Id
     private Long id;
-    private long splitterId = 0;
-    private long numberOfSongs = 0;
+    private int numberOfSongs = 0;
     private String phoneNumber = "hello_world";    //UUID
     private String userName = "hello_world";       //Custom Username, can be changed
-    private String genres = "hello_world";    //Genres
     private String imageId = "hello_world";  //User Profile Image
-    private String statusSong = "hello_world"; //Status Song
 
     private String promoCode = "hello_world"; //promo code of user
     private String gcmId = "hello_world"; //Gcm Cloud Message Id
@@ -35,11 +32,14 @@ public class ReachUser {
     private long megaBytesSent;
     private long megaBytesReceived;
 
-    private HashSet<Long> myReach;
-    private HashSet<Long> sentRequests;
-    private HashSet<Long> receivedRequests;
+    @Unindex private HashSet<Long> myReach;
+    @Unindex private HashSet<Long> sentRequests;
+    @Unindex private HashSet<Long> receivedRequests;
 
     //shit to remove
+    private String statusSong = "hello_world"; //Status Song
+    private long splitterId = 0;
+    private String genres = "hello_world";    //Genres
     @Unindex
     private HashSet<ReachSong> mySongs; //switch to compressed blob
     @Unindex
@@ -55,11 +55,11 @@ public class ReachUser {
         this.splitterId = splitterId;
     }
 
-    public long getNumberOfSongs() {
+    public int getNumberOfSongs() {
         return numberOfSongs;
     }
 
-    public void setNumberOfSongs(long numberOfSongs) {
+    public void setNumberOfSongs(int numberOfSongs) {
         this.numberOfSongs = numberOfSongs;
     }
 

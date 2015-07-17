@@ -80,10 +80,10 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
         final int a = MiscUtils.dpToPx(80);
         final int b = MiscUtils.dpToPx(125);
 
+        final Types type = Types.valueOf(cursor.getString(1));
 
-        Types type = Types.DEFAULT;
         switch (type) {
-            case DEFAULT:
+            case :
                 break;
             case LIKE:
                 Like like = ReachNotificationsHelper.getLike(cursor).get();
@@ -91,7 +91,7 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                 viewHolder.linearLayout.getLayoutParams().height = a;
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
-                viewHolder.notifType.setText( " likes " + like.getSongName());
+                viewHolder.notifType.setText(" likes " + like.getSongName());
                 break;
             case PUSH:
                 Push push = ReachNotificationsHelper.getPush(cursor).get();

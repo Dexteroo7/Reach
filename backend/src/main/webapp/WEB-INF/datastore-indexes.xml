@@ -13,10 +13,10 @@
     </datastore-index>
 
     <datastore-index kind="ReachUser" ancestor="false" source="manual">
-        <property name="gcmId" direction="asc"/>
-        <property name="megaBytesReceived" direction="asc"/>
-        <property name="phoneNumber" direction="asc"/>
+        <property name="numberOfSongs" direction="asc"/>
         <property name="userName" direction="asc"/>
+        <property name="imageId" direction="asc"/>
+        <property name="phoneNumber" direction="asc"/>
     </datastore-index>
 
 </datastore-indexes>
