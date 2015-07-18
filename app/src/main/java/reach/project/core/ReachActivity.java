@@ -1321,7 +1321,6 @@ public class ReachActivity extends ActionBarActivity implements
                 new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
     }
 
-    //TODO rework
     private void processMultiple(Intent intent) {
 
         final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);

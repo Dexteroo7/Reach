@@ -16,22 +16,22 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.SwitchCompat;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
 import reach.project.R;
+import reach.project.adapter.DrawerListAdapter;
 import reach.project.database.ReachDatabase;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
@@ -71,28 +71,36 @@ public class NavigationDrawerFragment extends Fragment {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
-    private String[] priList;
+    private  String[] priList;
     private View mFragmentContainerView;
     private View rootView;
 
     private int mCurrentSelectedPosition = 0;
     private boolean mUserLearnedDrawer;
 
-    public NavigationDrawerFragment() {
-    }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // Read in the flag indicating whether or not the user has demonstrated awareness of the
-        // drawer. See PREF_USER_LEARNED_DRAWER for details.
-//        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-//        mUserLearnedDrawer = sp.getBoolean(PREF_USER_LEARNED_DRAWER, false);
-//        if (savedInstanceState != null) {
-//            mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
-//        }
-//        selectItem(mCurrentSelectedPosition);
-    }
+    private final AdapterView.OnItemClickListener navigationItemSelector = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            view.setSelected(true);
+            selectItem(position);
+        }
+    };
+
+    private final View.OnClickListener openProfile = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mCallbacks.onOpenProfile();
+        }
+    };
+
+    private final View.OnClickListener rateApp = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+        }
+    };
+
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -106,30 +114,6 @@ public class NavigationDrawerFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
-        mDrawerListView = (ListView) rootView.findViewById(R.id.primaryListView);
-        //mDrawerSecListView = (ListView) rootView.findViewById(R.id.secondaryListView);
-        final SharedPreferences sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
-        final SwitchCompat netToggle = (SwitchCompat) rootView.findViewById(R.id.netToggle);
-        if (SharedPrefUtils.getMobileData(sharedPrefs))
-            netToggle.setChecked(true);
-        else
-            netToggle.setChecked(false);
-        netToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    SharedPrefUtils.setDataOn(sharedPrefs.edit());
-                else {
-                    SharedPrefUtils.setDataOff(sharedPrefs.edit());
-                    ////////////////////purge all upload operations, but retain paused operations
-                    getActivity().getContentResolver().delete(
-                            ReachDatabaseProvider.CONTENT_URI,
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                            new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
-                }
-            }
-        });
         priList = new String[]{
                 getString(R.string.title_section1),
                 getString(R.string.title_section2),
@@ -138,55 +122,55 @@ public class NavigationDrawerFragment extends Fragment {
                 getString(R.string.title_section5),
                 getString(R.string.title_section6)
         };
-        int priImageRes[] = {
-                R.drawable.icon_grey,
-                R.drawable.audio_grey,
-                R.drawable.promo,
-                R.drawable.add_icon_grey,
-                R.drawable.clock,
-                R.drawable.sheet_grey
-        };
-        mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mDrawerListView = (ListView) rootView.findViewById(R.id.primaryListView);
+        //mDrawerSecListView = (ListView) rootView.findViewById(R.id.secondaryListView);
+        final Activity activity = getActivity();
+        final SharedPreferences sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SwitchCompat netToggle = (SwitchCompat) rootView.findViewById(R.id.netToggle);
+        if (SharedPrefUtils.getMobileData(sharedPrefs))
+            netToggle.setChecked(true);
+        else
+            netToggle.setChecked(false);
+
+        netToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                view.setSelected(true);
-                selectItem(position);
-            }
-        });
-        final RelativeLayout navHeader = (RelativeLayout) rootView.findViewById(R.id.navHeader);
-        navHeader.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCallbacks.onOpenProfile();
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                if (isChecked)
+                    SharedPrefUtils.setDataOn(sharedPrefs);
+                else {
+                    SharedPrefUtils.setDataOff(sharedPrefs);
+                    ////////////////////purge all upload operations, but retain paused operations
+                    activity.getContentResolver().delete(
+                            ReachDatabaseProvider.CONTENT_URI,
+                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                            new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
+                }
             }
         });
 
-
-        FrameLayout footer = (FrameLayout) rootView.findViewById(R.id.footer);
-        footer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
-            }
-        });
-        mDrawerListView.setAdapter(new DrawerListAdapter(getActivity(), R.layout.listview_item, priList, priImageRes));
+        mDrawerListView.setOnItemClickListener(navigationItemSelector);
+        rootView.findViewById(R.id.navHeader).setOnClickListener(openProfile);
+        rootView.findViewById(R.id.footer).setOnClickListener(rateApp);
+        mDrawerListView.setAdapter(new DrawerListAdapter(activity, R.layout.listview_item, priList));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
-        setNavViews(getActivity());
+        setNavViews(activity);
         return rootView;
     }
 
-    public void setNavViews(Context context){
+    public void setNavViews(Context context)  {
 
         final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         final String path = SharedPrefUtils.getImageId(sharedPreferences);
-        if(path != null && !path.equals("") && !path.equals("hello_world")) {
+        if (TextUtils.isEmpty(path) && !path.equals("hello_world")) {
             //Path must not be empty exception
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + path).transform(new CircleTransform())
                     .into(((ImageView) rootView.findViewById(R.id.userImageNav)));
         }
-        ((TextView)rootView.findViewById(R.id.userNameNav))
+        ((TextView) rootView.findViewById(R.id.userNameNav))
                 .setText(SharedPrefUtils.getUserName(sharedPreferences));
-
         ////////////////////
         final Cursor countCursor = context.getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
@@ -194,8 +178,8 @@ public class NavigationDrawerFragment extends Fragment {
                 ReachSongHelper.COLUMN_USER_ID + " = ?",
                 new String[]{SharedPrefUtils.getServerId(sharedPreferences) + ""},
                 null);
-        if(countCursor == null) return;
-        if(!countCursor.moveToFirst()) {
+        if (countCursor == null) return;
+        if (!countCursor.moveToFirst()) {
             countCursor.close();
             return;
         }
@@ -203,56 +187,6 @@ public class NavigationDrawerFragment extends Fragment {
         countCursor.close();
         ((TextView) rootView.findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
     }
-
-    private class DrawerListAdapter extends ArrayAdapter<String>{
-
-        private final Context mContext;
-        private final int layoutResourceId;
-        private final String txt[];
-        private final int imageRes[];
-
-        private DrawerListAdapter(Context context, int resource, String[] text, int images[]) {
-
-            super(context, resource, text);
-            this.layoutResourceId = resource;
-            this.mContext = context;
-            this.txt = text;
-            this.imageRes = images;
-        }
-
-        private final class ViewHolder {
-
-            private final ImageView listImage;
-            private final TextView textViewItem;
-
-            private ViewHolder(ImageView listImage, TextView textViewItem) {
-                this.listImage = listImage;
-                this.textViewItem = textViewItem;
-            }
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            final ViewHolder viewHolder;
-
-            if(convertView==null){
-
-                convertView = ((Activity) mContext).getLayoutInflater().inflate(layoutResourceId, parent, false);
-                viewHolder = new ViewHolder(
-                        (ImageView) convertView.findViewById(R.id.listImage),
-                        (TextView) convertView.findViewById(R.id.listTitle));
-                convertView.setTag(viewHolder);
-            }
-            else
-                viewHolder = (ViewHolder) convertView.getTag();
-
-            Picasso.with(parent.getContext()).load(imageRes[position]).into(viewHolder.listImage);
-            viewHolder.textViewItem.setText(txt[position]);
-            return convertView;
-        }
-    }
-
 
     public boolean isDrawerOpen() {
         return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(mFragmentContainerView);
@@ -266,50 +200,59 @@ public class NavigationDrawerFragment extends Fragment {
      */
     public void setUp(int fragmentId, DrawerLayout drawerLayout) {
 
-        mFragmentContainerView = getActivity().findViewById(fragmentId);
+        final Activity activity = getActivity();
+
+        mFragmentContainerView = activity.findViewById(fragmentId);
         mDrawerLayout = drawerLayout;
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         // set up the drawer's list view with items and click listener
-        final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
-        if (actionBar!=null) {
+        final ActionBar actionBar = ((ActionBarActivity) activity).getSupportActionBar();
+        if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
         }
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the navigation drawer and the action bar app icon.
         mDrawerToggle = new ActionBarDrawerToggle(
-                getActivity(),                    /* host Activity */
+                activity,                    /* host Activity */
                 mDrawerLayout,                    /* DrawerLayout object */
                 R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
                 R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
         ) {
             @Override
             public void onDrawerClosed(View drawerView) {
-
                 super.onDrawerClosed(drawerView);
                 if (!isAdded()) {
                     return;
                 }
-                getActivity().invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+                if(drawerView.getId() == R.id.notification_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.LEFT);
+                } else if(drawerView.getId() == R.id.navigation_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);
+                }
+                activity.invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
             }
 
             @Override
             public void onDrawerOpened(View drawerView) {
-
                 super.onDrawerOpened(drawerView);
                 if (!isAdded()) {
                     return;
+                }
+                if(drawerView.getId() == R.id.notification_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
+                } else if(drawerView.getId() == R.id.navigation_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.RIGHT);
                 }
                 if (!mUserLearnedDrawer) {
                     // The user manually opened the drawer; store this flag to prevent auto-showing
                     // the navigation drawer automatically in the future.
                     mUserLearnedDrawer = true;
-                    final SharedPreferences sp = PreferenceManager
-                            .getDefaultSharedPreferences(getActivity());
+                    final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(activity);
                     sp.edit().putBoolean(PREF_USER_LEARNED_DRAWER, true).apply();
                 }
-                getActivity().invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+                activity.invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
             }
         };
 
@@ -331,7 +274,7 @@ public class NavigationDrawerFragment extends Fragment {
     private void selectItem(int position) {
 
         mCurrentSelectedPosition = position;
-        if (priList!=null) {
+        if (priList != null) {
             if (position < priList.length) {
                 if (mDrawerListView != null)
                     mDrawerListView.setItemChecked(position, true);
@@ -381,33 +324,31 @@ public class NavigationDrawerFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mDrawerToggle!=null&&mDrawerToggle.onOptionsItemSelected(item)) {
+
+        if (mDrawerToggle != null && mDrawerToggle.onOptionsItemSelected(item)) {
             return true;
         }
-
         /*if (item.getItemId() == R.id.action_example) {
             Toast.makeText(getActivity(), "Example action.", Toast.LENGTH_SHORT).show();
             return true;
         }*/
-
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Per the navigation drawer design guidelines, updates the action bar to show the global app
-     * 'context', rather than just what's in the current screen.
-     */
-    private void showGlobalContextActionBar() {
-        getSupportActionBar().setDisplayShowTitleEnabled(true);
-        //actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        //actionBar.setTitle(R.string.app_name);
-    }
+//    /**
+//     * Per the navigation drawer design guidelines, updates the action bar to show the global app
+//     * 'context', rather than just what's in the current screen.
+//     */
+//    private void showGlobalContextActionBar() {
+//        getSupportActionBar().setDisplayShowTitleEnabled(true);
+//        //actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+//        //actionBar.setTitle(R.string.app_name);
+//    }
 
-    private ActionBar getSupportActionBar() {
-        return ((ActionBarActivity)getActivity()).getSupportActionBar();
-    }
-
-    /**
-     * Callbacks interface that all activities using this fragment must implement.
-     */
+//    private ActionBar getSupportActionBar() {
+//        return ((ActionBarActivity) getActivity()).getSupportActionBar();
+//    }
+//    /**
+//     * Callbacks interface that all activities using this fragment must implement.
+//     */
 }

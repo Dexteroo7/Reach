@@ -98,14 +98,12 @@ public enum SharedPrefUtils {
         editor.apply();
     }
 
-    public static void setDataOn(SharedPreferences.Editor editor) {
-        editor.putBoolean("mobileDataOn", true);
-        editor.apply();
+    public static void setDataOn(SharedPreferences editor) {
+        editor.edit().putBoolean("mobileDataOn", true).apply();
     }
 
-    public static void setDataOff(SharedPreferences.Editor editor) {
-        editor.putBoolean("mobileDataOn", false);
-        editor.apply();
+    public static void setDataOff(SharedPreferences editor) {
+        editor.edit().putBoolean("mobileDataOn", false).apply();
     }
 
     public static void storeLastPlayed(SharedPreferences.Editor editor, String data) {

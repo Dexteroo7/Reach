@@ -104,14 +104,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".core.ReachNotificationActivity"
-            android:excludeFromRecents="true"
-            android:label="@string/title_activity_reach_notification"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" >
-        </activity>
-
-        <activity
             android:name=".core.PushActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_reach_notification"

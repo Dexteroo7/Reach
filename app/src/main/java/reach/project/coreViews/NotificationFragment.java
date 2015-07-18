@@ -1,6 +1,5 @@
 package reach.project.coreViews;
 
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -72,20 +71,6 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
         // Required empty public constructor
     }
 
-    private void expand(final ViewGroup viewGroup, int a,int b)
-    {
-        ValueAnimator va = ValueAnimator.ofInt(a, b);
-        va.setDuration(300);
-        va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            public void onAnimationUpdate(ValueAnimator animation) {
-                viewGroup.getLayoutParams().height = (Integer) animation.getAnimatedValue();
-                viewGroup.requestLayout();
-            }
-        });
-        //va.setInterpolator(new DecelerateInterpolator());
-        va.start();
-    }
-
     AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
@@ -99,13 +84,13 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                     mListener.anchorFooter(true);
                     break;
                 case PUSH:
-                    final Push push = ReachNotificationsHelper.getPush(cursor).get();
+                    Push push = ReachNotificationsHelper.getPush(cursor).get();
+                    // TODO check if accepted
                     break;
                 case BECAME_FRIENDS:
                     BecameFriends becameFriends = ReachNotificationsHelper.getBecameFriends(cursor).get();
                     final long hostID = becameFriends.getHostId();
 
-                    //TODO open user library properly
                     final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
                     final Future<?> fetching = isMusicFetching.get(hostID, null);
                     if(fetching == null || fetching.isDone() || fetching.isCancelled()) {
@@ -301,7 +286,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == StaticData.NOTIFICATIONS_LOADER && data != null && !data.isClosed()) {
             adapter.swapCursor(data);
-            if(data.getCount() == 0)
+            if(!refreshing.get() && data.getCount() == 0)
                 MiscUtils.setEmptyTextforListView(listView, "No notifications for you!");
         }
     }

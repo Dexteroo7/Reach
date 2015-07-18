@@ -5,12 +5,6 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.PropertyProjection;
-import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
@@ -22,7 +16,6 @@ import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.repackaged.com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.ObjectifyService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +33,9 @@ import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
 import reach.backend.OfyService;
+import reach.backend.UploadHistory.CompletedOperation;
+import reach.backend.UploadHistory.CompletedOperations;
+import reach.backend.User.FriendContainers.ReceivedRequest;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -65,9 +60,140 @@ public class ReachUserEndpoint {
 
     private static final Logger logger = Logger.getLogger(ReachUserEndpoint.class.getName());
 
-    static {
-        ObjectifyService.register(ReachUser.class);
-    }
+//    /**
+//     * Use this to sync up the phoneBook, only send those numbers which are not known / are new
+//     * @param phoneNumbers list of phoneNumbers
+//     * @return list of people on reach
+//     */
+//    @ApiMethod(
+//            name = "phoneBookSync",
+//            path = "user/phoneBookSync/{clientId}/",
+//            httpMethod = ApiMethod.HttpMethod.PUT)
+//    public List<Friend> phoneBookSync(@Named("phoneNumbers") ImmutableList<String> phoneNumbers) {
+//
+//        logger.info(phoneNumbers.size() + " total");
+//        final List<Friend> friends = new ArrayList<>();
+//        for (ReachUser user : ofy().load().type(ReachUser.class)
+//                .filter("phoneNumber in", phoneNumbers)
+//                .filter("gcmId !=", "")
+//                .project(Friend.projectNewFriend))
+//            friends.add(new Friend(user));
+//        return friends;
+//    }
+//
+//    @ApiMethod(
+//            name = "quickSync",
+//            path = "user/quickSync/{clientId}/",
+//            httpMethod = ApiMethod.HttpMethod.GET)
+//    public QuickSync quickSync(@Named("clientId") final long clientId,
+//                               @Named("myIds") HashSet<Long> myIds) {
+//
+//        if (clientId == 0)
+//            return null;
+//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+//        if (client == null)
+//            return null;
+//        logger.info(client.getUserName());
+//
+//        final Map<Long, Short> newStatus = new HashMap<>();
+//        final HashSet<Long> myReach = client.getMyReach();
+//        final HashSet<Long> sentRequests = client.getSentRequests();
+//        final HashSet<Long> receivedRequests = client.getReceivedRequests();
+//        final List<Long> newIds;
+//        if (receivedRequests == null)
+//            newIds = new ArrayList<>();
+//        else
+//            newIds = new ArrayList<>(receivedRequests);
+//        //////////////////////////////////////
+//        //sync-up myReach
+//        if (myReach != null && myReach.size() > 0)
+//            if (myIds == null || myIds.size() == 0)
+//                newIds.addAll(myReach);
+//            else
+//                for (long id : myReach)
+//                    if (myIds.contains(id))
+//                        newStatus.put(id, getStatus(id, syncCache));
+//                    else
+//                        newIds.add(id);
+//
+//        //sync-up sentRequests
+//        if (sentRequests != null && sentRequests.size() > 0)
+//            if (myIds == null || myIds.size() == 0)
+//                newIds.addAll(sentRequests);
+//            else
+//                for (long id : sentRequests)
+//                    if (myIds.contains(id))
+//                        newStatus.put(id, (short) 2);
+//                    else
+//                        newIds.add(id);
+//
+//        if (newIds.size() == 0) {
+//            logger.info("Quick " + client.getUserName());
+//            return new QuickSync(newStatus, null, null);
+//        }
+//
+//        /////some new id's were found !
+//
+//        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+//        final List<Friend> friends = new ArrayList<>();
+//        final List<ReceivedRequest> requests = new ArrayList<>();
+//
+//        for (Long id : newIds)
+//            keysBuilder.add(Key.create(ReachUser.class, id));
+//
+//        for (ReachUser user : ofy().load().type(ReachUser.class)
+//                .filterKey("in", keysBuilder.build())
+//                .filter("gcmId !=", "")
+//                .project(Friend.projectNewFriend)) {
+//
+//            final long currentTime = System.currentTimeMillis();
+//            final long lastSeen;
+//            final byte[] value = (byte[]) syncCache.get(user.getId());
+//            if (value == null || value.length == 0)
+//                lastSeen = currentTime;
+//            else {
+//                final String val = new String(value);
+//                if (val.equals(""))
+//                    lastSeen = currentTime;
+//                else
+//                    lastSeen = currentTime - Long.parseLong(val);
+//            }
+//
+//            if (receivedRequests != null && receivedRequests.contains(user.getId()))
+//                requests.add(new ReceivedRequest(
+//                        user.getId(),
+//                        user.getNumberOfSongs(),
+//                        user.getPhoneNumber(),
+//                        user.getUserName(),
+//                        user.getImageId()));
+//            else
+//                friends.add(new Friend(
+//                        user,
+//                        myReach,
+//                        sentRequests,
+//                        lastSeen));
+//        }
+//        logger.info("Slow " + client.getUserName());
+//        return new QuickSync(newStatus, friends, requests);
+//    }
+//
+//    private short getStatus(long id, MemcacheService service) {
+//
+//        final byte[] value = (byte[]) service.get(id);
+//        if (value == null || value.length == 0)
+//            return 0;
+//        final String val = new String(value);
+//        if (val.equals(""))
+//            return 0;
+//        final long lastSeen = System.currentTimeMillis() - Long.parseLong(val);
+//        if (lastSeen > ReachUser.ONLINE_LIMIT)
+//            return 0; //offline and permission-request granted
+//        return 1; //online and permission-request granted
+//    }
 
     private ReachFriend getReachFriendFromUser(ReachUser host, MemcacheService service, ReachUser client) {
 
@@ -82,6 +208,45 @@ public class ReachUserEndpoint {
         else
             reachFriend = null;
         return reachFriend;
+    }
+
+    @ApiMethod(
+            name = "getReceivedRequests",
+            path = "user/getReceivedRequests/{clientId}/",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public List<ReceivedRequest> getReceivedRequests(@Named("clientId") final long clientId) {
+
+        if (clientId == 0)
+            return null;
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (client == null || client.getReceivedRequests() == null || client.getReceivedRequests().size() == 0)
+            return null;
+        //////////////////////////////////////
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        final List<ReceivedRequest> requests = new ArrayList<>();
+
+        for (Long id : client.getReceivedRequests())
+            keysBuilder.add(Key.create(ReachUser.class, id));
+
+        for (ReachUser user : ofy().load().type(ReachUser.class)
+                .filterKey("in", keysBuilder.build())
+                .filter("gcmId !=", "")
+                .project(ReceivedRequest.projectNewFriend)) {
+
+            requests.add(new ReceivedRequest(
+                    user.getId(),
+                    user.getNumberOfSongs(),
+                    user.getPhoneNumber(),
+                    user.getUserName(),
+                    user.getImageId()));
+        }
+        return requests;
     }
 
     @ApiMethod(
@@ -326,70 +491,6 @@ public class ReachUserEndpoint {
         return new DataCall(
                 builder.build(),
                 (count == 100) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
-    }
-
-    @ApiMethod(
-            name = "getStatsNew",
-            path = "user/getStatsNew",
-            httpMethod = ApiMethod.HttpMethod.GET)
-    public DataCall getStatsNew(@Named("cursor") String cursor) {
-
-        final ImmutableList.Builder<DataCall.Statistics> builder = new ImmutableList.Builder<>();
-        final DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
-        final QueryResultIterator<ReachUser> userQueryResultIterator;
-        final Iterator<Entity> friendsIterator;
-        final Query friendsQuery = new Query();
-        friendsQuery.addProjection(new PropertyProjection("myReach", ReachUser.class));
-
-        if (cursor != null && !cursor.trim().equals("")) {
-
-            userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .startAt(Cursor.fromWebSafeString(cursor))
-                    .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
-                    .limit(200)
-                    .iterator();
-            friendsIterator = datastoreService.prepare(friendsQuery).asIterator(FetchOptions.Builder
-                    .withLimit(200)
-                    .startCursor(Cursor.fromWebSafeString(cursor)));
-        } else {
-            userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
-                    .limit(200)
-                    .iterator();
-            friendsIterator = datastoreService.prepare(friendsQuery).asIterator(FetchOptions.Builder.withLimit(200));
-        }
-        ReachUser reachUser;
-        int count = 0;
-
-        while (userQueryResultIterator.hasNext() && friendsIterator.hasNext()) {
-
-            reachUser = userQueryResultIterator.next();
-            final Entity friend = friendsIterator.next();
-            final int friendsCount;
-            if (friend == null)
-                friendsCount = 0;
-            else {
-
-                final Iterator ff = ((Iterable) friend.getProperty("myReach")).iterator();
-                int i = 0;
-                while (ff.hasNext() && ff.next() != null)
-                    i++;
-                friendsCount = i;
-            }
-
-            builder.add(new DataCall.Statistics(
-                    reachUser.getUserName(),
-                    reachUser.getPhoneNumber(),
-                    reachUser.getNumberOfSongs(),
-                    friendsCount,
-                    reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
-            count++;
-        }
-
-        //if no more friends return null cursor
-        return new DataCall(
-                builder.build(),
-                (count == 200) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
     }
 
     @ApiMethod(

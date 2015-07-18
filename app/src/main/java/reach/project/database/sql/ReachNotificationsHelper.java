@@ -34,6 +34,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IMAGE_ID = "imageId";
     public static final String COLUMN_SYSTEM_TIME = "systemTime";
     public static final String COLUMN_READ = "read";
+    public static final String COLUMN_EXPANDED = "expanded";
     //like
     public static final String COLUMN_SONG_NAME = "songName";
     //push
@@ -57,6 +58,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
             COLUMN_IMAGE_ID + " text" + "," +
             COLUMN_SYSTEM_TIME + " long" + "," +
             COLUMN_READ + " short" + "," +
+            COLUMN_EXPANDED + " short" + "," +
             //like
             COLUMN_SONG_NAME + " text" + "," +
             //push
@@ -75,13 +77,14 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
                     COLUMN_IMAGE_ID, //4
                     COLUMN_SYSTEM_TIME, //5
                     COLUMN_READ, //6
+                    COLUMN_EXPANDED, //7
                     //like
-                    COLUMN_SONG_NAME, //7
+                    COLUMN_SONG_NAME, //8
                     //push
-                    COLUMN_PUSH_CONTAINER, //8
+                    COLUMN_PUSH_CONTAINER, //9
                     //push accepted
-                    COLUMN_FIRST_SONG_NAME, //9
-                    COLUMN_SIZE, //10
+                    COLUMN_FIRST_SONG_NAME, //10
+                    COLUMN_SIZE, //11
             };
 
     public static ContentValues [] extractValues(List<NotificationBase> dataFromServer) {
@@ -134,6 +137,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IMAGE_ID, like.getImageId());
         values.put(COLUMN_SYSTEM_TIME, like.getSystemTime());
         values.put(COLUMN_READ, like.getRead());
+        values.put(COLUMN_EXPANDED, like.getExpanded());
 
         values.put(COLUMN_SONG_NAME, like.getSongName());
         return values;
@@ -148,6 +152,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IMAGE_ID, becameFriends.getImageId());
         values.put(COLUMN_SYSTEM_TIME, becameFriends.getSystemTime());
         values.put(COLUMN_READ, becameFriends.getRead());
+        values.put(COLUMN_EXPANDED, becameFriends.getExpanded());
         return values;
     }
 
@@ -160,6 +165,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IMAGE_ID, push.getImageId());
         values.put(COLUMN_SYSTEM_TIME, push.getSystemTime());
         values.put(COLUMN_READ, push.getRead());
+        values.put(COLUMN_EXPANDED, push.getExpanded());
 
         values.put(COLUMN_PUSH_CONTAINER, push.getPushContainer());
         return values;
@@ -174,6 +180,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IMAGE_ID, pushAccepted.getImageId());
         values.put(COLUMN_SYSTEM_TIME, pushAccepted.getSystemTime());
         values.put(COLUMN_READ, pushAccepted.getRead());
+        values.put(COLUMN_EXPANDED, pushAccepted.getExpanded());
 
         values.put(COLUMN_FIRST_SONG_NAME, pushAccepted.getFirstSongName());
         values.put(COLUMN_SIZE, pushAccepted.getSize());
@@ -195,8 +202,9 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         like.setImageId(cursor.getString(4));
         like.setSystemTime(cursor.getLong(5));
         like.setRead(cursor.getShort(6));
+        like.setExpanded(cursor.getShort(7));
 
-        like.setSongName(cursor.getString(7));
+        like.setSongName(cursor.getString(8));
         return Optional.of(like);
     }
 
@@ -215,8 +223,9 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         push.setImageId(cursor.getString(4));
         push.setSystemTime(cursor.getLong(5));
         push.setRead(cursor.getShort(6));
+        push.setExpanded(cursor.getShort(7));
 
-        push.setPushContainer(cursor.getString(8));
+        push.setPushContainer(cursor.getString(9));
         return Optional.of(push);
     }
 
@@ -235,6 +244,7 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         becameFriends.setImageId(cursor.getString(4));
         becameFriends.setSystemTime(cursor.getLong(5));
         becameFriends.setRead(cursor.getShort(6));
+        becameFriends.setExpanded(cursor.getShort(7));
         return Optional.of(becameFriends);
     }
 
@@ -253,9 +263,10 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         pushAccepted.setImageId(cursor.getString(4));
         pushAccepted.setSystemTime(cursor.getLong(5));
         pushAccepted.setRead(cursor.getShort(6));
+        pushAccepted.setExpanded(cursor.getShort(7));
 
-        pushAccepted.setFirstSongName(cursor.getString(9));
-        pushAccepted.setSize(cursor.getInt(10));
+        pushAccepted.setFirstSongName(cursor.getString(10));
+        pushAccepted.setSize(cursor.getInt(11));
         return Optional.of(pushAccepted);
     }
 

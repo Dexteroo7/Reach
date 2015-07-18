@@ -3,18 +3,15 @@
 <datastore-indexes autoGenerate="true">
 
     <datastore-index ancestor="false" kind="ReachUser" source="manual">
-        <property name="phoneNumber" direction="asc" />
-        <property name="gcmId" direction="asc" />
-    </datastore-index>
-
-    <datastore-index ancestor="false" kind="ReachUser" source="manual">
         <property name="__key__" direction="asc" />
         <property name="gcmId" direction="asc" />
     </datastore-index>
 
     <datastore-index kind="ReachUser" ancestor="false" source="manual">
+        <property name="__key__" direction="asc"/>
         <property name="gcmId" direction="asc"/>
-        <property name="megaBytesReceived" direction="asc"/>
+        <property name="imageId" direction="asc"/>
+        <property name="numberOfSongs" direction="asc"/>
         <property name="phoneNumber" direction="asc"/>
         <property name="userName" direction="asc"/>
     </datastore-index>
