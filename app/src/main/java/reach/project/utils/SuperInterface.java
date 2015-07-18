@@ -54,6 +54,8 @@ public interface SuperInterface {
 
     void onOpenProfile();
 
+    void onOpenNotificationDrawer();
+
     void onPrivacyDone(); //PrivacyFragment
 
     void onPushNext(HashSet<TransferSong> songsList); //PushSongFragment

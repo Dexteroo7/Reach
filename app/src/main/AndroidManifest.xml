@@ -34,6 +34,10 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <meta-data
+            android:name="LOCALYTICS_APP_KEY"
+            android:value="88a912b3cdb7caaf3b2d0d1-9501be7a-2af6-11e5-46fb-006918dcf667"/>
+
         <activity
             android:name=".core.ReachActivity"
             android:label="@string/app_name"
@@ -45,15 +49,6 @@
                 <action android:name="process_multiple" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".core.NotificationActivity"
-            android:excludeFromRecents="true"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"
-            android:label="@string/title_activity_reach_notification"
-            android:launchMode="singleTop" >
         </activity>
 
         <receiver
@@ -103,14 +98,10 @@
             android:name=".database.contentProvider.ReachPlayListProvider"
             android:authorities="reach.project.database.contentProvider.ReachPlayListProvider"
             android:exported="false" />
-
-        <activity
-            android:name=".core.ReachNotificationActivity"
-            android:excludeFromRecents="true"
-            android:label="@string/title_activity_reach_notification"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" >
-        </activity>
+        <provider
+            android:name=".database.contentProvider.ReachNotificationsProvider"
+            android:authorities="reach.project.database.contentProvider.ReachNotificationsProvider"
+            android:exported="false" />
 
         <activity
             android:name=".core.PushActivity"

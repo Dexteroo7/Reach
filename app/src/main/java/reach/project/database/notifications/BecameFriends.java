@@ -8,6 +8,16 @@ import reach.backend.entities.userApi.model.ReachUser;
 public class BecameFriends extends NotificationBase {
 
     @Override
+    public short getExpanded() {
+        return super.getExpanded();
+    }
+
+    @Override
+    public void setExpanded(short expanded) {
+        super.setExpanded(expanded);
+    }
+
+    @Override
     public Types getTypes() {
         return super.getTypes();
     }
@@ -65,7 +75,22 @@ public class BecameFriends extends NotificationBase {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public short getRead() {
         return super.getRead();
+    }
+
+    @Override
+    public void setRead(short read) {
+        super.setRead(read);
     }
 }

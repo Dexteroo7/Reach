@@ -275,7 +275,14 @@
         android:id="@+id/navigation_drawer"
         android:name="reach.project.core.NavigationDrawerFragment"
         android:layout_width="@dimen/navigation_drawer_width"
-        android:layout_height="fill_parent"
-        android:layout_gravity="start"
+        android:layout_height="match_parent"
+        android:layout_gravity="left"
         tools:layout="@layout/fragment_navigation_drawer" />
+    <fragment
+        android:id="@+id/notification_drawer"
+        android:name="reach.project.coreViews.NotificationCenterFragment"
+        android:layout_width="@dimen/navigation_drawer_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        tools:layout="@layout/fragment_notification_center" />
 </android.support.v4.widget.DrawerLayout>

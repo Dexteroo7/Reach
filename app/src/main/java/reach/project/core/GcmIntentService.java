@@ -189,13 +189,14 @@ public class GcmIntentService extends IntentService {
             final String[] splitter = message.split("`");
 
             final Intent viewIntent;
-            viewIntent = new Intent(this, PushActivity.class);
-            viewIntent.putExtra("type",3);
+            viewIntent = new Intent(this, ReachActivity.class);
+            viewIntent.putExtra("openNotificationFragment", true);
+            /*viewIntent.putExtra("type",3);
             viewIntent.putExtra("manual_title", splitter[2].trim());
-            viewIntent.putExtra("manual_text", splitter[3].trim());
-            viewIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            viewIntent.putExtra("manual_text", splitter[3].trim());*/
+            viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, message.hashCode(), viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, message.hashCode(), viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)

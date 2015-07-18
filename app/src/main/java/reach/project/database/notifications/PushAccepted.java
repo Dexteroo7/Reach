@@ -27,6 +27,16 @@ public class PushAccepted extends NotificationBase {
     }
 
     @Override
+    public short getExpanded() {
+        return super.getExpanded();
+    }
+
+    @Override
+    public void setExpanded(short expanded) {
+        super.setExpanded(expanded);
+    }
+
+    @Override
     public Types getTypes() {
         return super.getTypes();
     }
@@ -87,6 +97,11 @@ public class PushAccepted extends NotificationBase {
     @Override
     public short getRead() {
         return super.getRead();
+    }
+
+    @Override
+    public void setRead(short read) {
+        super.setRead(read);
     }
 
     @Override

@@ -10,7 +10,6 @@
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:descendantFocusability="blocksDescendants"
         android:id="@+id/card_view"
-        android:clickable="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         card_view:cardCornerRadius="4dp">
@@ -74,6 +73,7 @@
                 <TextView
                     android:id="@+id/userNameList"
                     android:layout_toRightOf="@id/profilePhoto"
+                    android:layout_toLeftOf="@id/libraryButton"
                     android:layout_alignTop="@id/profilePhoto"
                     android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
@@ -81,13 +81,15 @@
                     android:layout_height="wrap_content"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:text="Ashish Kumar"/>
+                    android:text="Name"/>
                 <TextView
                     android:id="@+id/notifType"
-                    android:text="wants to view your Library"
                     android:layout_below="@id/userNameList"
+                    android:layout_toLeftOf="@id/libraryButton"
                     android:layout_alignLeft="@id/userNameList"
                     android:textSize="14sp"
+                    android:maxLines="2"
+                    android:ellipsize="marquee"
                     android:textColor="@color/darkgrey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
