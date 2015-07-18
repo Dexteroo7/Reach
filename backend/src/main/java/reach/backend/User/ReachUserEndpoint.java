@@ -5,12 +5,6 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.PropertyProjection;
-import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
@@ -29,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -498,70 +491,6 @@ public class ReachUserEndpoint {
         return new DataCall(
                 builder.build(),
                 (count == 100) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
-    }
-
-    @ApiMethod(
-            name = "getStatsNew",
-            path = "user/getStatsNew",
-            httpMethod = ApiMethod.HttpMethod.GET)
-    public DataCall getStatsNew(@Named("cursor") String cursor) {
-
-        final ImmutableList.Builder<DataCall.Statistics> builder = new ImmutableList.Builder<>();
-        final DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
-        final QueryResultIterator<ReachUser> userQueryResultIterator;
-        final Iterator<Entity> friendsIterator;
-        final Query friendsQuery = new Query();
-        friendsQuery.addProjection(new PropertyProjection("myReach", ReachUser.class));
-
-        if (cursor != null && !cursor.trim().equals("")) {
-
-            userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .startAt(Cursor.fromWebSafeString(cursor))
-                    .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
-                    .limit(200)
-                    .iterator();
-            friendsIterator = datastoreService.prepare(friendsQuery).asIterator(FetchOptions.Builder
-                    .withLimit(200)
-                    .startCursor(Cursor.fromWebSafeString(cursor)));
-        } else {
-            userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .project("userName", "phoneNumber", "megaBytesReceived", "gcmId")
-                    .limit(200)
-                    .iterator();
-            friendsIterator = datastoreService.prepare(friendsQuery).asIterator(FetchOptions.Builder.withLimit(200));
-        }
-        ReachUser reachUser;
-        int count = 0;
-
-        while (userQueryResultIterator.hasNext() && friendsIterator.hasNext()) {
-
-            reachUser = userQueryResultIterator.next();
-            final Entity friend = friendsIterator.next();
-            final int friendsCount;
-            if (friend == null)
-                friendsCount = 0;
-            else {
-
-                final Iterator ff = ((Iterable) friend.getProperty("myReach")).iterator();
-                int i = 0;
-                while (ff.hasNext() && ff.next() != null)
-                    i++;
-                friendsCount = i;
-            }
-
-            builder.add(new DataCall.Statistics(
-                    reachUser.getUserName(),
-                    reachUser.getPhoneNumber(),
-                    reachUser.getNumberOfSongs(),
-                    friendsCount,
-                    reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
-            count++;
-        }
-
-        //if no more friends return null cursor
-        return new DataCall(
-                builder.build(),
-                (count == 200) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
     }
 
     @ApiMethod(

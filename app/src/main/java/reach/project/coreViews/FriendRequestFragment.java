@@ -1,6 +1,7 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,11 +10,19 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import reach.backend.entities.userApi.model.ReachFriend;
+import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
 import reach.project.adapter.ReachFriendRequestAdapter;
+import reach.project.utils.DoWork;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
 
 public class FriendRequestFragment extends Fragment {
@@ -40,6 +49,29 @@ public class FriendRequestFragment extends Fragment {
             mListener.onOpenLibrary(reachFriend.getId());
         }
     };
+
+    private final class FetchRequests extends AsyncTask<Long, Void, List<ReceivedRequest>> {
+
+        @Override
+        protected List<ReceivedRequest> doInBackground(Long... params) {
+            return MiscUtils.autoRetry(new DoWork<List<ReceivedRequest>>() {
+                @Override
+                protected List<ReceivedRequest> doWork() throws IOException {
+                    return null;
+                }
+            }, Optional.<Predicate<List<ReceivedRequest>>>absent()).orNull();
+        }
+
+        @Override
+        protected void onPostExecute(List<ReceivedRequest> receivedRequests) {
+            super.onPostExecute(receivedRequests);
+            final Activity activity = getActivity();
+            if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() || receivedRequests == null)
+                return;
+
+            //else TODO do something
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

@@ -20,21 +20,23 @@ public class ReachUser {
 
     @Id
     private Long id;
-     private int numberOfSongs = 0;
+    private int numberOfSongs = 0;
     private String phoneNumber = "hello_world";    //UUID
-     private String userName = "hello_world";       //Custom Username, can be changed
-     private String imageId = "hello_world";  //User Profile Image
+    private String userName = "hello_world";       //Custom Username, can be changed
+    private String imageId = "hello_world";  //User Profile Image
+    private String gcmId = "hello_world"; //Gcm Cloud Message Id
 
     private String promoCode = "hello_world"; //promo code of user
-     private String gcmId = "hello_world"; //Gcm Cloud Message Id
     private String deviceId = "hello_world";
-
     private long megaBytesSent;
     private long megaBytesReceived;
 
-    @Unindex private HashSet<Long> myReach;
-    @Unindex private HashSet<Long> sentRequests;
-    @Unindex private HashSet<Long> receivedRequests;
+    @Unindex
+    private HashSet<Long> myReach;
+    @Unindex
+    private HashSet<Long> sentRequests;
+    @Unindex
+    private HashSet<Long> receivedRequests;
 
     //shit to remove
     private String statusSong = "hello_world"; //Status Song
