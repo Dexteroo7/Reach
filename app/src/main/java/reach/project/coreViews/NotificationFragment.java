@@ -1,5 +1,6 @@
 package reach.project.coreViews;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -43,6 +44,7 @@ import reach.project.database.ReachAlbum;
 import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachNotificationsProvider;
 import reach.project.database.notifications.BecameFriends;
+import reach.project.database.notifications.Push;
 import reach.project.database.notifications.Types;
 import reach.project.database.sql.ReachNotificationsHelper;
 import reach.project.utils.DoWork;
@@ -57,6 +59,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
     private ReachNotificationAdapter adapter;
     private ListView listView;
+    private Activity mActivity;
 
     public static NotificationFragment newInstance() {
 
@@ -69,9 +72,23 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
         // Required empty public constructor
     }
 
+    private void expand(final ViewGroup viewGroup, int a,int b)
+    {
+        ValueAnimator va = ValueAnimator.ofInt(a, b);
+        va.setDuration(300);
+        va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            public void onAnimationUpdate(ValueAnimator animation) {
+                viewGroup.getLayoutParams().height = (Integer) animation.getAnimatedValue();
+                viewGroup.requestLayout();
+            }
+        });
+        //va.setInterpolator(new DecelerateInterpolator());
+        va.start();
+    }
+
     AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
         @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
             Log.d("Ashish","notif list click - "+position);
             Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
             Types type = Types.valueOf(cursor.getString(1));
@@ -82,10 +99,10 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                     mListener.anchorFooter(true);
                     break;
                 case PUSH:
-                    //mListener.anchorFooter(true);
+                    final Push push = ReachNotificationsHelper.getPush(cursor).get();
                     break;
                 case BECAME_FRIENDS:
-                    BecameFriends becameFriends = new BecameFriends();
+                    BecameFriends becameFriends = ReachNotificationsHelper.getBecameFriends(cursor).get();
                     final long hostID = becameFriends.getHostId();
 
                     //TODO open user library properly
@@ -95,10 +112,10 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
 
 
                         isMusicFetching.append(hostID,StaticData.threadPool.submit(new GetMusic(hostID,
-                                getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS))));
+                                mActivity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS))));
                         //Inform only when necessary
                         //if(cursor.getInt(7) == 0)
-                        //    Toast.makeText(getActivity(), "Refreshing music list", Toast.LENGTH_SHORT).show();
+                        //    Toast.makeText(mActivity, "Refreshing music list", Toast.LENGTH_SHORT).show();
                     }
                     mListener.onOpenLibrary(hostID);
                     break;
@@ -121,7 +138,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
 
         @Override
         public void run() {
-            final long serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+            final long serverId = SharedPrefUtils.getServerId(mActivity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
 
             //fetch music
             final MusicContainer musicContainer = MiscUtils.autoRetry(new DoWork<MusicContainer>() {
@@ -141,22 +158,22 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                 }
             })).orNull();
 
-            if(musicContainer == null && getActivity() != null)
-                getActivity().runOnUiThread(new Runnable() {
+            if(musicContainer == null && mActivity != null)
+                mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(getActivity(), "Music fetch failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mActivity, "Music fetch failed", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-            if(getActivity() == null || getActivity().isFinishing() || musicContainer == null)
+            if(mActivity == null || mActivity.isFinishing() || musicContainer == null)
                 return;
 
             if(musicContainer.getSongsChanged()) {
 
                 if(musicContainer.getReachSongs() == null || musicContainer.getReachSongs().size() == 0)
                     //All the songs got deleted
-                    MiscUtils.deleteSongs(hostId, getActivity().getContentResolver());
+                    MiscUtils.deleteSongs(hostId, mActivity.getContentResolver());
                 else {
                     final Pair<Collection<ReachAlbum>, Collection<ReachArtist>> pair =
                             MiscUtils.getAlbumsAndArtists(new HashSet<>(musicContainer.getReachSongs()));
@@ -165,19 +182,19 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                     MiscUtils.bulkInsertSongs(new HashSet<>(musicContainer.getReachSongs()),
                             reachAlbums,
                             reachArtists,
-                            getActivity().getContentResolver());
+                            mActivity.getContentResolver());
                 }
                 SharedPrefUtils.storeSongCodeForUser(hostId, musicContainer.getSongsHash(), sharedPreferences.edit());
                 Log.i("Ayush", "Fetching songs, song hash changed for " + hostId + " " + musicContainer.getSongsHash());
             }
 
-            if(musicContainer.getPlayListsChanged() && getActivity() != null && !getActivity().isFinishing()) {
+            if(musicContainer.getPlayListsChanged() && mActivity != null && !mActivity.isFinishing()) {
 
                 if(musicContainer.getReachPlayLists() == null || musicContainer.getReachPlayLists().size() == 0)
                     //All playLists got deleted
-                    MiscUtils.deletePlayLists(hostId, getActivity().getContentResolver());
+                    MiscUtils.deletePlayLists(hostId, mActivity.getContentResolver());
                 else
-                    MiscUtils.bulkInsertPlayLists(new HashSet<>(musicContainer.getReachPlayLists()), getActivity().getContentResolver());
+                    MiscUtils.bulkInsertPlayLists(new HashSet<>(musicContainer.getReachPlayLists()), mActivity.getContentResolver());
                 SharedPrefUtils.storePlayListCodeForUser(hostId, musicContainer.getPlayListHash(), sharedPreferences.edit());
                 Log.i("Ayush", "Fetching playLists, playList hash changed for " + hostId + " " + musicContainer.getPlayListHash());
             }
@@ -191,7 +208,8 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0,MiscUtils.dpToPx(10),0,0);
-        adapter = new ReachNotificationAdapter(getActivity(),R.layout.notification_item,null,0,getActivity().getApplication());
+        listView.setBackgroundColor(getResources().getColor(R.color.grey));
+        adapter = new ReachNotificationAdapter(mActivity,R.layout.notification_item,null,0,getActivity().getApplication());
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
 
@@ -211,7 +229,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                     new DoWork<ImmutableList<NotificationBase>>() {
                         @Override
                         protected ImmutableList<NotificationBase> doWork() throws IOException {
-                            long myId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                            long myId = SharedPrefUtils.getServerId(mActivity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
                             return ImmutableList.copyOf(StaticData.notificationApi.get(myId).execute().getItems()).reverse();
                         }
                     }, Optional.<Predicate<ImmutableList<NotificationBase>>>absent());
@@ -221,7 +239,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
 
             final ContentValues[] values = ReachNotificationsHelper.extractValues(list.get());
 
-            final ContentResolver resolver = getActivity().getContentResolver();
+            final ContentResolver resolver = mActivity.getContentResolver();
             if (resolver == null)
                 return false;
 
@@ -246,6 +264,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        mActivity = activity;
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
@@ -273,7 +292,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(getActivity(),
+        return new CursorLoader(mActivity,
                 ReachNotificationsProvider.CONTENT_URI,
                 ReachNotificationsHelper.projection, null, null, null);
     }

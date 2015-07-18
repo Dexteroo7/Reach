@@ -17,12 +17,12 @@
             android:id="@+id/linearLayout"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="125dp">
+            android:layout_height="110dp">
             <RelativeLayout
                 android:id="@+id/notifHeader"
                 android:gravity="center_vertical"
                 android:layout_width="match_parent"
-                android:layout_height="80dp">
+                android:layout_height="70dp">
                 <FrameLayout
                     android:layout_margin="10dp"
                     android:layout_width="50dp"
@@ -75,7 +75,7 @@
                     android:layout_toRightOf="@id/profilePhoto"
                     android:layout_toLeftOf="@id/libraryButton"
                     android:layout_alignTop="@id/profilePhoto"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="2dp"
                     android:layout_marginRight="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -100,7 +100,7 @@
                 android:visibility="visible"
                 android:layout_below="@+id/notifHeader"
                 android:layout_width="match_parent"
-                android:layout_height="45dp" >
+                android:layout_height="40dp" >
                 <View
                     android:id="@+id/dividerHeader"
                     android:layout_width="match_parent"

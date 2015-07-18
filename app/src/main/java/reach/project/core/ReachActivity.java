@@ -220,7 +220,6 @@ public class ReachActivity extends ActionBarActivity implements
     private String[] selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     private int topPadding;
-    private boolean enablePadding = false;
     private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private MusicData currentPlaying;
@@ -598,8 +597,6 @@ public class ReachActivity extends ActionBarActivity implements
                         default: {
 
                             if(navPos > 0) {
-
-                                enablePadding = true;
                                 fragmentManager.beginTransaction()
                                         .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
                             }
@@ -1106,8 +1103,7 @@ public class ReachActivity extends ActionBarActivity implements
         }
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
-        if (!enablePadding)
-            slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
+        slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
         toggleSliding(false);
 
         upArrow = (ImageView) findViewById(R.id.upArrow);
@@ -1208,6 +1204,7 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     private void processIntent(Intent intent) {
+        slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
         if (intent != null&&intent.getBooleanExtra("openNotificationFragment", false)) {
             onOpenNotificationDrawer();
             setIntent(null);

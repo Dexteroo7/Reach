@@ -44,7 +44,6 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachNotificationAdapter extends ResourceCursorAdapter {
 
-    private boolean open;
     private Application reachApplication;
 
     public ReachNotificationAdapter(Context context, int layout, Cursor c, int flags, Application reachApp) {
@@ -101,8 +100,8 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
         if(cursor == null) return;
 
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
-        final int a = MiscUtils.dpToPx(80);
-        final int b = MiscUtils.dpToPx(125);
+        final int a = MiscUtils.dpToPx(70);
+        final int b = MiscUtils.dpToPx(110);
 
         Types type = Types.valueOf(cursor.getString(1));
         switch (type) {
@@ -119,12 +118,10 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                 Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + like.getImageId()).transform(new CircleTransform()).into(viewHolder.profilePhoto);
                 break;
             case PUSH:
-                Push push = ReachNotificationsHelper.getPush(cursor).get();
-                open = true;
+                final Push push = ReachNotificationsHelper.getPush(cursor).get();
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
                 Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(new CircleTransform()).into(viewHolder.profilePhoto);
-
 
                 final String unCompressed;
                 try {
@@ -133,86 +130,94 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                     e.printStackTrace();
                     return;
                 }
-
                 final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
 
-                String cMsg = pushContainer.getCustomMessage();
-                String msg;
-                if (cMsg != null && cMsg.length() > 0)
-                    msg = cMsg + ". Start listening to ";
-                else
-                    msg = "wants you to listen to ";
+                if (push.getRead()==0) {
+                    viewHolder.linearLayout.getLayoutParams().height = a;
+                    viewHolder.actionBlock.setVisibility(View.GONE);
+                    viewHolder.librarayBtn.setVisibility(View.VISIBLE);
+                    String txt = " song";
+                    if (pushContainer.getSongCount()>1)
+                        txt = txt + "s";
+                    viewHolder.notifType.setText(" pushed " + pushContainer.getSongCount() + txt + " to you");
+                }
+                else {
+                    viewHolder.librarayBtn.setVisibility(View.GONE);
 
-                msg = msg + pushContainer.getFirstSongName();
+                    String cMsg = pushContainer.getCustomMessage();
+                    String msg;
+                    if (cMsg != null && cMsg.length() > 0)
+                        msg = cMsg + ". Start listening to ";
+                    else
+                        msg = "wants you to listen to ";
 
-                if (pushContainer.getSongCount() == 2)
-                    msg = msg + " and 1 other song";
-                else if (pushContainer.getSongCount() > 2)
-                    msg = msg + " and " + (pushContainer.getSongCount() - 1) + " other songs";
+                    msg = msg + pushContainer.getFirstSongName();
 
-                viewHolder.notifType.setText(msg);
+                    if (pushContainer.getSongCount() == 2)
+                        msg = msg + " and 1 other song";
+                    else if (pushContainer.getSongCount() > 2)
+                        msg = msg + " and " + (pushContainer.getSongCount() - 1) + " other songs";
 
-                viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (!open) {
-                            expand(viewHolder.linearLayout, a, b);
-                            open = true;
-                        } else {
-                            expand(viewHolder.linearLayout, b, a);
-                            open = false;
-                        }
-                    }
-                });
-                viewHolder.accept.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+                    viewHolder.notifType.setText(msg);
 
-                        final Intent pushAddSong = new Intent(context, ReachActivity.class);
-                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                    if (push.getRead()==1) {
+                        viewHolder.linearLayout.getLayoutParams().height = b;
+                        viewHolder.actionBlock.setVisibility(View.VISIBLE);
+                        viewHolder.accept.setOnClickListener(new View.OnClickListener() {
                             @Override
-                            protected Void doWork() throws IOException {
-                                return StaticData.notificationApi.pushAccepted(pushContainer.getFirstSongName(),
-                                        pushContainer.hashCode(),
-                                        pushContainer.getReceiverId(),
-                                        pushContainer.getSenderId(),
-                                        (int) pushContainer.getSongCount()).execute();
+                            public void onClick(View v) {
+
+                                final Intent pushAddSong = new Intent(context, ReachActivity.class);
+                                MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                                    @Override
+                                    protected Void doWork() throws IOException {
+                                        return StaticData.notificationApi.pushAccepted(pushContainer.getFirstSongName(),
+                                                pushContainer.hashCode(),
+                                                pushContainer.getReceiverId(),
+                                                pushContainer.getSenderId(),
+                                                (int) pushContainer.getSongCount()).execute();
+                                    }
+                                }, Optional.<Predicate<Void>>absent());
+
+                                if (!StaticData.debugMode) {
+                                    ((ReachApplication)reachApplication).getTracker().send(new HitBuilders.EventBuilder()
+                                            .setCategory("Accept - Pushed song")
+                                            .setAction("User - " + SharedPrefUtils.getServerId(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                            .setAction("User Name - " + SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                            .setLabel("Sender - " + pushContainer.getUserName() + ", Songs - " + pushContainer.getSongCount())
+                                            .setValue(pushContainer.getSongCount())
+                                            .build());
+                                }
+                                pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                                pushAddSong.setAction("process_multiple");
+                                pushAddSong.putExtra("data", unCompressed);
+                                //start the Activity
+                                context.startActivity(pushAddSong);
+
+                                expand(viewHolder.linearLayout, b, a);
+                                viewHolder.actionBlock.setVisibility(View.GONE);
+                                viewHolder.librarayBtn.setVisibility(View.VISIBLE);
+                                String txt = " song";
+                                if (pushContainer.getSongCount()>1)
+                                    txt = txt + "s";
+                                viewHolder.notifType.setText(" pushed " + pushContainer.getSongCount() + txt + " to you");
+                                //TODO delete push object
+
                             }
-                        }, Optional.<Predicate<Void>>absent());
-
-                        if (!StaticData.debugMode) {
-                            ((ReachApplication)reachApplication).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("Accept - Pushed song")
-                                    .setAction("User - " + SharedPrefUtils.getServerId(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                    .setAction("User Name - " + SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                    .setLabel("Sender - " + pushContainer.getUserName() + ", Songs - " + pushContainer.getSongCount())
-                                    .setValue(pushContainer.getSongCount())
-                                    .build());
-                        }
-                        pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        pushAddSong.setAction("process_multiple");
-                        pushAddSong.putExtra("data", unCompressed);
-                        //start the Activity
-                        context.startActivity(pushAddSong);
-
-                        expand(viewHolder.linearLayout, b, a);
+                        });
+                        viewHolder.reject.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                //TODO delete push object
+                            }
+                        });
+                    }
+                    else {
+                        viewHolder.linearLayout.getLayoutParams().height = b;
                         viewHolder.actionBlock.setVisibility(View.GONE);
-                        viewHolder.librarayBtn.setVisibility(View.VISIBLE);
-                        String txt = " song";
-                        if (pushContainer.getSongCount()>1)
-                            txt = txt + "s";
-                        viewHolder.notifType.setText(" pushed " + pushContainer.getSongCount() + txt + " to you");
-                        viewHolder.linearLayout.setOnClickListener(null);
-                        //TODO delete push object
+                    }
 
-                    }
-                });
-                viewHolder.reject.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        //TODO delete push object
-                    }
-                });
+                }
                 break;
             case BECAME_FRIENDS:
                 BecameFriends becameFriends = ReachNotificationsHelper.getBecameFriends(cursor).get();
