@@ -68,7 +68,6 @@ public class FriendRequestFragment extends Fragment {
             final Activity activity = getActivity();
             if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() || receivedRequests == null)
                 return;
-
             //else TODO do something
         }
     }

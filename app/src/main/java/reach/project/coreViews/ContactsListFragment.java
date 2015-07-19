@@ -56,7 +56,6 @@ import android.widget.Toast;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.melnykov.fab.FloatingActionButton;
 import com.squareup.picasso.Picasso;
 
@@ -67,15 +66,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.MusicContainer;
 import reach.backend.entities.userApi.model.MyString;
-import reach.backend.entities.userApi.model.ReachFriend;
-import reach.backend.entities.userApi.model.ReachFriendCollection;
 import reach.project.R;
 import reach.project.adapter.ReachAllContactsAdapter;
 import reach.project.adapter.ReachContactsAdapter;
@@ -86,7 +81,9 @@ import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.DoWork;
+import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
@@ -684,90 +681,20 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         }
     }
 
-    private final class FindAndAddFriends extends AsyncTask<Void, Void, Integer> {
+    private final class FindAndAddFriends extends AsyncTask<Void, Void, Void> {
 
         @Override
-        protected Integer doInBackground(Void... params) {
+        protected Void doInBackground(Void... params) {
 
-            final HashSet<String> numbers = new HashSet<>();
-            numbers.add("000000001");
-            if(getActivity() == null) {
-                refreshing.set(false);
-                return 0;
-            }
-            final Cursor cursor = getActivity().getContentResolver().query(ContactsContract.
-                    CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
-            if(cursor != null) {
-
-                while (cursor.moveToNext()) {
-
-                    final int columnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                    if (columnIndex == -1)
-                        continue;
-                    String phoneNumber = cursor.getString(columnIndex);
-                    if (TextUtils.isEmpty(phoneNumber))
-                        continue;
-                    phoneNumber = phoneNumber.replaceAll("[^0-9]", "");
-                    if (TextUtils.isEmpty(phoneNumber) || phoneNumber.length() < 10)
-                        continue;
-                    else if(phoneNumber.startsWith("91"))
-                        phoneNumber = phoneNumber.substring(2);
-                    else if(phoneNumber.startsWith("0"))
-                        phoneNumber = phoneNumber.substring(1);
-                    numbers.add(phoneNumber);
-                }
-                cursor.close();
-            }
-
-            final ContactsWrapper contactsWrapper = new ContactsWrapper();
-            contactsWrapper.setContacts(ImmutableList.copyOf(numbers));
-
-            final ReachFriendCollection dataToReturn = MiscUtils.autoRetry(new DoWork<ReachFriendCollection>() {
-                @Override
-                protected ReachFriendCollection doWork() throws IOException {
-                    return StaticData.userEndpoint.returnUsersNew(serverId, contactsWrapper).execute();
-                }
-            }, Optional.<Predicate<ReachFriendCollection>>absent()).orNull();
-            final List<ReachFriend> reachFriends;
-            if(dataToReturn == null || (reachFriends = dataToReturn.getItems()) == null || reachFriends.size() == 0) {
-
-                refreshing.set(false);
-                return 0;
-            }
-
-            //add everything
-            int i = 0;
-            final ContentValues[] contentValues = new ContentValues[reachFriends.size()];
-            final long currentTime = System.currentTimeMillis();
-
-            for(ReachFriend reachFriend : reachFriends) {
-
-                /**
-                 * Actual last-seen
-                 */
-                reachFriend.setLastSeen(currentTime - reachFriend.getLastSeen());
-                reachFriend.setNetworkType(Integer.parseInt(StaticData.networkCache.get(reachFriend.getId(), 0+"").trim()));
-                contentValues[i++] = ReachFriendsHelper.contentValuesCreator(reachFriend);
-            }
-            if(getActivity() != null)
-                Log.i("Ayush", "FRIENDS INSERTED " +
-                        getActivity().getContentResolver().bulkInsert(ReachFriendsProvider.CONTENT_URI, contentValues));
-            reachFriends.clear();
-            for(ContentValues values : contentValues)
-                values.clear();
-            return contentValues.length;
+            final QuickSyncFriends.Status status = new QuickSyncFriends(getActivity(), serverId).call();
+            if (status == QuickSyncFriends.Status.FULL_SYNC)
+                new ForceSyncFriends(getActivity(), serverId);
+            return null;
         }
 
         @Override
-        protected void onPostExecute(Integer anInt) {
-            super.onPostExecute(anInt);
-            if (mergeAdapter!=null) {
-                if (anInt == 0 && listView != null) {
-                    mergeAdapter.setActive(emptyTV1, true);
-                    MiscUtils.setEmptyTextforListView(listView, "No friends found");
-                } else
-                    mergeAdapter.setActive(emptyTV1, false);
-            }
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
             refreshing.set(false);
         }
     }

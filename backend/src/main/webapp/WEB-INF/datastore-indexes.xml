@@ -3,6 +3,11 @@
 <datastore-indexes autoGenerate="true">
 
     <datastore-index ancestor="false" kind="ReachUser" source="manual">
+        <property name="phoneNumber" direction="asc" />
+        <property name="gcmId" direction="asc" />
+    </datastore-index>
+
+    <datastore-index ancestor="false" kind="ReachUser" source="manual">
         <property name="__key__" direction="asc" />
         <property name="gcmId" direction="asc" />
     </datastore-index>
