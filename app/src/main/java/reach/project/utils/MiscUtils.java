@@ -234,6 +234,7 @@ public enum MiscUtils {
         final String parentType = parent.getClass().getName();
 
         if (parentType.equals("android.widget.FrameLayout")) {
+
             loading.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
             listView.setEmptyView(loading);
             final FrameLayout frameLayout = (FrameLayout) parent;
