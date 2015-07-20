@@ -145,21 +145,19 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         if (checkDead(activity))
             return Status.DEAD;
 
-        final List<Friend> toInsert = new ArrayList<>();
         final List<Long> toDelete = new ArrayList<>();
 
         if (phoneBookSync.isPresent())
-            toInsert.addAll(phoneBookSync.get());
+            newFriends.addAll(phoneBookSync.get());
         if (quickSync != null && quickSync.getToUpdate() != null)
             for (Friend friend : quickSync.getToUpdate()) {
                 toDelete.add(friend.getId());
-                toInsert.add(friend);
+                newFriends.add(friend);
             }
-
         //START DB COMMITS
         bulkInsert(activity,
                 resolver,
-                toInsert,
+                newFriends,
                 toDelete,
                 quickSync != null ? quickSync.getNewStatus() : null);
 
@@ -172,19 +170,21 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                            List<Long> toDelete,
                            JsonMap statusChange) {
 
+        Log.i("Ayush", "Bulk inserting " + toInsert.size() + " | " + toDelete.size() + " | " + (statusChange == null ? -1 : statusChange.size()));
+
         final ReachFriendsHelper reachFriendsHelper = new ReachFriendsHelper(context);
         final SQLiteDatabase sqlDB = reachFriendsHelper.getWritableDatabase();
         sqlDB.beginTransaction();
         try {
 
-            if (toInsert != null && toInsert.size() > 0)
+            if (toInsert.size() > 0)
                 for (Friend friend : toInsert) {
                     Log.i("Ayush", "Inserting " + friend.getUserName());
                     final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend);
                     sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values);
                 }
 
-            if (toDelete != null && toDelete.size() > 0)
+            if (toDelete.size() > 0)
                 for (Long id : toDelete) {
                     Log.i("Ayush", "Deleting " + id);
                     sqlDB.delete(ReachFriendsHelper.FRIENDS_TABLE,
@@ -203,6 +203,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             sqlDB.setTransactionSuccessful();
         } finally {
             sqlDB.endTransaction();
+            reachFriendsHelper.close();
         }
         resolver.notifyChange(ReachFriendsProvider.CONTENT_URI, null);
     }
