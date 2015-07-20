@@ -17,6 +17,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -70,20 +71,13 @@ public class NavigationDrawerFragment extends Fragment {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
+    private  String[] priList;
     private View mFragmentContainerView;
     private View rootView;
 
     private int mCurrentSelectedPosition = 0;
     private boolean mUserLearnedDrawer;
 
-    private final String[] priList = new String[]{
-            getString(R.string.title_section1),
-            getString(R.string.title_section2),
-            getString(R.string.title_section3),
-            getString(R.string.title_section4),
-            getString(R.string.title_section5),
-            getString(R.string.title_section6)
-    };
 
     private final AdapterView.OnItemClickListener navigationItemSelector = new AdapterView.OnItemClickListener() {
         @Override
@@ -120,6 +114,14 @@ public class NavigationDrawerFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
+        priList = new String[]{
+                getString(R.string.title_section1),
+                getString(R.string.title_section2),
+                getString(R.string.title_section3),
+                getString(R.string.title_section4),
+                getString(R.string.title_section5),
+                getString(R.string.title_section6)
+        };
         mDrawerListView = (ListView) rootView.findViewById(R.id.primaryListView);
         //mDrawerSecListView = (ListView) rootView.findViewById(R.id.secondaryListView);
         final Activity activity = getActivity();
@@ -220,20 +222,28 @@ public class NavigationDrawerFragment extends Fragment {
         ) {
             @Override
             public void onDrawerClosed(View drawerView) {
-
                 super.onDrawerClosed(drawerView);
                 if (!isAdded()) {
                     return;
+                }
+                if(drawerView.getId() == R.id.notification_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.LEFT);
+                } else if(drawerView.getId() == R.id.navigation_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);
                 }
                 activity.invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
             }
 
             @Override
             public void onDrawerOpened(View drawerView) {
-
                 super.onDrawerOpened(drawerView);
                 if (!isAdded()) {
                     return;
+                }
+                if(drawerView.getId() == R.id.notification_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
+                } else if(drawerView.getId() == R.id.navigation_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.RIGHT);
                 }
                 if (!mUserLearnedDrawer) {
                     // The user manually opened the drawer; store this flag to prevent auto-showing

@@ -168,12 +168,12 @@ public enum SharedPrefUtils {
         return sharedPreferences.getInt("play_list_hash" + userId, 0);
     }
 
-    public static void storeSongCodeForUser(long userId, int songId, SharedPreferences.Editor editor) {
-        editor.putInt("song_hash" + userId, songId).apply();
+    public static void storeSongCodeForUser(long userId, int songId, SharedPreferences editor) {
+        editor.edit().putInt("song_hash" + userId, songId).apply();
     }
 
-    public static void storePlayListCodeForUser(long userId, int playListId, SharedPreferences.Editor editor) {
-        editor.putInt("play_list_hash" + userId, playListId).apply();
+    public static void storePlayListCodeForUser(long userId, int playListId, SharedPreferences editor) {
+        editor.edit().putInt("play_list_hash" + userId, playListId).apply();
     }
 
     public static boolean toggleShuffle(SharedPreferences sharedPreferences) {

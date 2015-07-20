@@ -5,6 +5,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.database.contentProvider.ReachNotificationsProvider;
 import reach.project.database.notifications.BecameFriends;
 import reach.project.database.notifications.Like;
 import reach.project.database.notifications.Push;
@@ -44,12 +46,13 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachNotificationAdapter extends ResourceCursorAdapter {
 
-    private boolean open;
-    private Application reachApplication;
+    private final Application reachApplication;
+    private final long serverId;
 
-    public ReachNotificationAdapter(Context context, int layout, Cursor c, int flags, Application reachApp) {
+    public ReachNotificationAdapter(Context context, int layout, Cursor c, int flags, Application reachApp, long serverId) {
         super(context, layout, c, flags);
         this.reachApplication = reachApp;
+        this.serverId = serverId;
     }
 
     private final class ViewHolder {
@@ -96,13 +99,14 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
     }
 
     @Override
-    public void bindView(View view, final Context context, Cursor cursor) {
+    public void bindView(View view, final Context context, final Cursor cursor) {
         if (cursor == null) return;
 
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
-        final int a = MiscUtils.dpToPx(80);
-        final int b = MiscUtils.dpToPx(125);
+        final int a = MiscUtils.dpToPx(70);
+        final int b = MiscUtils.dpToPx(110);
         final Types type = Types.valueOf(cursor.getString(1));
+        final long dataBaseId = cursor.getLong(0);
 
         switch (type) {
 
@@ -114,6 +118,7 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                 viewHolder.userName.setText(like.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(like.getHostName()));
                 viewHolder.linearLayout.getLayoutParams().height = a;
+                viewHolder.linearLayout.setClickable(false);
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText(" likes " + like.getSongName());
@@ -122,13 +127,10 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                         .into(viewHolder.profilePhoto);
                 break;
             case PUSH:
-
-                Push push = ReachNotificationsHelper.getPush(cursor).get();
-                open = true;
+                final Push push = ReachNotificationsHelper.getPush(cursor).get();
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
                 Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(new CircleTransform()).into(viewHolder.profilePhoto);
-
 
                 final String unCompressed;
                 try {
@@ -137,8 +139,9 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                     e.printStackTrace();
                     return;
                 }
-
                 final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
+                viewHolder.librarayBtn.setVisibility(View.GONE);
+                viewHolder.actionBlock.setVisibility(View.VISIBLE);
 
                 String cMsg = pushContainer.getCustomMessage();
                 String msg;
@@ -156,15 +159,20 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
 
                 viewHolder.notifType.setText(msg);
 
+                if (push.getExpanded() == 0)
+                    viewHolder.linearLayout.getLayoutParams().height = a;
+                else
+                    viewHolder.linearLayout.getLayoutParams().height = b;
+
                 viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (!open) {
+                        if (push.getExpanded() == 0) {
                             expand(viewHolder.linearLayout, a, b);
-                            open = true;
+                            push.setExpanded((short) 1);
                         } else {
                             expand(viewHolder.linearLayout, b, a);
-                            open = false;
+                            push.setExpanded((short) 0);
                         }
                     }
                 });
@@ -198,31 +206,68 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                         pushAddSong.putExtra("data", unCompressed);
                         //start the Activity
                         context.startActivity(pushAddSong);
-
                         expand(viewHolder.linearLayout, b, a);
+                        viewHolder.linearLayout.setClickable(false);
                         viewHolder.actionBlock.setVisibility(View.GONE);
                         viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                         String txt = " song";
                         if (pushContainer.getSongCount() > 1)
                             txt = txt + "s";
                         viewHolder.notifType.setText(" pushed " + pushContainer.getSongCount() + txt + " to you");
-                        viewHolder.linearLayout.setOnClickListener(null);
-                        //TODO delete push object
+
+                        context.getContentResolver().delete(
+                                Uri.parse(ReachNotificationsProvider.CONTENT_URI + "/" + dataBaseId),
+                                ReachNotificationsHelper.COLUMN_ID + " = ?",
+                                new String[]{dataBaseId + ""});
+
+                        final PushAccepted accepted = new PushAccepted();
+                        accepted.portData(push);
+                        accepted.setTypes(Types.PUSH_ACCEPTED);
+                        accepted.setSize(pushContainer.getSongCount());
+                        accepted.setFirstSongName(pushContainer.getFirstSongName());
+
+                        context.getContentResolver().insert(ReachNotificationsProvider.CONTENT_URI,
+                                ReachNotificationsHelper.contentValuesCreator(accepted));
+
+                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                            @Override
+                            protected Void doWork() throws IOException {
+                                return StaticData.notificationApi.pushAccepted(
+                                        accepted.getFirstSongName(),
+                                        push.getPushContainer().hashCode(),
+                                        serverId,
+                                        push.getHostId(),
+                                        (int) pushContainer.getSongCount()).execute();
+                            }
+                        }, Optional.<Predicate<Void>>absent());
 
                     }
                 });
                 viewHolder.reject.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        //TODO delete push object
+
+                        context.getContentResolver().delete(
+                                Uri.parse(ReachNotificationsProvider.CONTENT_URI + "/" + dataBaseId),
+                                ReachNotificationsHelper.COLUMN_ID + " = ?",
+                                new String[]{dataBaseId + ""});
+
+                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                            @Override
+                            protected Void doWork() throws IOException {
+                                return StaticData.notificationApi.removePush(push.getPushContainer().hashCode(), serverId).execute();
+                            }
+                        }, Optional.<Predicate<Void>>absent());
                     }
                 });
                 break;
+
             case BECAME_FRIENDS:
                 BecameFriends becameFriends = ReachNotificationsHelper.getBecameFriends(cursor).get();
                 viewHolder.userName.setText(becameFriends.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(becameFriends.getHostName()));
                 viewHolder.linearLayout.getLayoutParams().height = a;
+                viewHolder.linearLayout.setClickable(false);
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
@@ -233,6 +278,7 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                 viewHolder.userName.setText(pushAccepted.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(pushAccepted.getHostName()));
                 viewHolder.linearLayout.getLayoutParams().height = a;
+                viewHolder.linearLayout.setClickable(false);
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 String txt = " song";

@@ -13,7 +13,7 @@ public abstract class NotificationBase {
     private String hostName = "";
     private String imageId = "";
     private short read = 0;
-    private short expanded = 0;
+    private short expanded = 1;
 
     public NotificationBase portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
 
@@ -34,6 +34,18 @@ public abstract class NotificationBase {
             this.setTypes(Types.LIKE);
         else
             throw new IllegalArgumentException("Illegal notification type detected");
+        return this;
+    }
+
+    public NotificationBase portData(NotificationBase base) {
+
+        this.setHostName(base.getHostName());
+        this.setRead(base.getRead());
+        this.setHostId(base.getHostId());
+        this.setImageId(base.getImageId());
+        this.setSystemTime(base.getSystemTime());
+        this.setExpanded((short) 0);
+        this.setTypes(base.getTypes());
         return this;
     }
 

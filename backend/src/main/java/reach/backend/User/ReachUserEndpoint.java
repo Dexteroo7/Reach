@@ -13,7 +13,6 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.appengine.repackaged.com.google.common.collect.ImmutableSet;
 import com.google.appengine.repackaged.com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
@@ -26,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -70,16 +70,15 @@ public class ReachUserEndpoint {
      */
     @ApiMethod(
             name = "phoneBookSync",
-            path = "user/phoneBookSync/{clientId}/",
+            path = "user/phoneBookSync/",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public List<Friend> phoneBookSync(@Named("phoneNumbers") ImmutableSet<String> phoneNumbers) {
+    public List<Friend> phoneBookSync(@Named("phoneNumbers") List<String> phoneNumbers) {
 
         logger.info(phoneNumbers.size() + " total");
         final List<Friend> friends = new ArrayList<>();
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filter("phoneNumber in", phoneNumbers)
-                .filter("gcmId !=", "")
-                .project(Friend.projectNewFriend))
+                .filter("gcmId !=", ""))
             friends.add(new Friend(user));
         return friends;
     }
@@ -145,26 +144,26 @@ public class ReachUserEndpoint {
      * To be used if friends are already loaded
      *
      * @param clientId the client
-     * @param ids     pair of id - hash, to be used to updating friends data (IF changed, i.e. hash different)
-     * @param hashes     pair of id - hash, to be used to updating friends data (IF changed, i.e. hash different)
+     * @param ids      pair of id - hash, to be used to updating friends data (IF changed, i.e. hash different)
+     * @param hashes   pair of id - hash, to be used to updating friends data (IF changed, i.e. hash different)
      * @return QuickSync object
      */
     @ApiMethod(
             name = "quickSync",
             path = "user/quickSync/",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public QuickSync quickSync(@Named("ids") ImmutableList<Long> ids,
-                               @Named("hashes") ImmutableList<Integer> hashes,
+    public QuickSync quickSync(@Named("ids") List<Long> ids,
+                               @Named("hashes") List<Integer> hashes,
                                @Named("clientId") final long clientId) {
 
         //sanity checks
         if (clientId == 0 || ids == null || hashes == null)
             return null;
         final int size = ids.size();
-        if(size == 0 || size != hashes.size())
+        if (size == 0 || size != hashes.size())
             return null;
         final Map<Long, Integer> pair = new HashMap<>(size);
-        for(int i=0; i<size; i++)
+        for (int i = 0; i < size; i++)
             pair.put(ids.get(i), hashes.get(i));
 
         final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
@@ -188,7 +187,7 @@ public class ReachUserEndpoint {
         final QueryResultIterable<ReachUser> newIdQuery;
         //////////////////////////////////////
         //fill 3 by-default
-        for(long id : ids)
+        for (long id : ids)
             newStatus.put(id, (short) 3);
         //sync-up myReach
         if (myReach != null && myReach.size() > 0)
@@ -275,87 +274,87 @@ public class ReachUserEndpoint {
         return lastSeen;
     }
 
-//    private ReachFriend getReachFriendFromUser(ReachUser host, MemcacheService service, ReachUser client) {
-//
-//        final long currentTime = System.currentTimeMillis();
-//        final byte[] value = (byte[]) service.get(host.getId());
-//        final String val;
-//        final ReachFriend reachFriend;
-//        if (value != null && value.length > 0 && !((val = new String(value)).equals("")))
-//            reachFriend = new ReachFriend(host, currentTime - Long.parseLong(val), client);
-//        else if (!host.getId().equals(client.getId()))
-//            reachFriend = new ReachFriend(host, currentTime, client);
-//        else
-//            reachFriend = null;
-//        return reachFriend;
-//    }
-//
-//    @ApiMethod(
-//            name = "returnUsersNew",
-//            path = "user/returnUsersNew/{clientId}/",
-//            httpMethod = ApiMethod.HttpMethod.PUT)
-//    public Set<ReachFriend> returnUsersNew(@Named("clientId") final long clientId,
-//                                           final ContactsWrapper contactsWrapper) {
-//
-//        if (clientId == 0)
-//            return null;
-//
-//        final Set<ReachFriend> toSend = new HashSet<>(100);
-//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-//
-//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-//        if (client == null || client.getUserName() == null)
-//            return null;
-//        logger.info(client.getUserName());
-//        //////////////////////////////////////
-//        final Map<Long, ReachUser> myReach;
-//        if (client.getMyReach() != null && client.getMyReach().size() > 0)
-//            myReach = ofy().load().type(ReachUser.class).ids(client.getMyReach());
-//        else
-//            myReach = null;
-//        contactsWrapper.getContacts().add("8860872102");
-//
-//        //////////////////////////////////////
-//        try {
-//            /**
-//             * Process the PhoneBookContacts
-//             */
-//            for (ReachUser host : ofy().load().type(ReachUser.class)
-//                    .filter("phoneNumber in", contactsWrapper.getContacts())
-//                    .filter("gcmId !=", "")) {
-//
-//                if (host == null || host.getGcmId() == null || host.getGcmId().equals("") || host.getUserName() == null || host.getUserName().equals("") || host.getId() == clientId)
-//                    continue;
-//                final ReachFriend reachFriend = getReachFriendFromUser(host, syncCache, client);
-//                if (reachFriend != null)
-//                    toSend.add(reachFriend);
-//            }
-//            contactsWrapper.getContacts().clear();
-//            /**
-//             * Complete The asynchronous fetch by id call
-//             */
-//            if (myReach != null) {
-//
-//                for (ReachUser host : myReach.values()) {
-//
-//                    if (host == null || host.getGcmId() == null || host.getGcmId().equals("") ||
-//                            host.getUserName() == null || host.getUserName().equals("") || host.getId() == clientId)
-//                        continue;
-//                    final ReachFriend reachFriend = getReachFriendFromUser(host, syncCache, client);
-//                    if (reachFriend != null)
-//                        toSend.add(reachFriend);
-//                }
-//                myReach.clear();
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//        return toSend;
-//    }
+    private ReachFriend getReachFriendFromUser(ReachUser host, MemcacheService service, ReachUser client) {
+
+        final long currentTime = System.currentTimeMillis();
+        final byte[] value = (byte[]) service.get(host.getId());
+        final String val;
+        final ReachFriend reachFriend;
+        if (value != null && value.length > 0 && !((val = new String(value)).equals("")))
+            reachFriend = new ReachFriend(host, currentTime - Long.parseLong(val), client);
+        else if (!host.getId().equals(client.getId()))
+            reachFriend = new ReachFriend(host, currentTime, client);
+        else
+            reachFriend = null;
+        return reachFriend;
+    }
+
+    @ApiMethod(
+            name = "returnUsersNew",
+            path = "user/returnUsersNew/{clientId}/",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public Set<ReachFriend> returnUsersNew(@Named("clientId") final long clientId,
+                                           final ContactsWrapper contactsWrapper) {
+
+        if (clientId == 0)
+            return null;
+
+        final Set<ReachFriend> toSend = new HashSet<>(100);
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (client == null || client.getUserName() == null)
+            return null;
+        logger.info(client.getUserName());
+        //////////////////////////////////////
+        final Map<Long, ReachUser> myReach;
+        if (client.getMyReach() != null && client.getMyReach().size() > 0)
+            myReach = ofy().load().type(ReachUser.class).ids(client.getMyReach());
+        else
+            myReach = null;
+        contactsWrapper.getContacts().add("8860872102");
+
+        //////////////////////////////////////
+        try {
+            /**
+             * Process the PhoneBookContacts
+             */
+            for (ReachUser host : ofy().load().type(ReachUser.class)
+                    .filter("phoneNumber in", contactsWrapper.getContacts())
+                    .filter("gcmId !=", "")) {
+
+                if (host == null || host.getGcmId() == null || host.getGcmId().equals("") || host.getUserName() == null || host.getUserName().equals("") || host.getId() == clientId)
+                    continue;
+                final ReachFriend reachFriend = getReachFriendFromUser(host, syncCache, client);
+                if (reachFriend != null)
+                    toSend.add(reachFriend);
+            }
+            contactsWrapper.getContacts().clear();
+            /**
+             * Complete The asynchronous fetch by id call
+             */
+            if (myReach != null) {
+
+                for (ReachUser host : myReach.values()) {
+
+                    if (host == null || host.getGcmId() == null || host.getGcmId().equals("") ||
+                            host.getUserName() == null || host.getUserName().equals("") || host.getId() == clientId)
+                        continue;
+                    final ReachFriend reachFriend = getReachFriendFromUser(host, syncCache, client);
+                    if (reachFriend != null)
+                        toSend.add(reachFriend);
+                }
+                myReach.clear();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return toSend;
+    }
 
     @ApiMethod(
             name = "getReceivedRequests",
@@ -445,10 +444,10 @@ public class ReachUserEndpoint {
         }
 
         final SplitMusicContainer musicContainer;
-        if (reachUser.getMegaBytesSent() == 0)
+        if (reachUser.getSplitterId() == 0)
             musicContainer = null;
         else
-            musicContainer = ofy().load().type(SplitMusicContainer.class).id(reachUser.getMegaBytesSent()).now();
+            musicContainer = ofy().load().type(SplitMusicContainer.class).id(reachUser.getSplitterId()).now();
         if (musicContainer != null) {
 
             final Collection<MusicSplitter> musicSplitters = ofy().load().type(MusicSplitter.class).ids(musicContainer.getSplitIds()).values();
@@ -498,10 +497,11 @@ public class ReachUserEndpoint {
         logger.info("updating user music " + userToSave.getUserName() + " " + userToSave.getPhoneNumber());
 
         ///////////////////////////////////
-        userToSave.setMegaBytesReceived(musicContainer.getReachSongs().size());
+        userToSave.setNumberOfSongs(musicContainer.getReachSongs().size());
         if (musicContainer.getGenres().length() > 499)
             musicContainer.setGenres(musicContainer.getGenres().substring(0, 499));
-        userToSave.setGenres(musicContainer.getGenres());
+        if (musicContainer.getGenres().length() > 499)
+            userToSave.setGenres(musicContainer.getGenres().substring(0, 499));
         userToSave.setMyPlayLists(musicContainer.getReachPlayLists());
 
         if (musicContainer.getReachSongs().size() > 500) {
@@ -579,37 +579,37 @@ public class ReachUserEndpoint {
         return ofy().load().type(ReachUser.class).id(hostId).now();
     }
 
-//    @ApiMethod(
-//            name = "getReachFriend",
-//            path = "user/friend/{hostId}",
-//            httpMethod = ApiMethod.HttpMethod.GET)
-//    public ReachFriend getReachFriend(@Named("hostId") long hostId, @Named("clientId") long clientId) throws NotFoundException {
-//
-//        if (hostId == 0 || clientId == 0)
-//            return null;
-//
-//        logger.info("Getting ReachUser with ID: " + hostId);
-//        final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
-//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-//        if (host == null || client == null)
-//            throw new NotFoundException("Could not find ReachUser with ID: " + hostId);
-//
-//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-//
-//        final long currentTime = System.currentTimeMillis();
-//        final byte[] value = (byte[]) syncCache.get(hostId);
-//        final String val;
-//
-//        if (value != null && value.length > 0 &&
-//                !((val = new String(value)).equals("")))
-//            return new ReachFriend(host, currentTime - Long.parseLong(val), client);
-//        else if (!host.getId().equals(clientId))
-//            return new ReachFriend(host, currentTime, client);
-//        return null;
-//    }
+    @ApiMethod(
+            name = "getReachFriend",
+            path = "user/friend/{hostId}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public ReachFriend getReachFriend(@Named("hostId") long hostId, @Named("clientId") long clientId) {
+
+        if (hostId == 0 || clientId == 0)
+            return null;
+
+        logger.info("Getting ReachUser with ID: " + hostId);
+        final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (host == null || client == null)
+            return null;
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final long currentTime = System.currentTimeMillis();
+        final byte[] value = (byte[]) syncCache.get(hostId);
+        final String val;
+
+        if (value != null && value.length > 0 &&
+                !((val = new String(value)).equals("")))
+            return new ReachFriend(host, currentTime - Long.parseLong(val), client);
+        else if (!host.getId().equals(clientId))
+            return new ReachFriend(host, currentTime, client);
+        return null;
+    }
 
     @ApiMethod(
             name = "insert",
@@ -631,23 +631,26 @@ public class ReachUserEndpoint {
             user.setMyReach(oldUser.getMyReach());
             user.setMegaBytesReceived(oldUser.getMegaBytesReceived());
             user.setMegaBytesSent(oldUser.getMegaBytesSent());
+            user.setSplitterId(oldUser.getSplitterId());
+            user.setTimeCreated(oldUser.getTimeCreated());
             user.setPromoCode(oldUser.getPromoCode());
-            ofy().delete().entity(oldUser);
-        }
+            ofy().delete().entity(oldUser).now();
+        } else
+            user.setTimeCreated(System.currentTimeMillis());
 
         getSplitter(user, false);
         ofy().save().entity(user).now();
-        logger.info("Created ReachUser with ID: " + user.getUserName() + " " + new MessagingEndpoint().sendMessage("PING", user));
+        logger.info("Created ReachUser with ID: " + user.getUserName() + " " + new MessagingEndpoint().sendMessage("hello_world", user));
         return new MyString(user.getId() + "");
     }
 
     private Collection<MusicSplitter> getSplitter(ReachUser reachUser, boolean wait) {
 
         SplitMusicContainer splitMusicContainer;
-        if (reachUser.getMegaBytesSent() == 0)
+        if (reachUser.getSplitterId() == 0)
             splitMusicContainer = null;
         else
-            splitMusicContainer = ofy().load().type(SplitMusicContainer.class).id(reachUser.getMegaBytesSent()).now();
+            splitMusicContainer = ofy().load().type(SplitMusicContainer.class).id(reachUser.getSplitterId()).now();
 
         final Collection<MusicSplitter> musicSplitters;
 
@@ -666,7 +669,7 @@ public class ReachUserEndpoint {
             for (MusicSplitter splitter : musicSplitters)
                 splitMusicContainer.getSplitIds().add(splitter.getId());
             ofy().save().entity(splitMusicContainer).now();
-            reachUser.setMegaBytesSent(splitMusicContainer.getId());
+            reachUser.setSplitterId(splitMusicContainer.getId());
         } else {
 
             logger.info("Reusing existing splitters");
@@ -896,10 +899,10 @@ public class ReachUserEndpoint {
         }
         logger.info("Song not found for toggle in main list " + reachUser.getUserName());
 
-        if (reachUser.getMegaBytesSent() == 0)
+        if (reachUser.getSplitterId() == 0)
             return new MyString("false");
 
-        final SplitMusicContainer musicContainer = ofy().load().type(SplitMusicContainer.class).id(reachUser.getMegaBytesSent()).now();
+        final SplitMusicContainer musicContainer = ofy().load().type(SplitMusicContainer.class).id(reachUser.getSplitterId()).now();
         if (musicContainer == null || musicContainer.getSplitIds() == null || musicContainer.getSplitIds().isEmpty())
             return new MyString("false");
         final Collection<MusicSplitter> musicSplitters = ofy().load().type(MusicSplitter.class).ids(musicContainer.getSplitIds()).values();

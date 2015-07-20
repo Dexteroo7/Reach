@@ -100,7 +100,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
 
         values.put(COLUMN_PHONE_NUMBER, reachFriend.getPhoneNumber());
         values.put(COLUMN_USER_NAME, reachFriend.getUserName());
-        values.put(COLUMN_GENRES, ReachFriend.getFromList(reachFriend.getGenres()));
+        values.put(COLUMN_GENRES, reachFriend.getGenres());
         values.put(COLUMN_IMAGE_ID, reachFriend.getImageId());
         values.put(COLUMN_STATUS_SONG, reachFriend.getStatusSong());
         values.put(COLUMN_NETWORK_TYPE, reachFriend.getNetworkType());
@@ -122,7 +122,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_GENRES, new byte[]{});
         values.put(COLUMN_IMAGE_ID, reachFriend.getImageId());
         values.put(COLUMN_STATUS_SONG, "hello_world");
-        values.put(COLUMN_NETWORK_TYPE, 5);
+        values.put(COLUMN_NETWORK_TYPE, 0);
         values.put(COLUMN_NUMBER_OF_SONGS, reachFriend.getNumberOfSongs());
         values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen());
         values.put(COLUMN_STATUS, reachFriend.getStatus());

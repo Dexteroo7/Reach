@@ -247,6 +247,34 @@ public class NotificationEndpoint {
         logger.info("Adding push " + sender.getUserName() + " " + firstSongName + " " + size);
     }
 
+    @ApiMethod(
+            name = "removePush",
+            path = "notification/removePush",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public void removePush(@Named("receiverId") long receiverId,
+                           @Named("oldHash") int oldHash) {
+
+        if(receiverId == 0 || oldHash == 0)
+            return;
+        final Notification notification = ofy().load().type(Notification.class).id(receiverId).now();
+        if(notification == null || notification.getNotifications() == null || notification.getNotifications().size() == 0)
+            return;
+        final Iterator<NotificationBase> queue = notification.getNotifications().iterator();
+        while (queue.hasNext()) {
+
+            final NotificationBase base = queue.next();
+            if (base instanceof Push) {
+                final int hash = ((Push) base).getPushContainer().hashCode();
+                logger.info("iterating " + hash + " " + oldHash);
+                if (hash == oldHash) {
+                    queue.remove();
+                    break;
+                }
+            }
+        }
+        ofy().save().entity(notification).now();
+    }
+
     /**
      * @param id               of the person who will receive this notification
      * @param notificationBase the notification

@@ -1,6 +1,7 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,20 +16,26 @@ import com.google.common.base.Predicate;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import reach.backend.entities.userApi.model.ReachFriend;
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
 import reach.project.adapter.ReachFriendRequestAdapter;
+import reach.project.core.StaticData;
 import reach.project.utils.DoWork;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 
 public class FriendRequestFragment extends Fragment {
 
     private static WeakReference<FriendRequestFragment> reference = null;
     private SuperInterface mListener;
+    private ListView listView;
+    public static List<Boolean> opened,accepted;
+    private Activity activity;
 
     public static FriendRequestFragment newInstance() {
 
@@ -44,9 +51,10 @@ public class FriendRequestFragment extends Fragment {
     AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-            ReachFriend reachFriend = ((ReachFriendRequestAdapter) parent.getAdapter()).getItem(position);
-            mListener.onOpenLibrary(reachFriend.getId());
+            if (accepted.get(position)) {
+                ReceivedRequest receivedRequest = ((ReachFriendRequestAdapter) parent.getAdapter()).getItem(position);
+                mListener.onOpenLibrary(receivedRequest.getId());
+            }
         }
     };
 
@@ -57,7 +65,12 @@ public class FriendRequestFragment extends Fragment {
             return MiscUtils.autoRetry(new DoWork<List<ReceivedRequest>>() {
                 @Override
                 protected List<ReceivedRequest> doWork() throws IOException {
-                    return null;
+                    long myId = SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                    if(myId == 0)
+                        return null;
+                    List<ReceivedRequest> receivedRequests = StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
+                    Collections.reverse(receivedRequests);
+                    return receivedRequests;
                 }
             }, Optional.<Predicate<List<ReceivedRequest>>>absent()).orNull();
         }
@@ -65,10 +78,19 @@ public class FriendRequestFragment extends Fragment {
         @Override
         protected void onPostExecute(List<ReceivedRequest> receivedRequests) {
             super.onPostExecute(receivedRequests);
-            final Activity activity = getActivity();
-            if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() || receivedRequests == null)
+            if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() )
                 return;
-            //else TODO do something
+
+            if (receivedRequests != null && receivedRequests.size()>0) {
+                ReachFriendRequestAdapter reachFriendRequestAdapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests);
+                opened = new ArrayList<>(Collections.nCopies(receivedRequests.size(), true));
+                accepted = new ArrayList<>(Collections.nCopies(receivedRequests.size(), false));
+                listView.setAdapter(reachFriendRequestAdapter);
+                listView.setOnItemClickListener(itemClickListener);
+            }
+            else {
+                MiscUtils.setEmptyTextforListView(listView,"No friends requests for you!");
+            }
         }
     }
 
@@ -77,17 +99,15 @@ public class FriendRequestFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ListView listView = (ListView) rootView.findViewById(R.id.listView);
-
-        ReachFriendRequestAdapter reachFriendRequestAdapter = new ReachFriendRequestAdapter(getActivity(),R.layout.notification_item,null);
-        //listView.setAdapter(reachFriendRequestAdapter);
-        listView.setOnItemClickListener(itemClickListener);
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        new FetchRequests().executeOnExecutor(StaticData.threadPool);
         return rootView;
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        this.activity = activity;
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {

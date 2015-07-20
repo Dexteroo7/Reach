@@ -14,6 +14,11 @@
 
     <datastore-index kind="ReachUser" ancestor="false" source="manual">
         <property name="__key__" direction="asc"/>
+        <property name="dirtyCheck" direction="asc"/>
+    </datastore-index>
+
+    <datastore-index kind="ReachUser" ancestor="false" source="manual">
+        <property name="__key__" direction="asc"/>
         <property name="gcmId" direction="asc"/>
         <property name="imageId" direction="asc"/>
         <property name="numberOfSongs" direction="asc"/>

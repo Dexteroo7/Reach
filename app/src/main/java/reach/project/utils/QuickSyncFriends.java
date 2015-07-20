@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -41,10 +42,12 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
 
     private final WeakReference<Activity> activityWeakReference;
     private final long serverId;
+    private final String myNumber;
 
-    public QuickSyncFriends(Activity activity, long serverId) {
+    public QuickSyncFriends(Activity activity, long serverId, String myNumber) {
         this.activityWeakReference = new WeakReference<>(activity);
         this.serverId = serverId;
+        this.myNumber = myNumber;
     }
 
     private boolean checkDead(Activity activity) {
@@ -81,6 +84,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             }
             phoneNumbers.close();
         }
+        Log.i("Ayush", "Prepared numbers" + numbers.size());
         /////phone numbers prepared
         final Cursor currentIds = resolver.query(
                 ReachFriendsProvider.CONTENT_URI,
@@ -102,29 +106,33 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             presentNumbers.add(currentIds.getString(2));
         }
         currentIds.close();
+        Log.i("Ayush", "Prepared callData" + ids.size() + " " + hashes.size() + " | " + presentNumbers.size());
 
-        final Optional<QuickSync> quickSync = MiscUtils.autoRetry(
+        final QuickSync quickSync = MiscUtils.autoRetry(
                 new DoWork<QuickSync>() {
                     @Override
                     protected QuickSync doWork() throws IOException {
                         return StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute();
                     }
-                }, Optional.<Predicate<QuickSync>>absent());
+                }, Optional.<Predicate<QuickSync>>absent()).orNull();
 
         activity = activityWeakReference.get();
         if (checkDead(activity))
             return Status.DEAD;
-        if (!quickSync.isPresent())
-            return Status.OK; //nothing to do here
 
-        final QuickSync sync = quickSync.get();
-        final List<Friend> newFriends = sync.getNewFriends();
-        if (newFriends != null && newFriends.size() > 0)
+        final List<Friend> newFriends = new ArrayList<>();
+        if(quickSync != null && quickSync.getNewFriends() != null)
+            newFriends.addAll(quickSync.getNewFriends());
+
+        if (newFriends.size() > 0) {
+            Log.i("Ayush", "Found new friends " + newFriends.size());
             for (Friend friend : newFriends)
                 presentNumbers.add(friend.getPhoneNumber());
+        }
 
         //remove all present phoneNumbers and sync phoneBook
         numbers.removeAll(presentNumbers);
+        numbers.remove(myNumber);
         final Optional<List<Friend>> phoneBookSync = MiscUtils.autoRetry(
                 new DoWork<List<Friend>>() {
                     @Override
@@ -140,12 +148,10 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final List<Friend> toInsert = new ArrayList<>();
         final List<Long> toDelete = new ArrayList<>();
 
-        if (newFriends != null && newFriends.size() > 0)
-            toInsert.addAll(newFriends);
         if (phoneBookSync.isPresent())
             toInsert.addAll(phoneBookSync.get());
-        if (sync.getToUpdate() != null && sync.getToUpdate().size() > 0)
-            for (Friend friend : sync.getToUpdate()) {
+        if (quickSync != null && quickSync.getToUpdate() != null)
+            for (Friend friend : quickSync.getToUpdate()) {
                 toDelete.add(friend.getId());
                 toInsert.add(friend);
             }
@@ -155,7 +161,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                 resolver,
                 toInsert,
                 toDelete,
-                sync.getNewStatus());
+                quickSync != null ? quickSync.getNewStatus() : null);
 
         return Status.OK;
     }
@@ -173,19 +179,23 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
 
             if (toInsert != null && toInsert.size() > 0)
                 for (Friend friend : toInsert) {
+                    Log.i("Ayush", "Inserting " + friend.getUserName());
                     final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend);
                     sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values);
                 }
 
             if (toDelete != null && toDelete.size() > 0)
-                for (Long id : toDelete)
+                for (Long id : toDelete) {
+                    Log.i("Ayush", "Deleting " + id);
                     sqlDB.delete(ReachFriendsHelper.FRIENDS_TABLE,
                             ReachFriendsHelper.COLUMN_ID + "=" + id, null);
+                }
 
             if (statusChange != null && statusChange.size() > 0)
                 for (Map.Entry<String, Object> newStatus : statusChange.entrySet()) {
                     final ContentValues values = new ContentValues();
                     values.put(newStatus.getKey(), (Short) newStatus.getValue());
+                    Log.i("Ayush", "Updating status " + newStatus.getKey() + " " + newStatus.getValue());
                     sqlDB.update(ReachFriendsHelper.FRIENDS_TABLE,
                             values,
                             ReachFriendsHelper.COLUMN_ID + "=" + newStatus.getKey(), null);

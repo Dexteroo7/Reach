@@ -6,6 +6,7 @@ import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.OnSave;
 import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.HashSet;
@@ -34,6 +35,7 @@ public class ReachUser {
     private String deviceId = "hello_world";
     private long megaBytesSent;
     private long megaBytesReceived;
+    private long timeCreated;
 
     @Unindex
     private HashSet<Long> myReach;
@@ -55,10 +57,10 @@ public class ReachUser {
         //basic hash function
         return Hashing.adler32().newHasher()
                 .putInt(numberOfSongs)
-                .putString(userName, Charsets.UTF_8)
-                .putString(imageId, Charsets.UTF_8)
-                .putString(gcmId, Charsets.UTF_8)
-                .putString(statusSong, Charsets.UTF_8)
+                .putString(userName == null ? "" : userName, Charsets.UTF_8)
+                .putString(imageId == null ? "" : imageId, Charsets.UTF_8)
+                .putString(gcmId == null ? "" : gcmId, Charsets.UTF_8)
+                .putString(statusSong == null ? "" : statusSong, Charsets.UTF_8)
                 .hash().asInt();
     }
 
@@ -218,6 +220,12 @@ public class ReachUser {
         this.id = id;
     }
 
+    @OnSave
+    void onSave() {
+        setDirtyCheck();
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -234,5 +242,13 @@ public class ReachUser {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (deviceId != null ? deviceId.hashCode() : 0);
         return result;
+    }
+
+    public long getTimeCreated() {
+        return timeCreated;
+    }
+
+    public void setTimeCreated(long timeCreated) {
+        this.timeCreated = timeCreated;
     }
 }

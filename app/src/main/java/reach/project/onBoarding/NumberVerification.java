@@ -1,8 +1,10 @@
 package reach.project.onBoarding;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -29,7 +31,15 @@ import java.io.IOException;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.database.contentProvider.ReachAlbumProvider;
+import reach.project.database.contentProvider.ReachArtistProvider;
+import reach.project.database.contentProvider.ReachDatabaseProvider;
+import reach.project.database.contentProvider.ReachFriendsProvider;
+import reach.project.database.contentProvider.ReachNotificationsProvider;
+import reach.project.database.contentProvider.ReachPlayListProvider;
+import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.utils.DoWork;
+import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
@@ -47,6 +57,7 @@ public class NumberVerification extends Fragment {
                               Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
+        resetDatabases(container.getContext().getContentResolver());
 
         rootView.postDelayed(new Runnable() {
             @Override
@@ -61,7 +72,7 @@ public class NumberVerification extends Fragment {
                 final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
 
                 telephone.requestFocus();
-                viewPager.setAdapter(new TourPagerAdapter(getActivity()));
+                viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
                 ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
 
                 rootView.findViewById(R.id.verify).setOnClickListener(new ClickListener(
@@ -152,12 +163,16 @@ public class NumberVerification extends Fragment {
             @Override
             protected final Pair<OldUserContainerNew, String> doInBackground (final String... params) {
 
-                return new Pair<>(MiscUtils.autoRetry(new DoWork<OldUserContainerNew>() {
+                final OldUserContainerNew container = MiscUtils.autoRetry(new DoWork<OldUserContainerNew>() {
                     @Override
                     protected OldUserContainerNew doWork () throws IOException {
                         return StaticData.userEndpoint.isAccountPresentNew(params[0]).execute();
                     }
-                }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull(), params[0]);
+                }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
+
+                //start sync
+                StaticData.threadPool.submit(new ForceSyncFriends(getActivity(), container == null ? 0 : container.getServerId(), params[0]));
+                return new Pair<>(container, params[0]);
             }
 
             @Override
@@ -174,6 +189,38 @@ public class NumberVerification extends Fragment {
                 SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
                 mListener.startAccountCreation(Optional.fromNullable(pair.first));
             }
+        }
+    }
+
+    private void resetDatabases(ContentResolver resolver) {
+
+        try {
+            resolver.delete(ReachFriendsProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignored) {
+        }
+        try {
+            resolver.delete(ReachSongProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignored) {
+        }
+        try {
+            resolver.delete(ReachAlbumProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignored) {
+        }
+        try {
+            resolver.delete(ReachArtistProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignored) {
+        }
+        try {
+            resolver.delete(ReachPlayListProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignored) {
+        }
+        try {
+            resolver.delete(ReachDatabaseProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignore) {
+        }
+        try {
+            resolver.delete(ReachNotificationsProvider.CONTENT_URI, 1 + "", null);
+        } catch (SQLiteException ignored) {
         }
     }
 

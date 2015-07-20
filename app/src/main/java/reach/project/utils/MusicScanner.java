@@ -625,7 +625,7 @@ public class MusicScanner extends IntentService {
 
         if(playListSet.hashCode() != playListHash) {
 
-            SharedPrefUtils.storePlayListCodeForUser(serverId, playListSet.hashCode(), sharedPreferences.edit());
+            SharedPrefUtils.storePlayListCodeForUser(serverId, playListSet.hashCode(), sharedPreferences);
             Log.i("Ayush", "Updating playLists " + playListSet.hashCode() + " " + playListHash);
             MiscUtils.bulkInsertPlayLists(
                     playListSet,
@@ -634,7 +634,7 @@ public class MusicScanner extends IntentService {
 
         try {
             musicUpdate.get();
-            SharedPrefUtils.storeSongCodeForUser(serverId, songHashSet.hashCode(), sharedPreferences.edit());
+            SharedPrefUtils.storeSongCodeForUser(serverId, songHashSet.hashCode(), sharedPreferences);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         } finally {
