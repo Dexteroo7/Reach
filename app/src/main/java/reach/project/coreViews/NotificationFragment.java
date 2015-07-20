@@ -43,7 +43,6 @@ import reach.project.database.ReachAlbum;
 import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachNotificationsProvider;
 import reach.project.database.notifications.BecameFriends;
-import reach.project.database.notifications.Push;
 import reach.project.database.notifications.Types;
 import reach.project.database.sql.ReachNotificationsHelper;
 import reach.project.utils.DoWork;
@@ -63,18 +62,16 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
     public static NotificationFragment newInstance() {
 
         NotificationFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new NotificationFragment());
         return fragment;
-    }
-    public NotificationFragment() {
-        // Required empty public constructor
     }
 
     AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-            Log.d("Ashish","notif list click - "+position);
+
+            Log.d("Ashish", "notif list click - " + position);
             Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
             Types type = Types.valueOf(cursor.getString(1));
             switch (type) {
@@ -83,20 +80,16 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                 case LIKE:
                     mListener.anchorFooter(true);
                     break;
-                case PUSH:
-                    Push push = ReachNotificationsHelper.getPush(cursor).get();
-                    // TODO check if accepted
-                    break;
                 case BECAME_FRIENDS:
                     BecameFriends becameFriends = ReachNotificationsHelper.getBecameFriends(cursor).get();
                     final long hostID = becameFriends.getHostId();
 
                     final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
                     final Future<?> fetching = isMusicFetching.get(hostID, null);
-                    if(fetching == null || fetching.isDone() || fetching.isCancelled()) {
+                    if (fetching == null || fetching.isDone() || fetching.isCancelled()) {
 
 
-                        isMusicFetching.append(hostID,StaticData.threadPool.submit(new GetMusic(hostID,
+                        isMusicFetching.append(hostID, StaticData.threadPool.submit(new GetMusic(hostID,
                                 mActivity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS))));
                         //Inform only when necessary
                         //if(cursor.getInt(7) == 0)
@@ -143,7 +136,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                 }
             })).orNull();
 
-            if(musicContainer == null && mActivity != null)
+            if (musicContainer == null && mActivity != null)
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -151,12 +144,12 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                     }
                 });
 
-            if(mActivity == null || mActivity.isFinishing() || musicContainer == null)
+            if (mActivity == null || mActivity.isFinishing() || musicContainer == null)
                 return;
 
-            if(musicContainer.getSongsChanged()) {
+            if (musicContainer.getSongsChanged()) {
 
-                if(musicContainer.getReachSongs() == null || musicContainer.getReachSongs().size() == 0)
+                if (musicContainer.getReachSongs() == null || musicContainer.getReachSongs().size() == 0)
                     //All the songs got deleted
                     MiscUtils.deleteSongs(hostId, mActivity.getContentResolver());
                 else {
@@ -169,18 +162,18 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                             reachArtists,
                             mActivity.getContentResolver());
                 }
-                SharedPrefUtils.storeSongCodeForUser(hostId, musicContainer.getSongsHash(), sharedPreferences.edit());
+                SharedPrefUtils.storeSongCodeForUser(hostId, musicContainer.getSongsHash(), sharedPreferences);
                 Log.i("Ayush", "Fetching songs, song hash changed for " + hostId + " " + musicContainer.getSongsHash());
             }
 
-            if(musicContainer.getPlayListsChanged() && mActivity != null && !mActivity.isFinishing()) {
+            if (musicContainer.getPlayListsChanged() && mActivity != null && !mActivity.isFinishing()) {
 
-                if(musicContainer.getReachPlayLists() == null || musicContainer.getReachPlayLists().size() == 0)
+                if (musicContainer.getReachPlayLists() == null || musicContainer.getReachPlayLists().size() == 0)
                     //All playLists got deleted
                     MiscUtils.deletePlayLists(hostId, mActivity.getContentResolver());
                 else
                     MiscUtils.bulkInsertPlayLists(new HashSet<>(musicContainer.getReachPlayLists()), mActivity.getContentResolver());
-                SharedPrefUtils.storePlayListCodeForUser(hostId, musicContainer.getPlayListHash(), sharedPreferences.edit());
+                SharedPrefUtils.storePlayListCodeForUser(hostId, musicContainer.getPlayListHash(), sharedPreferences);
                 Log.i("Ayush", "Fetching playLists, playList hash changed for " + hostId + " " + musicContainer.getPlayListHash());
             }
         }
@@ -192,9 +185,10 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        listView.setPadding(0,MiscUtils.dpToPx(10),0,0);
+        listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         listView.setBackgroundColor(getResources().getColor(R.color.grey));
-        adapter = new ReachNotificationAdapter(mActivity,R.layout.notification_item,null,0,getActivity().getApplication());
+        adapter = new ReachNotificationAdapter(mActivity, R.layout.notification_item, null, 0, getActivity().getApplication(),
+                SharedPrefUtils.getServerId(container.getContext().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
 
@@ -215,6 +209,8 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
                         @Override
                         protected ImmutableList<NotificationBase> doWork() throws IOException {
                             long myId = SharedPrefUtils.getServerId(mActivity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                            if(myId == 0)
+                                return null;
                             return ImmutableList.copyOf(StaticData.notificationApi.get(myId).execute().getItems()).reverse();
                         }
                     }, Optional.<Predicate<ImmutableList<NotificationBase>>>absent());
@@ -238,12 +234,11 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
             return true;
         }
 
-        @Override
-        protected void onPostExecute(Boolean aVoid) {
-            super.onPostExecute(aVoid);
-
-            //TODO use boolean
-        }
+//        @Override
+//        protected void onPostExecute(Boolean aVoid) {
+//            super.onPostExecute(aVoid);
+//            //TODO use boolean
+//        }
     }
 
     @Override
@@ -286,7 +281,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == StaticData.NOTIFICATIONS_LOADER && data != null && !data.isClosed()) {
             adapter.swapCursor(data);
-            if(!refreshing.get() && data.getCount() == 0)
+            if (!refreshing.get() && data.getCount() == 0)
                 MiscUtils.setEmptyTextforListView(listView, "No notifications for you!");
         }
     }

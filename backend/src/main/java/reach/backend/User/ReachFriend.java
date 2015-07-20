@@ -51,12 +51,7 @@ public class ReachFriend {
         this.statusSong = host.getStatusSong();
         this.imageId = host.getImageId();
         this.genres = host.getGenres();
-        if (host.getMegaBytesReceived() > 0)
-            this.numberofSongs = (int) host.getMegaBytesReceived();
-        else if (host.getMySongs() != null && host.getMySongs().size() > 0)
-            this.numberofSongs = host.getMySongs().size();
-        else
-            this.numberofSongs = 0;
+        this.numberofSongs = host.getNumberOfSongs();
     }
 
     public int getNumberofSongs() {

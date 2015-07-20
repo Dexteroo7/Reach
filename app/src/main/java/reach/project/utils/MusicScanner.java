@@ -507,7 +507,7 @@ public class MusicScanner extends IntentService {
         Log.i("Ayush", "User genres = " + stringBuilder.toString());
         final String genres = stringBuilder.toString();
         //save the genres
-        SharedPrefUtils.storeGenres(sharedPreferences.edit(), genres);
+        SharedPrefUtils.storeGenres(sharedPreferences, genres);
         final int songHash = SharedPrefUtils.getSongCodeForUser(serverId, sharedPreferences);
         final int playListHash = SharedPrefUtils.getPlayListCodeForUser(serverId, sharedPreferences);
         ////////////////////save to server
@@ -625,7 +625,7 @@ public class MusicScanner extends IntentService {
 
         if(playListSet.hashCode() != playListHash) {
 
-            SharedPrefUtils.storePlayListCodeForUser(serverId, playListSet.hashCode(), sharedPreferences.edit());
+            SharedPrefUtils.storePlayListCodeForUser(serverId, playListSet.hashCode(), sharedPreferences);
             Log.i("Ayush", "Updating playLists " + playListSet.hashCode() + " " + playListHash);
             MiscUtils.bulkInsertPlayLists(
                     playListSet,
@@ -634,7 +634,7 @@ public class MusicScanner extends IntentService {
 
         try {
             musicUpdate.get();
-            SharedPrefUtils.storeSongCodeForUser(serverId, songHashSet.hashCode(), sharedPreferences.edit());
+            SharedPrefUtils.storeSongCodeForUser(serverId, songHashSet.hashCode(), sharedPreferences);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         } finally {

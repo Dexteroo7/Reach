@@ -13,14 +13,14 @@ import reach.project.viewHelpers.SlidingTabLayout;
 import reach.project.viewHelpers.ViewPagerReusable;
 
 
-public class NotificationCenterFragment extends Fragment{
+public class NotificationCenterFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_notification_center, container, false);
-        CustomViewPager viewPager = (CustomViewPager) rootView.findViewById(R.id.viewPager);
+        final CustomViewPager viewPager = (CustomViewPager) rootView.findViewById(R.id.viewPager);
         viewPager.setAdapter(new ViewPagerReusable(
                 getChildFragmentManager(),
                 new String[]{"Requests", "Notifications"},
@@ -29,7 +29,7 @@ public class NotificationCenterFragment extends Fragment{
                         NotificationFragment.newInstance()}));
         viewPager.setPagingEnabled(false);
 
-        SlidingTabLayout slidingTabLayout = (SlidingTabLayout) rootView.findViewById(R.id.sliding_tabs);
+        final SlidingTabLayout slidingTabLayout = (SlidingTabLayout) rootView.findViewById(R.id.sliding_tabs);
         slidingTabLayout.setDistributeEvenly(true);
         slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
             @Override
@@ -40,5 +40,4 @@ public class NotificationCenterFragment extends Fragment{
         slidingTabLayout.setViewPager(viewPager);
         return rootView;
     }
-
 }

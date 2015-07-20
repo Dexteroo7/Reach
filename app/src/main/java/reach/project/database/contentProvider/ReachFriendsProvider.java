@@ -110,10 +110,8 @@ public class ReachFriendsProvider extends ContentProvider {
                     //delete everything
                     sqlDB.delete(ReachFriendsHelper.FRIENDS_TABLE, null, null);
                     //bulk insert
-                    for(ContentValues contentValues : values) {
-                        sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, contentValues);
-                        done++;
-                    }
+                    for(done = 0; done<values.length; done++)
+                        sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values[done]);
                     sqlDB.setTransactionSuccessful();
                 } finally {
                     sqlDB.endTransaction();

@@ -55,6 +55,9 @@ public class NotificationEndpoint {
             httpMethod = ApiMethod.HttpMethod.GET)
     public List<NotificationBase> get(@Named("id") long id) {
 
+        if (id == 0)
+            return null;
+
         logger.info("Getting Notification with ID: " + id);
         final Notification notification = ofy().load().type(Notification.class).id(id).now();
         if (notification == null || notification.getNotifications() == null)
@@ -85,21 +88,21 @@ public class NotificationEndpoint {
                 continue;
             }
             //update the notifications
-            if(!notificationBase.getImageId().equals(reachUser.getImageId())) {
+            if (!notificationBase.getImageId().equals(reachUser.getImageId())) {
                 notificationBase.setImageId(reachUser.getImageId()); //can change
                 needToSave = true;
             }
 
-            if(!notificationBase.getHostName().equals(reachUser.getUserName())) {
+            if (!notificationBase.getHostName().equals(reachUser.getUserName())) {
                 notificationBase.setHostName(reachUser.getUserName()); //can change
                 needToSave = true;
             }
 
             //very imp else if
-            if(notificationBase.getRead() == -1) {
+            if (notificationBase.getRead() == -1) {
                 notificationBase.setRead((short) 0); //mark unread but fetched
                 needToSave = true;
-            } else if(notificationBase.getRead() == 0) {
+            } else if (notificationBase.getRead() == 0) {
                 notificationBase.setRead((short) 1); //mark read
                 needToSave = true;
             }
@@ -128,6 +131,9 @@ public class NotificationEndpoint {
                         @Named("senderId") long senderId,
                         @Named("songName") String songName) {
 
+        if (receiverId == 0 || senderId == 0 || songName == null)
+            return;
+
         final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
         final Like like = new Like();
         like.addBasicData(sender);
@@ -151,6 +157,9 @@ public class NotificationEndpoint {
                         @Named("receiverId") long receiverId,
                         @Named("senderId") long senderId) {
 
+        if (container == null || receiverId == 0 || senderId == 0)
+            return;
+
         final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
         final Push push = new Push();
         push.addBasicData(sender);
@@ -171,6 +180,9 @@ public class NotificationEndpoint {
             httpMethod = ApiMethod.HttpMethod.PUT)
     public void addBecameFriends(@Named("receiver") long receiverId,
                                  @Named("sender") long senderId) {
+
+        if (receiverId == 0 || senderId == 0)
+            return;
 
         final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
         final ReachUser receiver = ofy().load().type(ReachUser.class).id(receiverId).now();
@@ -194,6 +206,8 @@ public class NotificationEndpoint {
      * @param senderId      the person who had made the push
      * @param firstSongName to display in UI
      * @param size          to display in UI
+     * @param oldHash       old hash of push container
+     * @param firstSongName name of first song for UI shit
      */
     @ApiMethod(
             name = "pushAccepted",
@@ -204,6 +218,9 @@ public class NotificationEndpoint {
                              @Named("size") int size,
                              @Named("oldHash") int oldHash,
                              @Named("firstSongName") String firstSongName) {
+
+        if (receiverId == 0 || senderId == 0 || size == 0 || oldHash == 0 || firstSongName == null)
+            return;
 
         final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
         final PushAccepted pushAccepted = new PushAccepted();
@@ -217,7 +234,7 @@ public class NotificationEndpoint {
         while (queue.hasNext()) {
 
             final NotificationBase base = queue.next();
-            if(base instanceof Push) {
+            if (base instanceof Push) {
                 final int hash = ((Push) base).getPushContainer().hashCode();
                 logger.info("iterating " + hash + " " + oldHash);
                 if (hash == oldHash) {
@@ -228,6 +245,34 @@ public class NotificationEndpoint {
         }
         ofy().save().entity(notification).now();
         logger.info("Adding push " + sender.getUserName() + " " + firstSongName + " " + size);
+    }
+
+    @ApiMethod(
+            name = "removePush",
+            path = "notification/removePush",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public void removePush(@Named("receiverId") long receiverId,
+                           @Named("oldHash") int oldHash) {
+
+        if(receiverId == 0 || oldHash == 0)
+            return;
+        final Notification notification = ofy().load().type(Notification.class).id(receiverId).now();
+        if(notification == null || notification.getNotifications() == null || notification.getNotifications().size() == 0)
+            return;
+        final Iterator<NotificationBase> queue = notification.getNotifications().iterator();
+        while (queue.hasNext()) {
+
+            final NotificationBase base = queue.next();
+            if (base instanceof Push) {
+                final int hash = ((Push) base).getPushContainer().hashCode();
+                logger.info("iterating " + hash + " " + oldHash);
+                if (hash == oldHash) {
+                    queue.remove();
+                    break;
+                }
+            }
+        }
+        ofy().save().entity(notification).now();
     }
 
     /**

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -45,11 +44,6 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachAlbumProvider;
-import reach.project.database.contentProvider.ReachArtistProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.contentProvider.ReachPlayListProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.DoWork;
 import reach.project.utils.MiscUtils;
@@ -80,6 +74,7 @@ public class AccountCreation extends Fragment {
     private final int IMAGE_PICKER_SELECT = 999;
     private String imageId = "hello_world";
     private SuperInterface mListener;
+
     private TextView uploadText;
     private View profilePhotoSelector;
 
@@ -154,7 +149,6 @@ public class AccountCreation extends Fragment {
                     return;
                 //reset the whole databases
                 sharedPreferences.edit().clear().apply();
-                resetDatabases(activity);
                 Log.i("Ayush", "Cleared everything : AccountCreation underway");
                 profilePhotoSelector.setOnClickListener(null);
                 uploadText.setVisibility(View.GONE);
@@ -210,37 +204,6 @@ public class AccountCreation extends Fragment {
             mListener.onAccountCreated();
         }
     };
-
-    private void resetDatabases(FragmentActivity activity) {
-
-        //TODO reset notifications
-
-        try {
-            activity.getContentResolver().delete(ReachFriendsProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        }
-        try {
-            activity.getContentResolver().delete(ReachSongProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        }
-        try {
-            activity.getContentResolver().delete(ReachAlbumProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        }
-        try {
-            activity.getContentResolver().delete(ReachArtistProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        }
-        try {
-            activity.getContentResolver().delete(ReachPlayListProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
@@ -360,7 +323,8 @@ public class AccountCreation extends Fragment {
             else
                 id = Long.parseLong(toParse);
             Log.i("Ayush", "Id received = " + id);
-            if (id == 0) return null;
+            if (id == 0) //failed
+                return null;
             //finally set the userID, probably unnecessary
             user.setId(id);
             return user;

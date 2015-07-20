@@ -1,6 +1,7 @@
 package reach.backend.Servlets;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -9,13 +10,13 @@ import javax.servlet.http.HttpServletResponse;
 
 public class Worker extends HttpServlet {
 
-//    private static final Logger logger = Logger.getLogger(Worker.class.getName());
+    private static final Logger logger = Logger.getLogger(Worker.class.getName());
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         super.doGet(req, resp);
 
-
+        logger.info("Hello_world");
 //        QueryResultIterator<ReachUser> userQueryResultIterator;
 //        String cursorStr = req.getParameter("cursor");
 //        ReachUser reachUser;
@@ -35,10 +36,13 @@ public class Worker extends HttpServlet {
 //        while (userQueryResultIterator.hasNext()) {
 //
 //            reachUser = userQueryResultIterator.next();
-//            reachUser.setNumberOfSongs(reachUser.getMegaBytesReceived());
+//
+//            reachUser.setNumberOfSongs((int) reachUser.getMegaBytesReceived());
 //            reachUser.setSplitterId(reachUser.getMegaBytesSent());
+//            reachUser.setTimeCreated(System.currentTimeMillis());
 //            if (reachUser.getGenres().length() > 499)
 //                reachUser.setGenres(reachUser.getGenres().substring(0, 499));
+//
 //            ofy().save().entity(reachUser).now();
 //            currentProcessed++;
 //        }
@@ -47,13 +51,13 @@ public class Worker extends HttpServlet {
 //        logger.info("CURRENT " + currentProcessed);
 //        logger.info("TOTAL " + totalProcessed);
 //
-//        if (currentProcessed == 100) {
+//        if (currentProcessed == 100)
 //            QueueFactory.getDefaultQueue().add(TaskOptions.Builder
 //                    .withUrl("/worker")
 //                    .param("cursor", userQueryResultIterator.getCursor().toWebSafeString())
 //                    .param("total", totalProcessed + "")
 //                    .retryOptions(RetryOptions.Builder.withTaskRetryLimit(0)));
-//        } else
+//        else
 //            logger.info("FINISHED");
 //
 //        userQueryResultIterator = null;

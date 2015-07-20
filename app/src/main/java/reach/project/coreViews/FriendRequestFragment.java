@@ -66,6 +66,8 @@ public class FriendRequestFragment extends Fragment {
                 @Override
                 protected List<ReceivedRequest> doWork() throws IOException {
                     long myId = SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                    if(myId == 0)
+                        return null;
                     List<ReceivedRequest> receivedRequests = StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
                     Collections.reverse(receivedRequests);
                     return receivedRequests;
@@ -78,6 +80,7 @@ public class FriendRequestFragment extends Fragment {
             super.onPostExecute(receivedRequests);
             if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() )
                 return;
+
             if (receivedRequests != null && receivedRequests.size()>0) {
                 ReachFriendRequestAdapter reachFriendRequestAdapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests);
                 opened = new ArrayList<>(Collections.nCopies(receivedRequests.size(), true));

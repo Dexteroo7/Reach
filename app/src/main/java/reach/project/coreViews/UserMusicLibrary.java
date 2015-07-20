@@ -29,11 +29,11 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import reach.backend.entities.userApi.model.ReachFriend;
 import reach.project.R;
 import reach.project.core.PushActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.database.ReachFriend;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
@@ -146,14 +146,14 @@ public class UserMusicLibrary extends Fragment {
                         managerCompat.notify(99911, builder.build());
                     }
                 });
-                SharedPrefUtils.setSecondIntroSeen(sharedPreferences.edit());
+                SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
             }
         }
         actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
         if(actionBar!= null) {
 
             actionBar.setTitle(reachFriend.getUserName());
-            actionBar.setSubtitle(reachFriend.getNumberofSongs()+ " Songs");
+            actionBar.setSubtitle(reachFriend.getNumberOfSongs()+ " Songs");
         }
 
         final String path;

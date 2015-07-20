@@ -37,6 +37,18 @@ public abstract class NotificationBase {
         return this;
     }
 
+    public NotificationBase portData(NotificationBase base) {
+
+        this.setHostName(base.getHostName());
+        this.setRead(base.getRead());
+        this.setHostId(base.getHostId());
+        this.setImageId(base.getImageId());
+        this.setSystemTime(base.getSystemTime());
+        this.setExpanded((short) 0);
+        this.setTypes(base.getTypes());
+        return this;
+    }
+
     public short getExpanded() {
         return expanded;
     }

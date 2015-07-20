@@ -5,7 +5,7 @@ package reach.backend.User.FriendContainers;
  */
 public class ReceivedRequest {
 
-    public static String[] projectNewFriend = new String[]{
+    public static String[] projectReceivedRequest = new String[]{
         "numberOfSongs",
         "userName",
         "imageId",

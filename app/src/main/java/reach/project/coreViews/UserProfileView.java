@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 import reach.backend.entities.messaging.model.MyString;
-import reach.backend.entities.userApi.model.ReachFriend;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.database.ReachFriend;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.DoWork;
@@ -102,7 +102,7 @@ public class UserProfileView extends Fragment {
         if (((ActionBarActivity)getActivity()).getSupportActionBar() != null)
             ((ActionBarActivity)getActivity()).getSupportActionBar().setTitle(reachFriendsDatabase.getUserName());
         userName.setText(reachFriendsDatabase.getUserName());
-        numberOfSongs.setText(reachFriendsDatabase.getNumberofSongs()+" Songs");
+        numberOfSongs.setText(reachFriendsDatabase.getNumberOfSongs()+" Songs");
         if (!TextUtils.isEmpty(reachFriendsDatabase.getImageId()) && !reachFriendsDatabase.getImageId().equals("hello_world"))
             Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + reachFriendsDatabase.getImageId()).transform(new CircleTransform()).into(userImage);
 
@@ -145,7 +145,7 @@ public class UserProfileView extends Fragment {
 
                         new SendRequest(access).executeOnExecutor(
                                 StaticData.threadPool,
-                                reachFriendsDatabase.getId());
+                                reachFriendsDatabase.getServerId());
                         Toast.makeText(getActivity(),"Access Request sent",Toast.LENGTH_SHORT).show();
                     }
                 });

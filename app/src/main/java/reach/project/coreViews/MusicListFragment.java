@@ -86,7 +86,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                     mListener.anchorFooter(false);
                 }
                 else {
-                    SharedPrefUtils.setReachQueueSeen(sharedPreferences.edit());
+                    SharedPrefUtils.setReachQueueSeen(sharedPreferences);
                     mListener.anchorFooter(true);
                 }
                 mListener.addSongToQueue(

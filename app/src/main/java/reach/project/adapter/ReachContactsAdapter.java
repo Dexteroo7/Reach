@@ -28,9 +28,9 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 import reach.backend.entities.messaging.model.MyString;
-import reach.backend.entities.userApi.model.ReachFriend;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.database.ReachFriend;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.DoWork;
@@ -99,7 +99,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
 
         viewHolder.userNameList.setText(reachFriendsDatabase.getUserName());
-        viewHolder.telephoneNumberList.setText(reachFriendsDatabase.getNumberofSongs()+"");
+        viewHolder.telephoneNumberList.setText(reachFriendsDatabase.getNumberOfSongs()+"");
         final String phoneNumber = reachFriendsDatabase.getPhoneNumber();
         if (phoneNumber.equals("0000000001") || phoneNumber.equals("0000000002") || phoneNumber.equals("8860872102"))
             viewHolder.featured.setVisibility(View.VISIBLE);
@@ -151,17 +151,17 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
                     new SendRequest().executeOnExecutor(
                             StaticData.threadPool,
-                            reachFriendsDatabase.getId(),
+                            reachFriendsDatabase.getServerId(),
                             (long) reachFriendsDatabase.getStatus());
 
                     Toast.makeText(context, "Access Request sent to " + reachFriendsDatabase.getUserName(), Toast.LENGTH_SHORT).show();
                     final ContentValues values = new ContentValues();
                     values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
                     context.getContentResolver().update(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + reachFriendsDatabase.getId()),
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + reachFriendsDatabase.getServerId()),
                             values,
                             ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{reachFriendsDatabase.getId() + ""});
+                            new String[]{reachFriendsDatabase.getServerId() + ""});
                 }
             });
         }

@@ -111,7 +111,6 @@ public class RefreshGCM extends HttpServlet {
 
             if (result.getMessageId() != null) {
 
-                logger.info("Message sent to " + users.get(index).getId());
                 if (result.getCanonicalRegistrationId() != null && !result.getCanonicalRegistrationId().equals("")) {
                     // if the regId changed, we have to update the data-store
                     logger.info("Registration Id changed for " + users.get(index).getId() + " updating to " + result.getCanonicalRegistrationId());

@@ -100,9 +100,11 @@ import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.DoWork;
+import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.PushContainer;
+import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.TransferSong;
@@ -326,9 +328,10 @@ public class ReachActivity extends ActionBarActivity implements
     private final AdapterView.OnItemLongClickListener myLibraryLongClickListener = new AdapterView.OnItemLongClickListener() {
         @Override
         public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long viewId) {
+
             final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
             final short status = cursor.getShort(6);
-            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length && status!=ReachDatabase.FINISHED) {
+            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length && status != ReachDatabase.FINISHED) {
                 final long id = cursor.getLong(0);
                 final short operationKind = cursor.getShort(7);
                 final short logicalClock = cursor.getShort(9);
@@ -344,7 +347,7 @@ public class ReachActivity extends ActionBarActivity implements
                 else
                     txt = "Resume download";
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ReachActivity.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(ReachActivity.this);
                 builder.setPositiveButton(txt, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -375,16 +378,16 @@ public class ReachActivity extends ActionBarActivity implements
                             reachDatabase.setSenderId(senderId);
                             reachDatabase.setReceiverId(receiverId);
                             reachDatabase.setSongId(songId);
-                                    reachDatabase.setProcessed(processed);
-                                    reachDatabase.setLength(length);
-                                    reachDatabase.setLogicalClock(logicalClock);
-                                    reachDatabase.setId(id);
-                                    StaticData.threadPool.submit(MiscUtils.startDownloadOperation(reachDatabase, getContentResolver()));
-                                    Log.i("Ayush", "Un-pausing");
-                                }
-                                dialog.dismiss();
-                            }
-                        });
+                            reachDatabase.setProcessed(processed);
+                            reachDatabase.setLength(length);
+                            reachDatabase.setLogicalClock(logicalClock);
+                            reachDatabase.setId(id);
+                            StaticData.threadPool.submit(MiscUtils.startDownloadOperation(reachDatabase, getContentResolver()));
+                            Log.i("Ayush", "Un-pausing");
+                        }
+                        dialog.dismiss();
+                    }
+                });
                 AlertDialog dialog = builder.create();
                 dialog.show();
             }
@@ -459,7 +462,7 @@ public class ReachActivity extends ActionBarActivity implements
 
         super.onDestroy();
 
-        if (reference!=null)
+        if (reference != null)
             reference.clear();
         reference = null;
 
@@ -530,11 +533,10 @@ public class ReachActivity extends ActionBarActivity implements
         super.onPause();
 
         final PackageManager packageManager;
-        if((packageManager = getPackageManager()) == null)
+        if ((packageManager = getPackageManager()) == null)
             return;
         packageManager.setComponentEnabledSetting(
-                new ComponentName(getApplicationContext(),
-                        PlayerUpdateListener.class),
+                new ComponentName(this, PlayerUpdateListener.class),
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
     }
@@ -553,22 +555,15 @@ public class ReachActivity extends ActionBarActivity implements
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
 
-        /*NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
-        int nID = getIntent().getIntExtra("notifID",0);
-        if (nID!=0) {
-            Log.d("Ashish", "1stNotif");
-            managerCompat.cancel(nID);
-        }*/
-        if (getIntent().getBooleanExtra("openPlayer", false)) {
-
+        if (getIntent().getBooleanExtra("openPlayer", false))
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (slidingUpPanelLayout!=null)
+                    if (slidingUpPanelLayout != null)
                         slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }
             }, 1500);
-        }
+
         processIntent(getIntent());
     }
 
@@ -578,7 +573,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
 
-        if (position > 0 && position!=2) {
+        if (position > 0 && position != 2) {
 
             final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null)
@@ -589,14 +584,18 @@ public class ReachActivity extends ActionBarActivity implements
             switch (position) {
 
                 case 0: {
-                    final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
 
+                    final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
                     switch (action) {
-                        case 0:accountCreationError();break;
-                        case 1:startAccountCreation(Optional.<OldUserContainerNew>absent());break;
+                        case 0:
+                            accountCreationError();
+                            break;
+                        case 1:
+                            startAccountCreation(Optional.<OldUserContainerNew>absent());
+                            break;
                         default: {
 
-                            if(navPos > 0) {
+                            if (navPos > 0) {
                                 fragmentManager.beginTransaction()
                                         .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
                             }
@@ -633,9 +632,9 @@ public class ReachActivity extends ActionBarActivity implements
                             .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
                     break;
                 }
-
             }
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
         navPos = position;
     }
 
@@ -708,7 +707,8 @@ public class ReachActivity extends ActionBarActivity implements
                         .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
             } else
                 super.onBackPressed();
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
     }
 
     @Override
@@ -800,7 +800,7 @@ public class ReachActivity extends ActionBarActivity implements
         new Handler().post(new Runnable() {
             @Override
             public void run() {
-                if (slidingUpPanelLayout!=null) {
+                if (slidingUpPanelLayout != null) {
                     if (show) {
                         slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
                         slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(70));
@@ -817,7 +817,7 @@ public class ReachActivity extends ActionBarActivity implements
 
     @Override
     public void anchorFooter(boolean first) {
-        if (slidingUpPanelLayout==null)
+        if (slidingUpPanelLayout == null)
             return;
         if (first)
             slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
@@ -956,11 +956,12 @@ public class ReachActivity extends ActionBarActivity implements
 
     private void initialize(final SharedPreferences sharedPreferences) {
 
+        final Activity activity = this;
         final NetworkInfo networkInfo =
                 ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         if (networkInfo == null || !networkInfo.isConnected()) {
             // There are no active networks.
-            Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "No active networks detected", Toast.LENGTH_SHORT).show();
             return;
         }
         final String userName = SharedPrefUtils.getUserName(sharedPreferences);
@@ -968,7 +969,7 @@ public class ReachActivity extends ActionBarActivity implements
 
         if (!StaticData.debugMode) {
             // Crittercism
-            Crittercism.initialize(this, "552eac3c8172e25e67906922");
+            Crittercism.initialize(activity, "552eac3c8172e25e67906922");
             Crittercism.setUsername(userName + " " + phoneNumber);
             // Check for new update
             new CheckUpdate().executeOnExecutor(StaticData.threadPool);
@@ -1025,7 +1026,7 @@ public class ReachActivity extends ActionBarActivity implements
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (reference!=null) {
+                            if (reference != null) {
                                 final Context context = reference.get();
                                 if (context != null)
                                     Toast.makeText(context, "Network error, GCM failed", Toast.LENGTH_SHORT).show();
@@ -1039,7 +1040,7 @@ public class ReachActivity extends ActionBarActivity implements
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (reference!=null) {
+                            if (reference != null) {
                                 final Context context = reference.get();
                                 if (context != null)
                                     Toast.makeText(context, "Network error, GCM failed", Toast.LENGTH_SHORT).show();
@@ -1060,9 +1061,18 @@ public class ReachActivity extends ActionBarActivity implements
                     //check if gcmID is present on server
                     checkGCM();
                     //Run music-scanner
-                    final Intent intent = new Intent(mNavigationDrawerFragment.getActivity(), MusicScanner.class);
+                    final Intent intent = new Intent(activity, MusicScanner.class);
                     intent.putExtra("ReturnNow", false);
                     startService(intent);
+                    if(!StaticData.syncingContacts.get()) {
+                        try {
+                            final QuickSyncFriends.Status status = new QuickSyncFriends(activity, serverId, phoneNumber).call();
+                            if (status == QuickSyncFriends.Status.FULL_SYNC)
+                                new ForceSyncFriends(activity, serverId, phoneNumber).run();
+                        } finally {
+                            StaticData.syncingContacts.set(false);
+                        }
+                    }
                 }
                 //if service is running register callback
             }
@@ -1205,11 +1215,10 @@ public class ReachActivity extends ActionBarActivity implements
 
     private void processIntent(Intent intent) {
         slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
-        if (intent != null&&intent.getBooleanExtra("openNotificationFragment", false)) {
+        if (intent != null && intent.getBooleanExtra("openNotificationFragment", false)) {
             onOpenNotificationDrawer();
             setIntent(null);
-        }
-        else
+        } else
             onNavigationDrawerItemSelected(0);
     }
 
@@ -1498,7 +1507,7 @@ public class ReachActivity extends ActionBarActivity implements
                             activity.likeButton.setVisibility(View.GONE);
                     }
 
-                    ((ReachApplication)activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                             .setCategory("Play song")
                             .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                             .setLabel("Song - " + data.getDisplayName())

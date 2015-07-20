@@ -1,9 +1,12 @@
 package reach.backend.User;
 
+import com.google.appengine.repackaged.com.google.api.client.util.Charsets;
+import com.google.appengine.repackaged.com.google.common.hash.Hashing;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
+import com.googlecode.objectify.annotation.OnSave;
 import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.HashSet;
@@ -20,16 +23,19 @@ public class ReachUser {
 
     @Id
     private Long id;
+    private int dirtyCheck = 0; //hashcode for checking dirty values
     private int numberOfSongs = 0;
     private String phoneNumber = "hello_world";    //UUID
     private String userName = "hello_world";       //Custom Username, can be changed
     private String imageId = "hello_world";  //User Profile Image
     private String gcmId = "hello_world"; //Gcm Cloud Message Id
 
+    private String statusSong = "hello_world"; //Status Song
     private String promoCode = "hello_world"; //promo code of user
     private String deviceId = "hello_world";
     private long megaBytesSent;
     private long megaBytesReceived;
+    private long timeCreated;
 
     @Unindex
     private HashSet<Long> myReach;
@@ -39,7 +45,6 @@ public class ReachUser {
     private HashSet<Long> receivedRequests;
 
     //shit to remove
-    private String statusSong = "hello_world"; //Status Song
     private long splitterId = 0;
     private String genres = "hello_world";    //Genres
     @Unindex
@@ -48,6 +53,28 @@ public class ReachUser {
     private HashSet<ReachPlayList> myPlayLists; //switch to compressed blob
 
     //////////////////////////////////
+    public int computeDirtyHash() {
+        //basic hash function
+        return Hashing.adler32().newHasher()
+                .putInt(numberOfSongs)
+                .putString(userName == null ? "" : userName, Charsets.UTF_8)
+                .putString(imageId == null ? "" : imageId, Charsets.UTF_8)
+                .putString(gcmId == null ? "" : gcmId, Charsets.UTF_8)
+                .putString(statusSong == null ? "" : statusSong, Charsets.UTF_8)
+                .hash().asInt();
+    }
+
+    public int getDirtyCheck() {
+        return dirtyCheck;
+    }
+
+    public void setDirtyCheck(int dirtyCheck) {
+        this.dirtyCheck = dirtyCheck;
+    }
+
+    public void setDirtyCheck() {
+        this.dirtyCheck = computeDirtyHash();
+    }
 
     public long getSplitterId() {
         return splitterId;
@@ -193,6 +220,12 @@ public class ReachUser {
         this.id = id;
     }
 
+    @OnSave
+    void onSave() {
+        setDirtyCheck();
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -209,5 +242,13 @@ public class ReachUser {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (deviceId != null ? deviceId.hashCode() : 0);
         return result;
+    }
+
+    public long getTimeCreated() {
+        return timeCreated;
+    }
+
+    public void setTimeCreated(long timeCreated) {
+        this.timeCreated = timeCreated;
     }
 }
