@@ -43,7 +43,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -98,7 +97,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     private final HashSet<String> inviteSentTo = new HashSet<>();
     private final String inviteKey = "invite_sent";
     private ProgressBar loading;
-    private TextView emptyTV1, emptyTV2;
+    private TextView emptyTV1, emptyTV2, notificationCount;
 
     private SuperInterface mListener;
     private String mCurFilter, selection;
@@ -107,6 +106,13 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     private final AtomicBoolean pinging = new AtomicBoolean(false);
     public static final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
     private ScaleAnimation translation;
+
+    public static void setNotificationCount(int count) {
+        final ContactsListFragment fragment;
+        if(reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
+            return;
+        fragment.notificationCount.setText("" + count);
+    }
 
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
 
@@ -142,7 +148,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
 
                 final Contact contact = (Contact) object;
                 if (contact.isInviteSent()) return;
-                String msg = "Hey! Checkout and download m y  phone music collection with just  a click!" + ".\nhttp://letsreach.co/app\n--\n" + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                String msg = "Hey! Checkout and download m y  phone music collection with just  a click!" + ".\nhttp://msg.mn/reach\n--\n" + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
                 final EditText input = new EditText(getActivity());
                 input.setBackgroundResource(0);
                 input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
@@ -239,21 +245,15 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
 
     private static WeakReference<ContactsListFragment> reference = null;
 
-    public static ContactsListFragment newInstance(boolean first) {
+    public static ContactsListFragment newInstance() {
 
-        final Bundle args;
         ContactsListFragment fragment;
         if (reference == null || (fragment = reference.get()) == null) {
-
             Log.i("Ayush", "Creating new instance of contacts list fragment");
             reference = new WeakReference<>(fragment = new ContactsListFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
+        } else
             Log.i("Ayush", "Reusing contacts list fragment object :)");
-            args = fragment.getArguments();
-        }
 
-        args.putBoolean("first", first);
         return fragment;
     }
 
@@ -264,8 +264,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         mListener.setUpDrawer();
         mListener.toggleDrawer(false);
         mListener.toggleSliding(true);
-        /*if (getArguments().getBoolean("first", false))
-            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
 
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
         /**
@@ -301,48 +299,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
 
             if (cursor.getCount() > 0) {
+
                 if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
-                    StaticData.threadPool.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (getActivity() == null)
-                                return;
-                            Bitmap bmp = null;
-                            NotificationManagerCompat managerCompat = NotificationManagerCompat.from(getActivity());
-                            int px = MiscUtils.dpToPx(64);
-                            try {
-                                bmp = Picasso.with(getActivity())
-                                        .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
-                                        .centerCrop()
-                                        .resize(px, px)
-                                        .get();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            Intent intent = new Intent(getActivity(), PushActivity.class);
-                            intent.putExtra("type", 1);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity())
-                                    .setAutoCancel(true)
-                                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                                    .setSmallIcon(R.drawable.ic_icon_notif)
-                                    .setLargeIcon(bmp)
-                                    .setContentIntent(pendingIntent)
-                                            //.addAction(0, "Okay! I got it", pendingIntent)
-                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                            .bigText("I am Devika from Team Reach! \n" +
-                                                    "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
-                                                    "Keep Reaching ;)"))
-                                    .setContentTitle("Hey!")
-                                    .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my music collection. Keep Reaching ;)")
-                                    .setContentText("I am Devika from Team Reach! \n" +
-                                            "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
-                                            "Keep Reaching ;)")
-                                    .setPriority(NotificationCompat.PRIORITY_MAX);
-                            managerCompat.notify(99910, builder.build());
-                        }
-                    });
+                    StaticData.threadPool.execute(devika1);
                     SharedPrefUtils.setFirstIntroSeen(sharedPrefs);
                 }
                 mergeAdapter.setActive(loading, false);
@@ -358,10 +317,51 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
 
                 Log.i("Downloader", "LOADING EMPTY VIEW ON LOAD FINISHED");
                 mergeAdapter.setActive(emptyTV1, true);
-                MiscUtils.setEmptyTextforListView(listView, "No friends found :(");
             }
         }
     }
+
+    private final Runnable devika1 = new Runnable() {
+        @Override
+        public void run() {
+            if (getActivity() == null)
+                return;
+            Bitmap bmp = null;
+            NotificationManagerCompat managerCompat = NotificationManagerCompat.from(getActivity());
+            int px = MiscUtils.dpToPx(64);
+            try {
+                bmp = Picasso.with(getActivity())
+                        .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
+                        .centerCrop()
+                        .resize(px, px)
+                        .get();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Intent intent = new Intent(getActivity(), PushActivity.class);
+            intent.putExtra("type", 1);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity())
+                    .setAutoCancel(true)
+                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                    .setSmallIcon(R.drawable.ic_icon_notif)
+                    .setLargeIcon(bmp)
+                    .setContentIntent(pendingIntent)
+                            //.addAction(0, "Okay! I got it", pendingIntent)
+                    .setStyle(new NotificationCompat.BigTextStyle()
+                            .bigText("I am Devika from Team Reach! \n" +
+                                    "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                                    "Keep Reaching ;)"))
+                    .setContentTitle("Hey!")
+                    .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my music collection. Keep Reaching ;)")
+                    .setContentText("I am Devika from Team Reach! \n" +
+                            "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                            "Keep Reaching ;)")
+                    .setPriority(NotificationCompat.PRIORITY_MAX);
+            managerCompat.notify(99910, builder.build());
+        }
+    };
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
@@ -437,7 +437,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(refreshListener);
 
-        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.contactsList));
+        listView = (ListView) rootView.findViewById(R.id.contactsList);
         listView.setDivider(null);
         listView.setDividerHeight(0);
         listView.setOnItemClickListener(clickListener);
@@ -755,22 +755,20 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
-        final MenuItem notifButton = menu.findItem(R.id.notif_button);
-        if (notifButton == null)
+        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
+        if (notificationButton == null)
             return;
-        notifButton.setActionView(R.layout.reach_queue_counter);
+        notificationButton.setActionView(R.layout.reach_queue_counter);
 
-        final FrameLayout rqContainer = (FrameLayout) notifButton.getActionView().findViewById(R.id.counterContainer);
-        rqContainer.setOnClickListener(new View.OnClickListener() {
+        final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
+        notificationContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mListener.onOpenNotificationDrawer();
-                //Intent intent = new Intent(getActivity(), NotificationCenterFragment.class);
-                //startActivity(intent);
             }
         });
-        final TextView rqCount = (TextView) rqContainer.findViewById(R.id.reach_q_count);
-        rqCount.setText("0");
+        notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
+        notificationCount.setText("0");
     }
 
     @Override

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notification_drawer"
     android:orientation="vertical"
     android:background="@color/grey"
-    android:layout_gravity="center"
-    android:layout_width="match_parent"
-    android:paddingTop="?attr/actionBarSize"
-    android:layout_height="match_parent">
+    android:layout_width="@dimen/navigation_drawer_width"
+    android:layout_height="match_parent"
+    android:layout_gravity="right"
+    android:paddingTop="?attr/actionBarSize">
     <reach.project.viewHelpers.SlidingTabLayout
         android:id="@+id/sliding_tabs"
         android:background="@color/reach_light"

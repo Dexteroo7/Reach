@@ -2,12 +2,11 @@
 <resources>
 
     <string name="app_name">Reach</string>
-    <string name="title_section1">My Reach</string>
-    <string name="title_section2">Hide Songs</string>
-    <string name="title_section3">Promo Code</string>
-    <string name="title_section4">Invite Friends</string>
-    <string name="title_section5">Upload History</string>
-    <string name="title_section6">Contact Us</string>
+    <string name="title_section1">Hide Songs</string>
+    <string name="title_section2">Promo Code</string>
+    <string name="title_section3">Invite Friends</string>
+    <string name="title_section4">Upload History</string>
+    <string name="title_section5">Contact Us</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_example">Example action</string>

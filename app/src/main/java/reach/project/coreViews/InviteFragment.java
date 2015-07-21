@@ -131,7 +131,7 @@ public class InviteFragment extends Fragment {
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT,
                         "Hey! Checkout and download my phone music collection with just a click!" +
-                                ".\nhttp://letsreach.co/app\n--\n"+SharedPrefUtils.getUserName(preferences));
+                                ".\nhttp://msg.mn/reach\n--\n"+SharedPrefUtils.getUserName(preferences));
                 sendIntent.setType("text/plain");
                 sendIntent.setPackage(packageNames[position]);
                 try{

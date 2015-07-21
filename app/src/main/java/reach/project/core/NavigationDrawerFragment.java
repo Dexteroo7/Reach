@@ -119,8 +119,7 @@ public class NavigationDrawerFragment extends Fragment {
                 getString(R.string.title_section2),
                 getString(R.string.title_section3),
                 getString(R.string.title_section4),
-                getString(R.string.title_section5),
-                getString(R.string.title_section6)
+                getString(R.string.title_section5)
         };
         mDrawerListView = (ListView) rootView.findViewById(R.id.primaryListView);
         //mDrawerSecListView = (ListView) rootView.findViewById(R.id.secondaryListView);

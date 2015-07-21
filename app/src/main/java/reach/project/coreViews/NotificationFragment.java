@@ -283,6 +283,7 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
             adapter.swapCursor(data);
             if (!refreshing.get() && data.getCount() == 0)
                 MiscUtils.setEmptyTextforListView(listView, "No notifications for you!");
+            ContactsListFragment.setNotificationCount(data.getCount());
         }
     }
 

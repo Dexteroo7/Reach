@@ -80,6 +80,7 @@ import reach.project.coreViews.EditProfileFragment;
 import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MusicListFragment;
+import reach.project.coreViews.NotificationCenterFragment;
 import reach.project.coreViews.PrivacyFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.PushSongsFragment;
@@ -171,7 +172,6 @@ public class ReachActivity extends ActionBarActivity implements
     private FragmentManager fragmentManager;
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private DrawerLayout mDrawerLayout;
-    private int navPos = 99;
     private SearchView searchView;
     private FrameLayout.LayoutParams params;
     private ImageView upArrow;
@@ -516,7 +516,7 @@ public class ReachActivity extends ActionBarActivity implements
                                 return true;
                         }
                     }
-                    if (fragmentManager.getBackStackEntryCount() == 0 && navPos > 0) {
+                    else {
                         onBackPressed();
                         return true;
                     }
@@ -555,15 +555,6 @@ public class ReachActivity extends ActionBarActivity implements
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
 
-        if (getIntent().getBooleanExtra("openPlayer", false))
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (slidingUpPanelLayout != null)
-                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
-                }
-            }, 1500);
-
         processIntent(getIntent());
     }
 
@@ -573,8 +564,7 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
 
-        if (position > 0 && position != 2) {
-
+        if (position != 1) {
             final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null)
                 actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
@@ -584,49 +574,28 @@ public class ReachActivity extends ActionBarActivity implements
             switch (position) {
 
                 case 0: {
-
-                    final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
-                    switch (action) {
-                        case 0:
-                            accountCreationError();
-                            break;
-                        case 1:
-                            startAccountCreation(Optional.<OldUserContainerNew>absent());
-                            break;
-                        default: {
-
-                            if (navPos > 0) {
-                                fragmentManager.beginTransaction()
-                                        .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
-                            }
-                        }
-                    }
-                    break;
-                }
-                case 1: {
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
                     break;
                 }
-                case 2: {
-                    //promo code dialog
+                case 1: {
                     PromoCodeDialog.newInstance().show(getSupportFragmentManager(), "promo_dialog");
                     break;
                 }
-                case 3: {
+                case 2: {
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                     break;
                 }
-                case 4: {
+                case 3: {
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
                     break;
                 }
-                case 5: {
+                case 4: {
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
@@ -635,7 +604,6 @@ public class ReachActivity extends ActionBarActivity implements
             }
         } catch (IllegalStateException ignored) {
         }
-        navPos = position;
     }
 
     @Override
@@ -647,6 +615,19 @@ public class ReachActivity extends ActionBarActivity implements
                     .addToBackStack(null).replace(R.id.container, EditProfileFragment.newInstance(), "edit_profile_fragment").commit();
         } catch (IllegalStateException ignored) {
         }
+    }
+
+    @Override
+    public void addNotificationDrawer() {
+        if (isFinishing())
+            return;
+        try {
+            if (fragmentManager.findFragmentById(R.id.notification_drawer) == null)
+                fragmentManager.beginTransaction()
+                        .add(R.id.drawer_layout, new NotificationCenterFragment()).commit();
+        } catch (IllegalStateException ignored) {
+        }
+
     }
 
     @Override
@@ -693,19 +674,15 @@ public class ReachActivity extends ActionBarActivity implements
         if (isFinishing())
             return;
         try {
-            if (slidingUpPanelLayout != null &&
+            if (mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
+                mDrawerLayout.closeDrawer(Gravity.RIGHT);
+            else if (mDrawerLayout.isDrawerOpen(Gravity.LEFT))
+                mDrawerLayout.closeDrawer(Gravity.LEFT);
+            else if (slidingUpPanelLayout != null &&
                     slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED) {
                 slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                return;
             }
-            if (fragmentManager.getBackStackEntryCount() == 0 && navPos > 0) {
-
-                navPos = 0;
-                fragmentManager
-                        .beginTransaction()
-                        .setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right, R.anim.slide_in_right, R.anim.slide_out_left)
-                        .replace(R.id.container, ContactsListFragment.newInstance(false), "contacts_fragment").commit();
-            } else
+            else
                 super.onBackPressed();
         } catch (IllegalStateException ignored) {
         }
@@ -722,9 +699,10 @@ public class ReachActivity extends ActionBarActivity implements
             getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
             getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
             slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
+            addNotificationDrawer();
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.container, ContactsListFragment.newInstance(true), "my_reach").commit();
+                    .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
         } catch (IllegalStateException ignored) {
         }
     }
@@ -1064,7 +1042,7 @@ public class ReachActivity extends ActionBarActivity implements
                     final Intent intent = new Intent(activity, MusicScanner.class);
                     intent.putExtra("ReturnNow", false);
                     startService(intent);
-                    if(!StaticData.syncingContacts.get()) {
+                    if (!StaticData.syncingContacts.get()) {
                         try {
                             final QuickSyncFriends.Status status = new QuickSyncFriends(activity, serverId, phoneNumber).call();
                             if (status == QuickSyncFriends.Status.FULL_SYNC)
@@ -1082,11 +1060,7 @@ public class ReachActivity extends ActionBarActivity implements
     @Override
     protected void onNewIntent(Intent intent) {
 
-        Log.d("Downloader", "Received new Intent");
-        if (intent != null && !TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
-            processMultiple(intent);
-            new RefreshOperations().execute();
-        }
+        Log.d("Ayush", "Received new Intent");
         processIntent(intent);
         super.onNewIntent(intent);
     }
@@ -1095,13 +1069,13 @@ public class ReachActivity extends ActionBarActivity implements
     protected void onCreate(Bundle savedInstanceState) {
 
         //getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+        fragmentManager = getSupportFragmentManager();
         super.onCreate(savedInstanceState);
 
         //possibility of serverId not being set ?
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
         reference = new WeakReference<>(this);
-        fragmentManager = getSupportFragmentManager();
 
         setContentView(R.layout.activity_my);
         initialize(sharedPreferences);
@@ -1115,6 +1089,26 @@ public class ReachActivity extends ActionBarActivity implements
         topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
         slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
         toggleSliding(false);
+        //navigation-drawer
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
+        final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
+        switch (action) {
+            case 0:
+                accountCreationError();
+                break;
+            case 1:
+                startAccountCreation(Optional.<OldUserContainerNew>absent());
+                break;
+            default: {
+                slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
+                addNotificationDrawer();
+                fragmentManager
+                        .beginTransaction()
+                        .replace(R.id.container, ContactsListFragment.newInstance(), "contacts_fragment").commit();
+            }
+        }
 
         upArrow = (ImageView) findViewById(R.id.upArrow);
         params = (FrameLayout.LayoutParams) findViewById(R.id.fullPlayer).getLayoutParams();
@@ -1136,14 +1130,11 @@ public class ReachActivity extends ActionBarActivity implements
         //reachQueue
         queueListView = (ListView) findViewById(R.id.queueListView);
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
-        //navigation-drawer
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
         selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
         selectionArgumentsDownloader = new String[]{"0"};
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 fragmentManager.findFragmentById(R.id.navigation_drawer);
         fragmentManager.addOnBackStackChangedListener(this);
@@ -1214,12 +1205,25 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     private void processIntent(Intent intent) {
-        slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
-        if (intent != null && intent.getBooleanExtra("openNotificationFragment", false)) {
-            onOpenNotificationDrawer();
-            setIntent(null);
-        } else
-            onNavigationDrawerItemSelected(0);
+        if (intent != null) {
+            if (intent.getBooleanExtra("openNotificationFragment", false)) {
+                onOpenNotificationDrawer();
+                setIntent(null);
+            }
+            else if (intent.getBooleanExtra("openPlayer", false))
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (slidingUpPanelLayout != null)
+                            slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
+                    }
+                }, 1500);
+            else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
+                processMultiple(intent);
+                new RefreshOperations().execute();
+            }
+        }
+
     }
 
     private TextView getDownloadedTextView() {
