@@ -40,7 +40,8 @@ public enum CloudStorageUtils {
 
     private static final String APPLICATION_NAME_PROPERTY = "Reach";
     private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
-    private static final String BUCKET_NAME = "able-door-616.appspot.com";
+    private static final String BUCKET_NAME_IMAGES = "able-door-616-images";
+    private static final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
     public static Optional<String> uploadFile(final File file, InputStream key) {
@@ -91,7 +92,7 @@ public enum CloudStorageUtils {
 
             InputStream check = null;
             try {
-                check = storage.objects().get(BUCKET_NAME, fileName).executeMediaAsInputStream();
+                check = storage.objects().get(BUCKET_NAME_IMAGES, fileName).executeMediaAsInputStream();
                 Log.i("Ayush", "File found" + fileName);
                 return;
             } catch (IOException e) {
@@ -111,7 +112,7 @@ public enum CloudStorageUtils {
                     new DoWork<Void>() {
                         @Override
                         protected Void doWork() throws IOException {
-                            final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME, null, content);
+                            final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
                             insert.setPredefinedAcl("publicRead");
                             insert.setName(fileName);
                             insert.execute();
@@ -284,7 +285,7 @@ public enum CloudStorageUtils {
         //getMd5Hash of music data on storage
         String hash = "";
         try {
-            hash = storage.objects().get(BUCKET_NAME, fileName).execute().getMd5Hash().trim();
+            hash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -306,7 +307,7 @@ public enum CloudStorageUtils {
                     @Override
                     protected Void doWork() throws IOException {
 
-                        final String uploadedHash = storage.objects().insert(BUCKET_NAME, null, content)
+                        final String uploadedHash = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content)
                                 .setName(fileName)
                                 .execute().getMd5Hash();
 

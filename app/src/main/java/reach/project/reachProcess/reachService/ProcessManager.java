@@ -174,9 +174,9 @@ public class ProcessManager extends Service implements
             musicFuture.cancel(true);
         if (networkFuture != null)
             networkFuture.cancel(true);
-        if(wakeLock != null && wakeLock.isHeld())
+        if (wakeLock != null && wakeLock.isHeld())
             wakeLock.release();
-        if(reference != null) {
+        if (reference != null) {
             reference.clear();
             reference = null;
         }
@@ -317,7 +317,6 @@ public class ProcessManager extends Service implements
 
         if (totalDownloads > 0 && totalUploads == 0) {
             //only download
-
             final Cursor songNameCursor = getContentResolver().query(
                     ReachDatabaseProvider.CONTENT_URI,
                     new String[]{ReachDatabaseHelper.COLUMN_DISPLAY_NAME},
@@ -520,8 +519,10 @@ public class ProcessManager extends Service implements
         //insert music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
+
         final String toSend = new Gson().toJson(musicData, MusicData.class);
         SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS).edit(), toSend);
+
         switch (notificationState) {
 
             case Network:
@@ -759,8 +760,8 @@ public class ProcessManager extends Service implements
                 Log.i("Downloader", "ACTION_PLAY_PAUSE");
                 if (!musicHandler.processPlayPause())
                     break;
-                final Optional<MusicData> history = Optional.fromNullable((MusicData)intent.getParcelableExtra("message"));
-                if(history.isPresent())
+                final Optional<MusicData> history = Optional.fromNullable((MusicData) intent.getParcelableExtra("message"));
+                if (history.isPresent())
                     pushNextSong(history);
                 else {
                     final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
@@ -1045,9 +1046,9 @@ public class ProcessManager extends Service implements
     public static InputStream getSERStream(String name) throws IOException {
 
         final ProcessManager manager = reference.get();
-        if(manager == null)
+        if (manager == null)
             return null;
 
-       return manager.getAssets().open(name);
+        return manager.getAssets().open(name);
     }
 }

@@ -35,7 +35,6 @@ public enum SharedPrefUtils {
 
                 .putString("imageId", reachUserDatabase.getImageId())
                 .putString("statusSong", reachUserDatabase.getStatusSong())
-                .putString("genres", reachUserDatabase.getGenres())
 
                 .putLong("megaBytesReceived", reachUserDatabase.getMegaBytesReceived())
                 .putLong("megaBytesSent", reachUserDatabase.getMegaBytesSent())
