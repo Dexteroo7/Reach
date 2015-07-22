@@ -62,4 +62,22 @@ public class DataCall {
             return userName;
         }
     }
+
+    final class Solution {
+
+
+
+        public int solution(int[] A) {
+
+            if (A == null || A.length == 0)
+                return 0;
+
+            if (A.length == 1)
+                return A[0];
+
+
+
+            return 0;
+        }
+    }
 }

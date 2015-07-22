@@ -30,51 +30,51 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
                 packagePath = ""
         )
 )
-public class MusicVisibilityEndpoint {
+public class MusicDataEndpoint {
 
-    private static final Logger logger = Logger.getLogger(MusicVisibilityEndpoint.class.getName());
+    private static final Logger logger = Logger.getLogger(MusicDataEndpoint.class.getName());
 
     /**
-     * Returns the {@link MusicVisibility} with the corresponding ID.
+     * Returns the {@link MusicData} with the corresponding ID.
      *
      * @param id the ID of the entity to be retrieved
      * @return the entity with the corresponding ID
-     * @throws NotFoundException if there is no {@code MusicVisibility} with the provided ID.
+     * @throws NotFoundException if there is no {@code MusicData} with the provided ID.
      */
     @ApiMethod(
             name = "get",
             path = "musicVisibility/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public MusicVisibility get(@Named("id") long id) throws NotFoundException {
-        logger.info("Getting MusicVisibility with ID: " + id);
-        MusicVisibility musicVisibility = ofy().load().type(MusicVisibility.class).id(id).now();
-        if (musicVisibility == null) {
-            throw new NotFoundException("Could not find MusicVisibility with ID: " + id);
+    public MusicData get(@Named("id") long id) throws NotFoundException {
+        logger.info("Getting MusicData with ID: " + id);
+        MusicData musicData = ofy().load().type(MusicData.class).id(id).now();
+        if (musicData == null) {
+            throw new NotFoundException("Could not find MusicData with ID: " + id);
         }
-        return musicVisibility;
+        return musicData;
     }
 
     /**
-     * Inserts a new {@code MusicVisibility}.
+     * Inserts a new {@code MusicData}.
      */
     @ApiMethod(
             name = "insert",
-            path = "musicVisibility",
+            path = "musicData",
             httpMethod = ApiMethod.HttpMethod.POST)
-    public MusicVisibility insert(MusicVisibility musicVisibility) {
+    public MusicData insert(MusicData musicData) {
         // Typically in a RESTful API a POST does not have a known ID (assuming the ID is used in the resource path).
-        // You should validate that musicVisibility.id has not been set. If the ID type is not supported by the
+        // You should validate that musicData.id has not been set. If the ID type is not supported by the
         // Objectify ID generator, e.g. long or String, then you should generate the unique ID yourself prior to saving.
         //
         // If your client provides the ID then you should probably use PUT instead.
-        ofy().save().entity(musicVisibility).now();
-        logger.info("Created MusicVisibility with ID: " + musicVisibility.getId());
+        ofy().save().entity(musicData).now();
+        logger.info("Created MusicData with ID: " + musicData.getId());
 
-        return ofy().load().entity(musicVisibility).now();
+        return ofy().load().entity(musicData).now();
     }
 
     /**
-     * Updates an existing {@code MusicVisibility}.
+     * Updates an existing {@code MusicData}.
      *
      * @param id         the ID of the entity to be updated
      * @param musicId    the ID of the music object
@@ -89,16 +89,16 @@ public class MusicVisibilityEndpoint {
                            @Named("musicId") int musicId,
                            @Named("visibility") boolean visibility) {
 
-        MusicVisibility musicVisibility = ofy().load().type(MusicVisibility.class).id(id).now();
+        MusicData musicData = ofy().load().type(MusicData.class).id(id).now();
 
-        if (musicVisibility == null || musicVisibility.getVisibility() == null) {
+        if (musicData == null || musicData.getVisibility() == null) {
             logger.info("visibility error " + id);
             return new MyString("false"); //not found, run scanner
         }
 
-        musicVisibility.getVisibility().put(musicId, visibility);
-        ofy().save().entity(musicVisibility).now();
-        logger.info("Updated MusicVisibility: " + musicVisibility);
+        musicData.getVisibility().put(musicId, visibility);
+        ofy().save().entity(musicData).now();
+        logger.info("Updated MusicData: " + musicData);
         return new MyString("true");
     }
 }

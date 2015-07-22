@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.JsonMap;
 import reach.backend.entities.userApi.model.QuickSync;
@@ -63,7 +64,14 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final ContentResolver resolver = activity.getContentResolver();
 
         final HashSet<String> numbers = new HashSet<>();
-        numbers.add("000000001");
+        final List<Long> ids = new ArrayList<>();
+        final List<Integer> hashes = new ArrayList<>();
+        final List<String> presentNumbers = new ArrayList<>();
+
+        final HashSet<Friend> newFriends = new HashSet<>();
+        final HashSet<Long> toDelete = new HashSet<>();
+
+        numbers.add("8860872102");
         final Cursor phoneNumbers = resolver.query(ContactsContract.
                 CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         if (phoneNumbers != null) {
@@ -97,16 +105,14 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         if (currentIds == null || currentIds.getCount() == 0)
             return Status.FULL_SYNC;
 
-        final List<Long> ids = new ArrayList<>();
-        final List<Integer> hashes = new ArrayList<>();
-        final List<String> presentNumbers = new ArrayList<>();
+
         while (currentIds.moveToNext()) {
             ids.add(currentIds.getLong(0));
             hashes.add(currentIds.getInt(1));
             presentNumbers.add(currentIds.getString(2));
         }
         currentIds.close();
-        Log.i("Ayush", "Prepared callData" + ids.size() + " " + hashes.size() + " | " + presentNumbers.size());
+        Log.i("Ayush", "Prepared callData quickSync" + ids.size() + " " + hashes.size());
 
         final QuickSync quickSync = MiscUtils.autoRetry(
                 new DoWork<QuickSync>() {
@@ -120,24 +126,42 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         if (checkDead(activity))
             return Status.DEAD;
 
-        final List<Friend> newFriends = new ArrayList<>();
-        if(quickSync != null && quickSync.getNewFriends() != null)
-            newFriends.addAll(quickSync.getNewFriends());
+        if(quickSync != null) {
 
-        if (newFriends.size() > 0) {
-            Log.i("Ayush", "Found new friends " + newFriends.size());
-            for (Friend friend : newFriends)
-                presentNumbers.add(friend.getPhoneNumber());
+            if(quickSync.getNewFriends() != null)
+                newFriends.addAll(quickSync.getNewFriends());
+            if (quickSync.getToUpdate() != null) {
+                /**
+                 * We update by deletion followed by insertion.
+                 * Friends with hash = 0 are meant for removal
+                 */
+                for (Friend friend : quickSync.getToUpdate()) {
+
+                    presentNumbers.add(friend.getPhoneNumber());
+                    toDelete.add(friend.getId());
+                    if (friend.getHash() != 0)
+                        newFriends.add(friend);
+                }
+            }
         }
+
+        for (Friend friend : newFriends)
+            presentNumbers.add(friend.getPhoneNumber());
 
         //remove all present phoneNumbers and sync phoneBook
         numbers.removeAll(presentNumbers);
         numbers.remove(myNumber);
+
         final Optional<List<Friend>> phoneBookSync = MiscUtils.autoRetry(
                 new DoWork<List<Friend>>() {
+                    final ContactsWrapper wrapper = new ContactsWrapper();
+                    {
+                        Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
+                        wrapper.setContacts(ImmutableList.copyOf(numbers));
+                    }
                     @Override
                     protected List<Friend> doWork() throws IOException {
-                        return StaticData.userEndpoint.phoneBookSync(ImmutableList.copyOf(numbers)).execute().getItems();
+                        return StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems();
                     }
                 }, Optional.<Predicate<List<Friend>>>absent());
 
@@ -145,15 +169,9 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         if (checkDead(activity))
             return Status.DEAD;
 
-        final List<Long> toDelete = new ArrayList<>();
-
         if (phoneBookSync.isPresent())
             newFriends.addAll(phoneBookSync.get());
-        if (quickSync != null && quickSync.getToUpdate() != null)
-            for (Friend friend : quickSync.getToUpdate()) {
-                toDelete.add(friend.getId());
-                newFriends.add(friend);
-            }
+
         //START DB COMMITS
         bulkInsert(activity,
                 resolver,
@@ -161,47 +179,51 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                 toDelete,
                 quickSync != null ? quickSync.getNewStatus() : null);
 
+        MiscUtils.closeAndIgnore(numbers, ids, presentNumbers, hashes, newFriends, toDelete);
         return Status.OK;
     }
 
     public void bulkInsert(Context context,
                            ContentResolver resolver,
-                           List<Friend> toInsert,
-                           List<Long> toDelete,
+                           Iterable<Friend> toInsert,
+                           Iterable<Long> toDelete,
                            JsonMap statusChange) {
-
-        Log.i("Ayush", "Bulk inserting " + toInsert.size() + " | " + toDelete.size() + " | " + (statusChange == null ? -1 : statusChange.size()));
 
         final ReachFriendsHelper reachFriendsHelper = new ReachFriendsHelper(context);
         final SQLiteDatabase sqlDB = reachFriendsHelper.getWritableDatabase();
         sqlDB.beginTransaction();
         try {
 
-            if (toInsert.size() > 0)
-                for (Friend friend : toInsert) {
-                    Log.i("Ayush", "Inserting " + friend.getUserName());
-                    final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend);
-                    sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values);
-                }
+            if (statusChange != null && statusChange.size() > 0) {
 
-            if (toDelete.size() > 0)
-                for (Long id : toDelete) {
-                    Log.i("Ayush", "Deleting " + id);
-                    sqlDB.delete(ReachFriendsHelper.FRIENDS_TABLE,
-                            ReachFriendsHelper.COLUMN_ID + "=" + id, null);
-                }
-
-            if (statusChange != null && statusChange.size() > 0)
+                ContentValues values = new ContentValues();
                 for (Map.Entry<String, Object> newStatus : statusChange.entrySet()) {
-                    final ContentValues values = new ContentValues();
-                    values.put(newStatus.getKey(), (Short) newStatus.getValue());
+
+                    values.put(ReachFriendsHelper.COLUMN_ID, newStatus.getKey());
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, newStatus.getValue() + "");
                     Log.i("Ayush", "Updating status " + newStatus.getKey() + " " + newStatus.getValue());
                     sqlDB.update(ReachFriendsHelper.FRIENDS_TABLE,
                             values,
-                            ReachFriendsHelper.COLUMN_ID + "=" + newStatus.getKey(), null);
+                            ReachFriendsHelper.COLUMN_ID + " = " + newStatus.getKey(), null);
                 }
+                statusChange.clear();
+            }
+
+            for (Long id : toDelete) {
+                Log.i("Ayush", "Deleting " + id);
+                sqlDB.delete(ReachFriendsHelper.FRIENDS_TABLE,
+                        ReachFriendsHelper.COLUMN_ID + "=" + id, null);
+            }
+
+            for (Friend friend : toInsert) {
+                Log.i("Ayush", "Inserting " + friend.getUserName());
+                final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend);
+                sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values);
+            }
             sqlDB.setTransactionSuccessful();
+
         } finally {
+
             sqlDB.endTransaction();
             reachFriendsHelper.close();
         }

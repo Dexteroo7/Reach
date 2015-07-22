@@ -23,7 +23,7 @@
                 reach.backend.User.SplitMusicContainerEndpoint,
                 reach.backend.User.MusicSplitterEndpoint,
                 reach.backend.UploadHistory.CompletedOperationsEndpoint,
-                reach.backend.Music.MusicVisibilityEndpoint,
+                reach.backend.Music.MusicDataEndpoint,
                 reach.backend.Notifications.NotificationEndpoint
             </param-value>
         </init-param>

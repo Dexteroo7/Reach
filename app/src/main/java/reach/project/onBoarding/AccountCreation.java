@@ -395,41 +395,4 @@ public class AccountCreation extends Fragment {
         super.onDetach();
         mListener = null;
     }
-
-//    public static class IncomingHandler extends Handler {
-//
-//        long songs = 0, playLists = 0;
-//
-//        @Override
-//        public void handleMessage(Message message) {
-//
-//            final AccountCreation creation = reference.get();
-//            if (message == null || creation == null)
-//                return;
-//            if (message.what == MusicScanner.FINISHED) {
-//
-//                creation.bottomPart2.setVisibility(View.INVISIBLE);
-//                creation.bottomPart3.setVisibility(View.VISIBLE);
-//                creation.phoneNumber.setText(songs + " songs");
-//                creation.next.setOnClickListener(creation.proceed);
-//            } else if (message.what == MusicScanner.SONGS) {
-//
-//                creation.progress.setText("Found " + message.arg1 + " songs");
-//                songs = message.arg1 + 1;
-//            } else if (message.what == MusicScanner.PLAY_LISTS) {
-//
-//                creation.progress.setText("Found " + message.arg1 + " playLists");
-//                playLists = message.arg1 + 1;
-//            } else if (message.what == MusicScanner.ALBUM_ARTIST)
-//                creation.progress.setText("Creating account");
-//        }
-//    }
-
-//    @Override
-//    public void onDestroy() {
-//        if (incomingHandler != null)
-//            incomingHandler.removeCallbacksAndMessages(null);
-//        incomingHandler = null;
-//        super.onDestroy();
-//    }
 }

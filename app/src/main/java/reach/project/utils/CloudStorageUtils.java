@@ -1,6 +1,7 @@
 package reach.project.utils;
 
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -19,6 +20,7 @@ import com.google.common.base.Predicate;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -43,14 +45,6 @@ public enum CloudStorageUtils {
 
     public static Optional<String> uploadFile(final File file, InputStream key) {
 
-        final FileInputStream stream;
-        try {
-            stream = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return Optional.absent();
-        }
-
         String fileName;
         try {
             fileName = Files.hash(file, Hashing.md5()).toString();
@@ -59,14 +53,18 @@ public enum CloudStorageUtils {
             fileName = null;
         }
 
-        if (TextUtils.isEmpty(fileName)) {
-            MiscUtils.closeAndIgnore(stream);
+        if (TextUtils.isEmpty(fileName))
             return Optional.absent();
-        }
 
         final Optional<Storage> storage = getStorage(key);
-        if (!storage.isPresent()) {
-            MiscUtils.closeAndIgnore(stream);
+        if (!storage.isPresent())
+            return Optional.absent();
+
+        final FileInputStream stream;
+        try {
+            stream = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
             return Optional.absent();
         }
 
@@ -261,6 +259,65 @@ public enum CloudStorageUtils {
 //        }
 //        return list;
 //    }
+
+    /**
+     * Uploads the music data to google cloud storage
+     *
+     * @param musicData bytes of music data
+     * @param fileName  the name of file (@MiscUtils.getMusicStorageKey())
+     * @param key       the cloud storage key as input stream
+     */
+    public static boolean uploadMusicData(byte[] musicData, final String fileName, InputStream key) {
+
+        //prepare storage object
+        final Storage storage = getStorage(key).orNull();
+        MiscUtils.closeAndIgnore(key);
+        if (storage == null)
+            return true;
+
+        //compute hash of current music data
+        final String currentHash = Base64.encodeToString(Hashing.md5().newHasher()
+                .putBytes(musicData)
+                .hash().asBytes(), Base64.DEFAULT).trim();
+        Log.i("Ayush", "Current hash = " + currentHash);
+
+        //getMd5Hash of music data on storage
+        String hash = "";
+        try {
+            hash = storage.objects().get(BUCKET_NAME, fileName).execute().getMd5Hash().trim();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.i("Ayush", "Server hash = " + hash);
+
+        //compare hash
+        if (currentHash.equals(hash))
+            return false; //hash was same
+
+        Log.i("Ayush", currentHash.compareTo(hash) + " ");
+        //file not present OR old
+        Log.i("Ayush", "File not found, Uploading " + fileName);
+        final ByteArrayInputStream stream = new ByteArrayInputStream(musicData);
+        final InputStreamContent content;
+        content = new InputStreamContent("application/octet-stream", stream);
+
+        MiscUtils.autoRetry(
+                new DoWork<Void>() {
+                    @Override
+                    protected Void doWork() throws IOException {
+
+                        final String uploadedHash = storage.objects().insert(BUCKET_NAME, null, content)
+                                .setName(fileName)
+                                .execute().getMd5Hash();
+
+                        MiscUtils.closeAndIgnore(stream);
+                        Log.i("Ayush", "Upload complete " + uploadedHash);
+                        return null;
+                    }
+                }, Optional.<Predicate<Void>>absent());
+
+        return true;
+    }
 
     private static Optional<Storage> getStorage(InputStream stream) {
 

@@ -5,7 +5,7 @@ import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 
 import reach.backend.Feedback.FeedBack;
-import reach.backend.Music.MusicVisibility;
+import reach.backend.Music.MusicData;
 import reach.backend.Notifications.BecameFriends;
 import reach.backend.Notifications.Like;
 import reach.backend.Notifications.Notification;
@@ -28,7 +28,7 @@ public class OfyService {
         ObjectifyService.register(CompletedOperations.class);
         ObjectifyService.register(SplitMusicContainer.class);
         ObjectifyService.register(MusicSplitter.class);
-        ObjectifyService.register(MusicVisibility.class);
+        ObjectifyService.register(MusicData.class);
         ObjectifyService.register(Notification.class);
 
         ObjectifyService.register(Like.class);

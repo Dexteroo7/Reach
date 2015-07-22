@@ -23,16 +23,18 @@ public class ReachUser {
 
     @Id
     private Long id;
-    private int dirtyCheck = 0; //hashcode for checking dirty values
-    private int numberOfSongs = 0;
     private String phoneNumber = "hello_world";    //UUID
+    private String deviceId = "hello_world";
+
+    private int dirtyCheck = 0; //hashcode for checking dirty values
+
+    private int numberOfSongs = 0;
     private String userName = "hello_world";       //Custom Username, can be changed
     private String imageId = "hello_world";  //User Profile Image
     private String gcmId = "hello_world"; //Gcm Cloud Message Id
-
     private String statusSong = "hello_world"; //Status Song
+
     private String promoCode = "hello_world"; //promo code of user
-    private String deviceId = "hello_world";
     private long megaBytesSent;
     private long megaBytesReceived;
     private long timeCreated;

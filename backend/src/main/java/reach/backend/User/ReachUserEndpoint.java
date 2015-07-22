@@ -65,15 +65,16 @@ public class ReachUserEndpoint {
     /**
      * Use this to sync up the phoneBook, only send those numbers which are not known / are new
      *
-     * @param phoneNumbers list of phoneNumbers
+     * @param contactsWrapper list of phoneNumbers
      * @return list of people on reach
      */
     @ApiMethod(
             name = "phoneBookSync",
             path = "user/phoneBookSync/",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public List<Friend> phoneBookSync(@Named("phoneNumbers") List<String> phoneNumbers) {
+    public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
+        final HashSet<String> phoneNumbers = contactsWrapper.getContacts();
         logger.info(phoneNumbers.size() + " total");
         final List<Friend> friends = new ArrayList<>();
         for (ReachUser user : ofy().load().type(ReachUser.class)
@@ -150,11 +151,11 @@ public class ReachUserEndpoint {
      */
     @ApiMethod(
             name = "quickSync",
-            path = "user/quickSync/",
-            httpMethod = ApiMethod.HttpMethod.GET)
-    public QuickSync quickSync(@Named("ids") List<Long> ids,
-                               @Named("hashes") List<Integer> hashes,
-                               @Named("clientId") final long clientId) {
+            path = "user/quickSync/{clientId}",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public QuickSync quickSync(@Named("clientId") final long clientId,
+                               @Named("ids") List<Long> ids,
+                               @Named("hashes") List<Integer> hashes) {
 
         //sanity checks
         if (clientId == 0 || ids == null || hashes == null)
@@ -182,9 +183,10 @@ public class ReachUserEndpoint {
         final HashSet<Long> myReach = client.getMyReach();
         final HashSet<Long> sentRequests = client.getSentRequests();
         final QueryResultIterable<ReachUser> dirtyCheckQuery = ofy().load().type(ReachUser.class)
-                .filterKey("in", getKeyBuilder(pair.keySet()).build())
+                .filterKey("in", getKeyBuilder(ids).build())
                 .project("dirtyCheck").iterable(); //will load async
         final QueryResultIterable<ReachUser> newIdQuery;
+
         //////////////////////////////////////
         //fill 3 by-default
         for (long id : ids)

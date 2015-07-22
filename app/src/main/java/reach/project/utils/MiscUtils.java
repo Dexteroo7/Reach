@@ -39,10 +39,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -102,6 +102,14 @@ public enum MiscUtils {
                 new Date(seconds));
     }
 
+    public static void closeAndIgnore(Collection... collections) {
+        if (collections == null || collections.length == 0)
+            return;
+        for (Collection collection : collections)
+            if (collection != null)
+                collection.clear();
+    }
+
     public static void closeAndIgnore(Closeable... closeables) {
         for (Closeable closeable : closeables)
             if (closeable != null)
@@ -125,18 +133,9 @@ public enum MiscUtils {
         return "A";
     }
 
-    public static boolean filter(String name) {
-
-        return (name.startsWith("AUD") ||
-                containsIgnoreCase(name, "AudioRecording") ||
-                containsIgnoreCase(name, "AudioTrack") ||
-                containsIgnoreCase(name, "WhatsApp") ||
-                containsIgnoreCase(name, "Recording"));
-    }
-
     public static boolean containsIgnoreCase(CharSequence str, CharSequence searchStr) {
 
-        if (str == null || searchStr == null)
+        if (TextUtils.isEmpty(str) || TextUtils.isEmpty(searchStr))
             return false;
         int len = searchStr.length();
         int max = str.length() - len;
@@ -300,7 +299,7 @@ public enum MiscUtils {
                 new String[]{userId + ""});
     }
 
-    public static void bulkInsertSongs(HashSet<ReachSong> reachSongDatabases,
+    public static void bulkInsertSongs(Set<ReachSong> reachSongDatabases,
                                        Collection<ReachAlbum> reachAlbums,
                                        Collection<ReachArtist> reachArtists,
                                        ContentResolver contentResolver) {
@@ -331,7 +330,7 @@ public enum MiscUtils {
 
     }
 
-    public static void bulkInsertPlayLists(HashSet<ReachPlayList> reachPlayListDatabases,
+    public static void bulkInsertPlayLists(Set<ReachPlayList> reachPlayListDatabases,
                                            ContentResolver contentResolver) {
 
         if (reachPlayListDatabases != null && !reachPlayListDatabases.isEmpty()) {
@@ -346,14 +345,18 @@ public enum MiscUtils {
     }
 
     public static Pair<Collection<ReachAlbum>, Collection<ReachArtist>> getAlbumsAndArtists
-            (HashSet<ReachSong> reachSongs) {
+            (Iterable<ReachSong> reachSongs) {
 
         final Map<String, ReachAlbum> reachAlbumDatabaseHashMap = new HashMap<>();
         final Map<String, ReachArtist> reachArtistDatabaseHashMap = new HashMap<>();
 
         for (ReachSong reachSong : reachSongs) {
 
-            if (reachSong.getAlbum() != null && !reachSong.getAlbum().equals("")) {
+            //don't consider invisible files
+            if(reachSong.getVisibility() == 0)
+                continue;
+
+            if (!TextUtils.isEmpty(reachSong.getAlbum())) {
 
                 final ReachAlbum reachAlbum;
 
@@ -386,7 +389,8 @@ public enum MiscUtils {
             }
         }
         ///////////////////////
-        return new Pair<>(reachAlbumDatabaseHashMap.values(), reachArtistDatabaseHashMap.values());
+        return new Pair<>(reachAlbumDatabaseHashMap.values(),
+                reachArtistDatabaseHashMap.values());
     }
 
     public static void keyCleanUp(SelectionKey selectionKey) {

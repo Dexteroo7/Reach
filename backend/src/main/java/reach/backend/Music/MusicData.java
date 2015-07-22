@@ -14,14 +14,15 @@ import java.util.Map;
 
 @Cache
 @Entity
-public class MusicVisibility {
+public class MusicData {
 
-    //visibility of songs
-    @Serialize(zip = true)
-    Map<Integer, Boolean> visibility = new HashMap<>(500);
     //will be same as ReachUser id
     @Id
     private long id = 0;
+    //visibility of songs
+    @Serialize(zip = true)
+    Map<Integer, Boolean> visibility = new HashMap<>(500);
+
 
     public Map<Integer, Boolean> getVisibility() {
         return visibility;

@@ -100,11 +100,9 @@ import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.DoWork;
-import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.PushContainer;
-import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.TransferSong;
@@ -1064,15 +1062,6 @@ public class ReachActivity extends ActionBarActivity implements
                     final Intent intent = new Intent(activity, MusicScanner.class);
                     intent.putExtra("ReturnNow", false);
                     startService(intent);
-                    if(!StaticData.syncingContacts.get()) {
-                        try {
-                            final QuickSyncFriends.Status status = new QuickSyncFriends(activity, serverId, phoneNumber).call();
-                            if (status == QuickSyncFriends.Status.FULL_SYNC)
-                                new ForceSyncFriends(activity, serverId, phoneNumber).run();
-                        } finally {
-                            StaticData.syncingContacts.set(false);
-                        }
-                    }
                 }
                 //if service is running register callback
             }

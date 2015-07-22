@@ -12,7 +12,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
@@ -142,7 +141,6 @@ public final class StaticData {
     public static final Messaging messagingEndpoint;
     public static final MusicVisibilityApi musicVisibility;
     public static final NotificationApi notificationApi;
-    public static final AtomicBoolean syncingContacts = new AtomicBoolean(false);
 
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
 

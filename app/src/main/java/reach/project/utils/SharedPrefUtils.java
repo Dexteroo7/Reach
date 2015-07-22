@@ -9,6 +9,8 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import java.util.Set;
+
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
@@ -70,9 +72,8 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("phoneNumber", number).apply();
     }
 
-    public static void storeGenres(SharedPreferences.Editor editor, String genres) {
-        editor.putString("genres", genres);
-        editor.apply();
+    public static void storeGenres(SharedPreferences editor, Set<String> genres) {
+        editor.edit().putStringSet("genres", genres).apply();
     }
 
     public static void storeUserName(SharedPreferences editor, String userName) {

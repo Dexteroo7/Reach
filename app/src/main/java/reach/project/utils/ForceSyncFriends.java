@@ -1,7 +1,6 @@
 package reach.project.utils;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.provider.ContactsContract;
@@ -10,13 +9,17 @@ import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
+import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
+import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
@@ -43,14 +46,35 @@ public class ForceSyncFriends implements Runnable {
     @Override
     public void run() {
 
+        final List<Friend> fullSync;
+        final HashSet<String> numbers;
+        final List<String> presentNumbers;
+        final List<ContentValues> values;
+        /**
+         * First we fetch the list of 'KNOWN' friends
+         */
+         fullSync = serverId == 0 ? null : MiscUtils.autoRetry(
+                new DoWork<List<Friend>>() {
+                    @Override
+                    protected List<Friend> doWork() throws IOException {
+                        final FriendCollection collection = StaticData.userEndpoint.longSync(serverId).execute();
+                        if(collection != null && collection.size() > 0)
+                            return collection.getItems();
+                        return null;
+                    }
+                }, Optional.<Predicate<List<Friend>>>absent()).orNull();
+
+
         Activity activity = activityWeakReference.get();
         if (checkDead(activity))
             return;
-        ContentResolver resolver = activity.getContentResolver();
 
-        final List<String> numbers = new ArrayList<>();
-        numbers.add("000000001");
-        final Cursor phoneNumbers = resolver.query(ContactsContract.
+        /**
+         * Now we collect the phoneNumbers on device
+         */
+        numbers = new HashSet<>();
+        numbers.add("8860872102");
+        final Cursor phoneNumbers = activity.getContentResolver().query(ContactsContract.
                 CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         if (phoneNumbers != null) {
 
@@ -71,65 +95,61 @@ public class ForceSyncFriends implements Runnable {
             phoneNumbers.close();
         }
         Log.i("Ayush", "Prepared numbers" + numbers.size());
-        /////phone numbers prepared
-        final List<Friend> fullSync = serverId == 0 ? null : MiscUtils.autoRetry(
-                new DoWork<List<Friend>>() {
-                    @Override
-                    protected List<Friend> doWork() throws IOException {
-                        return StaticData.userEndpoint.longSync(serverId).execute().getItems();
-                    }
-                }, Optional.<Predicate<List<Friend>>>absent()).orNull();
 
-        activity = activityWeakReference.get();
-        if (checkDead(activity))
-            return;
-
-        final List<Friend> newFriends = new ArrayList<>();
-        final List<String> presentNumbers = new ArrayList<>();
+        /**
+         * Now we remove the duplicate numbers and sync phoneBook
+         */
+        presentNumbers = new ArrayList<>();
         if(fullSync != null)
-            newFriends.addAll(fullSync);
-
-        if (newFriends.size() > 0)
-            for (Friend friend : newFriends)
+            for (Friend friend : fullSync)
                 presentNumbers.add(friend.getPhoneNumber());
 
-        Log.i("Ayush", "Duplicate numbers removed");
         //remove all present phoneNumbers and sync phoneBook
         numbers.removeAll(presentNumbers);
         numbers.remove(myNumber);
-        final List<Friend> phoneBookSync = MiscUtils.autoRetry(
+
+        final List<Friend> phoneBookSync = numbers.isEmpty() ? null : MiscUtils.autoRetry(
 
                 new DoWork<List<Friend>>() {
-
+                    final ContactsWrapper wrapper = new ContactsWrapper();
+                    {
+                        Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
+                        wrapper.setContacts(ImmutableList.copyOf(numbers));
+                    }
                     protected List<Friend> doWork() throws IOException {
-                        return StaticData.userEndpoint.phoneBookSync(numbers).execute().getItems();
+                        return StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems();
                     }
                 }, Optional.<Predicate<List<Friend>>>absent()).orNull();
 
         activity = activityWeakReference.get();
         if (checkDead(activity))
             return;
-        resolver = activity.getContentResolver();
 
-        final int size1 = newFriends.size();
+        /**
+         * Finally we insert the received contacts
+         */
+        final int size1 = (fullSync == null) ? 0 : fullSync.size();
         final int size2 = (phoneBookSync == null) ? 0 : phoneBookSync.size();
         Log.i("Ayush", "Sizes " + size1 + " " + size2);
         if (size1 + size2 == 0)
             return;
 
-        final List<ContentValues> values = new ArrayList<>();
+        values = new ArrayList<>();
         if (size1 > 0)
-            for (Friend friend : newFriends) {
-                Log.i("Ayush", friend.getUserName() + friend.getStatus());
+            for (Friend friend : fullSync) {
+                Log.i("Ayush", friend.getUserName() + friend.getStatus() + " " + friend.getId());
                 values.add(ReachFriendsHelper.contentValuesCreator(friend));
             }
         if (size2 > 0)
             for (Friend friend : phoneBookSync) {
-                Log.i("Ayush", friend.getUserName() + friend.getStatus() + " phone book");
+                Log.i("Ayush", friend.getUserName() + friend.getStatus() + " " + friend.getId());
                 values.add(ReachFriendsHelper.contentValuesCreator(friend));
             }
+
         Log.i("Ayush", "Starting insertion");
-        Log.i("Ayush", "Inserting " + resolver.bulkInsert(ReachFriendsProvider.CONTENT_URI,
+        Log.i("Ayush", "Inserting " + activity.getContentResolver().bulkInsert(ReachFriendsProvider.CONTENT_URI,
                 values.toArray(new ContentValues[size1 + size2])));
+
+        MiscUtils.closeAndIgnore(fullSync, numbers, values, presentNumbers);
     }
 }

@@ -5,8 +5,10 @@ import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -16,11 +18,8 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -77,42 +76,77 @@ import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.DoWork;
+import reach.project.utils.ForceSyncFriends;
+import reach.project.utils.ListLoader;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.viewHelpers.Contact;
 
-public class ContactsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener, SearchView.OnCloseListener {
+public class ContactsListFragment extends Fragment implements SearchView.OnQueryTextListener, SearchView.OnCloseListener {
 
-    private ListView listView;
-    private View rootView;
-    private SearchView searchView;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private FloatingActionButton actionButton;
+    private TextView notificationCount;
+    private SearchView searchView;
+
     private SharedPreferences sharedPrefs;
+    private SuperInterface mListener;
+    private ListLoader listLoader;
+
     private MergeAdapter mergeAdapter;
-    private ReachContactsAdapter reachContactsAdapter = null;
-    private ReachAllContactsAdapter adapter = null;
+    private ReachContactsAdapter reachContactsAdapter;
+    private ReachAllContactsAdapter adapter;
+
+    public static final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
+    private final AtomicBoolean pinging = new AtomicBoolean(false);
     private final HashSet<String> inviteSentTo = new HashSet<>();
     private final String inviteKey = "invite_sent";
-    private ProgressBar loading;
-    private TextView emptyTV1, emptyTV2, notificationCount;
-
-    private SuperInterface mListener;
     private String mCurFilter, selection;
     private String[] selectionArguments;
     private long serverId;
-    private final AtomicBoolean pinging = new AtomicBoolean(false);
-    public static final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
-    private ScaleAnimation translation;
 
     public static void setNotificationCount(int count) {
         final ContactsListFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
+        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
             return;
         fragment.notificationCount.setText("" + count);
     }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+
+        super.onCreate(savedInstanceState);
+        mListener.setUpDrawer();
+        mListener.toggleDrawer(false);
+        mListener.toggleSliding(true);
+        /*if (getArguments().getBoolean("first", false))
+            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
+        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        serverId = SharedPrefUtils.getServerId(sharedPrefs);
+        /**
+         * Invalidate everyone
+         */
+        final ContentValues contentValues = new ContentValues();
+        contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis() + 31 * 1000);
+        contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+        contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
+        getActivity().getContentResolver().update(
+                ReachFriendsProvider.CONTENT_URI,
+                contentValues,
+                ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""});
+        contentValues.clear();
+        StaticData.networkCache.clear();
+    }
+    
+    private final View.OnClickListener openNotification = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListener.onOpenNotificationDrawer();
+        }
+    };
 
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
 
@@ -132,7 +166,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
 
 
                     isMusicFetching.append(id, StaticData.threadPool.submit(new GetMusic(id,
-                            getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS))));
+                            sharedPrefs)));
                     //Inform only when nece ssary
                     if (status < 2 && cursor.getInt(7) == 0)
                         Toast.makeText(getActivity(), "Refreshing music list", Toast.LENGTH_SHORT).show();
@@ -148,7 +182,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
 
                 final Contact contact = (Contact) object;
                 if (contact.isInviteSent()) return;
-                String msg = "Hey! Checkout and download m y  phone music collection with just  a click!" + ".\nhttp://letsreach.co/app\n--\n" + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                String msg = "Hey! Checkout and download m y  phone music collection with just  a click!" + ".\nhttp://letsreach.co/app\n--\n" + SharedPrefUtils.getUserName(sharedPrefs);
                 final EditText input = new EditText(getActivity());
                 input.setBackgroundResource(0);
                 input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
@@ -224,10 +258,10 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         public void onScroll(AbsListView view, int firstVisibleItem,
                              int visibleItemCount, int totalItemCount) {
             boolean enable = false;
-            if (listView.getChildCount() > 0) {
+            if (view.getChildCount() > 0) {
 
-                final boolean firstItemVisible = listView.getFirstVisiblePosition() == 0;
-                final boolean topOfFirstItemVisible = listView.getChildAt(0).getTop() == 0;
+                final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
+                final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
                 enable = firstItemVisible && topOfFirstItemVisible;
             }
             swipeRefreshLayout.setEnabled(enable);
@@ -239,9 +273,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             mListener.onOpenPushLibrary();
         }
     };
-
-    public ContactsListFragment() {
-    }
 
     private static WeakReference<ContactsListFragment> reference = null;
 
@@ -263,75 +294,10 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         return fragment;
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-        mListener.setUpDrawer();
-        mListener.toggleDrawer(false);
-        mListener.toggleSliding(true);
-        /*if (getArguments().getBoolean("first", false))
-            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-
-        serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-        /**
-         * Invalidate everyone
-         */
-        final ContentValues contentValues = new ContentValues();
-        contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis() + 31 * 1000);
-        contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-        contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-        getActivity().getContentResolver().update(
-                ReachFriendsProvider.CONTENT_URI,
-                contentValues,
-                ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""});
-        contentValues.clear();
-        StaticData.networkCache.clear();
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-
-        return new CursorLoader(getActivity(),
-                ReachFriendsProvider.CONTENT_URI,
-                ReachFriendsHelper.projection,
-                selection,
-                selectionArguments,
-                ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-
-        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
-
-            if (cursor.getCount() > 0) {
-
-                if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
-                    StaticData.threadPool.execute(devika1);
-                    SharedPrefUtils.setFirstIntroSeen(sharedPrefs.edit());
-                }
-                mergeAdapter.setActive(loading, false);
-                mergeAdapter.setActive(emptyTV1, false);
-                actionButton.setVisibility(View.VISIBLE);
-                if (!translation.hasStarted())
-                    actionButton.startAnimation(translation);
-            } else
-                actionButton.setVisibility(View.GONE);
-            reachContactsAdapter.swapCursor(cursor);
-
-            if (!StaticData.syncingContacts.get() && cursor.getCount() == 0) {
-
-                Log.i("Downloader", "LOADING EMPTY VIEW ON LOAD FINISHED");
-                mergeAdapter.setActive(emptyTV1, true);
-            }
-        }
-    }
-
     private final Runnable devika1 = new Runnable() {
         @Override
         public void run() {
+
             if (getActivity() == null)
                 return;
             Bitmap bmp = null;
@@ -372,14 +338,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     };
 
     @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER) {
-            reachContactsAdapter.swapCursor(null);
-            actionButton.setVisibility(View.GONE);
-        }
-    }
-
-    @Override
     public void onDestroyView() {
 
         getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
@@ -391,13 +349,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             adapter.cleanUp();
 
         sharedPrefs.edit().putStringSet(inviteKey, inviteSentTo).apply();
-
         swipeRefreshLayout.setOnRefreshListener(null);
-        listView.setOnItemClickListener(null);
         //listView.setOnScrollListener(null);
 
-        actionButton = null;
-        rootView = null;
         if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
@@ -407,7 +361,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         }
 
         searchView = null;
-        listView = null;
         swipeRefreshLayout = null;
         super.onDestroyView();
     }
@@ -415,20 +368,23 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        if (serverId == 0)
+            return rootView;
+
         final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
             actionBar.setTitle("My Reach");
             mListener.setUpNavigationViews();
         }
-        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+
         inviteSentTo.clear();
         inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<String>()));
         /**
          * All cursor operations should be background, else lag
          */
-        translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        final ScaleAnimation translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
         translation.setDuration(1000);
         translation.setInterpolator(new BounceInterpolator());
 
@@ -436,22 +392,18 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0);
         selection = null;
         selectionArguments = null;
-
-        if (serverId == 0)
-            return rootView;
-
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
         swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_blue));
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(refreshListener);
 
-        listView = (ListView) rootView.findViewById(R.id.contactsList);
+        final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
         listView.setDivider(null);
         listView.setDividerHeight(0);
         listView.setOnItemClickListener(clickListener);
         mergeAdapter = new MergeAdapter();
 
-        TextView textView = new TextView(getActivity());
+        final TextView textView = new TextView(getActivity());
         textView.setText("Friends on Reach");
         textView.setTextColor(getResources().getColor(R.color.reach_color));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
@@ -459,13 +411,13 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(10));
         mergeAdapter.addView(textView);
 
-        loading = new ProgressBar(getActivity());
+        final ProgressBar loading = new ProgressBar(getActivity());
         loading.setIndeterminate(true);
         loading.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
         mergeAdapter.addView(loading);
         mergeAdapter.addAdapter(reachContactsAdapter);
 
-        emptyTV1 = new TextView(getActivity());
+        final TextView emptyTV1 = new TextView(getActivity());
         emptyTV1.setText("No friends found");
         emptyTV1.setTextColor(getResources().getColor(R.color.darkgrey));
         emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
@@ -474,7 +426,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         mergeAdapter.addView(emptyTV1, false);
         mergeAdapter.setActive(emptyTV1, false);
 
-        TextView textView2 = new TextView(getActivity());
+        final TextView textView2 = new TextView(getActivity());
         textView2.setText("Invite Friends");
         textView2.setTextColor(getResources().getColor(R.color.reach_color));
         textView2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
@@ -482,7 +434,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         textView2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
         mergeAdapter.addView(textView2);
 
-        emptyTV2 = new TextView(getActivity());
+        final TextView emptyTV2 = new TextView(getActivity());
         emptyTV2.setText("No contacts found");
         emptyTV2.setTextColor(getResources().getColor(R.color.darkgrey));
         emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
@@ -491,7 +443,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         mergeAdapter.addView(emptyTV2, false);
         mergeAdapter.setActive(emptyTV2, false);
 
-        actionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        final FloatingActionButton actionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
         actionButton.attachToListView(listView, null, scrollListener);
         actionButton.setOnClickListener(pushLibraryListener);
 
@@ -501,12 +453,80 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             new SendPing().executeOnExecutor(StaticData.threadPool);
         }
 
-        new InitializeData().executeOnExecutor(StaticData.threadPool);
-        getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
+        final Activity activity = getActivity();
+        final String phoneNumber = SharedPrefUtils.getUserNumber(activity.getSharedPreferences("reach_process", Context.MODE_MULTI_PROCESS));
+
+        new InitializeData(emptyTV2).executeOnExecutor(StaticData.threadPool);
+
+        listLoader = new ListLoader(activity, StaticData.FRIENDS_LOADER) {
+
+            @Override
+            public void showEmptyView() {
+                mergeAdapter.setActive(emptyTV1, true);
+                mergeAdapter.setActive(loading, false);
+            }
+
+            @Override
+            public void showLoader() {
+                mergeAdapter.setActive(emptyTV1, false);
+                mergeAdapter.setActive(loading, true);
+            }
+
+            @Override
+            public void onLoaderReset() {
+                reachContactsAdapter.swapCursor(null);
+                actionButton.setVisibility(View.GONE);
+            }
+
+            @Override
+            public Loader<Cursor> onCreateLoader() {
+
+                return new CursorLoader(activity,
+                        ReachFriendsProvider.CONTENT_URI,
+                        ReachFriendsHelper.projection,
+                        selection,
+                        selectionArguments,
+                        ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+            }
+
+            @Override
+            public void onLoaded(Cursor data, int count) {
+
+                mergeAdapter.setActive(emptyTV1, false);
+                mergeAdapter.setActive(loading, false);
+                //count > 0 always
+                if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
+                    StaticData.threadPool.execute(devika1);
+                    SharedPrefUtils.setFirstIntroSeen(sharedPrefs.edit());
+                }
+                actionButton.setVisibility(View.VISIBLE);
+                if (!translation.hasStarted())
+                    actionButton.startAnimation(translation);
+                reachContactsAdapter.swapCursor(data);
+            }
+
+            @Override
+            public void doWork() {
+
+                final QuickSyncFriends.Status status = new QuickSyncFriends(activity, serverId, phoneNumber).call();
+                if (status == QuickSyncFriends.Status.FULL_SYNC)
+                    new ForceSyncFriends(activity, serverId, phoneNumber).run();
+            }
+        };
+
+        listView.setAdapter(mergeAdapter);
+        StaticData.threadPool.submit(listLoader);
+        listLoader.startLoader();
         return rootView;
     }
 
     private class InitializeData extends AsyncTask<Void, String, Boolean> {
+
+        private final TextView emptyView;
+
+        private InitializeData(TextView emptyView) {
+            this.emptyView = emptyView;
+        }
 
         @Override
         protected Boolean doInBackground(Void... params) {
@@ -553,12 +573,12 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             adapter.setOnEmptyContactsListener(new ReachAllContactsAdapter.OnEmptyContactsListener() {
                 @Override
                 public void onEmptyContacts() {
-                    mergeAdapter.setActive(emptyTV2, true);
+                    mergeAdapter.setActive(emptyView, true);
                 }
 
                 @Override
                 public void onNotEmptyContacts() {
-                    mergeAdapter.setActive(emptyTV2, false);
+                    mergeAdapter.setActive(emptyView, false);
                 }
             });
             return true;
@@ -568,16 +588,14 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         protected void onPostExecute(Boolean gg) {
             super.onPostExecute(gg);
 
-            if (isCancelled() || getActivity() == null || getActivity().isFinishing() || listView == null)
+            if (isCancelled() || getActivity() == null || getActivity().isFinishing())
                 return;
 
             if (gg) {
-                mergeAdapter.setActive(emptyTV2, false);
+                mergeAdapter.setActive(emptyView, false);
                 mergeAdapter.addAdapter(adapter);
-                listView.setAdapter(mergeAdapter);
             } else {
-                mergeAdapter.setActive(emptyTV2, true);
-                MiscUtils.setEmptyTextforListView(listView, "No contacts found");
+                mergeAdapter.setActive(emptyView, true);
                 Toast.makeText(getActivity(), "No contacts found", Toast.LENGTH_SHORT).show();
             }
         }
@@ -591,7 +609,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             adapter.getFilter().filter(null);
         selection = null;
         selectionArguments = null;
-        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+       listLoader.restartLoader();
         return false;
     }
 
@@ -609,9 +627,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         if (adapter != null)
             adapter.getFilter().filter(newText);
 
-// Called when the action bar search text has changed.  Update
-// the search filter, and restart the loader to do a new query
-// with this filter.
+        // Called when the action bar search text has changed.  Update
+        // the search filter, and restart the loader to do a new query
+        // with this filter.
         final String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
         // Don't do anything if the filter hasn't actually changed.
         // Prevents restarting the loader when restoring state.
@@ -630,7 +648,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             selection = ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
             selectionArguments = new String[]{"%" + mCurFilter + "%"};
         }
-        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+        listLoader.restartLoader();
         return true;
     }
 
@@ -645,33 +663,36 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
                     return StaticData.userEndpoint.pingMyReach(serverId).execute();
                 }
             }, Optional.<Predicate<MyString>>absent()).orNull();
-            if (isCancelled() || getActivity() == null || getActivity().isFinishing() || swipeRefreshLayout == null)
+
+            final Activity activity = getActivity();
+            if (isCancelled() || activity == null || activity.isFinishing())
                 return null;
             /**
              * Invalidate those who were online 30 secs ago
              * and send PING
              */
+            final long currentTime = System.currentTimeMillis();
             final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis() + 31 * 1000);
+            contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, currentTime + 31 * 1000);
             contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
             contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-            getActivity().getContentResolver().update(
+            activity.getContentResolver().update(
                     ReachFriendsProvider.CONTENT_URI,
                     contentValues,
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (System.currentTimeMillis() - 30 * 1000) + ""});
+                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + ""});
             contentValues.clear();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
+
             super.onPostExecute(aVoid);
             pinging.set(false);
-            if (isCancelled() || getActivity() == null || getActivity().isFinishing() || swipeRefreshLayout == null)
-                return;
-            swipeRefreshLayout.setRefreshing(false);
+            if (swipeRefreshLayout != null)
+                swipeRefreshLayout.setRefreshing(false);
         }
     }
 
@@ -680,7 +701,8 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         private final long hostId;
         private final SharedPreferences sharedPreferences;
 
-        private GetMusic(long hostId, SharedPreferences sharedPreferences) {
+        private GetMusic(long hostId,
+                         SharedPreferences sharedPreferences) {
             this.hostId = hostId;
             this.sharedPreferences = sharedPreferences;
         }
@@ -754,14 +776,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
 
         if (menu == null || inflater == null)
             return;
-
         menu.clear();
+
         inflater.inflate(R.menu.myreach_menu, menu);
-        searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-        if (searchView == null)
-            return;
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
 
         final MenuItem notificationButton = menu.findItem(R.id.notif_button);
         if (notificationButton == null)
@@ -769,14 +786,15 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         notificationButton.setActionView(R.layout.reach_queue_counter);
 
         final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
-        notificationContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListener.onOpenNotificationDrawer();
-            }
-        });
+        notificationContainer.setOnClickListener(openNotification);
         notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
         notificationCount.setText("0");
+
+        searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
+        if (searchView == null)
+            return;
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
     }
 
     @Override
