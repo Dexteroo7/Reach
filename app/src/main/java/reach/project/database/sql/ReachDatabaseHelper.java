@@ -26,7 +26,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
     public static final String COLUMN_SENDER_NAME = "localIp";
     public static final String COLUMN_ONLINE_STATUS = "localPort";
-    public static final String COLUMN_NETWORK_TYPE = "globalIp";
+    public static final String COLUMN_ARTIST_NAME = "globalIp";
     public static final String COLUMN_IS_LIKED = "globalPort";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName";
@@ -36,7 +36,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PROCESSED = "processed";
     public static final String COLUMN_ADDED = "added";
     public static final String COLUMN_LOGICAL_CLOCK = "logicalClock";
-    public static final String COLUMN_LAST_ACTIVE = "lastActive";
+    public static final String COLUMN_ACTIVATED = "lastActive";
     public static final String COLUMN_STATUS = "status";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachDatabaseHelper";
@@ -56,7 +56,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
             COLUMN_SENDER_NAME + " text" + "," +
             COLUMN_ONLINE_STATUS + " text" + "," +
-            COLUMN_NETWORK_TYPE + " text" + "," +
+            COLUMN_ARTIST_NAME + " text" + "," +
             COLUMN_IS_LIKED + " text" + "," +
 
             COLUMN_DISPLAY_NAME + " text" + "," +
@@ -65,7 +65,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_LENGTH + " long" + "," +
             COLUMN_PROCESSED + " long" + "," +
             COLUMN_ADDED + " long" + "," +
-            COLUMN_LAST_ACTIVE + " long" + "," +
+            COLUMN_ACTIVATED + " long" + "," +
 
             COLUMN_LOGICAL_CLOCK + " short" + "," +
             COLUMN_STATUS + " short" + " )";
@@ -82,7 +82,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     COLUMN_PATH,
                     COLUMN_SENDER_NAME,
                     COLUMN_ONLINE_STATUS,
-                    COLUMN_NETWORK_TYPE,
+                    COLUMN_ARTIST_NAME,
                     COLUMN_IS_LIKED,
                     //strings
                     COLUMN_DISPLAY_NAME,
@@ -91,7 +91,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     COLUMN_LENGTH,
                     COLUMN_PROCESSED,
                     COLUMN_ADDED,
-                    COLUMN_LAST_ACTIVE,
+                    COLUMN_ACTIVATED,
                     //shorts
                     COLUMN_LOGICAL_CLOCK,
                     COLUMN_STATUS,

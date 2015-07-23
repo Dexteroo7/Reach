@@ -69,7 +69,6 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
  * Created by dexter on 1/10/14.
  */
 
-//TODO fix nonsense string wraps
 public enum MiscUtils {
     ;
 
@@ -81,9 +80,9 @@ public enum MiscUtils {
                 - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
         final long hours = TimeUnit.MILLISECONDS.toHours(millis);
 
-        final String toSend = (hours == 0 ? "00" : hours < 10 ? hours : hours) + ":" +
-                (minutes == 0 ? "00" : minutes < 10 ? minutes : minutes) + ":" +
-                (seconds == 0 ? "00" : seconds < 10 ? seconds : seconds);
+        final String toSend = (hours == 0 ? "00" : hours < 10 ? "0"+hours : hours) + ":" +
+                (minutes == 0 ? "00" : minutes < 10 ? "0"+minutes : minutes) + ":" +
+                (seconds == 0 ? "00" : seconds < 10 ? "0"+seconds : seconds);
 
         return toSend.startsWith("00:") ? toSend.substring(3) : toSend;
     }
@@ -578,10 +577,6 @@ public enum MiscUtils {
     public static String getMusicStorageKey(long serverId) {
 
         return serverId + "MUSIC";
-    }
-
-    public static String getHistoryStoragekey(long serverId) {
-        return serverId + "HISTORY";
     }
 
     /**

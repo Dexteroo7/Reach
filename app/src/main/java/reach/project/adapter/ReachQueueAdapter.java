@@ -156,10 +156,7 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                /**
-                                 * Can not remove from memory cache just yet, because some operation might be underway
-                                 * in connection manager
-                                 */
+
                                 Log.i("Downloader", "Deleting " +
                                         id + " " +
                                         context.getContentResolver().delete(

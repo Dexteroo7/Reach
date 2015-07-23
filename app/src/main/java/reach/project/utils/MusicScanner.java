@@ -96,7 +96,6 @@ public class MusicScanner extends IntentService {
         final File[] directories = new File[]{
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
         };
 
@@ -172,10 +171,12 @@ public class MusicScanner extends IntentService {
             reachSongDatabase.setDisplayName(displayName);
             reachSongDatabase.setActualName(actualName);
 
+            Log.i("Ayush", reachSongDatabase.getDisplayName());
+
             final String correctPath = verifyPath(unverifiedPath, actualName, verifiedMusicPaths);
-            if (TextUtils.isEmpty(correctPath)) {
+            if (TextUtils.isEmpty(correctPath))
                 continue;
-            }
+
             reachSongDatabase.setPath(correctPath);
 
             if (music_column_artist != -1) {
@@ -273,6 +274,8 @@ public class MusicScanner extends IntentService {
 
         if (file.exists() && file.isFile() && file.length() > 0)
             return path; //file is OK
+
+        Log.i("Ayush", path + " invalid");
 
         //file not OK
         path = "";
@@ -599,6 +602,8 @@ public class MusicScanner extends IntentService {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(music.length);
         GZIPOutputStream gzipOutputStream = null;
 
+
+
         try {
             
             gzipOutputStream = new GZIPOutputStream(outputStream);
@@ -615,12 +620,11 @@ public class MusicScanner extends IntentService {
 
         Log.i("Ayush", "Compression ratio " + (compressedMusic.length * 100) / music.length);
 
-        InputStream key = null;
+        final InputStream key;
         try {
             key = getAssets().open("key.p12");
         } catch (IOException e) {
             e.printStackTrace();
-            MiscUtils.closeAndIgnore(key);
             return true;
         }
 

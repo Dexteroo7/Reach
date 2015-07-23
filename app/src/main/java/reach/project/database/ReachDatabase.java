@@ -9,39 +9,61 @@ public class ReachDatabase {
     private long songId = 0;
     private long receiverId = 0;
     private long senderId = 0;
-    private short operationKind = 0; //0 = download, 1 = upload
 
     private String path = "hello_world";
     private String senderName = "hello_world";
     private String onlineStatus = "hello_world";
-    private String networkType = "hello_world";
-    private String isLiked = "hello_world";
+    private String artistName = "hello_world";
     private String displayName = "hello_world";
     private String actualName = "hello_world";
+
+    private boolean isLiked = false;
+    private boolean isActivated = false;
 
     private long length = 0;
     private long processed = 0;
     private long added = 0;
     private long lastActive = 0;
 
+    private short operationKind = 0; //0 = download, 1 = upload
     private short logicalClock = 0;
     private short status = 0;
 
-    public String getIsLiked() {
+    //types of status
+    public static final short NOT_WORKING = 0;
+    public static final short WORKING = 1;
+    public static final short RELAY = 2;
+    public static final short FINISHED = 3;
+    public static final short GCM_FAILED = 4;        //only applicable for download
+    public static final short FILE_NOT_FOUND = 5;    //404 from host
+    public static final short FILE_NOT_CREATED = 6;  //weird error
+    public static final short PAUSED_BY_USER = 7;    //paused by client
+    public static final short PAUSED_BY_HOST = 8;    //paused by host
+
+    public boolean isActivated() {
+        return isActivated;
+    }
+
+    public void setIsActivated(boolean isActivated) {
+        this.isActivated = isActivated;
+    }
+
+    public boolean isLiked() {
         return isLiked;
     }
 
-    public void setIsLiked(String isLiked) {
+    public void setIsLiked(boolean isLiked) {
         this.isLiked = isLiked;
     }
 
-    public String getNetworkType() {
-        return networkType;
+    public String getArtistName() {
+        return artistName;
     }
 
-    public void setNetworkType(String networkType) {
-        this.networkType = networkType;
+    public void setArtistName(String artistName) {
+        this.artistName = artistName;
     }
+
 
     public String getOnlineStatus() {
         return onlineStatus;
@@ -58,15 +80,6 @@ public class ReachDatabase {
     public void setSenderName(String senderName) {
         this.senderName = senderName;
     }
-
-    public static final short NOT_WORKING = 0;
-    public static final short WORKING = 1;
-    public static final short RELAY = 2;
-    public static final short FINISHED = 3;
-    public static final short GCM_FAILED = 4;        //only applicable for download
-    public static final short FILE_NOT_FOUND = 5;    //only applicable for download, sent by uploader
-    public static final short FILE_NOT_CREATED = 6;  //only applicable for download
-    public static final short PAUSED_BY_USER = 7;
 
     public long getId() {
         return id;
