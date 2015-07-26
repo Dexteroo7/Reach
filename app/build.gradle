@@ -43,15 +43,13 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.1'
     compile 'com.android.support:support-v4:22.2.1'
     compile 'com.android.support:cardview-v7:22.2.1'
-
+    compile 'com.android.support:design:22.2.1'
     ////meant for release
     compile 'com.android.support:multidex:1.0.1'
-
     // non-google stuff
     compile 'com.crittercism:crittercism-android-agent:5.0.6'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
-
     // to remove
     compile 'com.viewpagerindicator:library:2.4.1'
     compile 'com.melnykov:floatingactionbutton:1.3.0'
