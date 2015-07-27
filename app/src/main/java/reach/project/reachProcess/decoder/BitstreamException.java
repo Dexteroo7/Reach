@@ -21,8 +21,8 @@
 package reach.project.reachProcess.decoder;
 
 /**
- * Instances of <code>BitstreamException</code> are thrown
- * when operations on a <code>Bitstream</code> fail.
+ * Instances of <code>BitStreamException</code> are thrown
+ * when operations on a <code>BitStream</code> fail.
  * <p>
  * The exception provides details of the exception condition
  * in two ways:
@@ -37,15 +37,15 @@ package reach.project.reachProcess.decoder;
  * @since 0.0.6
  */
 
-public class BitstreamException extends JavaLayerException
+public class BitStreamException extends JavaLayerException
         implements BitstreamErrors {
     private int errorcode = UNKNOWN_ERROR;
 
-    public BitstreamException(String msg, Throwable t) {
+    public BitStreamException(String msg, Throwable t) {
         super(msg, t);
     }
 
-    public BitstreamException(int errorcode, Throwable t) {
+    public BitStreamException(int errorcode, Throwable t) {
         this(getErrorString(errorcode), t);
         this.errorcode = errorcode;
     }
@@ -59,7 +59,7 @@ public class BitstreamException extends JavaLayerException
         // REVIEW: use resource bundle to map error codes
         // to locale-sensitive strings.
 
-        return "Bitstream errorcode " + Integer.toHexString(errorcode);
+        return "BitStream errorcode " + Integer.toHexString(errorcode);
     }
 
 

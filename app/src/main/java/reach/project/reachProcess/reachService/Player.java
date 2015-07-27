@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import reach.project.reachProcess.decoder.Bitstream;
-import reach.project.reachProcess.decoder.BitstreamException;
+import reach.project.reachProcess.decoder.BitStream;
+import reach.project.reachProcess.decoder.BitStreamException;
 import reach.project.reachProcess.decoder.Decoder;
 import reach.project.reachProcess.decoder.DecoderException;
 import reach.project.reachProcess.decoder.Header;
@@ -45,6 +45,7 @@ public class Player {
                     .setNamePrefix("reach_decoder")
                     .setPriority(Thread.MAX_PRIORITY)
                     .build());
+
     private final AtomicBoolean stopDecoding = new AtomicBoolean(true), pauseDecoding = new AtomicBoolean(false);
     private final DecoderHandler handlerInterface;
     private WhichPlayer whichPlayer = WhichPlayer.MediaPlayer;
@@ -144,33 +145,33 @@ public class Player {
         else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
     }
 
-//    /**
-//         * @param data the bytes to be fed
-//         * @return true : successfully fed the data
-//         * false : some error occurred
-//         */
-//        public boolean feedData(short[] data) {
-//
-//            final int result = audioTrack.write(data, 0, data.length);
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-//                return resultAnalyzeNew(result);
-//            else
-//                return resultAnalyzeOld(result);
-//        }
-//
-//        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-//        private boolean resultAnalyzeNew(int result) {
-//            return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
-//                    result == AudioTrack.ERROR_BAD_VALUE || //-2
-//                    result == AudioTrack.ERROR || //-1
-//                    result == AudioManager.ERROR_DEAD_OBJECT); //-6
-//        }
-//
-//    private boolean resultAnalyzeOld(int result) {
-//        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
-//                result == AudioTrack.ERROR_BAD_VALUE || //-2
-//                result == AudioTrack.ERROR); //-1
-//    }
+    /**
+     * @param data the bytes to be fed
+     * @return true : successfully fed the data
+     * false : some error occurred
+     */
+    public boolean feedData(short[] data) {
+
+        final int result = audioTrack.write(data, 0, data.length);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            return resultAnalyzeNew(result);
+        else
+            return resultAnalyzeOld(result);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private boolean resultAnalyzeNew(int result) {
+        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
+                result == AudioTrack.ERROR_BAD_VALUE || //-2
+                result == AudioTrack.ERROR || //-1
+                result == AudioManager.ERROR_DEAD_OBJECT); //-6
+    }
+
+    private boolean resultAnalyzeOld(int result) {
+        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
+                result == AudioTrack.ERROR_BAD_VALUE || //-2
+                result == AudioTrack.ERROR); //-1
+    }
 
     public void cleanUp() {
 
@@ -184,9 +185,9 @@ public class Player {
         decoderService.shutdownNow();
     }
 
-    int createMediaPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
-                                  MediaPlayer.OnErrorListener onErrorListener,
-                                  String path) throws IOException, InterruptedException {
+    protected int createMediaPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
+                                            MediaPlayer.OnErrorListener onErrorListener,
+                                            String path) throws IOException, InterruptedException {
 
         reset();
         whichPlayer = WhichPlayer.MediaPlayer;
@@ -202,7 +203,7 @@ public class Player {
         return mediaPlayer.getDuration();
     }
 
-    int createAudioTrackIfNeeded(Optional<String> path, long contentLength) throws IOException, InterruptedException {
+    protected int createAudioTrackIfNeeded(Optional<String> path, long contentLength) throws IOException, InterruptedException {
 
         reset();
         whichPlayer = WhichPlayer.AudioTrack;
@@ -211,36 +212,38 @@ public class Player {
             throw new IOException("Given path is invalid");
 
         final InputStream source = new FileInputStream(path.get());
-        final Bitstream bitstream = new Bitstream(source);
+        final BitStream bitStream = new BitStream(source);
         final Header frameHeader;
 
         final Future<Header> getHeader = decoderService.submit(new Callable<Header>() {
             @Override
-            public Header call() throws BitstreamException, InterruptedException {
+            public Header call() throws BitStreamException, InterruptedException {
                 //safety check for mp3 frame size
                 while (handlerInterface.getProcessed() < 3000) {
                     Log.i("Downloader", "Waiting for minimum buffer");
                     Thread.sleep(3000L);
                 }
-                return bitstream.readFrame();
+                return bitStream.readFrame();
             }
         });
 
         try {
+            //caller should handle InterruptedException
             frameHeader = getHeader.get(5, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException e) {
+
             e.printStackTrace();
             try {
-                bitstream.close();
-            } catch (BitstreamException ignored) {}
-            throw new IOException("Probably corrupt file, header fetch timed out");
+                bitStream.close(); //closes source
+            } catch (BitStreamException ignored) {
+            }
+            throw new IOException("Probably corrupt file : header fetch timed out, " + e.getLocalizedMessage());
         } finally {
             getHeader.cancel(true);
         }
 
         if (frameHeader == null)
-
-           throw new IOException("Probably corrupt file, null frameHeader");
+            throw new IOException("Probably corrupt file : null frameHeader");
 
         final int duration = (int) frameHeader.total_ms((int) contentLength);
         final int sampleFrequency = frameHeader.frequency();
@@ -263,12 +266,13 @@ public class Player {
                     AudioTrack.MODE_STREAM);
         }
 
+        decodeFuture = decoderService.submit(new Decode(bitStream, frameHeader, contentLength, mono, sampleFrequency * 2));
+
         //half fill with zeroes
         final byte[] zeroes = new byte[sampleFrequency];
         Arrays.fill(zeroes, 0, zeroes.length, (byte) 0);
         audioTrack.write(zeroes, 0, zeroes.length);
 
-        decodeFuture = decoderService.submit(new Decode(bitstream, frameHeader, contentLength, mono, sampleFrequency * 2));
         return duration;
     }
 
@@ -291,14 +295,14 @@ public class Player {
     private final class Decode implements Runnable {
 
         private final short[] buffer;
-        private final Bitstream bitstream;
+        private final BitStream bitStream;
         private final long contentLength;
         private final boolean mono;
         private Header frameHeader;
         private int limit = 0;
 
-        public Decode(Bitstream bitstream, Header frameHeader, long contentLength, boolean mono, int bufferSize) {
-            this.bitstream = bitstream;
+        public Decode(BitStream bitStream, Header frameHeader, long contentLength, boolean mono, int bufferSize) {
+            this.bitStream = bitStream;
             this.contentLength = contentLength;
             this.frameHeader = frameHeader;
             this.mono = mono;
@@ -325,9 +329,10 @@ public class Player {
         }
 
         private boolean flush() {
-            if(limit > 0) {
+            if (limit > 0) {
                 Log.i("Downloader", "Flushing " + limit);
                 audioTrack.write(buffer, 0, limit);
+                Log.i("Downloader", "Flushed");
                 limit = 0;
                 return true;
             }
@@ -356,18 +361,17 @@ public class Player {
 
                 short[] toFeed = null;
                 try {
-                    toFeed = ((SampleBuffer) decoder.decodeFrame(frameHeader, bitstream)).getBuffer();
-                } catch (DecoderException e) {
-                    e.printStackTrace();
+                    toFeed = ((SampleBuffer) decoder.decodeFrame(frameHeader, bitStream)).getBuffer();
+                } catch (DecoderException ignored) {
+                    //ignore frame
                 } finally {
 
                     if (toFeed != null && toFeed.length > 0)
                         buffer(toFeed);
                     else
                         Log.i("Downloader", "could not feed");
-                    bitstream.closeFrame();
+                    bitStream.closeFrame();
                 }
-
 
                 while (transferred + 3000 >= count && count != contentLength && !stopDecoding.get()) {
 
@@ -375,7 +379,7 @@ public class Player {
                     final short progress = (short) ((count * 100) / contentLength);
                     if (progress > lastProgress)
                         handlerInterface.updateSecondaryProgress(progress);
-                    if(transferred + 3000 >= count && count != contentLength) {
+                    if (transferred + 3000 >= count && count != contentLength) {
                         Log.i("Downloader", "PAUSING DECODER");
                         pause();
                     }
@@ -383,14 +387,15 @@ public class Player {
                 }
 
                 try {
-                    frameHeader = bitstream.readFrame();
-                } catch (BitstreamException e) {
+                    frameHeader = bitStream.readFrame();
+                } catch (BitStreamException e) {
                     e.printStackTrace();
                     frameHeader = null;
                 }
+
                 if (frameHeader == null) {
 
-                    if(flush())
+                    if (flush())
                         try {
                             Thread.sleep(500L); //wait for the flush to be played
                         } catch (InterruptedException e) {
@@ -405,9 +410,8 @@ public class Player {
             }
 
             try {
-                bitstream.close();
-            } catch (BitstreamException e) {
-                e.printStackTrace();
+                bitStream.close();
+            } catch (BitStreamException ignored) {
             }
         }
     }

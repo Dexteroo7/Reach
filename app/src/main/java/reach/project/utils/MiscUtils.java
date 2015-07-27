@@ -80,9 +80,9 @@ public enum MiscUtils {
                 - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis));
         final long hours = TimeUnit.MILLISECONDS.toHours(millis);
 
-        final String toSend = (hours == 0 ? "00" : hours < 10 ? "0"+hours : hours) + ":" +
-                (minutes == 0 ? "00" : minutes < 10 ? "0"+minutes : minutes) + ":" +
-                (seconds == 0 ? "00" : seconds < 10 ? "0"+seconds : seconds);
+        final String toSend = (hours == 0 ? "00" : hours < 10 ? "0" + hours : hours) + ":" +
+                (minutes == 0 ? "00" : minutes < 10 ? "0" + minutes : minutes) + ":" +
+                (seconds == 0 ? "00" : seconds < 10 ? "0" + seconds : seconds);
 
         return toSend.startsWith("00:") ? toSend.substring(3) : toSend;
     }
@@ -352,7 +352,7 @@ public enum MiscUtils {
         for (ReachSong reachSong : reachSongs) {
 
             //don't consider invisible files
-            if(reachSong.getVisibility() == 0)
+            if (reachSong.getVisibility() == 0)
                 continue;
 
             if (!TextUtils.isEmpty(reachSong.getAlbum())) {
@@ -500,14 +500,14 @@ public enum MiscUtils {
 //        return localIpAddress;
 //    }
 
-    public static boolean updateGCM(final long id, final WeakReference reference) {
+    public static boolean updateGCM(final long id, final WeakReference<Context> reference) {
 
         final String regId = autoRetry(new DoWork<String>() {
             @Override
             protected String doWork() throws IOException {
 
-                final Context context = (Context) reference.get();
-                if (context == null)
+                final Context context;
+                if (reference == null || (context = reference.get()) == null)
                     return "QUIT";
                 return GoogleCloudMessaging.getInstance(context)
                         .register("528178870551");

@@ -77,7 +77,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
     //message holder
     private final ConcurrentLinkedQueue<String> pendingNetworkRequests = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Pair<SocketChannel, Connection>> pendingLanRequests = new ConcurrentLinkedQueue<>(); //needs closing
+//    private final ConcurrentLinkedQueue<Pair<SocketChannel, Connection>> pendingLanRequests = new ConcurrentLinkedQueue<>(); //needs closing
 
     private final ByteBuffer transferBuffer = ByteBuffer.allocateDirect(4096);
     private final InetSocketAddress vmAddress = new InetSocketAddress("104.199.154.0", 60001);
@@ -131,16 +131,16 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         openChannels.clear();
         Log.i("Downloader", "Downloader openChannels released");
         //////////////////////////////////
-        Pair<SocketChannel, Connection> temp;
-        while ((temp = pendingLanRequests.poll()) != null && temp.first != null) {
-            try {
-                temp.first.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        pendingLanRequests.clear();
-        Log.i("Downloader", "Downloader pendingLanRequests released");
+//        Pair<SocketChannel, Connection> temp;
+//        while ((temp = pendingLanRequests.poll()) != null && temp.first != null) {
+//            try {
+//                temp.first.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        pendingLanRequests.clear();
+//        Log.i("Downloader", "Downloader pendingLanRequests released");
         //////////////////////////////////
         reachDatabaseMemory.clear();
         tempDiskHolder.clear();
@@ -600,7 +600,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 connection.getReceiverId());
         //first we perform checks
         if (reachDatabase != null && reachDatabase.getStatus() == ReachDatabase.PAUSED_BY_USER) {
-            //TODO we should also perform this check in GCMIntentService
             Log.i("Downloader", "CONNECT for Paused/deleted operation encountered " + reachDatabase.getDisplayName());
             return false;
         }
@@ -698,13 +697,13 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 return false;
             }
         }
+        return connectRelay((short) 0, reachDatabase, connection.getUniqueIdReceiver(), connection.getUniqueIdSender(), values);
         //establish relay
-        try {
-            return connectRelay((short) 0, reachDatabase, connection.getUniqueIdReceiver(), connection.getUniqueIdSender(), values);
-        } finally {
-            //attempt a LAN connection (even if relay failed)
+//        try {
+//        } finally {
+//            //attempt a LAN connection (even if relay failed)
 //            StaticData.threadPool.submit(new LanRequester(connection));
-        }
+//        }
     }
 
 //    private class LanRequester implements Runnable {

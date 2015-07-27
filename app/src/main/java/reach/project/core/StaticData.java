@@ -134,7 +134,7 @@ public final class StaticData {
     public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
-    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616.appspot.com/";
+    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
 
     public static final UserApi userEndpoint;
     public static final FeedBackApi feedBackApi;

@@ -74,7 +74,10 @@ public class ReachUserEndpoint {
             httpMethod = ApiMethod.HttpMethod.PUT)
     public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
-        final HashSet<String> phoneNumbers = contactsWrapper.getContacts();
+        final HashSet<String> phoneNumbers;
+        if(contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.size() = 0)
+            return null;
+
         logger.info(phoneNumbers.size() + " total");
         final List<Friend> friends = new ArrayList<>();
         for (ReachUser user : ofy().load().type(ReachUser.class)

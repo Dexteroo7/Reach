@@ -12,22 +12,34 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 public class UpdateReceiver extends BroadcastReceiver {
-    public UpdateReceiver() {
-    }
 
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-        // an Intent broadcast.
-        Log.i("Ayush", "Application updated");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
-                MiscUtils.updateGCM(SharedPrefUtils.getServerId(sharedPreferences), new WeakReference<>(context));
-            }
-        }).start();
         context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS).edit().remove("song_hash");
         context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS).edit().remove("play_list_hash");
+
+        final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        // an Intent broadcast.
+        Log.i("Ayush", "Application updated");
+        new Thread(new GCMUpdate(new WeakReference<>(context),
+                SharedPrefUtils.getServerId(sharedPreferences))).start();
+    }
+
+    private static final class GCMUpdate implements Runnable {
+
+        private final WeakReference<Context> reference;
+        private final long serverId;
+
+        private GCMUpdate(WeakReference<Context> reference, long serverId) {
+            this.reference = reference;
+            this.serverId = serverId;
+        }
+
+        @Override
+        public void run() {
+
+            MiscUtils.updateGCM(serverId, reference);
+        }
     }
 }

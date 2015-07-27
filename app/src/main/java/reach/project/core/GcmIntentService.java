@@ -408,13 +408,16 @@ public class GcmIntentService extends IntentService {
                     ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
                     ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
                     ReachDatabaseHelper.COLUMN_SONG_ID + " = ?",
-                    new String[]{connection.getSenderId() + "", connection.getReceiverId() + "", connection.getSongId() + ""}, null);
+                    new String[]{connection.getSenderId() + "",
+                            connection.getReceiverId() + "",
+                            connection.getSongId() + ""}, null);
 
             if(isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.PAUSED_BY_USER) {
                 isPaused.close();
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
-            } else if(isPaused != null) isPaused.close();
+            } else if(isPaused != null)
+                isPaused.close();
 
             Log.i("Downloader", message + " Received");
             if (!SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_MULTI_PROCESS)) && getNetworkType(this) != 1 && message.contains("REQ"))

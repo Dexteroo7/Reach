@@ -615,7 +615,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_allocation(Bitstream stream, Header header, Crc16 crc)
+	  public void read_allocation(BitStream stream, Header header, Crc16 crc)
 	  {
 		 int length = get_allocationlength(header);
 		 allocation = stream.get_bits(length);
@@ -626,7 +626,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_scalefactor_selection (Bitstream stream, Crc16 crc)
+	  public void read_scalefactor_selection (BitStream stream, Crc16 crc)
 	  {
 	 	if (allocation != 0)
 	 	{
@@ -638,7 +638,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_scalefactor (Bitstream stream, Header header)
+	  public void read_scalefactor (BitStream stream, Header header)
 	  {
 	 	if (allocation != 0)
 	 	{
@@ -669,7 +669,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public boolean read_sampledata (Bitstream stream)
+	  public boolean read_sampledata (BitStream stream)
 	  {
 	  	if (allocation != 0)
 		 if (groupingtable[0] != null)
@@ -762,7 +762,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_allocation(Bitstream stream, Header header, Crc16 crc)
+	  public void read_allocation(BitStream stream, Header header, Crc16 crc)
 	  {
 	    super.read_allocation (stream, header, crc);
 	  }
@@ -770,7 +770,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_scalefactor_selection(Bitstream stream, Crc16 crc)
+	  public void read_scalefactor_selection(BitStream stream, Crc16 crc)
 	  {
 	    if (allocation != 0)
 	    {
@@ -787,7 +787,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_scalefactor(Bitstream stream, Header header)
+	  public void read_scalefactor(BitStream stream, Header header)
 	  {
 	    if (allocation != 0)
 	    {
@@ -822,7 +822,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public boolean read_sampledata(Bitstream stream)
+	  public boolean read_sampledata(BitStream stream)
 	  {
 		 return super.read_sampledata (stream);
 	  }
@@ -916,7 +916,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_allocation (Bitstream stream, Header header, Crc16 crc)
+	  public void read_allocation (BitStream stream, Header header, Crc16 crc)
 	  {
 	    int length = get_allocationlength(header);
 	    allocation = stream.get_bits(length);
@@ -931,7 +931,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_scalefactor_selection(Bitstream stream, Crc16 crc)
+	  public void read_scalefactor_selection(BitStream stream, Crc16 crc)
 	  {
 		  if (allocation != 0)
 		  {
@@ -950,7 +950,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public void read_scalefactor(Bitstream stream, Header header)
+	  public void read_scalefactor(BitStream stream, Header header)
 	  {
 	    super.read_scalefactor(stream, header);
 	    if (channel2_allocation != 0)
@@ -989,7 +989,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  /**
 	   *
 	   */
-	  public boolean read_sampledata (Bitstream stream)
+	  public boolean read_sampledata (BitStream stream)
 	  {
 	    boolean returnvalue = super.read_sampledata(stream);
 	  

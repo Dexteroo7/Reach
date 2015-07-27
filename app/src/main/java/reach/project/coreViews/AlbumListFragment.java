@@ -33,6 +33,7 @@ public class AlbumListFragment extends Fragment implements LoaderManager.LoaderC
     private ReachAlbumsAdapter reachAlbumsAdapter = null;
 
     private SuperInterface mListener;
+
     private final AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

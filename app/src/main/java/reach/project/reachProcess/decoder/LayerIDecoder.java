@@ -30,7 +30,7 @@ package reach.project.reachProcess.decoder;
  * Implements decoding of MPEG Audio Layer I frames.
  */
 class LayerIDecoder implements FrameDecoder {
-    protected Bitstream stream;
+    protected BitStream stream;
     protected Header header;
     protected SynthesisFilter filter1, filter2;
     protected Obuffer buffer;
@@ -45,7 +45,7 @@ class LayerIDecoder implements FrameDecoder {
         crc = new Crc16();
     }
 
-    public void create(Bitstream stream0, Header header0,
+    public void create(BitStream stream0, Header header0,
                        SynthesisFilter filtera, SynthesisFilter filterb,
                        Obuffer buffer0, int which_ch0) {
         stream = stream0;
@@ -158,11 +158,11 @@ class LayerIDecoder implements FrameDecoder {
                         0.00000190734863f, 0.00000151386361f, 0.00000120155435f, 0.00000000000000f /* illegal scalefactor */
                 };
 
-        public abstract void read_allocation(Bitstream stream, Header header, Crc16 crc) throws DecoderException;
+        public abstract void read_allocation(BitStream stream, Header header, Crc16 crc) throws DecoderException;
 
-        public abstract void read_scalefactor(Bitstream stream, Header header);
+        public abstract void read_scalefactor(BitStream stream, Header header);
 
-        public abstract boolean read_sampledata(Bitstream stream);
+        public abstract boolean read_sampledata(BitStream stream);
 
         public abstract boolean put_next_sample(int channels, SynthesisFilter filter1, SynthesisFilter filter2);
     }
@@ -212,7 +212,7 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public void read_allocation(Bitstream stream, Header header, Crc16 crc) throws DecoderException {
+        public void read_allocation(BitStream stream, Header header, Crc16 crc) throws DecoderException {
             if ((allocation = stream.get_bits(4)) == 15) {
                 // CGJ: catch this condition and throw appropriate exception
                 throw new DecoderException(DecoderErrors.ILLEGAL_SUBBAND_ALLOCATION, null);
@@ -231,14 +231,14 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public void read_scalefactor(Bitstream stream, Header header) {
+        public void read_scalefactor(BitStream stream, Header header) {
             if (allocation != 0) scalefactor = scalefactors[stream.get_bits(6)];
         }
 
         /**
          *
          */
-        public boolean read_sampledata(Bitstream stream) {
+        public boolean read_sampledata(BitStream stream) {
             if (allocation != 0) {
                 sample = (float) (stream.get_bits(samplelength));
             }
@@ -277,14 +277,14 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public void read_allocation(Bitstream stream, Header header, Crc16 crc) throws DecoderException {
+        public void read_allocation(BitStream stream, Header header, Crc16 crc) throws DecoderException {
             super.read_allocation(stream, header, crc);
         }
 
         /**
          *
          */
-        public void read_scalefactor(Bitstream stream, Header header) {
+        public void read_scalefactor(BitStream stream, Header header) {
             if (allocation != 0) {
                 scalefactor = scalefactors[stream.get_bits(6)];
                 channel2_scalefactor = scalefactors[stream.get_bits(6)];
@@ -294,7 +294,7 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public boolean read_sampledata(Bitstream stream) {
+        public boolean read_sampledata(BitStream stream) {
             return super.read_sampledata(stream);
         }
 
@@ -342,7 +342,7 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public void read_allocation(Bitstream stream, Header header, Crc16 crc) throws DecoderException {
+        public void read_allocation(BitStream stream, Header header, Crc16 crc) throws DecoderException {
             allocation = stream.get_bits(4);
             channel2_allocation = stream.get_bits(4);
             if (crc != null) {
@@ -364,7 +364,7 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public void read_scalefactor(Bitstream stream, Header header) {
+        public void read_scalefactor(BitStream stream, Header header) {
             if (allocation != 0) scalefactor = scalefactors[stream.get_bits(6)];
             if (channel2_allocation != 0) channel2_scalefactor = scalefactors[stream.get_bits(6)];
         }
@@ -372,7 +372,7 @@ class LayerIDecoder implements FrameDecoder {
         /**
          *
          */
-        public boolean read_sampledata(Bitstream stream) {
+        public boolean read_sampledata(BitStream stream) {
             boolean returnvalue = super.read_sampledata(stream);
             if (channel2_allocation != 0) {
                 channel2_sample = (float) (stream.get_bits(channel2_samplelength));

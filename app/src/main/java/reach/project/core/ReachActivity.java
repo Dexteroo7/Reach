@@ -114,12 +114,18 @@ public class ReachActivity extends ActionBarActivity implements
         SearchView.OnQueryTextListener,
         SearchView.OnCloseListener {
 
-    public static long serverId = 0;
-
+    /**
+     * Class reference for using inside static anonymous/inner classes
+     */
     private static WeakReference<ReachActivity> reference = null;
-    private final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
+    /**
+     * Listener on seekBar for seeking music
+     */
+    private static final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
+
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
             if (fromUser)
                 ProcessManager.submitMusicRequest(seekBar.getContext(), Optional.of(progress + ""), MusicHandler.ACTION_SEEK);
         }
@@ -132,17 +138,28 @@ public class ReachActivity extends ActionBarActivity implements
         public void onStopTrackingTouch(SeekBar seekBar) {
         }
     };
-    private final View.OnClickListener repeatClick = new View.OnClickListener() {
+    /**
+     * Click listener on repeat button for music
+     */
+    private static final View.OnClickListener repeatClick = new View.OnClickListener() {
+
         @Override
         public void onClick(View v) {
 
-            if (SharedPrefUtils.toggleRepeat(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
-                repeatBtn.setSelected(true);
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            if (SharedPrefUtils.toggleRepeat(activity.getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+                activity.repeatBtn.setSelected(true);
             else
-                repeatBtn.setSelected(false);
+                activity.repeatBtn.setSelected(false);
         }
     };
-    private final View.OnClickListener nextClick = new View.OnClickListener() {
+    /**
+     * Click listener on next button for player
+     */
+    private static final View.OnClickListener nextClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
@@ -152,7 +169,10 @@ public class ReachActivity extends ActionBarActivity implements
                     MusicHandler.ACTION_NEXT);
         }
     };
-    private final View.OnClickListener previousClick = new View.OnClickListener() {
+    /**
+     * Click listener on previous button for player
+     */
+    private static final View.OnClickListener previousClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
@@ -163,48 +183,57 @@ public class ReachActivity extends ActionBarActivity implements
         }
     };
     /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
+     * Sliding listener for slide up panel
      */
+    private static final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
 
-    private FragmentManager fragmentManager;
-    private NavigationDrawerFragment mNavigationDrawerFragment;
-    private DrawerLayout mDrawerLayout;
-    private int navPos = 99;
-    private SearchView searchView;
-    private FrameLayout.LayoutParams params;
-    private ImageView upArrow;
-    private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
         @Override
         public void onPanelSlide(View view, float v) {
 
-            final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            final Optional<ActionBar> actionBar = Optional.fromNullable(activity.getSupportActionBar());
             if (actionBar.isPresent()) {
                 if (v > 0.85f) {
-                    params.setMargins(0, 0, 0, 0);
+
+                    activity.params.setMargins(0, 0, 0, 0);
                     actionBar.get().hide();
-                    upArrow.setVisibility(View.GONE);
-                    findViewById(R.id.player).setVisibility(View.GONE);
-                    searchView.setVisibility(View.VISIBLE);
+                    activity.upArrow.setVisibility(View.GONE);
+                    activity.findViewById(R.id.player).setVisibility(View.GONE);
+                    activity.searchView.setVisibility(View.VISIBLE);
                 } else if (v < 0.85f) {
-                    params.setMargins(0, MiscUtils.dpToPx(10), 0, 0);
+                    activity.params.setMargins(0, MiscUtils.dpToPx(10), 0, 0);
                     actionBar.get().show();
-                    upArrow.setVisibility(View.VISIBLE);
-                    findViewById(R.id.player).setVisibility(View.VISIBLE);
-                    searchView.setVisibility(View.GONE);
+                    activity.upArrow.setVisibility(View.VISIBLE);
+                    activity.findViewById(R.id.player).setVisibility(View.VISIBLE);
+                    activity.searchView.setVisibility(View.GONE);
                 }
             }
         }
 
+
         @Override
         public void onPanelCollapsed(View view) {
-            if (fragmentManager.getBackStackEntryCount() == 0)
-                toggleDrawer(false);
+
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            if (activity.fragmentManager.getBackStackEntryCount() == 0)
+                activity.toggleDrawer(false);
         }
 
         @Override
         public void onPanelExpanded(View view) {
-            if (fragmentManager.getBackStackEntryCount() == 0)
-                toggleDrawer(true);
+
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            if (activity.fragmentManager.getBackStackEntryCount() == 0)
+                activity.toggleDrawer(true);
         }
 
         @Override
@@ -215,23 +244,36 @@ public class ReachActivity extends ActionBarActivity implements
         public void onPanelHidden(View view) {
         }
     };
-    private String selectionDownloader, selectionMyLibrary, mCurFilter;
-    private String[] selectionArgumentsDownloader;
-    private String[] selectionArgumentsMyLibrary;
-    private SlidingUpPanelLayout slidingUpPanelLayout;
-    private int topPadding;
-    private TextView emptyTV1, emptyTV2;
-    ////////////////////////////////////////
-    private MusicData currentPlaying;
-    private final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
+    /**
+     * Click button on like button
+     */
+    private static final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
+
+        private boolean toggleLiked(ReachActivity activity) {
+
+            final ContentValues values = new ContentValues();
+            values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() + "");
+
+            return activity.getContentResolver().update(
+                    Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
+                    values,
+                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
+        }
+
         @Override
         public void onClick(View v) {
 
-            if (currentPlaying == null || currentPlaying.getType() == 1)
+            final ReachActivity activity;
+            if (reference == null ||
+                    (activity = reference.get()) == null ||
+                    currentPlaying == null ||
+                    currentPlaying.getType() == 1)
                 return;
-            if (toggleLiked()) {
 
-                final Cursor cursor = getContentResolver().query(
+            if (toggleLiked(activity)) {
+
+                final Cursor cursor = activity.getContentResolver().query(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + currentPlaying.getSenderId()),
                         new String[]{ReachFriendsHelper.COLUMN_USER_NAME, ReachFriendsHelper.COLUMN_IMAGE_ID},
                         ReachFriendsHelper.COLUMN_ID + " = ?",
@@ -243,6 +285,9 @@ public class ReachActivity extends ActionBarActivity implements
                     cursor.close();
                     return;
                 }
+                currentPlaying.setIsLiked(true);
+                activity.likeButton.setImageResource(R.drawable.like_pink);
+
                 MiscUtils.autoRetryAsync(new DoWork<reach.backend.entities.messaging.model.MyString>() {
                     @Override
                     protected reach.backend.entities.messaging.model.MyString doWork() throws IOException {
@@ -253,18 +298,20 @@ public class ReachActivity extends ActionBarActivity implements
 
                         return StaticData.messagingEndpoint.messagingEndpoint().sendManualNotification(
                                 currentPlaying.getSenderId(), 0, "likes " + currentPlaying.getDisplayName(),
-                                SharedPrefUtils.getUserName(getSharedPreferences("Reach", MODE_MULTI_PROCESS))).execute();
+                                SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", MODE_MULTI_PROCESS))).execute();
                     }
                 }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>absent());
-                currentPlaying.setIsLiked(true);
-                likeButton.setImageResource(R.drawable.like_pink);
+
             } else {
-                likeButton.setImageResource(R.drawable.like_white);
+                activity.likeButton.setImageResource(R.drawable.like_white);
                 currentPlaying.setIsLiked(false);
             }
         }
     };
-    private final View.OnClickListener pauseClick = new View.OnClickListener() {
+    /**
+     * Click listener on pause click
+     */
+    private static final View.OnClickListener pauseClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
@@ -280,32 +327,41 @@ public class ReachActivity extends ActionBarActivity implements
                         MusicHandler.ACTION_PLAY_PAUSE);
         }
     };
-    ////////////////////////////////////////
-    private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
-    private TextView playerPos;
-    private SeekBar progressBarMaximized;
-    private SeekBar progressBarMinimized;
-    private ListView queueListView;
-    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
-    private final View.OnClickListener shuffleClick = new View.OnClickListener() {
+    /**
+     * Click listener on shuffle button
+     */
+    private static final View.OnClickListener shuffleClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
-            if (SharedPrefUtils.toggleShuffle(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
-                shuffleBtn.setSelected(true);
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            if (SharedPrefUtils.toggleShuffle(activity.getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+                activity.shuffleBtn.setSelected(true);
             else
-                shuffleBtn.setSelected(false);
+                activity.shuffleBtn.setSelected(false);
         }
     };
-    private ImageButton pausePlayMinimized; //small
-    private SwipeRefreshLayout downloadRefresh;
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+    /**
+     * Swipe listener to refresh myReach
+     */
+    private static final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
         public void onRefresh() {
-            new RefreshOperations().execute(downloadRefresh);
+
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            new RefreshOperations().execute(activity.downloadRefresh);
         }
     };
-    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
+    /**
+     * Scroll listener to fix swipe refresh
+     */
+    private static final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
         @Override
         public void onScrollStateChanged(AbsListView absListView, int i) {
         }
@@ -313,16 +369,20 @@ public class ReachActivity extends ActionBarActivity implements
         @Override
         public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
 
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
             boolean enable = false;
-            if (queueListView.getChildCount() > 0) {
-                final boolean firstItemVisible = queueListView.getFirstVisiblePosition() == 0;
-                final boolean topOfFirstItemVisible = queueListView.getChildAt(0).getTop() == 0;
+            if (activity.queueListView.getChildCount() > 0) {
+                final boolean firstItemVisible = activity.queueListView.getFirstVisiblePosition() == 0;
+                final boolean topOfFirstItemVisible = activity.queueListView.getChildAt(0).getTop() == 0;
                 enable = firstItemVisible && topOfFirstItemVisible;
             }
-            downloadRefresh.setEnabled(enable);
+            activity.downloadRefresh.setEnabled(enable);
         }
     };
-    private MergeAdapter combinedAdapter = null;
+
     private final AdapterView.OnItemLongClickListener myLibraryLongClickListener = new AdapterView.OnItemLongClickListener() {
         @Override
         public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long viewId) {
@@ -392,18 +452,22 @@ public class ReachActivity extends ActionBarActivity implements
             return true;
         }
     };
-    private final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
+    private static final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
 
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
-            final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            final Cursor cursor = (Cursor) activity.combinedAdapter.getItem(position);
             if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length) {
 
                 final long senderId = cursor.getLong(8);
                 final String artistName;
                 final long duration;
-                final Cursor artistCursor = getContentResolver().query(
+                final Cursor artistCursor = activity.getContentResolver().query(
                         ReachSongProvider.CONTENT_URI,
                         new String[]{ReachSongHelper.COLUMN_ID,
                                 ReachSongHelper.COLUMN_USER_ID,
@@ -436,7 +500,7 @@ public class ReachActivity extends ActionBarActivity implements
                         artistName,           //artistName
                         (byte) 0,
                         cursor.getString(14),
-                        duration);
+                        duration, activity);
                 return;
             }
             playSong(
@@ -449,9 +513,364 @@ public class ReachActivity extends ActionBarActivity implements
                     cursor.getString(5), //artistName
                     (byte) 1, //type
                     "false", //isLiked
-                    cursor.getLong(4)); //duration
+                    cursor.getLong(4), activity); //duration
         }
     };
+
+    public static class PlayerUpdateListener extends BroadcastReceiver {
+
+        private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
+
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    if (activity.pausePlayMaximized != null) {
+//                        if (activity.paused = pause)
+                        if (pause)
+                            activity.pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
+                        else
+                            activity.pausePlayMaximized.setImageResource(R.drawable.pause_white_selector);
+                    }
+
+                    if (activity.pausePlayMinimized != null) {
+                        if (pause)
+                            activity.pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
+                        else
+                            activity.pausePlayMinimized.setImageResource(R.drawable.pause_white_selector);
+                    }
+                }
+            });
+        }
+
+        private synchronized void updateMusic(final MusicData data, boolean paused, final ReachActivity activity) {
+
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity.songNameMinimized != null)
+                        activity.songNameMinimized.setText(data.getDisplayName());
+                    if (activity.songNameMaximized != null)
+                        activity.songNameMaximized.setText(data.getDisplayName());
+                    if (activity.songDuration != null)
+                        activity.songDuration.setText(MiscUtils.combinationFormatter(data.getDuration()));
+                    if (activity.artistName != null)
+                        activity.artistName.setText(data.getArtistName());
+                    if (activity.likeButton != null) {
+
+                        if (data.getType() == 0) {
+                            activity.likeButton.setVisibility(View.VISIBLE);
+                            if (data.isLiked())
+                                activity.likeButton.setImageResource(R.drawable.like_pink);
+                            else
+                                activity.likeButton.setImageResource(R.drawable.like_white);
+                        } else
+                            activity.likeButton.setVisibility(View.GONE);
+                    }
+
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Play song")
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setLabel("Song - " + data.getDisplayName())
+                            .setValue(1)
+                            .build());
+                }
+            });
+            updatePrimaryProgress(data.getPrimaryProgress(), data.getCurrentPosition(), activity);
+            updateSecondaryProgress(data.getSecondaryProgress(), activity);
+            togglePlayPause(paused, activity);
+        }
+
+        private synchronized void updatePrimaryProgress(final int progress, final int pos, final ReachActivity activity) {
+
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity.playerPos != null)
+                        activity.playerPos.setText(MiscUtils.combinationFormatter(pos));
+                    if (activity.progressBarMaximized != null)
+                        activity.progressBarMaximized.setProgress(progress);
+                    if (activity.progressBarMinimized != null)
+                        activity.progressBarMinimized.setProgress(progress);
+                }
+            });
+//            if (activity.paused)
+//                togglePlayPause(false, activity);
+        }
+
+        private synchronized void updateSecondaryProgress(final int progress, final ReachActivity activity) {
+
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity.progressBarMaximized != null)
+                        activity.progressBarMaximized.setSecondaryProgress(progress);
+                    if (activity.progressBarMinimized != null)
+                        activity.progressBarMinimized.setSecondaryProgress(progress);
+                }
+            });
+        }
+
+        private synchronized void updateDuration(final String duration, final ReachActivity activity) {
+
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity.songDuration != null)
+                        activity.songDuration.setText(duration);
+                }
+            });
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent == null || TextUtils.isEmpty(intent.getAction())) {
+                Log.i("MusicPlayer", "Received null action");
+                return;
+            }
+
+
+            final ReachActivity activity;
+            if (reference == null || (activity = reference.get()) == null)
+                return;
+
+            switch (intent.getAction()) {
+
+                case ProcessManager.REPLY_LATEST_MUSIC: {
+                    Log.i("Downloader", "REPLY_LATEST_MUSIC received");
+                    //update the currentPlaying for like and such
+                    currentPlaying = intent.getParcelableExtra("message");
+                    updateMusic(currentPlaying, false, activity);
+                    break;
+                }
+                case ProcessManager.REPLY_MUSIC_DEAD: {
+                    Log.i("Downloader", "REPLY_MUSIC_DEAD received");
+//                        updateMusic(new MusicData("", "", "", 0, 0, 0, 0, (byte) 0, false, 0), true);
+                    togglePlayPause(false, activity);
+                    updatePrimaryProgress((short) 0, 0, activity);
+                    break;
+                }
+                case ProcessManager.REPLY_ERROR: {
+                    Log.i("Downloader", "REPLY_ERROR received");
+                    updateMusic(new MusicData("", "", "", 0, 0, 0, 0, (byte) 0, false, 0), true, activity);
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    break;
+                }
+                case ProcessManager.REPLY_PAUSED: {
+                    Log.i("Downloader", "REPLY_PAUSED received");
+                    togglePlayPause(true, activity);
+                    break;
+                }
+                case ProcessManager.REPLY_UN_PAUSED: {
+                    Log.i("Downloader", "REPLY_UN_PAUSED received");
+                    togglePlayPause(false, activity);
+                    break;
+                }
+                case ProcessManager.REPLY_PRIMARY_PROGRESS: {
+//                    Log.i("Downloader", "REPLY_PRIMARY_PROGRESS received");
+                    updatePrimaryProgress(intent.getShortExtra("progress", (short) 0), intent.getIntExtra("position", 0) * 1000, activity);
+                    break;
+                }
+                case ProcessManager.REPLY_SECONDARY_PROGRESS: {
+//                    Log.i("Downloader", "REPLY_SECONDARY_PROGRESS received");
+                    updateSecondaryProgress(intent.getShortExtra("progress", (short) 0), activity);
+                    break;
+                }
+                case ProcessManager.REPLY_DURATION: {
+                    Log.i("Downloader", "REPLY_SECONDARY_PROGRESS received");
+                    updateDuration(intent.getStringExtra("message"), activity);
+                    break;
+                }
+            }
+
+        }
+    }
+
+    private static class CheckUpdate extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected String doInBackground(Void... params) {
+
+            BufferedReader reader = null;
+            try {
+
+                reader = new BufferedReader(new InputStreamReader(new URL(StaticData.dropBox).openStream()));
+                final StringBuilder total = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    total.append(line);
+                }
+                final String result = total.toString();
+                return result.trim();
+            } catch (Exception ignored) {
+            } finally {
+                if (reader != null)
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            super.onPostExecute(result);
+            if (isCancelled() || isFinishing() || TextUtils.isEmpty(result))
+                return;
+
+            final int currentVersion;
+            try {
+                currentVersion = Integer.parseInt(result);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return;
+            }
+            final int version;
+            try {
+                version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
+            if (version < currentVersion && !isFinishing()) {
+
+                final UpdateFragment updateFragment = new UpdateFragment();
+                updateFragment.setCancelable(false);
+                try {
+                    updateFragment.show(fragmentManager, "update");
+                } catch (IllegalStateException ignored) {
+                }
+            }
+        }
+    }
+
+    private static class RefreshOperations extends AsyncTask<SwipeRefreshLayout, Void, SwipeRefreshLayout> {
+        @Override
+        protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
+
+            final ContentResolver contentResolver = getContentResolver();
+            if (contentResolver == null) {
+                if (params != null && params.length == 1)
+                    return params[0];
+                return null;
+            }
+//            final ContentValues database = new ContentValues();
+//            database.put(ReachDatabaseHelper.COLUMN_NETWORK_TYPE, -1);
+//            database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+//            contentResolver.update(
+//                    ReachDatabaseProvider.CONTENT_URI,
+//                    database,
+//                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+//                    new String[]{ReachDatabase.FINISHED + ""});
+            final Cursor cursor = contentResolver.query(
+                    ReachDatabaseProvider.CONTENT_URI,
+                    ReachDatabaseHelper.projection,
+                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
+                            ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                    new String[]{"0", "" + ReachDatabase.FINISHED, "" + ReachDatabase.PAUSED_BY_USER}, null);
+            if (cursor == null) {
+                if (params != null && params.length == 1)
+                    return params[0];
+                return null;
+            }
+
+            final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
+            while (cursor.moveToNext()) {
+
+                reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
+//                final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
+//                //If the service is running, we tread carefully
+//                if (reachDatabase.getProcessed() < reachDatabase.getLength() &&
+//                        (reachDatabase.getStatus() == ReachDatabase.NOT_WORKING || //not working
+//                                reachDatabase.getStatus() == ReachDatabase.GCM_FAILED || //gcm failed
+//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_FOUND || //file not found on host
+//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_CREATED)) { //disk error
+//                    reachDatabaseList.add(reachDatabase);
+//                }
+            }
+            cursor.close();
+            if (reachDatabaseList.size() > 0)
+                MiscUtils.startBulkDownloadOperation(reachDatabaseList, contentResolver).run();
+
+            if (params != null && params.length == 1)
+                return params[0];
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(SwipeRefreshLayout refreshLayout) {
+
+            super.onPostExecute(refreshLayout);
+            if (isCancelled() || isFinishing() || refreshLayout == null)
+                return;
+            if (refreshLayout.isRefreshing())
+                refreshLayout.setRefreshing(false);
+        }
+    }
+
+    //id = -1 : disk else downloader
+    private static boolean playSong(long id, long length, long senderId, long processed, String path,
+                                    String displayName, String artistName, byte type, String isLiked, long duration, Context context) {
+
+        //stop any other play clicks till current is processed
+        //sanity check
+        Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
+        if (length == 0 || senderId == 0 || TextUtils.isEmpty(path) || TextUtils.isEmpty(displayName)) {
+            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (processed == 0) {
+            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        final MusicData data = new MusicData(displayName, path, artistName, id, length,
+                senderId, processed, type, isLiked.equals("true"), duration);
+        ProcessManager.submitMusicRequest(context,
+                Optional.of(data),
+                MusicHandler.ACTION_NEW_SONG);
+        /////////////////////////////////////////////////////
+        return true;
+    }
+
+    private static MusicData currentPlaying;
+    public static long serverId = 0;
+
+    private FragmentManager fragmentManager;
+    private NavigationDrawerFragment mNavigationDrawerFragment;
+    private DrawerLayout mDrawerLayout;
+    private SearchView searchView;
+    private FrameLayout.LayoutParams params;
+    private ImageView upArrow;
+    private TextView emptyTV1, emptyTV2;
+
+    private String selectionDownloader, selectionMyLibrary, mCurFilter;
+    private String[] selectionArgumentsDownloader;
+    private String[] selectionArgumentsMyLibrary;
+    private SlidingUpPanelLayout slidingUpPanelLayout;
+    private int topPadding, navPos = 99;
+    ////////////////////////////////////////
+    private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
+    private TextView playerPos;
+    private SeekBar progressBarMaximized;
+    private SeekBar progressBarMinimized;
+    private ListView queueListView;
+    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+
+    private ImageButton pausePlayMinimized; //small
+    private SwipeRefreshLayout downloadRefresh;
+
+    private MergeAdapter combinedAdapter = null;
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
 
@@ -1033,7 +1452,7 @@ public class ReachActivity extends ActionBarActivity implements
                     });
                 } else if (gcmId.equals("user_deleted")) {
                     //TODO restart app sign-up
-                } else if (gcmId.equals("hello_world") && !MiscUtils.updateGCM(serverId, reference)) {
+                } else if (gcmId.equals("hello_world") && !MiscUtils.updateGCM(serverId, new WeakReference<Context>(ReachActivity.this))) {
                     Log.i("Ayush", "GCM check failed");
                     runOnUiThread(new Runnable() {
                         @Override
@@ -1282,43 +1701,6 @@ public class ReachActivity extends ActionBarActivity implements
             queueAdapter.swapCursor(null);
     }
 
-    //id = -1 : disk else downloader
-    public boolean playSong(long id, long length, long senderId, long processed, String path,
-                            String displayName, String artistName, byte type, String isLiked, long duration) {
-
-        //stop any other play clicks till current is processed
-        //sanity check
-        Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
-        if (length == 0 || senderId == 0 || TextUtils.isEmpty(path) || TextUtils.isEmpty(displayName)) {
-            Toast.makeText(this, "Bad song", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        if (processed == 0) {
-            Toast.makeText(this, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        final MusicData data = new MusicData(displayName, path, artistName, id, length,
-                senderId, processed, type, isLiked.equals("true"), duration);
-        ProcessManager.submitMusicRequest(this,
-                Optional.of(data),
-                MusicHandler.ACTION_NEW_SONG);
-        /////////////////////////////////////////////////////
-        return true;
-    }
-
-    private boolean toggleLiked() {
-
-        final ContentValues values = new ContentValues();
-        values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() + "");
-
-        return getContentResolver().update(
-                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
-                values,
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
-    }
-
     private void processMultiple(Intent intent) {
 
         final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
@@ -1397,7 +1779,7 @@ public class ReachActivity extends ActionBarActivity implements
                             artistName,
                             (byte) 0,
                             cursor.getString(6),
-                            duration);
+                            duration, this);
                 }
                 cursor.close();
                 return;
@@ -1442,307 +1824,6 @@ public class ReachActivity extends ActionBarActivity implements
                     .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                     .setValue(1)
                     .build());
-        }
-    }
-
-    public static class PlayerUpdateListener extends BroadcastReceiver {
-
-        private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
-
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-
-                    if (activity.pausePlayMaximized != null) {
-//                        if (activity.paused = pause)
-                        if (pause)
-                            activity.pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
-                        else
-                            activity.pausePlayMaximized.setImageResource(R.drawable.pause_white_selector);
-                    }
-
-                    if (activity.pausePlayMinimized != null) {
-                        if (pause)
-                            activity.pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
-                        else
-                            activity.pausePlayMinimized.setImageResource(R.drawable.pause_white_selector);
-                    }
-                }
-            });
-        }
-
-        private synchronized void updateMusic(final MusicData data, boolean paused, final ReachActivity activity) {
-
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.songNameMinimized != null)
-                        activity.songNameMinimized.setText(data.getDisplayName());
-                    if (activity.songNameMaximized != null)
-                        activity.songNameMaximized.setText(data.getDisplayName());
-                    if (activity.songDuration != null)
-                        activity.songDuration.setText(MiscUtils.combinationFormatter(data.getDuration()));
-                    if (activity.artistName != null)
-                        activity.artistName.setText(data.getArtistName());
-                    if (activity.likeButton != null) {
-
-                        if (data.getType() == 0) {
-                            activity.likeButton.setVisibility(View.VISIBLE);
-                            if (data.isLiked())
-                                activity.likeButton.setImageResource(R.drawable.like_pink);
-                            else
-                                activity.likeButton.setImageResource(R.drawable.like_white);
-                        } else
-                            activity.likeButton.setVisibility(View.GONE);
-                    }
-
-                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                            .setCategory("Play song")
-                            .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                            .setLabel("Song - " + data.getDisplayName())
-                            .setValue(1)
-                            .build());
-                }
-            });
-            updatePrimaryProgress(data.getPrimaryProgress(), data.getCurrentPosition(), activity);
-            updateSecondaryProgress(data.getSecondaryProgress(), activity);
-            togglePlayPause(paused, activity);
-        }
-
-        private synchronized void updatePrimaryProgress(final int progress, final int pos, final ReachActivity activity) {
-
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.playerPos != null)
-                        activity.playerPos.setText(MiscUtils.combinationFormatter(pos));
-                    if (activity.progressBarMaximized != null)
-                        activity.progressBarMaximized.setProgress(progress);
-                    if (activity.progressBarMinimized != null)
-                        activity.progressBarMinimized.setProgress(progress);
-                }
-            });
-//            if (activity.paused)
-//                togglePlayPause(false, activity);
-        }
-
-        private synchronized void updateSecondaryProgress(final int progress, final ReachActivity activity) {
-
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.progressBarMaximized != null)
-                        activity.progressBarMaximized.setSecondaryProgress(progress);
-                    if (activity.progressBarMinimized != null)
-                        activity.progressBarMinimized.setSecondaryProgress(progress);
-                }
-            });
-        }
-
-        private synchronized void updateDuration(final String duration, final ReachActivity activity) {
-
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.songDuration != null)
-                        activity.songDuration.setText(duration);
-                }
-            });
-        }
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            if (intent == null || TextUtils.isEmpty(intent.getAction())) {
-                Log.i("MusicPlayer", "Received null action");
-                return;
-            }
-
-
-            final ReachActivity activity;
-            if (reference == null || (activity = reference.get()) == null)
-                return;
-
-            switch (intent.getAction()) {
-
-                case ProcessManager.REPLY_LATEST_MUSIC: {
-                    Log.i("Downloader", "REPLY_LATEST_MUSIC received");
-                    //update the currentPlaying for like and such
-                    activity.currentPlaying = intent.getParcelableExtra("message");
-                    updateMusic(activity.currentPlaying, false, activity);
-                    break;
-                }
-                case ProcessManager.REPLY_MUSIC_DEAD: {
-                    Log.i("Downloader", "REPLY_MUSIC_DEAD received");
-//                        updateMusic(new MusicData("", "", "", 0, 0, 0, 0, (byte) 0, false, 0), true);
-                    togglePlayPause(false, activity);
-                    updatePrimaryProgress((short) 0, 0, activity);
-                    break;
-                }
-                case ProcessManager.REPLY_ERROR: {
-                    Log.i("Downloader", "REPLY_ERROR received");
-                    updateMusic(new MusicData("", "", "", 0, 0, 0, 0, (byte) 0, false, 0), true, activity);
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    break;
-                }
-                case ProcessManager.REPLY_PAUSED: {
-                    Log.i("Downloader", "REPLY_PAUSED received");
-                    togglePlayPause(true, activity);
-                    break;
-                }
-                case ProcessManager.REPLY_UN_PAUSED: {
-                    Log.i("Downloader", "REPLY_UN_PAUSED received");
-                    togglePlayPause(false, activity);
-                    break;
-                }
-                case ProcessManager.REPLY_PRIMARY_PROGRESS: {
-//                    Log.i("Downloader", "REPLY_PRIMARY_PROGRESS received");
-                    updatePrimaryProgress(intent.getShortExtra("progress", (short) 0), intent.getIntExtra("position", 0) * 1000, activity);
-                    break;
-                }
-                case ProcessManager.REPLY_SECONDARY_PROGRESS: {
-//                    Log.i("Downloader", "REPLY_SECONDARY_PROGRESS received");
-                    updateSecondaryProgress(intent.getShortExtra("progress", (short) 0), activity);
-                    break;
-                }
-                case ProcessManager.REPLY_DURATION: {
-                    Log.i("Downloader", "REPLY_SECONDARY_PROGRESS received");
-                    updateDuration(intent.getStringExtra("message"), activity);
-                    break;
-                }
-            }
-
-        }
-    }
-
-    private class CheckUpdate extends AsyncTask<Void, Void, String> {
-
-        @Override
-        protected String doInBackground(Void... params) {
-
-            BufferedReader reader = null;
-            try {
-
-                reader = new BufferedReader(new InputStreamReader(new URL(StaticData.dropBox).openStream()));
-                final StringBuilder total = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    total.append(line);
-                }
-                final String result = total.toString();
-                return result.trim();
-            } catch (Exception ignored) {
-            } finally {
-                if (reader != null)
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-
-            super.onPostExecute(result);
-            if (isCancelled() || isFinishing() || TextUtils.isEmpty(result))
-                return;
-
-            final int currentVersion;
-            try {
-                currentVersion = Integer.parseInt(result);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                return;
-            }
-            final int version;
-            try {
-                version = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-                return;
-            }
-            if (version < currentVersion && !isFinishing()) {
-
-                final UpdateFragment updateFragment = new UpdateFragment();
-                updateFragment.setCancelable(false);
-                try {
-                    updateFragment.show(fragmentManager, "update");
-                } catch (IllegalStateException ignored) {
-                }
-            }
-        }
-    }
-
-    private class RefreshOperations extends AsyncTask<SwipeRefreshLayout, Void, SwipeRefreshLayout> {
-        @Override
-        protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
-
-            final ContentResolver contentResolver = getContentResolver();
-            if (contentResolver == null) {
-                if (params != null && params.length == 1)
-                    return params[0];
-                return null;
-            }
-//            final ContentValues database = new ContentValues();
-//            database.put(ReachDatabaseHelper.COLUMN_NETWORK_TYPE, -1);
-//            database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-//            contentResolver.update(
-//                    ReachDatabaseProvider.CONTENT_URI,
-//                    database,
-//                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-//                    new String[]{ReachDatabase.FINISHED + ""});
-            final Cursor cursor = contentResolver.query(
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.projection,
-                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                            ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                    new String[]{"0", "" + ReachDatabase.FINISHED, "" + ReachDatabase.PAUSED_BY_USER}, null);
-            if (cursor == null) {
-                if (params != null && params.length == 1)
-                    return params[0];
-                return null;
-            }
-
-            final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
-            while (cursor.moveToNext()) {
-
-                reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
-//                final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
-//                //If the service is running, we tread carefully
-//                if (reachDatabase.getProcessed() < reachDatabase.getLength() &&
-//                        (reachDatabase.getStatus() == ReachDatabase.NOT_WORKING || //not working
-//                                reachDatabase.getStatus() == ReachDatabase.GCM_FAILED || //gcm failed
-//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_FOUND || //file not found on host
-//                                reachDatabase.getStatus() == ReachDatabase.FILE_NOT_CREATED)) { //disk error
-//                    reachDatabaseList.add(reachDatabase);
-//                }
-            }
-            cursor.close();
-            if (reachDatabaseList.size() > 0)
-                MiscUtils.startBulkDownloadOperation(reachDatabaseList, contentResolver).run();
-
-            if (params != null && params.length == 1)
-                return params[0];
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(SwipeRefreshLayout refreshLayout) {
-
-            super.onPostExecute(refreshLayout);
-            if (isCancelled() || isFinishing() || refreshLayout == null)
-                return;
-            if (refreshLayout.isRefreshing())
-                refreshLayout.setRefreshing(false);
         }
     }
 }

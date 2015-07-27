@@ -54,7 +54,7 @@ final class LayerIIIDecoder implements FrameDecoder {
     private float[][] prevblck;
     private float[][] k;
     private int[] nonzero;
-    private Bitstream stream;
+    private BitStream stream;
     private Header header;
     private SynthesisFilter filter1, filter2;
     private Obuffer buffer;
@@ -79,7 +79,7 @@ final class LayerIIIDecoder implements FrameDecoder {
      */
     // REVIEW: these constructor arguments should be moved to the
     // decodeFrame() method, where possible, so that one
-    public LayerIIIDecoder(Bitstream stream0, Header header0,
+    public LayerIIIDecoder(BitStream stream0, Header header0,
                            SynthesisFilter filtera, SynthesisFilter filterb,
                            Obuffer buffer0, int which_ch0) {
         huffcodetab.inithuff();

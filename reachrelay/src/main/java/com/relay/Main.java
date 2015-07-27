@@ -26,7 +26,7 @@ public final class Main {
     private static final ExecutorService threadPool = Executors.newCachedThreadPool(new CustomThreadFactoryBuilder()
             .setPriority(Thread.MAX_PRIORITY)
             .setNamePrefix("relay_thread")
-            .setDaemon(true).build());
+            .setDaemon(false).build());
     private static ServerSocketChannel controller;
 
     /**
@@ -185,12 +185,17 @@ public final class Main {
                     }
                 buf.clear();
             }
-//            System.out.println("Cleaning");
             final Cleaner cleaner = ((DirectBuffer) buf).cleaner();
-            if (cleaner != null) {
+            if (cleaner != null)
                 cleaner.clean();
-//                System.out.println("Cleaned");
+
+            //sleep before closing !
+            try {
+                Thread.sleep(5000L);
+            } catch (InterruptedException ignored) {
+                //ignored as we anyway kill this thread soon
             }
+
             closeAndIgnore(from, to);
         }
 
