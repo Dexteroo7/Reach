@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -103,7 +103,7 @@ public class InviteFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_invite, container, false);
-        final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         if(actionBar != null)
             actionBar.setTitle("Invite Friends");
         final ListView inviteList = (ListView) rootView.findViewById(R.id.listView);

@@ -4,7 +4,7 @@
     <item name="reach_color" type="color">#f33b5b</item>
     <item name="reach_dark" type="color">#c22f48</item>
     <item name="reach_light" type="color">#ffff8f9d</item>
-    <item name="reach_blue" type="color">#56bada</item>
+    <item name="reach_blue" type="color">#515151</item>
     <item name="reach_blue_fade" type="color">#802488e1</item>
     <item name="purple" type="color">#FFAA66CC</item>
     <item name="green" type="color">#FF99CC00</item>

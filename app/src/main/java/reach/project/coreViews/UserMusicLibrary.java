@@ -11,12 +11,13 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,13 +41,12 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.TextDrawable;
 import reach.project.viewHelpers.CircleTransform;
-import reach.project.viewHelpers.SlidingTabLayout;
 import reach.project.viewHelpers.ViewPagerReusable;
 
 public class UserMusicLibrary extends Fragment {
 
     private ActionBar actionBar;
-    private SlidingTabLayout slidingTabLayout;
+    private TabLayout slidingTabLayout;
     private View rootView;
     private ViewPager viewPager;
 
@@ -149,7 +149,7 @@ public class UserMusicLibrary extends Fragment {
                 SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
             }
         }
-        actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         if(actionBar!= null) {
 
             actionBar.setTitle(reachFriend.getUserName());
@@ -173,14 +173,14 @@ public class UserMusicLibrary extends Fragment {
                         AlbumListFragment.newInstance(userId), // ALBUMS
                         ArtistListFragment.newInstance(userId)})); // ARTISTS
 
-        slidingTabLayout = (SlidingTabLayout) rootView.findViewById(R.id.sliding_tabs);
-        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+        slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
+        /*slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
             @Override
             public int getIndicatorColor(int position) {
                 return Color.parseColor("#FFCC0000");
             }
-        });
-        slidingTabLayout.setViewPager(viewPager);
+        });*/
+        slidingTabLayout.setupWithViewPager(viewPager);
 
         if (!StaticData.debugMode) {
             ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
@@ -213,7 +213,7 @@ public class UserMusicLibrary extends Fragment {
             styledAttributes.recycle();*/
             try {
                 if (!params[0].equals("default"))
-                    bmp = Picasso.with(rootView.getContext()).load(params[0])
+                    bmp = Picasso.with(getActivity()).load(params[0])
                             .resize(margin, margin)
                             .centerCrop()
                             .transform(new CircleTransform()).get();

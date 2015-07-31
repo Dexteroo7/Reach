@@ -13,7 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
@@ -113,7 +113,7 @@ public class NavigationDrawerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
+        //rootView = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
         priList = new String[]{
                 getString(R.string.title_section1),
                 getString(R.string.title_section2),
@@ -121,7 +121,7 @@ public class NavigationDrawerFragment extends Fragment {
                 getString(R.string.title_section4),
                 getString(R.string.title_section5)
         };
-        mDrawerListView = (ListView) rootView.findViewById(R.id.primaryListView);
+        //mDrawerListView = (ListView) rootView.findViewById(R.id.primaryListView);
         //mDrawerSecListView = (ListView) rootView.findViewById(R.id.secondaryListView);
         final Activity activity = getActivity();
         final SharedPreferences sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
@@ -152,7 +152,7 @@ public class NavigationDrawerFragment extends Fragment {
 
         mDrawerListView.setOnItemClickListener(navigationItemSelector);
         rootView.findViewById(R.id.navHeader).setOnClickListener(openProfile);
-        rootView.findViewById(R.id.footer).setOnClickListener(rateApp);
+        //rootView.findViewById(R.id.footer).setOnClickListener(rateApp);
         mDrawerListView.setAdapter(new DrawerListAdapter(activity, R.layout.listview_item, priList));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         setNavViews(activity);
@@ -206,7 +206,7 @@ public class NavigationDrawerFragment extends Fragment {
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         // set up the drawer's list view with items and click listener
-        final ActionBar actionBar = ((ActionBarActivity) activity).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity) activity).getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
@@ -227,7 +227,7 @@ public class NavigationDrawerFragment extends Fragment {
                 }
                 if(drawerView.getId() == R.id.notification_drawer) {
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.LEFT);
-                } else if(drawerView.getId() == R.id.navigation_drawer) {
+                } else if(drawerView.getId() == R.id.navigation_view) {
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);
                 }
                 activity.invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
@@ -241,7 +241,7 @@ public class NavigationDrawerFragment extends Fragment {
                 }
                 if(drawerView.getId() == R.id.notification_drawer) {
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
-                } else if(drawerView.getId() == R.id.navigation_drawer) {
+                } else if(drawerView.getId() == R.id.navigation_view) {
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.RIGHT);
                 }
                 if (!mUserLearnedDrawer) {
@@ -285,9 +285,9 @@ public class NavigationDrawerFragment extends Fragment {
         if (mDrawerLayout != null) {
             mDrawerLayout.closeDrawer(mFragmentContainerView);
         }
-        if (mCallbacks != null) {
+        /*if (mCallbacks != null) {
             mCallbacks.onNavigationDrawerItemSelected(position);
-        }
+        }*/
     }
 
     @Override
@@ -345,7 +345,7 @@ public class NavigationDrawerFragment extends Fragment {
 //    }
 
 //    private ActionBar getSupportActionBar() {
-//        return ((ActionBarActivity) getActivity()).getSupportActionBar();
+//        return ((AppCompatActivity) getActivity()).getSupportActionBar();
 //    }
 //    /**
 //     * Callbacks interface that all activities using this fragment must implement.

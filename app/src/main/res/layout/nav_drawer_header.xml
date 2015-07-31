@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/navHeader"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="180dp">
+        <ImageView
+            android:id="@+id/userImageNav"
+            android:scaleType="centerCrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:background="@drawable/nav_pic_gradient"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <LinearLayout
+            android:layout_gravity="bottom"
+            android:layout_marginLeft="15dp"
+            android:layout_marginBottom="15dp"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/userNameNav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:textSize="20sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/numberOfSongsNav"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 Songs"/>
+        </LinearLayout>
+        <ImageView
+            android:src="@drawable/edit_pencil"
+            android:layout_gravity="bottom|right"
+            android:background="@drawable/circular_background_pink"
+            android:padding="5dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="15dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+    </FrameLayout>
+    <RelativeLayout
+        android:id="@+id/netSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+        <TextView
+            android:id="@+id/netSwitchText"
+            android:layout_marginLeft="15dp"
+            android:textSize="15sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#000"
+            android:text="Enable sharing on 2G/3G"
+            android:layout_centerVertical="true" />
+        <android.support.v7.widget.SwitchCompat
+            android:id="@+id/netToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="15dp"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"
+        />
+</LinearLayout>

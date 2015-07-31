@@ -24,7 +24,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -36,9 +36,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.BounceInterpolator;
-import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -50,9 +47,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
+import com.getbase.floatingactionbutton.FloatingActionButton;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.melnykov.fab.FloatingActionButton;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -89,7 +87,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     private View rootView;
     private SearchView searchView;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private FloatingActionButton actionButton;
+    private FloatingActionsMenu actionMenu;
     private SharedPreferences sharedPrefs;
     private MergeAdapter mergeAdapter;
     private ReachContactsAdapter reachContactsAdapter = null;
@@ -105,7 +103,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     private long serverId;
     private final AtomicBoolean pinging = new AtomicBoolean(false);
     public static final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
-    private ScaleAnimation translation;
 
     public static void setNotificationCount(int count) {
         final ContactsListFragment fragment;
@@ -306,11 +303,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
                 }
                 mergeAdapter.setActive(loading, false);
                 mergeAdapter.setActive(emptyTV1, false);
-                actionButton.setVisibility(View.VISIBLE);
-                if (!translation.hasStarted())
-                    actionButton.startAnimation(translation);
+                actionMenu.setVisibility(View.VISIBLE);
             } else
-                actionButton.setVisibility(View.GONE);
+                actionMenu.setVisibility(View.GONE);
             reachContactsAdapter.swapCursor(cursor);
 
             if (!StaticData.syncingContacts.get() && cursor.getCount() == 0) {
@@ -367,7 +362,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
         if (cursorLoader.getId() == StaticData.FRIENDS_LOADER) {
             reachContactsAdapter.swapCursor(null);
-            actionButton.setVisibility(View.GONE);
+            actionMenu.setVisibility(View.GONE);
         }
     }
 
@@ -388,7 +383,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         listView.setOnItemClickListener(null);
         //listView.setOnScrollListener(null);
 
-        actionButton = null;
+        actionMenu = null;
         rootView = null;
         if (searchView != null) {
             searchView.setOnQueryTextListener(null);
@@ -408,10 +403,10 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
-        final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
-            actionBar.setTitle("My Reach");
+            actionBar.setTitle("Reach");
             mListener.setUpNavigationViews();
         }
         sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
@@ -420,9 +415,6 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         /**
          * All cursor operations should be background, else lag
          */
-        translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-        translation.setDuration(1000);
-        translation.setInterpolator(new BounceInterpolator());
 
         if (reachContactsAdapter == null)
             reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0);
@@ -444,7 +436,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         mergeAdapter = new MergeAdapter();
 
         TextView textView = new TextView(getActivity());
-        textView.setText("Friends on Reach");
+        textView.setText("My Friends");
         textView.setTextColor(getResources().getColor(R.color.reach_color));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
         textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
@@ -483,8 +475,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         mergeAdapter.addView(emptyTV2, false);
         mergeAdapter.setActive(emptyTV2, false);
 
-        actionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        actionButton.attachToListView(listView, null, scrollListener);
+        actionMenu = (FloatingActionsMenu) rootView.findViewById(R.id.right_labels);
+        listView.setOnScrollListener(scrollListener);
+        FloatingActionButton actionButton = (FloatingActionButton) rootView.findViewById(R.id.share_music_fab);
         actionButton.setOnClickListener(pushLibraryListener);
 
         if (!pinging.get()) {

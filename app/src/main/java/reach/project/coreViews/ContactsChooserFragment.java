@@ -13,7 +13,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.telephony.TelephonyManager;
 import android.text.Html;
@@ -347,7 +347,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         if (actionBar!=null) {
             actionBar.show();
             actionBar.setTitle("Choose contact");

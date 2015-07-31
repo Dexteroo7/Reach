@@ -63,10 +63,10 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
                     COLUMN_HASH //10
             };
 
-    public static short OFFLINE_REQUEST_GRANTED = 0;
-    public static short ONLINE_REQUEST_GRANTED = 1;
-    public static short REQUEST_SENT_NOT_GRANTED = 2;
-    public static short REQUEST_NOT_SENT = 3;
+    public static final short OFFLINE_REQUEST_GRANTED = 0;
+    public static final short ONLINE_REQUEST_GRANTED = 1;
+    public static final short REQUEST_SENT_NOT_GRANTED = 2;
+    public static final short REQUEST_NOT_SENT = 3;
 
     /*
     0 - offline and permission-request granted

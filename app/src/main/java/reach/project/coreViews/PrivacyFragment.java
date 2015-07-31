@@ -12,7 +12,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -164,7 +164,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
-        actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
 
         if(actionBar != null) {
             actionBar.setTitle("Hide Songs");

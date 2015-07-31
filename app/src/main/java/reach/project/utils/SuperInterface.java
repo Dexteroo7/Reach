@@ -11,8 +11,6 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
  */
 public interface SuperInterface {
 
-    void onNavigationDrawerItemSelected(int position); //NavigationDrawerFragment
-
     void onAccountCreated(); //AccountCreationFragment
 
     void accountCreationError();

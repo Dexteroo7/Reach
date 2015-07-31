@@ -11,7 +11,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -169,7 +169,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
 
         rootView = inflater.inflate(R.layout.fragment_list, container, false);
         musicList  = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         final int type = getArguments().getInt("type");
 
         if (actionBar!=null) {
@@ -264,7 +264,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onDestroyView() {
         if (getArguments().getInt("type")!=0) {
-            ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
             if (actionBar != null)
                 actionBar.setSubtitle("");
         }
@@ -329,7 +329,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                 MiscUtils.setEmptyTextforListView(musicList,"No visible songs found");
             if (getArguments().getInt("type") != 0) {
 
-                final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+                final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
                 if (actionBar != null)
                     actionBar.setSubtitle(count + " Songs");
             }

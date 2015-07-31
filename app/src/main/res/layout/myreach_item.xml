@@ -33,22 +33,35 @@
             android:layout_height="15dp"
             android:visibility="gone"/>
     </FrameLayout>
-    <ImageButton
-        android:id="@+id/listToggle"
-        android:src="@drawable/lock_selector"
-        android:scaleType="fitCenter"
-        android:background="@null"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:padding="10dp"
-        android:layout_centerVertical="true"
+    <RelativeLayout
+        android:id="@+id/toggleContainer"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="10dp"/>
+        android:layout_centerVertical="true"
+        android:layout_marginRight="15dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/listToggle"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/icon_user_offline"
+            android:scaleType="fitCenter"
+            android:layout_width="25dp"
+            android:layout_height="25dp" />
+        <TextView
+            android:id="@+id/listStatus"
+            android:layout_centerHorizontal="true"
+            android:textSize="13sp"
+            android:textColor="@color/darkgrey"
+            android:text="Offline"
+            android:layout_below="@id/listToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_centerVertical="true"
-        android:layout_toLeftOf="@id/listToggle"
+        android:layout_toLeftOf="@id/toggleContainer"
         android:layout_toRightOf="@id/profilePhoto"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -62,7 +75,8 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:maxWidth="120dp"
-                android:textSize="16sp"
+                android:textColor="#000"
+                android:textSize="18sp"
                 android:text="TITLE"/>
             <ImageView
                 android:id="@+id/status"
@@ -104,15 +118,15 @@
             android:layout_height="wrap_content">
             <ImageView
                 android:id="@+id/note"
-                android:src="@drawable/note_pink"
+                android:src="@drawable/note60"
                 android:layout_centerVertical="true"
-                android:layout_width="13dp"
-                android:layout_height="13dp" />
+                android:layout_width="20dp"
+                android:layout_height="20dp" />
             <TextView
                 android:id="@+id/telephoneNumberList"
                 android:layout_marginLeft="5dp"
                 android:text="0"
-                android:textColor="@color/reach_color"
+                android:textColor="@color/reach_blue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
@@ -120,13 +134,4 @@
                 android:textSize="15sp"/>
         </RelativeLayout>
     </LinearLayout>
-    <View
-        android:id="@+id/dividerFooter"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_toRightOf="@id/profilePhoto"
-        android:layout_marginRight="15dp"
-        android:layout_alignParentBottom="true"
-        android:background="#dcdcdcdc" />
-
 </RelativeLayout>

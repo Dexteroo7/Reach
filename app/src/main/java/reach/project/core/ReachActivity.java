@@ -23,12 +23,17 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SwitchCompat;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
@@ -38,8 +43,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -59,6 +64,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
+import com.squareup.picasso.Picasso;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -77,7 +83,6 @@ import reach.project.adapter.ReachQueueAdapter;
 import reach.project.coreViews.ContactsChooserFragment;
 import reach.project.coreViews.ContactsListFragment;
 import reach.project.coreViews.EditProfileFragment;
-import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MusicListFragment;
 import reach.project.coreViews.NotificationCenterFragment;
@@ -110,7 +115,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.TransferSong;
 
-public class ReachActivity extends ActionBarActivity implements
+public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
         FragmentManager.OnBackStackChangedListener,
         LoaderManager.LoaderCallbacks<Cursor>,
@@ -170,41 +175,39 @@ public class ReachActivity extends ActionBarActivity implements
      */
 
     private FragmentManager fragmentManager;
-    private NavigationDrawerFragment mNavigationDrawerFragment;
+    private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
-    private FrameLayout.LayoutParams params;
-    private ImageView upArrow;
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
+
+        String actionBarTitle;
+
         @Override
         public void onPanelSlide(View view, float v) {
 
-            final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
-            if (actionBar.isPresent()) {
-                if (v > 0.85f) {
-                    params.setMargins(0, 0, 0, 0);
-                    actionBar.get().hide();
-                    upArrow.setVisibility(View.GONE);
-                    findViewById(R.id.player).setVisibility(View.GONE);
-                    searchView.setVisibility(View.VISIBLE);
-                } else if (v < 0.85f) {
-                    params.setMargins(0, MiscUtils.dpToPx(10), 0, 0);
-                    actionBar.get().show();
-                    upArrow.setVisibility(View.VISIBLE);
-                    findViewById(R.id.player).setVisibility(View.VISIBLE);
-                    searchView.setVisibility(View.GONE);
-                }
-            }
+            /*if (v > 0.85f) {
+                findViewById(R.id.player).setVisibility(View.GONE);
+                searchView.setVisibility(View.VISIBLE);
+            } else if (v < 0.85f) {
+                findViewById(R.id.player).setVisibility(View.VISIBLE);
+                searchView.setVisibility(View.GONE);
+            }*/
+            findViewById(R.id.player).setAlpha(1f-v);
         }
 
         @Override
         public void onPanelCollapsed(View view) {
+            getSupportActionBar().setTitle(actionBarTitle);
+            setUpDrawer();
             if (fragmentManager.getBackStackEntryCount() == 0)
                 toggleDrawer(false);
         }
 
         @Override
         public void onPanelExpanded(View view) {
+            actionBarTitle = getSupportActionBar().getTitle().toString();
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+            getSupportActionBar().setTitle("Player");
             if (fragmentManager.getBackStackEntryCount() == 0)
                 toggleDrawer(true);
         }
@@ -221,7 +224,7 @@ public class ReachActivity extends ActionBarActivity implements
     private String[] selectionArgumentsDownloader;
     private String[] selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
-    private int topPadding;
+    //private int topPadding;
     private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private MusicData currentPlaying;
@@ -454,6 +457,59 @@ public class ReachActivity extends ActionBarActivity implements
                     cursor.getLong(4)); //duration
         }
     };
+
+    private View.OnClickListener navHeaderClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            onOpenProfile();
+        }
+    };
+
+    private NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(MenuItem menuItem) {
+            //Checking if the item is in checked state or not, if not make it in checked state
+            if (menuItem.isChecked())
+                menuItem.setChecked(false);
+            else
+                menuItem.setChecked(true);
+
+            //Closing drawer on item click
+            mDrawerLayout.closeDrawers();
+
+            if (menuItem.getItemId() != R.id.navigation_item_2) {
+                final ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null)
+                    actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+                toggleDrawer(true);
+            }
+            //Check to see which item was being clicked and perform appropriate action
+            switch (menuItem.getItemId()){
+
+                case R.id.navigation_item_1:
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
+                    return true;
+                case R.id.navigation_item_2:
+                    PromoCodeDialog.newInstance().show(getSupportFragmentManager(), "promo_dialog");
+                    return true;
+                case R.id.navigation_item_3:
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
+                    return true;
+                case R.id.navigation_item_4:
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
+                    return true;
+                default:
+                    return true;
+
+            }
+        }
+    };
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
 
@@ -487,7 +543,7 @@ public class ReachActivity extends ActionBarActivity implements
         combinedAdapter = null;
         queueAdapter = null;
         musicAdapter = null;
-        mNavigationDrawerFragment = null;
+        mNavigationView = null;
         mDrawerLayout = null;
         slidingUpPanelLayout = null;
         currentPlaying = null;
@@ -559,54 +615,6 @@ public class ReachActivity extends ActionBarActivity implements
     }
 
     @Override
-    public void onNavigationDrawerItemSelected(int position) {
-
-        if (isFinishing())
-            return;
-
-        if (position != 1) {
-            final ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null)
-                actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-            toggleDrawer(true);
-        }
-        try {
-            switch (position) {
-
-                case 0: {
-                    fragmentManager
-                            .beginTransaction()
-                            .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
-                    break;
-                }
-                case 1: {
-                    PromoCodeDialog.newInstance().show(getSupportFragmentManager(), "promo_dialog");
-                    break;
-                }
-                case 2: {
-                    fragmentManager
-                            .beginTransaction()
-                            .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
-                    break;
-                }
-                case 3: {
-                    fragmentManager
-                            .beginTransaction()
-                            .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
-                    break;
-                }
-                case 4: {
-                    fragmentManager
-                            .beginTransaction()
-                            .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
-                    break;
-                }
-            }
-        } catch (IllegalStateException ignored) {
-        }
-    }
-
-    @Override
     public void onOpenProfile() {
         if (isFinishing())
             return;
@@ -647,7 +655,7 @@ public class ReachActivity extends ActionBarActivity implements
             final Optional<ActionBar> optional = Optional.fromNullable(getSupportActionBar());
             if (optional.isPresent())
                 optional.get().show();
-            slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
+            //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.container, PrivacyFragment.newInstance(true), "privacy_fragment").commit();
@@ -698,7 +706,7 @@ public class ReachActivity extends ActionBarActivity implements
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
             getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
             getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
-            slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
+            //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
             addNotificationDrawer();
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
@@ -758,8 +766,58 @@ public class ReachActivity extends ActionBarActivity implements
     @Override
     public void setUpDrawer() {
 
-        if (mNavigationDrawerFragment != null)
-            mNavigationDrawerFragment.setUp(R.id.navigation_drawer, mDrawerLayout);
+        // set a custom shadow that overlays the main content when the drawer opens
+        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+        // set up the drawer's list view with items and click listener
+        final ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+        }
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the navigation drawer and the action bar app icon.
+        final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(
+                this,                    /* host Activity */
+                mDrawerLayout,                    /* DrawerLayout object */
+                R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
+                R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
+        ) {
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                if(drawerView.getId() == R.id.notification_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.LEFT);
+                } else if(drawerView.getId() == R.id.navigation_view) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);
+                }
+                invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                if(drawerView.getId() == R.id.notification_drawer) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
+                } else if(drawerView.getId() == R.id.navigation_view) {
+                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.RIGHT);
+                }
+                invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+            }
+        };
+
+        // If the user hasn't 'learned' about the drawer, open it to introduce them to the drawer,
+        // per the navigation drawer design guidelines.
+    /*if (!mUserLearnedDrawer && !mFromSavedInstanceState) {
+        mDrawerLayout.openDrawer(mFragmentContainerView);
+    }*/
+        // Defer code dependent on restoration of previous instance state.
+        mDrawerLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mDrawerToggle.syncState();
+            }
+        });
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
 
     @Override
@@ -781,7 +839,7 @@ public class ReachActivity extends ActionBarActivity implements
                 if (slidingUpPanelLayout != null) {
                     if (show) {
                         slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
-                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(70));
+                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(60));
                         slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
                     } else {
                         slidingUpPanelLayout.getChildAt(1).setVisibility(View.GONE);
@@ -818,9 +876,52 @@ public class ReachActivity extends ActionBarActivity implements
     @Override
     public void setUpNavigationViews() {
 
-        if (mNavigationDrawerFragment != null) {
-            mNavigationDrawerFragment.setNavViews(this);
+        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
+        if (SharedPrefUtils.getMobileData(sharedPreferences))
+            netToggle.setChecked(true);
+        else
+            netToggle.setChecked(false);
+
+        netToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                if (isChecked)
+                    SharedPrefUtils.setDataOn(sharedPreferences);
+                else {
+                    SharedPrefUtils.setDataOff(sharedPreferences);
+                    ////////////////////purge all upload operations, but retain paused operations
+                    getContentResolver().delete(
+                            ReachDatabaseProvider.CONTENT_URI,
+                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                            new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
+                }
+            }
+        });
+        final String path = SharedPrefUtils.getImageId(sharedPreferences);
+        if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
+            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path)
+                    .into((ImageView) findViewById(R.id.userImageNav));
+        ((TextView) findViewById(R.id.userNameNav))
+                .setText(SharedPrefUtils.getUserName(sharedPreferences));
+        ////////////////////
+        final Cursor countCursor = getContentResolver().query(
+                ReachSongProvider.CONTENT_URI,
+                ReachSongHelper.projection,
+                ReachSongHelper.COLUMN_USER_ID + " = ?",
+                new String[]{SharedPrefUtils.getServerId(sharedPreferences) + ""},
+                null);
+        if (countCursor == null) return;
+        if (!countCursor.moveToFirst()) {
+            countCursor.close();
+            return;
         }
+        final long count = countCursor.getCount();
+        countCursor.close();
+        ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
     }
 
     @Override
@@ -1080,14 +1181,15 @@ public class ReachActivity extends ActionBarActivity implements
         setContentView(R.layout.activity_my);
         initialize(sharedPreferences);
 
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
         if (actionBar.isPresent()) {
             actionBar.get().setDisplayShowHomeEnabled(false);
             actionBar.get().hide();
         }
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
-        slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
+        //topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
+        //slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
         toggleSliding(false);
         //navigation-drawer
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -1102,7 +1204,7 @@ public class ReachActivity extends ActionBarActivity implements
                 startAccountCreation(Optional.<OldUserContainerNew>absent());
                 break;
             default: {
-                slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
+                //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
                 addNotificationDrawer();
                 fragmentManager
                         .beginTransaction()
@@ -1110,10 +1212,8 @@ public class ReachActivity extends ActionBarActivity implements
             }
         }
 
-        upArrow = (ImageView) findViewById(R.id.upArrow);
-        params = (FrameLayout.LayoutParams) findViewById(R.id.fullPlayer).getLayoutParams();
         //small
-        searchView = (SearchView) findViewById(R.id.reachQueueSearch);
+        searchView = new SearchView(this);
         progressBarMinimized = (SeekBar) findViewById(R.id.progressBar);
         songNameMinimized = (TextView) findViewById(R.id.songNamePlaying);
         pausePlayMinimized = (ImageButton) findViewById(R.id.pause_play);
@@ -1135,10 +1235,11 @@ public class ReachActivity extends ActionBarActivity implements
         selectionArgumentsDownloader = new String[]{"0"};
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                fragmentManager.findFragmentById(R.id.navigation_drawer);
+        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
 
+        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(previousClick);
         pausePlayMaximized.setOnClickListener(pauseClick);
