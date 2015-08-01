@@ -1,4 +1,4 @@
-package reach.backend.User;
+package reach.backend.user;
 
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.Message;
@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
-import reach.backend.ObjectWrappers.MyBoolean;
-import reach.backend.ObjectWrappers.MyString;
+import reach.backend.objectWrappers.MyBoolean;
+import reach.backend.objectWrappers.MyString;
 
 import static reach.backend.OfyService.ofy;
 

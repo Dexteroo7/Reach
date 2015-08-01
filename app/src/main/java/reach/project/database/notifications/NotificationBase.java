@@ -1,28 +1,32 @@
 package reach.project.database.notifications;
 
-import reach.backend.entities.userApi.model.ReachUser;
-
 /**
  * Created by dexter on 08/07/15.
  */
 public abstract class NotificationBase {
 
+    public static final byte GET_ALL = 0;
+    public static final byte GET_READ = 1;
+    public static final byte GET_UN_READ = 2;
+
+    public static final byte UN_READ = 0;
+    public static final byte READ = 1;
+
+    public static final byte NOT_EXPANDED = 0;
+    public static final byte EXPANDED = 1;
+
     private Types types = Types.DEFAULT;
-    private long hostId = 0;
-    private long systemTime = 0;
+
     private String hostName = "";
     private String imageId = "";
-    private short read = 0;
-    private short expanded = 1;
+
+    private long hostId = 0;
+    private long systemTime = 0;
+
+    private int read = UN_READ;
+    private int expanded = NOT_EXPANDED;
 
     public NotificationBase portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
-
-        this.setHostName(base.getHostName());
-        this.setRead(base.getRead().shortValue());
-        this.setHostId(base.getHostId());
-        this.setImageId(base.getImageId());
-        this.setSystemTime(base.getSystemTime());
-        this.setExpanded((short) 0);
 
         if (base.getTypes().equals(Types.PUSH_ACCEPTED.name()))
             this.setTypes(Types.PUSH_ACCEPTED);
@@ -34,27 +38,28 @@ public abstract class NotificationBase {
             this.setTypes(Types.LIKE);
         else
             throw new IllegalArgumentException("Illegal notification type detected");
+
+        this.setHostName(base.getHostName());
+        this.setImageId(base.getImageId());
+        this.setHostId(base.getHostId());
+        this.setSystemTime(base.getSystemTime());
+        this.setRead(base.getRead());
+        this.setExpanded(NOT_EXPANDED);
+
         return this;
     }
 
     public NotificationBase portData(NotificationBase base) {
 
-        this.setHostName(base.getHostName());
-        this.setRead(base.getRead());
-        this.setHostId(base.getHostId());
-        this.setImageId(base.getImageId());
-        this.setSystemTime(base.getSystemTime());
-        this.setExpanded((short) 0);
         this.setTypes(base.getTypes());
+        this.setHostName(base.getHostName());
+        this.setImageId(base.getImageId());
+        this.setHostId(base.getHostId());
+        this.setSystemTime(base.getSystemTime());
+        this.setRead(base.getRead());
+        this.setExpanded(NOT_EXPANDED);
+
         return this;
-    }
-
-    public short getExpanded() {
-        return expanded;
-    }
-
-    public void setExpanded(short expanded) {
-        this.expanded = expanded;
     }
 
     public Types getTypes() {
@@ -65,14 +70,6 @@ public abstract class NotificationBase {
         this.types = types;
     }
 
-    public String getImageId() {
-        return imageId;
-    }
-
-    public void setImageId(String imageId) {
-        this.imageId = imageId;
-    }
-
     public String getHostName() {
         return hostName;
     }
@@ -81,12 +78,12 @@ public abstract class NotificationBase {
         this.hostName = hostName;
     }
 
-    public long getSystemTime() {
-        return systemTime;
+    public String getImageId() {
+        return imageId;
     }
 
-    public void setSystemTime(long systemTime) {
-        this.systemTime = systemTime;
+    public void setImageId(String imageId) {
+        this.imageId = imageId;
     }
 
     public long getHostId() {
@@ -97,35 +94,48 @@ public abstract class NotificationBase {
         this.hostId = hostId;
     }
 
-    public short getRead() {
+    public long getSystemTime() {
+        return systemTime;
+    }
+
+    public void setSystemTime(long systemTime) {
+        this.systemTime = systemTime;
+    }
+
+    public int getRead() {
         return read;
     }
 
-    public void setRead(short read) {
+    public void setRead(int read) {
         this.read = read;
     }
 
-    public void addBasicData(ReachUser user) {
-        setRead((short) 0);
-        setSystemTime(System.currentTimeMillis());
-        setImageId(user.getImageId());
-        setHostId(user.getId());
-        setHostName(user.getUserName());
+    public int getExpanded() {
+        return expanded;
+    }
+
+    public void setExpanded(int expanded) {
+        this.expanded = expanded;
+    }
+
+    public int getNotificationId() {
+
+        //basically the hashcode
+        if(this.types == null || this.types == Types.DEFAULT || this.hostId == 0 || this.systemTime == 0)
+            throw new IllegalStateException("Notification uninitialized !");
+
+        int result = types.hashCode();
+        result = 31 * result + (int) (hostId ^ (hostId >>> 32));
+        result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
+        return result;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof NotificationBase)) return false;
-
         NotificationBase that = (NotificationBase) o;
-
-        if (hostId != that.hostId) return false;
-        if (systemTime != that.systemTime) return false;
-        if (read != that.read) return false;
-        if (types != that.types) return false;
-        if (!hostName.equals(that.hostName)) return false;
-        return !(imageId != null ? !imageId.equals(that.imageId) : that.imageId != null);
+        return hostId == that.hostId && systemTime == that.systemTime && types == that.types;
 
     }
 
@@ -134,9 +144,6 @@ public abstract class NotificationBase {
         int result = types.hashCode();
         result = 31 * result + (int) (hostId ^ (hostId >>> 32));
         result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
-        result = 31 * result + hostName.hashCode();
-        result = 31 * result + (imageId != null ? imageId.hashCode() : 0);
-        result = 31 * result + (int) read;
         return result;
     }
 }

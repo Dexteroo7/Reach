@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.userProfile;
 
 import android.app.PendingIntent;
 import android.content.Context;
@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -19,26 +20,36 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.Collection;
+import java.util.HashSet;
 
+import reach.backend.entities.userApi.model.MusicContainer;
 import reach.project.R;
 import reach.project.core.PushActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.ReachFriend;
+import reach.project.utils.auxiliaryClasses.ReachAlbum;
+import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.utils.auxiliaryClasses.ReachFriend;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.TextDrawable;
+import reach.project.viewHelpers.TextDrawable;
 import reach.project.viewHelpers.CircleTransform;
 import reach.project.viewHelpers.SlidingTabLayout;
 import reach.project.viewHelpers.ViewPagerReusable;
@@ -185,13 +196,88 @@ public class UserMusicLibrary extends Fragment {
         if (!StaticData.debugMode) {
             ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Browsing Library")
-                    .setAction("User - " + SharedPrefUtils.getUserName(sharedPreferences))
+                    .setAction("user - " + SharedPrefUtils.getUserName(sharedPreferences))
                     .setAction("Friend - " + userId)
                     .setValue(1)
                     .build());
         }
 
         return rootView;
+    }
+
+    private final class GetMusic implements Runnable {
+
+        private final long hostId;
+        private final SharedPreferences sharedPreferences;
+
+        private GetMusic(long hostId,
+                         SharedPreferences sharedPreferences) {
+            this.hostId = hostId;
+            this.sharedPreferences = sharedPreferences;
+        }
+
+        @Override
+        public void run() {
+
+            //fetch music
+            final MusicContainer musicContainer = MiscUtils.autoRetry(new DoWork<MusicContainer>() {
+                @Override
+                protected MusicContainer doWork() throws IOException {
+
+                    return StaticData.userEndpoint.getMusicWrapper(
+                            hostId,
+                            serverId,
+                            SharedPrefUtils.getPlayListCodeForUser(hostId, sharedPreferences),
+                            SharedPrefUtils.getSongCodeForUser(hostId, sharedPreferences)).execute();
+                }
+            }, Optional.<Predicate<MusicContainer>>of(new Predicate<MusicContainer>() {
+                @Override
+                public boolean apply(@Nullable MusicContainer input) {
+                    return input == null;
+                }
+            })).orNull();
+
+            if (musicContainer == null && getActivity() != null)
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(), "music fetch failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            if (getActivity() == null || getActivity().isFinishing() || musicContainer == null)
+                return;
+
+            if (musicContainer.getSongsChanged()) {
+
+                if (musicContainer.getReachSongs() == null || musicContainer.getReachSongs().isEmpty())
+                    //All the songs got deleted
+                    MiscUtils.deleteSongs(hostId, getActivity().getContentResolver());
+                else {
+                    final Pair<Collection<ReachAlbum>, Collection<ReachArtist>> pair =
+                            MiscUtils.getAlbumsAndArtists(new HashSet<>(musicContainer.getReachSongs()));
+                    final Collection<ReachAlbum> reachAlbums = pair.first;
+                    final Collection<ReachArtist> reachArtists = pair.second;
+                    MiscUtils.bulkInsertSongs(new HashSet<>(musicContainer.getReachSongs()),
+                            reachAlbums,
+                            reachArtists,
+                            getActivity().getContentResolver());
+                }
+                SharedPrefUtils.storeSongCodeForUser(hostId, musicContainer.getSongsHash(), sharedPreferences);
+                Log.i("Ayush", "Fetching songs, song hash changed for " + hostId + " " + musicContainer.getSongsHash());
+            }
+
+            if (musicContainer.getPlayListsChanged() && getActivity() != null && !getActivity().isFinishing()) {
+
+                if (musicContainer.getReachPlayLists() == null || musicContainer.getReachPlayLists().isEmpty())
+                    //All playLists got deleted
+                    MiscUtils.deletePlayLists(hostId, getActivity().getContentResolver());
+                else
+                    MiscUtils.bulkInsertPlayLists(new HashSet<>(musicContainer.getReachPlayLists()), getActivity().getContentResolver());
+                SharedPrefUtils.storePlayListCodeForUser(hostId, musicContainer.getPlayListHash(), sharedPreferences);
+                Log.i("Ayush", "Fetching playLists, playList hash changed for " + hostId + " " + musicContainer.getPlayListHash());
+            }
+        }
     }
 
     private class SetIcon extends AsyncTask<String, Void, Bitmap> {

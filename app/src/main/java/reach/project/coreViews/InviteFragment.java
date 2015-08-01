@@ -122,7 +122,7 @@ public class InviteFragment extends Fragment {
                 if (!StaticData.debugMode) {
                     ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                             .setCategory("Invite Page")
-                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                             .setLabel(inviteOptions[position])
                             .setValue(1)
                             .build());

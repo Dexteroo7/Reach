@@ -91,8 +91,8 @@
 
 # Application classes that will be serialized/deserialized over Gson
 -keep class reach.project.reachProcess.auxiliaryClasses.Connection { *; }
--keep class reach.project.utils.PushContainer { *; }
--keep class reach.project.utils.TransferSong { *; }
+-keep class reach.project.utils.auxiliaryClasses.PushContainer { *; }
+-keep class reach.project.utils.auxiliaryClasses.TransferSong { *; }
 
 
 #-keep class com.viewpagerindicator.** { *; }

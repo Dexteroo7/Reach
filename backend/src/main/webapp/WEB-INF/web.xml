@@ -17,14 +17,14 @@
         <init-param>
             <param-name>services</param-name>
             <param-value>
-                reach.backend.Feedback.FeedBackEndpoint,
-                reach.backend.User.MessagingEndpoint,
-                reach.backend.User.ReachUserEndpoint,
-                reach.backend.User.SplitMusicContainerEndpoint,
-                reach.backend.User.MusicSplitterEndpoint,
-                reach.backend.UploadHistory.CompletedOperationsEndpoint,
-                reach.backend.Music.MusicDataEndpoint,
-                reach.backend.Notifications.NotificationEndpoint
+                reach.backend.feedback.FeedBackEndpoint,
+                reach.backend.user.MessagingEndpoint,
+                reach.backend.user.ReachUserEndpoint,
+                reach.backend.user.SplitMusicContainerEndpoint,
+                reach.backend.user.MusicSplitterEndpoint,
+                reach.backend.transactions.CompletedOperationsEndpoint,
+                reach.backend.music.MusicDataEndpoint,
+                reach.backend.notifications.NotificationEndpoint
             </param-value>
         </init-param>
     </servlet>
@@ -35,7 +35,7 @@
     //////////////////////////////////
     <servlet>
         <servlet-name>Worker</servlet-name>
-        <servlet-class>reach.backend.Servlets.Worker</servlet-class>
+        <servlet-class>reach.backend.servlets.Worker</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>Worker</servlet-name>
@@ -44,7 +44,7 @@
     //////////////////////////////////
     <servlet>
         <servlet-name>RefreshGCM</servlet-name>
-        <servlet-class>reach.backend.Servlets.RefreshGCM</servlet-class>
+        <servlet-class>reach.backend.servlets.RefreshGCM</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>RefreshGCM</servlet-name>

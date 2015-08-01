@@ -26,7 +26,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -122,7 +122,7 @@ public class PromoCodeDialog extends DialogFragment {
             if (!StaticData.debugMode) {
                 ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Promo Code")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setLabel("Code - " + pCode)
                         .setValue(1)
                         .build());

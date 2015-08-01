@@ -22,7 +22,7 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 
 import reach.project.R;
-import reach.project.database.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 

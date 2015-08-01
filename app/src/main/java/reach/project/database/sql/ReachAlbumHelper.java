@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import reach.project.database.ReachAlbum;
+import reach.project.utils.auxiliaryClasses.ReachAlbum;
 
 /**
  * Created by Dexter on 2/14/2015.

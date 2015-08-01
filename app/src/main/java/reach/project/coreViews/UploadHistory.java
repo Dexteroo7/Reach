@@ -43,7 +43,7 @@ import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -198,7 +198,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
                 }
             }, Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
             final List<CompletedOperation> list;
-            if(dataToReturn == null || (list = dataToReturn.getItems()) == null || list.size() == 0) return null;
+            if(dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty()) return null;
 
             final Set<Long> ids = new HashSet<>();
             for(CompletedOperation completedOperation : list)

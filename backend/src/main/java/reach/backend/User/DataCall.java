@@ -1,4 +1,4 @@
-package reach.backend.User;
+package reach.backend.user;
 
 import com.google.common.collect.ImmutableList;
 

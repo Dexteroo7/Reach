@@ -34,9 +34,9 @@ import reach.project.database.notifications.Push;
 import reach.project.database.notifications.PushAccepted;
 import reach.project.database.notifications.Types;
 import reach.project.database.sql.ReachNotificationsHelper;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.PushContainer;
+import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.viewHelpers.CircleTransform;
@@ -195,8 +195,8 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                         if (!StaticData.debugMode) {
                             ((ReachApplication) reachApplication).getTracker().send(new HitBuilders.EventBuilder()
                                     .setCategory("Accept - Pushed song")
-                                    .setAction("User - " + SharedPrefUtils.getServerId(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                    .setAction("User Name - " + SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                    .setAction("user - " + SharedPrefUtils.getServerId(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                    .setAction("user Name - " + SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                     .setLabel("Sender - " + pushContainer.getUserName() + ", Songs - " + pushContainer.getSongCount())
                                     .setValue(pushContainer.getSongCount())
                                     .build());
@@ -255,7 +255,7 @@ public class ReachNotificationAdapter extends ResourceCursorAdapter {
                         MiscUtils.autoRetryAsync(new DoWork<Void>() {
                             @Override
                             protected Void doWork() throws IOException {
-                                return StaticData.notificationApi.removePush(push.getPushContainer().hashCode(), serverId).execute();
+                                return StaticData.notificationApi.removeNotification(push.getNotificationId(), serverId).execute();
                             }
                         }, Optional.<Predicate<Void>>absent());
                     }

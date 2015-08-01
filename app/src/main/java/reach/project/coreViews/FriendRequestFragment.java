@@ -2,6 +2,7 @@ package reach.project.coreViews;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -19,24 +20,21 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
 import reach.project.adapter.ReachFriendRequestAdapter;
 import reach.project.core.StaticData;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 
 public class FriendRequestFragment extends Fragment {
 
+    private static AtomicBoolean refreshing = new AtomicBoolean(false);
     private static WeakReference<FriendRequestFragment> reference = null;
-    private SuperInterface mListener;
-    private ListView listView;
-    public static List<Boolean> opened,accepted;
-    private Activity activity;
-
     public static FriendRequestFragment newInstance() {
 
         FriendRequestFragment fragment;
@@ -44,70 +42,45 @@ public class FriendRequestFragment extends Fragment {
             reference = new WeakReference<>(fragment = new FriendRequestFragment());
         return fragment;
     }
-    public FriendRequestFragment() {
-        // Required empty public constructor
-    }
 
-    AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
+    private final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (accepted.get(position)) {
-                ReceivedRequest receivedRequest = ((ReachFriendRequestAdapter) parent.getAdapter()).getItem(position);
+
+            final ReachFriendRequestAdapter adapter = (ReachFriendRequestAdapter) parent.getAdapter();
+            if (adapter.accepted.get(position)) {
+                final ReceivedRequest receivedRequest = adapter.getItem(position);
                 mListener.onOpenLibrary(receivedRequest.getId());
             }
         }
     };
 
-    private final class FetchRequests extends AsyncTask<Long, Void, List<ReceivedRequest>> {
-
-        @Override
-        protected List<ReceivedRequest> doInBackground(Long... params) {
-            return MiscUtils.autoRetry(new DoWork<List<ReceivedRequest>>() {
-                @Override
-                protected List<ReceivedRequest> doWork() throws IOException {
-                    long myId = SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-                    if(myId == 0)
-                        return null;
-                    List<ReceivedRequest> receivedRequests = StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
-                    Collections.reverse(receivedRequests);
-                    return receivedRequests;
-                }
-            }, Optional.<Predicate<List<ReceivedRequest>>>absent()).orNull();
-        }
-
-        @Override
-        protected void onPostExecute(List<ReceivedRequest> receivedRequests) {
-            super.onPostExecute(receivedRequests);
-            if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() )
-                return;
-
-            if (receivedRequests != null && receivedRequests.size()>0) {
-                ReachFriendRequestAdapter reachFriendRequestAdapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests);
-                opened = new ArrayList<>(Collections.nCopies(receivedRequests.size(), true));
-                accepted = new ArrayList<>(Collections.nCopies(receivedRequests.size(), false));
-                listView.setAdapter(reachFriendRequestAdapter);
-                listView.setOnItemClickListener(itemClickListener);
-            }
-            else {
-                MiscUtils.setEmptyTextforListView(listView,"No friends requests for you!");
-            }
-        }
-    }
+    private long serverId;
+    private SuperInterface mListener;
+    private final List<ReceivedRequest> receivedRequests = new ArrayList<>();
+    private ReachFriendRequestAdapter reachFriendRequestAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        listView.setOnScrollListener(NotificationCenterFragment.scrollListener);
+
         new FetchRequests().executeOnExecutor(StaticData.threadPool);
         return rootView;
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
+    @Override
     public void onAttach(Activity activity) {
+
         super.onAttach(activity);
-        this.activity = activity;
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
@@ -117,8 +90,61 @@ public class FriendRequestFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+
+        super.onCreate(savedInstanceState);
+        final Activity activity = getActivity();
+        final SharedPreferences sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        serverId = SharedPrefUtils.getServerId(sharedPrefs);
+        reachFriendRequestAdapter = new ReachFriendRequestAdapter(activity, R.layout.notification_item, receivedRequests, serverId);
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public static final class FetchRequests extends AsyncTask<Context, Void, List<ReceivedRequest>> {
+
+        @Override
+        protected List<ReceivedRequest> doInBackground(Context... params) {
+
+            final long myId = SharedPrefUtils.getServerId(params[0].getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+            if(myId == 0)
+                return Collections.EMPTY_LIST;
+
+            return MiscUtils.autoRetry(new DoWork<List<ReceivedRequest>>() {
+                @Override
+                protected List<ReceivedRequest> doWork() throws IOException {
+
+                    final List<ReceivedRequest> receivedRequests =
+                            StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
+                    Collections.reverse(receivedRequests);
+                    return receivedRequests;
+                }
+            }, Optional.<Predicate<List<ReceivedRequest>>>absent()).orNull();
+        }
+
+        @Override
+        protected void onPostExecute(List<ReceivedRequest> receivedRequests) {
+
+            super.onPostExecute(receivedRequests);
+
+            final FriendRequestFragment fragment;
+            if(reference == null || (fragment = reference.get()) == null)
+
+            if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() )
+                return;
+
+            if (receivedRequests != null && receivedRequests.size()>0) {
+
+                listView.setAdapter(reachFriendRequestAdapter);
+                listView.setOnItemClickListener(itemClickListener);
+            }
+            else {
+                MiscUtils.setEmptyTextforListView(listView,"No friends requests for you!");
+            }
+        }
     }
 }

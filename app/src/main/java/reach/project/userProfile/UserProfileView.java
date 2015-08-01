@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.userProfile;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -29,10 +29,10 @@ import java.lang.ref.WeakReference;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.database.ReachFriend;
+import reach.project.utils.auxiliaryClasses.ReachFriend;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;

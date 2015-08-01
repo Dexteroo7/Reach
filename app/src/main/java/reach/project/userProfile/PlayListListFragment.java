@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.userProfile;
         
 import android.app.Activity;
 import android.database.Cursor;
@@ -21,6 +21,7 @@ import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.project.R;
 import reach.project.adapter.ReachPlayListsAdapter;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.utils.MiscUtils;

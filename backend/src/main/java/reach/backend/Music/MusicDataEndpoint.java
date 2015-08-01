@@ -1,4 +1,4 @@
-package reach.backend.Music;
+package reach.backend.music;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 import javax.inject.Named;
 
-import reach.backend.ObjectWrappers.MyString;
+import reach.backend.objectWrappers.MyString;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -25,8 +25,8 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
         version = "v1",
         resource = "musicVisibility",
         namespace = @ApiNamespace(
-                ownerDomain = "Music.backend.reach",
-                ownerName = "Music.backend.reach",
+                ownerDomain = "music.backend.reach",
+                ownerName = "music.backend.reach",
                 packagePath = ""
         )
 )

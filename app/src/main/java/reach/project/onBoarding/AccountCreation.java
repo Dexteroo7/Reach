@@ -45,7 +45,7 @@ import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
@@ -175,7 +175,7 @@ public class AccountCreation extends Fragment {
                 if (!StaticData.debugMode) {
                     ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                             .setCategory("Promo Code")
-                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                             .setLabel("Code - " + code)
                             .setValue(1)
                             .build());

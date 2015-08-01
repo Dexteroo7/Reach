@@ -1,7 +1,5 @@
-package reach.backend.User;
+package reach.backend.user;
 
-import com.google.appengine.repackaged.com.google.api.client.util.Charsets;
-import com.google.appengine.repackaged.com.google.common.hash.Hashing;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
@@ -9,6 +7,7 @@ import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnSave;
 import com.googlecode.objectify.annotation.Unindex;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 /**
@@ -30,7 +29,7 @@ public class ReachUser {
 
     private int numberOfSongs = 0;
     private String userName = "hello_world";       //Custom Username, can be changed
-    private String imageId = "hello_world";  //User Profile Image
+    private String imageId = "hello_world";  //user Profile Image
     private String gcmId = "hello_world"; //Gcm Cloud Message Id
     private String statusSong = "hello_world"; //Status Song
 
@@ -56,14 +55,21 @@ public class ReachUser {
 
     //////////////////////////////////
     public int computeDirtyHash() {
-        //basic hash function
-        return Hashing.adler32().newHasher()
-                .putInt(numberOfSongs)
-                .putString(userName == null ? "" : userName, Charsets.UTF_8)
-                .putString(imageId == null ? "" : imageId, Charsets.UTF_8)
-                .putString(gcmId == null ? "" : gcmId, Charsets.UTF_8)
-                .putString(statusSong == null ? "" : statusSong, Charsets.UTF_8)
-                .hash().asInt();
+
+        //faster probably
+        return Arrays.hashCode(new Object[]{
+                numberOfSongs,
+                userName == null ? "" : userName,
+                imageId == null ? "" : imageId,
+                gcmId == null ? "" : gcmId,
+                statusSong == null ? "" : statusSong});
+//        return Hashing.adler32().newHasher()
+//                .putInt(numberOfSongs)
+//                .putString(userName == null ? "" : userName, Charsets.UTF_8)
+//                .putString(imageId == null ? "" : imageId, Charsets.UTF_8)
+//                .putString(gcmId == null ? "" : gcmId, Charsets.UTF_8)
+//                .putString(statusSong == null ? "" : statusSong, Charsets.UTF_8)
+//                .hash().asInt();
     }
 
     public int getDirtyCheck() {

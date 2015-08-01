@@ -29,6 +29,7 @@ import reach.backend.entities.userApi.model.QuickSync;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.utils.auxiliaryClasses.DoWork;
 
 /**
  * Created by dexter on 19/07/15.
@@ -47,6 +48,12 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
 
     public QuickSyncFriends(Activity activity, long serverId, String myNumber) {
         this.activityWeakReference = new WeakReference<>(activity);
+        this.serverId = serverId;
+        this.myNumber = myNumber;
+    }
+
+    public QuickSyncFriends(WeakReference<Activity> activity, long serverId, String myNumber) {
+        this.activityWeakReference = activity;
         this.serverId = serverId;
         this.myNumber = myNumber;
     }
@@ -71,6 +78,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final HashSet<Friend> newFriends = new HashSet<>();
         final HashSet<Long> toDelete = new HashSet<>();
 
+        //TODO get all global profiles !
         numbers.add("8860872102");
         final Cursor phoneNumbers = resolver.query(ContactsContract.
                 CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
@@ -102,8 +110,10 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                         ReachFriendsHelper.COLUMN_PHONE_NUMBER //int
                 }, null, null, null);
 
-        if (currentIds == null || currentIds.getCount() == 0)
+        if (currentIds == null || currentIds.getCount() == 0) {
+            new ForceSyncFriends(activityWeakReference, serverId, myNumber).run();
             return Status.FULL_SYNC;
+        }
 
 
         while (currentIds.moveToNext()) {
@@ -129,7 +139,10 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         if(quickSync != null) {
 
             if(quickSync.getNewFriends() != null)
-                newFriends.addAll(quickSync.getNewFriends());
+                for (Friend friend : quickSync.getNewFriends()) {
+                    presentNumbers.add(friend.getPhoneNumber());
+                    newFriends.add(friend);
+                }
             if (quickSync.getToUpdate() != null) {
                 /**
                  * We update by deletion followed by insertion.
@@ -139,14 +152,13 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
 
                     presentNumbers.add(friend.getPhoneNumber());
                     toDelete.add(friend.getId());
+
                     if (friend.getHash() != 0)
-                        newFriends.add(friend);
+                        newFriends.add(friend); //its an update
+                    //else it was a deletion
                 }
             }
         }
-
-        for (Friend friend : newFriends)
-            presentNumbers.add(friend.getPhoneNumber());
 
         //remove all present phoneNumbers and sync phoneBook
         numbers.removeAll(presentNumbers);
@@ -183,7 +195,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         return Status.OK;
     }
 
-    public void bulkInsert(Context context,
+    private void bulkInsert(Context context,
                            ContentResolver resolver,
                            Iterable<Friend> toInsert,
                            Iterable<Long> toDelete,

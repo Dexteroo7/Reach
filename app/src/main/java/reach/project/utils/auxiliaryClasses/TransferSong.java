@@ -1,4 +1,4 @@
-package reach.project.utils;
+package reach.project.utils.auxiliaryClasses;
 
 /**
  * Created by Dexter on 10-04-2015.

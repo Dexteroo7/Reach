@@ -25,16 +25,16 @@ import com.google.gson.Gson;
 import java.io.IOException;
 
 import reach.project.R;
-import reach.project.database.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.PushContainer;
+import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 
@@ -320,7 +320,7 @@ public class GcmIntentService extends IntentService {
                 return;
             }
             final List<Notification> notifications = collection.get().getItems();
-            if(notifications == null || notifications.size() == 0) {
+            if(notifications == null || notifications.isEmpty()) {
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
             }
@@ -332,17 +332,21 @@ public class GcmIntentService extends IntentService {
          */
         else if (message.startsWith("PONG")) {
 
+            /**
+             * 0 - PONG
+             * 1 - ID
+             * 2 - Network Type
+             */
             final String[] splitter = message.split(" ");
             final long hostId = Long.parseLong(splitter[1]);
             final ContentValues friend = new ContentValues();
             final ContentValues database = new ContentValues();
             StaticData.networkCache.put(hostId, splitter[2]);
 
-            friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
             friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+            friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
             friend.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis()); //online
 
-            database.put(ReachDatabaseHelper.COLUMN_NETWORK_TYPE, splitter[2]);
             database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
             /**
              * It is important to only update the required data

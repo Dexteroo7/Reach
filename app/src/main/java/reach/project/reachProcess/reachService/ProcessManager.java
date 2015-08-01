@@ -40,7 +40,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
@@ -406,7 +406,7 @@ public class ProcessManager extends Service implements
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
-                .setContentTitle("Playing Music")
+                .setContentTitle("Playing music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
                 .setOnlyAlertOnce(true)
@@ -439,7 +439,7 @@ public class ProcessManager extends Service implements
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this);
         Notification notification = note
                 .setSmallIcon(R.drawable.ic_icon_notif)
-                .setContentTitle("Playing Music")
+                .setContentTitle("Playing music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
                 .setOnlyAlertOnce(true)
@@ -484,7 +484,7 @@ public class ProcessManager extends Service implements
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
-                .setContentTitle("Playing Music")
+                .setContentTitle("Playing music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
                 .setOnlyAlertOnce(true)
@@ -571,8 +571,8 @@ public class ProcessManager extends Service implements
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Download Fail")
-//                    .setAction("User - " + reachDatabase.getSenderId() + " sending song to " + reachDatabase.getReceiverId() + " timedOut " + reachDatabase.getLogicalClock())
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+//                    .setAction("user - " + reachDatabase.getSenderId() + " sending song to " + reachDatabase.getReceiverId() + " timedOut " + reachDatabase.getLogicalClock())
+                    .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                     .setLabel("Song - " + songName)
                     .setValue(1)
                     .build());
@@ -902,7 +902,7 @@ public class ProcessManager extends Service implements
     public synchronized void pushNextSong(Optional<MusicData> musicData) {
 
         if (!musicData.isPresent()) {
-            Log.i("Downloader", "Music not found");
+            Log.i("Downloader", "music not found");
             return;
         }
 
@@ -1010,7 +1010,7 @@ public class ProcessManager extends Service implements
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(missType)
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                     .setLabel("Song - " + songName)
                     .setValue(1)
                     .build());
@@ -1030,7 +1030,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public Context getContext() {
-        return getApplicationContext();
+        return this;
     }
 
     @Override

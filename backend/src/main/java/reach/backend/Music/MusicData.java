@@ -1,4 +1,4 @@
-package reach.backend.Music;
+package reach.backend.music;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;

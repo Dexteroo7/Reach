@@ -51,10 +51,10 @@ import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.PushContainer;
+import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
-import reach.project.utils.TransferSong;
+import reach.project.utils.auxiliaryClasses.TransferSong;
 
 /**
  * Created by Dexter on 11-04-2015.
@@ -135,8 +135,8 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             if (!StaticData.debugMode) {
                 ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Push song")
-                        .setAction("User - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("user - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setLabel("Receiver - " + pushContainer.getCustomMessage() + ", Songs - " + pushContainer.getSongCount())
                         .setValue(pushContainer.getSongCount())
                         .build());
@@ -238,8 +238,10 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                         try {
                             StaticData.notificationApi.addPush(
                                     pushContainer,
+                                    params[0].getFirstSongName(),
                                     params[0].getReceiverId(),
-                                    params[0].getSenderId()).execute();
+                                    params[0].getSenderId(),
+                                    (int) params[0].getSongCount()).execute();
                         } catch (IOException e) {
                             e.printStackTrace();
                             return null;

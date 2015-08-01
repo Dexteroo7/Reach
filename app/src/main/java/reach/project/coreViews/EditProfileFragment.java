@@ -39,7 +39,7 @@ import java.lang.ref.WeakReference;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.viewHelpers.CircleTransform;

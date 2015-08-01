@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.userProfile;
 
 import android.app.Activity;
 import android.database.Cursor;
@@ -20,7 +20,8 @@ import java.util.concurrent.Future;
 import reach.project.R;
 import reach.project.adapter.ReachArtistsAdapter;
 import reach.project.core.StaticData;
-import reach.project.database.ReachArtist;
+import reach.project.coreViews.ContactsListFragment;
+import reach.project.utils.auxiliaryClasses.ReachArtist;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.sql.ReachArtistHelper;
 import reach.project.utils.MiscUtils;

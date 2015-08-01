@@ -52,13 +52,13 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
             + " integer primary key autoincrement, " +
 
             //base
-            COLUMN_NOTIFICATION_TYPE + " int" + "," +
+            COLUMN_NOTIFICATION_TYPE + " text" + "," +
             COLUMN_HOST_ID + " long" + "," +
             COLUMN_HOST_NAME + " text" + "," +
             COLUMN_IMAGE_ID + " text" + "," +
             COLUMN_SYSTEM_TIME + " long" + "," +
-            COLUMN_READ + " short" + "," +
-            COLUMN_EXPANDED + " short" + "," +
+            COLUMN_READ + " int" + "," +
+            COLUMN_EXPANDED + " int" + "," +
             //like
             COLUMN_SONG_NAME + " text" + "," +
             //push
@@ -126,7 +126,6 @@ public class ReachNotificationsHelper extends SQLiteOpenHelper {
         }
         return values;
     }
-
 
     public static ContentValues contentValuesCreator(Like like) {
 

@@ -1,4 +1,4 @@
-package reach.project.database;
+package reach.project.utils.auxiliaryClasses;
 
 /**
  * Created by dexter on 14/9/14.
@@ -24,10 +24,12 @@ public class ReachDatabase {
     private long processed = 0;
     private long added = 0;
     private long lastActive = 0;
+    private long reference;
 
     private short operationKind = 0; //0 = download, 1 = upload
     private short logicalClock = 0;
     private short status = 0;
+
 
     //types of status
     public static final short NOT_WORKING = 0;
@@ -38,7 +40,14 @@ public class ReachDatabase {
     public static final short FILE_NOT_FOUND = 5;    //404 from host
     public static final short FILE_NOT_CREATED = 6;  //weird error
     public static final short PAUSED_BY_USER = 7;    //paused by client
-    public static final short PAUSED_BY_HOST = 8;    //paused by host
+//    public static final short PAUSED_BY_HOST = 8;    //paused by host
+//    public static final short HOST_GONE = 9;    //paused by host
+
+    public static void isPresent(short status) throws IllegalArgumentException {
+        if(status < 0 || status > 7)
+            throw new IllegalArgumentException("Wrong status !");
+        //else all good
+    }
 
     public boolean isActivated() {
         return isActivated;
@@ -230,5 +239,13 @@ public class ReachDatabase {
         result = 31 * result + (int) (length ^ (length >>> 32));
         result = 31 * result + (int) (added ^ (added >>> 32));
         return result;
+    }
+
+    public long getReference() {
+        return reference;
+    }
+
+    public void setReference(long reference) {
+        this.reference = reference;
     }
 }

@@ -19,7 +19,7 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 
 import reach.project.R;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.viewHelpers.CircleTransform;
@@ -89,8 +89,8 @@ public class PushActivity extends Activity {
                     if (!StaticData.debugMode) {
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Accept - Pushed song")
-                                .setAction("User - " + SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setAction("user - " + SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                 .setLabel("Sender - " + getIntent().getStringExtra("user_name") + ", Songs - " + song_count)
                                 .setValue(song_count)
                                 .build());

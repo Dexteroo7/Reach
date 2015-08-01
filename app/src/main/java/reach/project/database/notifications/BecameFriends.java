@@ -1,20 +1,18 @@
 package reach.project.database.notifications;
 
-import reach.backend.entities.userApi.model.ReachUser;
-
 /**
  * Created by dexter on 08/07/15.
  */
 public class BecameFriends extends NotificationBase {
 
     @Override
-    public short getExpanded() {
-        return super.getExpanded();
+    public NotificationBase portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
+        return super.portData(base);
     }
 
     @Override
-    public void setExpanded(short expanded) {
-        super.setExpanded(expanded);
+    public NotificationBase portData(NotificationBase base) {
+        return super.portData(base);
     }
 
     @Override
@@ -60,6 +58,31 @@ public class BecameFriends extends NotificationBase {
     }
 
     @Override
+    public int getRead() {
+        return super.getRead();
+    }
+
+    @Override
+    public void setRead(int read) {
+        super.setRead(read);
+    }
+
+    @Override
+    public int getExpanded() {
+        return super.getExpanded();
+    }
+
+    @Override
+    public void setExpanded(int expanded) {
+        super.setExpanded(expanded);
+    }
+
+    @Override
+    public int getNotificationId() {
+        return super.getNotificationId();
+    }
+
+    @Override
     public long getHostId() {
         return super.getHostId();
     }
@@ -70,11 +93,6 @@ public class BecameFriends extends NotificationBase {
     }
 
     @Override
-    public void addBasicData(ReachUser user) {
-        super.addBasicData(user);
-    }
-
-    @Override
     public boolean equals(Object o) {
         return super.equals(o);
     }
@@ -82,15 +100,5 @@ public class BecameFriends extends NotificationBase {
     @Override
     public int hashCode() {
         return super.hashCode();
-    }
-
-    @Override
-    public short getRead() {
-        return super.getRead();
-    }
-
-    @Override
-    public void setRead(short read) {
-        super.setRead(read);
     }
 }

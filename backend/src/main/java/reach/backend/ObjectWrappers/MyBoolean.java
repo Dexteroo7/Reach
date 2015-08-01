@@ -1,4 +1,4 @@
-package reach.backend.ObjectWrappers;
+package reach.backend.objectWrappers;
 
 /**
  * Created by dexter on 4/11/14.

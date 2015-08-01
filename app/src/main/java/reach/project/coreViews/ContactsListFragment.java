@@ -3,12 +3,11 @@ package reach.project.coreViews;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -18,16 +17,17 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.util.LongSparseArray;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,10 +41,10 @@ import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,28 +56,24 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.concurrent.Future;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import reach.backend.entities.userApi.model.MusicContainer;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
 import reach.project.adapter.ReachAllContactsAdapter;
 import reach.project.adapter.ReachContactsAdapter;
 import reach.project.core.PushActivity;
 import reach.project.core.StaticData;
-import reach.project.database.ReachAlbum;
-import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.DoWork;
-import reach.project.utils.ForceSyncFriends;
-import reach.project.utils.ListLoader;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SendSMS;
@@ -85,194 +81,38 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.viewHelpers.Contact;
 
-public class ContactsListFragment extends Fragment implements SearchView.OnQueryTextListener, SearchView.OnCloseListener {
+public class ContactsListFragment extends Fragment implements
+        SearchView.OnQueryTextListener,
+        SearchView.OnCloseListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
 
-    private SwipeRefreshLayout swipeRefreshLayout;
     private TextView notificationCount;
+    private View emptyFriends, emptyInvite;
+
+    private FloatingActionButton actionButton;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private SearchView searchView;
 
+    private ScaleAnimation translation;
     private SharedPreferences sharedPrefs;
     private SuperInterface mListener;
-    private ListLoader listLoader;
 
-    private MergeAdapter mergeAdapter;
     private ReachContactsAdapter reachContactsAdapter;
-    private ReachAllContactsAdapter adapter;
+    private ReachAllContactsAdapter inviteAdapter;
+    private MergeAdapter mergeAdapter;
 
-    public static final LongSparseArray<Future<?>> isMusicFetching = new LongSparseArray<>();
-    private final AtomicBoolean pinging = new AtomicBoolean(false);
-    private final HashSet<String> inviteSentTo = new HashSet<>();
+    private static final AtomicBoolean
+            pinging = new AtomicBoolean(false), //are we pinging ?
+            synchronizing = new AtomicBoolean(false), //are we synchronizing ?
+            synchronizeOnce = new AtomicBoolean(false); //have we already synchronized ?
+
     private final String inviteKey = "invite_sent";
+
     private String mCurFilter, selection;
     private String[] selectionArguments;
-    private long serverId;
 
-    public static void setNotificationCount(int count) {
-        final ContactsListFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
-            return;
-        fragment.notificationCount.setText("" + count);
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-        mListener.setUpDrawer();
-        mListener.toggleDrawer(false);
-        mListener.toggleSliding(true);
-        /*if (getArguments().getBoolean("first", false))
-            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
-        serverId = SharedPrefUtils.getServerId(sharedPrefs);
-        /**
-         * Invalidate everyone
-         */
-        final ContentValues contentValues = new ContentValues();
-        contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis() + 31 * 1000);
-        contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-        contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-        getActivity().getContentResolver().update(
-                ReachFriendsProvider.CONTENT_URI,
-                contentValues,
-                ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""});
-        contentValues.clear();
-        StaticData.networkCache.clear();
-    }
-    
-    private final View.OnClickListener openNotification = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mListener.onOpenNotificationDrawer();
-        }
-    };
-
-    private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
-
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-
-            Object object = mergeAdapter.getItem(position);
-
-            if (object instanceof Cursor) {
-
-                final Cursor cursor = (Cursor) object;
-                final long id = cursor.getLong(0);
-                final short status = cursor.getShort(9);
-
-                final Future<?> fetching = isMusicFetching.get(id, null);
-                if (fetching == null || fetching.isDone() || fetching.isCancelled()) {
-
-
-                    isMusicFetching.append(id, StaticData.threadPool.submit(new GetMusic(id,
-                            sharedPrefs)));
-                    //Inform only when nece ssary
-                    if (status < 2 && cursor.getInt(7) == 0)
-                        Toast.makeText(getActivity(), "Refreshing music list", Toast.LENGTH_SHORT).show();
-                }
-
-                if (mListener != null) {
-                    if (status < 2)
-                        mListener.onOpenLibrary(id);
-                    else
-                        mListener.onOpenProfileView(id);
-                }
-            } else if (object instanceof Contact) {
-
-                final Contact contact = (Contact) object;
-                if (contact.isInviteSent()) return;
-                String msg = "Hey! Checkout and download m y  phone music collection with just  a click!" + ".\nhttp://letsreach.co/app\n--\n" + SharedPrefUtils.getUserName(sharedPrefs);
-                final EditText input = new EditText(getActivity());
-                input.setBackgroundResource(0);
-                input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-                input.setTextColor(getResources().getColor(R.color.darkgrey));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT);
-                input.setLayoutParams(lp);
-                input.setText(msg);
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder
-                        .setMessage("Send an invite to " + contact.getUserName() + " ?")
-                        .setView(input)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                StaticData.threadPool.execute(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            String txt = input.getText().toString();
-                                            if (!TextUtils.isEmpty(txt))
-                                                sendSMS(contact.getPhoneNumber(), txt);
-                                            else
-                                                Toast.makeText(getActivity(), "Please enter an invite message", Toast.LENGTH_SHORT).show();
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                                contact.setInviteSent(true);
-                                adapter.notifyDataSetChanged();
-                                inviteSentTo.add(contact.toString());
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                AlertDialog dialog = builder.create();
-                dialog.show();
-            }
-        }
-    };
-
-    public void sendSMS(String number, String msg) throws Exception {
-        SendSMS smsObj = new SendSMS();
-        smsObj.setparams("alerts.sinfini.com ", "sms", "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM");
-        smsObj.send_sms(number, msg, "dlr_url");
-    }
-
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
-
-            if (!pinging.get()) {
-                pinging.set(true);
-                new SendPing().executeOnExecutor(StaticData
-                        .threadPool);
-            }
-        }
-    };
-    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
-
-        @Override
-        public void onScrollStateChanged(AbsListView absListView, int i) {
-
-        }
-
-        @Override
-        public void onScroll(AbsListView view, int firstVisibleItem,
-                             int visibleItemCount, int totalItemCount) {
-            boolean enable = false;
-            if (view.getChildCount() > 0) {
-
-                final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
-                final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
-                enable = firstItemVisible && topOfFirstItemVisible;
-            }
-            swipeRefreshLayout.setEnabled(enable);
-        }
-    };
-    private final View.OnClickListener pushLibraryListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mListener.onOpenPushLibrary();
-        }
-    };
+    private static long serverId = 0;
+    private static String phoneNumber = "";
 
     private static WeakReference<ContactsListFragment> reference = null;
 
@@ -294,62 +134,119 @@ public class ContactsListFragment extends Fragment implements SearchView.OnQuery
         return fragment;
     }
 
-    private final Runnable devika1 = new Runnable() {
-        @Override
-        public void run() {
+    public static void setNotificationCount(int count) {
 
-            if (getActivity() == null)
-                return;
-            Bitmap bmp = null;
-            NotificationManagerCompat managerCompat = NotificationManagerCompat.from(getActivity());
-            int px = MiscUtils.dpToPx(64);
-            try {
-                bmp = Picasso.with(getActivity())
-                        .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
-                        .centerCrop()
-                        .resize(px, px)
-                        .get();
-            } catch (IOException e) {
-                e.printStackTrace();
+        final ContactsListFragment fragment;
+        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
+            return;
+        fragment.notificationCount.setText("" + count);
+    }
+
+    private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
+
+        @Override
+        public void onItemClick(final AdapterView<?> adapterView, final View view, int position, long l) {
+
+            final Object object = adapterView.getAdapter().getItem(position);
+
+            if (object instanceof Cursor) {
+
+                final Cursor cursor = (Cursor) object;
+                final long id = cursor.getLong(0);
+                final short status = cursor.getShort(9);
+
+                if (mListener != null) {
+                    if (status < 2)
+                        mListener.onOpenLibrary(id);
+                    else
+                        mListener.onOpenProfileView(id);
+                }
+            } else if (object instanceof Contact) {
+
+                final Contact contact = (Contact) object;
+                if (contact.isInviteSent()) return;
+                final String msg = "Hey! Checkout and download my phone music collection with just a click!" +
+                        ".\nhttp://letsreach.co/app\n--\n" +
+                        SharedPrefUtils.getUserName(sharedPrefs);
+                final EditText input = new EditText(view.getContext());
+                input.setBackgroundResource(0);
+                input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+                input.setTextColor(view.getContext().getResources().getColor(R.color.darkgrey));
+                final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                input.setLayoutParams(lp);
+                input.setText(msg);
+
             }
-            Intent intent = new Intent(getActivity(), PushActivity.class);
-            intent.putExtra("type", 1);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(getActivity())
-                    .setAutoCancel(true)
-                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                    .setSmallIcon(R.drawable.ic_icon_notif)
-                    .setLargeIcon(bmp)
-                    .setContentIntent(pendingIntent)
-                            //.addAction(0, "Okay! I got it", pendingIntent)
-                    .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText("I am Devika from Team Reach! \n" +
-                                    "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
-                                    "Keep Reaching ;)"))
-                    .setContentTitle("Hey!")
-                    .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my music collection. Keep Reaching ;)")
-                    .setContentText("I am Devika from Team Reach! \n" +
-                            "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
-                            "Keep Reaching ;)")
-                    .setPriority(NotificationCompat.PRIORITY_MAX);
-            managerCompat.notify(99910, builder.build());
+        }
+    };
+
+    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+
+            if (!pinging.get()) {
+                pinging.set(true);
+                new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+            }
+        }
+    };
+
+    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
+
+        @Override
+        public void onScrollStateChanged(AbsListView absListView, int i) {
+
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem,
+                             int visibleItemCount, int totalItemCount) {
+
+            boolean enable = false;
+            if (view.getChildCount() > 0) {
+
+                final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
+                final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
+                enable = firstItemVisible && topOfFirstItemVisible;
+            }
+
+            swipeRefreshLayout.setEnabled(enable);
+        }
+    };
+
+    private final View.OnClickListener pushLibraryListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            mListener.onOpenPushLibrary();
+        }
+    };
+
+    private final View.OnClickListener openNotification = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            mListener.onOpenNotificationDrawer();
         }
     };
 
     @Override
     public void onDestroyView() {
 
+        //clean up
+        pinging.set(false);
+        synchronizing.set(false);
+
         getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
         if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
-        reachContactsAdapter = null;
 
-        if (adapter != null)
-            adapter.cleanUp();
+        if (inviteAdapter != null)
+            inviteAdapter.cleanUp();
 
-        sharedPrefs.edit().putStringSet(inviteKey, inviteSentTo).apply();
-        swipeRefreshLayout.setOnRefreshListener(null);
+        sharedPrefs.edit().putStringSet(inviteKey, LocalUtils.inviteSentTo).apply();
         //listView.setOnScrollListener(null);
 
         if (searchView != null) {
@@ -361,16 +258,74 @@ public class ContactsListFragment extends Fragment implements SearchView.OnQuery
         }
 
         searchView = null;
-        swipeRefreshLayout = null;
         super.onDestroyView();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+
+        super.onCreate(savedInstanceState);
+
+        final Activity activity = getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        mListener.setUpDrawer();
+        mListener.toggleDrawer(false);
+        mListener.toggleSliding(true);
+        /*if (getArguments().getBoolean("first", false))
+            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
+        translation = LocalUtils.createScaleAnimation();
+        sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        serverId = SharedPrefUtils.getServerId(sharedPrefs);
+        phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPrefs);
+
+        //clean up
+        pinging.set(false);
+        synchronizing.set(false);
+        synchronizeOnce.set(false);
+        LocalUtils.contactData.clear();
+        LocalUtils.inviteSentTo.clear();
+        //create adapters
+        inviteAdapter = new ReachAllContactsAdapter(activity, R.layout.allcontacts_user, LocalUtils.contactData) {
+
+            @Override
+            protected void onEmptyContacts() {
+                mergeAdapter.setActive(emptyInvite, true);
+                mergeAdapter.setActive(inviteAdapter, false);
+            }
+
+            @Override
+            protected void onNotEmptyContacts() {
+                mergeAdapter.setActive(emptyInvite, false);
+                mergeAdapter.setActive(inviteAdapter, true);
+            }
+        };
+
+        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.fragment_contacts, null, 0);
+        mergeAdapter = new MergeAdapter();
+        //setup friends adapter
+        mergeAdapter.addView(LocalUtils.createFriendsHeader(activity));
+        mergeAdapter.addView(emptyFriends = LocalUtils.friendsEmpty(activity), false);
+        mergeAdapter.setActive(emptyFriends, false);
+        mergeAdapter.addAdapter(reachContactsAdapter);
+        //setup invite adapter
+        mergeAdapter.addView(LocalUtils.createInviteHeader(activity));
+        mergeAdapter.addView(emptyInvite = LocalUtils.inviteEmpty(activity), false);
+        mergeAdapter.setActive(emptyInvite, false);
+        mergeAdapter.addAdapter(inviteAdapter);
+        //mark those who we have already invited !
+        LocalUtils.inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<String>()));
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
-        if (serverId == 0)
-            return rootView;
+        if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
+            return null;
 
         final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         if (actionBar != null) {
@@ -379,238 +334,106 @@ public class ContactsListFragment extends Fragment implements SearchView.OnQuery
             mListener.setUpNavigationViews();
         }
 
-        inviteSentTo.clear();
-        inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<String>()));
-        /**
-         * All cursor operations should be background, else lag
-         */
-        final ScaleAnimation translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-        translation.setDuration(1000);
-        translation.setInterpolator(new BounceInterpolator());
+        final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
+        listView.setDivider(null);
+        listView.setDividerHeight(0);
+        listView.setOnItemClickListener(clickListener);
+        listView.setAdapter(mergeAdapter);
 
-        if (reachContactsAdapter == null)
-            reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0);
-        selection = null;
-        selectionArguments = null;
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
         swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_blue));
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(refreshListener);
 
-        final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
-        listView.setDivider(null);
-        listView.setDividerHeight(0);
-        listView.setOnItemClickListener(clickListener);
-        mergeAdapter = new MergeAdapter();
-
-        final TextView textView = new TextView(getActivity());
-        textView.setText("Friends on Reach");
-        textView.setTextColor(getResources().getColor(R.color.reach_color));
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-        textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
-        textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(10));
-        mergeAdapter.addView(textView);
-
-        final ProgressBar loading = new ProgressBar(getActivity());
-        loading.setIndeterminate(true);
-        loading.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
-        mergeAdapter.addView(loading);
-        mergeAdapter.addAdapter(reachContactsAdapter);
-
-        final TextView emptyTV1 = new TextView(getActivity());
-        emptyTV1.setText("No friends found");
-        emptyTV1.setTextColor(getResources().getColor(R.color.darkgrey));
-        emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        //emptyTV1.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
-        emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
-        mergeAdapter.addView(emptyTV1, false);
-        mergeAdapter.setActive(emptyTV1, false);
-
-        final TextView textView2 = new TextView(getActivity());
-        textView2.setText("Invite Friends");
-        textView2.setTextColor(getResources().getColor(R.color.reach_color));
-        textView2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-        textView2.setTypeface(textView2.getTypeface(), Typeface.BOLD);
-        textView2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
-        mergeAdapter.addView(textView2);
-
-        final TextView emptyTV2 = new TextView(getActivity());
-        emptyTV2.setText("No contacts found");
-        emptyTV2.setTextColor(getResources().getColor(R.color.darkgrey));
-        emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        //emptyTV2.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
-        emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
-        mergeAdapter.addView(emptyTV2, false);
-        mergeAdapter.setActive(emptyTV2, false);
-
-        final FloatingActionButton actionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        actionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
         actionButton.attachToListView(listView, null, scrollListener);
         actionButton.setOnClickListener(pushLibraryListener);
 
-        if (!pinging.get()) {
+        selection = null;
+        selectionArguments = null;
+
+        //we have not already synchronized !
+        if (!synchronizeOnce.get() && !synchronizing.get()) {
+
+            //contact sync will call send ping as well
+            swipeRefreshLayout.setRefreshing(true);
+            synchronizing.set(true);
+            pinging.set(true);
+            new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+            new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(StaticData.threadPool);
+        } else if (!pinging.get()) {
+
+            //if not pinging send a ping !
             swipeRefreshLayout.setRefreshing(true);
             pinging.set(true);
-            new SendPing().executeOnExecutor(StaticData.threadPool);
+            new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
         }
 
-        final Activity activity = getActivity();
-        final String phoneNumber = SharedPrefUtils.getUserNumber(activity.getSharedPreferences("reach_process", Context.MODE_MULTI_PROCESS));
-
-        new InitializeData(emptyTV2).executeOnExecutor(StaticData.threadPool);
-
-        listLoader = new ListLoader(activity, StaticData.FRIENDS_LOADER) {
-
-            @Override
-            public void showEmptyView() {
-                mergeAdapter.setActive(emptyTV1, true);
-                mergeAdapter.setActive(loading, false);
-            }
-
-            @Override
-            public void showLoader() {
-                mergeAdapter.setActive(emptyTV1, false);
-                mergeAdapter.setActive(loading, true);
-            }
-
-            @Override
-            public void onLoaderReset() {
-                reachContactsAdapter.swapCursor(null);
-                actionButton.setVisibility(View.GONE);
-            }
-
-            @Override
-            public Loader<Cursor> onCreateLoader() {
-
-                return new CursorLoader(activity,
-                        ReachFriendsProvider.CONTENT_URI,
-                        ReachFriendsHelper.projection,
-                        selection,
-                        selectionArguments,
-                        ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
-            }
-
-            @Override
-            public void onLoaded(Cursor data, int count) {
-
-                mergeAdapter.setActive(emptyTV1, false);
-                mergeAdapter.setActive(loading, false);
-                //count > 0 always
-                if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
-                    StaticData.threadPool.execute(devika1);
-                    SharedPrefUtils.setFirstIntroSeen(sharedPrefs.edit());
-                }
-                actionButton.setVisibility(View.VISIBLE);
-                if (!translation.hasStarted())
-                    actionButton.startAnimation(translation);
-                reachContactsAdapter.swapCursor(data);
-            }
-
-            @Override
-            public void doWork() {
-
-                final QuickSyncFriends.Status status = new QuickSyncFriends(activity, serverId, phoneNumber).call();
-                if (status == QuickSyncFriends.Status.FULL_SYNC)
-                    new ForceSyncFriends(activity, serverId, phoneNumber).run();
-            }
-        };
-
-        listView.setAdapter(mergeAdapter);
-        StaticData.threadPool.submit(listLoader);
-        listLoader.startLoader();
+        getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
         return rootView;
     }
 
-    private class InitializeData extends AsyncTask<Void, String, Boolean> {
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (id == StaticData.FRIENDS_LOADER)
+            return new CursorLoader(getActivity(),
+                    ReachFriendsProvider.CONTENT_URI,
+                    ReachFriendsHelper.projection,
+                    selection,
+                    selectionArguments,
+                    ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+        else
+            return null;
+    }
 
-        private final TextView emptyView;
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        private InitializeData(TextView emptyView) {
-            this.emptyView = emptyView;
-        }
+        if (loader.getId() != StaticData.FRIENDS_LOADER || data == null || data.isClosed())
+            return;
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
+        reachContactsAdapter.swapCursor(data);
+        final int count = data.getCount();
 
-            if (getActivity() == null)
-                return false;
-            final Cursor phones = getActivity().getContentResolver().query(ContactsContract.
-                    CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
-            if (phones == null)
-                return false;
-            final HashSet<Contact> contacts = new HashSet<>(phones.getCount());
-            while (phones.moveToNext()) {
+        if (count == 0) {
 
-                final Contact contact;
-                final String number, displayName;
-                final long userID;
+            mergeAdapter.setActive(emptyFriends, true);
+            mergeAdapter.setActive(reachContactsAdapter, false);
+        } else {
 
-                if (phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER) == -1 ||
-                        phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME) == -1 ||
-                        phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID) == -1)
-                    continue;
-
-                number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                displayName = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                userID = phones.getLong(phones.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
-
-                if (TextUtils.isEmpty(displayName)) continue;
-                contact = new Contact(displayName, number, userID);
-                if (inviteSentTo.contains(contact.toString()))
-                    contact.setInviteSent(true);
-                contacts.add(contact);
+            mergeAdapter.setActive(emptyFriends, false);
+            mergeAdapter.setActive(reachContactsAdapter, true);
+            if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
+                StaticData.threadPool.execute(LocalUtils.devikaSendMeSomeLove);
+                SharedPrefUtils.setFirstIntroSeen(sharedPrefs.edit());
             }
-            phones.close();
-            if (contacts.size() == 0 || getActivity() == null)
-                return false;
-            final ArrayList<Contact> contactArrayList = new ArrayList<>(contacts);
-            Collections.sort(contactArrayList, new Comparator<Contact>() {
-                @Override
-                public int compare(Contact lhs, Contact rhs) {
-                    return lhs.getUserName().compareToIgnoreCase(rhs.getUserName());
-                }
-            });
-            adapter = new ReachAllContactsAdapter(getActivity(), R.layout.allcontacts_user, contactArrayList);
-            adapter.setOnEmptyContactsListener(new ReachAllContactsAdapter.OnEmptyContactsListener() {
-                @Override
-                public void onEmptyContacts() {
-                    mergeAdapter.setActive(emptyView, true);
-                }
-
-                @Override
-                public void onNotEmptyContacts() {
-                    mergeAdapter.setActive(emptyView, false);
-                }
-            });
-            return true;
+            //bounce ?
+            actionButton.setVisibility(View.VISIBLE);
+            if (!translation.hasStarted())
+                actionButton.startAnimation(translation);
         }
+    }
 
-        @Override
-        protected void onPostExecute(Boolean gg) {
-            super.onPostExecute(gg);
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
 
-            if (isCancelled() || getActivity() == null || getActivity().isFinishing())
-                return;
-
-            if (gg) {
-                mergeAdapter.setActive(emptyView, false);
-                mergeAdapter.addAdapter(adapter);
-            } else {
-                mergeAdapter.setActive(emptyView, true);
-                Toast.makeText(getActivity(), "No contacts found", Toast.LENGTH_SHORT).show();
-            }
+        if (loader.getId() == StaticData.FRIENDS_LOADER) {
+            reachContactsAdapter.swapCursor(null);
+            actionButton.setVisibility(View.GONE);
         }
     }
 
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        if (adapter != null)
-            adapter.getFilter().filter(null);
-        selection = null;
-        selectionArguments = null;
-       listLoader.restartLoader();
-        return false;
+//        selection = null;
+//        selectionArguments = null;
+//        searchView.setQuery(null, true);
+//
+//        inviteAdapter.getFilter().filter(null);
+//        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+//        return false;
+        return onQueryTextChange(null);
     }
 
     @Override
@@ -623,152 +446,30 @@ public class ContactsListFragment extends Fragment implements SearchView.OnQuery
 
         if (searchView == null)
             return false;
-
-        if (adapter != null)
-            adapter.getFilter().filter(newText);
-
-        // Called when the action bar search text has changed.  Update
-        // the search filter, and restart the loader to do a new query
-        // with this filter.
-        final String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
-        // Don't do anything if the filter hasn't actually changed.
-        // Prevents restarting the loader when restoring state.
-        if (mCurFilter == null && newFilter == null) {
+        /**
+         * Called when the action bar search text has changed.
+         * Update the search filter.
+         * Restart the loader to do a new query with this filter.
+         * Don't do anything if the filter hasn't actually changed.
+         * Prevents restarting the loader when restoring state.
+         */
+        if (TextUtils.isEmpty(mCurFilter) && TextUtils.isEmpty(newText))
             return true;
-        }
-        if (mCurFilter != null && mCurFilter.equals(newFilter)) {
+        if (!TextUtils.isEmpty(mCurFilter) && mCurFilter.equals(newText))
             return true;
-        }
-        mCurFilter = newFilter;
+        mCurFilter = newText;
 
-        if (TextUtils.isEmpty(newText)) {
+        if (TextUtils.isEmpty(mCurFilter)) {
             selection = null;
             selectionArguments = null;
         } else {
             selection = ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
             selectionArguments = new String[]{"%" + mCurFilter + "%"};
         }
-        listLoader.restartLoader();
+
+        inviteAdapter.getFilter().filter(mCurFilter);
+        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
         return true;
-    }
-
-    private final class SendPing extends AsyncTask<Void, String, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            StaticData.networkCache.clear();
-            MiscUtils.autoRetry(new DoWork<MyString>() {
-                @Override
-                protected MyString doWork() throws IOException {
-                    return StaticData.userEndpoint.pingMyReach(serverId).execute();
-                }
-            }, Optional.<Predicate<MyString>>absent()).orNull();
-
-            final Activity activity = getActivity();
-            if (isCancelled() || activity == null || activity.isFinishing())
-                return null;
-            /**
-             * Invalidate those who were online 30 secs ago
-             * and send PING
-             */
-            final long currentTime = System.currentTimeMillis();
-            final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, currentTime + 31 * 1000);
-            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-            contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-            activity.getContentResolver().update(
-                    ReachFriendsProvider.CONTENT_URI,
-                    contentValues,
-                    ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
-                            ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + ""});
-            contentValues.clear();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-
-            super.onPostExecute(aVoid);
-            pinging.set(false);
-            if (swipeRefreshLayout != null)
-                swipeRefreshLayout.setRefreshing(false);
-        }
-    }
-
-    private final class GetMusic implements Runnable {
-
-        private final long hostId;
-        private final SharedPreferences sharedPreferences;
-
-        private GetMusic(long hostId,
-                         SharedPreferences sharedPreferences) {
-            this.hostId = hostId;
-            this.sharedPreferences = sharedPreferences;
-        }
-
-        @Override
-        public void run() {
-
-            //fetch music
-            final MusicContainer musicContainer = MiscUtils.autoRetry(new DoWork<MusicContainer>() {
-                @Override
-                protected MusicContainer doWork() throws IOException {
-
-                    return StaticData.userEndpoint.getMusicWrapper(
-                            hostId,
-                            serverId,
-                            SharedPrefUtils.getPlayListCodeForUser(hostId, sharedPreferences),
-                            SharedPrefUtils.getSongCodeForUser(hostId, sharedPreferences)).execute();
-                }
-            }, Optional.<Predicate<MusicContainer>>of(new Predicate<MusicContainer>() {
-                @Override
-                public boolean apply(@Nullable MusicContainer input) {
-                    return input == null;
-                }
-            })).orNull();
-
-            if (musicContainer == null && getActivity() != null)
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getActivity(), "Music fetch failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-            if (getActivity() == null || getActivity().isFinishing() || musicContainer == null)
-                return;
-
-            if (musicContainer.getSongsChanged()) {
-
-                if (musicContainer.getReachSongs() == null || musicContainer.getReachSongs().size() == 0)
-                    //All the songs got deleted
-                    MiscUtils.deleteSongs(hostId, getActivity().getContentResolver());
-                else {
-                    final Pair<Collection<ReachAlbum>, Collection<ReachArtist>> pair =
-                            MiscUtils.getAlbumsAndArtists(new HashSet<>(musicContainer.getReachSongs()));
-                    final Collection<ReachAlbum> reachAlbums = pair.first;
-                    final Collection<ReachArtist> reachArtists = pair.second;
-                    MiscUtils.bulkInsertSongs(new HashSet<>(musicContainer.getReachSongs()),
-                            reachAlbums,
-                            reachArtists,
-                            getActivity().getContentResolver());
-                }
-                SharedPrefUtils.storeSongCodeForUser(hostId, musicContainer.getSongsHash(), sharedPreferences);
-                Log.i("Ayush", "Fetching songs, song hash changed for " + hostId + " " + musicContainer.getSongsHash());
-            }
-
-            if (musicContainer.getPlayListsChanged() && getActivity() != null && !getActivity().isFinishing()) {
-
-                if (musicContainer.getReachPlayLists() == null || musicContainer.getReachPlayLists().size() == 0)
-                    //All playLists got deleted
-                    MiscUtils.deletePlayLists(hostId, getActivity().getContentResolver());
-                else
-                    MiscUtils.bulkInsertPlayLists(new HashSet<>(musicContainer.getReachPlayLists()), getActivity().getContentResolver());
-                SharedPrefUtils.storePlayListCodeForUser(hostId, musicContainer.getPlayListHash(), sharedPreferences);
-                Log.i("Ayush", "Fetching playLists, playList hash changed for " + hostId + " " + musicContainer.getPlayListHash());
-            }
-        }
     }
 
     @Override
@@ -813,5 +514,394 @@ public class ContactsListFragment extends Fragment implements SearchView.OnQuery
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+
+    private enum LocalUtils {
+        ;
+
+        public static final HashSet<String> inviteSentTo = new HashSet<>();
+        public static final List<Contact> contactData = new ArrayList<>();
+
+        private static boolean isDead() {
+
+            final Fragment fragment;
+            if (reference == null || (fragment = reference.get()) == null)
+                return true;
+            final Activity activity = fragment.getActivity();
+            return activity == null || activity.isFinishing();
+
+        }
+
+        private static Optional<ContentResolver> getResolver() {
+
+            final Fragment fragment;
+            if (reference == null || (fragment = reference.get()) == null)
+                return Optional.absent();
+            final Activity activity = fragment.getActivity();
+            if (activity == null || activity.isFinishing())
+                return Optional.absent();
+            return Optional.of(activity.getContentResolver());
+        }
+
+        public static final class InitializeData extends AsyncTask<Void, Void, Boolean> {
+
+            private final MergeAdapter mergeAdapter;
+            private final ReachAllContactsAdapter inviteAdapter;
+            private final View emptyInvite;
+
+            public InitializeData(MergeAdapter mergeAdapter,
+                                  ReachAllContactsAdapter inviteAdapter,
+                                  View emptyInvite) {
+
+                this.mergeAdapter = mergeAdapter;
+                this.inviteAdapter = inviteAdapter;
+                this.emptyInvite = emptyInvite;
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+
+                Optional<ContentResolver> optional = getResolver();
+                if (!optional.isPresent())
+                    return false;
+                final Cursor phones = optional.get().query(ContactsContract.
+                        CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+                if (phones == null)
+                    return false;
+
+                final HashSet<Contact> contacts = new HashSet<>(phones.getCount());
+                while (phones.moveToNext()) {
+
+                    final Contact contact;
+                    final String number, displayName;
+                    final long userID;
+
+                    if (phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER) == -1 ||
+                            phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME) == -1 ||
+                            phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID) == -1)
+                        continue;
+
+                    number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    displayName = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    userID = phones.getLong(phones.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
+
+                    if (TextUtils.isEmpty(displayName))
+                        continue;
+                    contact = new Contact(displayName, number, userID);
+
+                    if (inviteSentTo.contains(contact.toString()))
+                        contact.setInviteSent(true);
+                    contacts.add(contact);
+                }
+                phones.close();
+
+                if (contacts.isEmpty())
+                    return false;
+
+                contactData.clear();
+                contactData.addAll(contacts);
+                Collections.sort(contactData, new Comparator<Contact>() {
+                    @Override
+                    public int compare(Contact lhs, Contact rhs) {
+                        return lhs.getUserName().compareToIgnoreCase(rhs.getUserName());
+                    }
+                });
+
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean success) {
+
+                super.onPostExecute(success);
+
+                if (mergeAdapter == null || inviteAdapter == null || emptyInvite == null || isDead())
+                    return;
+
+                inviteAdapter.notifyDataSetChanged();
+                if (success) {
+                    mergeAdapter.setActive(emptyInvite, false);
+                    mergeAdapter.setActive(inviteAdapter, true);
+                } else {
+                    mergeAdapter.setActive(emptyInvite, true);
+                    mergeAdapter.setActive(inviteAdapter, false);
+                }
+            }
+        }
+
+        public static final class ContactsSync extends AsyncTask<SwipeRefreshLayout, Void, SwipeRefreshLayout> {
+
+            @Override
+            protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
+
+                /**
+                 * Invalidate everyone
+                 */
+                final ContentValues contentValues = new ContentValues();
+                contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis() + 31 * 1000);
+                contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+                contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
+
+                final Optional<ContentResolver> optional = getResolver();
+                if (!optional.isPresent())
+                    return null;
+
+                optional.get().update(
+                        ReachFriendsProvider.CONTENT_URI,
+                        contentValues,
+                        ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
+                                ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
+                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                (System.currentTimeMillis() - (60 * 1000)) + ""});
+                contentValues.clear();
+                StaticData.networkCache.clear();
+
+                try {
+                    final QuickSyncFriends.Status status = new QuickSyncFriends(reference.get().getActivity(), serverId, phoneNumber).call();
+                    if (status == QuickSyncFriends.Status.FULL_SYNC) {
+                        //full sync was performed
+//                    new ForceSyncFriends(weakReference, serverId, phoneNumber).run();
+                    }
+                } catch (NullPointerException ignored) {
+                }
+                return params[0];
+            }
+
+            @Override
+            protected void onPostExecute(SwipeRefreshLayout swipeRefreshLayout) {
+
+                super.onPostExecute(swipeRefreshLayout);
+                if (swipeRefreshLayout == null || isDead())
+                    return;
+                synchronizeOnce.set(true);
+                //we are still refreshing !
+                pinging.set(true);
+                new SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+            }
+        }
+
+        public static final class SendPing extends AsyncTask<SwipeRefreshLayout, String, SwipeRefreshLayout> {
+            @Override
+            protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
+
+                StaticData.networkCache.clear();
+                MiscUtils.autoRetry(new DoWork<MyString>() {
+                    @Override
+                    public MyString doWork() throws IOException {
+                        return StaticData.userEndpoint.pingMyReach(serverId).execute();
+                    }
+                }, Optional.<Predicate<MyString>>absent()).orNull();
+
+                /**
+                 * Invalidate those who were online 30 secs ago
+                 * and send PING
+                 */
+                final long currentTime = System.currentTimeMillis();
+                final ContentValues contentValues = new ContentValues();
+                contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, currentTime + 31 * 1000);
+                contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+                contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
+
+                final Optional<ContentResolver> optional = getResolver();
+                if (!optional.isPresent())
+                    return null;
+
+                optional.get().update(
+                        ReachFriendsProvider.CONTENT_URI,
+                        contentValues,
+                        ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
+                                ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
+                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + ""});
+                contentValues.clear();
+                return params[0];
+            }
+
+            @Override
+            protected void onPostExecute(SwipeRefreshLayout refreshLayout) {
+
+                super.onPostExecute(refreshLayout);
+                if (refreshLayout == null || isDead())
+                    return;
+                //finally relax !
+                synchronizing.set(false);
+                pinging.set(false);
+                refreshLayout.setRefreshing(false);
+            }
+        }
+
+        public static final Runnable devikaSendMeSomeLove = new Runnable() {
+            @Override
+            public void run() {
+
+                final ContactsListFragment fragment;
+                if (reference == null || (fragment = reference.get()) == null)
+                    return;
+                final Activity activity = fragment.getActivity();
+                if (activity == null || activity.isFinishing())
+                    return;
+
+                Bitmap bmp = null;
+                final NotificationManagerCompat managerCompat = NotificationManagerCompat.from(activity);
+                final int px = MiscUtils.dpToPx(64);
+                try {
+                    bmp = Picasso.with(activity)
+                            .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
+                            .centerCrop()
+                            .resize(px, px)
+                            .get();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                final Intent intent = new Intent(activity, PushActivity.class);
+                intent.putExtra("type", 1);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                final NotificationCompat.Builder builder = new NotificationCompat.Builder(activity)
+                        .setAutoCancel(true)
+                        .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                        .setSmallIcon(R.drawable.ic_icon_notif)
+                        .setLargeIcon(bmp)
+                        .setContentIntent(pendingIntent)
+                                //.addAction(0, "Okay! I got it", pendingIntent)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText("I am Devika from Team Reach! \n" +
+                                        "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                                        "Keep Reaching ;)"))
+                        .setContentTitle("Hey!")
+                        .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my music collection. Keep Reaching ;)")
+                        .setContentText("I am Devika from Team Reach! \n" +
+                                "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                                "Keep Reaching ;)")
+                        .setPriority(NotificationCompat.PRIORITY_MAX);
+                managerCompat.notify(99910, builder.build());
+            }
+        };
+
+        public static ScaleAnimation createScaleAnimation() {
+            final ScaleAnimation translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+            translation.setDuration(1000);
+            translation.setInterpolator(new BounceInterpolator());
+            return translation;
+        }
+
+        public static View createFriendsHeader(Context context) {
+
+            final TextView friendsHeader = new TextView(context);
+            friendsHeader.setText("Friends on Reach");
+            friendsHeader.setTextColor(context.getResources().getColor(R.color.reach_color));
+            friendsHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
+            friendsHeader.setTypeface(friendsHeader.getTypeface(), Typeface.BOLD);
+            friendsHeader.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(10));
+            return friendsHeader;
+        }
+
+        public static View friendsEmpty(Context context) {
+
+            final TextView emptyFriends = new TextView(context);
+            emptyFriends.setText("No friends found");
+            emptyFriends.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyFriends.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            //emptyTV1.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
+            emptyFriends.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
+            return emptyFriends;
+        }
+
+        public static View createInviteHeader(Context context) {
+
+            final TextView inviteHeader = new TextView(context);
+            inviteHeader.setText("Invite Friends");
+            inviteHeader.setTextColor(context.getResources().getColor(R.color.reach_color));
+            inviteHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
+            inviteHeader.setTypeface(inviteHeader.getTypeface(), Typeface.BOLD);
+            inviteHeader.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
+            return inviteHeader;
+        }
+
+        public static View inviteEmpty(Context context) {
+
+            final TextView emptyInvite = new TextView(context);
+            emptyInvite.setText("No contacts found");
+            emptyInvite.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyInvite.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            //emptyTV2.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.MATCH_PARENT, ListView.LayoutParams.WRAP_CONTENT));
+            emptyInvite.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
+            return emptyInvite;
+        }
+
+        public static void showAlert(TextView textView, ArrayAdapter arrayAdapter, final Contact contact) {
+
+            final WeakReference<TextView> textViewReference = new WeakReference<>(textView);
+            final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(arrayAdapter);
+
+            new AlertDialog.Builder(textView.getContext())
+                    .setMessage("Send an invite to " + contact.getUserName() + " ?")
+                    .setView(textView)
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                        final class SendInvite extends AsyncTask<String, Void, Boolean> {
+
+                            @Override
+                            protected Boolean doInBackground(String... params) {
+
+                                final SendSMS smsObj = new SendSMS();
+                                smsObj.setparams("alerts.sinfini.com ", "sms", "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM");
+                                try {
+                                    smsObj.send_sms(params[0], params[1], "dlr_url");
+                                } catch (IOException | KeyManagementException | NoSuchAlgorithmException e) {
+                                    e.printStackTrace();
+                                    return false;
+                                }
+                                return true;
+                            }
+
+                            @Override
+                            protected void onPostExecute(Boolean aBoolean) {
+
+                                super.onPostExecute(aBoolean);
+
+                                if (!aBoolean) {
+
+                                    final ArrayAdapter adapter = arrayAdapterReference.get();
+                                    if (adapter == null)
+                                        return;
+                                    //fail
+                                    contact.setInviteSent(false);
+                                    adapter.notifyDataSetChanged();
+                                    LocalUtils.inviteSentTo.remove(contact.toString());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+
+                            final ArrayAdapter adapter = arrayAdapterReference.get();
+                            final TextView input = textViewReference.get();
+                            if (input == null || adapter == null) {
+                                dialog.dismiss();
+                                return;
+                            }
+
+                            final String txt = input.getText().toString();
+                            if (!TextUtils.isEmpty(txt))
+                                new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
+                            else
+                                Toast.makeText(input.getContext(), "Please enter an invite message", Toast.LENGTH_SHORT).show();
+
+                            contact.setInviteSent(true);
+                            adapter.notifyDataSetChanged();
+                            LocalUtils.inviteSentTo.add(contact.toString());
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).create().show();
+        }
     }
 }

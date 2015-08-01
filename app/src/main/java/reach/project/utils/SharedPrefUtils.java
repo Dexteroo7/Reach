@@ -42,6 +42,10 @@ public enum SharedPrefUtils {
                 .apply();
     }
 
+    public static String getPhoneNumber(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("phoneNumber", "");
+    }
+
     public static String getPromoCode(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("promoCode", "");
     }

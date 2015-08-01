@@ -38,7 +38,7 @@ import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachNotificationsProvider;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;

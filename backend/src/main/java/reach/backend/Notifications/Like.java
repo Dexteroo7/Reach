@@ -1,14 +1,16 @@
-package reach.backend.Notifications;
+package reach.backend.notifications;
 
 import com.googlecode.objectify.annotation.Subclass;
 
-import reach.backend.User.ReachUser;
+import java.io.Serializable;
 
 /**
  * Created by dexter on 06/07/15.
  */
-@Subclass (name = "Like")
-public class Like extends NotificationBase {
+@Subclass(name = "Like")
+public class Like extends NotificationBase implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String songName = "";
 
@@ -73,31 +75,32 @@ public class Like extends NotificationBase {
     }
 
     @Override
-    public void addBasicData(ReachUser user) {
-        super.addBasicData(user);
+    public int getNotificationId() {
+        return super.getNotificationId();
     }
 
     @Override
-    public short getRead() {
-        return super.getRead();
+    public void setNotificationId(int notificationId) {
+        super.setNotificationId(notificationId);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Like)) return false;
-        if (!super.equals(o)) return false;
-
-        Like like = (Like) o;
-
-        return !(songName != null ? !songName.equals(like.songName) : like.songName != null);
-
+        return super.equals(o);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (songName != null ? songName.hashCode() : 0);
-        return result;
+        return super.hashCode();
+    }
+
+    @Override
+    public int getRead() {
+        return super.getRead();
+    }
+
+    @Override
+    public void setRead(int read) {
+        super.setRead(read);
     }
 }

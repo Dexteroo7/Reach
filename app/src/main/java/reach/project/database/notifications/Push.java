@@ -1,11 +1,13 @@
 package reach.project.database.notifications;
 
-import reach.backend.entities.userApi.model.ReachUser;
-
 /**
  * Created by dexter on 06/07/15.
  */
 public class Push extends NotificationBase {
+
+    private int size = 0;
+    private String firstSongName = "";
+    private String pushContainer = ""; //compressed Base64
 
     public String getPushContainer() {
         return pushContainer;
@@ -15,16 +17,14 @@ public class Push extends NotificationBase {
         this.pushContainer = pushContainer;
     }
 
-    private String pushContainer = ""; //pushContainer compressed
-
     @Override
-    public short getExpanded() {
-        return super.getExpanded();
+    public NotificationBase portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
+        return super.portData(base);
     }
 
     @Override
-    public void setExpanded(short expanded) {
-        super.setExpanded(expanded);
+    public NotificationBase portData(NotificationBase base) {
+        return super.portData(base);
     }
 
     @Override
@@ -70,6 +70,31 @@ public class Push extends NotificationBase {
     }
 
     @Override
+    public int getRead() {
+        return super.getRead();
+    }
+
+    @Override
+    public void setRead(int read) {
+        super.setRead(read);
+    }
+
+    @Override
+    public int getExpanded() {
+        return super.getExpanded();
+    }
+
+    @Override
+    public void setExpanded(int expanded) {
+        super.setExpanded(expanded);
+    }
+
+    @Override
+    public int getNotificationId() {
+        return super.getNotificationId();
+    }
+
+    @Override
     public long getHostId() {
         return super.getHostId();
     }
@@ -79,19 +104,20 @@ public class Push extends NotificationBase {
         super.setHostId(hostId);
     }
 
-    @Override
-    public void addBasicData(ReachUser user) {
-        super.addBasicData(user);
+    public int getSize() {
+        return size;
     }
 
-    @Override
-    public short getRead() {
-        return super.getRead();
+    public void setSize(int size) {
+        this.size = size;
     }
 
-    @Override
-    public void setRead(short read) {
-        super.setRead(read);
+    public String getFirstSongName() {
+        return firstSongName;
+    }
+
+    public void setFirstSongName(String firstSongName) {
+        this.firstSongName = firstSongName;
     }
 
     @Override
@@ -102,14 +128,18 @@ public class Push extends NotificationBase {
 
         Push push = (Push) o;
 
-        return !(pushContainer != null ? !pushContainer.equals(push.pushContainer) : push.pushContainer != null);
+        if (size != push.size) return false;
+        if (!firstSongName.equals(push.firstSongName)) return false;
+        return pushContainer.equals(push.pushContainer);
 
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (pushContainer != null ? pushContainer.hashCode() : 0);
+        result = 31 * result + size;
+        result = 31 * result + firstSongName.hashCode();
+        result = 31 * result + pushContainer.hashCode();
         return result;
     }
 }

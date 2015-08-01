@@ -1,8 +1,8 @@
-package reach.backend.User.FriendContainers;
+package reach.backend.user.friendContainers;
 
 import java.util.HashSet;
 
-import reach.backend.User.ReachUser;
+import reach.backend.user.ReachUser;
 
 /**
  * Created by dexter on 17/07/15.

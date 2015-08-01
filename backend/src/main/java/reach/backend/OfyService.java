@@ -4,17 +4,17 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 
-import reach.backend.Feedback.FeedBack;
-import reach.backend.Music.MusicData;
-import reach.backend.Notifications.BecameFriends;
-import reach.backend.Notifications.Like;
-import reach.backend.Notifications.Notification;
-import reach.backend.Notifications.Push;
-import reach.backend.Notifications.PushAccepted;
-import reach.backend.UploadHistory.CompletedOperations;
-import reach.backend.User.MusicSplitter;
-import reach.backend.User.ReachUser;
-import reach.backend.User.SplitMusicContainer;
+import reach.backend.feedback.FeedBack;
+import reach.backend.music.MusicData;
+import reach.backend.notifications.BecameFriends;
+import reach.backend.notifications.Like;
+import reach.backend.notifications.Notification;
+import reach.backend.notifications.Push;
+import reach.backend.notifications.PushAccepted;
+import reach.backend.transactions.CompletedOperations;
+import reach.backend.user.MusicSplitter;
+import reach.backend.user.ReachUser;
+import reach.backend.user.SplitMusicContainer;
 
 /**
  * Objectify service wrapper so we can statically register our persistence classes

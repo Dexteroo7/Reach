@@ -23,7 +23,7 @@ import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.viewHelpers.CircleTransform;

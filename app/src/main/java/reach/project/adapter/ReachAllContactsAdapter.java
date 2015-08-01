@@ -28,23 +28,13 @@ import reach.project.viewHelpers.CircleTransform;
 import reach.project.viewHelpers.Contact;
 
 
-public class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
+public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
     private final  Context context;
     private final int layoutResourceId;
     private final Picasso picasso;
     private final List<Contact> originalData;
     private final List<Contact> filteredData;
-    private OnEmptyContactsListener mListener = null;
-
-    public interface OnEmptyContactsListener {
-        void onEmptyContacts();
-        void onNotEmptyContacts();
-    }
-
-    public void setOnEmptyContactsListener(OnEmptyContactsListener listener){
-        this.mListener = listener;
-    }
 
     public void cleanUp() {
 
@@ -78,7 +68,7 @@ public class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
     private Uri openPhoto(long contactId) {
         return Uri.withAppendedPath(ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId),
-                                    ContactsContract.Contacts.Photo.CONTENT_DIRECTORY);
+                ContactsContract.Contacts.Photo.CONTENT_DIRECTORY);
     }
 
     private final class ViewHolder{
@@ -156,9 +146,9 @@ public class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
                 if(filterResults.values instanceof List) {
 
                     if (((List) filterResults.values).size()==0)
-                        mListener.onEmptyContacts();
+                        onEmptyContacts();
                     else
-                        mListener.onNotEmptyContacts();
+                        onNotEmptyContacts();
 
                     filteredData.clear();
                     for(Object contact : (List) filterResults.values) {
@@ -171,4 +161,7 @@ public class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
         };
     }
+
+    protected abstract void onEmptyContacts();
+    protected abstract void onNotEmptyContacts();
 }

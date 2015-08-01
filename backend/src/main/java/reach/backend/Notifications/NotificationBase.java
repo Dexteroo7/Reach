@@ -1,30 +1,27 @@
-package reach.backend.Notifications;
+package reach.backend.notifications;
 
-import reach.backend.User.ReachUser;
+import java.io.Serializable;
 
 /**
  * Created by dexter on 08/07/15.
  */
-public class NotificationBase {
+public class NotificationBase implements Serializable {
 
-    public static final int DEFAULT_LIST_LIMIT = 30;
+    private static final long serialVersionUID = 1L;
+
+    public static final int DEFAULT_LIST_LIMIT = 150;
+
+    public static final int NEW = -1;
+    public static final int UN_READ = 0;
+    public static final int READ = 1;
 
     private Types types = Types.DEFAULT;
     private long hostId = 0;
     private long systemTime = 0;
-    private String hostName = "";
-    private String imageId = "";
-    /**
-     * initially will be -1 for unread notifications
-     * 0 will signal that the notification was delivered to the centre
-     * 1 will confirm read
-     *
-     * 1) First set to -1 for all new/unread notifications
-     * 2) In the subsequent sync by the notification centre all -1's are marked as 0
-     *    and sent to the centre and updated here.
-     * 3) In the next call, all 0's are marked as 1's and sent thus making them read
-     */
-    private short read = -1;
+    private int read = NEW; //using int to accommodate more cases !
+
+    private String hostName = ""; //can change, we don't save this in the data store
+    private String imageId = ""; //can change, we don't save this in the data store
 
     public Types getTypes() {
         return types;
@@ -66,20 +63,20 @@ public class NotificationBase {
         this.hostId = hostId;
     }
 
-    public short getRead() {
-        return read;
+    public int getNotificationId() {
+
+        //basically the hashcode
+        if(this.types == null || this.types == Types.DEFAULT || this.hostId == 0 || this.systemTime == 0)
+            throw new IllegalStateException("Notification uninitialized !");
+
+        int result = types.hashCode();
+        result = 31 * result + (int) (hostId ^ (hostId >>> 32));
+        result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
+        return result;
     }
 
-    public void setRead(short read) {
-        this.read = read;
-    }
-
-    public void addBasicData(ReachUser user) {
-        setRead((short) -1);
-        setSystemTime(System.currentTimeMillis());
-        setImageId(user.getImageId());
-        setHostId(user.getId());
-        setHostName(user.getUserName());
+    public void setNotificationId(int notificationId) {
+        //nothing to do here ! :)
     }
 
     @Override
@@ -87,14 +84,11 @@ public class NotificationBase {
         if (this == o) return true;
         if (!(o instanceof NotificationBase)) return false;
 
-        NotificationBase that = (NotificationBase) o;
+        NotificationBase base = (NotificationBase) o;
 
-        if (hostId != that.hostId) return false;
-        if (systemTime != that.systemTime) return false;
-        if (read != that.read) return false;
-        if (types != that.types) return false;
-        if (!hostName.equals(that.hostName)) return false;
-        return !(imageId != null ? !imageId.equals(that.imageId) : that.imageId != null);
+        if (hostId != base.hostId) return false;
+        if (systemTime != base.systemTime) return false;
+        return types == base.types;
 
     }
 
@@ -103,9 +97,14 @@ public class NotificationBase {
         int result = types.hashCode();
         result = 31 * result + (int) (hostId ^ (hostId >>> 32));
         result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
-        result = 31 * result + hostName.hashCode();
-        result = 31 * result + (imageId != null ? imageId.hashCode() : 0);
-        result = 31 * result + (int) read;
         return result;
+    }
+
+    public int getRead() {
+        return read;
+    }
+
+    public void setRead(int read) {
+        this.read = read;
     }
 }

@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.userProfile;
 
 import android.app.Activity;
 import android.content.Context;
@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import reach.project.R;
 import reach.project.adapter.ReachMusicAdapter;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;

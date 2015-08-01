@@ -23,6 +23,7 @@ import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.utils.auxiliaryClasses.DoWork;
 
 /**
  * Created by dexter on 19/07/15.
@@ -39,6 +40,12 @@ public class ForceSyncFriends implements Runnable {
         this.myNumber = myNumber;
     }
 
+    public ForceSyncFriends(WeakReference<Activity> activity, long serverId, String myNumber) {
+        this.activityWeakReference = activity;
+        this.serverId = serverId;
+        this.myNumber = myNumber;
+    }
+
     private boolean checkDead(Activity activity) {
         return (activity == null || activity.isFinishing());
     }
@@ -47,16 +54,13 @@ public class ForceSyncFriends implements Runnable {
     public void run() {
 
         final List<Friend> fullSync;
-        final HashSet<String> numbers;
-        final List<String> presentNumbers;
-        final List<ContentValues> values;
         /**
          * First we fetch the list of 'KNOWN' friends
          */
          fullSync = serverId == 0 ? null : MiscUtils.autoRetry(
                 new DoWork<List<Friend>>() {
                     @Override
-                    protected List<Friend> doWork() throws IOException {
+                    public List<Friend> doWork() throws IOException {
                         final FriendCollection collection = StaticData.userEndpoint.longSync(serverId).execute();
                         if(collection != null && collection.size() > 0)
                             return collection.getItems();
@@ -72,8 +76,13 @@ public class ForceSyncFriends implements Runnable {
         /**
          * Now we collect the phoneNumbers on device
          */
-        numbers = new HashSet<>();
+        final HashSet<String> numbers = new HashSet<>();
+        final List<String> presentNumbers;
+        final List<ContentValues> values;
+
+        //TODO get all global profiles !
         numbers.add("8860872102");
+
         final Cursor phoneNumbers = activity.getContentResolver().query(ContactsContract.
                 CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         if (phoneNumbers != null) {
@@ -116,7 +125,7 @@ public class ForceSyncFriends implements Runnable {
                         Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
                         wrapper.setContacts(ImmutableList.copyOf(numbers));
                     }
-                    protected List<Friend> doWork() throws IOException {
+                    public List<Friend> doWork() throws IOException {
                         return StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems();
                     }
                 }, Optional.<Predicate<List<Friend>>>absent()).orNull();

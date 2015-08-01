@@ -1,14 +1,16 @@
-package reach.backend.Notifications;
+package reach.backend.notifications;
 
 import com.googlecode.objectify.annotation.Subclass;
 
-import reach.backend.User.ReachUser;
+import java.io.Serializable;
 
 /**
  * Created by dexter on 08/07/15.
  */
 @Subclass (name = "PushAccepted")
-public class PushAccepted extends NotificationBase {
+public class PushAccepted extends NotificationBase implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String firstSongName = "";
     private int size = 0;
@@ -83,13 +85,13 @@ public class PushAccepted extends NotificationBase {
     }
 
     @Override
-    public void addBasicData(ReachUser user) {
-        super.addBasicData(user);
+    public int getNotificationId() {
+        return super.getNotificationId();
     }
 
     @Override
-    public short getRead() {
-        return super.getRead();
+    public void setNotificationId(int notificationId) {
+        super.setNotificationId(notificationId);
     }
 
     @Override
@@ -111,5 +113,15 @@ public class PushAccepted extends NotificationBase {
         result = 31 * result + (firstSongName != null ? firstSongName.hashCode() : 0);
         result = 31 * result + size;
         return result;
+    }
+
+    @Override
+    public int getRead() {
+        return super.getRead();
+    }
+
+    @Override
+    public void setRead(int read) {
+        super.setRead(read);
     }
 }

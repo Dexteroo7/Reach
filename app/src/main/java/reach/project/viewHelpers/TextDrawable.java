@@ -1,4 +1,4 @@
-package reach.project.utils;
+package reach.project.viewHelpers;
 
 import android.graphics.*;
 import android.graphics.drawable.ShapeDrawable;

@@ -1,4 +1,4 @@
-package reach.backend.User;
+package reach.backend.user;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -31,13 +31,13 @@ import java.util.logging.Logger;
 
 import javax.inject.Named;
 
-import reach.backend.ObjectWrappers.MyString;
+import reach.backend.objectWrappers.MyString;
 import reach.backend.OfyService;
-import reach.backend.UploadHistory.CompletedOperation;
-import reach.backend.UploadHistory.CompletedOperations;
-import reach.backend.User.FriendContainers.Friend;
-import reach.backend.User.FriendContainers.QuickSync;
-import reach.backend.User.FriendContainers.ReceivedRequest;
+import reach.backend.transactions.CompletedOperation;
+import reach.backend.transactions.CompletedOperations;
+import reach.backend.user.friendContainers.Friend;
+import reach.backend.user.friendContainers.QuickSync;
+import reach.backend.user.friendContainers.ReceivedRequest;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -75,7 +75,7 @@ public class ReachUserEndpoint {
     public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
         final HashSet<String> phoneNumbers;
-        if(contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.size() = 0)
+        if(contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.size() == 0)
             return null;
 
         logger.info(phoneNumbers.size() + " total");
@@ -320,7 +320,7 @@ public class ReachUserEndpoint {
             myReach = ofy().load().type(ReachUser.class).ids(client.getMyReach());
         else
             myReach = null;
-        contactsWrapper.getContacts().add("8860872102");
+        contactsWrapper.getContacts().add("8860872102"); //devika !
 
         //////////////////////////////////////
         try {

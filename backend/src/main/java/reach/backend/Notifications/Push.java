@@ -1,14 +1,20 @@
-package reach.backend.Notifications;
+package reach.backend.notifications;
 
 import com.googlecode.objectify.annotation.Subclass;
 
-import reach.backend.User.ReachUser;
+import java.io.Serializable;
 
 /**
  * Created by dexter on 06/07/15.
  */
 @Subclass (name = "Push")
-public class Push extends NotificationBase {
+public class Push extends NotificationBase implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private int size = 0;
+    private String firstSongName = "";
+    private String pushContainer = "";
 
     public String getPushContainer() {
         return pushContainer;
@@ -17,8 +23,6 @@ public class Push extends NotificationBase {
     public void setPushContainer(String pushContainer) {
         this.pushContainer = pushContainer;
     }
-
-    private String pushContainer = "";
 
     @Override
     public Types getTypes() {
@@ -73,13 +77,13 @@ public class Push extends NotificationBase {
     }
 
     @Override
-    public void addBasicData(ReachUser user) {
-        super.addBasicData(user);
+    public int getNotificationId() {
+        return super.getNotificationId();
     }
 
     @Override
-    public short getRead() {
-        return super.getRead();
+    public void setNotificationId(int notificationId) {
+        super.setNotificationId(notificationId);
     }
 
     @Override
@@ -99,5 +103,31 @@ public class Push extends NotificationBase {
         int result = super.hashCode();
         result = 31 * result + (pushContainer != null ? pushContainer.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public int getRead() {
+        return super.getRead();
+    }
+
+    @Override
+    public void setRead(int read) {
+        super.setRead(read);
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public String getFirstSongName() {
+        return firstSongName;
+    }
+
+    public void setFirstSongName(String firstSongName) {
+        this.firstSongName = firstSongName;
     }
 }

@@ -37,7 +37,7 @@ public final class StaticData {
                 request.setConnectTimeout(request.getConnectTimeout() * 2);
                 request.setReadTimeout(request.getReadTimeout() * 2);
 //                connection.setRequestProperty("Accept-Encoding", "gzip");
-//                connection.setRequestProperty("User-Agent", "gzip");
+//                connection.setRequestProperty("user-Agent", "gzip");
             }
         };
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();

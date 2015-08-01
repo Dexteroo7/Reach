@@ -1,4 +1,4 @@
-package reach.backend.User;
+package reach.backend.user;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;

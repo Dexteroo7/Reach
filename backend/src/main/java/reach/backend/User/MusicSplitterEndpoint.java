@@ -1,4 +1,4 @@
-package reach.backend.User;
+package reach.backend.user;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;

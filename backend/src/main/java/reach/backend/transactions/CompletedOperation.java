@@ -1,4 +1,4 @@
-package reach.backend.UploadHistory;
+package reach.backend.transactions;
 
 import java.util.HashSet;
 
@@ -14,10 +14,6 @@ public class CompletedOperation {
     private long time;
     private long hits = 0;
     private HashSet<Long> receiver;
-
-    public CompletedOperation() {
-
-    }
 
     public CompletedOperation(String songName, long songSize, long senderId) {
         this.senderId = senderId;

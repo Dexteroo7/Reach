@@ -1,4 +1,4 @@
-package reach.backend.UploadHistory;
+package reach.backend.transactions;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
@@ -11,18 +11,16 @@ import com.googlecode.objectify.annotation.Unindex;
  */
 @Cache
 @Entity
+@Index
 public class CompletedOperations {
 
     //these 3 will identify this element
     @Id
     private Long id;
-    @Index
-    private long senderId;
-
-    @Unindex
-    private long receiver;
-    @Unindex
+    private long senderId; //uploader
+    private long receiver; //downloader
     private String songName;
+
     @Unindex
     private long songSize;
     @Unindex

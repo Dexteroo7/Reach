@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import reach.backend.entities.userApi.model.Friend;
-import reach.project.database.ReachFriend;
+import reach.project.utils.auxiliaryClasses.ReachFriend;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -63,8 +63,8 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
                     COLUMN_HASH //10
             };
 
-    public static short OFFLINE_REQUEST_GRANTED = 0;
-    public static short ONLINE_REQUEST_GRANTED = 1;
+    public static short ONLINE_REQUEST_GRANTED = 0;
+    public static short OFFLINE_REQUEST_GRANTED = 1;
     public static short REQUEST_SENT_NOT_GRANTED = 2;
     public static short REQUEST_NOT_SENT = 3;
 

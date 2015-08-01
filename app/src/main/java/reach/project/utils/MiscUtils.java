@@ -1,14 +1,10 @@
 package reach.project.utils;
 
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.os.Environment;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -26,20 +22,18 @@ import android.widget.TextView;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
-import java.nio.channels.SelectionKey;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -50,9 +44,9 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.StaticData;
-import reach.project.database.ReachAlbum;
-import reach.project.database.ReachArtist;
-import reach.project.database.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.ReachAlbum;
+import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
@@ -64,6 +58,7 @@ import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
+import reach.project.utils.auxiliaryClasses.DoWork;
 
 /**
  * Created by dexter on 1/10/14.
@@ -329,6 +324,22 @@ public enum MiscUtils {
 
     }
 
+    /**
+     * Get a quick hash of song
+     * @param actualName name1 of song
+     * @param displayName name2 of song
+     * @param duration of song
+     * @param size of song
+     * @return hash using above parameters
+     */
+    public static String quickHash(String actualName, String displayName, long duration, long size) {
+        return Hashing.md5().newHasher()
+                .putString(actualName)
+                .putString(displayName)
+                .putLong(duration)
+                .putLong(size).hash().toString();
+    }
+
     public static void bulkInsertPlayLists(Set<ReachPlayList> reachPlayListDatabases,
                                            ContentResolver contentResolver) {
 
@@ -392,37 +403,6 @@ public enum MiscUtils {
                 reachArtistDatabaseHashMap.values());
     }
 
-    public static void keyCleanUp(SelectionKey selectionKey) {
-
-        if (selectionKey == null || !selectionKey.isValid())
-            return;
-        Log.i("Downloader", "Running cleanUp");
-        try {
-            if (selectionKey.channel() != null)
-                selectionKey.channel().close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            selectionKey.cancel();
-        }
-    }
-
-    public static ContentProviderOperation getUpdateOperation(ContentValues contentValues, long id) {
-        return ContentProviderOperation
-                .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
-                .withValues(contentValues)
-                .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " + ReachDatabaseHelper.COLUMN_STATUS + " != ?", new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER})
-                .build();
-    }
-
-    public synchronized static StartDownloadOperation startDownloadOperation(ReachDatabase reachDatabase, ContentResolver contentResolver) {
-        return new StartDownloadOperation(reachDatabase, contentResolver);
-    }
-
-    public synchronized static Runnable startBulkDownloadOperation(List<ReachDatabase> reachDatabases, ContentResolver contentResolver) {
-        return new StartBulkDownloadOperation(reachDatabases, contentResolver);
-    }
-
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
 
         return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
@@ -438,30 +418,6 @@ public enum MiscUtils {
                 return input == null;
             }
         })).orNull();
-    }
-
-    public static File getReachDirectory() {
-
-        final File file = new File(Environment.getExternalStorageDirectory(), ".Reach");
-        if (file.isDirectory()) {
-            Log.i("Downloader", "Using getExternalStorageDirectory");
-            return file;
-        } else if (file.mkdir()) {
-            Log.i("Downloader", "Creating and using getExternalStorageDirectory");
-            return file;
-        }
-        return null;
-    }
-
-    public static long stringToLongHashCode(String string) {
-
-        long h = 1125899906842597L; // prime
-        int len = string.length();
-
-        for (int i = 0; i < len; i++) {
-            h = 31 * h + string.charAt(i);
-        }
-        return h;
     }
 
 //    public static int getReachDatabaseCount(ContentResolver contentResolver) {
@@ -621,118 +577,110 @@ public enum MiscUtils {
         });
     }
 
-    private static class StartBulkDownloadOperation implements Runnable {
+    public static String generateRequest(ReachDatabase reachDatabase) {
 
-        private final List<ReachDatabase> reachDatabases;
-        private final ContentResolver contentResolver;
+        return "CONNECT" + new Gson().toJson
+                (new Connection(
+                        ////Constructing connection object
+                        "REQ",
+                        reachDatabase.getSenderId(),
+                        reachDatabase.getReceiverId(),
+                        reachDatabase.getSongId(),
+                        reachDatabase.getProcessed(),
+                        reachDatabase.getLength(),
+                        UUID.randomUUID().getMostSignificantBits(),
+                        UUID.randomUUID().getMostSignificantBits(),
+                        reachDatabase.getLogicalClock(), ""));
+    }
 
-        private StartBulkDownloadOperation(List<ReachDatabase> reachDatabases, ContentResolver contentResolver) {
-            this.reachDatabases = reachDatabases;
-            this.contentResolver = contentResolver;
+    public static boolean updateStatus(ContentResolver contentResolver, short status, long databaseId, boolean shouldUnpause) {
+
+        //check for validity
+        ReachDatabase.isPresent(status); //will throw exception !
+
+        final ContentValues values = new ContentValues();
+        final String condition;
+        final String [] arguments;
+        if(shouldUnpause || status == ReachDatabase.PAUSED_BY_USER) {
+
+            condition = ReachDatabaseHelper.COLUMN_ID + " = ?";
+            arguments = new String[]{databaseId+""};
+        } else {
+            //we should not un-pause
+            condition = ReachDatabaseHelper.COLUMN_ID + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
+            arguments = new String[]{databaseId+"", ReachDatabase.PAUSED_BY_USER+""};
         }
 
-        @Override
-        public void run() {
+        return contentResolver.update(
+                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + databaseId),
+                values, condition, arguments) > 0;
+    }
 
-            final ArrayList<ContentProviderOperation> operations =
-                    new ArrayList<>();
-
-            for (ReachDatabase reachDatabase : reachDatabases) {
-
-                final ContentValues values = new ContentValues();
-                if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
-
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                    operations.add(getUpdateOperation(values, reachDatabase.getId()));
-                    continue;
-                }
-
-                final String message = "CONNECT" + new Gson().toJson
-                        (new Connection(
-                                ////Constructing connection object
-                                "REQ",
-                                reachDatabase.getSenderId(),
-                                reachDatabase.getReceiverId(),
-                                reachDatabase.getSongId(),
-                                reachDatabase.getProcessed(),
-                                reachDatabase.getLength(),
-                                UUID.randomUUID().getMostSignificantBits(),
-                                UUID.randomUUID().getMostSignificantBits(),
-                                reachDatabase.getLogicalClock(), ""));
-
-                final MyBoolean myBoolean = sendGCM(message, reachDatabase.getSenderId(), reachDatabase.getReceiverId());
-                if (myBoolean == null) {
-                    Log.i("Ayush", "GCM sending resulted in shit");
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                } else if (myBoolean.getGcmexpired()) {
-                    Log.i("Ayush", "GCM re-registry needed");
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                } else if (myBoolean.getOtherGCMExpired()) {
-                    Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                } else {
-                    Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-                }
-                operations.add(getUpdateOperation(values, reachDatabase.getId()));
-            }
-            try {
-                Log.i("Downloader", "Starting Download op " + operations.size());
-                contentResolver.applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
-            } catch (RemoteException | OperationApplicationException e) {
-                e.printStackTrace();
-            }
-        }
+    public synchronized static StartDownloadOperation startDownloadOperation(Context context,
+                                                                             String connection,
+                                                                             long receiverId,
+                                                                             long senderId,
+                                                                             long databaseId) {
+        return new StartDownloadOperation(context, connection, receiverId, senderId, databaseId);
     }
 
     private static class StartDownloadOperation implements Runnable {
 
-        private final ReachDatabase reachDatabase;
-        private final ContentResolver contentResolver;
+        private final String connection;
+        private final long receiverId, senderId, databaseId;
+        private final WeakReference<Context> contextReference;
 
-        private StartDownloadOperation(ReachDatabase reachDatabase, ContentResolver contentResolver) {
-            this.reachDatabase = reachDatabase;
-            this.contentResolver = contentResolver;
+        private StartDownloadOperation(Context context,
+                                       String connection,
+                                       long receiverId,
+                                       long senderId,
+                                       long databaseId) {
+
+            this.contextReference = new WeakReference<>(context);
+            this.connection = connection;
+            this.receiverId = receiverId;
+            this.senderId = senderId;
+            this.databaseId = databaseId;
         }
 
         @Override
         public void run() {
 
-            final String message = "CONNECT" + new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "REQ",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
-
-            final MyBoolean myBoolean = sendGCM(message, reachDatabase.getSenderId(), reachDatabase.getReceiverId());
-            final ContentValues values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
+            //sending REQ to senderId
+            final MyBoolean myBoolean = sendGCM(connection, senderId, receiverId);
+            final short status;
 
             if (myBoolean == null) {
                 Log.i("Ayush", "GCM sending resulted in shit");
-                values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                status = ReachDatabase.GCM_FAILED;
             } else if (myBoolean.getGcmexpired()) {
+
+                //TODO test
+//                final Context context = contextReference.get();
+//                if(context == null)
+//                    return;
+//                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+//                MiscUtils.updateGCM(SharedPrefUtils.getServerId(preferences), contextReference);
                 Log.i("Ayush", "GCM re-registry needed");
-                values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                status = ReachDatabase.GCM_FAILED;
             } else if (myBoolean.getOtherGCMExpired()) {
-                Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                Log.i("Downloader", "SENDING GCM FAILED " + senderId);
+                status = ReachDatabase.GCM_FAILED;
             } else {
-                Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+                Log.i("Downloader", "GCM SENT " + senderId);
+                status = ReachDatabase.NOT_WORKING;
             }
-            Log.i("Downloader", "Updating DB on GCM sent " + contentResolver.update(
-                    Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabase.getId()),
-                    values,
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabase.getId() + ""}));
+
+            final Context context = contextReference.get();
+            if(context == null)
+                return;
+
+            Log.i("Downloader", "Updating DB on GCM sent " + updateStatus(
+                    context.getContentResolver(),
+                    status,
+                    databaseId,
+                    false)); //should not unpause !
         }
     }
 }

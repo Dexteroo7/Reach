@@ -6,13 +6,12 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.text.TextUtils;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,18 +20,17 @@ import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.FriendRequestFragment;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.DoWork;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.viewHelpers.CircleTransform;
 
 /**
@@ -40,64 +38,60 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
-    private Context ctx;
-    private int rId;
+    public final SparseBooleanArray accepted = new SparseBooleanArray();
+    private final SparseBooleanArray opened = new SparseBooleanArray();
 
-    public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList) {
+    final int a = MiscUtils.dpToPx(70);
+    final int b = MiscUtils.dpToPx(110);
+
+    private final Context ctx;
+    private final int rId;
+    private final long serverId;
+
+    public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long serverId) {
         super(context, resourceId, receivedRequestList);
         this.ctx = context;
         this.rId = resourceId;
-    }
-
-    private void expand(final ViewGroup viewGroup, int a,int b)
-    {
-        ValueAnimator va = ValueAnimator.ofInt(a, b);
-        va.setDuration(300);
-        va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            public void onAnimationUpdate(ValueAnimator animation) {
-                viewGroup.getLayoutParams().height = (Integer) animation.getAnimatedValue();
-                viewGroup.requestLayout();
-            }
-        });
-        //va.setInterpolator(new DecelerateInterpolator());
-        va.start();
+        this.serverId = serverId;
     }
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
+
         if (convertView == null)
             convertView = LayoutInflater.from(getContext()).inflate(rId, parent, false);
+
         final ImageView profilePhoto = (ImageView) convertView.findViewById(R.id.profilePhotoList);
         final TextView userName = (TextView) convertView.findViewById(R.id.userNameList);
-        final TextView notifType = (TextView) convertView.findViewById(R.id.notifType);
+        final TextView notificationType = (TextView) convertView.findViewById(R.id.notifType);
         final TextView userInitials = (TextView) convertView.findViewById(R.id.userInitials);
-        final LinearLayout libraryBtn = (LinearLayout) convertView.findViewById(R.id.libraryButton);
-        final LinearLayout actionBlock = (LinearLayout) convertView.findViewById(R.id.actionBlock);
-        final LinearLayout linearLayout = (LinearLayout) convertView.findViewById(R.id.linearLayout);
-        final RelativeLayout accept = (RelativeLayout) convertView.findViewById(R.id.acceptBlock);
-        final RelativeLayout reject = (RelativeLayout) convertView.findViewById(R.id.rejectBlock);
+
+        final View libraryBtn = convertView.findViewById(R.id.libraryButton);
+        final View actionBlock = convertView.findViewById(R.id.actionBlock);
+        final View linearLayout = convertView.findViewById(R.id.linearLayout);
+        final View accept = convertView.findViewById(R.id.acceptBlock);
+        final View reject = convertView.findViewById(R.id.rejectBlock);
 
         final ReceivedRequest receivedRequest = getItem(position);
-
-        final int a = MiscUtils.dpToPx(70);
-        final int b = MiscUtils.dpToPx(110);
 
         Picasso.with(ctx).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).transform(new CircleTransform()).into(profilePhoto);
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 
-        if (FriendRequestFragment.accepted.get(position)) {
+        if (accepted.get(position, false)) {
+
             linearLayout.getLayoutParams().height = a;
             actionBlock.setVisibility(View.GONE);
             libraryBtn.setVisibility(View.VISIBLE);
-            notifType.setText("added to your friends");
+            notificationType.setText("added to your friends");
         }
         else {
-            notifType.setText("has sent you an access request");
+
+            notificationType.setText("has sent you an access request");
             libraryBtn.setVisibility(View.GONE);
             actionBlock.setVisibility(View.VISIBLE);
 
-            if (!FriendRequestFragment.opened.get(position))
+            if (!opened.get(position, false))
                 linearLayout.getLayoutParams().height = a;
             else
                 linearLayout.getLayoutParams().height = b;
@@ -105,36 +99,37 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             linearLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!FriendRequestFragment.opened.get(position))
+
+                    if (!opened.get(position, false))
                         expand(linearLayout,a,b);
                     else
                         expand(linearLayout,b,a);
-                    FriendRequestFragment.opened.set(position,!FriendRequestFragment.opened.get(position));
+                    opened.put(position, !opened.get(position, false));
                 }
             });
-            final long myId = SharedPrefUtils.getServerId(ctx.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-            final HandleReply handleReply = new HandleReply(ctx);
 
+            final HandleReply handleReply = new HandleReply(ctx);
             accept.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    handleReply.execute(myId + "", receivedRequest.getId() + "", "PERMISSION_GRANTED");
-                    FriendRequestFragment.accepted.set(position,true);
+                    handleReply.execute(serverId + "", receivedRequest.getId() + "", "PERMISSION_GRANTED");
+                    accepted.put(position, true);
                     expand(linearLayout, b, a);
                     linearLayout.setClickable(false);
                     actionBlock.setVisibility(View.GONE);
                     libraryBtn.setVisibility(View.VISIBLE);
-                    notifType.setText("added to your friends");
+                    notificationType.setText("added to your friends");
                 }
             });
             reject.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    handleReply.execute(myId + "", receivedRequest.getId() + "", "PERMISSION_REJECTED");
+
+                    handleReply.execute(serverId + "", receivedRequest.getId() + "", "PERMISSION_REJECTED");
                     //delete entry
                     remove(receivedRequest);
-                    FriendRequestFragment.accepted.remove(position);
-                    FriendRequestFragment.opened.remove(position);
+                    accepted.delete(position);
+                    opened.delete(position);
                     notifyDataSetChanged();
                 }
             });
@@ -142,12 +137,26 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         return convertView;
     }
 
-    private final class HandleReply extends AsyncTask<String, Void, Boolean> {
+    private void expand(final View view, int a,int b) {
 
-        private final Context context;
+        final ValueAnimator va = ValueAnimator.ofInt(a, b);
+        va.setDuration(300);
+        va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            public void onAnimationUpdate(ValueAnimator animation) {
+                view.getLayoutParams().height = (Integer) animation.getAnimatedValue();
+                view.requestLayout();
+            }
+        });
+        //va.setInterpolator(new DecelerateInterpolator());
+        va.start();
+    }
+
+    private static final class HandleReply extends AsyncTask<String, Void, Boolean> {
+
+        private final WeakReference<Context> contextWeakReference;
 
         private HandleReply(Context context) {
-            this.context = context;
+            this.contextWeakReference = new WeakReference<>(context);
         }
 
         @Override
@@ -161,7 +170,6 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                 protected MyString doWork() throws IOException {
 
                     StaticData.notificationApi.addBecameFriends(clientId, hostId).execute();
-
                     return StaticData.messagingEndpoint.messagingEndpoint().handleReply(clientId, hostId, message).execute();
                 }
             }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {
@@ -170,13 +178,19 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                     return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
                 }
             })).orNull();
+
             if(myString == null || TextUtils.isEmpty(myString.getString()) || myString.getString().equals("false"))
                 return false;
-            else if(message.equals("PERMISSION_GRANTED") && ctx.getContentResolver() != null) {
+
+            final Context context = contextWeakReference.get();
+            if(context == null || context.getContentResolver() == null)
+                return true;
+
+            else if(message.equals("PERMISSION_GRANTED") && context.getContentResolver() != null) {
 
                 final ContentValues values = new ContentValues();
                 values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
-                ctx.getContentResolver().update(
+                context.getContentResolver().update(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                         values,
                         ReachFriendsHelper.COLUMN_ID + " = ?",
@@ -189,10 +203,13 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         protected void onPostExecute(Boolean aBoolean) {
 
             super.onPostExecute(aBoolean);
-            if(isCancelled() || context == null)
+            if(aBoolean)
                 return;
-            if(!aBoolean)
-                Toast.makeText(context, "Network Error on reply", Toast.LENGTH_SHORT).show();
+
+            final Context context = contextWeakReference.get();
+            if(context == null)
+                return;
+            Toast.makeText(context, "Network Error on reply", Toast.LENGTH_SHORT).show();
         }
     }
 }

@@ -1,4 +1,4 @@
-package reach.project.utils;
+package reach.project.utils.auxiliaryClasses;
 
 import java.io.IOException;
 
@@ -6,5 +6,5 @@ import java.io.IOException;
  * Created by Dexter on 27-03-2015.
  */
 public abstract class DoWork<T> {
-    protected abstract T doWork() throws IOException;
+    public abstract T doWork() throws IOException;
 }

@@ -43,12 +43,16 @@ import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.ReachAlbum;
-import reach.project.database.ReachArtist;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
+import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.MusicList;
+import reach.project.utils.auxiliaryClasses.Playlist;
+import reach.project.utils.auxiliaryClasses.ReachAlbum;
+import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.utils.auxiliaryClasses.Song;
 
 public class MusicScanner extends IntentService {
 
@@ -177,6 +181,7 @@ public class MusicScanner extends IntentService {
             if (TextUtils.isEmpty(correctPath))
                 continue;
 
+//            reachSongDatabase.setFileHash(MiscUtils.quickHash(actualName, displayName, duration, size));
             reachSongDatabase.setPath(correctPath);
 
             if (music_column_artist != -1) {
@@ -186,6 +191,7 @@ public class MusicScanner extends IntentService {
                     reachSongDatabase.setArtist(artist);
                 }
             }
+
             if (music_column_album != -1) {
 
                 String album = musicCursor.getString(music_column_album);
@@ -353,7 +359,7 @@ public class MusicScanner extends IntentService {
                 reachPlayListDatabase.setDateModified(MiscUtils.dateFormatter(playLists.getLong(last_modified)));
             }
 
-            if (reachPlayListDatabase.getReachSongs().size() == 0)
+            if (reachPlayListDatabase.getReachSongs().isEmpty())
                 continue;
             musicCursor.close();
             reachPlayListDatabases.add(reachPlayListDatabase);
@@ -435,8 +441,8 @@ public class MusicScanner extends IntentService {
         ////////////////////Add all the songs
         final ImmutableSortedSet<ReachSong> songs =
                 getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI).orNull();
-        if (songs == null || songs.size() == 0) {
-            Log.i("Ayush", "Closing Music Scanner");
+        if (songs == null || songs.isEmpty()) {
+            Log.i("Ayush", "Closing music Scanner");
             sendMessage(FINISHED, -1);
             return;
         }
@@ -486,9 +492,9 @@ public class MusicScanner extends IntentService {
         
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Update Music")
-                    .setAction("User - " + serverId)
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setCategory("Update music")
+                    .setAction("user - " + serverId)
+                    .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                     .setValue(1)
                     .build());
         }
@@ -497,7 +503,7 @@ public class MusicScanner extends IntentService {
             @Override
             public void run() {
 
-                //update Music onServer, yes shit load of boiler-plate code
+                //update music onServer, yes shit load of boiler-plate code
                 final MusicContainer musicContainer = new MusicContainer();
                 musicContainer.setClientId(serverId);
                 musicContainer.setGenres(genreHashSet.toString());
@@ -506,7 +512,7 @@ public class MusicScanner extends IntentService {
                 
                 MiscUtils.autoRetry(new DoWork<Void>() {
                     @Override
-                    protected Void doWork() throws IOException {
+                    public Void doWork() throws IOException {
 
                         Log.i("Ayush", "Updating music");
                         return StaticData.userEndpoint.updateMusic(musicContainer).execute();
