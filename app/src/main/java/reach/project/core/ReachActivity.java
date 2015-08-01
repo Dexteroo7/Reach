@@ -24,6 +24,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -83,9 +85,10 @@ import reach.project.adapter.ReachQueueAdapter;
 import reach.project.coreViews.ContactsChooserFragment;
 import reach.project.coreViews.ContactsListFragment;
 import reach.project.coreViews.EditProfileFragment;
+import reach.project.coreViews.FriendRequestFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MusicListFragment;
-import reach.project.coreViews.NotificationCenterFragment;
+import reach.project.coreViews.NotificationFragment;
 import reach.project.coreViews.PrivacyFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.PushSongsFragment;
@@ -114,6 +117,8 @@ import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.TransferSong;
+import reach.project.viewHelpers.CustomViewPager;
+import reach.project.viewHelpers.ViewPagerReusable;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
@@ -625,16 +630,33 @@ public class ReachActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void addNotificationDrawer() {
-        if (isFinishing())
+    private void addNotificationDrawer() {
+        /*if (isFinishing())
             return;
         try {
             if (fragmentManager.findFragmentById(R.id.notification_drawer) == null)
                 fragmentManager.beginTransaction()
                         .add(R.id.drawer_layout, new NotificationCenterFragment()).commit();
         } catch (IllegalStateException ignored) {
-        }
+        }*/
+        final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.viewPager);
+        viewPager.setAdapter(new ViewPagerReusable(
+                fragmentManager,
+                new String[]{"Requests", "Notifications"},
+                new Fragment[]{
+                        FriendRequestFragment.newInstance(),
+                        NotificationFragment.newInstance()}));
+        viewPager.setPagingEnabled(false);
+
+        final TabLayout slidingTabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+        /*slidingTabLayout.setDistributeEvenly(true);
+        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return Color.parseColor("#FFCC0000");
+            }
+        });*/
+        slidingTabLayout.setupWithViewPager(viewPager);
 
     }
 

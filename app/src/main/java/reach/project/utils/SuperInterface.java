@@ -52,8 +52,6 @@ public interface SuperInterface {
 
     void onOpenProfile();
 
-    void addNotificationDrawer();
-
     void onOpenNotificationDrawer();
 
     void onPrivacyDone(); //PrivacyFragment

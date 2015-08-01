@@ -281,4 +281,28 @@
                 android:layout_height="25dp" />
         </FrameLayout>
     </android.support.design.widget.NavigationView>
+    <android.support.design.widget.NavigationView
+        android:layout_width="wrap_content"
+        android:id="@+id/notification_view"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_gravity="right">
+        <LinearLayout
+            android:id="@+id/notification_drawer"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <android.support.design.widget.TabLayout
+                android:id="@+id/sliding_tabs"
+                android:background="@color/reach_light"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <reach.project.viewHelpers.CustomViewPager
+                android:id="@+id/viewPager"
+                android:background="@color/white"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_height="0dp" />
+        </LinearLayout>
+    </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>
