@@ -24,7 +24,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -324,12 +324,20 @@ public class ContactsListFragment extends Fragment implements
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
 
-        final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
             actionBar.setTitle("Reach");
             mListener.setUpNavigationViews();
         }
+
+        actionMenu = (FloatingActionsMenu) rootView.findViewById(R.id.right_labels);
+        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
+
+        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
+        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_blue));
+        swipeRefreshLayout.setBackgroundResource(R.color.white);
+        swipeRefreshLayout.setOnRefreshListener(refreshListener);
 
         final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
         listView.setDivider(null);
@@ -337,15 +345,6 @@ public class ContactsListFragment extends Fragment implements
         listView.setOnItemClickListener(clickListener);
         listView.setOnScrollListener(scrollListener);
         listView.setAdapter(mergeAdapter);
-
-        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_blue));
-        swipeRefreshLayout.setBackgroundResource(R.color.white);
-        swipeRefreshLayout.setOnRefreshListener(refreshListener);
-
-
-        actionMenu = (FloatingActionsMenu) rootView.findViewById(R.id.right_labels);
-        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
 
         selection = null;
         selectionArguments = null;

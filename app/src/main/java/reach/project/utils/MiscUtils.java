@@ -486,10 +486,9 @@ public enum MiscUtils {
 
         final T context;
         final boolean contextLost = (context = reference.get()) == null;
-        final boolean isActivity = context instanceof Activity;
-
         if (contextLost)
             return Optional.absent();
+        final boolean isActivity = context instanceof Activity;
         final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
         if (activityIsFinishing)
             return Optional.absent();
@@ -497,20 +496,21 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(context));
     }
 
-    public static <T extends Context> void useContext2(final WeakReference<T> reference,
-                                                                          final UseContext<Void, T> task) {
+    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+                                                          final UseContext<Void, T> task) {
 
-        final T context;
-        final boolean contextLost = (context = reference.get()) == null;
-        final boolean isActivity = context instanceof Activity;
+        final T activity;
+        final boolean contextLost = (activity = reference.get()) == null;
 
-        if (contextLost)
-            return;
-        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-        if (activityIsFinishing)
+        if (contextLost || activity.isFinishing())
             return;
 
-        task.work(context);
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                task.work(activity);
+            }
+        });
     }
 
     public static <T extends Context> boolean updateGCM(final long id, final WeakReference<T> reference) {

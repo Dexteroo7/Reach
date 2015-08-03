@@ -347,6 +347,7 @@ public class AccountCreation extends Fragment {
             SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS), user);
             final Intent intent = new Intent(activity, MusicScanner.class);
             intent.putExtra("messenger", messenger);
+            intent.putExtra("first", true);
             activity.startService(intent);
         }
 

@@ -121,9 +121,9 @@ public class NotificationFragment extends Fragment {
                     new DoWork<List<NotificationBase>>() {
                         @Override
                         public List<NotificationBase> doWork() throws IOException {
-                            if (serverId == 0)
+//                            if (serverId == 0)
                                 return null;
-                            return StaticData.notificationApi.getNotifications(serverId, (int) reach.project.database.notifications.NotificationBase.GET_UN_READ).execute().getItems();
+//                            return StaticData.notificationApi.getNotifications(serverId, (int) reach.project.database.notifications.NotificationBase.GET_UN_READ).execute().getItems();
                         }
                     }, Optional.<Predicate<List<NotificationBase>>>absent());
 

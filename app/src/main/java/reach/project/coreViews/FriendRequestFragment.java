@@ -71,7 +71,7 @@ public class FriendRequestFragment extends Fragment {
         final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setAdapter(reachFriendRequestAdapter);
 
-        new FetchRequests().executeOnExecutor(StaticData.threadPool);
+        new FetchRequests().executeOnExecutor(StaticData.threadPool, rootView.getContext());
         return rootView;
     }
 
@@ -121,10 +121,11 @@ public class FriendRequestFragment extends Fragment {
                 @Override
                 public List<ReceivedRequest> doWork() throws IOException {
 
-                    final List<ReceivedRequest> receivedRequests =
-                            StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
-                    Collections.reverse(receivedRequests);
-                    return receivedRequests;
+//                    final List<ReceivedRequest> receivedRequests =
+//                            StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
+//                    Collections.reverse(receivedRequests);
+//                    return receivedRequests;
+                    return null;
                 }
             }, Optional.<Predicate<List<ReceivedRequest>>>absent()).orNull();
         }

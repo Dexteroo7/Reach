@@ -1,6 +1,5 @@
 package reach.project.core;
 
-import android.app.Activity;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -74,7 +73,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -139,6 +137,7 @@ public class ReachActivity extends AppCompatActivity implements
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
 
+    private SharedPreferences preferences;
     private FragmentManager fragmentManager;
     private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
@@ -153,7 +152,6 @@ public class ReachActivity extends AppCompatActivity implements
     private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private static MusicData currentPlaying;
-    private static String userName, phoneNumber;
 
     ////////////////////////////////////////
     private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
@@ -576,7 +574,7 @@ public class ReachActivity extends AppCompatActivity implements
             return;
         try {
 
-            serverId = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
+            serverId = SharedPrefUtils.getServerId(preferences);
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
             getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
             getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
@@ -915,37 +913,6 @@ public class ReachActivity extends AppCompatActivity implements
         return true;
     }
 
-    private void initialize(final SharedPreferences sharedPreferences) {
-
-        final Activity activity = this;
-        final NetworkInfo networkInfo =
-                ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        if (networkInfo == null || !networkInfo.isConnected()) {
-            // There are no active networks.
-            Toast.makeText(activity, "No active networks detected", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        userName = SharedPrefUtils.getUserName(sharedPreferences);
-        phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
-
-        if (!StaticData.debugMode) {
-            // Crittercism
-            Crittercism.initialize(activity, "552eac3c8172e25e67906922");
-            Crittercism.setUsername(userName + " " + phoneNumber);
-            // Check for new update
-            new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.threadPool);
-            //  Get tracker.
-            final Tracker t = ((ReachApplication) getApplication()).getTracker();
-            //  Set screen name.
-            t.setScreenName("reach.project.core.ReachActivity");
-            //  Send a screen view.
-            t.send(new HitBuilders.ScreenViewBuilder().build());
-        }
-
-        StaticData.threadPool.submit(LocalUtils.checks);
-    }
-
     @Override
     protected void onNewIntent(Intent intent) {
 
@@ -957,52 +924,27 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        //getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+        preferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
         fragmentManager = getSupportFragmentManager();
-        super.onCreate(savedInstanceState);
-
-        //possibility of serverId not being set ?
-        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
-        serverId = SharedPrefUtils.getServerId(sharedPreferences);
         reference = new WeakReference<>(this);
+        serverId = SharedPrefUtils.getServerId(preferences);
 
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        initialize(sharedPreferences);
-
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
         if (actionBar.isPresent()) {
             actionBar.get().setDisplayShowHomeEnabled(false);
             actionBar.get().hide();
         }
+
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        player = findViewById(R.id.player);
-        //topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
-        //slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
-        toggleSliding(false);
-        //navigation-drawer
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        player = findViewById(R.id.player);
+        searchView = new SearchView(this);
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
-        final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
-        switch (action) {
-            case 0:
-                accountCreationError();
-                break;
-            case 1:
-                startAccountCreation(Optional.<OldUserContainerNew>absent());
-                break;
-            default: {
-                //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
-                addNotificationDrawer();
-                fragmentManager
-                        .beginTransaction()
-                        .replace(R.id.container, ContactsListFragment.newInstance(), "contacts_fragment").commit();
-            }
-        }
-
         //small
-        searchView = new SearchView(this);
         progressBarMinimized = (SeekBar) findViewById(R.id.progressBar);
         songNameMinimized = (TextView) findViewById(R.id.songNamePlaying);
         pausePlayMinimized = (ImageButton) findViewById(R.id.pause_play);
@@ -1019,10 +961,6 @@ public class ReachActivity extends AppCompatActivity implements
         //reachQueue
         queueListView = (ListView) findViewById(R.id.queueListView);
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
-        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
-        selectionArgumentsDownloader = new String[]{"0"};
-        selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
         mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
@@ -1048,52 +986,74 @@ public class ReachActivity extends AppCompatActivity implements
         progressBarMaximized.setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
         progressBarMinimized.setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
 
-        if (SharedPrefUtils.getShuffle(sharedPreferences))
-            shuffleBtn.setSelected(true);
-        else
-            shuffleBtn.setSelected(false);
-        if (SharedPrefUtils.getRepeat(sharedPreferences))
-            repeatBtn.setSelected(true);
-        else
-            repeatBtn.setSelected(false);
-
+        /**
+         * Set up adapter for music player
+         */
         combinedAdapter = new MergeAdapter();
         combinedAdapter.addView(LocalUtils.getDownloadedTextView(this));
-        emptyTV1 = new TextView(this);
-        emptyTV1.setText("Add songs to download");
-        emptyTV1.setTextColor(getResources().getColor(R.color.darkgrey));
-        emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+        emptyTV1 = LocalUtils.getEmptyDownload(this);
         combinedAdapter.addView(emptyTV1, false);
         combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(this, R.layout.reach_queue_item, null, 0));
+
         combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(this));
-        emptyTV2 = new TextView(this);
-        emptyTV2.setText("No music on your phone");
-        emptyTV2.setTextColor(getResources().getColor(R.color.darkgrey));
-        emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+        emptyTV2 = LocalUtils.getEmptyLibrary(this);
         combinedAdapter.addView(emptyTV2, false);
         combinedAdapter.addAdapter(musicAdapter = new ReachMusicAdapter(this, R.layout.my_musiclist_item, null, 0,
                 ReachMusicAdapter.PLAYER));
+
         queueListView.setAdapter(combinedAdapter);
 
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
-        if (currentPlaying != null) {
-            songNameMinimized.setText(currentPlaying.getDisplayName());
-            songNameMaximized.setText(currentPlaying.getDisplayName());
-            artistName.setText(currentPlaying.getArtistName());
-            songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
-            pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
-            pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
-        }
+        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
+        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+        selectionArgumentsDownloader = new String[]{"0"};
+        selectionArgumentsMyLibrary = new String[]{serverId + ""};
+
 
         final Intent intent = getIntent();
         if (intent != null && !TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple"))
             processMultiple(intent);
-        new LocalUtils.RefreshOperations(getContentResolver()).executeOnExecutor(StaticData.threadPool, downloadRefresh);
 
-        getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
-        getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
+        new LastSong().executeOnExecutor(StaticData.threadPool);
+        StaticData.threadPool.submit(LocalUtils.initialize);
+    }
+
+    private final class LastSong extends AsyncTask<Void, Void, Boolean[]> {
+
+        @Override
+        protected Boolean[] doInBackground(Void... params) {
+
+
+            final Boolean[] toSend = new Boolean[]{false, false, false};
+            currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
+
+            toSend[0] = (currentPlaying != null);
+            toSend[1] = SharedPrefUtils.getShuffle(preferences);
+            toSend[2] = SharedPrefUtils.getRepeat(preferences);
+
+            return toSend;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean[] booleans) {
+
+            super.onPostExecute(booleans);
+
+            if (booleans[0]) {
+                //last song is present
+                songNameMinimized.setText(currentPlaying.getDisplayName());
+                songNameMaximized.setText(currentPlaying.getDisplayName());
+                artistName.setText(currentPlaying.getArtistName());
+                songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
+                pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
+                pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
+            }
+
+            shuffleBtn.setSelected(booleans[1]);
+            repeatBtn.setSelected(booleans[2]);
+
+            //also do this !
+            addNotificationDrawer();
+        }
     }
 
     private void processIntent(Intent intent) {
@@ -1403,7 +1363,7 @@ public class ReachActivity extends AppCompatActivity implements
                             //TODO send notification
 //                        return StaticData.messagingEndpoint.messagingEndpoint().sendManualNotification(
 //                                currentPlaying.getSenderId(), 0, "likes " + currentPlaying.getDisplayName(),
-//                                SharedPrefUtils.getUserName(getSharedPreferences("Reach", MODE_MULTI_PROCESS))).execute();
+//                                SharedPrefUtils.getUserName(preferences)).execute();
                         }
                     }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>absent());
                     currentPlaying.setIsLiked(true);
@@ -1507,23 +1467,24 @@ public class ReachActivity extends AppCompatActivity implements
             }
         };
 
-        private static Optional<Context> getContext() {
+        public static void toast(final String message) {
 
-            final Context context;
-            if (reference == null || (context = reference.get()) == null)
-                return Optional.absent();
-            return Optional.of(context);
+            MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
+                @Override
+                public Void work(final ReachActivity activity) {
+
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    return null;
+                }
+            });
         }
 
-        private static Optional<Activity> getActivity() {
-
-            final Activity activity;
-            if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
-                return Optional.absent();
-            return Optional.of(activity);
-        }
-
-        public static final Runnable checks = new Runnable() {
+        public static final Runnable initialize = new Runnable() {
 
             /**
              * Check the device to make sure it has the Google Play Services APK. If
@@ -1543,10 +1504,10 @@ public class ReachActivity extends AppCompatActivity implements
                     return false;
 
                 final int resultCode = result.get();
-                if(resultCode == ConnectionResult.SUCCESS)
+                if (resultCode == ConnectionResult.SUCCESS)
                     return true;
 
-                MiscUtils.useContext2(reference, new UseContext<Void, ReachActivity>() {
+                MiscUtils.runOnUiThread(reference, new UseContext<Void, ReachActivity>() {
                     @Override
                     public Void work(ReachActivity context) {
 
@@ -1579,21 +1540,11 @@ public class ReachActivity extends AppCompatActivity implements
                     }
                 }, Optional.<Predicate<MyString>>absent()).orNull();
 
-
-                final Optional<Activity> tempActivity = getActivity();
-                if(!tempActivity.isPresent())
-                    return;
-
                 final String gcmId;
                 if (dataToReturn == null || TextUtils.isEmpty(gcmId = dataToReturn.getString())) {
 
                     Log.i("Ayush", "GcmId ObjectFetch failed");
-                    tempActivity.get().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(tempActivity.get(), "Network error, GCM failed", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    toast("Network error, GCM failed");
 
                 } else if (gcmId.equals("user_deleted")) {
                     //TODO restart app sign-up
@@ -1604,15 +1555,7 @@ public class ReachActivity extends AppCompatActivity implements
                     else {
 
                         Log.i("Ayush", "GCM check failed");
-                        if(!tempActivity.isPresent() || tempActivity.get().isFinishing())
-                            return;
-
-                        tempActivity.get().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(tempActivity.get(), "Network error, GCM failed", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        toast("Network error, GCM failed");
                     }
                 }
             }
@@ -1620,27 +1563,131 @@ public class ReachActivity extends AppCompatActivity implements
             @Override
             public void run() {
 
-                // Check for play services
+                /**
+                 * First load username and phone number for later use
+                 */
+                final String[] temp = MiscUtils.useContext(reference, new UseContext<String[], ReachActivity>() {
+                    @Override
+                    public String[] work(ReachActivity reachActivity) {
 
-                if (!checkPlayServices())
-                    Log.i("GCM_UTILS", "No valid Google Play Services APK found.");
-                /////Verify User data
-                if (!TextUtils.isEmpty(phoneNumber) || !TextUtils.isEmpty(userName)) {
-                    //check if gcmID is present on server
-                    checkGCM();
-                    //Run music-scanner
-                    MiscUtils.useContext2(reference, new UseContext<Void, ReachActivity>() {
+                        return new String[]{
+                                SharedPrefUtils.getUserName(reachActivity.preferences),
+                                SharedPrefUtils.getUserNumber(reachActivity.preferences)
+                        };
+                    }
+                }).get();
+                final String userName = temp[0], phoneNumber = temp[1];
+
+                /**
+                 * Now we initialize Crittercism and GA also check online status
+                 */
+                final Optional<Boolean> result = MiscUtils.useContext(reference, new UseContext<Boolean, ReachActivity>() {
+                    @Override
+                    public Boolean work(ReachActivity activity) {
+
+                        if (!StaticData.debugMode) {
+                            // Crittercism
+                            Crittercism.initialize(activity, "552eac3c8172e25e67906922");
+                            Crittercism.setUsername(userName + " " + phoneNumber);
+                            //  Get tracker
+                            final Tracker t = ((ReachApplication) activity.getApplication()).getTracker();
+                            t.setScreenName("reach.project.core.ReachActivity");
+                            t.send(new HitBuilders.ScreenViewBuilder().build());
+                        }
+
+                        final NetworkInfo networkInfo =
+                                ((ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+                        if (networkInfo == null || !networkInfo.isConnected()) {
+                            // There are no active networks.
+                            toast("No active networks detected");
+                            return false;
+                        }
+                        return true;
+                    }
+                });
+                final boolean online = result.isPresent() && result.get();
+
+                /**
+                 * Now we check for play services, if not found we do not continue
+                 */
+                if (!checkPlayServices()) {
+                    Log.i("Ayush", "No valid Google Play Services APK found.");
+                    return;
+                }
+
+                /**
+                 * Now we check if number verification needs to be started
+                 */
+                if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
+
+                    MiscUtils.runOnUiThread(reference, new UseContext<Void, ReachActivity>() {
                         @Override
-                        public Void work(ReachActivity activity) {
+                        public Void work(ReachActivity reachActivity) {
 
-                            final Intent intent = new Intent(activity, MusicScanner.class);
-                            intent.putExtra("ReturnNow", false);
-                            activity.startService(intent);
+                            reachActivity.accountCreationError();
+                            reachActivity.toggleSliding(false);
                             return null;
                         }
                     });
+                    return;
                 }
-                //if service is running register callback
+
+                /**
+                 * Number might be entered but userName could be absent, start account creation
+                 */
+                else if (TextUtils.isEmpty(userName)) {
+
+                    MiscUtils.runOnUiThread(reference, new UseContext<Void, ReachActivity>() {
+                        @Override
+                        public Void work(ReachActivity reachActivity) {
+
+                            reachActivity.startAccountCreation(Optional.<OldUserContainerNew>absent());
+                            reachActivity.toggleSliding(false);
+                            return null;
+                        }
+                    });
+                    return;
+                }
+
+                /**
+                 * Recheck GCM if we are online
+                 */
+                if (online)
+                    checkGCM();
+
+                /**
+                 * START !!
+                 */
+                MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
+                    @Override
+                    public Void work(ReachActivity reachActivity) {
+
+
+                        reachActivity.fragmentManager
+                                .beginTransaction()
+                                .replace(R.id.container, ContactsListFragment.newInstance(), "contacts_fragment").commit();
+
+                        if (online) {
+                            final Intent intent = new Intent(reachActivity, MusicScanner.class);
+                            intent.putExtra("first", false);
+                            reachActivity.startService(intent);
+                        }
+
+                        reachActivity.getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, reachActivity);
+                        reachActivity.getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, reachActivity);
+
+                        if (online) //refresh only if online !
+                            new LocalUtils.RefreshOperations(reachActivity.getContentResolver()).executeOnExecutor(StaticData.threadPool, reachActivity.downloadRefresh);
+
+                        return null;
+                    }
+                });
+
+                /**
+                 * Lastly check if new update is avaiable
+                 */
+                if (online)
+                    new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.threadPool);
             }
         };
 
@@ -1663,6 +1710,26 @@ public class ReachActivity extends AppCompatActivity implements
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return textView;
+        }
+
+        public static TextView getEmptyDownload(Context context) {
+
+            final TextView emptyTV1 = new TextView(context);
+            emptyTV1.setText("Add songs to download");
+            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+            return emptyTV1;
+        }
+
+        public static TextView getEmptyLibrary(Context context) {
+
+            final TextView emptyTV2 = new TextView(context);
+            emptyTV2.setText("No music on your phone");
+            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+            return emptyTV2;
         }
 
         //id = -1 : disk else downloader
@@ -1945,13 +2012,6 @@ public class ReachActivity extends AppCompatActivity implements
                             activity.likeButton.setVisibility(View.GONE);
                     }
 
-                    //TODO move
-                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                            .setCategory("Play song")
-                            .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                            .setLabel("Song - " + data.getDisplayName())
-                            .setValue(1)
-                            .build());
                 }
             });
             updatePrimaryProgress(data.getPrimaryProgress(), data.getCurrentPosition(), activity);

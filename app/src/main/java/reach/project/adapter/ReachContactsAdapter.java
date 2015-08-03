@@ -87,6 +87,9 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         if(cursor == null) return;
 
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
+        if (viewHolder == null || viewHolder.userInitials == null)
+            return;
+
         final ReachFriend reachFriendsDatabase = ReachFriendsHelper.cursorToProcess(cursor);
         //First show the initials
         viewHolder.userInitials.setText(MiscUtils.generateInitials(reachFriendsDatabase.getUserName()));

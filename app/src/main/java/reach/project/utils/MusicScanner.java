@@ -483,7 +483,7 @@ public class MusicScanner extends IntentService {
         ////////////////////Genres Added
 
         final boolean newMusic = portData(songs, playListSet, ImmutableList.copyOf(genreHashSet));
-        if(!newMusic) {
+        if(! (newMusic || intent.getBooleanExtra("first", true))) {
             
             Log.i("Ayush", "Same music found !");
             sendMessage(FINISHED, -1);

@@ -520,6 +520,13 @@ public class ProcessManager extends Service implements
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
 
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Play song")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setLabel("Song - " + musicData.getDisplayName())
+                .setValue(1)
+                .build());
+
         final String toSend = new Gson().toJson(musicData, MusicData.class);
         SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS), toSend);
 
