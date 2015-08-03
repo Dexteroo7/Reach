@@ -35,7 +35,6 @@ import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.contentProvider.ReachNotificationsProvider;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.utils.auxiliaryClasses.DoWork;
@@ -86,10 +85,10 @@ public class NumberVerification extends Fragment {
 
     private final class TourPagerAdapter extends PagerAdapter {
 
-        private final String[] tourTexts = new String[]{"Browse and Access files\nof your Network",
-                                                               "Build your Reach by\ninviting friends",
-                                                               "Privacy and security\noptions",
-                                                               "Synced media files\n"};
+        private final String[] tourTexts = new String[]{"Browse through files on\nthe mobile devices of your friends",
+                                                               "Build a network\nto have more fun",
+                                                               "Connect with your friends\n",
+                                                               "Hide the files\nyou don't wish others to see"};
         private final int[] tourImages = new int[]{R.drawable.library_view,
                                                           R.drawable.reach_queue,
                                                           R.drawable.my_reach,
@@ -165,7 +164,7 @@ public class NumberVerification extends Fragment {
 
                 final OldUserContainerNew container = MiscUtils.autoRetry(new DoWork<OldUserContainerNew>() {
                     @Override
-                    protected OldUserContainerNew doWork () throws IOException {
+                    public OldUserContainerNew doWork() throws IOException {
                         return StaticData.userEndpoint.isAccountPresentNew(params[0]).execute();
                     }
                 }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
@@ -217,10 +216,6 @@ public class NumberVerification extends Fragment {
         try {
             resolver.delete(ReachDatabaseProvider.CONTENT_URI, 1 + "", null);
         } catch (SQLiteException ignore) {
-        }
-        try {
-            resolver.delete(ReachNotificationsProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignored) {
         }
     }
 

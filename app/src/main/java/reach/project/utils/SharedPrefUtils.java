@@ -26,9 +26,9 @@ public enum SharedPrefUtils {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
-    public static void storeReachUser(SharedPreferences editor, ReachUser reachUserDatabase) {
+    public static void storeReachUser(SharedPreferences sharedPreferences, ReachUser reachUserDatabase) {
 
-        editor.edit().putString("phoneNumber", reachUserDatabase.getPhoneNumber())
+        sharedPreferences.edit().putString("phoneNumber", reachUserDatabase.getPhoneNumber())
                 .putString("userName", reachUserDatabase.getUserName())
                 .putString("promoCode", reachUserDatabase.getPromoCode())
                 .putString("deviceId", reachUserDatabase.getDeviceId())
@@ -79,39 +79,36 @@ public enum SharedPrefUtils {
         editor.edit().putStringSet("genres", genres).apply();
     }
 
-    public static void storeUserName(SharedPreferences editor, String userName) {
-        editor.edit().putString("userName", userName).apply();
+    public static void storeUserName(SharedPreferences sharedPreferences, String userName) {
+        sharedPreferences.edit().putString("userName", userName).apply();
     }
 
-    public static void storeImageId(SharedPreferences editor, String imageId) {
-        editor.edit().putString("imageId", imageId).apply();
+    public static void storeImageId(SharedPreferences sharedPreferences, String imageId) {
+        sharedPreferences.edit().putString("imageId", imageId).apply();
     }
 
-    public static void setReachQueueSeen(SharedPreferences.Editor editor) {
-        editor.putBoolean("reachQueueSeen", true);
-        editor.apply();
+    public static void setReachQueueSeen(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("reachQueueSeen", true).apply();
     }
 
-    public static void setFirstIntroSeen(SharedPreferences.Editor editor) {
-        editor.putBoolean("firstIntroSeen", true);
-        editor.apply();
+    public static void setFirstIntroSeen(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("firstIntroSeen", true).apply();
     }
 
-    public static void setSecondIntroSeen(SharedPreferences.Editor editor) {
-        editor.putBoolean("secondIntroSeen", true);
-        editor.apply();
+    public static void setSecondIntroSeen(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("secondIntroSeen", true).apply();
     }
 
-    public static void setDataOn(SharedPreferences editor) {
-        editor.edit().putBoolean("mobileDataOn", true).apply();
+    public static void setDataOn(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("mobileDataOn", true).apply();
     }
 
-    public static void setDataOff(SharedPreferences editor) {
-        editor.edit().putBoolean("mobileDataOn", false).apply();
+    public static void setDataOff(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("mobileDataOn", false).apply();
     }
 
-    public static void storeLastPlayed(SharedPreferences.Editor editor, String data) {
-        editor.putString("last_played", data).apply();
+    public static void storeLastPlayed(SharedPreferences sharedPreferences, String data) {
+        sharedPreferences.edit().putString("last_played", data).apply();
     }
 
     public static boolean getMobileData (SharedPreferences sharedPreferences) {
@@ -172,12 +169,12 @@ public enum SharedPrefUtils {
         return sharedPreferences.getInt("play_list_hash" + userId, 0);
     }
 
-    public static void storeSongCodeForUser(long userId, int songId, SharedPreferences editor) {
-        editor.edit().putInt("song_hash" + userId, songId).apply();
+    public static void storeSongCodeForUser(long userId, int songId, SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putInt("song_hash" + userId, songId).apply();
     }
 
-    public static void storePlayListCodeForUser(long userId, int playListId, SharedPreferences editor) {
-        editor.edit().putInt("play_list_hash" + userId, playListId).apply();
+    public static void storePlayListCodeForUser(long userId, int playListId, SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putInt("play_list_hash" + userId, playListId).apply();
     }
 
     public static boolean toggleShuffle(SharedPreferences sharedPreferences) {

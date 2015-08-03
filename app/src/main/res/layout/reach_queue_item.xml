@@ -9,65 +9,33 @@
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
         android:layout_marginLeft="15dp"
-        android:padding="10dp"
-        android:background="#42353e"
+        android:padding="15dp"
+        android:background="@drawable/circular_background_pink"
         android:src="@drawable/music_note"/>
-    <RelativeLayout
+    <LinearLayout
         android:layout_alignTop="@id/albumArt"
+        android:orientation="vertical"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="2dp"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="12dp"
         android:id="@+id/progressContainer"
         android:layout_width="wrap_content"
-        android:layout_height="62dp">
-        <TextView
-            android:id="@+id/progressText"
-            android:gravity="center"
-            android:textColor="@color/darkgrey"
-            android:lines="1"
-            android:layout_alignParentBottom="true"
-            android:textSize="12sp"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content" />
-        <RelativeLayout
-            android:id="@+id/progressFrame"
-            android:layout_marginBottom="2dp"
-            android:layout_above="@id/progressText"
-            android:layout_marginLeft="17dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <ProgressBar
-                android:id="@+id/progressBar"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:indeterminate="false"
-                android:progress="0"
-                android:secondaryProgress="100"
-                android:max="100"
-                android:progressDrawable="@drawable/circle_progress_red" />
+        android:layout_height="wrap_content">
+            <ImageView
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/icon_played"
+                android:layout_marginBottom="2dp"
+                android:layout_width="25dp"
+                android:layout_height="25dp" />
             <TextView
                 android:id="@+id/songSize"
-                android:layout_centerInParent="true"
-                android:textColor="@color/darkgrey"
+                android:textColor="@color/reach_blue"
                 android:maxLines="1"
                 android:text="99%"
-                android:textStyle="bold"
                 android:textSize="13sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-        </RelativeLayout>
-        <ImageButton
-            android:id="@+id/delete_btn"
-            android:layout_toRightOf="@id/progressFrame"
-            android:src="@drawable/del_brown"
-            android:layout_marginTop="3dp"
-            android:scaleType="fitCenter"
-            android:background="@null"
-            android:padding="8dp"
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
-    </RelativeLayout>
+    </LinearLayout>
     <TextView
         android:id="@+id/songTitle"
         android:layout_alignTop="@id/albumArt"
@@ -78,49 +46,31 @@
         android:text="Title"
         android:singleLine="true"
         android:ellipsize="marquee"
-        android:textSize="16sp"
+        android:textSize="18sp"
+        android:textColor="#000"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
-    <RelativeLayout
+    <TextView
+        android:id="@+id/from"
         android:layout_toLeftOf="@id/progressContainer"
         android:layout_marginTop="2dp"
         android:layout_below="@id/songTitle"
         android:layout_alignLeft="@id/songTitle"
+        android:maxLines="1"
+        android:layout_centerVertical="true"
+        android:maxWidth="100dp"
+        android:textColor="@color/reach_color"
+        android:textSize="14sp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/from"
-            android:maxLines="1"
-            android:layout_centerVertical="true"
-            android:maxWidth="100dp"
-            android:textColor="@color/darkgrey"
-            android:textSize="14sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <ImageView
-            android:id="@+id/status"
-            android:layout_marginLeft="3dp"
-            android:layout_width="15dp"
-            android:layout_height="15dp"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/from"/>
-        <TextView
-            android:id="@+id/netType"
-            android:layout_marginTop="2dp"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/status"
-            android:textColor="@color/darkgrey"
-            android:textSize="11sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
-    <View
-        android:id="@+id/dividerFooter"
-        android:layout_width="match_parent"
-        android:layout_marginRight="15dp"
-        android:layout_toRightOf="@id/albumArt"
-        android:layout_marginLeft="10dp"
-        android:layout_height="1dp"
+        android:layout_height="wrap_content" />
+    <ProgressBar
+        android:id="@+id/progressBar"
         android:layout_alignParentBottom="true"
-        android:background="@color/darkgrey" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:indeterminate="false"
+        android:progress="0"
+        android:secondaryProgress="100"
+        android:max="100" />
 </RelativeLayout>

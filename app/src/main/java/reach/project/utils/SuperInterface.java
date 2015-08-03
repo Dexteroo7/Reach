@@ -12,8 +12,6 @@ import reach.project.utils.auxiliaryClasses.TransferSong;
  */
 public interface SuperInterface {
 
-    void onNavigationDrawerItemSelected(int position); //NavigationDrawerFragment
-
     void onAccountCreated(); //AccountCreationFragment
 
     void accountCreationError();

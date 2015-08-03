@@ -21,7 +21,6 @@ public class DrawerListAdapter extends ArrayAdapter<String> {
     private final int layoutResourceId;
     private final String txt[];
     private final int imageRes[] = {
-            R.drawable.icon_grey,
             R.drawable.audio_grey,
             R.drawable.promo,
             R.drawable.add_icon_grey,

@@ -384,7 +384,7 @@ public class GcmIntentService extends IntentService {
             lastPong = currentTime;
             MiscUtils.autoRetry(new DoWork<Void>() {
                 @Override
-                protected Void doWork() throws IOException {
+                public Void doWork() throws IOException {
 
                     return StaticData.messagingEndpoint.messagingEndpoint()
                             .handleAnnounce(id, networkType[0] + "")

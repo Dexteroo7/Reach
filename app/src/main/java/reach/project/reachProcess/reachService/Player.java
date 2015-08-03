@@ -219,9 +219,9 @@ public class Player {
             @Override
             public Header call() throws BitStreamException, InterruptedException {
                 //safety check for mp3 frame size
-                while (handlerInterface.getProcessed() < 3000) {
+                while (handlerInterface.getProcessed() < 4096) {
                     Log.i("Downloader", "Waiting for minimum buffer");
-                    Thread.sleep(3000L);
+                    Thread.sleep(4000L);
                 }
                 return bitStream.readFrame();
             }
@@ -229,7 +229,7 @@ public class Player {
 
         try {
             //caller should handle InterruptedException
-            frameHeader = getHeader.get(5, TimeUnit.SECONDS);
+            frameHeader = getHeader.get(12, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException e) {
 
             e.printStackTrace();
@@ -311,7 +311,7 @@ public class Player {
 
         private void pause() {
             try {
-                Thread.sleep(2500L);
+                Thread.sleep(4000L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 stopDecoding.set(true);
@@ -373,13 +373,13 @@ public class Player {
                     bitStream.closeFrame();
                 }
 
-                while (transferred + 3000 >= count && count != contentLength && !stopDecoding.get()) {
+                while (transferred + 4096 >= count && count != contentLength && !stopDecoding.get()) {
 
                     count = handlerInterface.getProcessed();
                     final short progress = (short) ((count * 100) / contentLength);
                     if (progress > lastProgress)
                         handlerInterface.updateSecondaryProgress(progress);
-                    if (transferred + 3000 >= count && count != contentLength) {
+                    if (transferred + 4096 >= count && count != contentLength) {
                         Log.i("Downloader", "PAUSING DECODER");
                         pause();
                     }

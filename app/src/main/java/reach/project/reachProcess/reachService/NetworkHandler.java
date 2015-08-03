@@ -205,9 +205,9 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 currentTime = System.currentTimeMillis();
                 if (sleeping && //no connections to service (sleeping)
-                        !taskAdded && //no task that is getting added (no taskAdded)
-                        threadPool.getQueue().isEmpty() && //no task that is in queue
-                        threadPool.getActiveCount() == 0 &&  //no task that is in running
+                        !taskAdded && //no work that is getting added (no taskAdded)
+                        threadPool.getQueue().isEmpty() && //no work that is in queue
+                        threadPool.getActiveCount() == 0 &&  //no work that is in running
                         networkManager.keys().isEmpty() && //no active connections (network-manager has 0 keys)
                         currentTime - lastActive > 5000) { //finally a sleep allowance of 5 seconds
                     Log.i("Downloader", "Service can be killed now");
@@ -250,7 +250,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
      * Uploader : send paused, get paused, get deleted/get bytes
      * Downloader : send paused, get paused, send deleted
      *
-     * @return weather a task was added or not
+     * @return weather a work was added or not
      */
     private boolean processTask(Optional<String> networkRequest) {
         //////////////////////////////////service network requests
@@ -492,7 +492,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
      * Pause and Delete in disk are newer.
      * For a download operation update information from memory (for processed value).
      *
-     * @return Returns if a task was added or not
+     * @return Returns if a work was added or not
      */
     private boolean startOperation(Connection connection) {
 
@@ -968,7 +968,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 MiscUtils.autoRetryAsync(new DoWork<Void>() {
                     @Override
-                    protected Void doWork() throws IOException {
+                    public Void doWork() throws IOException {
 
                         return StaticData.userEndpoint.updateCompletedOperations(
                                 database.getReceiverId(),

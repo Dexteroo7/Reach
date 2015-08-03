@@ -15,13 +15,11 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import java.lang.ref.WeakReference;
-import java.util.concurrent.Future;
 
 import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.project.R;
 import reach.project.adapter.ReachPlayListsAdapter;
 import reach.project.core.StaticData;
-import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.utils.MiscUtils;
@@ -86,9 +84,9 @@ public class PlayListListFragment extends Fragment implements LoaderManager.Load
         if(cursorLoader.getId() == StaticData.PLAY_LIST_LOADER && cursor != null && !cursor.isClosed()) {
 
             reachPlayListsAdapter.swapCursor(cursor);
-            final Future<?> isMusicFetching = ContactsListFragment.isMusicFetching.get(getArguments().getLong("id"));
-            if((isMusicFetching == null || isMusicFetching.isCancelled() || isMusicFetching.isDone()) && cursor.getCount() == 0 && playListGrid!=null)
-                MiscUtils.setEmptyTextforGridView(playListGrid, "No playlists found");
+//            final Future<?> isMusicFetching = ContactsListFragment.isMusicFetching.get(getArguments().getLong("id"));
+//            if((isMusicFetching == null || isMusicFetching.isCancelled() || isMusicFetching.isDone()) && cursor.getCount() == 0 && playListGrid!=null)
+//                MiscUtils.setEmptyTextforGridView(playListGrid, "No playlists found");
         }
     }
 

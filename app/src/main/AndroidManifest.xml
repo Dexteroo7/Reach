@@ -98,10 +98,6 @@
             android:name=".database.contentProvider.ReachPlayListProvider"
             android:authorities="reach.project.database.contentProvider.ReachPlayListProvider"
             android:exported="false" />
-        <provider
-            android:name=".database.contentProvider.ReachNotificationsProvider"
-            android:authorities="reach.project.database.contentProvider.ReachNotificationsProvider"
-            android:exported="false" />
 
         <activity
             android:name=".core.PushActivity"

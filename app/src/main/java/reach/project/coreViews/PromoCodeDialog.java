@@ -85,7 +85,7 @@ public class PromoCodeDialog extends DialogFragment {
 
                     new DoWork<Boolean>() {
                         @Override
-                        protected Boolean doWork() throws IOException {
+                        public Boolean doWork() throws IOException {
 
                             final MyString isValid = StaticData.userEndpoint.storePromoCode(
                                     ReachActivity.serverId, params[0]).execute();

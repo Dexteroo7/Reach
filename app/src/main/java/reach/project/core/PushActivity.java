@@ -77,7 +77,7 @@ public class PushActivity extends Activity {
 
                     MiscUtils.autoRetryAsync(new DoWork<Void>() {
                         @Override
-                        protected Void doWork() throws IOException {
+                        public Void doWork() throws IOException {
                             return StaticData.notificationApi.pushAccepted(firstSongName,
                                     hashCode,
                                     receiverId,

@@ -13,7 +13,7 @@ import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.ResourceCursorAdapter;
@@ -49,29 +49,35 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
     private final class ViewHolder{
 
-        private final TextView userNameList,telephoneNumberList,netType,userInitials,featured;
-        private final ImageButton listToggle;
-        private final ImageView profilePhotoList, networkStatus,online_offline;
+        private final TextView userNameList,telephoneNumberList,netType,userInitials,featured,listStatus;
+        private final ImageView profilePhotoList, networkStatus,online_offline,listToggle,note;
+        private final FrameLayout profilePhoto;
 
         private ViewHolder(TextView userNameList,
                            TextView telephoneNumberList,
                            TextView netType,
                            TextView userInitials,
                            TextView featured,
-                           ImageButton listToggle,
+                           TextView listStatus,
+                           ImageView listToggle,
                            ImageView profilePhotoList,
                            ImageView networkStatus,
-                           ImageView online_offline) {
+                           ImageView online_offline,
+                           ImageView note,
+                           FrameLayout profilePhoto) {
 
             this.userNameList = userNameList;
             this.telephoneNumberList = telephoneNumberList;
             this.netType = netType;
             this.userInitials = userInitials;
             this.featured = featured;
+            this.listStatus = listStatus;
             this.listToggle = listToggle;
             this.profilePhotoList = profilePhotoList;
             this.networkStatus = networkStatus;
             this.online_offline = online_offline;
+            this.note = note;
+            this.profilePhoto = profilePhoto;
         }
     }
 
@@ -99,7 +105,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
 
         viewHolder.userNameList.setText(reachFriendsDatabase.getUserName());
-        viewHolder.telephoneNumberList.setText(reachFriendsDatabase.getNumberOfSongs()+"");
+        viewHolder.telephoneNumberList.setText(reachFriendsDatabase.getNumberOfSongs()+" songs");
         final String phoneNumber = reachFriendsDatabase.getPhoneNumber();
         if (phoneNumber.equals("0000000001") || phoneNumber.equals("0000000002") || phoneNumber.equals("8860872102"))
             viewHolder.featured.setVisibility(View.VISIBLE);
@@ -165,6 +171,34 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 }
             });
         }
+        int status = reachFriendsDatabase.getStatus();
+        viewHolder.online_offline.setVisibility(View.GONE);
+        viewHolder.listToggle.setVisibility(View.VISIBLE);
+        switch (status) {
+            case ReachFriendsHelper.OFFLINE_REQUEST_GRANTED:
+                viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
+                viewHolder.listStatus.setText("Offline");
+                break;
+            case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
+                viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
+                viewHolder.note.setImageResource(R.drawable.note_pink);
+                viewHolder.listStatus.setText("Online");
+                viewHolder.userNameList.setTextColor(context.getResources().getColor(R.color.reach_color));
+                viewHolder.listStatus.setTextColor(context.getResources().getColor(R.color.reach_color));
+                viewHolder.telephoneNumberList.setTextColor(context.getResources().getColor(R.color.reach_color));
+                viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
+                break;
+            case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
+                viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
+                viewHolder.listStatus.setText("Waiting");
+                break;
+            case ReachFriendsHelper.REQUEST_NOT_SENT:
+                viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
+                viewHolder.listStatus.setText("");
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
@@ -177,10 +211,13 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 (TextView) view.findViewById(R.id.netType),
                 (TextView) view.findViewById(R.id.userInitials),
                 (TextView) view.findViewById(R.id.featured),
-                (ImageButton) view.findViewById(R.id.listToggle),
+                (TextView) view.findViewById(R.id.listStatus),
+                (ImageView) view.findViewById(R.id.listToggle),
                 (ImageView) view.findViewById(R.id.profilePhotoList),
                 (ImageView) view.findViewById(R.id.status),
-                (ImageView) view.findViewById(R.id.circle));
+                (ImageView) view.findViewById(R.id.circle),
+                (ImageView) view.findViewById(R.id.note),
+                (FrameLayout) view.findViewById(R.id.profilePhoto));
         view.setTag(viewHolder);
         return view;
     }
@@ -192,7 +229,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
             final MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<MyString>() {
                 @Override
-                protected MyString doWork() throws IOException {
+                public MyString doWork() throws IOException {
                     return StaticData
                             .messagingEndpoint
                             .messagingEndpoint()

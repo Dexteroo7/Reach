@@ -15,17 +15,15 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import java.lang.ref.WeakReference;
-import java.util.concurrent.Future;
 
 import reach.project.R;
 import reach.project.adapter.ReachAlbumsAdapter;
 import reach.project.core.StaticData;
-import reach.project.coreViews.ContactsListFragment;
-import reach.project.utils.auxiliaryClasses.ReachAlbum;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.sql.ReachAlbumHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.ReachAlbum;
 
 public class AlbumListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -128,9 +126,9 @@ public class AlbumListFragment extends Fragment implements LoaderManager.LoaderC
 
         if(cursorLoader.getId() == StaticData.ALBUM_LOADER && cursor != null && !cursor.isClosed()) {
             reachAlbumsAdapter.swapCursor(cursor);
-            final Future<?> isMusicFetching = ContactsListFragment.isMusicFetching.get(getArguments().getLong("id"));
-            if((isMusicFetching == null || isMusicFetching.isCancelled() || isMusicFetching.isDone()) && cursor.getCount() == 0 && albumGrid!=null)
-                MiscUtils.setEmptyTextforGridView(albumGrid, "No albums found");
+//            final Future<?> isMusicFetching = ContactsListFragment.isMusicFetching.get(getArguments().getLong("id"));
+//            if((isMusicFetching == null || isMusicFetching.isCancelled() || isMusicFetching.isDone()) && cursor.getCount() == 0 && albumGrid!=null)
+//                MiscUtils.setEmptyTextforGridView(albumGrid, "No albums found");
         }
     }
 

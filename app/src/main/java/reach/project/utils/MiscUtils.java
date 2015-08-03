@@ -1,5 +1,6 @@
 package reach.project.utils;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -30,7 +31,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,9 +44,6 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.ReachPlayList;
 import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.StaticData;
-import reach.project.utils.auxiliaryClasses.ReachAlbum;
-import reach.project.utils.auxiliaryClasses.ReachArtist;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
@@ -59,6 +56,10 @@ import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.ReachAlbum;
+import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.utils.auxiliaryClasses.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.UseContext;
 
 /**
  * Created by dexter on 1/10/14.
@@ -326,10 +327,11 @@ public enum MiscUtils {
 
     /**
      * Get a quick hash of song
-     * @param actualName name1 of song
+     *
+     * @param actualName  name1 of song
      * @param displayName name2 of song
-     * @param duration of song
-     * @param size of song
+     * @param duration    of song
+     * @param size        of song
      * @return hash using above parameters
      */
     public static String quickHash(String actualName, String displayName, long duration, long size) {
@@ -407,7 +409,7 @@ public enum MiscUtils {
 
         return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
             @Override
-            protected MyBoolean doWork() throws IOException {
+            public MyBoolean doWork() throws IOException {
                 Log.i("Downloader", "Sending message " + message);
                 return StaticData.messagingEndpoint.messagingEndpoint()
                         .sendMessage(message, hostId, clientId).execute();
@@ -456,11 +458,66 @@ public enum MiscUtils {
 //        return localIpAddress;
 //    }
 
-    public static boolean updateGCM(final long id, final WeakReference<Context> reference) {
+    public static <T extends Context, Result> Optional<Result> useContext(final WeakReference<T> reference,
+                                                                          final UseContext<Result, T>... tasks) {
+
+        final boolean isActivity = reference.get() instanceof Activity;
+
+        Optional<Result> result = Optional.absent();
+        for (UseContext<Result, T> task : tasks) {
+
+            final T context;
+
+            final boolean contextLost = (context = reference.get()) == null;
+            if (contextLost)
+                return Optional.absent();
+            final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
+            if (activityIsFinishing)
+                return Optional.absent();
+
+            result = Optional.fromNullable(task.work(context));
+        }
+
+        return result;
+    }
+
+    public static <T extends Context, Result> Optional<Result> useContext(final WeakReference<T> reference,
+                                                                          final UseContext<Result, T> task) {
+
+        final T context;
+        final boolean contextLost = (context = reference.get()) == null;
+        final boolean isActivity = context instanceof Activity;
+
+        if (contextLost)
+            return Optional.absent();
+        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
+        if (activityIsFinishing)
+            return Optional.absent();
+
+        return Optional.fromNullable(task.work(context));
+    }
+
+    public static <T extends Context> void useContext2(final WeakReference<T> reference,
+                                                                          final UseContext<Void, T> task) {
+
+        final T context;
+        final boolean contextLost = (context = reference.get()) == null;
+        final boolean isActivity = context instanceof Activity;
+
+        if (contextLost)
+            return;
+        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
+        if (activityIsFinishing)
+            return;
+
+        task.work(context);
+    }
+
+    public static <T extends Context> boolean updateGCM(final long id, final WeakReference<T> reference) {
 
         final String regId = autoRetry(new DoWork<String>() {
             @Override
-            protected String doWork() throws IOException {
+            public String doWork() throws IOException {
 
                 final Context context;
                 if (reference == null || (context = reference.get()) == null)
@@ -481,7 +538,7 @@ public enum MiscUtils {
         Log.i("Ayush", "Uploading newGcmId to server");
         final Boolean result = autoRetry(new DoWork<Boolean>() {
             @Override
-            protected Boolean doWork() throws IOException {
+            public Boolean doWork() throws IOException {
 
                 StaticData.userEndpoint.setGCMId(id, regId).execute();
                 Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
@@ -493,13 +550,13 @@ public enum MiscUtils {
     }
 
     /**
-     * Performs a task, retries upon failure with exponential back-off.
+     * Performs a work, retries upon failure with exponential back-off.
      * Kindly don't use on UI thread.
      *
-     * @param <T>       the return type of task
-     * @param task      the task that needs to be performed
+     * @param <T>       the return type of work
+     * @param task      the work that needs to be performed
      * @param predicate the extra condition for failure
-     * @return the result/output of performing the task
+     * @return the result/output of performing the work
      */
     public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
                                             @NonNull final Optional<Predicate<T>> predicate) {
@@ -536,13 +593,13 @@ public enum MiscUtils {
     }
 
     /**
-     * Performs a task, retries upon failure with exponential back-off.
+     * Performs a work, retries upon failure with exponential back-off.
      * This is to be used if returned value is of no importance other than checking for failure.
      * Automatically delegates to separate thread.
      *
-     * @param task      the task that needs to be performed
+     * @param task      the work that needs to be performed
      * @param predicate the extra condition for failure
-     * @param <T>       the return type of task
+     * @param <T>       the return type of work
      */
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
@@ -600,16 +657,16 @@ public enum MiscUtils {
 
         final ContentValues values = new ContentValues();
         final String condition;
-        final String [] arguments;
-        if(shouldUnpause || status == ReachDatabase.PAUSED_BY_USER) {
+        final String[] arguments;
+        if (shouldUnpause || status == ReachDatabase.PAUSED_BY_USER) {
 
             condition = ReachDatabaseHelper.COLUMN_ID + " = ?";
-            arguments = new String[]{databaseId+""};
+            arguments = new String[]{databaseId + ""};
         } else {
             //we should not un-pause
             condition = ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
-            arguments = new String[]{databaseId+"", ReachDatabase.PAUSED_BY_USER+""};
+                    ReachDatabaseHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
+            arguments = new String[]{databaseId + "", ReachDatabase.PAUSED_BY_USER + ""};
         }
 
         return contentResolver.update(
@@ -673,7 +730,7 @@ public enum MiscUtils {
             }
 
             final Context context = contextReference.get();
-            if(context == null)
+            if (context == null)
                 return;
 
             Log.i("Downloader", "Updating DB on GCM sent " + updateStatus(

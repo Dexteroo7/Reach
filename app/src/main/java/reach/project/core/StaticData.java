@@ -63,7 +63,7 @@ public final class StaticData {
 
             ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
             ReachDatabaseHelper.COLUMN_ONLINE_STATUS, //12
-            ReachDatabaseHelper.COLUMN_NETWORK_TYPE, //13
+            ReachDatabaseHelper.COLUMN_ARTIST_NAME, //13
             ReachDatabaseHelper.COLUMN_IS_LIKED}; //14
 
     public static final String [] DISK_LIST = new String[] { //count = 8
@@ -123,7 +123,6 @@ public final class StaticData {
     public static final short DOWNLOAD_LOADER = 5;
     public static final short UPLOAD_LOADER = 6;
     public static final short MY_LIBRARY_LOADER = 7;
-    public static final short NOTIFICATIONS_LOADER = 8;
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout

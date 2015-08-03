@@ -167,7 +167,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             final String message = params[2];
             final MyString myString = MiscUtils.autoRetry(new DoWork<MyString>() {
                 @Override
-                protected MyString doWork() throws IOException {
+                public MyString doWork() throws IOException {
 
                     StaticData.notificationApi.addBecameFriends(clientId, hostId).execute();
                     return StaticData.messagingEndpoint.messagingEndpoint().handleReply(clientId, hostId, message).execute();

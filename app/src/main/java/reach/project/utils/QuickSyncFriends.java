@@ -127,7 +127,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final QuickSync quickSync = MiscUtils.autoRetry(
                 new DoWork<QuickSync>() {
                     @Override
-                    protected QuickSync doWork() throws IOException {
+                    public QuickSync doWork() throws IOException {
                         return StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute();
                     }
                 }, Optional.<Predicate<QuickSync>>absent()).orNull();
@@ -172,7 +172,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                         wrapper.setContacts(ImmutableList.copyOf(numbers));
                     }
                     @Override
-                    protected List<Friend> doWork() throws IOException {
+                    public List<Friend> doWork() throws IOException {
                         return StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems();
                     }
                 }, Optional.<Predicate<List<Friend>>>absent());

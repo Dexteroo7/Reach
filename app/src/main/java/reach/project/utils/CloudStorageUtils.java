@@ -112,7 +112,7 @@ public enum CloudStorageUtils {
             MiscUtils.autoRetry(
                     new DoWork<Void>() {
                         @Override
-                        protected Void doWork() throws IOException {
+                        public Void doWork() throws IOException {
                             final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
                             insert.setPredefinedAcl("publicRead");
                             insert.setName(fileName);
@@ -306,7 +306,7 @@ public enum CloudStorageUtils {
         MiscUtils.autoRetry(
                 new DoWork<Void>() {
                     @Override
-                    protected Void doWork() throws IOException {
+                    public Void doWork() throws IOException {
 
                         final String uploadedHash = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content)
                                 .setName(fileName)

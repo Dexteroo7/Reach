@@ -15,17 +15,36 @@
                 android:id="@+id/contactsList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
-            <com.melnykov.fab.FloatingActionButton
-                android:id="@+id/fab"
+            <com.getbase.floatingactionbutton.FloatingActionsMenu
+                android:id="@+id/right_labels"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
+                android:layout_gravity="bottom|right"
                 android:layout_margin="16dp"
-                android:src="@drawable/ic_push"
-                android:visibility="gone"
-                fab:fab_colorNormal="@color/reach_color"
-                fab:fab_colorPressed="@color/reach_dark"
-                fab:fab_colorRipple="@color/reach_light"/>
+                fab:fab_addButtonColorNormal="@color/reach_color"
+                fab:fab_addButtonColorPressed="@color/reach_color"
+                fab:fab_addButtonPlusIconColor="@color/white"
+                fab:fab_labelStyle="@style/menu_labels_style">
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/share_music_fab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="@color/reach_color"
+                    fab:fab_colorPressed="@color/reach_color"
+                    fab:fab_icon="@drawable/ic_push"
+                    fab:fab_size="mini"
+                    fab:fab_title="Share Music" />
+                <com.getbase.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/invite_friend_fab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    fab:fab_colorNormal="@color/reach_color"
+                    fab:fab_colorPressed="@color/reach_color"
+                    fab:fab_icon="@drawable/add_icon_grey"
+                    fab:fab_size="mini"
+                    fab:fab_title="Invite a Friend" />
+
+            </com.getbase.floatingactionbutton.FloatingActionsMenu>
         </FrameLayout>
     </android.support.v4.widget.SwipeRefreshLayout>
 </RelativeLayout>

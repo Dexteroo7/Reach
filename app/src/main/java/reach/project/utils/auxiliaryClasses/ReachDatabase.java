@@ -24,7 +24,7 @@ public class ReachDatabase {
     private long processed = 0;
     private long added = 0;
     private long lastActive = 0;
-    private long reference;
+    private long reference = 0;
 
     private short operationKind = 0; //0 = download, 1 = upload
     private short logicalClock = 0;
@@ -47,22 +47,6 @@ public class ReachDatabase {
         if(status < 0 || status > 7)
             throw new IllegalArgumentException("Wrong status !");
         //else all good
-    }
-
-    public boolean isActivated() {
-        return isActivated;
-    }
-
-    public void setIsActivated(boolean isActivated) {
-        this.isActivated = isActivated;
-    }
-
-    public boolean isLiked() {
-        return isLiked;
-    }
-
-    public void setIsLiked(boolean isLiked) {
-        this.isLiked = isLiked;
     }
 
     public String getArtistName() {
@@ -247,5 +231,21 @@ public class ReachDatabase {
 
     public void setReference(long reference) {
         this.reference = reference;
+    }
+
+    public boolean isLiked() {
+        return isLiked;
+    }
+
+    public void setIsLiked(boolean isLiked) {
+        this.isLiked = isLiked;
+    }
+
+    public boolean isActivated() {
+        return isActivated;
+    }
+
+    public void setIsActivated(boolean isActivated) {
+        this.isActivated = isActivated;
     }
 }

@@ -9,7 +9,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -170,7 +170,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         pushLibraryList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
-        actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
 
         if(actionBar != null) {
             actionBar.setTitle("Share music");

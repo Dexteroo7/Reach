@@ -521,7 +521,7 @@ public class ProcessManager extends Service implements
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
 
         final String toSend = new Gson().toJson(musicData, MusicData.class);
-        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS).edit(), toSend);
+        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS), toSend);
 
         switch (notificationState) {
 

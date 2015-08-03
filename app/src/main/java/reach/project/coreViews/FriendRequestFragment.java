@@ -33,12 +33,17 @@ import reach.project.utils.SuperInterface;
 
 public class FriendRequestFragment extends Fragment {
 
+    private static long serverId;
     private static AtomicBoolean refreshing = new AtomicBoolean(false);
-    private static WeakReference<FriendRequestFragment> reference = null;
-    public static FriendRequestFragment newInstance() {
+    private static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
 
+    private static WeakReference<FriendRequestFragment> reference = null;
+
+    public static FriendRequestFragment newInstance(long serverId) {
+
+        FriendRequestFragment.serverId = serverId;
         FriendRequestFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new FriendRequestFragment());
         return fragment;
     }
@@ -55,9 +60,7 @@ public class FriendRequestFragment extends Fragment {
         }
     };
 
-    private long serverId;
     private SuperInterface mListener;
-    private final List<ReceivedRequest> receivedRequests = new ArrayList<>();
     private ReachFriendRequestAdapter reachFriendRequestAdapter;
 
     @Override
@@ -66,7 +69,7 @@ public class FriendRequestFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        listView.setOnScrollListener(NotificationCenterFragment.scrollListener);
+        listView.setAdapter(reachFriendRequestAdapter);
 
         new FetchRequests().executeOnExecutor(StaticData.threadPool);
         return rootView;
@@ -105,18 +108,18 @@ public class FriendRequestFragment extends Fragment {
         mListener = null;
     }
 
-    public static final class FetchRequests extends AsyncTask<Context, Void, List<ReceivedRequest>> {
+    private static final class FetchRequests extends AsyncTask<Context, Void, List<ReceivedRequest>> {
 
         @Override
         protected List<ReceivedRequest> doInBackground(Context... params) {
 
             final long myId = SharedPrefUtils.getServerId(params[0].getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-            if(myId == 0)
+            if (myId == 0)
                 return Collections.EMPTY_LIST;
 
             return MiscUtils.autoRetry(new DoWork<List<ReceivedRequest>>() {
                 @Override
-                protected List<ReceivedRequest> doWork() throws IOException {
+                public List<ReceivedRequest> doWork() throws IOException {
 
                     final List<ReceivedRequest> receivedRequests =
                             StaticData.userEndpoint.getReceivedRequests(myId).execute().getItems();
@@ -127,23 +130,19 @@ public class FriendRequestFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(List<ReceivedRequest> receivedRequests) {
+        protected void onPostExecute(List<ReceivedRequest> requests) {
 
-            super.onPostExecute(receivedRequests);
+            super.onPostExecute(requests);
 
             final FriendRequestFragment fragment;
-            if(reference == null || (fragment = reference.get()) == null)
-
-            if(isCancelled() || isRemoving() || activity == null || activity.isFinishing() )
+            if (receivedRequests == null || receivedRequests.isEmpty() || reference == null || (fragment = reference.get()) == null)
                 return;
 
-            if (receivedRequests != null && receivedRequests.size()>0) {
+            receivedRequests.clear();
+            receivedRequests.addAll(requests);
 
-                listView.setAdapter(reachFriendRequestAdapter);
-                listView.setOnItemClickListener(itemClickListener);
-            }
-            else {
-                MiscUtils.setEmptyTextforListView(listView,"No friends requests for you!");
+            if (fragment.reachFriendRequestAdapter != null) {
+                fragment.reachFriendRequestAdapter.notifyDataSetChanged();
             }
         }
     }

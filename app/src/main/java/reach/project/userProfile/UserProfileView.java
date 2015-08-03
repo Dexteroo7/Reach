@@ -8,7 +8,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -99,8 +99,8 @@ public class UserProfileView extends Fragment {
         final ReachFriend reachFriendsDatabase = ReachFriendsHelper.cursorToProcess(friendsCursor);
         friendsCursor.close();
         if (reachFriendsDatabase == null) return rootView;
-        if (((ActionBarActivity)getActivity()).getSupportActionBar() != null)
-            ((ActionBarActivity)getActivity()).getSupportActionBar().setTitle(reachFriendsDatabase.getUserName());
+        if (((AppCompatActivity)getActivity()).getSupportActionBar() != null)
+            ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(reachFriendsDatabase.getUserName());
         userName.setText(reachFriendsDatabase.getUserName());
         numberOfSongs.setText(reachFriendsDatabase.getNumberOfSongs()+" Songs");
         if (!TextUtils.isEmpty(reachFriendsDatabase.getImageId()) && !reachFriendsDatabase.getImageId().equals("hello_world"))
@@ -168,7 +168,7 @@ public class UserProfileView extends Fragment {
             final long serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
             final MyString myString = MiscUtils.autoRetry(new DoWork<MyString>() {
                 @Override
-                protected MyString doWork() throws IOException {
+                public MyString doWork() throws IOException {
                     return StaticData.messagingEndpoint.messagingEndpoint().requestAccess(serverId, params[0]).execute();
                 }
             }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {

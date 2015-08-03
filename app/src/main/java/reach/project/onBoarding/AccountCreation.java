@@ -283,7 +283,7 @@ public class AccountCreation extends Fragment {
 
             final String gcmId = MiscUtils.autoRetry(new DoWork<String>() {
                 @Override
-                protected String doWork() throws IOException {
+                public String doWork() throws IOException {
 
                     if (activity == null || activity.isFinishing())
                         return "QUIT";
@@ -314,7 +314,7 @@ public class AccountCreation extends Fragment {
             final String toParse;
             final MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<MyString>() {
                 @Override
-                protected MyString doWork() throws IOException {
+                public MyString doWork() throws IOException {
                     return StaticData.userEndpoint.insert(user).execute();
                 }
             }, Optional.<Predicate<MyString>>absent()).orNull();

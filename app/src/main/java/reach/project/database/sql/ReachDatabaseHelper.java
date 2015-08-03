@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 import android.util.Log;
 
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
@@ -116,8 +117,15 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         reachDatabase.setPath(cursor.getString(i++));
         reachDatabase.setSenderName(cursor.getString(i++));
         reachDatabase.setOnlineStatus(cursor.getString(i++));
-        reachDatabase.setNetworkType(cursor.getString(i++));
-        reachDatabase.setIsLiked(cursor.getString(i++));
+        reachDatabase.setArtistName(cursor.getString(i++));
+
+        final String liked = cursor.getString(i++);
+        if(TextUtils.isEmpty(liked))
+            reachDatabase.setIsLiked(false);
+        if(liked.equals("true"))
+            reachDatabase.setIsLiked(true);
+        else
+        reachDatabase.setIsLiked(false);
 
         reachDatabase.setDisplayName(cursor.getString(i++));
         reachDatabase.setActualName(cursor.getString(i++));
@@ -125,12 +133,27 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         reachDatabase.setLength(cursor.getLong(i++));
         reachDatabase.setProcessed(cursor.getLong(i++));
         reachDatabase.setAdded(cursor.getLong(i++));
-        reachDatabase.setLastActive(cursor.getLong(i++));
+
+        final long activated = cursor.getLong(i++);
+        if(activated == 0)
+            reachDatabase.setIsActivated(false);
+        else
+            reachDatabase.setIsActivated(true);
 
         reachDatabase.setLogicalClock(cursor.getShort(i++));
         reachDatabase.setStatus(cursor.getShort(i));
 
         return reachDatabase;
+    }
+
+    public static ContentValues putActivated(boolean activated, ContentValues values) {
+        values.put(COLUMN_ACTIVATED, activated ? 1 : 0); //must put pong
+        return values;
+    }
+
+    public static ContentValues putLiked(boolean liked, ContentValues values) {
+        values.put(COLUMN_ACTIVATED, liked ? "true" : "false"); //must put pong
+        return values;
     }
 
     public static ContentValues contentValuesCreator(ReachDatabase reachDatabase) {
@@ -147,8 +170,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_PATH, reachDatabase.getPath());
         values.put(COLUMN_SENDER_NAME, reachDatabase.getSenderName());
         values.put(COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus());
-        values.put(COLUMN_NETWORK_TYPE, reachDatabase.getNetworkType());
-        values.put(COLUMN_IS_LIKED, reachDatabase.getIsLiked());
+        values.put(COLUMN_ARTIST_NAME, reachDatabase.getArtistName());
+        values.put(COLUMN_IS_LIKED, reachDatabase.isLiked()+""); //must put string
 
         values.put(COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
         values.put(COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
@@ -156,7 +179,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_LENGTH, reachDatabase.getLength());
         values.put(COLUMN_PROCESSED, reachDatabase.getProcessed());
         values.put(COLUMN_ADDED, reachDatabase.getAdded());
-        values.put(COLUMN_LAST_ACTIVE, reachDatabase.getLastActive());
+        values.put(COLUMN_ACTIVATED, reachDatabase.isActivated() ? 1 : 0); //must put pong
 
         values.put(COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
         values.put(COLUMN_STATUS, reachDatabase.getStatus());

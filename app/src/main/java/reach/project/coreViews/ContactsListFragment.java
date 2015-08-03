@@ -49,9 +49,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.melnykov.fab.FloatingActionButton;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -73,12 +73,12 @@ import reach.project.core.PushActivity;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.Contact;
 
 public class ContactsListFragment extends Fragment implements
@@ -89,11 +89,12 @@ public class ContactsListFragment extends Fragment implements
     private TextView notificationCount;
     private View emptyFriends, emptyInvite;
 
-    private FloatingActionButton actionButton;
+    private FloatingActionsMenu actionMenu;
     private SwipeRefreshLayout swipeRefreshLayout;
     private SearchView searchView;
 
     private ScaleAnimation translation;
+
     private SharedPreferences sharedPrefs;
     private SuperInterface mListener;
 
@@ -111,28 +112,11 @@ public class ContactsListFragment extends Fragment implements
     private String mCurFilter, selection;
     private String[] selectionArguments;
 
-    private static long serverId = 0;
     private static String phoneNumber = "";
 
     private static WeakReference<ContactsListFragment> reference = null;
 
-    public static ContactsListFragment newInstance(boolean first) {
-
-        final Bundle args;
-        ContactsListFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
-
-            Log.i("Ayush", "Creating new instance of contacts list fragment");
-            reference = new WeakReference<>(fragment = new ContactsListFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing contacts list fragment object :)");
-            args = fragment.getArguments();
-        }
-
-        args.putBoolean("first", first);
-        return fragment;
-    }
+    private static long serverId;
 
     public static void setNotificationCount(int count) {
 
@@ -141,6 +125,13 @@ public class ContactsListFragment extends Fragment implements
             return;
         fragment.notificationCount.setText("" + count);
     }
+
+    private final View.OnClickListener openNotification = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListener.onOpenNotificationDrawer();
+        }
+    };
 
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
 
@@ -165,10 +156,12 @@ public class ContactsListFragment extends Fragment implements
 
                 final Contact contact = (Contact) object;
                 if (contact.isInviteSent()) return;
+
                 final String msg = "Hey! Checkout and download my phone music collection with just a click!" +
                         ".\nhttp://letsreach.co/app\n--\n" +
                         SharedPrefUtils.getUserName(sharedPrefs);
                 final EditText input = new EditText(view.getContext());
+
                 input.setBackgroundResource(0);
                 input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
                 input.setTextColor(view.getContext().getResources().getColor(R.color.darkgrey));
@@ -224,13 +217,18 @@ public class ContactsListFragment extends Fragment implements
         }
     };
 
-    private final View.OnClickListener openNotification = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
 
-            mListener.onOpenNotificationDrawer();
-        }
-    };
+    public static ContactsListFragment newInstance() {
+
+        ContactsListFragment fragment;
+        if (reference == null || (fragment = reference.get()) == null) {
+            Log.i("Ayush", "Creating new instance of contacts list fragment");
+            reference = new WeakReference<>(fragment = new ContactsListFragment());
+        } else
+            Log.i("Ayush", "Reusing contacts list fragment object :)");
+
+        return fragment;
+    }
 
     @Override
     public void onDestroyView() {
@@ -248,7 +246,6 @@ public class ContactsListFragment extends Fragment implements
 
         sharedPrefs.edit().putStringSet(inviteKey, LocalUtils.inviteSentTo).apply();
         //listView.setOnScrollListener(null);
-
         if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
@@ -330,7 +327,7 @@ public class ContactsListFragment extends Fragment implements
         final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
-            actionBar.setTitle("My Reach");
+            actionBar.setTitle("Reach");
             mListener.setUpNavigationViews();
         }
 
@@ -338,6 +335,7 @@ public class ContactsListFragment extends Fragment implements
         listView.setDivider(null);
         listView.setDividerHeight(0);
         listView.setOnItemClickListener(clickListener);
+        listView.setOnScrollListener(scrollListener);
         listView.setAdapter(mergeAdapter);
 
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
@@ -345,9 +343,9 @@ public class ContactsListFragment extends Fragment implements
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(refreshListener);
 
-        actionButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        actionButton.attachToListView(listView, null, scrollListener);
-        actionButton.setOnClickListener(pushLibraryListener);
+
+        actionMenu = (FloatingActionsMenu) rootView.findViewById(R.id.right_labels);
+        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
 
         selection = null;
         selectionArguments = null;
@@ -399,18 +397,19 @@ public class ContactsListFragment extends Fragment implements
 
             mergeAdapter.setActive(emptyFriends, true);
             mergeAdapter.setActive(reachContactsAdapter, false);
+            actionMenu.setVisibility(View.GONE);
         } else {
 
             mergeAdapter.setActive(emptyFriends, false);
             mergeAdapter.setActive(reachContactsAdapter, true);
             if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
                 StaticData.threadPool.execute(LocalUtils.devikaSendMeSomeLove);
-                SharedPrefUtils.setFirstIntroSeen(sharedPrefs.edit());
+                SharedPrefUtils.setFirstIntroSeen(sharedPrefs);
             }
             //bounce ?
-            actionButton.setVisibility(View.VISIBLE);
+            actionMenu.setVisibility(View.VISIBLE);
             if (!translation.hasStarted())
-                actionButton.startAnimation(translation);
+                actionMenu.startAnimation(translation);
         }
     }
 
@@ -419,7 +418,7 @@ public class ContactsListFragment extends Fragment implements
 
         if (loader.getId() == StaticData.FRIENDS_LOADER) {
             reachContactsAdapter.swapCursor(null);
-            actionButton.setVisibility(View.GONE);
+            actionMenu.setVisibility(View.GONE);
         }
     }
 

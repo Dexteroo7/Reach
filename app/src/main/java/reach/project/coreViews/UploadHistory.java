@@ -11,7 +11,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -126,7 +126,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ActionBar actionBar = ((ActionBarActivity)getActivity()).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         if (actionBar!=null)
             actionBar.setTitle("Upload History");
         uploadList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
@@ -193,7 +193,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
             final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(new DoWork<CompletedOperationCollection>() {
                 @Override
-                protected CompletedOperationCollection doWork() throws IOException {
+                public CompletedOperationCollection doWork() throws IOException {
                     return StaticData.userEndpoint.getCompletedOperations(params[0]).execute();
                 }
             }, Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();

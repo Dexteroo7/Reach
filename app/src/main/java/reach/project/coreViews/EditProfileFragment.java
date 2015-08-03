@@ -12,7 +12,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,7 +73,7 @@ public class EditProfileFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_edit_profile, container, false);
         final Activity activity = getActivity();
-        final ActionBar actionBar = ((ActionBarActivity) activity).getSupportActionBar();
+        final ActionBar actionBar = ((AppCompatActivity) activity).getSupportActionBar();
         if (actionBar != null)
             actionBar.setTitle("Edit Profile");
         sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_APPEND);
@@ -137,7 +137,7 @@ public class EditProfileFragment extends Fragment {
 
             MiscUtils.autoRetry(new DoWork<Void>() {
                 @Override
-                protected Void doWork() throws IOException {
+                public Void doWork() throws IOException {
                     return StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute();
                 }
             }, Optional.<Predicate<Void>>absent()).orNull();
