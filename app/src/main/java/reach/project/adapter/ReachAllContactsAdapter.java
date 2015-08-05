@@ -5,10 +5,8 @@ package reach.project.adapter;
 */
 
 import android.app.Activity;
-import android.content.ContentUris;
 import android.content.Context;
-import android.net.Uri;
-import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +15,9 @@ import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -32,9 +33,18 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
     private final  Context context;
     private final int layoutResourceId;
-    private final Picasso picasso;
     private final List<Contact> originalData;
     private final List<Contact> filteredData;
+    private final CircleTransform transform = new CircleTransform();
+
+    private final LoadingCache<String, String> cache = CacheBuilder.newBuilder()
+            .initialCapacity(50)
+            .build(new CacheLoader<String, String>() {
+                @Override
+                public String load(@NonNull String name) {
+                    return MiscUtils.generateInitials(name);
+                }
+            });
 
     public void cleanUp() {
 
@@ -49,7 +59,6 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
         super(context, ResourceId, friends);
         this.context = context;
-        this.picasso = Picasso.with(context);
         this.layoutResourceId = ResourceId;
         this.filteredData = friends;
         /**
@@ -64,11 +73,6 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
     public Contact getItem(int position) {
         return filteredData.get(position);
-    }
-
-    private Uri openPhoto(long contactId) {
-        return Uri.withAppendedPath(ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId),
-                ContactsContract.Contacts.Photo.CONTENT_DIRECTORY);
     }
 
     private final class ViewHolder{
@@ -104,13 +108,13 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
             viewHolder = (ViewHolder) convertView.getTag();
 
         viewHolder.userNameList.setText(contact.getUserName());
-        viewHolder. userInitials.setText(MiscUtils.generateInitials(contact.getUserName()));
-        picasso.load(openPhoto(contact.getUserID())).transform(new CircleTransform()).into(viewHolder.profilePhotoList);
+        viewHolder. userInitials.setText(cache.getUnchecked(contact.getUserName()));
+        Picasso.with(context).load(contact.getPhotoUri()).transform(transform).into(viewHolder.profilePhotoList);
 
         if(contact.isInviteSent())
-            picasso.load(R.drawable.add_tick).into(viewHolder.listToggle);
+            Picasso.with(context).load(R.drawable.add_tick).into(viewHolder.listToggle);
         else
-            picasso.load(R.drawable.add_myreach).into(viewHolder.listToggle);
+            Picasso.with(context).load(R.drawable.add_myreach).into(viewHolder.listToggle);
         return convertView;
     }
 

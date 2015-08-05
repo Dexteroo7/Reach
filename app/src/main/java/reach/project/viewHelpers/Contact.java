@@ -1,5 +1,9 @@
 package reach.project.viewHelpers;
 
+import android.content.ContentUris;
+import android.net.Uri;
+import android.provider.ContactsContract;
+
 /**
  * Created by Dexter on 03-03-2015.
  */
@@ -7,6 +11,7 @@ public class Contact {
 
     private final String userName,phoneNumber;
     private final long userID;
+    private final Uri photoUri;
 
     private boolean inviteSent = false;
 
@@ -14,6 +19,8 @@ public class Contact {
         this.userName = userName;
         this.phoneNumber = phoneNumber;
         this.userID = userID;
+        this.photoUri =  Uri.withAppendedPath(ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, userID),
+                ContactsContract.Contacts.Photo.CONTENT_DIRECTORY);
     }
 
     public boolean isInviteSent() {
@@ -58,5 +65,9 @@ public class Contact {
                 "userName='" + userName + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
+    }
+
+    public Uri getPhotoUri() {
+        return photoUri;
     }
 }

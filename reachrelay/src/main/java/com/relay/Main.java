@@ -53,6 +53,7 @@ public final class Main {
 
         for (Closeable channel : currentChannels.values())
             closeAndIgnore(channel);
+
         currentChannels.clear();
         closeAndIgnore(controller);
         controller = null;
@@ -65,6 +66,9 @@ public final class Main {
 
             //Check if controller is healthy
             if (controller == null || !controller.isOpen()) {
+
+                System.out.println("Controller lost " + System.currentTimeMillis());
+                System.out.println("*********----------********");
 
                 sanitize();
                 //relaxationPeriod
@@ -81,19 +85,17 @@ public final class Main {
                     return;
                 }
 
-                ServerSocket temp = null;
                 try {
                     controller = ServerSocketChannel.open();
                     controller.configureBlocking(true);
-                    temp = controller.socket();
-                    temp.bind(new InetSocketAddress(60001));
-                    temp.setReuseAddress(true);
-                    temp.setPerformancePreferences(0, 1, 0);
+                    controller.bind(new InetSocketAddress(60001));
+                    controller.socket().setReuseAddress(true);
                 } catch (IOException e) {
+
                     //BAD !
                     System.out.println("Partial failure " + System.currentTimeMillis());
                     System.out.println("*********----------********");
-                    closeAndIgnore(controller, temp);
+                    closeAndIgnore(controller);
                     controller = null;
                     continue;
                 }
@@ -102,6 +104,7 @@ public final class Main {
             try {
                 threadPool.submit(new ConnectionHandler(controller.accept()));
             } catch (IOException e) {
+
                 System.out.println("Could not accept " + System.currentTimeMillis());
                 System.out.println("*********----------********");
                 closeAndIgnore(controller);

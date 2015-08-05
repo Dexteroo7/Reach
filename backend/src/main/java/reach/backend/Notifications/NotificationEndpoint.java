@@ -99,7 +99,6 @@ public class NotificationEndpoint {
 
         final List<NotificationBase> toSend = new ArrayList<>();
         final LoadingCache<Long, ReachUser> cache = CacheBuilder.newBuilder()
-                .maximumSize(NotificationBase.DEFAULT_LIST_LIMIT)
                 .initialCapacity(10)
                 .build(new CacheLoader<Long, ReachUser>() {
                     public ReachUser load(@Nonnegative @Nonnull Long id) {

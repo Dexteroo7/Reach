@@ -59,15 +59,18 @@ import reach.project.utils.auxiliaryClasses.TransferSong;
 /**
  * Created by Dexter on 11-04-2015.
  */
-public class ContactsChooserFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,SearchView.OnQueryTextListener, SearchView.OnCloseListener {
+public class ContactsChooserFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener, SearchView.OnCloseListener {
 
+    private static long serverId;
+
+    private SharedPreferences preferences;
     private ListView listView;
     private View rootView;
     private SearchView searchView;
     private ReachContactsAdapter reachContactsAdapter = null;
 
     private String mCurFilter, selection;
-    private String [] selectionArguments;
+    private String[] selectionArguments;
 
     private short getNetworkType(Context context) {
 
@@ -121,19 +124,21 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
-            final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+            final Cursor cursor = (Cursor) reachContactsAdapter.getItem(position);
+
             final PushContainer pushContainer = new PushContainer(
-                    ((Cursor) reachContactsAdapter.getItem(position)).getLong(0), //receiverID
-                    SharedPrefUtils.getServerId(preferences),                     //senderID
-                    getArguments().getString("songs"),                            //songData
-                    SharedPrefUtils.getUserName(preferences),                     //userName
-                    ((Cursor) reachContactsAdapter.getItem(position)).getString(2), //receiverName
-                    getArguments().getShort("song_count"),                        //songCount
-                    SharedPrefUtils.getImageId(preferences),                      //imageID
-                    getArguments().getString("song_name"),                        //firstSongName
-                    getNetworkType(getActivity())+"");
+                    cursor.getLong(0),                             //receiverID
+                    SharedPrefUtils.getServerId(preferences),      //senderID
+                    getArguments().getString("songs"),             //songData
+                    SharedPrefUtils.getUserName(preferences),      //userName
+                    cursor.getString(2),                           //receiverName
+                    getArguments().getShort("song_count"),         //songCount
+                    SharedPrefUtils.getImageId(preferences),       //imageID
+                    getArguments().getString("song_name"),         //firstSongName
+                    getNetworkType(getActivity()) + "");           //networkType
+
             if (!StaticData.debugMode) {
-                ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Push song")
                         .setAction("user - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
@@ -141,26 +146,27 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                         .setValue(pushContainer.getSongCount())
                         .build());
             }
-            if(isRemoving() || isDetached())
+            if (isRemoving() || isDetached())
                 return;
             try {
                 PushDialog.newInstance(pushContainer).show(getChildFragmentManager(), "push_dialog");
-            } catch (IllegalStateException ignored) {}
+            } catch (IllegalStateException ignored) {
+            }
         }
     };
 
     public static class PushDialog extends DialogFragment {
 
         private static WeakReference<PushDialog> reference;
+
         public static PushDialog newInstance(PushContainer pushContainer) {
 
             final Bundle args;
             PushDialog fragment;
-            if(reference == null || (fragment = reference.get()) == null) {
+            if (reference == null || (fragment = reference.get()) == null) {
                 reference = new WeakReference<>(fragment = new PushDialog());
                 fragment.setArguments(args = new Bundle());
-            }
-            else {
+            } else {
                 Log.i("Ayush", "Reusing PushDialog object :)");
                 args = fragment.getArguments();
             }
@@ -189,7 +195,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             final TextView exit = (TextView) rootView.findViewById(R.id.exit);
 
             final short sCount = getArguments().getShort("songsCount");
-            if(sCount == 0) {
+            if (sCount == 0) {
                 dismiss();
                 return rootView;
             }
@@ -197,7 +203,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             stringBuilder.append("<font color=\"#f33b5b\"><b>");
             stringBuilder.append(sCount);
             stringBuilder.append(" song");
-            if(sCount > 1)
+            if (sCount > 1)
                 stringBuilder.append("s");
             stringBuilder.append("</b></font>");
             stringBuilder.append(" selected");
@@ -258,9 +264,9 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     protected void onPostExecute(MyBoolean myBoolean) {
                         super.onPostExecute(myBoolean);
 
-                        if(getActivity() == null || getActivity().isFinishing() || isCancelled())
+                        if (getActivity() == null || getActivity().isFinishing() || isCancelled())
                             return;
-                        if(myBoolean == null || myBoolean.getGcmexpired())
+                        if (myBoolean == null || myBoolean.getGcmexpired())
                             Toast.makeText(getActivity(), "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
                         else if (myBoolean.getOtherGCMExpired())
                             Toast.makeText(getActivity(), "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
@@ -276,7 +282,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     final StringBuilder stringBuilder2 = new StringBuilder();
                     stringBuilder2.append(sCount);
                     stringBuilder2.append(" song");
-                    if(sCount > 1)
+                    if (sCount > 1)
                         stringBuilder2.append("s");
                     stringBuilder2.append(" pushed to <font color=\"#f33b5b\"><b>");
                     stringBuilder2.append(getArguments().getString("receiverName"));
@@ -305,21 +311,22 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     }
 
     private static WeakReference<ContactsChooserFragment> reference = null;
+
     public static ContactsChooserFragment newInstance(HashSet<TransferSong> songs) {
 
         final Bundle args;
         ContactsChooserFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null) {
             reference = new WeakReference<>(fragment = new ContactsChooserFragment());
             fragment.setArguments(args = new Bundle());
-        }
-        else {
+        } else {
             Log.i("Ayush", "Reusing album list fragment object :)");
             args = fragment.getArguments();
         }
         args.putShort("song_count", (short) songs.size());
         args.putString("song_name", songs.iterator().next().getDisplayName());
-        args.putString("songs", new Gson().toJson(songs, new TypeToken<HashSet<TransferSong>>(){}.getType()));
+        args.putString("songs", new Gson().toJson(songs, new TypeToken<HashSet<TransferSong>>() {
+        }.getType()));
         return fragment;
     }
 
@@ -327,12 +334,12 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     public void onDestroyView() {
 
         getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
-        if(reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
+        if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
 
         listView = null;
         rootView = null;
-        if(searchView != null) {
+        if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
             searchView.setQuery(null, false);
@@ -346,19 +353,26 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        preferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        serverId = SharedPrefUtils.getServerId(preferences);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
-        if (actionBar!=null) {
+        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        if (actionBar != null) {
             actionBar.show();
             actionBar.setTitle("Choose contact");
         }
 
-        if(reachContactsAdapter == null)
-            reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0);
+        if (reachContactsAdapter == null)
+            reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0, serverId);
         selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
-        selectionArguments = new String[]{2+""};
+        selectionArguments = new String[]{2 + ""};
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setDivider(null);
@@ -384,16 +398,16 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         Log.i("Ayush", "Resetting Contacts adapter, AUTO");
-        if(cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
             reachContactsAdapter.swapCursor(cursor);
-            if(cursor.getCount() == 0)
+            if (cursor.getCount() == 0)
                 MiscUtils.setEmptyTextforListView(listView, "No friends found");
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if(cursorLoader.getId() == StaticData.FRIENDS_LOADER)
+        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER)
             reachContactsAdapter.swapCursor(null);
     }
 
@@ -403,7 +417,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
         searchView.setQuery(null, true);
         selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
-        selectionArguments = new String[]{2+""};
+        selectionArguments = new String[]{2 + ""};
         getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
         return false;
     }
@@ -416,7 +430,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public boolean onQueryTextChange(String newText) {
 
-        if(searchView == null)
+        if (searchView == null)
             return false;
 
         // Called when the action bar search text has changed.  Update
@@ -427,18 +441,19 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         // Prevents restarting the loader when restoring state.
         if (mCurFilter == null && newFilter == null) {
             return true;
-        } if (mCurFilter != null && mCurFilter.equals(newFilter)) {
+        }
+        if (mCurFilter != null && mCurFilter.equals(newFilter)) {
             return true;
         }
         mCurFilter = newFilter;
 
-        if(TextUtils.isEmpty(newText)) {
+        if (TextUtils.isEmpty(newText)) {
             selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
-            selectionArguments = new String[]{2+""};
+            selectionArguments = new String[]{2 + ""};
         } else {
             selection = ReachFriendsHelper.COLUMN_STATUS + " < ? and " +
-                        ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
-            selectionArguments = new String[]{2+"", "%"+mCurFilter+"%"};
+                    ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
+            selectionArguments = new String[]{2 + "", "%" + mCurFilter + "%"};
         }
         getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
         return true;
@@ -448,14 +463,13 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 
         menu.clear();
-        if (getArguments().getInt("type")==0) {
+        if (getArguments().getInt("type") == 0) {
 
             inflater.inflate(R.menu.search_menu, menu);
             searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
             searchView.setOnQueryTextListener(this);
             searchView.setOnCloseListener(this);
-        }
-        else
+        } else
             inflater.inflate(R.menu.menu, menu);
     }
 }

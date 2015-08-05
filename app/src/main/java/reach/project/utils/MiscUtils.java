@@ -485,9 +485,9 @@ public enum MiscUtils {
                                                                           final UseContext<Result, T> task) {
 
         final T context;
-        final boolean contextLost = (context = reference.get()) == null;
-        if (contextLost)
+        if (reference == null || (context = reference.get()) == null)
             return Optional.absent();
+
         final boolean isActivity = context instanceof Activity;
         final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
         if (activityIsFinishing)

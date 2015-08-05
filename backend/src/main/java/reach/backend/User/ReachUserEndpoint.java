@@ -199,7 +199,7 @@ public class ReachUserEndpoint {
             for (long id : myReach)
                 if (pair.containsKey(id))
                     newStatus.put(id,
-                            (short) (computeLastSeen((byte[]) syncCache.get(id)) > ReachUser.ONLINE_LIMIT ? 0 : 1));
+                            (short) (computeLastSeen((byte[]) syncCache.get(id)) > ReachUser.ONLINE_LIMIT ? 1 : 0));
                 else
                     newIds.add(id);
         //sync-up sentRequests
@@ -233,7 +233,7 @@ public class ReachUserEndpoint {
                 toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
             else
                 toUpdate.add(new Friend(reachUser, myReach, sentRequests,
-                        (short) (computeLastSeen((byte[]) syncCache.get(reachUser.getId())) > ReachUser.ONLINE_LIMIT ? 0 : 1)));
+                        (short) (computeLastSeen((byte[]) syncCache.get(reachUser.getId())) > ReachUser.ONLINE_LIMIT ? 1 : 0)));
         }
         //toUpdate built
         if (newIds.size() == 0 || newIdQuery == null) {

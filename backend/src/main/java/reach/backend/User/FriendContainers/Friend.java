@@ -94,9 +94,9 @@ public class Friend {
 
         if (myReach != null && myReach.contains(id))
             if (lastSeen > ReachUser.ONLINE_LIMIT)
-                this.status = 0;     //offline and permission-request granted
+                this.status = 1;     //offline and permission-request granted
             else
-                this.status = 1;  //online and permission-request granted
+                this.status = 0;  //online and permission-request granted
         else if (sentRequests != null && sentRequests.contains(id))
             this.status = 2; //request sent but permission not granted
         else

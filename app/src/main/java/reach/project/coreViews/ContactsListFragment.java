@@ -144,7 +144,8 @@ public class ContactsListFragment extends Fragment implements
 
                 final Cursor cursor = (Cursor) object;
                 final long id = cursor.getLong(0);
-                final short status = cursor.getShort(9);
+                final short status = cursor.getShort(5);
+
 
                 if (mListener != null) {
                     if (status < 2)
@@ -180,6 +181,8 @@ public class ContactsListFragment extends Fragment implements
         public void onRefresh() {
 
             if (!pinging.get()) {
+
+                Log.i("Ayush", "Starting refresh !");
                 pinging.set(true);
                 new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
             }
@@ -299,7 +302,7 @@ public class ContactsListFragment extends Fragment implements
             }
         };
 
-        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.fragment_contacts, null, 0);
+        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0, serverId);
         mergeAdapter = new MergeAdapter();
         //setup friends adapter
         mergeAdapter.addView(LocalUtils.createFriendsHeader(activity));
@@ -353,16 +356,26 @@ public class ContactsListFragment extends Fragment implements
         if (!synchronizeOnce.get() && !synchronizing.get()) {
 
             //contact sync will call send ping as well
-            swipeRefreshLayout.setRefreshing(true);
             synchronizing.set(true);
             pinging.set(true);
+            swipeRefreshLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    swipeRefreshLayout.setRefreshing(true);
+                }
+            });
             new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
             new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(StaticData.threadPool);
         } else if (!pinging.get()) {
 
             //if not pinging send a ping !
-            swipeRefreshLayout.setRefreshing(true);
             pinging.set(true);
+            swipeRefreshLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    swipeRefreshLayout.setRefreshing(true);
+                }
+            });
             new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
         }
 
@@ -372,13 +385,14 @@ public class ContactsListFragment extends Fragment implements
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
         if (id == StaticData.FRIENDS_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
-                    ReachFriendsHelper.projection,
+                    ReachContactsAdapter.requiredProjection,
                     selection,
                     selectionArguments,
-                    ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC");
         else
             return null;
     }
@@ -460,6 +474,7 @@ public class ContactsListFragment extends Fragment implements
         if (TextUtils.isEmpty(mCurFilter)) {
             selection = null;
             selectionArguments = null;
+            searchView.setQuery(null, true);
         } else {
             selection = ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
             selectionArguments = new String[]{"%" + mCurFilter + "%"};
@@ -716,7 +731,7 @@ public class ContactsListFragment extends Fragment implements
             }
 
             @Override
-            protected void onPostExecute(SwipeRefreshLayout refreshLayout) {
+            protected void onPostExecute(final SwipeRefreshLayout refreshLayout) {
 
                 super.onPostExecute(refreshLayout);
                 if (refreshLayout == null || isDead())
@@ -724,7 +739,12 @@ public class ContactsListFragment extends Fragment implements
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                refreshLayout.setRefreshing(false);
+                refreshLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        refreshLayout.setRefreshing(false);
+                    }
+                });
             }
         }
 

@@ -9,14 +9,14 @@ public class ReachFriend {
     private final String phoneNumber;
     private final String userName;
     private final String imageId;
-    private final String statusSong;
-    private final byte [] genres;
-
     private final short networkType;
     private final short status;
-    private final long lastSeen;
     private final int numberOfSongs;
+
+    private final String statusSong;
+    private final byte [] genres;
     private final int hash;
+    private final long lastSeen;
 
     public int getHash() {
         return hash;
