@@ -11,10 +11,10 @@ import reach.backend.notifications.Like;
 import reach.backend.notifications.Notification;
 import reach.backend.notifications.Push;
 import reach.backend.notifications.PushAccepted;
-import reach.backend.transactions.CompletedOperations;
-import reach.backend.user.MusicSplitter;
-import reach.backend.user.ReachUser;
-import reach.backend.user.SplitMusicContainer;
+import reach.backend.Transactions.CompletedOperations;
+import reach.backend.User.MusicSplitter;
+import reach.backend.User.ReachUser;
+import reach.backend.User.SplitMusicContainer;
 
 /**
  * Objectify service wrapper so we can statically register our persistence classes

@@ -31,7 +31,7 @@ import reach.project.utils.MiscUtils;
  * ///////////////////////////////////////////////
  * R.c) Receives un-pause : un-pause and start playing or start according to R.a/R.b
  * R.d) Receives musicData : when newSong() is called, musicData object is updated and observer is exited
- * music player is reinitialized, started, and observer started again.
+ * Music player is reinitialized, started, and observer started again.
  */
 public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         implements Player.DecoderHandler,
@@ -97,13 +97,16 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     @Override
     protected void sanitize() {
 
+        Log.i("Downloader", "Sanitizing music handler");
         currentSong = null;
         userPaused.set(false);
         playerState = State.Playing;
+        Log.i("Downloader", "Sanitizing player");
         if (player != null)
             player.cleanUp();
         giveUpAudioFocus();
         audioFocusHelper = null;
+        Log.i("Downloader", "music handler sanitized");
     }
 
     //////////////////////////////////
@@ -111,7 +114,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     protected void performTask() {
 
         kill.set(false);
-        Log.i("Downloader", "Starting music handler");
+        Log.i("Downloader", "Starting Music handler");
         player = new Player(this);
         audioFocusHelper = new AudioFocusHelper(handlerInterface.getContext(), this);
         Optional<MusicData> latestMusic = Optional.absent();
@@ -152,7 +155,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     /**
-     * @param latestMusic the music data
+     * @param latestMusic the Music data
      * @return 0 : disaster, 1 : OK update duration, 2 : OK don't update duration
      */
     private short takeMusicAndPrepare(Optional<MusicData> latestMusic) throws InterruptedException {
@@ -170,6 +173,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         }
 
         currentSong = latestMusic.get();
+        Log.i("Downloader", currentSong.getProcessed() + " " + currentSong.getLength());
         Log.i("Downloader", "found new song, needs streaming ? " + (currentSong.getProcessed() < currentSong.getLength()) +
                 " name= " + currentSong.getDisplayName());
         handlerInterface.updateSongDetails(currentSong);
@@ -231,7 +235,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
                     if (latestMusic != null)
                         return latestMusic;
                 }
-                //should not block since music was not found
+                //should not block since Music was not found
             }
             final int currentPosition = player.getCurrentPosition();
 //            Log.i("Downloader", player.getCurrentPosition() + " sending current position !!");
@@ -317,7 +321,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     boolean processSeek(short percent) {
-        if (player == null || player.isNull())
+        if (player == null || player.isNull() || currentSong == null)
             return false; //push new song
         try {
             if (!player.isPlaying())
@@ -406,8 +410,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         //if this gets called current song HAS to be reachDatabase
         final Cursor cursor = handlerInterface.getContext().getContentResolver().query(
                 Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentSong.getId()),
-                new String[]{ReachDatabaseHelper.COLUMN_ID,
-                        ReachDatabaseHelper.COLUMN_PROCESSED},
+                new String[]{ReachDatabaseHelper.COLUMN_PROCESSED},
                 ReachDatabaseHelper.COLUMN_ID + " = ?",
                 new String[]{currentSong.getId() + ""}, null);
         if (cursor == null) {
@@ -417,7 +420,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             cursor.close();
             return 0;
         }
-        final long processed = cursor.getLong(1); //processed is at 1 in custom cursor
+        final long processed = cursor.getLong(0); //processed is at 1 in custom cursor
         cursor.close();
         currentSong.setProcessed(processed);
         return processed;
@@ -450,7 +453,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         void errorReport(String songName, String missType);
 
         /**
-         * The music thread has died, update the notification
+         * The Music thread has died, update the notification
          */
         void musicPlayerDead();
 

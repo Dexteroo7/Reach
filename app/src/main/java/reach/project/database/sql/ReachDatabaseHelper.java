@@ -97,16 +97,17 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     COLUMN_LOGICAL_CLOCK,
                     COLUMN_STATUS,
             };
+
     /**
-    Operation kind :
-        0 = download;
-        1 = upload;
+     * Operation kind :
+     * 0 = download;
+     * 1 = upload;
      */
     public static ReachDatabase cursorToProcess(Cursor cursor) {
 
         final ReachDatabase reachDatabase = new ReachDatabase();
 
-        int i=0;
+        int i = 0;
         reachDatabase.setId(cursor.getLong(i++));
 
         reachDatabase.setSongId(cursor.getLong(i++));
@@ -120,12 +121,12 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         reachDatabase.setArtistName(cursor.getString(i++));
 
         final String liked = cursor.getString(i++);
-        if(TextUtils.isEmpty(liked))
+        if (TextUtils.isEmpty(liked))
             reachDatabase.setIsLiked(false);
-        if(liked.equals("true"))
+        if (liked.equals("true"))
             reachDatabase.setIsLiked(true);
         else
-        reachDatabase.setIsLiked(false);
+            reachDatabase.setIsLiked(false);
 
         reachDatabase.setDisplayName(cursor.getString(i++));
         reachDatabase.setActualName(cursor.getString(i++));
@@ -135,7 +136,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         reachDatabase.setAdded(cursor.getLong(i++));
 
         final long activated = cursor.getLong(i++);
-        if(activated == 0)
+        if (activated == 0)
             reachDatabase.setIsActivated(false);
         else
             reachDatabase.setIsActivated(true);
@@ -159,7 +160,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
     public static ContentValues contentValuesCreator(ReachDatabase reachDatabase) {
 
         final ContentValues values = new ContentValues();
-        if(reachDatabase.getId() != -1)
+        if (reachDatabase.getId() != -1)
             values.put(COLUMN_ID, reachDatabase.getId());
 
         values.put(COLUMN_SONG_ID, reachDatabase.getSongId());
@@ -171,7 +172,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_SENDER_NAME, reachDatabase.getSenderName());
         values.put(COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus());
         values.put(COLUMN_ARTIST_NAME, reachDatabase.getArtistName());
-        values.put(COLUMN_IS_LIKED, reachDatabase.isLiked()+""); //must put string
+        values.put(COLUMN_IS_LIKED, reachDatabase.isLiked() + ""); //must put string
 
         values.put(COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
         values.put(COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
@@ -187,7 +188,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         return values;
     }
 
-    public ReachDatabaseHelper (Context context) {
+    public ReachDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 

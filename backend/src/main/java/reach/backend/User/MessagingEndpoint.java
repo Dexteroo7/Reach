@@ -1,4 +1,4 @@
-package reach.backend.user;
+package reach.backend.User;
 
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.Message;
@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
-import reach.backend.objectWrappers.MyBoolean;
-import reach.backend.objectWrappers.MyString;
+import reach.backend.ObjectWrappers.MyBoolean;
+import reach.backend.ObjectWrappers.MyString;
 
 import static reach.backend.OfyService.ofy;
 
@@ -222,7 +222,7 @@ public class MessagingEndpoint {
     protected boolean sendMessage(@Nonnull String message,
                                   @Nonnull ReachUser user) {
 
-        //ensure that the user is not null and message is not shit, beforehand
+        //ensure that the User is not null and message is not shit, beforehand
         final Result result;
         try {
             result = new Sender(API_KEY).send(new Message.Builder().addData("message", message).build(), user.getGcmId(), 5);
@@ -350,7 +350,7 @@ public class MessagingEndpoint {
         if (users.size() > 1000 || regIds.size() > 1000)
             return false;
 
-        //ensure that the user is not null and message is not shit, beforehand
+        //ensure that the User is not null and message is not shit, beforehand
         final MulticastResult multicastResult;
 
         try {

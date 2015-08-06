@@ -1,4 +1,4 @@
-package reach.backend.transactions;
+package reach.backend.Transactions;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;

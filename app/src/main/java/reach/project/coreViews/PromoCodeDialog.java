@@ -122,7 +122,7 @@ public class PromoCodeDialog extends DialogFragment {
             if (!StaticData.debugMode) {
                 ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Promo Code")
-                        .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setLabel("Code - " + pCode)
                         .setValue(1)
                         .build());

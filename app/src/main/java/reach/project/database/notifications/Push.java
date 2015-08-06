@@ -3,7 +3,7 @@ package reach.project.database.notifications;
 /**
  * Created by dexter on 06/07/15.
  */
-public class Push extends NotificationBase {
+public class Push extends NotificationBaseLocal {
 
     private int size = 0;
     private String firstSongName = "";
@@ -18,12 +18,12 @@ public class Push extends NotificationBase {
     }
 
     @Override
-    public NotificationBase portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
+    public NotificationBaseLocal portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
         return super.portData(base);
     }
 
     @Override
-    public NotificationBase portData(NotificationBase base) {
+    public NotificationBaseLocal portData(NotificationBaseLocal base) {
         return super.portData(base);
     }
 

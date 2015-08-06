@@ -18,8 +18,8 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
-import reach.backend.objectWrappers.MyString;
-import reach.backend.user.ReachUser;
+import reach.backend.ObjectWrappers.MyString;
+import reach.backend.User.ReachUser;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -35,8 +35,8 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
         version = "v1",
         resource = "notification",
         namespace = @ApiNamespace(
-                ownerDomain = "notifications.backend.reach",
-                ownerName = "notifications.backend.reach",
+                ownerDomain = "Notifications.backend.reach",
+                ownerName = "Notifications.backend.reach",
                 packagePath = ""
         )
 )
@@ -112,29 +112,29 @@ public class NotificationEndpoint {
             switch (condition) {
                 case ALL:
                     break;
-                case READ: //send old notifications
+                case READ: //send old Notifications
                     if (notificationBase.getRead() == NotificationBase.UN_READ ||
                             notificationBase.getRead() == NotificationBase.NEW) continue;
                     break;
-                case UN_READ: //send (NEW + UN_READ) notifications
+                case UN_READ: //send (NEW + UN_READ) Notifications
                     if (notificationBase.getRead() == NotificationBase.READ) continue;
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown condition " + condition);
             }
 
-            //get user
+            //get User
             final ReachUser reachUser;
             try {
                 reachUser = cache.get(notificationBase.getHostId());
                 if (reachUser == null)
                     continue;
             } catch (Exception e) {
-                logger.info("Error getting notifications " + e.getLocalizedMessage());
+                logger.info("Error getting Notifications " + e.getLocalizedMessage());
                 continue;
             }
 
-            //update the notifications
+            //update the Notifications
             notificationBase.setImageId(reachUser.getImageId());
             notificationBase.setHostName(reachUser.getUserName());
             if (notificationBase.getRead() == NotificationBase.NEW) //NEW is only for server

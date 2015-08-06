@@ -1,4 +1,4 @@
-package reach.backend.user.friendContainers;
+package reach.backend.User.FriendContainers;
 
 import java.util.List;
 import java.util.Map;

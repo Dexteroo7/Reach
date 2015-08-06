@@ -1,4 +1,4 @@
-package reach.backend.servlets;
+package reach.backend.Servlets;
 
 import java.io.IOException;
 import java.util.logging.Logger;

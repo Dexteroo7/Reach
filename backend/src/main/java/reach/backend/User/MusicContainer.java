@@ -1,4 +1,4 @@
-package reach.backend.user;
+package reach.backend.User;
 
 import java.util.HashSet;
 

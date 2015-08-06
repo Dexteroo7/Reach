@@ -140,8 +140,8 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             if (!StaticData.debugMode) {
                 ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Push song")
-                        .setAction("user - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                        .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("User - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setLabel("Receiver - " + pushContainer.getCustomMessage() + ", Songs - " + pushContainer.getSongCount())
                         .setValue(pushContainer.getSongCount())
                         .build());

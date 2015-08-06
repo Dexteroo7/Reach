@@ -89,8 +89,8 @@ public class PushActivity extends Activity {
                     if (!StaticData.debugMode) {
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Accept - Pushed song")
-                                .setAction("user - " + SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setAction("User - " + SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                 .setLabel("Sender - " + getIntent().getStringExtra("user_name") + ", Songs - " + song_count)
                                 .setValue(song_count)
                                 .build());
@@ -131,7 +131,7 @@ public class PushActivity extends Activity {
             if (type == 1) {
                 userName.setText("Hey!");
                 textView1.setText("I am Devika from Team Reach! \n" +
-                        "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                        "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
                         "Keep Reaching ;)");
             }
             else if (type == 2) {

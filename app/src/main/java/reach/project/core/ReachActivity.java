@@ -194,26 +194,26 @@ public class ReachActivity extends AppCompatActivity implements
                 findViewById(R.id.playerShadow).setVisibility(View.GONE);
             else if (v < 0.99f)
                 findViewById(R.id.playerShadow).setVisibility(View.VISIBLE);
-            findViewById(R.id.player).setAlpha(1f-v);
+            findViewById(R.id.player).setAlpha(1f - v);
         }
 
         @Override
         public void onPanelCollapsed(View view) {
 
             ActionBar actionBar = getSupportActionBar();
-            if (actionBar!=null) {
+            if (actionBar != null) {
                 actionBar.setTitle(actionBarTitle);
                 actionBar.setSubtitle(actionBarSubtitle);
                 actionBar.setIcon(actionBarIcon);
                 Menu mToolbarMenu = mToolbar.getMenu();
                 if (searchView != null) {
-                    searchView.setQuery(null,false);
+                    searchView.setQuery(null, false);
                     ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                             .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
                     searchView = null;
                 }
                 mToolbarMenu.removeItem(R.id.player_search);
-                for (int i =0; i<mToolbarMenu.size();i++)
+                for (int i = 0; i < mToolbarMenu.size(); i++)
                     mToolbarMenu.getItem(i).setVisible(true);
             }
             if (fragmentManager.getBackStackEntryCount() == 0) {
@@ -226,7 +226,7 @@ public class ReachActivity extends AppCompatActivity implements
         public void onPanelExpanded(View view) {
 
             ActionBar actionBar = getSupportActionBar();
-            if (actionBar!=null && !actionBar.getTitle().equals("My Library")) {
+            if (actionBar != null && !actionBar.getTitle().equals("My Library")) {
                 actionBarTitle = (String) actionBar.getTitle();
                 actionBarSubtitle = (String) actionBar.getSubtitle();
                 actionBarIcon = mToolbar.getLogo();
@@ -235,7 +235,7 @@ public class ReachActivity extends AppCompatActivity implements
                 actionBar.setSubtitle("");
                 actionBar.setIcon(0);
                 Menu mToolbarMenu = mToolbar.getMenu();
-                for (int i =0; i<mToolbarMenu.size();i++)
+                for (int i = 0; i < mToolbarMenu.size(); i++)
                     mToolbarMenu.getItem(i).setVisible(false);
                 mToolbar.inflateMenu(R.menu.player_menu);
                 searchView = (SearchView) mToolbar.getMenu().findItem(R.id.player_search).getActionView();
@@ -462,12 +462,11 @@ public class ReachActivity extends AppCompatActivity implements
                     if (slidingUpPanelLayout != null &&
                             slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED) {
                         onBackPressed();
-                    }
-                    else {
+                    } else {
                         if (fragmentManager.getBackStackEntryCount() > 0)
                             fragmentManager.popBackStack();
-                        else if ((fragmentManager.getBackStackEntryCount() == 0)&&(!mDrawerLayout.isDrawerOpen(Gravity.LEFT))) {
-                                mDrawerLayout.openDrawer(Gravity.LEFT);
+                        else if ((fragmentManager.getBackStackEntryCount() == 0) && (!mDrawerLayout.isDrawerOpen(Gravity.LEFT))) {
+                            mDrawerLayout.openDrawer(Gravity.LEFT);
                         }
                     }
                     return true;
@@ -1088,7 +1087,7 @@ public class ReachActivity extends AppCompatActivity implements
         protected ReachActivity doInBackground(ReachActivity... params) {
 
             /**
-             * Set up adapter for music player
+             * Set up adapter for Music player
              */
             combinedAdapter = new MergeAdapter();
             combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
@@ -1710,7 +1709,7 @@ public class ReachActivity extends AppCompatActivity implements
                     new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.threadPool);
                     //refresh download ops
                     new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
-                    //music scanner
+                    //Music scanner
                     MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
                         @Override
                         public Void work(ReachActivity activity) {
@@ -1760,7 +1759,7 @@ public class ReachActivity extends AppCompatActivity implements
         public static TextView getEmptyLibrary(Context context) {
 
             final TextView emptyTV2 = new TextView(context);
-            emptyTV2.setText("No music on your phone");
+            emptyTV2.setText("No Music on your phone");
             emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1864,8 +1863,8 @@ public class ReachActivity extends AppCompatActivity implements
 
             /**
              * Create a contentProviderOperation, we do not update
-             * if the operation is paused. Case of unpause can not happen
-             * in this class.
+             * if the operation is paused.
+             * We do not mess with the status if it was paused, working, relay or finished !
              *
              * @param contentValues the values to use
              * @param id            the id of the entry
@@ -1876,10 +1875,28 @@ public class ReachActivity extends AppCompatActivity implements
                         .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
                         .withValues(contentValues)
                         .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " +
+                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
+                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
+                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
                                         ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                                new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER})
+                                new String[]{
+                                        id + "",
+                                        ReachDatabase.PAUSED_BY_USER + "",
+                                        ReachDatabase.WORKING + "",
+                                        ReachDatabase.RELAY + "",
+                                        ReachDatabase.FINISHED + ""})
                         .build();
             }
+
+            private ContentProviderOperation getForceUpdateOperation(ContentValues contentValues, long id) {
+                return ContentProviderOperation
+                        .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
+                        .withValues(contentValues)
+                        .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                new String[]{id + ""})
+                        .build();
+            }
+
 
             private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
 
@@ -1894,8 +1911,10 @@ public class ReachActivity extends AppCompatActivity implements
                     final ContentValues values = new ContentValues();
                     if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
 
+                        //mark finished
                         values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                        operations.add(getUpdateOperation(values, reachDatabase.getId()));
+                        values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getLength());
+                        operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
                         continue;
                     }
 
@@ -1942,14 +1961,10 @@ public class ReachActivity extends AppCompatActivity implements
                                 ReachDatabaseProvider.CONTENT_URI,
                                 ReachDatabaseHelper.projection,
                                 ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
                                         ReachDatabaseHelper.COLUMN_STATUS + " != ?",
                                 new String[]{
                                         "0", //only downloads
-                                        ReachDatabase.FINISHED + "", //should not be finished
-                                        ReachDatabase.PAUSED_BY_USER + "",  //should not be paused
-                                        ReachDatabase.RELAY + ""}, null); //should not be running
+                                        ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
                     }
                 }).orNull();
 
@@ -1962,8 +1977,8 @@ public class ReachActivity extends AppCompatActivity implements
                 final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
                 while (cursor.moveToNext())
                     reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
-
                 cursor.close();
+
                 if (reachDatabaseList.size() > 0) {
 
                     final ArrayList<ContentProviderOperation> operations = bulkStartDownloads(reachDatabaseList);
@@ -1991,15 +2006,13 @@ public class ReachActivity extends AppCompatActivity implements
             }
 
             @Override
-            protected void onPostExecute(Void refreshLayout) {
+            protected void onPostExecute(Void gg) {
 
-                super.onPostExecute(refreshLayout);
-                if (isCancelled() || refreshLayout == null)
-                    return;
+                super.onPostExecute(gg);
 
                 MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
                     @Override
-                    public Void work(ReachActivity reachActivity) {
+                    public Void work(final ReachActivity reachActivity) {
 
                         if (reachActivity.downloadRefresh != null)
                             reachActivity.downloadRefresh.setRefreshing(false);

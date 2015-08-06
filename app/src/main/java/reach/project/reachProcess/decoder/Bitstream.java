@@ -41,6 +41,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 
+import reach.project.core.StaticData;
+
 
 /**
  * The <code>Bistream</code> class is responsible for parsing
@@ -136,16 +138,21 @@ public final class BitStream implements BitstreamErrors {
      * Construct a IBitstream that reads data from a
      * given InputStream.
      *
-     * @param in The InputStream to read from.
+     * @param stream The Input stream to read from
      */
-    public BitStream(InputStream in) {
-        if (in == null) throw new NullPointerException("in");
-        in = new BufferedInputStream(in);
-        loadID3v2(in);
+    public BitStream(InputStream stream,
+                     int bufferSize) throws IOException {
+
+        if (stream == null)
+            throw new IOException("null channel");
+
+        if (bufferSize < StaticData.PLAYER_BUFFER_DEFAULT)
+            bufferSize = StaticData.PLAYER_BUFFER_DEFAULT;
+
+        loadID3v2(new BufferedInputStream(stream, bufferSize));
         firstframe = true;
         //source = new PushbackInputStream(in, 1024);
-        source = new PushbackInputStream(in, BUFFER_INT_SIZE * 4);
-
+        source = new PushbackInputStream(stream, bufferSize);
         closeFrame();
         //current_frame_number = -1;
         //last_frame_number = -1;
@@ -163,21 +170,21 @@ public final class BitStream implements BitstreamErrors {
     /**
      * Load ID3v2 frames.
      *
-     * @param in MP3 InputStream.
+     * @param stream MP3 InputStream.
      * @author JavaZOOM
      */
-    private void loadID3v2(InputStream in) {
+    private void loadID3v2(InputStream stream) {
         int size = -1;
         try {
             // Read ID3v2 header (10 bytes).
-            in.mark(10);
-            size = readID3v2Header(in);
+            stream.mark(10);
+            size = readID3v2Header(stream);
             header_pos = size;
         } catch (IOException ignored) {
         } finally {
             try {
                 // Unread ID3v2 header (10 bytes).
-                in.reset();
+                stream.reset();
             } catch (IOException ignored) {
             }
         }
@@ -185,7 +192,7 @@ public final class BitStream implements BitstreamErrors {
         try {
             if (size > 0) {
                 rawid3v2 = new byte[size];
-                in.read(rawid3v2, 0, rawid3v2.length);
+                stream.read(rawid3v2, 0, rawid3v2.length);
             }
         } catch (IOException ignored) {
         }
@@ -194,21 +201,21 @@ public final class BitStream implements BitstreamErrors {
     /**
      * Parse ID3v2 tag header to find out size of ID3v2 frames.
      *
-     * @param in MP3 InputStream
+     * @param stream MP3 InputStream
      * @return size of ID3v2 frames + header
      * @throws IOException
      * @author JavaZOOM
      */
-    private int readID3v2Header(InputStream in) throws IOException {
+    private int readID3v2Header(InputStream stream) throws IOException {
         byte[] id3header = new byte[4];
         int size = -10;
-        in.read(id3header, 0, 3);
+        stream.read(id3header, 0, 3);
         // Look for ID3v2
         if ((id3header[0] == 'I') && (id3header[1] == 'D') && (id3header[2] == '3')) {
-            in.read(id3header, 0, 3);
+            stream.read(id3header, 0, 3);
             int majorVersion = id3header[0];
             int revision = id3header[1];
-            in.read(id3header, 0, 4);
+            stream.read(id3header, 0, 4);
             size = (int) (id3header[0] << 21) + (id3header[1] << 14) + (id3header[2] << 7) + (id3header[3]);
         }
         return (size + 10);

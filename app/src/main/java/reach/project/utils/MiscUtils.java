@@ -618,7 +618,7 @@ public enum MiscUtils {
 
         final NetworkInfo networkInfo =
                 ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return !(networkInfo == null || !networkInfo.isConnected());
+        return (networkInfo != null && networkInfo.isConnected());
 
     }
 
@@ -723,30 +723,6 @@ public enum MiscUtils {
                         reachDatabase.getLogicalClock(), ""));
     }
 
-    public static boolean updateStatus(ContentResolver contentResolver, short status, long databaseId, boolean shouldUnpause) {
-
-        //check for validity
-        ReachDatabase.isPresent(status); //will throw exception !
-
-        final ContentValues values = new ContentValues();
-        final String condition;
-        final String[] arguments;
-        if (shouldUnpause || status == ReachDatabase.PAUSED_BY_USER) {
-
-            condition = ReachDatabaseHelper.COLUMN_ID + " = ?";
-            arguments = new String[]{databaseId + ""};
-        } else {
-            //we should not un-pause
-            condition = ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                    ReachDatabaseHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
-            arguments = new String[]{databaseId + "", ReachDatabase.PAUSED_BY_USER + ""};
-        }
-
-        return contentResolver.update(
-                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + databaseId),
-                values, condition, arguments) > 0;
-    }
-
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,
                                                                              String connection,
                                                                              long receiverId,
@@ -802,15 +778,22 @@ public enum MiscUtils {
                 status = ReachDatabase.NOT_WORKING;
             }
 
-            final Context context = contextReference.get();
-            if (context == null)
-                return;
+            final String condition = ReachDatabaseHelper.COLUMN_ID + " = ? and " +
+                    ReachDatabaseHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
+            final String[] arguments = new String[]{databaseId + "", ReachDatabase.PAUSED_BY_USER + ""};
+            final ContentValues values = new ContentValues();
+            values.put(ReachDatabaseHelper.COLUMN_STATUS, status);
 
-            Log.i("Downloader", "Updating DB on GCM sent " + updateStatus(
-                    context.getContentResolver(),
-                    status,
-                    databaseId,
-                    false)); //should not unpause !
+            MiscUtils.useContext(contextReference, new UseContext<Void, Context>() {
+                @Override
+                public Void work(Context context) {
+
+                    Log.i("Downloader", "Updating DB on GCM sent " + (context.getContentResolver().update(
+                            Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + databaseId),
+                            values, condition, arguments) > 0));
+                    return null;
+                }
+            });
         }
     }
 }

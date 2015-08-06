@@ -1,4 +1,4 @@
-package reach.backend.user;
+package reach.backend.User;
 
 /**
  * Created by dexter on 7/8/14.

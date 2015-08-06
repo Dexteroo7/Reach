@@ -1,4 +1,4 @@
-package reach.backend.user.friendContainers;
+package reach.backend.User.FriendContainers;
 
 /**
  * Created by dexter on 17/07/15.

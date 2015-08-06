@@ -153,7 +153,7 @@ public class ContactsListFragment extends Fragment implements
                 final Contact contact = (Contact) object;
                 if (contact.isInviteSent()) return;
 
-                final String msg = "Hey! Checkout and download my phone music collection with just a click!" +
+                final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
                         ".\nhttp://letsreach.co/app\n--\n" +
                         SharedPrefUtils.getUserName(sharedPrefs);
                 final EditText input = new EditText(view.getContext());
@@ -354,20 +354,25 @@ public class ContactsListFragment extends Fragment implements
         selection = null;
         selectionArguments = null;
 
+        final boolean isOnline = MiscUtils.isOnline(getActivity());
         //we have not already synchronized !
         if (!synchronizeOnce.get() && !synchronizing.get()) {
             //contact sync will call send ping as well
-            synchronizing.set(true);
-            pinging.set(true);
-            swipeRefreshLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(true);
-                }
-            });
-            new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+
+            if (isOnline) {
+                synchronizing.set(true);
+                pinging.set(true);
+                swipeRefreshLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(true);
+                    }
+                });
+                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+            }
             new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(StaticData.threadPool);
-        } else if (!pinging.get()) {
+
+        } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
             swipeRefreshLayout.post(new Runnable() {
@@ -645,6 +650,7 @@ public class ContactsListFragment extends Fragment implements
             @Override
             protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
 
+
                 /**
                  * Invalidate everyone
                  */
@@ -781,12 +787,12 @@ public class ContactsListFragment extends Fragment implements
                                 //.addAction(0, "Okay! I got it", pendingIntent)
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText("I am Devika from Team Reach! \n" +
-                                        "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                                        "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
                                         "Keep Reaching ;)"))
                         .setContentTitle("Hey!")
-                        .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my music collection. Keep Reaching ;)")
+                        .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my Music collection. Keep Reaching ;)")
                         .setContentText("I am Devika from Team Reach! \n" +
-                                "Send me an access request by clicking on the lock icon beside my name to view my music collection. \n" +
+                                "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
                                 "Keep Reaching ;)")
                         .setPriority(NotificationCompat.PRIORITY_MAX);
                 managerCompat.notify(99910, builder.build());

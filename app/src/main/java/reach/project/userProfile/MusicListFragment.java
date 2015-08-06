@@ -114,7 +114,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
             pagerReference = new WeakReference<>(fragment = new MusicListFragment());
             fragment.setArguments(args = new Bundle());
         } else {
-            Log.i("Ayush", "Reusing music list fragment object :)");
+            Log.i("Ayush", "Reusing Music list fragment object :)");
             args = fragment.getArguments();
         }
 
@@ -132,7 +132,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
             typeReference = new WeakReference<>(fragment = new MusicListFragment());
             fragment.setArguments(args = new Bundle());
         } else {
-            Log.i("Ayush", "Reusing music list fragment object :)");
+            Log.i("Ayush", "Reusing Music list fragment object :)");
             args = fragment.getArguments();
         }
 
