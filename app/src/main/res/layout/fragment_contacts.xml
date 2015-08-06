@@ -31,8 +31,7 @@
                     android:layout_height="wrap_content"
                     fab:fab_colorNormal="@color/reach_color"
                     fab:fab_colorPressed="@color/reach_color"
-                    fab:fab_icon="@drawable/ic_push"
-                    fab:fab_size="mini"
+                    fab:fab_icon="@drawable/ic_share_white"
                     fab:fab_title="Share Music" />
                 <com.getbase.floatingactionbutton.FloatingActionButton
                     android:id="@+id/invite_friend_fab"
@@ -40,8 +39,7 @@
                     android:layout_height="wrap_content"
                     fab:fab_colorNormal="@color/reach_color"
                     fab:fab_colorPressed="@color/reach_color"
-                    fab:fab_icon="@drawable/add_icon_grey"
-                    fab:fab_size="mini"
+                    fab:fab_icon="@drawable/icon_invite_white"
                     fab:fab_title="Invite a Friend" />
 
             </com.getbase.floatingactionbutton.FloatingActionsMenu>

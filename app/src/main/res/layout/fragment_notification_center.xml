@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/notification_drawer"
     android:orientation="vertical"
     android:background="@color/grey"
     android:layout_width="@dimen/navigation_drawer_width"
     android:layout_height="match_parent"
-    android:layout_gravity="right"
-    android:layout_marginTop="?attr/actionBarSize">
+    android:layout_gravity="right">
     <android.support.design.widget.TabLayout
         android:id="@+id/sliding_tabs"
-        android:background="@color/reach_light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <reach.project.viewHelpers.CustomViewPager

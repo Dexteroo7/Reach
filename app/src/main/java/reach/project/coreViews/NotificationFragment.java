@@ -186,7 +186,6 @@ public class NotificationFragment extends Fragment implements LoaderManager.Load
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
-        listView.setBackgroundColor(getResources().getColor(R.color.grey));
         adapter = new ReachNotificationAdapter(mActivity, R.layout.notification_item, null, 0, getActivity().getApplication(),
                 SharedPrefUtils.getServerId(container.getContext().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
         listView.setAdapter(adapter);

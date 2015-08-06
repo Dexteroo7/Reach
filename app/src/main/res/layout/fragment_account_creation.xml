@@ -32,7 +32,7 @@
                 android:id="@+id/profilePhoto"
                 android:layout_below="@id/tourText"
                 android:src="@drawable/hide"
-                android:textColor="@color/reach_blue"
+                android:textColor="@color/reach_grey"
                 android:layout_width="160dp"
                 android:layout_height="160dp"
                 android:layout_centerHorizontal="true"

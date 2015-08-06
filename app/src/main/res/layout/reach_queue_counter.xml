@@ -16,11 +16,12 @@
         android:text="99"
         android:textSize="12sp"
         android:gravity="center"
-        android:background="@drawable/circular_background_dark"
+        android:background="@drawable/circular_background_lightpink"
         android:id="@+id/reach_q_count"
         android:layout_gravity="right|center_vertical"
         android:layout_marginBottom="10dp"
         android:textColor="@color/white"
+        android:textStyle="bold"
         android:layout_width="20dp"
         android:layout_height="20dp" />
 </FrameLayout>

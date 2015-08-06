@@ -230,10 +230,18 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             swipeRefreshLayout.setEnabled(enable);
         }
     };
+
     private final View.OnClickListener pushLibraryListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             mListener.onOpenPushLibrary();
+        }
+    };
+
+    private final View.OnClickListener inviteFriendListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListener.onOpenInvitePage();
         }
     };
 
@@ -425,7 +433,7 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
             return rootView;
 
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_blue));
+        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(refreshListener);
 
@@ -478,7 +486,9 @@ public class ContactsListFragment extends Fragment implements LoaderManager.Load
         actionMenu = (FloatingActionsMenu) rootView.findViewById(R.id.right_labels);
         listView.setOnScrollListener(scrollListener);
         FloatingActionButton actionButton = (FloatingActionButton) rootView.findViewById(R.id.share_music_fab);
+        FloatingActionButton inviteFriendButton = (FloatingActionButton) rootView.findViewById(R.id.invite_friend_fab);
         actionButton.setOnClickListener(pushLibraryListener);
+        inviteFriendButton.setOnClickListener(inviteFriendListener);
 
         if (!pinging.get()) {
             swipeRefreshLayout.setRefreshing(true);

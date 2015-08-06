@@ -133,7 +133,7 @@ public class UserProfileView extends Fragment {
                 access.setText("Request Sent");
                 access.setClickable(false);
                 access.setBackgroundResource(R.drawable.button_background_blue);
-                access.setTextColor(getResources().getColor(R.color.reach_blue));
+                access.setTextColor(getResources().getColor(R.color.reach_grey));
             } else {
                 access.setText("Request Access");
                 access.setClickable(true);
@@ -197,7 +197,7 @@ public class UserProfileView extends Fragment {
                 access.setClickable(false);
                 access.setBackgroundResource(R.drawable.button_background_blue);
                 access.setText("Request Sent");
-                access.setTextColor(getResources().getColor(R.color.reach_blue));
+                access.setTextColor(getResources().getColor(R.color.reach_grey));
                 final ContentValues values = new ContentValues();
                 values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
                 getActivity().getContentResolver().update(

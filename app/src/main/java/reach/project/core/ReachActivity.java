@@ -15,8 +15,8 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -27,11 +27,9 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SwitchCompat;
@@ -40,13 +38,14 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
-import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -85,6 +84,7 @@ import reach.project.adapter.ReachQueueAdapter;
 import reach.project.coreViews.ContactsChooserFragment;
 import reach.project.coreViews.ContactsListFragment;
 import reach.project.coreViews.EditProfileFragment;
+import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.FriendRequestFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MusicListFragment;
@@ -185,34 +185,63 @@ public class ReachActivity extends AppCompatActivity implements
     private SearchView searchView;
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
 
-        String actionBarTitle;
+        String actionBarTitle = "Reach",actionBarSubtitle = "";
+        Drawable actionBarIcon;
 
         @Override
         public void onPanelSlide(View view, float v) {
 
-            /*if (v > 0.85f) {
-                findViewById(R.id.player).setVisibility(View.GONE);
-                searchView.setVisibility(View.VISIBLE);
-            } else if (v < 0.85f) {
-                findViewById(R.id.player).setVisibility(View.VISIBLE);
-                searchView.setVisibility(View.GONE);
-            }*/
+            if (v > 0.99f)
+                findViewById(R.id.playerShadow).setVisibility(View.GONE);
+            else if (v < 0.99f)
+                findViewById(R.id.playerShadow).setVisibility(View.VISIBLE);
             findViewById(R.id.player).setAlpha(1f-v);
         }
 
         @Override
         public void onPanelCollapsed(View view) {
-            getSupportActionBar().setTitle(actionBarTitle);
-            setUpDrawer();
-            if (fragmentManager.getBackStackEntryCount() == 0)
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar!=null) {
+                actionBar.setTitle(actionBarTitle);
+                actionBar.setSubtitle(actionBarSubtitle);
+                actionBar.setIcon(actionBarIcon);
+                Menu mToolbarMenu = mToolbar.getMenu();
+                if (searchView != null) {
+                    searchView.setQuery(null,false);
+                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                            .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+                    searchView = null;
+                }
+                mToolbarMenu.removeItem(R.id.player_search);
+                for (int i =0; i<mToolbarMenu.size();i++)
+                    mToolbarMenu.getItem(i).setVisible(true);
+            }
+            if (fragmentManager.getBackStackEntryCount() == 0) {
+                setUpDrawer();
                 toggleDrawer(false);
+            }
         }
 
         @Override
         public void onPanelExpanded(View view) {
-            actionBarTitle = getSupportActionBar().getTitle().toString();
-            getSupportActionBar().setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-            getSupportActionBar().setTitle("Player");
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar!=null && !actionBar.getTitle().equals("My Library")) {
+                actionBarTitle = (String) actionBar.getTitle();
+                actionBarSubtitle = (String) actionBar.getSubtitle();
+                actionBarIcon = mToolbar.getLogo();
+                actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+                actionBar.setTitle("My Library");
+                actionBar.setSubtitle("");
+                actionBar.setIcon(0);
+                Menu mToolbarMenu = mToolbar.getMenu();
+                for (int i =0; i<mToolbarMenu.size();i++)
+                    mToolbarMenu.getItem(i).setVisible(false);
+                mToolbar.inflateMenu(R.menu.player_menu);
+                searchView = (SearchView) mToolbar.getMenu().findItem(R.id.player_search).getActionView();
+                //((EditText) searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)).setTextColor(Color.WHITE);
+                searchView.setOnQueryTextListener(ReachActivity.this);
+                searchView.setOnCloseListener(ReachActivity.this);
+            }
             if (fragmentManager.getBackStackEntryCount() == 0)
                 toggleDrawer(true);
         }
@@ -229,7 +258,9 @@ public class ReachActivity extends AppCompatActivity implements
     private String[] selectionArgumentsDownloader;
     private String[] selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
-    //private int topPadding;
+    private FrameLayout containerFrame;
+    private int topPadding;
+    private Toolbar mToolbar;
     private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private MusicData currentPlaying;
@@ -470,30 +501,27 @@ public class ReachActivity extends AppCompatActivity implements
         }
     };
 
+    private View.OnClickListener footerClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+        }
+    };
+
     private NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(MenuItem menuItem) {
-            //Checking if the item is in checked state or not, if not make it in checked state
-            if (menuItem.isChecked())
-                menuItem.setChecked(false);
-            else
-                menuItem.setChecked(true);
 
             //Closing drawer on item click
             mDrawerLayout.closeDrawers();
 
-            if (menuItem.getItemId() != R.id.navigation_item_2) {
-                final ActionBar actionBar = getSupportActionBar();
-                if (actionBar != null)
-                    actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-                toggleDrawer(true);
-            }
             //Check to see which item was being clicked and perform appropriate action
             switch (menuItem.getItemId()){
 
                 case R.id.navigation_item_1:
                     fragmentManager
                             .beginTransaction()
+                            .addToBackStack(null)
                             .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
                     return true;
                 case R.id.navigation_item_2:
@@ -502,12 +530,20 @@ public class ReachActivity extends AppCompatActivity implements
                 case R.id.navigation_item_3:
                     fragmentManager
                             .beginTransaction()
+                            .addToBackStack(null)
                             .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                     return true;
                 case R.id.navigation_item_4:
                     fragmentManager
                             .beginTransaction()
+                            .addToBackStack(null)
                             .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
+                    return true;
+                case R.id.navigation_item_5:
+                    fragmentManager
+                            .beginTransaction()
+                            .addToBackStack(null)
+                            .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
                     return true;
                 default:
                     return true;
@@ -570,17 +606,18 @@ public class ReachActivity extends AppCompatActivity implements
             switch (id) {
 
                 case android.R.id.home: {
-                    if (fragmentManager.getBackStackEntryCount() > 0) {
-                        switch (item.getItemId()) {
-                            case android.R.id.home:
-                                fragmentManager.popBackStack();
-                                return true;
-                        }
+                    if (slidingUpPanelLayout != null &&
+                            slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED) {
+                        onBackPressed();
                     }
                     else {
-                        onBackPressed();
-                        return true;
+                        if (fragmentManager.getBackStackEntryCount() > 0)
+                            fragmentManager.popBackStack();
+                        else if ((fragmentManager.getBackStackEntryCount() == 0)&&(!mDrawerLayout.isDrawerOpen(Gravity.LEFT))) {
+                                mDrawerLayout.openDrawer(Gravity.LEFT);
+                        }
                     }
+                    return true;
                 }
             }
         } catch (IllegalStateException ignored) {
@@ -656,7 +693,12 @@ public class ReachActivity extends AppCompatActivity implements
                 return Color.parseColor("#FFCC0000");
             }
         });*/
-        slidingTabLayout.setupWithViewPager(viewPager);
+        slidingTabLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                slidingTabLayout.setupWithViewPager(viewPager);
+            }
+        });
 
     }
 
@@ -677,6 +719,7 @@ public class ReachActivity extends AppCompatActivity implements
             final Optional<ActionBar> optional = Optional.fromNullable(getSupportActionBar());
             if (optional.isPresent())
                 optional.get().show();
+            containerFrame.setPadding(0, topPadding, 0, 0);
             //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
@@ -728,6 +771,8 @@ public class ReachActivity extends AppCompatActivity implements
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
             getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
             getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
+            containerFrame.setPadding(0, topPadding, 0, 0);
+            slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
             //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
             addNotificationDrawer();
             fragmentManager.beginTransaction()
@@ -746,6 +791,18 @@ public class ReachActivity extends AppCompatActivity implements
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .addToBackStack(null).replace(R.id.container, ContactsChooserFragment.newInstance(songsList), "contacts_chooser").commit();
+        } catch (IllegalStateException ignored) {
+        }
+    }
+
+    @Override
+    public void onOpenInvitePage() {
+        if (isFinishing())
+            return;
+        try {
+            fragmentManager.beginTransaction()
+                    .addToBackStack(null)
+                    .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
         } catch (IllegalStateException ignored) {
         }
     }
@@ -787,59 +844,12 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void setUpDrawer() {
-
-        // set a custom shadow that overlays the main content when the drawer opens
-        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-        // set up the drawer's list view with items and click listener
         final ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_drawer);
             actionBar.setHomeButtonEnabled(true);
         }
-        // ActionBarDrawerToggle ties together the the proper interactions
-        // between the navigation drawer and the action bar app icon.
-        final ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(
-                this,                    /* host Activity */
-                mDrawerLayout,                    /* DrawerLayout object */
-                R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
-                R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
-        ) {
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-                if(drawerView.getId() == R.id.notification_drawer) {
-                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.LEFT);
-                } else if(drawerView.getId() == R.id.navigation_view) {
-                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);
-                }
-                invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
-            }
-
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                if(drawerView.getId() == R.id.notification_drawer) {
-                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
-                } else if(drawerView.getId() == R.id.navigation_view) {
-                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.RIGHT);
-                }
-                invalidateOptionsMenu(); // calls onPrepareOptionsMenu()
-            }
-        };
-
-        // If the user hasn't 'learned' about the drawer, open it to introduce them to the drawer,
-        // per the navigation drawer design guidelines.
-    /*if (!mUserLearnedDrawer && !mFromSavedInstanceState) {
-        mDrawerLayout.openDrawer(mFragmentContainerView);
-    }*/
-        // Defer code dependent on restoration of previous instance state.
-        mDrawerLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                mDrawerToggle.syncState();
-            }
-        });
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
 
     @Override
@@ -861,7 +871,7 @@ public class ReachActivity extends AppCompatActivity implements
                 if (slidingUpPanelLayout != null) {
                     if (show) {
                         slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
-                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(60));
+                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(63));
                         slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
                     } else {
                         slidingUpPanelLayout.getChildAt(1).setVisibility(View.GONE);
@@ -1203,19 +1213,23 @@ public class ReachActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_my);
         initialize(sharedPreferences);
 
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
         final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
         if (actionBar.isPresent()) {
             actionBar.get().setDisplayShowHomeEnabled(false);
             actionBar.get().hide();
         }
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        //topPadding = slidingUpPanelLayout.getChildAt(0).getPaddingTop();
-        //slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, 0);
         toggleSliding(false);
+        containerFrame = (FrameLayout) findViewById(R.id.containerFrame);
+        topPadding = containerFrame.getPaddingTop();
+        containerFrame.setPadding(0, 0, 0, 0);
         //navigation-drawer
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        // set a custom shadow that overlays the main content when the drawer opens
+        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, Gravity.LEFT);
+        toggleDrawer(true);
 
         final short action = SharedPrefUtils.isUserAbsent(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
         switch (action) {
@@ -1226,6 +1240,8 @@ public class ReachActivity extends AppCompatActivity implements
                 startAccountCreation(Optional.<OldUserContainerNew>absent());
                 break;
             default: {
+                containerFrame.setPadding(0, topPadding, 0, 0);
+                slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
                 //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
                 addNotificationDrawer();
                 fragmentManager
@@ -1235,7 +1251,7 @@ public class ReachActivity extends AppCompatActivity implements
         }
 
         //small
-        searchView = new SearchView(this);
+        //searchView = new SearchView(this);
         progressBarMinimized = (SeekBar) findViewById(R.id.progressBar);
         songNameMinimized = (TextView) findViewById(R.id.songNamePlaying);
         pausePlayMinimized = (ImageButton) findViewById(R.id.pause_play);
@@ -1258,10 +1274,18 @@ public class ReachActivity extends AppCompatActivity implements
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
         mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        View navListView = mNavigationView.getChildAt(0);
+
+        FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
+        frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
+        navListView.setLayoutParams(frameLayoutParams);
+        //navListView.setPadding(0,0,0,MiscUtils.dpToPx(70));
+
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
 
         findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
+        findViewById(R.id.footer).setOnClickListener(footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(previousClick);
         pausePlayMaximized.setOnClickListener(pauseClick);
@@ -1272,9 +1296,6 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(shuffleClick);
         repeatBtn.setOnClickListener(repeatClick);
-        ((EditText) searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)).setTextColor(Color.WHITE);
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
         likeButton.setOnClickListener(likeButtonClick);
         slidingUpPanelLayout.setPanelSlideListener(slideListener);
         progressBarMaximized.setOnSeekBarChangeListener(seekListener);
@@ -1351,8 +1372,8 @@ public class ReachActivity extends AppCompatActivity implements
 
     private TextView getDownloadedTextView() {
         final TextView textView = new TextView(this);
-        textView.setText("Downloaded");
-        textView.setTextColor(Color.parseColor("#42353e"));
+        textView.setText("Downloading");
+        textView.setTextColor(getResources().getColor(R.color.reach_color));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
         textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
         textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1361,8 +1382,8 @@ public class ReachActivity extends AppCompatActivity implements
 
     private TextView getMyLibraryTExtView() {
         final TextView textView = new TextView(this);
-        textView.setText("My Library");
-        textView.setTextColor(Color.parseColor("#42353e"));
+        textView.setText("My Songs");
+        textView.setTextColor(getResources().getColor(R.color.reach_color));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
         textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
         textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);

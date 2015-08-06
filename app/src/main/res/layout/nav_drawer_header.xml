@@ -7,7 +7,7 @@
     android:layout_height="wrap_content">
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="180dp">
+        android:layout_height="160dp">
         <ImageView
             android:id="@+id/userImageNav"
             android:scaleType="centerCrop"
@@ -29,7 +29,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Name"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textColor="@color/white" />
             <TextView
                 android:id="@+id/numberOfSongsNav"
@@ -40,23 +40,20 @@
                 android:text="0 Songs"/>
         </LinearLayout>
         <ImageView
-            android:src="@drawable/edit_pencil"
             android:layout_gravity="bottom|right"
-            android:background="@drawable/circular_background_pink"
-            android:padding="5dp"
             android:layout_marginRight="15dp"
             android:layout_marginBottom="15dp"
-            android:layout_width="30dp"
-            android:layout_height="30dp" />
+            android:src="@drawable/ic_edit_profile"
+            android:layout_width="35dp"
+            android:layout_height="35dp" />
     </FrameLayout>
     <RelativeLayout
         android:id="@+id/netSwitch"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="45dp">
         <TextView
             android:id="@+id/netSwitchText"
             android:layout_marginLeft="15dp"
-            android:textSize="15sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#000"
@@ -65,9 +62,11 @@
         <android.support.v7.widget.SwitchCompat
             android:id="@+id/netToggle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:layout_height="match_parent"
             android:layout_alignParentRight="true"
-            android:layout_marginRight="15dp"
+            android:layout_marginRight="10dp"
             android:layout_centerVertical="true" />
     </RelativeLayout>
     <View

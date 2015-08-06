@@ -30,6 +30,7 @@
             android:id="@+id/userName"
             android:text="Name"
             android:textSize="18sp"
+            android:textColor="#000"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="2dp"
             android:layout_toRightOf="@id/userImage"
@@ -38,7 +39,7 @@
             android:layout_height="wrap_content" />
         <ImageView
             android:id="@+id/note"
-            android:src="@drawable/note_pink"
+            android:src="@drawable/ic_music_count"
             android:layout_below="@id/userName"
             android:layout_marginTop="2dp"
             android:layout_marginRight="2dp"

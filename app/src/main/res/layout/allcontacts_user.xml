@@ -5,7 +5,7 @@
     android:layout_height="wrap_content">
     <FrameLayout
         android:id="@+id/profilePhotoContainer"
-        android:background="@drawable/circular_background_dark"
+        android:background="@drawable/circular_background_pink"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp"
@@ -33,16 +33,17 @@
         android:layout_toRightOf="@id/profilePhotoContainer"
         android:layout_centerVertical="true"
         android:layout_marginRight="50dp"
+        android:textColor="#000"
         android:textSize="16sp"
         android:text="TITLE"/>
     <ImageView
         android:id="@+id/listToggle"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:layout_marginRight="20dp"
-        android:src="@drawable/add_myreach"/>
+        android:src="@drawable/icon_invite"/>
     <View
         android:id="@+id/dividerFooter"
         android:layout_width="match_parent"

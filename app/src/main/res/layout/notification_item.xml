@@ -27,7 +27,7 @@
                     android:layout_margin="10dp"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:background="@drawable/circular_background_dark"
+                    android:background="@drawable/circular_background_pink"
                     android:id="@+id/profilePhoto" >
                     <TextView
                         android:id="@+id/userInitials"
@@ -38,14 +38,13 @@
                         android:layout_height="wrap_content"/>
                     <ImageView
                         android:id="@+id/profilePhotoList"
-                        android:src="@drawable/profile_pic_blue"
                         android:layout_gravity="center"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"/>
                 </FrameLayout>
                 <LinearLayout
                     android:orientation="vertical"
-                    android:visibility="invisible"
+                    android:visibility="visible"
                     android:id="@+id/libraryButton"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
@@ -58,9 +57,9 @@
                         android:background="@drawable/circular_background_pink"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginBottom="2dp"
-                        android:layout_width="30dp"
+                        android:layout_width="25dp"
                         android:padding="6dp"
-                        android:layout_height="30dp" />
+                        android:layout_height="25dp" />
                     <TextView
                         android:text="View"
                         android:textSize="12sp"
@@ -70,29 +69,33 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
-                <TextView
-                    android:id="@+id/userNameList"
+                <LinearLayout
                     android:layout_toRightOf="@id/profilePhoto"
                     android:layout_toLeftOf="@id/libraryButton"
-                    android:layout_alignTop="@id/profilePhoto"
-                    android:layout_marginTop="2dp"
                     android:layout_marginRight="10dp"
+                    android:orientation="vertical"
+                    android:layout_centerVertical="true"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:text="Name"/>
-                <TextView
-                    android:id="@+id/notifType"
-                    android:layout_below="@id/userNameList"
-                    android:layout_toLeftOf="@id/libraryButton"
-                    android:layout_alignLeft="@id/userNameList"
-                    android:textSize="14sp"
-                    android:maxLines="2"
-                    android:ellipsize="marquee"
-                    android:textColor="@color/darkgrey"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/userNameList"
+                        android:text="Title"
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:textSize="16sp"
+                        android:textColor="@color/reach_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/notifType"
+                        android:layout_marginTop="2dp"
+                        android:maxLines="2"
+                        android:textColor="#000"
+                        android:textSize="13sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
             </RelativeLayout>
             <LinearLayout
                 android:id="@+id/actionBlock"

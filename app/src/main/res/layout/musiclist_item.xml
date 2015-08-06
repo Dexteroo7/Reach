@@ -1,59 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="90dp">
     <ImageView
         android:id="@+id/albumArt"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_marginTop="20dp"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_centerVertical="true"
-        android:padding="8dp"
-        android:background="@drawable/button_background"
-        android:src="@drawable/note_white"/>
-    <TextView
-        android:id="@+id/songDuration"
-        android:textSize="16sp"
-        android:textColor="@color/darkgrey"
-        android:text="00:00"
+        android:padding="15dp"
+        android:background="@drawable/circular_background_pink"
+        android:src="@drawable/music_note"/>
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:layout_marginRight="15dp"
+        android:layout_marginRight="12dp"
+        android:id="@+id/progressContainer"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <RelativeLayout
+        android:layout_height="wrap_content">
+        <ImageView
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/ic_downloaded"
+            android:layout_marginBottom="2dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
+        <TextView
+            android:id="@+id/songDuration"
+            android:textColor="@color/reach_grey"
+            android:maxLines="1"
+            android:text="00:00"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout
         android:layout_toRightOf="@id/albumArt"
+        android:layout_toLeftOf="@id/progressContainer"
+        android:layout_marginLeft="10dp"
+        android:orientation="vertical"
         android:layout_centerVertical="true"
-        android:layout_marginRight="50dp"
-        android:layout_marginBottom="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <TextView
             android:id="@+id/listTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:text="Title"
+            android:singleLine="true"
+            android:ellipsize="marquee"
             android:textSize="16sp"
-            android:text="Title "/>
+            android:textColor="#000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
         <TextView
             android:id="@+id/listSubTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/listTitle"
-            android:layout_alignLeft="@id/listTitle"
             android:layout_marginTop="2dp"
-            android:textColor="@color/darkgrey"
-            android:textSize="14sp"
-            android:text="Subtitle "/>
-    </RelativeLayout>
-    <View
-        android:id="@+id/dividerFooter"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_toRightOf="@id/albumArt"
-        android:layout_marginRight="15dp"
-        android:layout_alignParentBottom="true"
-        android:background="#dcdcdcdc" />
+            android:maxLines="1"
+            android:maxWidth="100dp"
+            android:textColor="@color/reach_color"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 </RelativeLayout>

@@ -45,12 +45,12 @@
             android:layout_centerHorizontal="true"
             android:src="@drawable/icon_user_offline"
             android:scaleType="fitCenter"
-            android:layout_width="25dp"
-            android:layout_height="25dp" />
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
         <TextView
             android:id="@+id/listStatus"
             android:layout_centerHorizontal="true"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textColor="@color/darkgrey"
             android:text="Offline"
             android:layout_below="@id/listToggle"
@@ -76,7 +76,7 @@
                 android:layout_centerVertical="true"
                 android:maxWidth="120dp"
                 android:textColor="#000"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:text="TITLE"/>
             <ImageView
                 android:id="@+id/status"
@@ -105,7 +105,7 @@
                 android:text="Reach Manager"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
-                android:textColor="@color/reach_blue"
+                android:textColor="@color/reach_grey"
                 android:background="@drawable/textview_background_blue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -125,13 +125,13 @@
             <TextView
                 android:id="@+id/telephoneNumberList"
                 android:layout_marginLeft="5dp"
-                android:text="0"
-                android:textColor="@color/reach_blue"
+                android:text="0 Songs"
+                android:textColor="@color/reach_grey"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_toRightOf="@id/note"
-                android:textSize="15sp"/>
+                android:textSize="13sp"/>
         </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>
