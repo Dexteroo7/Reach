@@ -6,7 +6,6 @@ package reach.project.adapter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +14,6 @@ import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -36,15 +32,6 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
     private final List<Contact> originalData;
     private final List<Contact> filteredData;
     private final CircleTransform transform = new CircleTransform();
-
-    private final LoadingCache<String, String> cache = CacheBuilder.newBuilder()
-            .initialCapacity(50)
-            .build(new CacheLoader<String, String>() {
-                @Override
-                public String load(@NonNull String name) {
-                    return MiscUtils.generateInitials(name);
-                }
-            });
 
     public void cleanUp() {
 
@@ -106,9 +93,9 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
         }
         else
             viewHolder = (ViewHolder) convertView.getTag();
-
+        
         viewHolder.userNameList.setText(contact.getUserName());
-        viewHolder. userInitials.setText(cache.getUnchecked(contact.getUserName()));
+        viewHolder. userInitials.setText(MiscUtils.generateInitials(contact.getUserName()));
         Picasso.with(context).load(contact.getPhotoUri()).transform(transform).into(viewHolder.profilePhotoList);
 
         if(contact.isInviteSent())

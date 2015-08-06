@@ -28,17 +28,25 @@ public class DataCall {
      */
     public static class Statistics {
 
-        private final String userName;
-        private final String phoneNumber;
-        private final long songCount;
-        private final long friendsCount;
+        private final long userId;
+        private final int songCount;
+        private final int friendsCount;
+        private final int sentRequests;
+        private final int pendingRequests;
+
         private final boolean isAlive;
 
-        public Statistics(String userName, String phoneNumber, long songCount, long friendsCount, boolean isAlive) {
+        private final String userName;
+        private final String phoneNumber;
+
+        public Statistics(long userId, String userName, String phoneNumber, int songCount, int friendsCount, int sentRequests, int pendingRequests, boolean isAlive) {
+            this.userId = userId;
             this.userName = userName;
             this.phoneNumber = phoneNumber;
             this.songCount = songCount;
             this.friendsCount = friendsCount;
+            this.sentRequests = sentRequests;
+            this.pendingRequests = pendingRequests;
             this.isAlive = isAlive;
         }
 
@@ -61,23 +69,17 @@ public class DataCall {
         public String getUserName() {
             return userName;
         }
-    }
 
-    final class Solution {
+        public long getUserId() {
+            return userId;
+        }
 
+        public int getSentRequests() {
+            return sentRequests;
+        }
 
-
-        public int solution(int[] A) {
-
-            if (A == null || A.length == 0)
-                return 0;
-
-            if (A.length == 1)
-                return A[0];
-
-
-
-            return 0;
+        public int getPendingRequests() {
+            return pendingRequests;
         }
     }
 }

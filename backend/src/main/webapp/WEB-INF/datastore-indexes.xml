@@ -12,13 +12,11 @@
         <!--<property name="gcmId" direction="asc" />-->
     <!--</datastore-index>-->
 
-    //for quick sync
     <datastore-index kind="ReachUser" ancestor="false" source="manual">
         <property name="__key__" direction="asc"/>
         <property name="dirtyCheck" direction="asc"/>
     </datastore-index>
 
-    //for fetching friends data
     <datastore-index kind="ReachUser" ancestor="false" source="manual">
         <property name="__key__" direction="asc"/>
         <property name="gcmId" direction="asc"/>

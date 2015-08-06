@@ -2,12 +2,11 @@ package reach.project.database.sql;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import reach.backend.entities.userApi.model.ReachSong;
+import reach.project.utils.auxiliaryClasses.Song;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -78,46 +77,25 @@ public class ReachSongHelper extends SQLiteOpenHelper {
                     COLUMN_VISIBILITY
             };
 
-    public static ReachSong cursorToProcess(Cursor cursor) {
-
-        final ReachSong reachSongDatabase = new ReachSong();
-
-        reachSongDatabase.setSongId(cursor.getLong(2));
-        reachSongDatabase.setDisplayName(cursor.getString(3));
-        reachSongDatabase.setActualName(cursor.getString(4));
-        reachSongDatabase.setGenre(cursor.getString(5));
-        reachSongDatabase.setPath(cursor.getString(6));
-        reachSongDatabase.setArtist(cursor.getString(7));
-        reachSongDatabase.setDuration(cursor.getLong(8));
-        reachSongDatabase.setAlbum(cursor.getString(9));
-        reachSongDatabase.setFormattedDataAdded(cursor.getString(10));
-        reachSongDatabase.setUserId(cursor.getLong(11));
-        reachSongDatabase.setSize(cursor.getLong(12));
-        reachSongDatabase.setYear((int) cursor.getLong(13));
-        reachSongDatabase.setDateAdded(cursor.getLong(14));
-        reachSongDatabase.setVisibility((int) cursor.getShort(15));
-        return reachSongDatabase;
-    }
-
-    public static ContentValues contentValuesCreator(ReachSong reachSongDatabase) {
+    public static ContentValues contentValuesCreator(Song song, long serverId) {
 
         final ContentValues values = new ContentValues();
 
-        values.put(COLUMN_SONG_ID, reachSongDatabase.getSongId());
+        values.put(COLUMN_SONG_ID, song.songId);
         values.put(COLUMN_FILE_HASH, "hello_world");
-        values.put(COLUMN_DISPLAY_NAME, reachSongDatabase.getDisplayName());
-        values.put(COLUMN_ACTUAL_NAME, reachSongDatabase.getActualName());
-        values.put(COLUMN_GENRE, reachSongDatabase.getGenre());
-        values.put(COLUMN_PATH, reachSongDatabase.getPath());
-        values.put(COLUMN_ARTIST, reachSongDatabase.getArtist());
-        values.put(COLUMN_DURATION, reachSongDatabase.getDuration());
-        values.put(COLUMN_ALBUM, reachSongDatabase.getAlbum());
-        values.put(COLUMN_FORMATTED_DATE_ADDED, reachSongDatabase.getFormattedDataAdded());
-        values.put(COLUMN_USER_ID, reachSongDatabase.getUserId());
-        values.put(COLUMN_SIZE, reachSongDatabase.getSize());
-        values.put(COLUMN_YEAR, reachSongDatabase.getYear());
-        values.put(COLUMN_DATE_ADDED, reachSongDatabase.getDateAdded());
-        values.put(COLUMN_VISIBILITY, reachSongDatabase.getVisibility());
+        values.put(COLUMN_DISPLAY_NAME, song.displayName);
+        values.put(COLUMN_ACTUAL_NAME, song.actualName);
+        values.put(COLUMN_GENRE, song.genre);
+        values.put(COLUMN_PATH, song.path);
+        values.put(COLUMN_ARTIST, song.artist);
+        values.put(COLUMN_DURATION, song.duration);
+        values.put(COLUMN_ALBUM, song.album);
+        values.put(COLUMN_FORMATTED_DATE_ADDED, song.formattedDataAdded);
+        values.put(COLUMN_USER_ID, serverId);
+        values.put(COLUMN_SIZE, song.size);
+        values.put(COLUMN_YEAR, song.year);
+        values.put(COLUMN_DATE_ADDED, song.dateAdded);
+        values.put(COLUMN_VISIBILITY, song.visibility);
         return values;
     }
 

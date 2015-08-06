@@ -2,7 +2,6 @@ package reach.project.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ResourceCursorAdapter;
@@ -11,7 +10,6 @@ import android.widget.TextView;
 import reach.project.R;
 
 public class ReachPlayListsAdapter extends ResourceCursorAdapter {
-
 
     public ReachPlayListsAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
@@ -31,18 +29,8 @@ public class ReachPlayListsAdapter extends ResourceCursorAdapter {
         if(cursor == null) return;
 
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
-        final String ids = cursor.getString(4);
-        if(!TextUtils.isEmpty(ids)) {
-            int count = 1;
-            for(int i=0; i<ids.length(); i++)
-                if(ids.charAt(i) == ' ')
-                    count++;
-            viewHolder.songs.setText(count+"");
-        }
-        else
-            viewHolder.songs.setText(0+"");
-
-        viewHolder.listTitle.setText(cursor.getString(2));
+        viewHolder.songs.setText(cursor.getInt(0) + "");
+        viewHolder.listTitle.setText(cursor.getString(1));
     }
 
     @Override

@@ -2,15 +2,13 @@ package reach.project.database.sql;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.text.TextUtils;
 import android.util.Log;
 
-import java.util.Arrays;
+import java.util.List;
 
-import reach.backend.entities.userApi.model.ReachPlayList;
+import reach.project.utils.auxiliaryClasses.Playlist;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -18,8 +16,8 @@ import reach.backend.entities.userApi.model.ReachPlayList;
 public class ReachPlayListHelper extends SQLiteOpenHelper {
 
     public static final String PLAY_LIST_TABLE = "playLists";
+
     public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_PLAY_LIST_ID  = "playListId";
     public static final String COLUMN_PLAY_LIST_NAME = "playList";
     public static final String COLUMN_DATE_MODIFIED = "dateModified";
     public static final String COLUMN_USER_ID = "userId";
@@ -34,55 +32,122 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
     private static final String DATABASE_CREATE = "create table "
             + PLAY_LIST_TABLE + "(" + COLUMN_ID
             + " integer primary key autoincrement, " +
-            COLUMN_PLAY_LIST_ID + " long" + "," +
             COLUMN_PLAY_LIST_NAME + " text" + "," +
             COLUMN_DATE_MODIFIED + " text" + "," +
-            COLUMN_ARRAY_OF_SONG_IDS + " text" + "," +
+            COLUMN_ARRAY_OF_SONG_IDS + " blob" + "," +
             COLUMN_VISIBILITY + " short" + "," +
             COLUMN_USER_ID + " long" + "," +
             COLUMN_SIZE + " int" + " )";
 
     public static final String[] projection =
             {
-                    COLUMN_ID,
-                    COLUMN_PLAY_LIST_ID,
-                    COLUMN_PLAY_LIST_NAME,
-                    COLUMN_DATE_MODIFIED,
-                    COLUMN_ARRAY_OF_SONG_IDS,
-                    COLUMN_VISIBILITY,
-                    COLUMN_USER_ID,
-                    COLUMN_SIZE,
+                    COLUMN_ID, //0
+                    COLUMN_PLAY_LIST_NAME, //1
+                    COLUMN_DATE_MODIFIED, //2
+                    COLUMN_ARRAY_OF_SONG_IDS, //3
+                     COLUMN_VISIBILITY, //4
+                    COLUMN_USER_ID, //5
+                    COLUMN_SIZE, //6
             };
 
-    public static ReachPlayList cursorToProcess(Cursor cursor) {
+    public static byte[] toBytes(long data) {
 
-        final ReachPlayList reachPlayListDatabase = new ReachPlayList();
-        reachPlayListDatabase.setPlayListId(cursor.getLong(1));
-        reachPlayListDatabase.setPlaylistName(cursor.getString(2));
-        reachPlayListDatabase.setDateModified(cursor.getString(3));
-        if(!TextUtils.isEmpty(cursor.getString(4)))
-            reachPlayListDatabase.setReachSongs(Arrays.asList(cursor.getString(4).split(" ")));
-        reachPlayListDatabase.setVisibility((int) cursor.getShort(5));
-        reachPlayListDatabase.setUserId(cursor.getLong(6));
-        return reachPlayListDatabase;
+        return new byte[]{
+                (byte) ((data >> 56) & 0xff),
+                (byte) ((data >> 48) & 0xff),
+                (byte) ((data >> 40) & 0xff),
+                (byte) ((data >> 32) & 0xff),
+                (byte) ((data >> 24) & 0xff),
+                (byte) ((data >> 16) & 0xff),
+                (byte) ((data >> 8) & 0xff),
+                (byte) ((data) & 0xff),
+        };
     }
 
-    public static ContentValues contentValuesCreator(ReachPlayList reachPlayListDatabase) {
+    public static byte[] toBytes(List<Long> data) {
+
+        if (data == null || data.isEmpty())
+            return new byte[0];
+
+        final byte[] bytes = new byte[data.size() * 8];
+        for (int i = 0; i < data.size(); i++)
+            System.arraycopy(toBytes(data.get(i)), 0, bytes, i * 8, 8);
+        return bytes;
+    }
+
+    public static long toLong(byte[] data) {
+
+        if (data == null || data.length != 8)
+            return 0x0;
+        // ----------
+        // (Below) convert to longs before shift because digits
+        //         are lost with ints beyond the 32-bit limit
+        return (long) (0xff & data[0]) << 56 |
+                (long) (0xff & data[1]) << 48 |
+                (long) (0xff & data[2]) << 40 |
+                (long) (0xff & data[3]) << 32 |
+                (long) (0xff & data[4]) << 24 |
+                (long) (0xff & data[5]) << 16 |
+                (long) (0xff & data[6]) << 8 |
+                (long) (0xff & data[7]);
+    }
+
+    public static long[] toLongArray(byte[] data) {
+
+        if (data == null || data.length == 0 || data.length % 8 != 0)
+            return new long[0];
+        // ----------
+        long[] longs = new long[data.length / 8];
+        for (int i = 0; i < longs.length; i++) {
+            longs[i] = toLong(new byte[]{
+                    data[(i * 8)],
+                    data[(i * 8) + 1],
+                    data[(i * 8) + 2],
+                    data[(i * 8) + 3],
+                    data[(i * 8) + 4],
+                    data[(i * 8) + 5],
+                    data[(i * 8) + 6],
+                    data[(i * 8) + 7],
+            });
+        }
+        return longs;
+    }
+
+    public static String[] toStringArray(byte[] data) {
+
+        Log.i("Ayush", "Play lists " + data);
+
+        if (data == null || data.length == 0 || data.length % 8 != 0)
+            return new String[0];
+        // ----------
+        String[] strings = new String[data.length / 8];
+
+        for (int i = 0; i < strings.length; i++) {
+            strings[i] = toLong(new byte[]{
+                    data[(i * 8)],
+                    data[(i * 8) + 1],
+                    data[(i * 8) + 2],
+                    data[(i * 8) + 3],
+                    data[(i * 8) + 4],
+                    data[(i * 8) + 5],
+                    data[(i * 8) + 6],
+                    data[(i * 8) + 7],
+            }) + "";
+        }
+        return strings;
+    }
+
+    public static ContentValues contentValuesCreator(Playlist playlist, long serverId) {
 
         final ContentValues values = new ContentValues();
 
-        values.put(COLUMN_PLAY_LIST_ID, reachPlayListDatabase.getPlayListId());
-        values.put(COLUMN_PLAY_LIST_NAME, reachPlayListDatabase.getPlaylistName());
-        values.put(COLUMN_DATE_MODIFIED, reachPlayListDatabase.getDateModified());
-        final StringBuilder stringBuilder = new StringBuilder();
-        if(reachPlayListDatabase.getReachSongs() != null && reachPlayListDatabase.getReachSongs().size() > 0) {
-            for (String songId : reachPlayListDatabase.getReachSongs())
-                stringBuilder.append(songId).append(" ");
-            values.put(COLUMN_ARRAY_OF_SONG_IDS, stringBuilder.toString().trim());
-        } else
-            values.put(COLUMN_ARRAY_OF_SONG_IDS, "");
-        values.put(COLUMN_VISIBILITY, reachPlayListDatabase.getVisibility());
-        values.put(COLUMN_USER_ID, reachPlayListDatabase.getUserId());
+        values.put(COLUMN_PLAY_LIST_NAME, playlist.playlistName);
+        values.put(COLUMN_DATE_MODIFIED, playlist.dateModified);
+        values.put(COLUMN_VISIBILITY, (short) (playlist.visibility ? 1 : 0));
+        values.put(COLUMN_USER_ID, serverId);
+
+        values.put(COLUMN_SIZE, playlist.reachSongs.size());
+        values.put(COLUMN_ARRAY_OF_SONG_IDS, toBytes(playlist.reachSongs));
         return values;
     }
 

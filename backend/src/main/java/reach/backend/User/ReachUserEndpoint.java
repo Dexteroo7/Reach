@@ -537,32 +537,30 @@ public class ReachUserEndpoint {
     public DataCall getStats(@Named("cursor") String cursor) {
 
         final ImmutableList.Builder<DataCall.Statistics> builder = new ImmutableList.Builder<>();
-        QueryResultIterator<ReachUser> userQueryResultIterator;
+        final QueryResultIterator<ReachUser> userQueryResultIterator;
+
         if (cursor != null && !cursor.trim().equals(""))
             userQueryResultIterator = OfyService.ofy().load().type(ReachUser.class)
                     .startAt(Cursor.fromWebSafeString(cursor))
-                    .limit(100)
+                    .limit(200)
                     .iterator();
         else
             userQueryResultIterator = OfyService.ofy().load().type(ReachUser.class).limit(100).iterator();
+
         ReachUser reachUser;
         int count = 0;
 
         while (userQueryResultIterator.hasNext()) {
 
             reachUser = userQueryResultIterator.next();
-
-            final long friends;
-            if (reachUser.getMyReach() != null)
-                friends = reachUser.getMyReach().size();
-            else
-                friends = 0;
-
             builder.add(new DataCall.Statistics(
+                    reachUser.getId(),
                     reachUser.getUserName(),
                     reachUser.getPhoneNumber(),
                     reachUser.getNumberOfSongs(),
-                    friends,
+                    reachUser.getMyReach() == null ? 0 : reachUser.getMyReach().size(),
+                    reachUser.getSentRequests() == null ? 0 : reachUser.getSentRequests().size(),
+                    reachUser.getReceivedRequests() == null ? 0 : reachUser.getReceivedRequests().size(),
                     reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
             count++;
         }
@@ -570,7 +568,7 @@ public class ReachUserEndpoint {
         //if no more friends return null cursor
         return new DataCall(
                 builder.build(),
-                (count == 100) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
+                (count == 200) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
     }
 
     @ApiMethod(

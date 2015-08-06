@@ -71,6 +71,14 @@ public enum SharedPrefUtils {
         return 2;
     }
 
+    public static String getMusicHash(SharedPreferences sharedPreferences, String fileName) {
+        return sharedPreferences.getString(fileName, "");
+    }
+
+    public static void storeMusicHash(SharedPreferences sharedPreferences, String fileName, String hash) {
+        sharedPreferences.edit().putString(fileName, hash).apply();
+    }
+
     public static void storePhoneNumber(SharedPreferences sharedPreferences, String number) {
         sharedPreferences.edit().putString("phoneNumber", number).apply();
     }

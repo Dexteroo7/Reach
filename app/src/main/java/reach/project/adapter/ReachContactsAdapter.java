@@ -9,7 +9,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +21,6 @@ import android.widget.Toast;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -51,16 +47,8 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
     private final int color;
     private final int layoutParameter = MiscUtils.dpToPx(20);
     private final CircleTransform transform = new CircleTransform();
-    //TODO fill with global profiles
     private final Set<String> globalProfiles = new HashSet<>();
-    private final LoadingCache<String, String> cache = CacheBuilder.newBuilder()
-            .initialCapacity(50)
-            .build(new CacheLoader<String, String>() {
-                @Override
-                public String load(@NonNull String name) {
-                    return MiscUtils.generateInitials(name);
-                }
-            });
+
 
     public ReachContactsAdapter(Context context, int layout, Cursor c, int flags, long serverId) {
         super(context, layout, c, flags);
@@ -126,7 +114,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         final short status = cursor.getShort(5);
         final int numberOfSongs = cursor.getShort(6);
 
-        viewHolder.userInitials.setText(cache.getUnchecked(userName));
+        viewHolder.userInitials.setText(MiscUtils.generateInitials(userName));
         viewHolder.userNameList.setText(userName);
         viewHolder.telephoneNumberList.setText(numberOfSongs + " songs");
 

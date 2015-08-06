@@ -5,9 +5,12 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
@@ -34,15 +37,13 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
-import reach.backend.entities.userApi.model.ReachPlayList;
-import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
@@ -56,10 +57,13 @@ import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.Playlist;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
 import reach.project.utils.auxiliaryClasses.ReachArtist;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.Song;
 import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.auxiliaryClasses.UseFragment;
 
 /**
  * Created by dexter on 1/10/14.
@@ -116,16 +120,22 @@ public enum MiscUtils {
 
     public static String generateInitials(String name) {
 
-        try {
-            final String[] splitter = name.trim().split(" ");
-            if (splitter.length > 1)
-                return (String.valueOf(splitter[0].charAt(0)) + splitter[1].charAt(0)).toUpperCase();
-            else
-                return String.valueOf(splitter[0].charAt(0)).toUpperCase();
-        } catch (Exception e) {
-            e.printStackTrace();
+        name = name.trim();
+        if (TextUtils.isEmpty(name))
+            return "A";
+
+        final String [] splitter = name.split(" ");
+        switch (splitter.length) {
+
+            case 0:
+                return "A";
+            case 1:
+                return (splitter[0].charAt(0)+"").toUpperCase();
+            case 2:
+                return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
+            default:
+                return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
         }
-        return "A";
     }
 
     public static boolean containsIgnoreCase(CharSequence str, CharSequence searchStr) {
@@ -294,19 +304,20 @@ public enum MiscUtils {
                 new String[]{userId + ""});
     }
 
-    public static void bulkInsertSongs(Set<ReachSong> reachSongDatabases,
+    public static void bulkInsertSongs(List<Song> songList,
                                        Collection<ReachAlbum> reachAlbums,
                                        Collection<ReachArtist> reachArtists,
-                                       ContentResolver contentResolver) {
+                                       ContentResolver contentResolver,
+                                       long serverId) {
 
         //Add all songs
-        final ContentValues[] songs = new ContentValues[reachSongDatabases.size()];
+        final ContentValues[] songs = new ContentValues[songList.size()];
         final ContentValues[] albums = new ContentValues[reachAlbums.size()];
         final ContentValues[] artists = new ContentValues[reachArtists.size()];
 
         int i = 0;
-        for (ReachSong reachSongDatabase : reachSongDatabases) {
-            songs[i++] = ReachSongHelper.contentValuesCreator(reachSongDatabase);
+        for (Song song : songList) {
+            songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
         }
         i = 0;
         Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
@@ -342,67 +353,66 @@ public enum MiscUtils {
                 .putLong(size).hash().toString();
     }
 
-    public static void bulkInsertPlayLists(Set<ReachPlayList> reachPlayListDatabases,
-                                           ContentResolver contentResolver) {
+    public static void bulkInsertPlayLists(List<Playlist> playlistList,
+                                           ContentResolver contentResolver,
+                                           long serverId) {
 
-        if (reachPlayListDatabases != null && !reachPlayListDatabases.isEmpty()) {
+        if (playlistList != null && !playlistList.isEmpty()) {
 
-            final ContentValues[] playLists = new ContentValues[reachPlayListDatabases.size()];
+            final ContentValues[] playLists = new ContentValues[playlistList.size()];
             int i = 0;
-            for (ReachPlayList reachPlayListDatabase : reachPlayListDatabases) {
-                playLists[i++] = ReachPlayListHelper.contentValuesCreator(reachPlayListDatabase);
+            for (Playlist playlist : playlistList) {
+                playLists[i++] = ReachPlayListHelper.contentValuesCreator(playlist, serverId);
             }
             Log.i("Ayush", "PlayLists Inserted " + contentResolver.bulkInsert(ReachPlayListProvider.CONTENT_URI, playLists));
         } else Log.i("Ayush", "NO playLists to save");
     }
 
-    public static Pair<Collection<ReachAlbum>, Collection<ReachArtist>> getAlbumsAndArtists
-            (Iterable<ReachSong> reachSongs) {
+    public static Pair<Collection<ReachAlbum>, Collection<ReachArtist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
 
-        final Map<String, ReachAlbum> reachAlbumDatabaseHashMap = new HashMap<>();
-        final Map<String, ReachArtist> reachArtistDatabaseHashMap = new HashMap<>();
+        final Map<String, ReachAlbum> albumHashMap = new HashMap<>();
+        final Map<String, ReachArtist> artistHashMap = new HashMap<>();
 
-        for (ReachSong reachSong : reachSongs) {
+        for (Song song : songs) {
 
             //don't consider invisible files
-            if (reachSong.getVisibility() == 0)
+            if (!song.visibility)
                 continue;
 
-            if (!TextUtils.isEmpty(reachSong.getAlbum())) {
+            if (!TextUtils.isEmpty(song.album)) {
 
-                final ReachAlbum reachAlbum;
+                final ReachAlbum album;
 
-                if (reachAlbumDatabaseHashMap.containsKey(reachSong.getAlbum()))
-                    reachAlbum = reachAlbumDatabaseHashMap.get(reachSong.getAlbum());
+                if (albumHashMap.containsKey(song.album))
+                    album = albumHashMap.get(song.album);
                 else {
-                    reachAlbum = new ReachAlbum();
-                    reachAlbum.setAlbumName(reachSong.getAlbum());
-                    reachAlbum.setUserId(reachSong.getUserId());
-                    reachAlbum.setArtist(reachSong.getArtist());
+                    album = new ReachAlbum();
+                    album.setAlbumName(song.album);
+                    album.setUserId(serverId);
+                    album.setArtist(song.artist);
                 }
-                reachAlbum.incrementSize();
-                reachAlbumDatabaseHashMap.put(reachAlbum.getAlbumName(), reachAlbum);
+                album.incrementSize();
+                albumHashMap.put(song.album, album);
             }
 
-            if (reachSong.getArtist() != null && !reachSong.getArtist().equals("")) {
+            if (!TextUtils.isEmpty(song.artist)) {
 
-                final ReachArtist reachArtist;
+                final ReachArtist artist;
 
-                if (reachArtistDatabaseHashMap.containsKey(reachSong.getArtist()))
-                    reachArtist = reachArtistDatabaseHashMap.get(reachSong.getArtist());
+                if (artistHashMap.containsKey(song.artist))
+                    artist = artistHashMap.get(song.artist);
                 else {
-                    reachArtist = new ReachArtist();
-                    reachArtist.setArtistName(reachSong.getArtist());
-                    reachArtist.setUserID(reachSong.getUserId());
-                    reachArtist.setAlbum(reachSong.getAlbum());
+                    artist = new ReachArtist();
+                    artist.setArtistName(song.artist);
+                    artist.setUserID(serverId);
+                    artist.setAlbum(song.album);
                 }
-                reachArtist.incrementSize();
-                reachArtistDatabaseHashMap.put(reachArtist.getArtistName(), reachArtist);
+                artist.incrementSize();
+                artistHashMap.put(song.artist, artist);
             }
         }
         ///////////////////////
-        return new Pair<>(reachAlbumDatabaseHashMap.values(),
-                reachArtistDatabaseHashMap.values());
+        return new Pair<>(albumHashMap.values(), artistHashMap.values());
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
@@ -496,13 +506,57 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(context));
     }
 
+    public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
+                                                                            final UseContext<Result, Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return Optional.absent();
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return Optional.absent();
+
+        return Optional.fromNullable(task.work(activity));
+    }
+
+    public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
+                                                                            final UseFragment<Result, T> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return Optional.absent();
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return Optional.absent();
+
+        return Optional.fromNullable(task.work(fragment));
+    }
+
     public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
                                                           final UseContext<Void, T> task) {
 
         final T activity;
-        final boolean contextLost = (activity = reference.get()) == null;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return;
 
-        if (contextLost || activity.isFinishing())
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                task.work(activity);
+            }
+        });
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext<Void, Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+        final Activity activity = fragment.getActivity();
+        if (activity.isFinishing())
             return;
 
         activity.runOnUiThread(new Runnable() {
@@ -547,6 +601,25 @@ public enum MiscUtils {
         }, Optional.<Predicate<Boolean>>absent()).orNull();
         //set locally
         return !(result == null || !result);
+    }
+
+    public static <T> boolean isOnline(T stuff) {
+
+        if (stuff == null)
+            return false;
+
+        final Context context;
+        if (stuff instanceof Context)
+            context = (Context) stuff;
+        else if (stuff instanceof Fragment)
+            context = ((Fragment) stuff).getActivity();
+        else
+            return false;
+
+        final NetworkInfo networkInfo =
+                ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        return !(networkInfo == null || !networkInfo.isConnected());
+
     }
 
     /**

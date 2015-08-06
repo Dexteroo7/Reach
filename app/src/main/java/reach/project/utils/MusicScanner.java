@@ -13,16 +13,13 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.v4.util.LongSparseArray;
+import android.support.v4.util.SparseArrayCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -30,24 +27,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
 
-import reach.backend.entities.userApi.model.MusicContainer;
-import reach.backend.entities.userApi.model.ReachPlayList;
-import reach.backend.entities.userApi.model.ReachSong;
 import reach.project.core.ReachApplication;
-import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.MusicList;
 import reach.project.utils.auxiliaryClasses.Playlist;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
@@ -74,8 +64,8 @@ public class MusicScanner extends IntentService {
     Map of songs and playLists is needed to preserve
      */
     private final LongSparseArray<Short> reachSongVisibility = new LongSparseArray<>();
-    private final LongSparseArray<Short> reachPlayListVisibility = new LongSparseArray<>();
-    private final LongSparseArray<ReachSong> songSparse = new LongSparseArray<>();
+    private final SparseArrayCompat<Short> reachPlayListVisibility = new SparseArrayCompat<>();
+    private final LongSparseArray<Song> songSparse = new LongSparseArray<>();
     private final HashSet<String> genreHashSet = new HashSet<>();
 
     private long serverId;
@@ -85,16 +75,9 @@ public class MusicScanner extends IntentService {
         super("MusicScanner");
     }
 
-    private Optional<ImmutableSortedSet<ReachSong>> getSongListing(Uri uri) {
+    private ImmutableList<Song> getSongListing(Uri uri) {
 
-        final ImmutableSortedSet.Builder<ReachSong> songBuilder = new ImmutableSortedSet.Builder<>(
-                new Comparator<ReachSong>() {
-                    @Override
-                    public int compare(ReachSong lhs, ReachSong rhs) {
-                        return lhs.getDateAdded().compareTo(rhs.getDateAdded());
-                    }
-                }
-        );
+        final List<Song> toSend = new ArrayList<>();
         final HashSet<String> verifiedMusicPaths = new HashSet<>();
 
         final File[] directories = new File[]{
@@ -109,7 +92,8 @@ public class MusicScanner extends IntentService {
 
         final Cursor musicCursor = resolver.query(uri, projection, null, null, null);
         if (musicCursor == null)
-            return Optional.absent();
+            return null;
+
         int count = 0;
         while (musicCursor.moveToNext()) {
 
@@ -146,9 +130,8 @@ public class MusicScanner extends IntentService {
 
             long songID = musicCursor.getLong(music_column_id);
 
-            final ReachSong reachSongDatabase = new ReachSong();
-            reachSongDatabase.setSongId(songID);
-            reachSongDatabase.setUserId(serverId);
+            final Song.Builder builder = new Song.Builder();
+            builder.songId(songID);
 
             long size = musicCursor.getLong(music_column_size);
             long duration = musicCursor.getLong(music_column_duration);
@@ -156,8 +139,8 @@ public class MusicScanner extends IntentService {
             if (size == 0 || duration == 0) {
                 continue;
             }
-            reachSongDatabase.setSize(size);
-            reachSongDatabase.setDuration(duration);
+            builder.size(size);
+            builder.duration(duration);
 
             String unverifiedPath = musicCursor.getString(music_column_file);
             if (TextUtils.isEmpty(unverifiedPath)) {
@@ -172,23 +155,21 @@ public class MusicScanner extends IntentService {
                 continue;
             }
 
-            reachSongDatabase.setDisplayName(displayName);
-            reachSongDatabase.setActualName(actualName);
-
-            Log.i("Ayush", reachSongDatabase.getDisplayName());
+            builder.displayName(displayName);
+            builder.actualName(actualName);
 
             final String correctPath = verifyPath(unverifiedPath, actualName, verifiedMusicPaths);
             if (TextUtils.isEmpty(correctPath))
                 continue;
 
 //            reachSongDatabase.setFileHash(MiscUtils.quickHash(actualName, displayName, duration, size));
-            reachSongDatabase.setPath(correctPath);
+            builder.path(correctPath);
 
             if (music_column_artist != -1) {
 
                 String artist = musicCursor.getString(music_column_artist);
                 if (artist != null && !artist.equals("")) {
-                    reachSongDatabase.setArtist(artist);
+                    builder.artist(artist);
                 }
             }
 
@@ -196,34 +177,34 @@ public class MusicScanner extends IntentService {
 
                 String album = musicCursor.getString(music_column_album);
                 if (album != null && !album.equals("")) {
-                    reachSongDatabase.setAlbum(album);
+                    builder.album(album);
                 }
             }
 
             //load original visibility or default 1 (visible)
-            reachSongDatabase.setVisibility((int) reachSongVisibility.get(songID, (short) 2));
+            final int visibility = (int) reachSongVisibility.get(songID, (short) 2);
 
-            if (reachSongDatabase.getVisibility() == 2) {
+            if (visibility == 2) {
 
+                if (filter(builder.actualName) ||
+                        filter(builder.displayName) ||
+                        filter(builder.album) ||
+                        filter(builder.artist) ||
+                        builder.size > 100 * 1024 * 1024)
 
-                if (filter(reachSongDatabase.getActualName()) ||
-                        filter(reachSongDatabase.getDisplayName()) ||
-                        filter(reachSongDatabase.getAlbum()) ||
-                        filter(reachSongDatabase.getArtist()) ||
-                        reachSongDatabase.getSize() > 100 * 1024 * 1024)
-
-                    reachSongDatabase.setVisibility(0);
+                    builder.visibility(false);
                 else
-                    reachSongDatabase.setVisibility(1);
-            }
+                    builder.visibility(true);
+            } else
+                builder.visibility(visibility == 1);
 
             if (music_column_year != -1)
-                reachSongDatabase.setYear(musicCursor.getInt(music_column_year));
+                builder.year(musicCursor.getInt(music_column_year));
             if (music_date_added != -1) {
 
                 long actualDateAdded = musicCursor.getLong(music_date_added);
-                reachSongDatabase.setDateAdded(actualDateAdded);
-                reachSongDatabase.setFormattedDataAdded(MiscUtils.combinationFormatter(actualDateAdded));
+                builder.dateAdded(actualDateAdded);
+                builder.formattedDataAdded(MiscUtils.combinationFormatter(actualDateAdded));
             }
 
             final Cursor genresCursor;
@@ -251,12 +232,20 @@ public class MusicScanner extends IntentService {
             if (genresCursor != null)
                 genresCursor.close();
 
-            songBuilder.add(reachSongDatabase);
-            songSparse.append(reachSongDatabase.getSongId(), reachSongDatabase);
+            final Song song = builder.build();
+            toSend.add(song);
+            songSparse.append(song.songId, song);
             sendMessage(SONGS, count++);
         }
+
         musicCursor.close();
-        return Optional.of(songBuilder.build());
+        Collections.sort(toSend, new Comparator<Song>() {
+            @Override
+            public int compare(Song lhs, Song rhs) {
+                return lhs.dateAdded.compareTo(rhs.dateAdded);
+            }
+        });
+        return ImmutableList.copyOf(toSend);
     }
 
     private HashSet<String> recurseDirectory(File file) {
@@ -306,7 +295,7 @@ public class MusicScanner extends IntentService {
                 MiscUtils.containsIgnoreCase(name, "Recording"));
     }
 
-    private ImmutableSet<ReachPlayList> getPlayLists(ReachPlayList defaultPlayList) {
+    private ImmutableList<Playlist> getPlayLists(Playlist defaultPlayList) {
 
         Uri uri = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
         final String[] columns = {
@@ -321,7 +310,7 @@ public class MusicScanner extends IntentService {
             return null;
         }
 
-        final ImmutableSet.Builder<ReachPlayList> reachPlayListDatabases = new ImmutableSet.Builder<>();
+        final ImmutableList.Builder<Playlist> reachPlayListDatabases = new ImmutableList.Builder<>();
 
         int count = 0;
         while (playLists.moveToNext()) {
@@ -333,36 +322,35 @@ public class MusicScanner extends IntentService {
             final long playListId = playLists.getLong(play_list_id);
             if (playListName == null || playListName.equals("")) continue;
 
-            final ReachPlayList reachPlayListDatabase = new ReachPlayList();
+            final Playlist.Builder builder = new Playlist.Builder();
             //set playListId
-            reachPlayListDatabase.setPlayListId(playListId);
-            reachPlayListDatabase.setVisibility((int) reachPlayListVisibility.get(playListId, (short) 1));
-            reachPlayListDatabase.setPlaylistName(playListName);
-            reachPlayListDatabase.setUserId(serverId);
+            builder.visibility((int) reachPlayListVisibility.get(playListName.hashCode(), (short) 1) == 1);
+            builder.playlistName(playListName);
 
             uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playLists.getLong(play_list_id));
             final Cursor musicCursor = resolver.query(uri, projectionIds, null, null, null);
-            final List<String> songIds = new ArrayList<>(musicCursor.getCount());
+            final List<Long> songIds = new ArrayList<>(musicCursor.getCount());
             while (musicCursor.moveToNext()) {
 
                 final int music_column_id = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media._ID);
                 final long songID = musicCursor.getLong(music_column_id);
-                final ReachSong reachSongDatabase = songSparse.get(songID);
+                final Song reachSongDatabase = songSparse.get(songID);
                 if (reachSongDatabase != null) {
-                    songIds.add(songID + "");
+                    songIds.add(songID);
                 }
             }
-            reachPlayListDatabase.setReachSongs(songIds);
+            if (songIds.isEmpty())
+                continue;
+
+            builder.reachSongs(songIds);
             int last_modified = playLists.getColumnIndex(MediaStore.Audio.Playlists.DATE_MODIFIED);
             if (last_modified != -1) {
-                reachPlayListDatabase.setDateModified(MiscUtils.dateFormatter(playLists.getLong(last_modified)));
+                builder.dateModified(MiscUtils.dateFormatter(playLists.getLong(last_modified)));
             }
 
-            if (reachPlayListDatabase.getReachSongs().isEmpty())
-                continue;
             musicCursor.close();
-            reachPlayListDatabases.add(reachPlayListDatabase);
+            reachPlayListDatabases.add(builder.build());
             sendMessage(PLAY_LISTS, count++);
         }
         playLists.close();
@@ -398,7 +386,7 @@ public class MusicScanner extends IntentService {
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
         resolver = getContentResolver();
-                
+
         if (serverId == 0) {
             sendMessage(FINISHED, -1);
             return;
@@ -425,7 +413,7 @@ public class MusicScanner extends IntentService {
         final Cursor reachPlaylistInitialCursor = resolver.query(
                 ReachPlayListProvider.CONTENT_URI,
                 new String[]{
-                        ReachPlayListHelper.COLUMN_PLAY_LIST_ID,
+                        ReachPlayListHelper.COLUMN_PLAY_LIST_NAME,
                         ReachPlayListHelper.COLUMN_VISIBILITY},
                 ReachPlayListHelper.COLUMN_USER_ID + " = ?",
                 new String[]{serverId + ""},
@@ -433,14 +421,14 @@ public class MusicScanner extends IntentService {
         if (reachPlaylistInitialCursor != null) {
             while (reachPlaylistInitialCursor.moveToNext()) {
                 reachPlayListVisibility.append(
-                        reachPlaylistInitialCursor.getLong(0), //playListId
+                        reachPlaylistInitialCursor.getString(0).hashCode(), //playListId
                         reachPlaylistInitialCursor.getShort(1)); //visibility
             }
             reachPlaylistInitialCursor.close();
         }
         ////////////////////Add all the songs
-        final ImmutableSortedSet<ReachSong> songs =
-                getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI).orNull();
+        final ImmutableList<Song> songs =
+                getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
         if (songs == null || songs.isEmpty()) {
             Log.i("Ayush", "Closing music Scanner");
             sendMessage(FINISHED, -1);
@@ -450,30 +438,28 @@ public class MusicScanner extends IntentService {
         sendMessage(ALBUM_ARTIST, -1);
         ////////////////////Adding albums and artists
         final Pair<Collection<ReachAlbum>, Collection<ReachArtist>>
-                albums_artists = MiscUtils.getAlbumsAndArtists(songs);
+                albums_artists = MiscUtils.getAlbumsAndArtists(songs, serverId);
         final Collection<ReachAlbum> reachAlbums = albums_artists.first;
         final Collection<ReachArtist> reachArtists = albums_artists.second;
         ////////////////////Albums and artists added
         ////////////////////Adding playLists
-        final ReachPlayList defaultPlayList = new ReachPlayList();
-        defaultPlayList.setDateModified("");
-        defaultPlayList.setPlaylistName("Latest");
-        defaultPlayList.setUserId(serverId);
-        defaultPlayList.setVisibility(1);
-        defaultPlayList.setPlayListId(-1L);
+        final Playlist.Builder defaultPlayList = new Playlist.Builder();
+        defaultPlayList.dateModified("");
+        defaultPlayList.playlistName("Latest");
+        defaultPlayList.visibility(true);
 
-        final List<String> songIds = new ArrayList<>(20);
+        final List<Long> songIds = new ArrayList<>(20);
         int i = 0;
-        for (ReachSong reachSong : songs) {
+        for (Song reachSong : songs) {
 
-            if (reachSong.getVisibility() == 1) {
-                songIds.add("" + reachSong.getSongId());
+            if (reachSong.visibility) {
+                songIds.add(reachSong.songId);
                 if (++i > 19) break;
             }
         }
-        defaultPlayList.setReachSongs(songIds);
+        defaultPlayList.reachSongs(songIds);
 
-        final ImmutableSet<ReachPlayList> playListSet = getPlayLists(defaultPlayList);
+        final ImmutableList<Playlist> playListSet = getPlayLists(defaultPlayList.build());
         if (playListSet == null) {
             sendMessage(FINISHED, -1);
             return;
@@ -483,124 +469,55 @@ public class MusicScanner extends IntentService {
         ////////////////////Genres Added
 
         final boolean newMusic = portData(songs, playListSet, ImmutableList.copyOf(genreHashSet));
-        if(! (newMusic || intent.getBooleanExtra("first", true))) {
-            
+        if (!(newMusic || intent.getBooleanExtra("first", true))) {
+
             Log.i("Ayush", "Same music found !");
             sendMessage(FINISHED, -1);
             return;
         }
-        
-        if (!StaticData.debugMode) {
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Update music")
-                    .setAction("user - " + serverId)
-                    .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setValue(1)
-                    .build());
-        }
-        
-        final Future<?> musicUpdate = StaticData.threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
 
-                //update music onServer, yes shit load of boiler-plate code
-                final MusicContainer musicContainer = new MusicContainer();
-                musicContainer.setClientId(serverId);
-                musicContainer.setGenres(genreHashSet.toString());
-                musicContainer.setReachSongs(songs.asList());
-                musicContainer.setReachPlayLists(playListSet.asList());
-                
-                MiscUtils.autoRetry(new DoWork<Void>() {
-                    @Override
-                    public Void doWork() throws IOException {
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Update music")
+                .setAction("user - " + serverId)
+                .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setValue(1)
+                .build());
 
-                        Log.i("Ayush", "Updating music");
-                        return StaticData.userEndpoint.updateMusic(musicContainer).execute();
-                    }
-                }, Optional.<Predicate<Void>>absent()).orNull();
-                
-                sendMessage(FINISHED, -1);
-            }
-        });
-        
         //save to database
         Log.i("Ayush", "Updating songs");
         MiscUtils.bulkInsertSongs(
                 songs,
                 reachAlbums,
                 reachArtists,
-                resolver);
+                resolver, serverId);
 
         Log.i("Ayush", "Updating playLists");
         MiscUtils.bulkInsertPlayLists(
                 playListSet,
-                resolver);
+                resolver, serverId);
 
-        try {
-            musicUpdate.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        } finally {
+        MiscUtils.closeAndIgnore(
+                songIds,
+                reachAlbums,
+                reachArtists
+        );
 
-            MiscUtils.closeAndIgnore(
-                    songIds,
-                    reachAlbums,
-                    reachArtists
-            );
+        songSparse.clear();
+        reachPlayListVisibility.clear();
+        reachSongVisibility.clear();
 
-            songSparse.clear();
-            reachPlayListVisibility.clear();
-            reachSongVisibility.clear();
-        }
+        sendMessage(FINISHED, -1);
     }
 
-    private boolean portData(Set<ReachSong> songs,
-                             Set<ReachPlayList> playLists,
+    private boolean portData(List<Song> songs,
+                             List<Playlist> playLists,
                              List<String> genres) {
-
-        final List<Song> newSongs = new ArrayList<>(songs.size());
-        final List<Playlist> newPlayLists = new ArrayList<>(songs.size());
-
-        final Song.Builder songBuilder = new Song.Builder();
-        final Playlist.Builder playListBuilder = new Playlist.Builder();
-
-        for (ReachSong song : songs)
-            newSongs.add(songBuilder
-                    .songId(song.getSongId())
-                    .size(song.getSize())
-                    .visibility(song.getVisibility() == 1)
-                    .year(song.getYear())
-                    .dateAdded(song.getDateAdded())
-                    .duration(song.getDuration())
-                    .genre(song.getGenre())
-                    .displayName(song.getDisplayName())
-                    .actualName(song.getActualName())
-                    .artist(song.getArtist())
-                    .album(song.getAlbum())
-                    .albumArtUrl(song.getAlbumArtUrl())
-                    .formattedDataAdded(song.getFormattedDataAdded())
-                    .fileHash(song.getFileHash())
-                    .path(song.getPath())
-                    .build());
-
-        for (ReachPlayList reachPlayList : playLists) {
-
-            final List<Long> reachSongsList = new ArrayList<>();
-            for (String reachSongString : reachPlayList.getReachSongs())
-                reachSongsList.add(Long.valueOf(reachSongString.trim()));
-            newPlayLists.add(playListBuilder
-                    .visibility(reachPlayList.getVisibility() == 0)
-                    .dateModified(reachPlayList.getDateModified())
-                    .playlistName(reachPlayList.getPlaylistName())
-                    .reachSongs(reachSongsList)
-                    .build());
-        }
 
         final byte[] music = new MusicList.Builder()
                 .clientId(serverId)
                 .genres(genres)
-                .song(newSongs)
-                .playlist(newPlayLists)
+                .song(songs)
+                .playlist(playLists)
                 .build().toByteArray();
 
         final byte[] compressedMusic;
@@ -608,10 +525,8 @@ public class MusicScanner extends IntentService {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(music.length);
         GZIPOutputStream gzipOutputStream = null;
 
-
-
         try {
-            
+
             gzipOutputStream = new GZIPOutputStream(outputStream);
             gzipOutputStream.write(music);
             gzipOutputStream.close();
@@ -624,6 +539,7 @@ public class MusicScanner extends IntentService {
             MiscUtils.closeAndIgnore(outputStream, gzipOutputStream);
         }
 
+        //TODO track
         Log.i("Ayush", "Compression ratio " + (compressedMusic.length * 100) / music.length);
 
         final InputStream key;

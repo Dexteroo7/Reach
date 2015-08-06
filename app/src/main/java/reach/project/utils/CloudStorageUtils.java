@@ -1,5 +1,7 @@
 package reach.project.utils;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -19,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
+import com.squareup.wire.Wire;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -29,9 +32,11 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
+import java.util.zip.GZIPInputStream;
 
 import reach.project.core.StaticData;
 import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.MusicList;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -261,6 +266,60 @@ public enum CloudStorageUtils {
 //        }
 //        return list;
 //    }
+
+    public static MusicList getMusicData(long id, Context context) {
+
+        if (!MiscUtils.isOnline(context))
+            return null;
+
+        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final String fileName = MiscUtils.getMusicStorageKey(id);
+        final String currentHash = SharedPrefUtils.getMusicHash(preferences, fileName);
+
+        //get cloud key
+        final InputStream stream;
+        try {
+            stream = context.getAssets().open("key.p12");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        //prepare storage object
+        final Storage storage = getStorage(stream).orNull();
+        MiscUtils.closeAndIgnore(stream);
+        if (storage == null)
+            return null;
+
+        //getMd5Hash of music data on storage
+        String serverHash = "";
+        try {
+            serverHash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (TextUtils.isEmpty(serverHash) || currentHash.equals(serverHash))
+            return null;
+
+        InputStream download = null;
+        GZIPInputStream compressedData = null;
+
+        final MusicList toReturn;
+        try {
+
+            download = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).executeMediaAsInputStream();
+            compressedData = new GZIPInputStream(download);
+            toReturn = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+            if (toReturn != null)
+                SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
+            return toReturn;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            MiscUtils.closeAndIgnore(download, compressedData);
+        }
+    }
 
     /**
      * Uploads the music data to google cloud storage
