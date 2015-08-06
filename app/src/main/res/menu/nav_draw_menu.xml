@@ -2,36 +2,32 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group
         android:id="@+id/grp1"
-        android:checkableBehavior="single">
+        android:checkableBehavior="none">
         <item
             android:id="@+id/navigation_item_1"
-            android:checked="false"
-            android:icon="@drawable/audio_grey"
+            android:icon="@drawable/ic_music_count"
             android:title="@string/title_section1" />
         <item
             android:id="@+id/navigation_item_2"
-            android:checked="false"
-            android:icon="@drawable/promo"
+            android:icon="@drawable/ic_promo"
             android:title="@string/title_section2" />
         <item
             android:id="@+id/navigation_item_3"
-            android:checked="false"
-            android:icon="@drawable/add_icon_grey"
+            android:icon="@drawable/icon_invite_pink"
             android:title="@string/title_section3" />
         <item
             android:id="@+id/navigation_item_4"
-            android:checked="false"
-            android:icon="@drawable/clock"
+            android:icon="@drawable/ic_history"
             android:title="@string/title_section4" />
 
     </group>
     <group
         android:id="@+id/grp2"
-        android:checkableBehavior="single">
+        android:checkableBehavior="none">
         <item
             android:id="@+id/navigation_item_5"
             android:checked="false"
-            android:icon="@drawable/sheet_grey"
+            android:icon="@drawable/ic_contact_us"
             android:title="@string/title_section5" />
     </group>
 </menu>

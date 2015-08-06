@@ -13,7 +13,6 @@
         android:background="@drawable/circular_background_pink"
         android:src="@drawable/music_note"/>
     <LinearLayout
-        android:layout_alignTop="@id/albumArt"
         android:orientation="vertical"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
@@ -22,55 +21,56 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
             <ImageView
+                android:id="@+id/listToggle"
                 android:layout_gravity="center_horizontal"
                 android:src="@drawable/icon_played"
                 android:layout_marginBottom="2dp"
-                android:layout_width="25dp"
-                android:layout_height="25dp" />
+                android:layout_width="20dp"
+                android:layout_height="20dp" />
             <TextView
                 android:id="@+id/songSize"
-                android:textColor="@color/reach_blue"
+                android:textColor="@color/reach_grey"
                 android:maxLines="1"
                 android:text="99%"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
     </LinearLayout>
-    <TextView
-        android:id="@+id/songTitle"
-        android:layout_alignTop="@id/albumArt"
+    <LinearLayout
         android:layout_toRightOf="@id/albumArt"
         android:layout_toLeftOf="@id/progressContainer"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="3dp"
-        android:text="Title"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:textSize="18sp"
-        android:textColor="#000"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/from"
-        android:layout_toLeftOf="@id/progressContainer"
-        android:layout_marginTop="2dp"
-        android:layout_below="@id/songTitle"
-        android:layout_alignLeft="@id/songTitle"
-        android:maxLines="1"
+        android:orientation="vertical"
         android:layout_centerVertical="true"
-        android:maxWidth="100dp"
-        android:textColor="@color/reach_color"
-        android:textSize="14sp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/songTitle"
+            android:text="Title"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textSize="16sp"
+            android:textColor="#000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/from"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:maxWidth="100dp"
+            android:textColor="@color/reach_color"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="3dp"
         style="?android:attr/progressBarStyleHorizontal"
+        android:progressDrawable="@drawable/reachq_progressbar"
         android:indeterminate="false"
         android:progress="0"
-        android:secondaryProgress="100"
         android:max="100" />
 </RelativeLayout>

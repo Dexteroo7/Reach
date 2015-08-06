@@ -24,7 +24,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
             android:textSize="18sp"
-            android:text="Invite your newFriends using"
+            android:text="Invite your Friends using"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>

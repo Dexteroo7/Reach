@@ -59,4 +59,6 @@ public interface SuperInterface {
 
     void onPushNext(HashSet<TransferSong> songsList); //PushSongFragment
 
+    void onOpenInvitePage();
+
 }

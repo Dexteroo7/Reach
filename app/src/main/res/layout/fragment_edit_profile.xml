@@ -16,15 +16,14 @@
             android:layout_margin="30dp"
             android:id="@+id/profilePhotoContainer" >
             <ImageView
-                android:id="@+id/profilePhoto"
-                android:background="@drawable/profile_pic_dark"
-                android:layout_margin="7dp"
+                android:id="@+id/circle"
+                android:background="@drawable/abc"
                 android:layout_gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
             <ImageView
-                android:id="@+id/circle"
-                android:background="@drawable/circular_background_blue"
+                android:id="@+id/profilePhoto"
+                android:layout_margin="7dp"
                 android:layout_gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />

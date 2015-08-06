@@ -8,9 +8,7 @@
         android:id="@+id/listImage"
         android:layout_width="140dp"
         android:layout_height="140dp"
-        android:background="@color/reach_blue"
-        android:padding="30dp"
-        android:src="@drawable/note_white"/>
+        android:src="@drawable/song_cover_icon"/>
     <TextView
         android:id="@+id/listTitle"
         android:layout_width="wrap_content"
@@ -20,6 +18,7 @@
         android:layout_below="@id/listImage"
         android:layout_alignLeft="@id/listImage"
         android:layout_alignRight="@id/listImage"
+        android:textColor="#000"
         android:textSize="14sp"
         android:text="TITLE"/>
     <RelativeLayout
@@ -30,7 +29,7 @@
         android:layout_height="wrap_content">
         <ImageView
             android:id="@+id/note"
-            android:src="@drawable/note60"
+            android:src="@drawable/ic_music_count"
             android:layout_centerVertical="true"
             android:layout_width="15dp"
             android:layout_height="15dp" />
@@ -41,6 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
+            android:textColor="@color/reach_color"
             android:text="0"/>
     </RelativeLayout>
 

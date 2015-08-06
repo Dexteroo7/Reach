@@ -101,7 +101,7 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
         if(contact.isInviteSent())
             Picasso.with(context).load(R.drawable.add_tick).into(viewHolder.listToggle);
         else
-            Picasso.with(context).load(R.drawable.add_myreach).into(viewHolder.listToggle);
+            Picasso.with(context).load(R.drawable.icon_invite).into(viewHolder.listToggle);
         return convertView;
     }
 

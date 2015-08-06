@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -138,7 +137,7 @@ public class UserMusicLibrary extends Fragment {
 
         viewPager.setAdapter(new ViewPagerReusable(
                 getChildFragmentManager(),
-                new String[]{"TRACKS", "PLAYLISTS", "ALBUMS", "ARTISTS"},
+                new String[]{"Tracks", "Playlists", "Albums", "Artists"},
                 new Fragment[]{
                         MusicListFragment.newPagerInstance(userId, 0), // SONGS
                         PlayListListFragment.newInstance(userId), // PLAYLISTS
@@ -146,7 +145,12 @@ public class UserMusicLibrary extends Fragment {
                         ArtistListFragment.newInstance(userId)})); // ARTISTS
 
         final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
-        slidingTabLayout.setupWithViewPager(viewPager);
+        slidingTabLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                slidingTabLayout.setupWithViewPager(viewPager);
+            }
+        });
 
         ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Browsing Library")
@@ -308,7 +312,7 @@ public class UserMusicLibrary extends Fragment {
                                 .width(margin)
                                 .height(margin)
                                 .endConfig()
-                                .buildRound(MiscUtils.generateInitials(name), Color.parseColor("#FF56BADA")));
+                                .buildRound(MiscUtils.generateInitials(name), fragment.getResources().getColor(R.color.reach_grey)));
                     else
                         bar.setIcon(new BitmapDrawable(fragment.getResources(), bitmap));
 

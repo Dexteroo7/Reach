@@ -90,7 +90,7 @@
         android:visibility="gone"
         android:text="Ok! I got it"
         android:background="@drawable/number_text_selector"
-        android:textColor="@color/reach_blue"
+        android:textColor="@color/reach_grey"
         android:paddingRight="5dp"
         android:paddingLeft="5dp"
         android:paddingTop="10dp"

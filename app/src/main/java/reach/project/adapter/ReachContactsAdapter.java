@@ -47,8 +47,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
     private final int color;
     private final int layoutParameter = MiscUtils.dpToPx(20);
     private final CircleTransform transform = new CircleTransform();
-    private final Set<String> globalProfiles = new HashSet<>();
-
+//    private final Set<String> globalProfiles = new HashSet<>();
 
     public ReachContactsAdapter(Context context, int layout, Cursor c, int flags, long serverId) {
         super(context, layout, c, flags);
@@ -136,10 +135,6 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             Picasso.with(context).load(R.drawable.phone).into(viewHolder.networkStatus);
             viewHolder.netType.setTextColor(grey);
             viewHolder.netType.setText(networkType + "G");
-        } else if (networkType == 5) {
-            Picasso.with(context).load(R.drawable.phone).into(viewHolder.networkStatus);
-            viewHolder.netType.setTextColor(color);
-            viewHolder.netType.setText(" Uploads disabled");
         } else {
             viewHolder.networkStatus.setImageBitmap(null);
             viewHolder.netType.setText("");
@@ -184,20 +179,23 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 viewHolder.listStatus.setText("Offline");
                 break;
             case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
-
-                viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
-                viewHolder.listStatus.setText("Online");
-
-                viewHolder.userNameList.setTextColor(color);
-                viewHolder.listStatus.setTextColor(color);
-                viewHolder.telephoneNumberList.setTextColor(color);
-                viewHolder.note.setImageResource(R.drawable.note_pink);
-                viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
+                if (networkType == (short) 5) {
+                    viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
+                    viewHolder.listStatus.setText("Offline");
+                }
+                else {
+                    viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
+                    viewHolder.listStatus.setText("Online");
+                    viewHolder.note.setImageResource(R.drawable.ic_music_count);
+                    viewHolder.userNameList.setTextColor(color);
+                    viewHolder.telephoneNumberList.setTextColor(color);
+                    viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
+                }
                 break;
             case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
 
                 viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
-                viewHolder.listStatus.setText("Waiting");
+                viewHolder.listStatus.setText("Pending");
                 break;
             case ReachFriendsHelper.REQUEST_NOT_SENT:
 

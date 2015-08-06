@@ -5,15 +5,22 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/reach_color</item>
         <item name="colorPrimaryDark">@color/reach_dark</item>
-        <item name="colorAccent">@color/reach_blue</item>
-        <item name="searchViewStyle">@style/MySearchViewStyle</item>
+        <item name="colorAccent">@color/reach_grey</item>
         <item name="windowActionBarOverlay">true</item>
-    </style>
-    <style name="MySearchViewStyle" parent="Widget.AppCompat.SearchView">
-        <item name="searchIcon">@drawable/ic_search_white</item>
+        <item name="colorControlActivated">@color/reach_color</item>
+        <item name="colorSwitchThumbNormal">@color/reach_grey</item>
+        <item name="android:colorForeground">@color/reach_grey</item>
     </style>
     <style name="menu_labels_style">
         <item name="android:background">@drawable/fab_menu_bg</item>
         <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="MyCustomTabLayout" parent="Widget.Design.TabLayout">
+        <item name="tabTextAppearance">@style/MyCustomTextAppearance</item>
+    </style>
+
+    <style name="MyCustomTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
     </style>
 </resources>

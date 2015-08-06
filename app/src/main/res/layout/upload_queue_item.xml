@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:descendantFocusability="blocksDescendants"
     android:layout_width="match_parent"
     android:layout_height="90dp">
     <ImageView
@@ -9,51 +9,45 @@
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
         android:layout_marginLeft="15dp"
-        android:padding="10dp"
-        android:background="@drawable/button_background"
-        android:src="@drawable/note_white"/>
+        android:padding="15dp"
+        android:background="@drawable/circular_background_pink"
+        android:src="@drawable/music_note"/>
     <TextView
         android:id="@+id/songSize"
+        android:textColor="@color/reach_grey"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:layout_marginRight="15dp"
-        android:text="0MB"
-        android:textColor="@color/darkgrey"
         android:maxLines="1"
-        android:textSize="14sp"
+        android:layout_marginRight="12dp"
+        android:text="0 MB"
+        android:textSize="13sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/songTitle"
-        android:layout_alignTop="@id/albumArt"
+    <LinearLayout
         android:layout_toRightOf="@id/albumArt"
-        android:layout_toLeftOf="@id/songSize"
+        android:layout_toLeftOf="@id/progressContainer"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="3dp"
-        android:text="Title"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:textSize="16sp"
+        android:orientation="vertical"
+        android:layout_centerVertical="true"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/userName"
-        android:layout_below="@id/songTitle"
-        android:layout_alignLeft="@id/songTitle"
-        android:layout_toLeftOf="@id/songSize"
-        android:layout_marginTop="3dp"
-        android:textColor="@color/darkgrey"
-        android:maxLines="1"
-        android:textSize="14sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <View
-        android:id="@+id/dividerFooter"
-        android:layout_width="match_parent"
-        android:layout_marginRight="15dp"
-        android:layout_marginLeft="10dp"
-        android:layout_toRightOf="@id/albumArt"
-        android:layout_height="1dp"
-        android:layout_alignParentBottom="true"
-        android:background="@color/darkgrey" />
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/songTitle"
+            android:text="Title"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textSize="16sp"
+            android:textColor="#000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/userName"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:maxWidth="100dp"
+            android:textColor="@color/reach_color"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 </RelativeLayout>

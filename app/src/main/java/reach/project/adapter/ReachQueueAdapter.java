@@ -27,19 +27,21 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
 
         private final TextView songTitle ,userName, songSize;
         private final ProgressBar progressBar;
-        private final ImageView albumArt;
+        private final ImageView albumArt ,listToggle;
 
         private ViewHolder(ImageView albumArt,
                            TextView songTitle,
                            TextView userName,
                            TextView songSize,
-                           ProgressBar progressBar) {
+                           ProgressBar progressBar,
+                           ImageView listToggle) {
 
             this.albumArt = albumArt;
             this.songTitle = songTitle;
             this.userName = userName;
             this.songSize = songSize;
             this.progressBar = progressBar;
+            this.listToggle = listToggle;
         }
     }
 
@@ -132,10 +134,11 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
                 }
             });*/
         } else {
-            viewHolder.albumArt.setImageResource(R.drawable.note_white);
+            /*viewHolder.albumArt.setImageResource(R.drawable.note_white);
             viewHolder.albumArt.setBackgroundResource(R.drawable.button_background);
-            /*viewHolder.delete.setOnClickListener(null);
+            viewHolder.delete.setOnClickListener(null);
             viewHolder.delete.setVisibility(View.INVISIBLE);*/
+            viewHolder.listToggle.setVisibility(View.GONE);
         }
 
         /*if (status == ReachDatabase.GCM_FAILED)
@@ -156,7 +159,8 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
                 (TextView) view.findViewById(R.id.songTitle),
                 (TextView) view.findViewById(R.id.from),
                 (TextView) view.findViewById(R.id.songSize),
-                (ProgressBar) view.findViewById(R.id.progressBar));
+                (ProgressBar) view.findViewById(R.id.progressBar),
+                (ImageView) view.findViewById(R.id.listToggle));
         view.setTag(viewHolder);
         return view;
     }

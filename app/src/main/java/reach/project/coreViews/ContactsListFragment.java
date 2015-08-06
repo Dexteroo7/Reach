@@ -35,9 +35,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.BounceInterpolator;
-import android.view.animation.ScaleAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -92,8 +89,6 @@ public class ContactsListFragment extends Fragment implements
     private FloatingActionsMenu actionMenu;
     private SwipeRefreshLayout swipeRefreshLayout;
     private SearchView searchView;
-
-    private ScaleAnimation translation;
 
     private SharedPreferences sharedPrefs;
     private SuperInterface mListener;
@@ -220,6 +215,12 @@ public class ContactsListFragment extends Fragment implements
         }
     };
 
+    private final View.OnClickListener inviteFriendListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListener.onOpenInvitePage();
+        }
+    };
 
     public static ContactsListFragment newInstance() {
 
@@ -275,7 +276,6 @@ public class ContactsListFragment extends Fragment implements
         mListener.toggleSliding(true);
         /*if (getArguments().getBoolean("first", false))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-        translation = LocalUtils.createScaleAnimation();
         sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         serverId = SharedPrefUtils.getServerId(sharedPrefs);
         phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPrefs);
@@ -335,12 +335,14 @@ public class ContactsListFragment extends Fragment implements
         }
 
         actionMenu = (FloatingActionsMenu) rootView.findViewById(R.id.right_labels);
-        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
 
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_blue));
+        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(refreshListener);
+
+        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
+        rootView.findViewById(R.id.invite_friend_fab).setOnClickListener(inviteFriendListener);
 
         final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
         listView.setDivider(null);
@@ -354,7 +356,6 @@ public class ContactsListFragment extends Fragment implements
 
         //we have not already synchronized !
         if (!synchronizeOnce.get() && !synchronizing.get()) {
-
             //contact sync will call send ping as well
             synchronizing.set(true);
             pinging.set(true);
@@ -367,7 +368,6 @@ public class ContactsListFragment extends Fragment implements
             new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
             new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(StaticData.threadPool);
         } else if (!pinging.get()) {
-
             //if not pinging send a ping !
             pinging.set(true);
             swipeRefreshLayout.post(new Runnable() {
@@ -419,10 +419,7 @@ public class ContactsListFragment extends Fragment implements
                 StaticData.threadPool.execute(LocalUtils.devikaSendMeSomeLove);
                 SharedPrefUtils.setFirstIntroSeen(sharedPrefs);
             }
-            //bounce ?
             actionMenu.setVisibility(View.VISIBLE);
-            if (!translation.hasStarted())
-                actionMenu.startAnimation(translation);
         }
     }
 
@@ -796,12 +793,12 @@ public class ContactsListFragment extends Fragment implements
             }
         };
 
-        public static ScaleAnimation createScaleAnimation() {
-            final ScaleAnimation translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-            translation.setDuration(1000);
-            translation.setInterpolator(new BounceInterpolator());
-            return translation;
-        }
+//        public static ScaleAnimation createScaleAnimation() {
+//            final ScaleAnimation translation = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+//            translation.setDuration(1000);
+//            translation.setInterpolator(new BounceInterpolator());
+//            return translation;
+//        }
 
         public static View createFriendsHeader(Context context) {
 

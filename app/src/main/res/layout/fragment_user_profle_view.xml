@@ -11,15 +11,14 @@
         android:layout_margin="30dp"
         android:id="@+id/profilePhoto" >
         <ImageView
-            android:id="@+id/userImage"
-            android:background="@drawable/profile_pic_blue"
-            android:layout_margin="7dp"
+            android:id="@+id/circle"
+            android:background="@drawable/abc"
             android:layout_gravity="center"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
         <ImageView
-            android:id="@+id/circle"
-            android:background="@drawable/circular_background_blue"
+            android:id="@+id/userImage"
+            android:layout_margin="7dp"
             android:layout_gravity="center"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -31,7 +30,7 @@
         android:layout_below="@id/profilePhoto"
         android:text="Name"
         android:textSize="26sp"
-        android:textColor="@color/reach_color"
+        android:textColor="#000"
         android:layout_centerHorizontal="true"/>
 
     <RelativeLayout
@@ -47,7 +46,7 @@
             android:layout_height="20dp"
             android:layout_marginRight="5dp"
             android:layout_centerVertical="true"
-            android:src="@drawable/note_pink"/>
+            android:src="@drawable/ic_music_count"/>
         <TextView
             android:id="@+id/numberOfSongs"
             android:layout_centerVertical="true"

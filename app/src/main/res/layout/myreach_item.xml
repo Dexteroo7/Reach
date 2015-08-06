@@ -28,13 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
-        <!--<ImageView-->
-        <!--android:id="@+id/circle"-->
-        <!--android:layout_gravity="bottom|right"-->
-        <!--android:background="@drawable/circular_online"-->
-        <!--android:layout_width="15dp"-->
-        <!--android:layout_height="15dp"-->
-        <!--android:visibility="gone"/>-->
+
     </FrameLayout>
 
     <RelativeLayout
@@ -47,8 +41,8 @@
 
         <ImageView
             android:id="@+id/listToggle"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_centerHorizontal="true"
             android:scaleType="fitCenter"
             android:src="@drawable/icon_user_offline" />
@@ -61,7 +55,7 @@
             android:layout_centerHorizontal="true"
             android:text="Offline"
             android:textColor="@color/darkgrey"
-            android:textSize="13sp" />
+            android:textSize="12sp" />
     </RelativeLayout>
 
     <LinearLayout
@@ -85,7 +79,7 @@
                 android:maxWidth="120dp"
                 android:text="TITLE"
                 android:textColor="#000"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
 
             <ImageView
                 android:id="@+id/status"
@@ -117,7 +111,7 @@
                 android:paddingRight="5dp"
                 android:paddingTop="2dp"
                 android:text="Reach Manager"
-                android:textColor="@color/reach_blue"
+                android:textColor="@color/reach_grey"
                 android:textSize="12sp"
                 android:visibility="visible" />
         </RelativeLayout>
@@ -144,8 +138,8 @@
                 android:layout_marginLeft="5dp"
                 android:layout_toRightOf="@id/note"
                 android:text="0"
-                android:textColor="@color/reach_blue"
-                android:textSize="15sp" />
+                android:textColor="@color/reach_grey"
+                android:textSize="13sp" />
         </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>
