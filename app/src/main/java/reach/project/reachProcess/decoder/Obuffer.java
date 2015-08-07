@@ -79,7 +79,7 @@ public abstract class Obuffer {
     public abstract void clear_buffer();
 
     /**
-     * Notify the buffer that the user has stopped the stream.
+     * Notify the buffer that the User has stopped the stream.
      */
     public abstract void set_stop_flag();
 }

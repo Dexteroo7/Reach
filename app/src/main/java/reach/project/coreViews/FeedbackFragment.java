@@ -39,7 +39,7 @@ public class FeedbackFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_feedback, container, false);
         final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
         if(actionBar != null)
-            actionBar.setTitle("feedback");
+            actionBar.setTitle("Feedback");
         final TextView fb = (TextView) rootView.findViewById(R.id.query);
         rootView.findViewById(R.id.send_feedback).setOnClickListener(new View.OnClickListener() {
             @Override

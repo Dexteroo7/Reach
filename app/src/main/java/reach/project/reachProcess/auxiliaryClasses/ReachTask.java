@@ -32,6 +32,7 @@ public abstract class ReachTask<T> implements Runnable {
         //clean up when done
         Log.i("Downloader", "Post sanitize");
         sanitize();
+        Log.i("Downloader", "TASK COMPLETED");
     }
     protected abstract void sanitize();
     protected abstract void performTask();

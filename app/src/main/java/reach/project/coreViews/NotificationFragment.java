@@ -132,7 +132,7 @@ public class NotificationFragment extends Fragment {
                 return false;
 
             /**
-             * Clear all notifications and add latest ones
+             * Clear all Notifications and add latest ones
              */
             notifications.clear();
             for (NotificationBase base : list.get()) {

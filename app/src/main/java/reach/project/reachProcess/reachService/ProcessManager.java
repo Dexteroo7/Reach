@@ -134,11 +134,11 @@ public class ProcessManager extends Service implements
      * Pi = ith parent_thread
      * Cij = jth child_thread of ith parent_thread
      * *******************************************
-     * P1 : Music_Player //explicitly killed by user
+     * P1 : Music_Player //explicitly killed by User
      * C11 : HttpHandler
      * C12 : HttpReader
      * C13 : HttpWriter
-     * P2 : Network_Controller //auto-start, self kill, user can also kill it
+     * P2 : Network_Controller //auto-start, self kill, User can also kill it
      * C21 : LanHandler
      * P3 : Communicator
      */
@@ -164,6 +164,11 @@ public class ProcessManager extends Service implements
     private final Semaphore killCheck = new Semaphore(2, true); //fixed 2 parents
     private final NetworkHandler networkHandler = new NetworkHandler(this);
     private final MusicHandler musicHandler = new MusicHandler(this);
+    private final Stack<MusicId> musicStack = new Stack<>(); //id, type, push only when in shuffle mode
+
+    private Future<?> musicFuture, networkFuture;
+    private PowerManager.WakeLock wakeLock = null;
+    private static long serverId;
 
     private void close() {
 
@@ -181,6 +186,9 @@ public class ProcessManager extends Service implements
             reference = null;
         }
 
+        musicFuture = networkFuture = null;
+        wakeLock = null;
+
         fixedPool.shutdownNow();
         stopSelf();
         Log.i("Downloader", "KILLING SERVICE !!!");
@@ -195,11 +203,6 @@ public class ProcessManager extends Service implements
             this.type = type;
         }
     }
-
-    private final Stack<MusicId> musicStack = new Stack<>(); //id, type, push only when in shuffle mode
-    private Future<?> musicFuture, networkFuture;
-    private PowerManager.WakeLock wakeLock = null;
-    private static long serverId;
 
     private void closeCursor(Optional<Cursor> cursor) {
         if (cursor.isPresent())
@@ -406,7 +409,7 @@ public class ProcessManager extends Service implements
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
-                .setContentTitle("Playing music")
+                .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
                 .setOnlyAlertOnce(true)
@@ -439,7 +442,7 @@ public class ProcessManager extends Service implements
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this);
         Notification notification = note
                 .setSmallIcon(R.drawable.ic_icon_notif)
-                .setContentTitle("Playing music")
+                .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
                 .setOnlyAlertOnce(true)
@@ -484,7 +487,7 @@ public class ProcessManager extends Service implements
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
-                .setContentTitle("Playing music")
+                .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
                 .setOnlyAlertOnce(true)
@@ -516,7 +519,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public void updateSongDetails(MusicData musicData) {
-        //insert music player into notification
+        //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
 
@@ -578,8 +581,8 @@ public class ProcessManager extends Service implements
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Download Fail")
-//                    .setAction("user - " + reachDatabase.getSenderId() + " sending song to " + reachDatabase.getReceiverId() + " timedOut " + reachDatabase.getLogicalClock())
-                    .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+//                    .setAction("User - " + reachDatabase.getSenderId() + " sending song to " + reachDatabase.getReceiverId() + " timedOut " + reachDatabase.getLogicalClock())
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                     .setLabel("Song - " + songName)
                     .setValue(1)
                     .build());
@@ -614,7 +617,7 @@ public class ProcessManager extends Service implements
 
         musicHandler.close();
         sendMessage(this, Optional.absent(), REPLY_MUSIC_DEAD);
-        Log.i("Downloader", "Sent music player dead");
+        Log.i("Downloader", "Sent Music player dead");
         switch (notificationState) {
 
             case Network:
@@ -676,7 +679,7 @@ public class ProcessManager extends Service implements
         return fixedPool.submit(makeParentTask(parent));
     }
 
-    private ListenableFutureTask makeParentTask(final ReachTask task) {
+    private Runnable makeParentTask(final ReachTask task) {
 
         final ListenableFutureTask toSubmit = ListenableFutureTask.create(task, null);
         toSubmit.addListener(new Runnable() {
@@ -687,9 +690,11 @@ public class ProcessManager extends Service implements
                     toSubmit.get();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                    close();
+                    Log.i("Downloader", "INTERRUPTED EXCEPTION IN REACH TASK");
+                    close(); //shut down process
                 } catch (Throwable e) {
                     e.printStackTrace();
+                    Log.i("Downloader", "EXCEPTION IN REACH TASK " + e.getLocalizedMessage());
                 } finally {
                     killCheck.release();
                     Log.i("Downloader", "DEATH CHECK " + killCheck.availablePermits());
@@ -711,7 +716,7 @@ public class ProcessManager extends Service implements
     @Override
     public final int onStartCommand(Intent intent, int flags, int startId) {
         /**
-         * 1) music requests are immediately serviced
+         * 1) Music requests are immediately serviced
          * 2) lan and network requests are queued
          */
         switch (intent.getAction()) {
@@ -909,7 +914,7 @@ public class ProcessManager extends Service implements
     public synchronized void pushNextSong(Optional<MusicData> musicData) {
 
         if (!musicData.isPresent()) {
-            Log.i("Downloader", "music not found");
+            Log.i("Downloader", "Music not found");
             return;
         }
 
@@ -1017,7 +1022,7 @@ public class ProcessManager extends Service implements
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(missType)
-                    .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                     .setLabel("Song - " + songName)
                     .setValue(1)
                     .build());
@@ -1026,7 +1031,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public void updateSecondaryProgress(short percent) {
-        Log.i("Downloader", "Progress " + percent);
+//        Log.i("Downloader", "Progress " + percent);
         updateSecondaryProgress(this, percent, REPLY_SECONDARY_PROGRESS);
     }
 

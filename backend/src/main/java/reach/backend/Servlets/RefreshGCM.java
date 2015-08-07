@@ -1,4 +1,4 @@
-package reach.backend.servlets;
+package reach.backend.Servlets;
 
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.Message;
@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import reach.backend.user.ReachUser;
+import reach.backend.User.ReachUser;
 
 import static reach.backend.OfyService.ofy;
 
@@ -89,7 +89,7 @@ public class RefreshGCM extends HttpServlet {
         if (users.size() > 1000 || regIds.size() > 1000)
             return false;
 
-        //ensure that the user is not null and message is not shit, beforehand
+        //ensure that the User is not null and message is not shit, beforehand
         final MulticastResult multicastResult;
 
         try {

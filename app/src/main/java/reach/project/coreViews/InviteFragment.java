@@ -122,7 +122,7 @@ public class InviteFragment extends Fragment {
                 if (!StaticData.debugMode) {
                     ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                             .setCategory("Invite Page")
-                            .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                             .setLabel(inviteOptions[position])
                             .setValue(1)
                             .build());
@@ -130,7 +130,7 @@ public class InviteFragment extends Fragment {
                 final Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT,
-                        "Hey! Checkout and download my phone music collection with just a click!" +
+                        "Hey! Checkout and download my phone Music collection with just a click!" +
                                 ".\nhttp://msg.mn/reach\n--\n"+SharedPrefUtils.getUserName(preferences));
                 sendIntent.setType("text/plain");
                 sendIntent.setPackage(packageNames[position]);

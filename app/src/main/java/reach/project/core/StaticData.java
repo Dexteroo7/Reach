@@ -37,7 +37,7 @@ public final class StaticData {
                 request.setConnectTimeout(request.getConnectTimeout() * 2);
                 request.setReadTimeout(request.getReadTimeout() * 2);
 //                connection.setRequestProperty("Accept-Encoding", "gzip");
-//                connection.setRequestProperty("user-Agent", "gzip");
+//                connection.setRequestProperty("User-Agent", "gzip");
             }
         };
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
@@ -123,6 +123,9 @@ public final class StaticData {
     public static final short DOWNLOAD_LOADER = 5;
     public static final short UPLOAD_LOADER = 6;
     public static final short MY_LIBRARY_LOADER = 7;
+
+    public static final int PLAYER_BUFFER_DEFAULT = 8192;
+    public static final long LUCKY_DELAY = 4000;
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout

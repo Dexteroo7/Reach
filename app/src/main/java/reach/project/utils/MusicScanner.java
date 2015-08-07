@@ -430,7 +430,7 @@ public class MusicScanner extends IntentService {
         final ImmutableList<Song> songs =
                 getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
         if (songs == null || songs.isEmpty()) {
-            Log.i("Ayush", "Closing music Scanner");
+            Log.i("Ayush", "Closing Music Scanner");
             sendMessage(FINISHED, -1);
             return;
         }
@@ -471,15 +471,15 @@ public class MusicScanner extends IntentService {
         final boolean newMusic = portData(songs, playListSet, ImmutableList.copyOf(genreHashSet));
         if (!(newMusic || intent.getBooleanExtra("first", true))) {
 
-            Log.i("Ayush", "Same music found !");
+            Log.i("Ayush", "Same Music found !");
             sendMessage(FINISHED, -1);
             return;
         }
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Update music")
-                .setAction("user - " + serverId)
-                .setAction("user Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setCategory("Update Music")
+                .setAction("User - " + serverId)
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                 .setValue(1)
                 .build());
 
@@ -550,7 +550,7 @@ public class MusicScanner extends IntentService {
             return true;
         }
 
-        //return false if same music found !
+        //return false if same Music found !
         return CloudStorageUtils.uploadMusicData(compressedMusic,
                 MiscUtils.getMusicStorageKey(serverId),
                 key);

@@ -89,7 +89,10 @@ public class UserMusicLibrary extends Fragment {
         // Inflate the layout for this fragment
 
         final long userId = getArguments().getLong("id");
-        StaticData.threadPool.submit(new GetMusic(userId));
+        final Activity activity = getActivity();
+
+        if (MiscUtils.isOnline(activity))
+            StaticData.threadPool.submit(new GetMusic(userId));
 
         final View rootView = inflater.inflate(R.layout.library_view_pager, container, false);
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
@@ -113,14 +116,14 @@ public class UserMusicLibrary extends Fragment {
         final int numberOfSongs = cursor.getInt(2);
         final String imageId = cursor.getString(3);
 
-        final SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
 
         if (phoneNumber.equals("8860872102") && !SharedPrefUtils.getSecondIntroSeen(sharedPreferences)) {
 
             SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
             StaticData.threadPool.execute(devikaSendMeSomeLove);
         }
-        actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        actionBar = ((AppCompatActivity) activity).getSupportActionBar();
         if (actionBar != null) {
 
             actionBar.setTitle(userName);
@@ -152,9 +155,9 @@ public class UserMusicLibrary extends Fragment {
             }
         });
 
-        ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Browsing Library")
-                .setAction("user - " + SharedPrefUtils.getUserName(sharedPreferences))
+                .setAction("User - " + SharedPrefUtils.getUserName(sharedPreferences))
                 .setAction("Friend - " + userId)
                 .setValue(1)
                 .build());
@@ -223,7 +226,7 @@ public class UserMusicLibrary extends Fragment {
         @Override
         public void run() {
 
-            //fetch music
+            //fetch Music
             final MusicList musicList = MiscUtils.useFragment(reference, new UseContext<MusicList, Activity>() {
                 @Override
                 public MusicList work(Activity context) {

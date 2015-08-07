@@ -175,7 +175,7 @@ public class AccountCreation extends Fragment {
                 if (!StaticData.debugMode) {
                     ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                             .setCategory("Promo Code")
-                            .setAction("user Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                             .setLabel("Code - " + code)
                             .setValue(1)
                             .build());
@@ -309,7 +309,7 @@ public class AccountCreation extends Fragment {
             user.setPhoneNumber(strings[1]);
             user.setPromoCode(strings[2]);
             user.setImageId(imageId);
-            //insert user-object and get the userID
+            //insert User-object and get the userID
             final long id;
             final String toParse;
             final MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<MyString>() {

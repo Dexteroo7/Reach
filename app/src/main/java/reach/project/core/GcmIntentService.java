@@ -123,8 +123,8 @@ public class GcmIntentService extends IntentService {
 //                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
 //                            .setSmallIcon(R.drawable.ic_icon_notif)
 //                            .setContentTitle(userName)
-//                            .setTicker(userName + " wants to access your music")
-//                            .setContentText("wants to access your music")
+//                            .setTicker(userName + " wants to access your Music")
+//                            .setContentText("wants to access your Music")
 //                            .setContentIntent(viewPendingIntent)
 //                            .setPriority(NotificationCompat.PRIORITY_MAX)
 //                            .setWhen(System.currentTimeMillis());
@@ -132,7 +132,7 @@ public class GcmIntentService extends IntentService {
 //            notificationManager.notify(notification_id, notificationBuilder.build());
 //        }
         /**
-         * Service permission granted and rejected notifications
+         * Service permission granted and rejected Notifications
          */
         if (message.contains("PERMISSION_GRANTED") ||
                 message.contains("PERMISSION_REJECTED")) {
@@ -307,7 +307,7 @@ public class GcmIntentService extends IntentService {
 //        }
         /*if( message.startsWith("SYNC_NOTIFICATIONS")) {
 
-            //Pull notifications from server and insert new ones. Accordingly notify the user
+            //Pull Notifications from server and insert new ones. Accordingly notify the User
             final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
             final Optional<NotificationCollection> collection = MiscUtils.autoRetry(new DoWork<NotificationCollection>() {
                 @Override
@@ -319,8 +319,8 @@ public class GcmIntentService extends IntentService {
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
             }
-            final List<Notification> notifications = collection.get().getItems();
-            if(notifications == null || notifications.isEmpty()) {
+            final List<Notification> Notifications = collection.get().getItems();
+            if(Notifications == null || Notifications.isEmpty()) {
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
             }

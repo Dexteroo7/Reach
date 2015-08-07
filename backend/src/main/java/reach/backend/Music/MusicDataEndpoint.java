@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 import javax.inject.Named;
 
-import reach.backend.objectWrappers.MyString;
+import reach.backend.ObjectWrappers.MyString;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -25,8 +25,8 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
         version = "v1",
         resource = "musicVisibility",
         namespace = @ApiNamespace(
-                ownerDomain = "music.backend.reach",
-                ownerName = "music.backend.reach",
+                ownerDomain = "Music.backend.reach",
+                ownerName = "Music.backend.reach",
                 packagePath = ""
         )
 )
@@ -77,7 +77,7 @@ public class MusicDataEndpoint {
      * Updates an existing {@code MusicData}.
      *
      * @param id         the ID of the entity to be updated
-     * @param musicId    the ID of the music object
+     * @param musicId    the ID of the Music object
      * @param visibility the desired state of the entity
      * @return false : re-run musicScanner, true : OK
      */

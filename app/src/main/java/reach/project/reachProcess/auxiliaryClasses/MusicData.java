@@ -32,7 +32,7 @@ public class MusicData implements Parcelable {
     }
 
     private long duration; //found out by the musicHandler
-    private boolean isLiked; //toggled by user
+    private boolean isLiked; //toggled by User
     private long processed; //changes
     private int currentPosition; //changes
     private int primaryProgress; //changes

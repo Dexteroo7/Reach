@@ -173,7 +173,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
 
         if(actionBar != null) {
-            actionBar.setTitle("Share music");
+            actionBar.setTitle("Share Music");
             actionBar.setSubtitle("Select upto 5 Songs");
         }
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));

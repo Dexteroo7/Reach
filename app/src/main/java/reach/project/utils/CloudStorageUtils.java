@@ -291,7 +291,7 @@ public enum CloudStorageUtils {
         if (storage == null)
             return null;
 
-        //getMd5Hash of music data on storage
+        //getMd5Hash of Music data on storage
         String serverHash = "";
         try {
             serverHash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
@@ -322,9 +322,9 @@ public enum CloudStorageUtils {
     }
 
     /**
-     * Uploads the music data to google cloud storage
+     * Uploads the Music data to google cloud storage
      *
-     * @param musicData bytes of music data
+     * @param musicData bytes of Music data
      * @param fileName  the name of file (@MiscUtils.getMusicStorageKey())
      * @param key       the cloud storage key as input stream
      */
@@ -336,13 +336,13 @@ public enum CloudStorageUtils {
         if (storage == null)
             return true;
 
-        //compute hash of current music data
+        //compute hash of current Music data
         final String currentHash = Base64.encodeToString(Hashing.md5().newHasher()
                 .putBytes(musicData)
                 .hash().asBytes(), Base64.DEFAULT).trim();
         Log.i("Ayush", "Current hash = " + currentHash);
 
-        //getMd5Hash of music data on storage
+        //getMd5Hash of Music data on storage
         String hash = "";
         try {
             hash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();

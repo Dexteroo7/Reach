@@ -1,4 +1,4 @@
-package reach.backend.user;
+package reach.backend.User;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
@@ -29,11 +29,11 @@ public class ReachUser {
 
     private int numberOfSongs = 0;
     private String userName = "hello_world";       //Custom Username, can be changed
-    private String imageId = "hello_world";  //user Profile Image
+    private String imageId = "hello_world";  //User Profile Image
     private String gcmId = "hello_world"; //Gcm Cloud Message Id
     private String statusSong = "hello_world"; //Status Song
 
-    private String promoCode = "hello_world"; //promo code of user
+    private String promoCode = "hello_world"; //promo code of User
     private long megaBytesSent;
     private long megaBytesReceived;
     private long timeCreated;

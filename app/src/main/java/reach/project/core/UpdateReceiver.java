@@ -22,6 +22,7 @@ public class UpdateReceiver extends BroadcastReceiver {
         final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         // an Intent broadcast.
         Log.i("Ayush", "Application updated");
+        if (MiscUtils.isOnline(context))
         new Thread(new GCMUpdate(new WeakReference<>(context),
                 SharedPrefUtils.getServerId(sharedPreferences))).start();
     }
