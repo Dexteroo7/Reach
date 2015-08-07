@@ -3,7 +3,7 @@ package reach.project.database.notifications;
 /**
  * Created by dexter on 08/07/15.
  */
-public abstract class NotificationBase {
+public abstract class NotificationBaseLocal {
 
     public static final byte GET_ALL = 0;
     public static final byte GET_READ = 1;
@@ -26,7 +26,7 @@ public abstract class NotificationBase {
     private int read = UN_READ;
     private int expanded = NOT_EXPANDED;
 
-    public NotificationBase portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
+    public NotificationBaseLocal portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
 
         if (base.getTypes().equals(Types.PUSH_ACCEPTED.name()))
             this.setTypes(Types.PUSH_ACCEPTED);
@@ -49,7 +49,7 @@ public abstract class NotificationBase {
         return this;
     }
 
-    public NotificationBase portData(NotificationBase base) {
+    public NotificationBaseLocal portData(NotificationBaseLocal base) {
 
         this.setTypes(base.getTypes());
         this.setHostName(base.getHostName());
@@ -133,8 +133,8 @@ public abstract class NotificationBase {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof NotificationBase)) return false;
-        NotificationBase that = (NotificationBase) o;
+        if (!(o instanceof NotificationBaseLocal)) return false;
+        NotificationBaseLocal that = (NotificationBaseLocal) o;
         return hostId == that.hostId && systemTime == that.systemTime && types == that.types;
 
     }
