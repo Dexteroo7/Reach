@@ -1,10 +1,11 @@
-package reach.backend.music;
+package reach.backend.Music;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.NotFoundException;
 
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 import javax.inject.Named;
@@ -61,7 +62,7 @@ public class MusicDataEndpoint {
             name = "insert",
             path = "musicData",
             httpMethod = ApiMethod.HttpMethod.POST)
-    public MusicData insert(MusicData musicData) {
+    public void insert(MusicData musicData) {
         // Typically in a RESTful API a POST does not have a known ID (assuming the ID is used in the resource path).
         // You should validate that musicData.id has not been set. If the ID type is not supported by the
         // Objectify ID generator, e.g. long or String, then you should generate the unique ID yourself prior to saving.
@@ -69,8 +70,6 @@ public class MusicDataEndpoint {
         // If your client provides the ID then you should probably use PUT instead.
         ofy().save().entity(musicData).now();
         logger.info("Created MusicData with ID: " + musicData.getId());
-
-        return ofy().load().entity(musicData).now();
     }
 
     /**
@@ -86,15 +85,18 @@ public class MusicDataEndpoint {
             path = "musicVisibility/{id}",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public MyString update(@Named("id") long id,
-                           @Named("musicId") int musicId,
+                           @Named("musicId") long musicId,
                            @Named("visibility") boolean visibility) {
 
         MusicData musicData = ofy().load().type(MusicData.class).id(id).now();
 
-        if (musicData == null || musicData.getVisibility() == null) {
+        if (musicData == null) {
             logger.info("visibility error " + id);
             return new MyString("false"); //not found, run scanner
         }
+
+        if (musicData.getVisibility() == null)
+            musicData.setVisibility(new HashMap<Long, Boolean>(500));
 
         musicData.getVisibility().put(musicId, visibility);
         ofy().save().entity(musicData).now();

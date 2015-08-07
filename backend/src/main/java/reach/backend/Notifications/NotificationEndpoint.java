@@ -1,4 +1,4 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;

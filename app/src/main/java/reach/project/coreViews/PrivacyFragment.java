@@ -36,13 +36,12 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
-import reach.backend.entities.userApi.model.MyString;
+import reach.backend.music.musicVisibilityApi.model.MyString;
 import reach.project.R;
 import reach.project.adapter.ReachMusicAdapter;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachSongHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
@@ -186,21 +185,15 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
     private class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
 
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
+        private synchronized void updateDatabase (ContentValues contentValues, long songId, long userId) {
 
-            if(isCancelled() || getActivity() == null || getActivity().isFinishing())
+            if(getActivity() == null || contentValues == null || songId == 0 || userId == 0)
                 return;
-
-            if(!aBoolean)
-                Toast.makeText(getActivity(), "Network error", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            super.onProgressUpdate(values);
-            privacyList.setEnabled(true);
+            Log.i("Ayush", "Toggle Visibility " + getActivity().getContentResolver().update(
+                    ReachSongProvider.CONTENT_URI,
+                    contentValues,
+                    ReachSongHelper.COLUMN_SONG_ID + " = ? and " + ReachSongHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{songId + "", userId + ""}));
         }
 
         /**
@@ -221,31 +214,45 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             updateDatabase(values, params[1], params[2]);
             publishProgress(); //re-enable listView
 
+            boolean failed = false;
+
             try {
-                final MyString response = StaticData.userEndpoint.toggleVisibility(serverId, params[1]).execute();
-                if(response == null || response.getString() == null || response.getString().equals("false")) {
-
-                    //update unsuccessful
-                    values.put(ReachSongHelper.COLUMN_VISIBILITY, params[0]);
-                    updateDatabase(values, params[1], params[2]);
-                    return false;
-                }
+                final MyString response = StaticData.musicVisibility.update(
+                        params[2], //serverId
+                        params[1], //songId
+                        params[0] == 0).execute(); //if 0 (false) make it true and vice-versa
+                if(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+                    failed = true; //mark failed
             } catch (IOException e) {
-                return false;
+                e.printStackTrace();
+                failed = true; //mark failed
             }
-            return true;
+
+            if (failed) {
+                //reset if failed
+                values.put(ReachSongHelper.COLUMN_VISIBILITY, params[0]);
+                updateDatabase(values, params[1], params[2]);
+            }
+
+            return failed;
         }
-    }
 
-    private synchronized void updateDatabase (ContentValues contentValues, long songId, long userId) {
+        @Override
+        protected void onPostExecute(Boolean failed) {
+            super.onPostExecute(failed);
 
-        if(getActivity() == null || contentValues == null || songId == 0 || userId == 0)
-            return;
-        Log.i("Ayush", "Toggle Visibility " + getActivity().getContentResolver().update(
-                ReachSongProvider.CONTENT_URI,
-                contentValues,
-                ReachSongHelper.COLUMN_SONG_ID + " = ? and " + ReachSongHelper.COLUMN_USER_ID + " = ?",
-                new String[]{songId + "", userId + ""}));
+            if(isCancelled() || getActivity() == null || getActivity().isFinishing())
+                return;
+
+            if(failed)
+                Toast.makeText(getActivity(), "Network error", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            privacyList.setEnabled(true);
+        }
     }
 
     @Override

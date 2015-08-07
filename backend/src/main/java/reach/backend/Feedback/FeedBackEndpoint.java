@@ -1,4 +1,4 @@
-package reach.backend.feedback;
+package reach.backend.Feedback;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;

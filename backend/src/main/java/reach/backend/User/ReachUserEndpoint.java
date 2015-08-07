@@ -75,7 +75,7 @@ public class ReachUserEndpoint {
     public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
         final HashSet<String> phoneNumbers;
-        if(contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.size() == 0)
+        if(contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.isEmpty())
             return null;
 
         logger.info(phoneNumbers.size() + " total");

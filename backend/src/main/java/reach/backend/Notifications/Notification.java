@@ -1,4 +1,4 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;

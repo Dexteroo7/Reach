@@ -1,4 +1,4 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 import java.io.Serializable;
 

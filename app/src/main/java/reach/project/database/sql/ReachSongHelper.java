@@ -77,7 +77,8 @@ public class ReachSongHelper extends SQLiteOpenHelper {
                     COLUMN_VISIBILITY
             };
 
-    public static ContentValues contentValuesCreator(Song song, long serverId) {
+    public static ContentValues contentValuesCreator(Song song,
+                                                     long serverId) {
 
         final ContentValues values = new ContentValues();
 

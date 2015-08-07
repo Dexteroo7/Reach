@@ -1,4 +1,4 @@
-package reach.backend.music;
+package reach.backend.Music;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
@@ -21,14 +21,14 @@ public class MusicData {
     private long id = 0;
     //visibility of songs
     @Serialize(zip = true)
-    Map<Integer, Boolean> visibility = new HashMap<>(500);
+    Map<Long, Boolean> visibility = new HashMap<>(500);
 
 
-    public Map<Integer, Boolean> getVisibility() {
+    public Map<Long, Boolean> getVisibility() {
         return visibility;
     }
 
-    public void setVisibility(Map<Integer, Boolean> visibility) {
+    public void setVisibility(Map<Long, Boolean> visibility) {
         this.visibility = visibility;
     }
 

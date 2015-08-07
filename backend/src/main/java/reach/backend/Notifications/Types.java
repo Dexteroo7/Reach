@@ -1,4 +1,4 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 /**
  * Created by dexter on 06/07/15.

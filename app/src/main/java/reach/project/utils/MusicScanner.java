@@ -19,6 +19,8 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
 import java.io.ByteArrayOutputStream;
@@ -33,11 +35,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import reach.backend.music.musicVisibilityApi.model.JsonMap;
+import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.core.ReachApplication;
+import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.MusicList;
 import reach.project.utils.auxiliaryClasses.Playlist;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
@@ -319,7 +325,6 @@ public class MusicScanner extends IntentService {
             final int play_list_name = playLists.getColumnIndex(MediaStore.Audio.Playlists.NAME);
             if (play_list_name == -1 || play_list_id == -1) continue;
             final String playListName = playLists.getString(play_list_name);
-            final long playListId = playLists.getLong(play_list_id);
             if (playListName == null || playListName.equals("")) continue;
 
             final Playlist.Builder builder = new Playlist.Builder();
@@ -430,6 +435,8 @@ public class MusicScanner extends IntentService {
         final ImmutableList<Song> songs =
                 getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
         if (songs == null || songs.isEmpty()) {
+
+            //TODO remove from server ?
             Log.i("Ayush", "Closing Music Scanner");
             sendMessage(FINISHED, -1);
             return;
@@ -483,7 +490,10 @@ public class MusicScanner extends IntentService {
                 .setValue(1)
                 .build());
 
-        //save to database
+        //update music visibility
+        createVisibilityMap(songs);
+
+        //save songs, albums & artists to database
         Log.i("Ayush", "Updating songs");
         MiscUtils.bulkInsertSongs(
                 songs,
@@ -491,6 +501,7 @@ public class MusicScanner extends IntentService {
                 reachArtists,
                 resolver, serverId);
 
+        //save playLists to database
         Log.i("Ayush", "Updating playLists");
         MiscUtils.bulkInsertPlayLists(
                 playListSet,
@@ -554,5 +565,26 @@ public class MusicScanner extends IntentService {
         return CloudStorageUtils.uploadMusicData(compressedMusic,
                 MiscUtils.getMusicStorageKey(serverId),
                 key);
+    }
+
+    private void createVisibilityMap(Iterable<Song> songs) {
+
+        final JsonMap visibilityMap = new JsonMap();
+        for (Song song : songs)
+            visibilityMap.put(song.songId + "", song.visibility);
+
+        final MusicData musicData = new MusicData();
+        musicData.setVisibility(visibilityMap);
+        musicData.setId(serverId);
+
+        //update music visibility data
+        MiscUtils.autoRetry(new DoWork<Void>() {
+            @Override
+            public Void doWork() throws IOException {
+
+                StaticData.musicVisibility.insert(musicData).execute();
+                return null;
+            }
+        }, Optional.<Predicate<Void>>absent());
     }
 }

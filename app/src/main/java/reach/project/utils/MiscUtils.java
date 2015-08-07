@@ -333,7 +333,6 @@ public enum MiscUtils {
                 artists[i++] = ReachArtistHelper.contentValuesCreator(reachArtist);
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
         }
-
     }
 
     /**
