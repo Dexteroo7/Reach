@@ -145,6 +145,7 @@ public final class StaticData {
     public static final NotificationApi notificationApi;
 
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
+    public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
 
     //When using threadPool in ReachProcess, take care, as its a parameter to kill service
     public static final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();

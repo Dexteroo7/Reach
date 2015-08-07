@@ -156,16 +156,18 @@ public class ContactsListFragment extends Fragment implements
                 final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
                         ".\nhttp://letsreach.co/app\n--\n" +
                         SharedPrefUtils.getUserName(sharedPrefs);
-                final EditText input = new EditText(view.getContext());
-
-                input.setBackgroundResource(0);
-                input.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-                input.setTextColor(view.getContext().getResources().getColor(R.color.darkgrey));
-                final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                final LinearLayout input = new LinearLayout(getActivity());
+                final EditText inputText = new EditText(getActivity());
+                inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
+                inputText.setTextColor(getResources().getColor(R.color.darkgrey));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
-                input.setLayoutParams(lp);
-                input.setText(msg);
+                int margin = MiscUtils.dpToPx(20);
+                lp.setMargins(margin, 0, margin, 0);
+                inputText.setLayoutParams(lp);
+                inputText.setText(msg);
+                input.addView(inputText);
 
             }
         }
@@ -850,14 +852,14 @@ public class ContactsListFragment extends Fragment implements
             return emptyInvite;
         }
 
-        public static void showAlert(TextView textView, ArrayAdapter arrayAdapter, final Contact contact) {
+        public static void showAlert(LinearLayout linearLayout, ArrayAdapter arrayAdapter, final Contact contact) {
 
-            final WeakReference<TextView> textViewReference = new WeakReference<>(textView);
+            final WeakReference<LinearLayout> linearLayoutReference = new WeakReference<>(linearLayout);
             final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(arrayAdapter);
 
-            new AlertDialog.Builder(textView.getContext())
+            new AlertDialog.Builder(linearLayout.getContext())
                     .setMessage("Send an invite to " + contact.getUserName() + " ?")
-                    .setView(textView)
+                    .setView(linearLayout)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 
                         final class SendInvite extends AsyncTask<String, Void, Boolean> {
@@ -899,17 +901,18 @@ public class ContactsListFragment extends Fragment implements
 
 
                             final ArrayAdapter adapter = arrayAdapterReference.get();
-                            final TextView input = textViewReference.get();
-                            if (input == null || adapter == null) {
+                            final LinearLayout lLayout = linearLayoutReference.get();
+                            if (lLayout == null || adapter == null) {
                                 dialog.dismiss();
                                 return;
                             }
 
-                            final String txt = input.getText().toString();
+                            TextView inputText = (TextView) lLayout.getChildAt(0);
+                            final String txt = inputText.getText().toString();
                             if (!TextUtils.isEmpty(txt))
                                 new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
                             else
-                                Toast.makeText(input.getContext(), "Please enter an invite message", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(lLayout.getContext(), "Please enter an invite message", Toast.LENGTH_SHORT).show();
 
                             contact.setInviteSent(true);
                             adapter.notifyDataSetChanged();

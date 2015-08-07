@@ -20,6 +20,7 @@ import android.util.Pair;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.collect.ImmutableList;
+import com.localytics.android.Localytics;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,11 +30,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import reach.project.core.ReachApplication;
+import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachPlayListHelper;
@@ -476,12 +480,16 @@ public class MusicScanner extends IntentService {
             return;
         }
 
-        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Update Music")
-                .setAction("User - " + serverId)
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                .setValue(1)
-                .build());
+        if (!StaticData.debugMode) {
+            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Update Music")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setValue(1)
+                    .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            Localytics.tagEvent("Update Music", tagValues);
+        }
 
         //save to database
         Log.i("Ayush", "Updating songs");

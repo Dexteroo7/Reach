@@ -31,6 +31,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
+import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -331,7 +332,7 @@ public class AccountCreation extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ReachUser user) {
+        protected void onPostExecute(final ReachUser user) {
 
             super.onPostExecute(user);
             final FragmentActivity activity = getActivity();
@@ -344,6 +345,20 @@ public class AccountCreation extends Fragment {
             }
 
             ReachActivity.serverId = user.getId();
+            if (!StaticData.debugMode) {
+                if (user.getId() != 0) {
+                    StaticData.threadPool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            String locID = Localytics.getCustomerId();
+                            if (locID == null || TextUtils.isEmpty(locID)) {
+                                Localytics.setCustomerId(String.valueOf(user.getPhoneNumber()));
+                                Localytics.setCustomerFullName(user.getUserName());
+                            }
+                        }
+                    });
+                }
+            }
             SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS), user);
             final Intent intent = new Intent(activity, MusicScanner.class);
             intent.putExtra("messenger", messenger);

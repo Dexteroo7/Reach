@@ -38,10 +38,13 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.localytics.android.Localytics;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.project.R;
@@ -140,11 +143,15 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             if (!StaticData.debugMode) {
                 ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Push song")
-                        .setAction("User - " + SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                        .setLabel("Receiver - " + pushContainer.getCustomMessage() + ", Songs - " + pushContainer.getSongCount())
+                        .setLabel("Receiver - " + pushContainer.getReceiverName() + ", Songs - " + pushContainer.getSongCount())
                         .setValue(pushContainer.getSongCount())
                         .build());
+                Map<String, String> tagValues = new HashMap<>();
+                tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+                tagValues.put("Receiver", pushContainer.getReceiverName());
+                tagValues.put("Songs", String.valueOf(pushContainer.getSongCount()));
+                Localytics.tagEvent("Push song", tagValues);
             }
             if (isRemoving() || isDetached())
                 return;

@@ -24,11 +24,14 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.localytics.android.Localytics;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -522,16 +525,23 @@ public class ProcessManager extends Service implements
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
-
-        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Play song")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                .setLabel("Song - " + musicData.getDisplayName())
-                .setValue(1)
-                .build());
-
         final String toSend = new Gson().toJson(musicData, MusicData.class);
         SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS), toSend);
+        /**
+         * GA stuff
+         */
+        if (!StaticData.debugMode) {
+            ((ReachApplication)getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Play song")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setLabel("Song - " + musicData.getDisplayName())
+                    .setValue(1)
+                    .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("Song", musicData.getDisplayName());
+            Localytics.tagEvent("Play song", tagValues);
+        }
 
         switch (notificationState) {
 
@@ -581,11 +591,14 @@ public class ProcessManager extends Service implements
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Download Fail")
-//                    .setAction("User - " + reachDatabase.getSenderId() + " sending song to " + reachDatabase.getReceiverId() + " timedOut " + reachDatabase.getLogicalClock())
                     .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                     .setLabel("Song - " + songName)
                     .setValue(1)
                     .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("Song", songName);
+            Localytics.tagEvent("Download Fail", tagValues);
         }
     }
 
@@ -1026,6 +1039,10 @@ public class ProcessManager extends Service implements
                     .setLabel("Song - " + songName)
                     .setValue(1)
                     .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("Song", songName);
+            Localytics.tagEvent(missType, tagValues);
         }
     }
 

@@ -26,11 +26,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import reach.project.R;
 import reach.project.core.PushActivity;
@@ -155,12 +158,18 @@ public class UserMusicLibrary extends Fragment {
             }
         });
 
-        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Browsing Library")
-                .setAction("User - " + SharedPrefUtils.getUserName(sharedPreferences))
-                .setAction("Friend - " + userId)
-                .setValue(1)
-                .build());
+        if (!StaticData.debugMode) {
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Browsing Library")
+                    .setAction("User - " + SharedPrefUtils.getUserName(sharedPreferences))
+                    .setAction("Friend - " + userId)
+                    .setValue(1)
+                    .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("Friend", String.valueOf(userId));
+            Localytics.tagEvent("Browsing Library", tagValues);
+        }
 
         return rootView;
     }

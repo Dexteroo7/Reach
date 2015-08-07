@@ -10,8 +10,6 @@ import com.localytics.android.LocalyticsActivityLifecycleCallbacks;
 
 import reach.project.R;
 
-////meant for release
-
 /**
  * Created by ashish on 23/3/15.
  */
@@ -20,9 +18,9 @@ public class ReachApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        registerActivityLifecycleCallbacks(
-                new LocalyticsActivityLifecycleCallbacks(this));
+        if (!StaticData.debugMode)
+            registerActivityLifecycleCallbacks(
+                    new LocalyticsActivityLifecycleCallbacks(this));
     }
 
     public synchronized Tracker getTracker() {
