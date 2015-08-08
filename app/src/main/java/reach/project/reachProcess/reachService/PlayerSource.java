@@ -42,7 +42,7 @@ public final class PlayerSource implements Runnable, Closeable {
         this.handler = handler;
         this.contentLength = contentLength;
         this.source = new FileInputStream(path).getChannel();
-        this.sourceStream = new PipedInputStream(pipedOutputStream);
+        this.sourceStream = new PipedInputStream(pipedOutputStream, StaticData.PLAYER_BUFFER_DEFAULT);
         this.sinkChannel = Channels.newChannel(pipedOutputStream);
     }
 

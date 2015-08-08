@@ -21,7 +21,14 @@ public class CircleTransform implements Transformation {
         if (squaredBitmap != source)
             source.recycle();
 
-        final Bitmap bitmap = Bitmap.createBitmap(size, size, source.getConfig());
+        final Bitmap bitmap;
+        try {
+            bitmap = Bitmap.createBitmap(size, size, source.getConfig());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return squaredBitmap;
+        }
+
         final Paint paint = new Paint();
         paint.setShader(new BitmapShader(squaredBitmap,
                 BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP));

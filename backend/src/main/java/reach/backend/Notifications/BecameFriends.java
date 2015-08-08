@@ -67,11 +67,6 @@ public class BecameFriends extends NotificationBase {
     }
 
     @Override
-    public void setNotificationId(int notificationId) {
-        super.setNotificationId(notificationId);
-    }
-
-    @Override
     public boolean equals(Object o) {
         return super.equals(o);
     }

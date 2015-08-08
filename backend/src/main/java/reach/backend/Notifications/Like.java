@@ -72,22 +72,7 @@ public class Like extends NotificationBase {
 
     @Override
     public int getNotificationId() {
-        return super.getNotificationId();
-    }
-
-    @Override
-    public void setNotificationId(int notificationId) {
-        super.setNotificationId(notificationId);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+        return hashCode();
     }
 
     @Override
@@ -98,5 +83,24 @@ public class Like extends NotificationBase {
     @Override
     public void setRead(int read) {
         super.setRead(read);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Like)) return false;
+        if (!super.equals(o)) return false;
+
+        Like like = (Like) o;
+
+        return !(songName != null ? !songName.equals(like.songName) : like.songName != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (songName != null ? songName.hashCode() : 0);
+        return result;
     }
 }

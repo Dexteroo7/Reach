@@ -229,25 +229,36 @@ public class MessagingEndpoint {
         if (client == null)
             return null;
 
+        //remove from both received and sent
         if (client.getReceivedRequests() != null)
             client.getReceivedRequests().remove(sender.getId());
+        if (client.getSentRequests() != null)
+            client.getSentRequests().remove(sender.getId());
+
+        //remove from both received and sent
         if (sender.getSentRequests() != null)
             sender.getSentRequests().remove(clientId);
+        if (sender.getReceivedRequests() != null)
+            sender.getReceivedRequests().remove(clientId);
 
         if (type.equals("PERMISSION_GRANTED")) {
 
             //adding both parties to each others reach :)
-            if (client.getSentRequests() != null)
-                client.getSentRequests().remove(sender.getId());
-            if (sender.getReceivedRequests() != null)
-                sender.getReceivedRequests().remove(clientId);
-
             if (client.getMyReach() == null)
                 client.setMyReach(new HashSet<Long>());
             log.info("Adding MyReach To " + client.getUserName() + " " + client.getMyReach().add(sender.getId()));
             if (sender.getMyReach() == null)
                 sender.setMyReach(new HashSet<Long>());
             log.info("Adding MyReach To " + sender.getUserName() + " " + sender.getMyReach().add(clientId));
+        } else {
+
+            //remove from friends
+            if (client.getMyReach() == null)
+                client.setMyReach(new HashSet<Long>());
+            log.severe("Removing from reach " + client.getUserName() + " " + client.getMyReach().remove(sender.getId()));
+            if (sender.getMyReach() == null)
+                sender.setMyReach(new HashSet<Long>());
+            log.severe("Removing from reach " + sender.getUserName() + " " + sender.getMyReach().remove(clientId));
         }
 
         ofy().save().entities(client, sender).now();

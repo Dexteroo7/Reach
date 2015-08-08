@@ -388,7 +388,6 @@ public class Player {
                     continue;
                 }
                 //Log.i("Downloader", frameHeader.mode() + " " + frameHeader.frequency());
-
                 short[] toFeed = null;
                 try {
                     toFeed = ((SampleBuffer) decoder.decodeFrame(frameHeader, bitStream)).getBuffer();

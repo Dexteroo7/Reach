@@ -62,17 +62,7 @@ public class NotificationBase {
     public int getNotificationId() {
 
         //basically the hashcode
-        if(this.types == null || this.types == Types.DEFAULT || this.hostId == 0 || this.systemTime == 0)
-            throw new IllegalStateException("Notification uninitialized !");
-
-        int result = types.name().hashCode();
-        result = 31 * result + (int) (hostId ^ (hostId >>> 32));
-        result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
-        return result;
-    }
-
-    public void setNotificationId(int notificationId) {
-        //nothing to do here ! :)
+        return hashCode();
     }
 
     @Override
@@ -83,16 +73,14 @@ public class NotificationBase {
         NotificationBase base = (NotificationBase) o;
 
         if (hostId != base.hostId) return false;
-        if (systemTime != base.systemTime) return false;
         return types == base.types;
 
     }
 
     @Override
     public int hashCode() {
-        int result = types.hashCode();
+        int result = types.name().hashCode();
         result = 31 * result + (int) (hostId ^ (hostId >>> 32));
-        result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
         return result;
     }
 

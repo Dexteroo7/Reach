@@ -17,7 +17,7 @@ import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.List;
 
 import reach.backend.entities.userApi.model.ReceivedRequest;
@@ -122,9 +122,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                 }
             };
 
-            //pass weak reference to allow garbage collection
-            accept.setTag(new Object[]{receivedRequest.getId(), new WeakReference<>(onResult)});
-
+            accept.setTag(new Object[]{receivedRequest.getId(), onResult});
             accept.setOnClickListener(acceptClick);
             reject.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -238,12 +236,12 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                     return;
                 }
 
-                if (!(unCastReference instanceof WeakReference)) {
+                if (!(unCastReference instanceof SoftReference)) {
                     Log.i("Ayush", "Fail of 4th order");
                     return;
                 }
 
-                final Object unCastResult = ((WeakReference) unCastReference).get();
+                final Object unCastResult = ((SoftReference) unCastReference).get();
                 if (unCastResult == null) {
                     Log.i("Ayush", "REFERENCE LOST");
                     return;
@@ -276,7 +274,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             //disable and send request
             accept.setEnabled(false);
             //hostId, reference, view to enable
-            new HandleAccept().executeOnExecutor(StaticData.threadPool, data[0], data[1], accept);
+            new HandleAccept().executeOnExecutor(StaticData.threadPool, data[0], new SoftReference<>(data[1]), accept);
         }
     };
 
