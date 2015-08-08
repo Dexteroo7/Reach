@@ -2,16 +2,12 @@ package reach.backend.Notifications;
 
 import com.googlecode.objectify.annotation.Subclass;
 
-import java.io.Serializable;
-
 /**
  * Created by dexter on 08/07/15.
  */
 
 @Subclass (name = "BecameFriends")
-public class BecameFriends extends NotificationBase implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class BecameFriends extends NotificationBase {
 
     @Override
     public Types getTypes() {

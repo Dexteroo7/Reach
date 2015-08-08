@@ -45,10 +45,11 @@
     <orderEntry type="library" exported="" name="objectify-5.1.5" level="project" />
     <orderEntry type="library" exported="" name="javax.servlet-api-3.1.0" level="project" />
     <orderEntry type="library" exported="" name="gcm-server-1.0.2" level="project" />
-    <orderEntry type="library" exported="" name="wire-runtime-1.8.0" level="project" />
+    <orderEntry type="library" exported="" name="reflections-0.9.10" level="project" />
     <orderEntry type="library" exported="" name="appengine-api-1.0-sdk-1.9.23" level="project" />
     <orderEntry type="library" exported="" name="guava-18.0" level="project" />
     <orderEntry type="library" exported="" name="json-simple-1.1" level="project" />
-    <orderEntry type="library" exported="" name="okio-1.2.0" level="project" />
+    <orderEntry type="library" exported="" name="javassist-3.18.2-GA" level="project" />
+    <orderEntry type="library" exported="" name="annotations-2.0.1" level="project" />
   </component>
 </module>

@@ -13,5 +13,5 @@ public enum Types {
     LIKE,
     PUSH,
     BECAME_FRIENDS, //2-way
-    PUSH_ACCEPTED
+    PUSH_ACCEPTED;
 }

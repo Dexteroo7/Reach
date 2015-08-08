@@ -2,7 +2,6 @@ package reach.backend.Notifications;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
-import com.googlecode.objectify.annotation.Serialize;
 import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.Collections;
@@ -21,7 +20,7 @@ public class Notification {
     @Id
     private long id = 0;
     //The notification
-    @Serialize(zip = true)
+    @Unindex
     private Set<NotificationBase> notifications = Collections.newSetFromMap(new LinkedHashMap<NotificationBase, Boolean>() {
         protected boolean removeEldestEntry(Map.Entry<NotificationBase, Boolean> eldest) {
             return size() > NotificationBase.DEFAULT_LIST_LIMIT;

@@ -11,8 +11,9 @@ import java.util.logging.Logger;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.User.ReachUser;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static reach.backend.OfyService.ofy;
 
 /**
  * WARNING: This generated code is intended as a sample or starting point for using a
@@ -62,13 +63,16 @@ public class MusicDataEndpoint {
             name = "insert",
             path = "musicData",
             httpMethod = ApiMethod.HttpMethod.POST)
-    public void insert(MusicData musicData) {
+    public void insert(MusicData musicData, @Named("visibleSongs") int visibleSongs) {
         // Typically in a RESTful API a POST does not have a known ID (assuming the ID is used in the resource path).
         // You should validate that musicData.id has not been set. If the ID type is not supported by the
         // Objectify ID generator, e.g. long or String, then you should generate the unique ID yourself prior to saving.
         //
         // If your client provides the ID then you should probably use PUT instead.
-        ofy().save().entity(musicData).now();
+        //update number of "VISIBLE SONGS"
+        final ReachUser user = ofy().load().type(ReachUser.class).id(musicData.getId()).now();
+        user.setNumberOfSongs(visibleSongs);
+        ofy().save().entities(musicData, user).now();
         logger.info("Created MusicData with ID: " + musicData.getId());
     }
 
@@ -89,14 +93,12 @@ public class MusicDataEndpoint {
                            @Named("visibility") boolean visibility) {
 
         MusicData musicData = ofy().load().type(MusicData.class).id(id).now();
+        if (musicData == null || musicData.getVisibility() == null) {
 
-        if (musicData == null) {
-            logger.info("visibility error " + id);
-            return new MyString("false"); //not found, run scanner
-        }
-
-        if (musicData.getVisibility() == null)
+            musicData = new MusicData();
+            musicData.setId(id);
             musicData.setVisibility(new HashMap<Long, Boolean>(500));
+        }
 
         musicData.getVisibility().put(musicId, visibility);
         ofy().save().entity(musicData).now();

@@ -1454,20 +1454,15 @@ public class ReachActivity extends AppCompatActivity implements
                         cursor.close();
                         return;
                     }
-                    MiscUtils.autoRetryAsync(new DoWork<reach.backend.entities.messaging.model.MyString>() {
+                    MiscUtils.autoRetryAsync(new DoWork<Void>() {
                         @Override
-                        public reach.backend.entities.messaging.model.MyString doWork() throws IOException {
+                        public Void doWork() throws IOException {
 
-                            StaticData.notificationApi.addLike(currentPlaying.getSenderId(),
+                            return StaticData.notificationApi.addLike(currentPlaying.getSenderId(),
                                     serverId,
                                     currentPlaying.getDisplayName()).execute();
-                            return null;
-                            //TODO send notification
-//                        return StaticData.messagingEndpoint.messagingEndpoint().sendManualNotification(
-//                                currentPlaying.getSenderId(), 0, "likes " + currentPlaying.getDisplayName(),
-//                                SharedPrefUtils.getUserName(preferences)).execute();
                         }
-                    }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>absent());
+                    }, Optional.<Predicate<Void>>absent());
                     currentPlaying.setIsLiked(true);
                     ((ImageView) view).setImageResource(R.drawable.like_pink);
                 } else {

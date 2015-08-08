@@ -1,13 +1,9 @@
 package reach.backend.Notifications;
 
-import java.io.Serializable;
-
 /**
  * Created by dexter on 08/07/15.
  */
-public class NotificationBase implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class NotificationBase {
 
     public static final int DEFAULT_LIST_LIMIT = 150;
 

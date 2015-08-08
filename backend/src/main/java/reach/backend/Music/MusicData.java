@@ -4,6 +4,7 @@ import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Serialize;
+import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,17 +13,17 @@ import java.util.Map;
  * Created by dexter on 06/07/15.
  */
 
-@Cache
 @Entity
+@Cache
 public class MusicData {
 
     //will be same as ReachUser id
     @Id
     private long id = 0;
     //visibility of songs
+    @Unindex
     @Serialize(zip = true)
-    Map<Long, Boolean> visibility = new HashMap<>(500);
-
+    private Map<Long, Boolean> visibility = new HashMap<>(500);
 
     public Map<Long, Boolean> getVisibility() {
         return visibility;

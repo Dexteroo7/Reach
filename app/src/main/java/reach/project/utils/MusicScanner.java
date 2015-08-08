@@ -74,6 +74,8 @@ public class MusicScanner extends IntentService {
     private final LongSparseArray<Song> songSparse = new LongSparseArray<>();
     private final HashSet<String> genreHashSet = new HashSet<>();
 
+    //counter
+    private int visibleSongs = 0;
     private long serverId;
     private ContentResolver resolver;
 
@@ -200,9 +202,9 @@ public class MusicScanner extends IntentService {
 
                     builder.visibility(false);
                 else
-                    builder.visibility(true);
+                    builder.visibility(-1 < visibleSongs++); //increment and mark as true
             } else
-                builder.visibility(visibility == 1);
+                builder.visibility(visibility == 1 && -1 < visibleSongs++); //increment and mark as true
 
             if (music_column_year != -1)
                 builder.year(musicCursor.getInt(music_column_year));
@@ -582,7 +584,7 @@ public class MusicScanner extends IntentService {
             @Override
             public Void doWork() throws IOException {
 
-                StaticData.musicVisibility.insert(musicData).execute();
+                StaticData.musicVisibility.insert(visibleSongs, musicData).execute();
                 return null;
             }
         }, Optional.<Predicate<Void>>absent());

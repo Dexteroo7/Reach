@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.google.common.base.Optional;
@@ -32,13 +33,10 @@ import reach.project.database.notifications.Types;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.utils.auxiliaryClasses.UseFragment;
 
 public class NotificationFragment extends Fragment {
 
     private SuperInterface mListener;
-
-    private ReachNotificationAdapter adapter;
 
     private static final List<NotificationBaseLocal> notifications = new ArrayList<>();
     private static final AtomicBoolean refreshing = new AtomicBoolean(false);
@@ -61,13 +59,17 @@ public class NotificationFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        final ReachNotificationAdapter adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
+
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
-        adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
 
-        refreshing.set(true);
-        new NotificationSync().executeOnExecutor(StaticData.threadPool);
+        if (!refreshing.get()) {
+
+            refreshing.set(true);
+            new NotificationSync().executeOnExecutor(StaticData.threadPool, adapter);
+        }
 
         return rootView;
     }
@@ -113,10 +115,12 @@ public class NotificationFragment extends Fragment {
         }
     };
 
-    private static final class NotificationSync extends AsyncTask<Void, Void, Boolean> {
+    private static final class NotificationSync extends AsyncTask<ArrayAdapter, Void, ArrayAdapter> {
 
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected ArrayAdapter doInBackground(ArrayAdapter... params) {
+
+            notifications.clear();
 
             final Optional<List<NotificationBase>> list = MiscUtils.autoRetry(
                     new DoWork<List<NotificationBase>>() {
@@ -129,12 +133,11 @@ public class NotificationFragment extends Fragment {
                     }, Optional.<Predicate<List<NotificationBase>>>absent());
 
             if (!list.isPresent())
-                return false;
+                return params[0];
 
             /**
              * Clear all Notifications and add latest ones
              */
-            notifications.clear();
             for (NotificationBase base : list.get()) {
 
                 if(base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
@@ -175,18 +178,15 @@ public class NotificationFragment extends Fragment {
             }
 
             refreshing.set(false);
-            return true;
+            return params[0];
         }
         @Override
-        protected void onPostExecute(Boolean aVoid) {
-            super.onPostExecute(aVoid);
-            MiscUtils.useFragment(reference, new UseFragment<Void, NotificationFragment>() {
-                @Override
-                public Void work(NotificationFragment fragment) {
-                    fragment.adapter.notifyDataSetChanged();
-                    return null;
-                }
-            });
+        protected void onPostExecute(final ArrayAdapter adapter) {
+
+            super.onPostExecute(adapter);
+            if (adapter != null)
+                adapter.notifyDataSetChanged();
+            refreshing.set(false);
         }
     }
 }

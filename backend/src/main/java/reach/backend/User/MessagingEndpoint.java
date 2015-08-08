@@ -64,6 +64,13 @@ public class MessagingEndpoint {
     private static final String API_KEY = System.getProperty("gcm.api.key");
 //    private static final String API = "AIzaSyAYAjGP-6Xsz06ElmSv8yABvb8u6HFOP7Y";
 
+    public static MessagingEndpoint messagingEndpoint = null;
+    public static MessagingEndpoint getInstance() {
+        if (messagingEndpoint == null)
+            messagingEndpoint = new MessagingEndpoint();
+        return messagingEndpoint;
+    }
+
     public MyBoolean sendMessage(@Named("message") final String message,
                                  @Named("hostId") final long hostId,
                                  @Named("clientId") final long clientId) {

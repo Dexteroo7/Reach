@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static reach.backend.OfyService.ofy;
 
 /**
  * WARNING: This generated code is intended as a sample or starting point for using a

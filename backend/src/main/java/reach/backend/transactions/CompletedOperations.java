@@ -9,8 +9,9 @@ import com.googlecode.objectify.annotation.Unindex;
 /**
  * Created by Dexter on 12-04-2015.
  */
-@Cache
+
 @Entity
+@Cache
 @Index
 public class CompletedOperations {
 

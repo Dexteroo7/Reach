@@ -1,12 +1,14 @@
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -17,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
-import sun.jvm.hotspot.runtime.Bytes;
 import sun.misc.Cleaner;
 import sun.nio.ch.DirectBuffer;
 
@@ -63,6 +64,25 @@ public final class Main {
     }
 
     public static void main(String[] args) {
+
+        AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+        asyncHttpClient.prepareGet("http://www.ning.com/").execute(new AsyncCompletionHandler<Response>(){
+
+            @Override
+            public Response onCompleted(Response response) throws Exception{
+                // Do something with the Response
+                // ...
+                response.getResponseBodyAsStream();
+                return response;
+            }
+
+            @Override
+            public void onThrowable(Throwable t){
+                // Something wrong happened.
+            }
+        });
+
+
 
         while (true) {
 

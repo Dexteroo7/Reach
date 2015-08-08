@@ -51,6 +51,10 @@
         <url-pattern>/refreshGCM</url-pattern>
     </servlet-mapping>
     //////////////////////////////////
+    <listener>
+        <listener-class>reach.backend.Servlets.ObjectifyLoaderContextListener</listener-class>
+    </listener>
+    //////////////////////////////////
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

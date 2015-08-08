@@ -37,11 +37,11 @@ import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.DoWork;
 
 public class NumberVerification extends Fragment {
 

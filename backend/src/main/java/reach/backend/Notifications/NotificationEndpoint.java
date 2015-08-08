@@ -19,9 +19,10 @@ import javax.annotation.Nonnull;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.User.MessagingEndpoint;
 import reach.backend.User.ReachUser;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static reach.backend.OfyService.ofy;
 
 /**
  * WARNING: This generated code is intended as a sample or starting point for using a
@@ -68,13 +69,17 @@ public class NotificationEndpoint {
         final Notification database = ofy().load().type(Notification.class).id(id).now();
         if (database == null || database.getNotifications() == null)
             return null;
+        return new MyString(getNewCount(database.getNotifications()) + "");
+    }
+
+    private int getNewCount(Iterable<NotificationBase> notifications) {
 
         int count = 0;
-        for (NotificationBase base : database.getNotifications())
+        for (NotificationBase base : notifications)
             if (base.getRead() == NotificationBase.NEW)
                 count++;
 
-        return new MyString(count + "");
+        return count;
     }
 
     /**
@@ -174,7 +179,7 @@ public class NotificationEndpoint {
                 count++;
             }
 
-        ofy().save().entity(database);
+        ofy().save().entity(database).now();
         logger.info("Marking as read " + count + " " + needToUpdate);
     }
 
@@ -203,10 +208,16 @@ public class NotificationEndpoint {
         like.setSongName(songName);
 
         final Notification notification = getNotification(receiverId);
-        notification.getNotifications().add(like);
-        ofy().save().entity(notification);
+        if (notification.getNotifications().add(like)) {
 
-        logger.info("Adding like " + senderId + " " + songName);
+            ofy().save().entity(notification).now();
+            logger.info("Adding like " + senderId + " " + songName);
+            final int count = getNewCount(notification.getNotifications());
+            if (count > 0) {
+                final String message = "SYNC" + count;
+                MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
+            }
+        }
     }
 
     /**
@@ -238,10 +249,16 @@ public class NotificationEndpoint {
         push.setSize(size);
 
         final Notification notification = getNotification(receiverId);
-        notification.getNotifications().add(push);
-        ofy().save().entity(notification).now();
+        if (notification.getNotifications().add(push)) {
 
-        logger.info("Adding push " + senderId + " " + firstSongName + " " + size);
+            ofy().save().entity(notification).now();
+            logger.info("Adding push " + senderId + " " + firstSongName + " " + size);
+            final int count = getNewCount(notification.getNotifications());
+            if (count > 0) {
+                final String message = "SYNC" + count;
+                MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
+            }
+        }
     }
 
     /**
@@ -309,6 +326,7 @@ public class NotificationEndpoint {
         pushAccepted.setFirstSongName(firstSongName);
         pushAccepted.setSize(size);
 
+        //also remove
         final Notification notification = getNotification(receiverId);
         final Iterator<NotificationBase> queue = notification.getNotifications().iterator();
         while (queue.hasNext()) {

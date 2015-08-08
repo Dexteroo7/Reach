@@ -186,7 +186,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             if(context == null || context.getContentResolver() == null)
                 return true;
 
-            else if(message.equals("PERMISSION_GRANTED") && context.getContentResolver() != null) {
+            else if(message.equals("PERMISSION_GRANTED")) {
 
                 final ContentValues values = new ContentValues();
                 values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);

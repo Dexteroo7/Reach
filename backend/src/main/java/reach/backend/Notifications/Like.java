@@ -2,15 +2,11 @@ package reach.backend.Notifications;
 
 import com.googlecode.objectify.annotation.Subclass;
 
-import java.io.Serializable;
-
 /**
  * Created by dexter on 06/07/15.
  */
 @Subclass(name = "Like")
-public class Like extends NotificationBase implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class Like extends NotificationBase {
 
     private String songName = "";
 

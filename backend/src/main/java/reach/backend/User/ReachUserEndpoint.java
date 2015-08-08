@@ -32,14 +32,13 @@ import java.util.logging.Logger;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
-import reach.backend.OfyService;
 import reach.backend.Transactions.CompletedOperation;
 import reach.backend.Transactions.CompletedOperations;
 import reach.backend.User.FriendContainers.Friend;
 import reach.backend.User.FriendContainers.QuickSync;
 import reach.backend.User.FriendContainers.ReceivedRequest;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static reach.backend.OfyService.ofy;
 
 /**
  * WARNING: This generated code is intended as a sample or starting point for using a
@@ -51,7 +50,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 @Api(
         name = "userApi",
         version = "v1",
-        resource = "User",
+        resource = "user",
         namespace = @ApiNamespace(
                 ownerDomain = "Entities.backend.reach",
                 ownerName = "Entities.backend.reach",
@@ -70,7 +69,7 @@ public class ReachUserEndpoint {
      */
     @ApiMethod(
             name = "phoneBookSync",
-            path = "User/phoneBookSync/",
+            path = "user/phoneBookSync/",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
@@ -95,7 +94,7 @@ public class ReachUserEndpoint {
      */
     @ApiMethod(
             name = "longSync",
-            path = "User/longSync/{clientId}/",
+            path = "user/longSync/{clientId}/",
             httpMethod = ApiMethod.HttpMethod.GET)
     public List<Friend> longSync(@Named("clientId") final long clientId) {
         //sanity checks
@@ -154,7 +153,7 @@ public class ReachUserEndpoint {
      */
     @ApiMethod(
             name = "quickSync",
-            path = "User/quickSync/{clientId}",
+            path = "user/quickSync/{clientId}",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public QuickSync quickSync(@Named("clientId") final long clientId,
                                @Named("ids") List<Long> ids,
@@ -296,7 +295,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "returnUsersNew",
-            path = "User/returnUsersNew/{clientId}/",
+            path = "user/returnUsersNew/{clientId}/",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public Set<ReachFriend> returnUsersNew(@Named("clientId") final long clientId,
                                            final ContactsWrapper contactsWrapper) {
@@ -363,7 +362,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getReceivedRequests",
-            path = "User/getReceivedRequests/{clientId}/",
+            path = "user/getReceivedRequests/{clientId}/",
             httpMethod = ApiMethod.HttpMethod.GET)
     public List<ReceivedRequest> getReceivedRequests(@Named("clientId") final long clientId) {
 
@@ -398,7 +397,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "pingMyReach",
-            path = "User/ping/{clientId}",
+            path = "user/ping/{clientId}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public MyString pingMyReach(@Named("clientId") long clientId) {
 
@@ -409,7 +408,7 @@ public class ReachUserEndpoint {
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
         syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-        final ReachUser clientUser = OfyService.ofy().load().type(ReachUser.class).id(clientId).now();
+        final ReachUser clientUser = ofy().load().type(ReachUser.class).id(clientId).now();
         if (clientUser == null || clientUser.getMyReach() == null || clientUser.getMyReach().size() == 0)
             return null;
         logger.info(clientUser.getUserName() + " sending PONG");
@@ -419,7 +418,7 @@ public class ReachUserEndpoint {
         keysBuilder.add(Key.create(ReachUser.class, clientId));
 
         return new MyString(new MessagingEndpoint().sendMultiCastMessage("PING",
-                OfyService.ofy().load().type(ReachUser.class)
+                ofy().load().type(ReachUser.class)
                         .filterKey("in", keysBuilder.build())
                         .filter("gcmId !=", "")
                         .project("gcmId")) + "");
@@ -427,7 +426,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getMusicWrapper",
-            path = "User/songs/{hostId}",
+            path = "user/songs/{hostId}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public MusicContainer getMusicWrapper(@Named("hostId") long hostId,
                                           @Named("clientId") long clientId,
@@ -486,7 +485,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "updateMusic",
-            path = "User/updateMusic",
+            path = "user/updateMusic",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public void updateMusic(MusicContainer musicContainer) {
 
@@ -532,7 +531,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getStats",
-            path = "User/getStats",
+            path = "user/getStats",
             httpMethod = ApiMethod.HttpMethod.GET)
     public DataCall getStats(@Named("cursor") String cursor) {
 
@@ -540,12 +539,12 @@ public class ReachUserEndpoint {
         final QueryResultIterator<ReachUser> userQueryResultIterator;
 
         if (cursor != null && !cursor.trim().equals(""))
-            userQueryResultIterator = OfyService.ofy().load().type(ReachUser.class)
+            userQueryResultIterator = ofy().load().type(ReachUser.class)
                     .startAt(Cursor.fromWebSafeString(cursor))
                     .limit(200)
                     .iterator();
         else
-            userQueryResultIterator = OfyService.ofy().load().type(ReachUser.class).limit(100).iterator();
+            userQueryResultIterator = ofy().load().type(ReachUser.class).limit(100).iterator();
 
         ReachUser reachUser;
         int count = 0;
@@ -573,7 +572,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getReachUser",
-            path = "User/{hostId}",
+            path = "user/{hostId}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public ReachUser getReachUser(@Named("hostId") long hostId) {
 
@@ -584,7 +583,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getReachFriend",
-            path = "User/friend/{hostId}",
+            path = "user/friend/{hostId}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public ReachFriend getReachFriend(@Named("hostId") long hostId, @Named("clientId") long clientId) {
 
@@ -616,7 +615,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "insert",
-            path = "User",
+            path = "user",
             httpMethod = ApiMethod.HttpMethod.POST)
     public MyString insert(ReachUser user) {
 
@@ -687,7 +686,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getGcmId",
-            path = "User/gcmId/{clientId}",
+            path = "user/gcmId/{clientId}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public MyString getGCMId(@Named("clientId") long clientId) {
 
@@ -711,7 +710,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "updateUserDetails",
-            path = "User/updateUserDetails",
+            path = "user/updateUserDetails",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public void updateUserDetails(@Named("clientId") long clientId, @Named("details") String[] details) {
 
@@ -736,7 +735,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "updateCompletedOperations",
-            path = "User/updateCompletedOperations",
+            path = "user/updateCompletedOperations",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public void addToCompletedOperations(@Named("id") long clientId,
                                          @Named("senderId") long hostId,
@@ -766,7 +765,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "getCompletedOperations",
-            path = "User/getCompletedOperations/{clientId}",
+            path = "user/getCompletedOperations/{clientId}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public HashSet<CompletedOperation> getCompletedOperations(@Named("clientId") long clientId) {
 
@@ -818,7 +817,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "setGCMId",
-            path = "User/gcmId",
+            path = "user/gcmId",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public void setGCMId(@Named("clientId") long clientId, @Named("gcmId") String gcmId) {
 
@@ -841,7 +840,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "isAccountPresentNew",
-            path = "User/isAccountPresentNew/{phoneNumber}",
+            path = "user/isAccountPresentNew/{phoneNumber}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public OldUserContainerNew isAccountPresentNew(@Named("phoneNumber") String phoneNumber) {
 
@@ -856,7 +855,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "storePromoCode",
-            path = "User/storePromoCode/{id}",
+            path = "user/storePromoCode/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public MyString storePromoCode(@Named("id") long id, @Named("promoCode") String promoCode) {
 
@@ -870,7 +869,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "toggleVisibility",
-            path = "User/visibility/{clientId}",
+            path = "user/visibility/{clientId}",
             httpMethod = ApiMethod.HttpMethod.PUT)
     public MyString toggleVisibility(@Named("clientId") long clientId, @Named("songId") long songId) {
 
@@ -933,7 +932,7 @@ public class ReachUserEndpoint {
 
     @ApiMethod(
             name = "updateDatabase",
-            path = "User/updateDatabase",
+            path = "user/updateDatabase",
             httpMethod = ApiMethod.HttpMethod.GET)
     public MyString port() {
 
@@ -948,7 +947,7 @@ public class ReachUserEndpoint {
     ///stuff to remove
     @ApiMethod(
             name = "isAccountPresent",
-            path = "User/isAccountPresent/{phoneNumber}",
+            path = "user/isAccountPresent/{phoneNumber}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public OldUserContainer isAccountPresent(@Named("phoneNumber") String phoneNumber) {
 
