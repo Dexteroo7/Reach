@@ -1026,7 +1026,6 @@ public class ReachActivity extends AppCompatActivity implements
         pausePlayMaximized.setOnClickListener(LocalUtils.pauseClick);
         pausePlayMinimized.setOnClickListener(LocalUtils.pauseClick);
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
-//        queueListView.setOnItemLongClickListener(LocalUtils.myLibraryLongClickListener);
         queueListView.setOnScrollListener(scrollListener);
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
@@ -1111,8 +1110,8 @@ public class ReachActivity extends AppCompatActivity implements
             combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
             emptyTV1 = LocalUtils.getEmptyDownload(params[0]);
             combinedAdapter.addView(emptyTV1, false);
-            combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(params[0], R.layout.reach_queue_item, null, 0));
-
+            combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(params[0], null, 0));
+            queueAdapter.getSwipeLayoutResourceId(0);
             combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(params[0]));
             emptyTV2 = LocalUtils.getEmptyLibrary(params[0]);
             combinedAdapter.addView(emptyTV2, false);

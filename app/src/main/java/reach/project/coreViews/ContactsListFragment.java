@@ -168,7 +168,7 @@ public class ContactsListFragment extends Fragment implements
                 inputText.setLayoutParams(lp);
                 inputText.setText(msg);
                 input.addView(inputText);
-
+                LocalUtils.showAlert(input, inviteAdapter, contact);
             }
         }
     };

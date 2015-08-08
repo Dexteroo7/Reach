@@ -54,6 +54,7 @@ dependencies {
 //    compile 'org.apache.httpcomponents:httpasyncclient:4.1'
 
     // to remove
+    compile "com.daimajia.swipelayout:library:1.2.0@aar"
     compile 'com.viewpagerindicator:library:2.4.1'
     compile 'com.getbase:floatingactionbutton:1.10.0'
     compile 'com.sothree.slidinguppanel:library:3.0.0'
