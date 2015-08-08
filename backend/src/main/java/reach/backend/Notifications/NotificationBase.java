@@ -65,7 +65,7 @@ public class NotificationBase {
         if(this.types == null || this.types == Types.DEFAULT || this.hostId == 0 || this.systemTime == 0)
             throw new IllegalStateException("Notification uninitialized !");
 
-        int result = types.hashCode();
+        int result = types.name().hashCode();
         result = 31 * result + (int) (hostId ^ (hostId >>> 32));
         result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
         return result;

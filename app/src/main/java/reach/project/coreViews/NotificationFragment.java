@@ -1,6 +1,8 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -24,12 +27,14 @@ import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
 import reach.project.adapter.ReachNotificationAdapter;
 import reach.project.core.StaticData;
+import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.notifications.BecameFriends;
 import reach.project.database.notifications.Like;
 import reach.project.database.notifications.NotificationBaseLocal;
 import reach.project.database.notifications.Push;
 import reach.project.database.notifications.PushAccepted;
 import reach.project.database.notifications.Types;
+import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.auxiliaryClasses.DoWork;
@@ -95,8 +100,11 @@ public class NotificationFragment extends Fragment {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
 
-            final NotificationBaseLocal notificationBaseLocal = ((ReachNotificationAdapter)parent.getAdapter()).getItem(position);
-            Types type = notificationBaseLocal.getTypes();
+            final ReachNotificationAdapter adapter = (ReachNotificationAdapter) parent.getAdapter();
+            final NotificationBaseLocal notificationBaseLocal = adapter.getItem(position);
+            final Types type = notificationBaseLocal.getTypes();
+            final long hostID = notificationBaseLocal.getHostId();
+
             switch (type) {
                 case DEFAULT:
                     throw new IllegalArgumentException("Default notification in list !");
@@ -104,8 +112,31 @@ public class NotificationFragment extends Fragment {
                     mListener.anchorFooter(true);
                     break;
                 case BECAME_FRIENDS:
-                    BecameFriends becameFriends = (BecameFriends) notificationBaseLocal;
-                    final long hostID = becameFriends.getHostId();
+                    //check validity
+                    final Cursor cursor = view.getContext().getContentResolver().query(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostID),
+                            new String[]{ReachFriendsHelper.COLUMN_ID},
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{hostID + ""}, null);
+
+                    //check validity
+                    if (cursor == null || !cursor.moveToFirst()) {
+
+                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                            @Override
+                            public Void doWork() throws IOException {
+                                return StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute();
+                            }
+                        }, Optional.<Predicate<Void>>absent());
+
+                        if (cursor != null)
+                            cursor.close();
+                        //fail
+                        adapter.remove(notificationBaseLocal);
+                        Toast.makeText(view.getContext(), "404", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    cursor.close();
                     mListener.onOpenLibrary(hostID);
                     break;
                 case PUSH_ACCEPTED:
@@ -140,13 +171,13 @@ public class NotificationFragment extends Fragment {
              */
             for (NotificationBase base : list.get()) {
 
-                if(base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
+                if (base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
 
                     final BecameFriends becameFriends = new BecameFriends();
                     becameFriends.portData(base);
                     notifications.add(becameFriends);
 
-                } else if(base.getTypes().equals(Types.LIKE.name())) {
+                } else if (base.getTypes().equals(Types.LIKE.name())) {
 
                     final Like like = new Like();
                     like.portData(base);
@@ -154,7 +185,7 @@ public class NotificationFragment extends Fragment {
                     like.setSongName((String) base.get("songName"));
                     notifications.add(like);
 
-                } else if(base.getTypes().equals(Types.PUSH.name())) {
+                } else if (base.getTypes().equals(Types.PUSH.name())) {
 
                     final Push push = new Push();
                     push.portData(base);
@@ -164,7 +195,7 @@ public class NotificationFragment extends Fragment {
                     push.setSize(Integer.parseInt(base.get("size").toString()));
                     notifications.add(push);
 
-                } else if(base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
+                } else if (base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
 
                     final PushAccepted accepted = new PushAccepted();
                     accepted.portData(base);
@@ -180,6 +211,7 @@ public class NotificationFragment extends Fragment {
             refreshing.set(false);
             return params[0];
         }
+
         @Override
         protected void onPostExecute(final ArrayAdapter adapter) {
 

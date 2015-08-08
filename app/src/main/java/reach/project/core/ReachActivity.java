@@ -54,6 +54,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.appsflyer.AppsFlyerLib;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
 import com.google.android.gms.analytics.HitBuilders;
@@ -64,6 +65,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.localytics.android.Localytics;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
@@ -74,8 +76,10 @@ import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import reach.backend.entities.messaging.model.MyBoolean;
@@ -1067,6 +1071,20 @@ public class ReachActivity extends AppCompatActivity implements
 
                     containerFrame.setPadding(0, topPadding, 0, 0);
                     slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
+                    if (!StaticData.debugMode) {
+                        if (serverId != 0) {
+                            StaticData.threadPool.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    String locID = Localytics.getCustomerId();
+                                    if (locID == null || TextUtils.isEmpty(locID)) {
+                                        Localytics.setCustomerId(SharedPrefUtils.getUserNumber(preferences));
+                                        Localytics.setCustomerFullName(SharedPrefUtils.getUserName(preferences));
+                                    }
+                                }
+                            });
+                        }
+                    }
                     fragmentManager.beginTransaction()
                             .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                             .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
@@ -1363,6 +1381,11 @@ public class ReachActivity extends AppCompatActivity implements
                     .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                     .setValue(1)
                     .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("From", String.valueOf(reachDatabase.getSenderId()));
+            tagValues.put("Song", reachDatabase.getDisplayName());
+            Localytics.tagEvent("Transaction - Add Song", tagValues);
         }
     }
 
@@ -1678,6 +1701,9 @@ public class ReachActivity extends AppCompatActivity implements
                             final Tracker t = ((ReachApplication) activity.getApplication()).getTracker();
                             t.setScreenName("reach.project.core.ReachActivity");
                             t.send(new HitBuilders.ScreenViewBuilder().build());
+                            // AppsFlyer
+                            AppsFlyerLib.setAppsFlyerKey("JSwfk37zArmeNLNCd4grKR");
+                            AppsFlyerLib.sendTracking(activity);
                         }
 
                         if (!checkPlayServices(activity)) {

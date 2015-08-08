@@ -14,9 +14,12 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import reach.project.R;
 import reach.project.utils.auxiliaryClasses.DoWork;
@@ -89,11 +92,15 @@ public class PushActivity extends Activity {
                     if (!StaticData.debugMode) {
                         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Accept - Pushed song")
-                                .setAction("User - " + SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                 .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                                 .setLabel("Sender - " + getIntent().getStringExtra("user_name") + ", Songs - " + song_count)
                                 .setValue(song_count)
                                 .build());
+                        Map<String, String> tagValues = new HashMap<>();
+                        tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+                        tagValues.put("Sender", getIntent().getStringExtra("user_name"));
+                        tagValues.put("Songs", String.valueOf(song_count));
+                        Localytics.tagEvent("Accept - Pushed song", tagValues);
                     }
                     pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                     pushAddSong.setAction("process_multiple");

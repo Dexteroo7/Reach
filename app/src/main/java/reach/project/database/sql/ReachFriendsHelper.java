@@ -63,8 +63,8 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
                     COLUMN_HASH //10
             };
 
-    public static final short OFFLINE_REQUEST_GRANTED = 0;
-    public static final short ONLINE_REQUEST_GRANTED = 1;
+    public static final short ONLINE_REQUEST_GRANTED = 0;
+    public static final short OFFLINE_REQUEST_GRANTED = 1;
     public static final short REQUEST_SENT_NOT_GRANTED = 2;
     public static final short REQUEST_NOT_SENT = 3;
 
@@ -112,6 +112,25 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     }
 
     public static ContentValues contentValuesCreator(Friend reachFriend) {
+
+        final ContentValues values = new ContentValues();
+        if(reachFriend.getId() != -1)
+            values.put(COLUMN_ID, reachFriend.getId());
+
+        values.put(COLUMN_PHONE_NUMBER, reachFriend.getPhoneNumber());
+        values.put(COLUMN_USER_NAME, reachFriend.getUserName());
+        values.put(COLUMN_GENRES, new byte[]{});
+        values.put(COLUMN_IMAGE_ID, reachFriend.getImageId());
+        values.put(COLUMN_STATUS_SONG, "hello_world");
+        values.put(COLUMN_NETWORK_TYPE, 0);
+        values.put(COLUMN_NUMBER_OF_SONGS, reachFriend.getNumberOfSongs());
+        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen());
+        values.put(COLUMN_STATUS, reachFriend.getStatus());
+        values.put(COLUMN_HASH, reachFriend.getHash());
+        return values;
+    }
+
+    public static ContentValues contentValuesCreator(reach.backend.notifications.notificationApi.model.Friend reachFriend) {
 
         final ContentValues values = new ContentValues();
         if(reachFriend.getId() != -1)

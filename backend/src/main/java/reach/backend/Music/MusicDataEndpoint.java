@@ -49,11 +49,7 @@ public class MusicDataEndpoint {
             httpMethod = ApiMethod.HttpMethod.GET)
     public MusicData get(@Named("id") long id) throws NotFoundException {
         logger.info("Getting MusicData with ID: " + id);
-        MusicData musicData = ofy().load().type(MusicData.class).id(id).now();
-        if (musicData == null) {
-            throw new NotFoundException("Could not find MusicData with ID: " + id);
-        }
-        return musicData;
+        return ofy().load().type(MusicData.class).id(id).now();
     }
 
     /**

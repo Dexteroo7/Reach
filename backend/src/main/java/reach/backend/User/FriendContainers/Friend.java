@@ -54,7 +54,7 @@ public class Friend {
      * To be used when host is a new friends with status 3
      * @param host the friend
      */
-    public Friend(ReachUser host) {
+    public Friend(ReachUser host, boolean friend, long lastSeen) {
 
         this.id = host.getId();
         this.phoneNumber = host.getPhoneNumber();
@@ -62,11 +62,21 @@ public class Friend {
         this.imageId = host.getImageId();
         this.numberOfSongs = host.getNumberOfSongs();
         this.lastSeen = ReachUser.ONLINE_LIMIT + 1;
-        this.status = 3;
         //in-case dirty check was not set compute
         this.hash = host.getDirtyCheck() == 0 ? host.computeDirtyHash() : host.getDirtyCheck();
-        if(this.hash == 0)
-            throw  new IllegalArgumentException("Hash should not be zero " + this.userName);
+        if (this.hash == 0)
+            throw new IllegalArgumentException("Hash should not be zero " + this.userName);
+
+        //Friend
+        if (friend)
+            if (lastSeen > ReachUser.ONLINE_LIMIT)
+                this.status = 1;     //offline and permission-request granted
+            else
+                this.status = 0;  //online and permission-request granted
+
+        //Not a friend (also request not sent)
+        else
+            this.status = 3; //request not sent and permission not granted
     }
 
     /**

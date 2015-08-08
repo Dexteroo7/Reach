@@ -82,7 +82,7 @@ public class ReachUserEndpoint {
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filter("phoneNumber in", phoneNumbers)
                 .filter("gcmId !=", ""))
-            friends.add(new Friend(user));
+            friends.add(new Friend(user, false, 0));
         return friends;
     }
 
@@ -173,6 +173,7 @@ public class ReachUserEndpoint {
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
         syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
         final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
         if (client == null)
             return null;

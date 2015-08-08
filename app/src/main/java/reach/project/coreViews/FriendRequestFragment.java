@@ -1,6 +1,8 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -25,6 +28,8 @@ import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
 import reach.project.adapter.ReachFriendRequestAdapter;
 import reach.project.core.StaticData;
+import reach.project.database.contentProvider.ReachFriendsProvider;
+import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.auxiliaryClasses.DoWork;
@@ -51,7 +56,29 @@ public class FriendRequestFragment extends Fragment {
 
             final ReachFriendRequestAdapter adapter = (ReachFriendRequestAdapter) parent.getAdapter();
             if (adapter.accepted.get(position)) {
+
                 final ReceivedRequest receivedRequest = adapter.getItem(position);
+                final long userId = receivedRequest.getId();
+
+                //check validity
+                final Cursor cursor = view.getContext().getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                        new String[]{ReachFriendsHelper.COLUMN_ID},
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{userId+""}, null);
+
+                if (cursor == null || !cursor.moveToFirst()) {
+
+                    if (cursor != null)
+                        cursor.close();
+
+                    //fail
+                    adapter.remove(receivedRequest);
+                    Toast.makeText(view.getContext(), "404", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                cursor.close();
+
                 mListener.onOpenLibrary(receivedRequest.getId());
             }
         }

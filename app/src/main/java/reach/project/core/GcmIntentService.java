@@ -165,7 +165,7 @@ public class GcmIntentService extends IntentService {
             final int notification_id = message.hashCode();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            Bundle bundle = new Bundle();
+            final Bundle bundle = new Bundle();
             bundle.putBoolean("oP", true);
             viewIntent.putExtras(bundle);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -210,10 +210,18 @@ public class GcmIntentService extends IntentService {
             final String[] splitter = message.split("`");
 
             final Intent viewIntent;
-            viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.putExtra("type",3);
-            viewIntent.putExtra("manual_title", splitter[2].trim());
-            viewIntent.putExtra("manual_text", splitter[3].trim());
+
+            if (splitter[3].split(" ")[0].equals("likes")) {
+                viewIntent = new Intent(this, ReachActivity.class);
+                viewIntent.putExtra("openPlayer", true);
+            }
+            else {
+                viewIntent = new Intent(this, PushActivity.class);
+                viewIntent.putExtra("type", 3);
+                viewIntent.putExtra("manual_title", splitter[2].trim());
+                viewIntent.putExtra("manual_text", splitter[3].trim());
+            }
+
             viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, message.hashCode(), viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);

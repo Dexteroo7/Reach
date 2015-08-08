@@ -31,6 +31,7 @@ import java.io.IOException;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
@@ -170,6 +171,7 @@ public class NumberVerification extends Fragment {
                 }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
 
                 //start sync
+                ContactsListFragment.synchronizeOnce.set(true);
                 StaticData.threadPool.submit(new ForceSyncFriends(getActivity(), container == null ? 0 : container.getServerId(), params[0]));
                 return new Pair<>(container, params[0]);
             }
