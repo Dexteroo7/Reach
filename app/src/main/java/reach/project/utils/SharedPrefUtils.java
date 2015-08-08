@@ -79,6 +79,10 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString(fileName, hash).apply();
     }
 
+    public static void removeMusicHash(SharedPreferences sharedPreferences, String fileName) {
+        sharedPreferences.edit().remove(fileName).apply();
+    }
+
     public static void storePhoneNumber(SharedPreferences sharedPreferences, String number) {
         sharedPreferences.edit().putString("phoneNumber", number).apply();
     }

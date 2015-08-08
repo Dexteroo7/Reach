@@ -1,4 +1,4 @@
-package reach.backend.feedback;
+package reach.backend.Feedback;
 
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;

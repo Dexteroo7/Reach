@@ -1,8 +1,12 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
+import com.google.appengine.api.memcache.ErrorHandlers;
+import com.google.appengine.api.memcache.Expiration;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.repackaged.com.google.common.cache.CacheBuilder;
 import com.google.appengine.repackaged.com.google.common.cache.CacheLoader;
 import com.google.appengine.repackaged.com.google.common.cache.LoadingCache;
@@ -12,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnegative;
@@ -19,9 +24,11 @@ import javax.annotation.Nonnull;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.User.FriendContainers.Friend;
+import reach.backend.User.MessagingEndpoint;
 import reach.backend.User.ReachUser;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static reach.backend.OfyService.ofy;
 
 /**
  * WARNING: This generated code is intended as a sample or starting point for using a
@@ -68,13 +75,17 @@ public class NotificationEndpoint {
         final Notification database = ofy().load().type(Notification.class).id(id).now();
         if (database == null || database.getNotifications() == null)
             return null;
+        return new MyString(getNewCount(database.getNotifications()) + "");
+    }
+
+    private int getNewCount(Iterable<NotificationBase> notifications) {
 
         int count = 0;
-        for (NotificationBase base : database.getNotifications())
+        for (NotificationBase base : notifications)
             if (base.getRead() == NotificationBase.NEW)
                 count++;
 
-        return new MyString(count + "");
+        return count;
     }
 
     /**
@@ -128,7 +139,7 @@ public class NotificationEndpoint {
             try {
                 reachUser = cache.get(notificationBase.getHostId());
                 if (reachUser == null)
-                    continue;
+                    continue; //TODO handle null case
             } catch (Exception e) {
                 logger.info("Error getting Notifications " + e.getLocalizedMessage());
                 continue;
@@ -174,7 +185,7 @@ public class NotificationEndpoint {
                 count++;
             }
 
-        ofy().save().entity(database);
+        ofy().save().entity(database).now();
         logger.info("Marking as read " + count + " " + needToUpdate);
     }
 
@@ -203,10 +214,16 @@ public class NotificationEndpoint {
         like.setSongName(songName);
 
         final Notification notification = getNotification(receiverId);
-        notification.getNotifications().add(like);
-        ofy().save().entity(notification);
+        if (notification.getNotifications().add(like)) {
 
-        logger.info("Adding like " + senderId + " " + songName);
+            ofy().save().entity(notification).now();
+            logger.info("Adding like " + senderId + " " + songName);
+            final int count = getNewCount(notification.getNotifications());
+            if (count > 0) {
+                final String message = "SYNC" + count;
+                MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
+            }
+        }
     }
 
     /**
@@ -238,10 +255,16 @@ public class NotificationEndpoint {
         push.setSize(size);
 
         final Notification notification = getNotification(receiverId);
-        notification.getNotifications().add(push);
-        ofy().save().entity(notification).now();
+        if (notification.getNotifications().add(push)) {
 
-        logger.info("Adding push " + senderId + " " + firstSongName + " " + size);
+            ofy().save().entity(notification).now();
+            logger.info("Adding push " + senderId + " " + firstSongName + " " + size);
+            final int count = getNewCount(notification.getNotifications());
+            if (count > 0) {
+                final String message = "SYNC" + count;
+                MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
+            }
+        }
     }
 
     /**
@@ -252,15 +275,40 @@ public class NotificationEndpoint {
             name = "addBecameFriends",
             path = "notification/addBecameFriends",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void addBecameFriends(@Named("receiver") long receiverId,
-                                 @Named("sender") long senderId) {
+    public Friend addBecameFriends(@Named("receiver") long receiverId,
+                                   @Named("sender") long senderId,
+                                   @Named("accepted") boolean accepted) {
 
         if (receiverId == 0 || senderId == 0)
-            return;
+            return null;
+
+        final ReachUser sender = ofy().load().type(ReachUser.class).id(senderId).now();
+        if (sender == null)
+            return null;
+
+        if (!accepted) {
+            //permission request got rejected
+            final MyString string = MessagingEndpoint.getInstance().handleReplyNew(
+                    sender,
+                    receiverId,
+                    "PERMISSION_REJECTED");
+            if (string == null)
+                logger.severe("Permission rejection failed");
+            return null; //return null always as rejection should not fail (UX)
+        }
+
+        final MyString string = MessagingEndpoint.getInstance().handleReplyNew(
+                sender,
+                receiverId,
+                "PERMISSION_GRANTED");
+        if (string == null) {
+            logger.severe("Permission accept failed");
+            return null;
+        }
 
         final BecameFriends forSender = new BecameFriends();
         forSender.setRead(NotificationBase.NEW);
-        forSender.setHostId(senderId);
+        forSender.setHostId(receiverId);
         forSender.setSystemTime(System.currentTimeMillis());
         forSender.setTypes(Types.BECAME_FRIENDS);
 
@@ -278,6 +326,26 @@ public class NotificationEndpoint {
         ofy().save().entities(n1, n2).now();
 
         logger.info("Adding became friends " + receiverId + " " + senderId);
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(receiverId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final byte[] value = (byte[]) syncCache.get(receiverId);
+        final long currentTime = System.currentTimeMillis();
+        final long lastSeen;
+        if (value == null || value.length == 0)
+            lastSeen = currentTime;
+        else {
+            final String val = new String(value);
+            if (val.equals(""))
+                lastSeen = currentTime;
+            else
+                lastSeen = currentTime - Long.parseLong(val);
+        }
+
+        return new Friend(sender, true, lastSeen);
     }
 
     /**
@@ -309,6 +377,7 @@ public class NotificationEndpoint {
         pushAccepted.setFirstSongName(firstSongName);
         pushAccepted.setSize(size);
 
+        //also remove
         final Notification notification = getNotification(receiverId);
         final Iterator<NotificationBase> queue = notification.getNotifications().iterator();
         while (queue.hasNext()) {

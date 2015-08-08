@@ -82,7 +82,7 @@ public class ReachNotificationActivity extends Activity {
                 @Override
                 public MyString doWork() throws IOException {
 
-                    StaticData.notificationApi.addBecameFriends(clientId, hostId).execute();
+                    StaticData.notificationApi.addBecameFriends(true, clientId, hostId).execute();
 
                     return StaticData.messagingEndpoint.messagingEndpoint().handleReply(clientId, hostId, message).execute();
                 }

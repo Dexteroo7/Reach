@@ -131,6 +131,27 @@ public class GcmIntentService extends IntentService {
 //
 //            notificationManager.notify(notification_id, notificationBuilder.build());
 //        }
+
+        if (message.startsWith("SYNC")) {
+
+            final String count = message.substring(4);
+            final int notification_id = message.hashCode();
+            final Intent viewIntent = new Intent(this, ReachActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("oP", true);
+            viewIntent.putExtras(bundle);
+
+            final NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setAutoCancel(true)
+                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                            .setSmallIcon(R.drawable.ic_icon_notif)
+                            .setContentTitle("You have " + count + " new notification")
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setWhen(System.currentTimeMillis());
+            notificationManager.notify(notification_id, notificationBuilder.build());
+        }
+
         /**
          * Service permission granted and rejected Notifications
          */
@@ -144,7 +165,7 @@ public class GcmIntentService extends IntentService {
             final int notification_id = message.hashCode();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            Bundle bundle = new Bundle();
+            final Bundle bundle = new Bundle();
             bundle.putBoolean("oP", true);
             viewIntent.putExtras(bundle);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);

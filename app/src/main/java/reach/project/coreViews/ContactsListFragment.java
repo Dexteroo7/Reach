@@ -97,10 +97,10 @@ public class ContactsListFragment extends Fragment implements
     private ReachAllContactsAdapter inviteAdapter;
     private MergeAdapter mergeAdapter;
 
+    public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false); ////have we already synchronized ?
     private static final AtomicBoolean
             pinging = new AtomicBoolean(false), //are we pinging ?
-            synchronizing = new AtomicBoolean(false), //are we synchronizing ?
-            synchronizeOnce = new AtomicBoolean(false); //have we already synchronized ?
+            synchronizing = new AtomicBoolean(false); //are we synchronizing ?
 
     private final String inviteKey = "invite_sent";
 
@@ -247,8 +247,8 @@ public class ContactsListFragment extends Fragment implements
         if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
 
-        if (inviteAdapter != null)
-            inviteAdapter.cleanUp();
+//        if (inviteAdapter != null)
+//            inviteAdapter.cleanUp();
 
         sharedPrefs.edit().putStringSet(inviteKey, LocalUtils.inviteSentTo).apply();
         //listView.setOnScrollListener(null);

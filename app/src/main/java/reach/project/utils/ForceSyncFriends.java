@@ -21,6 +21,7 @@ import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.auxiliaryClasses.DoWork;

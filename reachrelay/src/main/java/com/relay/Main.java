@@ -1,9 +1,12 @@
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -61,6 +64,25 @@ public final class Main {
     }
 
     public static void main(String[] args) {
+
+        AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+        asyncHttpClient.prepareGet("http://www.ning.com/").execute(new AsyncCompletionHandler<Response>(){
+
+            @Override
+            public Response onCompleted(Response response) throws Exception{
+                // Do something with the Response
+                // ...
+                response.getResponseBodyAsStream();
+                return response;
+            }
+
+            @Override
+            public void onThrowable(Throwable t){
+                // Something wrong happened.
+            }
+        });
+
+
 
         while (true) {
 
@@ -160,15 +182,16 @@ public final class Main {
         /**
          * Copies all bytes from the readable channel to the writable channel.
          * Does not close or flush either channel.
-         *
-         * @param from the readable channel to read from
+         *  @param from the readable channel to read from
          * @param to   the writable channel to write to
+         * @param buf
          */
         private void copy(ReadableByteChannel from,
-                          WritableByteChannel to) {
+                          WritableByteChannel to,
+                          ByteBuffer buf) {
 
 //            System.out.println("Connected");
-            final ByteBuffer buf = ByteBuffer.allocateDirect(4096);
+
             boolean fail = false;
 
             while (!fail) {
@@ -188,15 +211,13 @@ public final class Main {
                     }
                 buf.clear();
             }
-            final Cleaner cleaner = ((DirectBuffer) buf).cleaner();
-            if (cleaner != null)
-                cleaner.clean();
 
             //sleep before closing !
             try {
                 Thread.sleep(5000L);
             } catch (InterruptedException ignored) {
                 //ignored as we anyway kill this thread soon
+                return;
             }
 
             closeAndIgnore(from, to);
@@ -206,7 +227,6 @@ public final class Main {
         public final void run() {
 
             final String id, wantsToConnectTo, socketType;
-
 
             try {
 
@@ -228,11 +248,23 @@ public final class Main {
 //            System.out.println(socketType + " | self " + id.hashCode() + " | other " + wantsToConnectTo.hashCode());
             currentChannels.put(id, socket);
 
+            final ByteBuffer buf;
+            if (socketType.equals("Receiver")) //create buffer before busy waiting
+                buf = ByteBuffer.allocateDirect(4096);
+            else
+                buf = null;
+
             //busy wait till partner arrives
             if (poll(wantsToConnectTo)) {
 
                 //noinspection StatementWithEmptyBody
                 if (socketType.equals("Sender")) {
+
+//                    try {
+//                        Thread.sleep(2000L);
+//                    } catch (InterruptedException ignored) {
+//                        return;
+//                    }
                     /**
                      * the socket needs to be kept alive till
                      * the receiver comes and takes it
@@ -254,7 +286,7 @@ public final class Main {
                     } else {
 
                         //first copy
-                        copy(sender, socket); //Use this thread only to perform copy
+                        copy(sender, socket, buf); //Use this thread only to perform copy
                         //then evict
                         closeAndIgnore(currentChannels.remove(id),
                                 currentChannels.remove(wantsToConnectTo),
@@ -271,6 +303,10 @@ public final class Main {
                         socket,
                         temp);
             }
+
+            final Cleaner cleaner = buf != null ? ((DirectBuffer) buf).cleaner() : null;
+            if (cleaner != null)
+                cleaner.clean();
         }
     }
 

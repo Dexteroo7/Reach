@@ -68,7 +68,6 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
     private SharedPreferences preferences;
     private ListView listView;
-    private View rootView;
     private SearchView searchView;
     private ReachContactsAdapter reachContactsAdapter = null;
 
@@ -140,19 +139,18 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     getArguments().getString("song_name"),         //firstSongName
                     getNetworkType(getActivity()) + "");           //networkType
 
-            if (!StaticData.debugMode) {
-                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("Push song")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                        .setLabel("Receiver - " + pushContainer.getReceiverName() + ", Songs - " + pushContainer.getSongCount())
-                        .setValue(pushContainer.getSongCount())
-                        .build());
-                Map<String, String> tagValues = new HashMap<>();
-                tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-                tagValues.put("Receiver", pushContainer.getReceiverName());
-                tagValues.put("Songs", String.valueOf(pushContainer.getSongCount()));
-                Localytics.tagEvent("Push song", tagValues);
-            }
+            ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Push song")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setLabel("Receiver - " + pushContainer.getReceiverName() + ", Songs - " + pushContainer.getSongCount())
+                    .setValue(pushContainer.getSongCount())
+                    .build());
+            Map<String, String> tagValues = new HashMap<>();
+            tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("Receiver", pushContainer.getReceiverName());
+            tagValues.put("Songs", String.valueOf(pushContainer.getSongCount()));
+            Localytics.tagEvent("Push song", tagValues);
+
             if (isRemoving() || isDetached())
                 return;
             try {
@@ -345,7 +343,6 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             reachContactsAdapter.getCursor().close();
 
         listView = null;
-        rootView = null;
         if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
@@ -368,8 +365,9 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         setHasOptionsMenu(true);
-        rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
@@ -396,7 +394,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
         return new CursorLoader(getActivity(),
                 ReachFriendsProvider.CONTENT_URI,
-                ReachFriendsHelper.projection,
+                ReachContactsAdapter.requiredProjection,
                 selection,
                 selectionArguments,
                 ReachFriendsHelper.COLUMN_USER_NAME + " ASC");

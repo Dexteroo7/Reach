@@ -45,12 +45,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     private PushSongAdapter pushSongAdapter = null;
     private TextView songsCount;
     private SearchView searchView;
-    private View rootView;
     private ActionBar actionBar;
 
     private SuperInterface mListener;
     private String mCurFilter, selection;
-    private String [] selectionArguments;
+    private String[] selectionArguments;
     private long serverId;
     private final HashSet<TransferSong> selectedList = new HashSet<>();
 
@@ -61,15 +60,15 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             final ImageView toggle = (ImageView) view.findViewById(R.id.listToggle);
             final Cursor songCursor = (Cursor) pushSongAdapter.getItem(position);
             final TransferSong transferSong = new TransferSong(
-                    songCursor.getLong(7),
-                    songCursor.getLong(1),
-                    songCursor.getLong(5),
-                    songCursor.getString(2),
-                    songCursor.getString(3),
-                    songCursor.getString(4));
+                    songCursor.getLong(7), //size of song
+                    songCursor.getLong(1), //songId
+                    songCursor.getLong(5), //duration
+                    songCursor.getString(2), //displayName
+                    songCursor.getString(3), //actualName
+                    songCursor.getString(4)); //artistName
             final int hashCode = transferSong.hashCode();
 
-            if(!pushSongAdapter.getCheck(hashCode)) {
+            if (!pushSongAdapter.getCheck(hashCode)) {
 
                 if (selectedList.size() < 5) {
 
@@ -79,9 +78,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                     toggle.setImageResource(R.drawable.check_white);
                     final int pad = MiscUtils.dpToPx(5);
                     toggle.setPadding(pad, pad, pad, pad);
-                }
-                else
-                    Toast.makeText(getActivity(),"Maximum 5 Songs allowed",Toast.LENGTH_SHORT).show();
+                } else
+                    Toast.makeText(getActivity(), "Maximum 5 Songs allowed", Toast.LENGTH_SHORT).show();
             } else {
 
                 pushSongAdapter.setCheck(transferSong.hashCode(), false);
@@ -94,10 +92,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     };
 
     private static WeakReference<PushSongsFragment> reference = null;
+
     public static PushSongsFragment newInstance() {
 
         PushSongsFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new PushSongsFragment());
         return fragment;
     }
@@ -116,26 +115,26 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
 
-        if(cursorLoader.getId() == StaticData.SONGS_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.SONGS_LOADER && cursor != null && !cursor.isClosed()) {
 
             final int count = cursor.getCount();
             pushSongAdapter.swapCursor(cursor);
             songsCount.setText(count + " Songs");
             if (count == 0 && pushLibraryList != null)
-                MiscUtils.setEmptyTextforListView(pushLibraryList,"No songs found");
+                MiscUtils.setEmptyTextforListView(pushLibraryList, "No songs found");
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if(cursorLoader.getId() == StaticData.SONGS_LOADER)
+        if (cursorLoader.getId() == StaticData.SONGS_LOADER)
             pushSongAdapter.swapCursor(null);
     }
 
     @Override
     public void onDestroyView() {
 
-        if(actionBar != null)
+        if (actionBar != null)
             actionBar.setSubtitle("");
 
         selectedList.clear();
@@ -143,12 +142,12 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         pushSongAdapter.cleanUp();
         getLoaderManager().destroyLoader(StaticData.SONGS_LOADER);
-        if(pushSongAdapter != null && pushSongAdapter.getCursor() != null && !pushSongAdapter.getCursor().isClosed())
+        if (pushSongAdapter != null && pushSongAdapter.getCursor() != null && !pushSongAdapter.getCursor().isClosed())
             pushSongAdapter.getCursor().close();
 
         pushSongAdapter = null;
         pushLibraryList = null;
-        if(searchView != null) {
+        if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
             searchView.setQuery(null, false);
@@ -158,7 +157,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         searchView = null;
         songsCount = null;
-        rootView = null;
         actionBar = null;
         super.onDestroyView();
     }
@@ -167,20 +165,20 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         pushLibraryList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
-        actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+        actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
 
-        if(actionBar != null) {
+        if (actionBar != null) {
             actionBar.setTitle("Share Music");
             actionBar.setSubtitle("Select upto 5 Songs");
         }
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-        if(pushSongAdapter == null)
+        if (pushSongAdapter == null)
             pushSongAdapter = new PushSongAdapter(getActivity(), R.layout.pushlibrary_item, null, 0);
         selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-        selectionArguments = new String[]{serverId+"", 1+""};
+        selectionArguments = new String[]{serverId + "", 1 + ""};
 
         pushLibraryList.setAdapter(pushSongAdapter);
         pushLibraryList.setOnItemClickListener(listener);
@@ -200,11 +198,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
         final int id = item.getItemId();
-        switch(id){
+        switch (id) {
 
             case R.id.done_button: {
-                if (selectedList.size()==0)
-                    Toast.makeText(getActivity(),"Please select some songs first",Toast.LENGTH_SHORT).show();
+                if (selectedList.size() == 0)
+                    Toast.makeText(getActivity(), "Please select some songs first", Toast.LENGTH_SHORT).show();
                 else
                     mListener.onPushNext(selectedList);
                 break;
@@ -218,7 +216,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         searchView.setQuery(null, true);
         selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-        selectionArguments = new String[]{serverId+"", 1+""};
+        selectionArguments = new String[]{serverId + "", 1 + ""};
         getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
         return false;
     }
@@ -231,7 +229,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public boolean onQueryTextChange(String newText) {
 
-        if(searchView == null)
+        if (searchView == null)
             return false;
         // Called when the action bar search text has changed.  Update
         // the search filter, and restart the loader to do a new query
@@ -241,19 +239,20 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         // Prevents restarting the loader when restoring state.
         if (mCurFilter == null && newFilter == null) {
             return true;
-        } if (mCurFilter != null && mCurFilter.equals(newFilter)) {
+        }
+        if (mCurFilter != null && mCurFilter.equals(newFilter)) {
             return true;
         }
         mCurFilter = newFilter;
 
-        if(TextUtils.isEmpty(newText)) {
+        if (TextUtils.isEmpty(newText)) {
             selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-            selectionArguments = new String[]{serverId+"", 1+""};
+            selectionArguments = new String[]{serverId + "", 1 + ""};
         } else {
             selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                        ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
-                        ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
-            selectionArguments = new String[]{serverId + "", 1+"" , "%"+mCurFilter+"%"};
+                    ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
+                    ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
+            selectionArguments = new String[]{serverId + "", 1 + "", "%" + mCurFilter + "%"};
         }
         getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
         return true;

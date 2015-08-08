@@ -193,9 +193,10 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                         }
                     }
                 });
+
                 viewHolder.accept.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v) {
+                    public void onClick(View view) {
 
                         final Intent pushAddSong = new Intent(activity, ReachActivity.class);
 

@@ -1,13 +1,9 @@
-package reach.backend.notifications;
-
-import java.io.Serializable;
+package reach.backend.Notifications;
 
 /**
  * Created by dexter on 08/07/15.
  */
-public class NotificationBase implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class NotificationBase {
 
     public static final int DEFAULT_LIST_LIMIT = 150;
 
@@ -69,7 +65,7 @@ public class NotificationBase implements Serializable {
         if(this.types == null || this.types == Types.DEFAULT || this.hostId == 0 || this.systemTime == 0)
             throw new IllegalStateException("Notification uninitialized !");
 
-        int result = types.hashCode();
+        int result = types.name().hashCode();
         result = 31 * result + (int) (hostId ^ (hostId >>> 32));
         result = 31 * result + (int) (systemTime ^ (systemTime >>> 32));
         return result;

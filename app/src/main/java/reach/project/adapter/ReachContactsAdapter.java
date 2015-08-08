@@ -25,8 +25,6 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.Set;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;

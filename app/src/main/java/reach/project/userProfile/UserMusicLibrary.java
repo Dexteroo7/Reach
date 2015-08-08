@@ -2,8 +2,11 @@ package reach.project.userProfile;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.ContentProviderOperation;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -11,6 +14,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
@@ -20,33 +24,37 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import reach.backend.music.musicVisibilityApi.model.JsonMap;
+import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
 import reach.project.core.PushActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
+import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.MusicList;
-import reach.project.utils.auxiliaryClasses.ReachAlbum;
-import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.viewHelpers.CircleTransform;
@@ -236,39 +244,77 @@ public class UserMusicLibrary extends Fragment {
         public void run() {
 
             //fetch Music
-            final MusicList musicList = MiscUtils.useFragment(reference, new UseContext<MusicList, Activity>() {
+            final Boolean aBoolean = MiscUtils.useFragment(reference, new UseContext<Boolean, Activity>() {
                 @Override
-                public MusicList work(Activity context) {
+                public Boolean work(Activity context) {
                     return CloudStorageUtils.getMusicData(hostId, context);
                 }
             }).orNull();
 
-            if (musicList == null)
+            //do we check for visibility ?
+            final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit
+            if (exit) {
+                Log.i("Ayush", "do not check for visibility");
                 return;
+            }
 
-            MiscUtils.useFragment(reference, new UseContext<Void, Activity>() {
+            //fetch visibility data
+            final MusicData visibility = MiscUtils.autoRetry(new DoWork<MusicData>() {
                 @Override
-                public Void work(Activity activity) {
-
-                    if (musicList.song == null || musicList.song.isEmpty())
-                        //All the songs got deleted
-                        MiscUtils.deleteSongs(hostId, activity.getContentResolver());
-                    else {
-                        final Pair<Collection<ReachAlbum>, Collection<ReachArtist>> pair =
-                                MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
-                        final Collection<ReachAlbum> reachAlbums = pair.first;
-                        final Collection<ReachArtist> reachArtists = pair.second;
-                        MiscUtils.bulkInsertSongs(musicList.song, reachAlbums, reachArtists, activity.getContentResolver(), hostId);
-                    }
-
-                    if (musicList.playlist == null || musicList.playlist.isEmpty())
-                        //All playLists got deleted
-                        MiscUtils.deletePlayLists(hostId, activity.getContentResolver());
-                    else
-                        MiscUtils.bulkInsertPlayLists(musicList.playlist, activity.getContentResolver(), hostId);
-                    return null;
+                public MusicData doWork() throws IOException {
+                    return StaticData.musicVisibility.get(hostId).execute();
                 }
-            });
+            }, Optional.<Predicate<MusicData>>absent()).orNull();
+            final JsonMap visibilityMap;
+            if (visibility == null || (visibilityMap = visibility.getVisibility()) == null || visibilityMap.isEmpty()) {
+                Log.i("Ayush", "no visibility data found");
+                return; //no visibility data found
+            }
+
+            //parse visibility data
+            final ArrayList<ContentProviderOperation> operations = new ArrayList<>(visibilityMap.size());
+            for (Map.Entry<String, Object> objectEntry : visibilityMap.entrySet()) {
+
+                if (objectEntry == null) {
+                    Log.i("Ayush", "objectEntry was null");
+                    continue;
+                }
+
+                final String key = objectEntry.getKey();
+                final Object value = objectEntry.getValue();
+
+                if (TextUtils.isEmpty(key) || !TextUtils.isDigitsOnly(key) || value == null || !(value instanceof Boolean)) {
+                    Log.i("Ayush", "Found shit data inside visibilityMap " + key + " " + value);
+                    continue;
+                }
+
+                final long songId = Long.parseLong(key);
+                final ContentValues values = new ContentValues();
+                values.put(ReachSongHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
+
+                operations.add(ContentProviderOperation
+                        .newUpdate(ReachSongProvider.CONTENT_URI)
+                .withSelection(
+                        ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+                                ReachSongHelper.COLUMN_SONG_ID + "  = ?",
+                        new String[]{hostId+"", songId+""}).build());
+            }
+
+            //update visibility into database
+            if (operations.size() > 0) {
+                MiscUtils.useFragment(reference, new UseContext<Void, Activity>() {
+                    @Override
+                    public Void work(Activity context) {
+                        try {
+                            context.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+                            Log.i("Ayush", "Visibility updated !");
+                        } catch (RemoteException | OperationApplicationException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                });
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 /**
  * Created by dexter on 06/07/15.
@@ -13,5 +13,5 @@ public enum Types {
     LIKE,
     PUSH,
     BECAME_FRIENDS, //2-way
-    PUSH_ACCEPTED
+    PUSH_ACCEPTED;
 }

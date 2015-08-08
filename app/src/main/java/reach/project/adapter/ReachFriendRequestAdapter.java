@@ -1,11 +1,9 @@
 package reach.project.adapter;
 
 import android.animation.ValueAnimator;
-import android.content.ContentValues;
 import android.content.Context;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -23,14 +20,14 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import reach.backend.entities.messaging.model.MyString;
 import reach.backend.entities.userApi.model.ReceivedRequest;
+import reach.backend.notifications.notificationApi.model.Friend;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.CircleTransform;
 
 /**
@@ -39,20 +36,19 @@ import reach.project.viewHelpers.CircleTransform;
 public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
     public final SparseBooleanArray accepted = new SparseBooleanArray();
-    private final SparseBooleanArray opened = new SparseBooleanArray();
 
-    final int a = MiscUtils.dpToPx(70);
-    final int b = MiscUtils.dpToPx(110);
-
-    private final Context ctx;
+    private static final SparseBooleanArray opened = new SparseBooleanArray();
+    private static final int a = MiscUtils.dpToPx(70);
+    private static final int b = MiscUtils.dpToPx(110);
+    private static long serverId;
     private final int rId;
-    private final long serverId;
 
-    public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long serverId) {
+    public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long id) {
         super(context, resourceId, receivedRequestList);
-        this.ctx = context;
+
         this.rId = resourceId;
-        this.serverId = serverId;
+        serverId = id;
+        opened.clear();
     }
 
     @Override
@@ -61,6 +57,8 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         if (convertView == null)
             convertView = LayoutInflater.from(getContext()).inflate(rId, parent, false);
 
+        final View linearLayout = convertView.findViewById(R.id.linearLayout);
+
         final ImageView profilePhoto = (ImageView) convertView.findViewById(R.id.profilePhotoList);
         final TextView userName = (TextView) convertView.findViewById(R.id.userNameList);
         final TextView notificationType = (TextView) convertView.findViewById(R.id.notifType);
@@ -68,13 +66,12 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
         final View libraryBtn = convertView.findViewById(R.id.libraryButton);
         final View actionBlock = convertView.findViewById(R.id.actionBlock);
-        final View linearLayout = convertView.findViewById(R.id.linearLayout);
         final View accept = convertView.findViewById(R.id.acceptBlock);
         final View reject = convertView.findViewById(R.id.rejectBlock);
 
         final ReceivedRequest receivedRequest = getItem(position);
 
-        Picasso.with(ctx).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).transform(new CircleTransform()).into(profilePhoto);
+        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).transform(new CircleTransform()).into(profilePhoto);
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 
@@ -84,8 +81,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             actionBlock.setVisibility(View.GONE);
             libraryBtn.setVisibility(View.VISIBLE);
             notificationType.setText("added to your friends");
-        }
-        else {
+        } else {
 
             notificationType.setText("has sent you an access request");
             libraryBtn.setVisibility(View.GONE);
@@ -95,37 +91,53 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                 linearLayout.getLayoutParams().height = a;
             else
                 linearLayout.getLayoutParams().height = b;
+            linearLayout.setTag(position);
+            linearLayout.setOnClickListener(expander);
 
-            linearLayout.setOnClickListener(new View.OnClickListener() {
+            final Result onResult = new Result() {
                 @Override
-                public void onClick(View v) {
+                public void result(Friend friend) {
 
-                    if (!opened.get(position, false))
-                        expand(linearLayout,a,b);
-                    else
-                        expand(linearLayout,b,a);
-                    opened.put(position, !opened.get(position, false));
-                }
-            });
+                    if (friend == null) {
 
-            final HandleReply handleReply = new HandleReply(ctx);
-            accept.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    handleReply.execute(serverId + "", receivedRequest.getId() + "", "PERMISSION_GRANTED");
-                    accepted.put(position, true);
-                    expand(linearLayout, b, a);
-                    linearLayout.setClickable(false);
-                    actionBlock.setVisibility(View.GONE);
-                    libraryBtn.setVisibility(View.VISIBLE);
-                    notificationType.setText("added to your friends");
+                        //fail
+                        expand(linearLayout, b, a);
+                        linearLayout.setClickable(false);
+                        actionBlock.setVisibility(View.GONE);
+                        libraryBtn.setVisibility(View.VISIBLE);
+                        notificationType.setText("added to your friends");
+
+                    } else {
+                        //success
+                        getContext().getContentResolver().insert(
+                                ReachFriendsProvider.CONTENT_URI,
+                                ReachFriendsHelper.contentValuesCreator(friend));
+
+                        expand(linearLayout, b, a);
+                        linearLayout.setClickable(false);
+                        actionBlock.setVisibility(View.GONE);
+                        libraryBtn.setVisibility(View.VISIBLE);
+                        notificationType.setText("added to your friends");
+                    }
                 }
-            });
+            };
+
+            //pass weak reference to allow garbage collection
+            accept.setTag(new Object[]{receivedRequest.getId(), new WeakReference<>(onResult)});
+
+            accept.setOnClickListener(acceptClick);
             reject.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    handleReply.execute(serverId + "", receivedRequest.getId() + "", "PERMISSION_REJECTED");
+                    MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                        @Override
+                        public Void doWork() throws IOException {
+                            StaticData.notificationApi.addBecameFriends(false, serverId, receivedRequest.getId()).execute();
+                            return null;
+                        }
+                    }, Optional.<Predicate<Void>>absent());
+
                     //delete entry
                     remove(receivedRequest);
                     accepted.delete(position);
@@ -137,7 +149,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         return convertView;
     }
 
-    private void expand(final View view, int a,int b) {
+    private static void expand(final View view, int a, int b) {
 
         final ValueAnimator va = ValueAnimator.ofInt(a, b);
         va.setDuration(300);
@@ -151,65 +163,124 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         va.start();
     }
 
-    private static final class HandleReply extends AsyncTask<String, Void, Boolean> {
+    private static final View.OnClickListener expander = new View.OnClickListener() {
 
-        private final WeakReference<Context> contextWeakReference;
+        private void expand(final View view, int a, int b) {
 
-        private HandleReply(Context context) {
-            this.contextWeakReference = new WeakReference<>(context);
+            final ValueAnimator va = ValueAnimator.ofInt(a, b);
+            va.setDuration(300)
+                    .addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            view.getLayoutParams().height = (Integer) animation.getAnimatedValue();
+                            view.requestLayout();
+                        }
+                    });
+            va.start();
         }
 
         @Override
-        protected Boolean doInBackground(String... params) {
+        public void onClick(View view) {
 
-            final long clientId = Long.parseLong(params[0]);
-            final long hostId = Long.parseLong(params[1]);
-            final String message = params[2];
-            final MyString myString = MiscUtils.autoRetry(new DoWork<MyString>() {
-                @Override
-                public MyString doWork() throws IOException {
+            final int position = (int) view.getTag();
+            if (!opened.get(position, false))
+                expand(view, a, b);
+            else
+                expand(view, b, a);
+            opened.put(position, !opened.get(position, false));
+        }
+    };
 
-                    StaticData.notificationApi.addBecameFriends(clientId, hostId).execute();
-                    return StaticData.messagingEndpoint.messagingEndpoint().handleReply(clientId, hostId, message).execute();
-                }
-            }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {
-                @Override
-                public boolean apply(MyString input) {
-                    return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
-                }
-            })).orNull();
+    private static final View.OnClickListener acceptClick = new View.OnClickListener() {
 
-            if(myString == null || TextUtils.isEmpty(myString.getString()) || myString.getString().equals("false"))
-                return false;
+        final class HandleAccept extends AsyncTask<Object, Void, Object[]> {
 
-            final Context context = contextWeakReference.get();
-            if(context == null || context.getContentResolver() == null)
-                return true;
+            /**
+             * @param params supplied parameters
+             *               params[0] = hostId
+             *               params[1] = un-cast weak reference of Result callback
+             *               params[2] = view to enable back
+             *
+             * @return [0] reference, [1] friend, [2] view
+             */
 
-            else if(message.equals("PERMISSION_GRANTED") && context.getContentResolver() != null) {
+            @Override
+            protected Object[] doInBackground(Object... params) {
 
-                final ContentValues values = new ContentValues();
-                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
-                context.getContentResolver().update(
-                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
-                        values,
-                        ReachFriendsHelper.COLUMN_ID + " = ?",
-                        new String[]{hostId + ""});
+                final long hostId = (long) params[0];
+
+                final Friend friend = MiscUtils.autoRetry(new DoWork<Friend>() {
+                    @Override
+                    public Friend doWork() throws IOException {
+
+                        return StaticData.notificationApi.addBecameFriends(true, serverId, hostId).execute();
+                    }
+                }, Optional.<Predicate<Friend>>absent()).orNull();
+
+
+                return new Object[]{params[1], friend, params[2]};
             }
-            return true;
+
+            @Override
+            protected void onPostExecute(Object[] result) {
+
+                super.onPostExecute(result);
+                /**
+                 * result[0] = reference
+                 * result[1] = friend;
+                 * result[2] = view to enable back;
+                 */
+                //enable view
+                ((View) result[2]).setEnabled(true);
+
+                final Object unCastReference = result[0];
+                if (unCastReference == null) {
+                    Log.i("Ayush", "REFERENCE NULL");
+                    return;
+                }
+
+                if (!(unCastReference instanceof WeakReference)) {
+                    Log.i("Ayush", "Fail of 4th order");
+                    return;
+                }
+
+                final Object unCastResult = ((WeakReference) unCastReference).get();
+                if (unCastResult == null) {
+                    Log.i("Ayush", "REFERENCE LOST");
+                    return;
+                }
+
+                //publish result
+                ((Result) unCastResult).result((Friend) result[1]);
+            }
         }
 
         @Override
-        protected void onPostExecute(Boolean aBoolean) {
+        public void onClick(View accept) {
 
-            super.onPostExecute(aBoolean);
-            if(aBoolean)
+            final Object temp = accept.getTag();
+            if (temp == null) {
+                Log.i("Ayush", "Fail of 1st order");
                 return;
+            }
+            if (!(temp instanceof Object[])) {
+                Log.i("Ayush", "Fail of 2nd order");
+                return;
+            }
 
-            final Context context = contextWeakReference.get();
-            if(context == null)
+            final Object[] data = (Object[]) temp;
+            if (data.length != 2) {
+                Log.i("Ayush", "Fail of 3rd order");
                 return;
-            Toast.makeText(context, "Network Error on reply", Toast.LENGTH_SHORT).show();
+            }
+
+            //disable and send request
+            accept.setEnabled(false);
+            //hostId, reference, view to enable
+            new HandleAccept().executeOnExecutor(StaticData.threadPool, data[0], data[1], accept);
         }
+    };
+
+    protected interface Result {
+        void result(Friend friend);
     }
 }

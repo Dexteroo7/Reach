@@ -24,6 +24,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.hash.Hashing;
@@ -124,13 +125,13 @@ public enum MiscUtils {
         if (TextUtils.isEmpty(name))
             return "A";
 
-        final String [] splitter = name.split(" ");
+        final String[] splitter = name.split(" ");
         switch (splitter.length) {
 
             case 0:
                 return "A";
             case 1:
-                return (splitter[0].charAt(0)+"").toUpperCase();
+                return (splitter[0].charAt(0) + "").toUpperCase();
             case 2:
                 return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
             default:
@@ -333,7 +334,6 @@ public enum MiscUtils {
                 artists[i++] = ReachArtistHelper.contentValuesCreator(reachArtist);
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
         }
-
     }
 
     /**
@@ -653,6 +653,9 @@ public enum MiscUtils {
             } catch (InterruptedException | UnknownHostException | NullPointerException e) {
                 e.printStackTrace();
                 return Optional.absent();
+            } catch (GoogleJsonResponseException e) {
+                if (e.getLocalizedMessage().contains("404"))
+                    return Optional.absent();
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -1,16 +1,12 @@
-package reach.backend.notifications;
+package reach.backend.Notifications;
 
 import com.googlecode.objectify.annotation.Subclass;
-
-import java.io.Serializable;
 
 /**
  * Created by dexter on 08/07/15.
  */
 @Subclass (name = "PushAccepted")
-public class PushAccepted extends NotificationBase implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class PushAccepted extends NotificationBase {
 
     private String firstSongName = "";
     private int size = 0;

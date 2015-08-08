@@ -31,17 +31,18 @@ import java.io.IOException;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.DoWork;
 
 public class NumberVerification extends Fragment {
 
@@ -170,6 +171,7 @@ public class NumberVerification extends Fragment {
                 }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
 
                 //start sync
+                ContactsListFragment.synchronizeOnce.set(true);
                 StaticData.threadPool.submit(new ForceSyncFriends(getActivity(), container == null ? 0 : container.getServerId(), params[0]));
                 return new Pair<>(container, params[0]);
             }

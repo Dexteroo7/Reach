@@ -17,14 +17,14 @@
         <init-param>
             <param-name>services</param-name>
             <param-value>
-                reach.backend.feedback.FeedBackEndpoint,
+                reach.backend.Feedback.FeedBackEndpoint,
                 reach.backend.User.MessagingEndpoint,
                 reach.backend.User.ReachUserEndpoint,
                 reach.backend.User.SplitMusicContainerEndpoint,
                 reach.backend.User.MusicSplitterEndpoint,
                 reach.backend.Transactions.CompletedOperationsEndpoint,
-                reach.backend.music.MusicDataEndpoint,
-                reach.backend.notifications.NotificationEndpoint
+                reach.backend.Music.MusicDataEndpoint,
+                reach.backend.Notifications.NotificationEndpoint
             </param-value>
         </init-param>
     </servlet>
@@ -50,6 +50,10 @@
         <servlet-name>RefreshGCM</servlet-name>
         <url-pattern>/refreshGCM</url-pattern>
     </servlet-mapping>
+    //////////////////////////////////
+    <listener>
+        <listener-class>reach.backend.Servlets.ObjectifyLoaderContextListener</listener-class>
+    </listener>
     //////////////////////////////////
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
