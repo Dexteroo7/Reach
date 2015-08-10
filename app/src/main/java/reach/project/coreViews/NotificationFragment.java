@@ -66,6 +66,7 @@ public class NotificationFragment extends Fragment {
         final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         final ReachNotificationAdapter adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
 
+        //listView.setBackgroundColor(getResources().getColor(R.color.default_grey));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);

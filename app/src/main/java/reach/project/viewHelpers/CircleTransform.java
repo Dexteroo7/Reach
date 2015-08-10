@@ -21,22 +21,22 @@ public class CircleTransform implements Transformation {
         if (squaredBitmap != source)
             source.recycle();
 
+        final Bitmap bitmap;
         try {
-
-            final Bitmap bitmap = Bitmap.createBitmap(size, size, source.getConfig());
-            final Paint paint = new Paint();
-            paint.setShader(new BitmapShader(squaredBitmap,
-                    BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP));
-            paint.setAntiAlias(true);
-            final float r = size / 2f;
-            new Canvas(bitmap).drawCircle(r, r, r, paint);
-            squaredBitmap.recycle();
-            return bitmap;
-
-        } catch (Exception e) {
+            bitmap = Bitmap.createBitmap(size, size, source.getConfig());
+        } catch (NullPointerException e) {
             e.printStackTrace();
             return squaredBitmap;
         }
+
+        final Paint paint = new Paint();
+        paint.setShader(new BitmapShader(squaredBitmap,
+                BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP));
+        paint.setAntiAlias(true);
+        final float r = size / 2f;
+        new Canvas(bitmap).drawCircle(r, r, r, paint);
+        squaredBitmap.recycle();
+        return bitmap;
     }
 
     @Override

@@ -63,12 +63,13 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
     }
 
     private final class ViewHolder{
-        private final TextView userNameList, userInitials;
+        private final TextView userNameList, userInitials, subTitle;
         private final ImageView profilePhotoList,listToggle;
 
-        private ViewHolder(TextView userNameList, TextView userInitials, ImageView profilePhotoList, ImageView listToggle) {
+        private ViewHolder(TextView userNameList, TextView userInitials, TextView subTitle,ImageView profilePhotoList, ImageView listToggle) {
             this.userNameList = userNameList;
             this.userInitials = userInitials;
+            this.subTitle = subTitle;
             this.profilePhotoList = profilePhotoList;
             this.listToggle = listToggle;
         }
@@ -87,6 +88,7 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
             viewHolder = new ViewHolder(
                     (TextView) convertView.findViewById(R.id.userNameList),
                     (TextView) convertView.findViewById(R.id.userInitials),
+                    (TextView) convertView.findViewById(R.id.listSubTitle),
                     (ImageView) convertView.findViewById(R.id.profilePhotoList),
                     (ImageView) convertView.findViewById(R.id.listToggle));
             convertView.setTag(viewHolder);
@@ -95,6 +97,7 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
             viewHolder = (ViewHolder) convertView.getTag();
         
         viewHolder.userNameList.setText(contact.getUserName());
+        viewHolder.subTitle.setText(contact.getPhoneNumber());
         viewHolder. userInitials.setText(MiscUtils.generateInitials(contact.getUserName()));
         Picasso.with(context).load(contact.getPhotoUri()).transform(transform).into(viewHolder.profilePhotoList);
 

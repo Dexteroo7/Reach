@@ -11,19 +11,18 @@
         android:layout_height="70dp">
         <LinearLayout
             android:orientation="horizontal"
+            android:background="#efefef"
             android:layout_width="wrap_content"
             android:layout_height="match_parent">
             <ImageView
                 android:id="@+id/pauseQueue"
                 android:src="@drawable/stop"
-                android:background="@color/reach_color"
                 android:padding="20dp"
                 android:layout_width="70dp"
                 android:layout_height="match_parent" />
             <ImageView
                 android:id="@+id/deleteQueue"
                 android:src="@drawable/del_brown"
-                android:background="#42353E"
                 android:padding="20dp"
                 android:layout_width="70dp"
                 android:layout_height="match_parent" />

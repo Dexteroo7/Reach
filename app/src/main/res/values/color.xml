@@ -3,9 +3,10 @@
 
     <item name="reach_color" type="color">#f33b5b</item>
     <item name="reach_dark" type="color">#c22f48</item>
-    <item name="reach_light" type="color">#f88599</item>
-    <item name="reach_grey" type="color">#333333</item>
-    <item name="reach_blue_fade" type="color">#802488e1</item>
+    <item name="reach_light" type="color">#f997a8</item>
+    <item name="reach_grey" type="color">#4d4d4d</item>
+    <item name="reach_grey_light" type="color">#595959</item>
+    <item name="default_grey" type="color">#e8e8e8</item>
     <item name="purple" type="color">#FFAA66CC</item>
     <item name="green" type="color">#FF99CC00</item>
     <item name="orange" type="color">#FFFFBB33</item>

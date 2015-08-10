@@ -112,7 +112,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 //        lanHandlerFuture = null;
         //////////////////////////////////
 //        Log.i("Downloader", "Releasing network manager");
-        MiscUtils.closeAndIgnore(networkManager);
+        if (networkManager != null)
+            try {
+                networkManager.close();
+            } catch (IOException ignored) {
+            }
 //        Log.i("Downloader", "NetworkManager released");
         //////////////////////////////////
         for (int i = 0, size = openChannels.size(); i < size; i++)
@@ -820,7 +824,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         connection.setMessageType("RELAY");
         final MyBoolean myBoolean = MiscUtils.sendGCM("CONNECT" + new Gson().toJson(connection, Connection.class),
                 connection.getReceiverId(), connection.getSenderId());
-        tryGCM = myBoolean != null && myBoolean.getOtherGCMExpired();
+        tryGCM = !(myBoolean == null || myBoolean.getOtherGCMExpired());
         if (!tryGCM) {
             Log.i("Downloader", "GCM FAILED NOT SENDING " + connection.toString());
             LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
@@ -907,6 +911,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                          */
 //                    bytesChanged = fileChannel.transferTo
 //                            (bundle.getBytesProcessed(), bytesSize, channel);
+//                        Log.i("Ayush", "Attempting upload");
                         if (fileChannel.read(transferBuffer, database.getProcessed()) > 0) {
                             transferBuffer.flip();
                             bytesChanged = socketChannel.write(transferBuffer);
@@ -1023,7 +1028,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
     /**
      * Kills the channels/keys that are sleeping for more than 60 secs
-     *
+     *Also sync with sql db
      * @param keys the set of keys to check
      */
     private void runOperation(Iterable<SelectionKey> keys,
@@ -1226,15 +1231,15 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             try {
                 //Update fileChannel
                 final SocketChannel socketChannel;
-                openChannels.append(reference, socketChannel = SocketChannel.open());
-                socketChannel.configureBlocking(true);
-                socketChannel.socket().setSoLinger(true, 1);
+                openChannels.append(reference, socketChannel = SocketChannel.open(vmAddress));
+//                socketChannel.configureBlocking(true);
+//                socketChannel.socket().setSoLinger(true, 1);
                 socketChannel.socket().setKeepAlive(true);
-                socketChannel.socket().connect(vmAddress, 5000);
-                socketChannel.write(ByteBuffer.wrap((String.valueOf(
-                        uniqueReceiverId) + "\n" +
-                        uniqueSenderId + "\n" +
-                        "Receiver" + "\n").getBytes()));
+//                socketChannel.socket().connect(vmAddress, 5000);
+                socketChannel.write(ByteBuffer.wrap((
+                        uniqueReceiverId + "\n" +
+                                uniqueSenderId + "\n" +
+                                "Receiver" + "\n").getBytes()));
                 socketChannel.configureBlocking(false).register(
                         networkManager,
                         SelectionKey.OP_READ,
@@ -1275,16 +1280,19 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             try {
                 //Update fileChannel
                 final SocketChannel socketChannel;
-                openChannels.append(reference, socketChannel = SocketChannel.open());
-                socketChannel.configureBlocking(true);
-                socketChannel.socket().setSoLinger(true, 1);
+                openChannels.append(reference, socketChannel = SocketChannel.open(vmAddress));
+//                socketChannel.configureBlocking(true);
+//                socketChannel.socket().setSoLinger(true, 1);
                 socketChannel.socket().setKeepAlive(true);
-                socketChannel.socket().connect(vmAddress, 5000);
-                socketChannel.write(ByteBuffer.wrap((String.valueOf(
-                        uniqueSenderId) + "\n" +
-                        uniqueReceiverId + "\n" +
-                        "Sender" + "\n").getBytes()));
-                socketChannel.configureBlocking(false).register(networkManager, SelectionKey.OP_READ, reachDatabase);
+//                socketChannel.socket().connect(vmAddress, 5000);
+                socketChannel.write(ByteBuffer.wrap((
+                        uniqueSenderId + "\n" +
+                                uniqueReceiverId + "\n" +
+                                "Sender" + "\n").getBytes()));
+                socketChannel.configureBlocking(false).register(
+                        networkManager,
+                        SelectionKey.OP_WRITE,
+                        reachDatabase);
 
 //                final PrintWriter printWriter = new PrintWriter(socketChannel.socket().getOutputStream());
 //                printWriter.println(uniqueSenderId);

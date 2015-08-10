@@ -82,12 +82,7 @@ public class PushAccepted extends NotificationBase {
 
     @Override
     public int getNotificationId() {
-        return super.getNotificationId();
-    }
-
-    @Override
-    public void setNotificationId(int notificationId) {
-        super.setNotificationId(notificationId);
+        return hashCode();
     }
 
     @Override

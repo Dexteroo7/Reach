@@ -91,7 +91,7 @@ public class Push extends NotificationBaseLocal {
 
     @Override
     public int getNotificationId() {
-        return super.getNotificationId();
+        return hashCode();
     }
 
     @Override

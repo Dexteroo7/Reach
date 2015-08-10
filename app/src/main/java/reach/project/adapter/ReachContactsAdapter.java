@@ -166,7 +166,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         viewHolder.userNameList.setTextColor(grey);
         viewHolder.listStatus.setTextColor(grey);
         viewHolder.telephoneNumberList.setTextColor(grey);
-        viewHolder.note.setImageResource(R.drawable.note60);
+        viewHolder.note.setImageResource(R.drawable.ic_music_count_grey);
         viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_dark);
 
         switch (status) {

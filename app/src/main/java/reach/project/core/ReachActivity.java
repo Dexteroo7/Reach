@@ -14,7 +14,6 @@ import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -1107,7 +1106,7 @@ public class ReachActivity extends AppCompatActivity implements
              * Set up adapter for Music player
              */
             combinedAdapter = new MergeAdapter();
-            combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
+            //combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
             emptyTV1 = LocalUtils.getEmptyDownload(params[0]);
             combinedAdapter.addView(emptyTV1, false);
             combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(params[0], null, 0));
@@ -1748,8 +1747,8 @@ public class ReachActivity extends AppCompatActivity implements
         public static TextView getDownloadedTextView(Context context) {
 
             final TextView textView = new TextView(context);
-            textView.setText("Downloaded");
-            textView.setTextColor(Color.parseColor("#42353e"));
+            textView.setText("Downloading");
+            textView.setTextColor(context.getResources().getColor(R.color.reach_color));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1758,8 +1757,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static TextView getMyLibraryTExtView(Context context) {
             final TextView textView = new TextView(context);
-            textView.setText("My Library");
-            textView.setTextColor(Color.parseColor("#42353e"));
+            textView.setText("My Songs");
+            textView.setTextColor(context.getResources().getColor(R.color.reach_color));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);

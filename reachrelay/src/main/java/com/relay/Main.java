@@ -1,7 +1,3 @@
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.Response;
-
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -64,25 +60,6 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-
-        AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-        asyncHttpClient.prepareGet("http://www.ning.com/").execute(new AsyncCompletionHandler<Response>(){
-
-            @Override
-            public Response onCompleted(Response response) throws Exception{
-                // Do something with the Response
-                // ...
-                response.getResponseBodyAsStream();
-                return response;
-            }
-
-            @Override
-            public void onThrowable(Throwable t){
-                // Something wrong happened.
-            }
-        });
-
-
 
         while (true) {
 
@@ -184,13 +161,13 @@ public final class Main {
          * Does not close or flush either channel.
          *  @param from the readable channel to read from
          * @param to   the writable channel to write to
-         * @param buf
+         * @param buf intermediate buffer
          */
         private void copy(ReadableByteChannel from,
                           WritableByteChannel to,
                           ByteBuffer buf) {
 
-//            System.out.println("Connected");
+            System.out.println("Connected");
 
             boolean fail = false;
 
@@ -245,7 +222,7 @@ public final class Main {
                 return;
             }
 
-//            System.out.println(socketType + " | self " + id.hashCode() + " | other " + wantsToConnectTo.hashCode());
+            System.out.println(socketType + " | self " + id + " | other " + wantsToConnectTo);
             currentChannels.put(id, socket);
 
             final ByteBuffer buf;

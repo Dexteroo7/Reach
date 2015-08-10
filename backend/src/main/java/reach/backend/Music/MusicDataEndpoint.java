@@ -3,7 +3,6 @@ package reach.backend.Music;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
-import com.google.api.server.spi.response.NotFoundException;
 
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -41,13 +40,12 @@ public class MusicDataEndpoint {
      *
      * @param id the ID of the entity to be retrieved
      * @return the entity with the corresponding ID
-     * @throws NotFoundException if there is no {@code MusicData} with the provided ID.
      */
     @ApiMethod(
             name = "get",
             path = "musicVisibility/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public MusicData get(@Named("id") long id) throws NotFoundException {
+    public MusicData get(@Named("id") long id) {
         logger.info("Getting MusicData with ID: " + id);
         return ofy().load().type(MusicData.class).id(id).now();
     }
