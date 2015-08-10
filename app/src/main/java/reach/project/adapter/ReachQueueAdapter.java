@@ -3,6 +3,7 @@ package reach.project.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.ResourceCursorAdapter;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -48,17 +49,33 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
     public void bindView(final View view, final Context context, final Cursor cursor) {
 
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
+
         final long id = cursor.getLong(0);
         final long length = cursor.getLong(1);
+        final long senderId = cursor.getLong(2);
         final long processed = cursor.getLong(3);
         final String path = cursor.getString(4);
         final String displayName = cursor.getString(5);
-        final short status = cursor.getShort(6);
-        final short operationKind = cursor.getShort(7);
+        final String artistName = cursor.getString(6);
+
+        final boolean liked;
+        final String temp = cursor.getString(7);
+        liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+
+        final long duration = cursor.getLong(8);
+
+        ///////////////
+
+        final short status = cursor.getShort(9);
+        final short operationKind = cursor.getShort(10);
         final String userName = cursor.getString(11);
 
+        final long receiverId = cursor.getLong(2);
+        final short logicalClock = cursor.getShort(9);
+        final long songId = cursor.getLong(10);
+
         final boolean finished = (processed + 1400 >= length) ||
-                                  status == ReachDatabase.FINISHED;
+                status == ReachDatabase.FINISHED;
         ///////////////////////////////////
         /**
          * If download has finished no need to display pause button
@@ -87,7 +104,7 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
                 viewHolder.progressBar.setProgressDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.circle_progress_red, context.getTheme()));
             }*/
 
-            viewHolder.songSize.setText((processed*100/length) + "%");
+            viewHolder.songSize.setText((processed * 100 / length) + "%");
             /*viewHolder.progressText.setText(String.format("%.2f", (float) (processed / 1024000.0f)) + "/" +
                     String.format("%.1f", (float) (length / 1024000.0f)) + " MB");*/
             viewHolder.progressBar.setProgress((int) ((processed * 100) / length));
@@ -108,9 +125,9 @@ public class ReachQueueAdapter extends ResourceCursorAdapter {
 
 =======
                                 *//**
-                                 * Can not remove from memory cache just yet, because some operation might be underway
-                                 * in connection manager
-                                 *//*
+             * Can not remove from memory cache just yet, because some operation might be underway
+             * in connection manager
+             *//*
 >>>>>>> 25793b11e7ea60ad5e95ea7e24763831ec13c7bc
                                 Log.i("Downloader", "Deleting " +
                                         id + " " +

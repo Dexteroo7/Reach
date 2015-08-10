@@ -309,7 +309,7 @@ public class ProcessManager extends Service implements
                 new String[]{"0", ReachDatabase.RELAY + ""}, null).getCount();
     }
 
-    //RETURN'S TOTAL NUMBER OF PEOPLE WHO ARE UPLOADING
+    //RETURNS TOTAL NUMBER OF PEOPLE WHO ARE UPLOADING
     private synchronized int getTotalUploads() {
         return getContentResolver().query(
                 ReachDatabaseProvider.CONTENT_URI,
@@ -848,63 +848,52 @@ public class ProcessManager extends Service implements
                 ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
     }
 
-    private Optional<MusicData> playFromCursor(Optional<Cursor> cursor, byte type) {
+    private Optional<MusicData> playFromCursor(Optional<Cursor> optional, byte type) {
 
-        if (!cursor.isPresent())
+        if (!optional.isPresent())
+            return Optional.absent();
+
+        final Cursor cursor = optional.get();
+
+        if (cursor.getCount() == 0 || cursor.getColumnCount() == 0)
             return Optional.absent();
 
         final MusicData musicData;
-        final Cursor cu = cursor.get();
-
-        if (cu.getCount() == 0 || cu.getColumnCount() == 0)
-            return Optional.absent();
 
         if (type == 0) {
 
-            final long senderId = cu.getLong(2);
-            final String artistName;
-            final long duration;
-            final Cursor artistCursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
-                    new String[]{ReachSongHelper.COLUMN_ID,
-                            ReachSongHelper.COLUMN_USER_ID,
-                            ReachSongHelper.COLUMN_SONG_ID,
-                            ReachSongHelper.COLUMN_ARTIST,
-                            ReachSongHelper.COLUMN_DURATION},
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " = ?",
-                    new String[]{senderId + "", cu.getLong(7) + ""}, null);
-            if (artistCursor == null) {
-                artistName = "";
-                duration = 0;
-            } else if (!artistCursor.moveToFirst()) {
-                artistName = "";
-                duration = 0;
-                artistCursor.close();
-            } else {
-                artistName = artistCursor.getString(3);
-                duration = artistCursor.getLong(4);
-                artistCursor.close();
-            }
+            //if not multiple addition, play the song
             final boolean liked;
-            liked = cu.getString(6).equals("true");
+            final String temp = cursor.getString(6); //liked
+            liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+
             musicData = new MusicData(
-                    cu.getString(5), cu.getString(4),
-                    artistName, cu.getLong(0),
-                    cu.getLong(1), senderId,
-                    cu.getLong(3), type,
-                    liked, duration);
+                    cursor.getLong(0), //id
+                    cursor.getLong(1), //length
+                    cursor.getLong(2), //senderId
+                    cursor.getLong(3), //processed
+                    cursor.getString(4), //path
+                    cursor.getString(5), //displayName
+                    cursor.getString(6), //artistName
+                    liked,
+                    cursor.getLong(9),
+                    (byte) 0);
 
         } else {
 
             musicData = new MusicData(
-                    cu.getString(4), cu.getString(3),
-                    cu.getString(0), cu.getLong(1),
-                    cu.getLong(2), serverId,
-                    cu.getLong(2), type,
-                    false, cu.getLong(6));
+                    cursor.getLong(1), //id
+                    cursor.getLong(2), //length
+                    serverId, //senderId
+                    cursor.getLong(2), //processed = length
+                    cursor.getString(3), //path
+                    cursor.getString(4), //displayName
+                    cursor.getString(0), //artistName
+                    false, //liked
+                    cursor.getLong(6), //duration
+                    (byte) 1); //type
         }
-        cu.close();
+        cursor.close();
         return Optional.of(musicData);
     }
 

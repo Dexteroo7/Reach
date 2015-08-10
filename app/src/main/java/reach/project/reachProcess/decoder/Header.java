@@ -502,7 +502,7 @@ public final class Header {
      * @param streamsize
      * @return number of frames
      */
-    public int max_number_of_frames(int streamsize)  // E.B
+    public long max_number_of_frames(long streamsize)  // E.B
     {
         if (h_vbr) return h_vbr_frames;
         else {
@@ -532,17 +532,17 @@ public final class Header {
      *
      * @return milliseconds per frame
      */
-    public float ms_per_frame() // E.B
+    public long ms_per_frame() // E.B
     {
         if (h_vbr) {
             double tpf = h_vbr_time_per_frame[layer()] / frequency();
             if ((h_version == MPEG2_LSF) || (h_version == MPEG25_LSF)) tpf /= 2;
-            return ((float) (tpf * 1000));
+            return ((long) (tpf * 1000));
         } else {
-            float ms_per_frame_array[][] = {{8.707483f, 8.0f, 12.0f},
-                    {26.12245f, 24.0f, 36.0f},
-                    {26.12245f, 24.0f, 36.0f}};
-            return (ms_per_frame_array[h_layer - 1][h_sample_frequency]);
+            double ms_per_frame_array[][] = {{8.707483d, 8.0d, 12.0d},
+                    {26.12245d, 24.0d, 36.0d},
+                    {26.12245d, 24.0d, 36.0d}};
+            return (long) ms_per_frame_array[h_layer - 1][h_sample_frequency];
         }
     }
 
@@ -552,7 +552,7 @@ public final class Header {
      * @param streamsize
      * @return total milliseconds
      */
-    public float total_ms(int streamsize) // E.B
+    public long total_ms(long streamsize) // E.B
     {
         return (max_number_of_frames(streamsize) * ms_per_frame());
     }

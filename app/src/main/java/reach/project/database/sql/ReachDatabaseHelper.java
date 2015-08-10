@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
 
 /**
@@ -37,7 +38,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PROCESSED = "processed";
     public static final String COLUMN_ADDED = "added";
     public static final String COLUMN_LOGICAL_CLOCK = "logicalClock";
-    public static final String COLUMN_ACTIVATED = "lastActive";
+    public static final String COLUMN_DURATION = "lastActive";
     public static final String COLUMN_STATUS = "status";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachDatabaseHelper";
@@ -66,36 +67,36 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_LENGTH + " long" + "," +
             COLUMN_PROCESSED + " long" + "," +
             COLUMN_ADDED + " long" + "," +
-            COLUMN_ACTIVATED + " long" + "," +
+            COLUMN_DURATION + " long" + "," +
 
             COLUMN_LOGICAL_CLOCK + " short" + "," +
             COLUMN_STATUS + " short" + " )";
 
     public static final String[] projection =
             {
-                    COLUMN_ID,
+                    COLUMN_ID, //0
 
-                    COLUMN_SONG_ID,
-                    COLUMN_RECEIVER_ID,
-                    COLUMN_SENDER_ID,
-                    COLUMN_OPERATION_KIND,
+                    COLUMN_SONG_ID, //1
+                    COLUMN_RECEIVER_ID, //2
+                    COLUMN_SENDER_ID, //3
+                    COLUMN_OPERATION_KIND, //4
                     //strings
-                    COLUMN_PATH,
-                    COLUMN_SENDER_NAME,
-                    COLUMN_ONLINE_STATUS,
-                    COLUMN_ARTIST_NAME,
-                    COLUMN_IS_LIKED,
+                    COLUMN_PATH, //5
+                    COLUMN_SENDER_NAME, //6
+                    COLUMN_ONLINE_STATUS, //7
+                    COLUMN_ARTIST_NAME, //8
+                    COLUMN_IS_LIKED, //9
                     //strings
-                    COLUMN_DISPLAY_NAME,
-                    COLUMN_ACTUAL_NAME,
+                    COLUMN_DISPLAY_NAME, //10
+                    COLUMN_ACTUAL_NAME, //11
                     //longs
-                    COLUMN_LENGTH,
-                    COLUMN_PROCESSED,
-                    COLUMN_ADDED,
-                    COLUMN_ACTIVATED,
+                    COLUMN_LENGTH, //12
+                    COLUMN_PROCESSED, //13
+                    COLUMN_ADDED, //14
+                    COLUMN_DURATION, //15
                     //shorts
-                    COLUMN_LOGICAL_CLOCK,
-                    COLUMN_STATUS,
+                    COLUMN_LOGICAL_CLOCK, //16
+                    COLUMN_STATUS, //17
             };
 
     /**
@@ -107,54 +108,39 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
         final ReachDatabase reachDatabase = new ReachDatabase();
 
-        int i = 0;
-        reachDatabase.setId(cursor.getLong(i++));
+        reachDatabase.setId(cursor.getLong(0));
+        reachDatabase.setSongId(cursor.getLong(1));
+        reachDatabase.setReceiverId(cursor.getLong(2));
+        reachDatabase.setSenderId(cursor.getLong(3));
 
-        reachDatabase.setSongId(cursor.getLong(i++));
-        reachDatabase.setReceiverId(cursor.getLong(i++));
-        reachDatabase.setSenderId(cursor.getLong(i++));
-        reachDatabase.setOperationKind(cursor.getShort(i++));
+        reachDatabase.setOperationKind(cursor.getShort(4));
 
-        reachDatabase.setPath(cursor.getString(i++));
-        reachDatabase.setSenderName(cursor.getString(i++));
-        reachDatabase.setOnlineStatus(cursor.getString(i++));
-        reachDatabase.setArtistName(cursor.getString(i++));
+        reachDatabase.setPath(cursor.getString(5));
+        reachDatabase.setSenderName(cursor.getString(6));
+        reachDatabase.setOnlineStatus(cursor.getString(7));
+        reachDatabase.setArtistName(cursor.getString(8));
 
-        final String liked = cursor.getString(i++);
+        final String liked = cursor.getString(9);
         if (TextUtils.isEmpty(liked))
             reachDatabase.setIsLiked(false);
-        if (liked.equals("true"))
-            reachDatabase.setIsLiked(true);
         else
-            reachDatabase.setIsLiked(false);
+            reachDatabase.setIsLiked(liked.equals("1"));
 
-        reachDatabase.setDisplayName(cursor.getString(i++));
-        reachDatabase.setActualName(cursor.getString(i++));
+        reachDatabase.setDisplayName(cursor.getString(10));
+        reachDatabase.setActualName(cursor.getString(11));
 
-        reachDatabase.setLength(cursor.getLong(i++));
-        reachDatabase.setProcessed(cursor.getLong(i++));
-        reachDatabase.setAdded(cursor.getLong(i++));
+        reachDatabase.setLength(cursor.getLong(12));
+        reachDatabase.setProcessed(cursor.getLong(13));
+        reachDatabase.setAdded(cursor.getLong(14));
+        reachDatabase.setDuration(cursor.getLong(15));
 
-        final long activated = cursor.getLong(i++);
-        if (activated == 0)
-            reachDatabase.setIsActivated(false);
-        else
-            reachDatabase.setIsActivated(true);
+        reachDatabase.setLogicalClock(cursor.getShort(16));
+        reachDatabase.setStatus(cursor.getShort(17));
 
-        reachDatabase.setLogicalClock(cursor.getShort(i++));
-        reachDatabase.setStatus(cursor.getShort(i));
+        reachDatabase.setLastActive(0); //reset
+        reachDatabase.setReference(0);  //reset
 
         return reachDatabase;
-    }
-
-    public static ContentValues putActivated(boolean activated, ContentValues values) {
-        values.put(COLUMN_ACTIVATED, activated ? 1 : 0); //must put pong
-        return values;
-    }
-
-    public static ContentValues putLiked(boolean liked, ContentValues values) {
-        values.put(COLUMN_ACTIVATED, liked ? "true" : "false"); //must put pong
-        return values;
     }
 
     public static ContentValues contentValuesCreator(ReachDatabase reachDatabase) {
@@ -172,7 +158,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_SENDER_NAME, reachDatabase.getSenderName());
         values.put(COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus());
         values.put(COLUMN_ARTIST_NAME, reachDatabase.getArtistName());
-        values.put(COLUMN_IS_LIKED, reachDatabase.isLiked() + ""); //must put string
+        values.put(COLUMN_IS_LIKED, reachDatabase.isLiked() ? 1 : 0); //must put string
 
         values.put(COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
         values.put(COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
@@ -180,12 +166,53 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_LENGTH, reachDatabase.getLength());
         values.put(COLUMN_PROCESSED, reachDatabase.getProcessed());
         values.put(COLUMN_ADDED, reachDatabase.getAdded());
-        values.put(COLUMN_ACTIVATED, reachDatabase.isActivated() ? 1 : 0); //must put pong
+        values.put(COLUMN_DURATION, reachDatabase.getDuration());
 
         values.put(COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
         values.put(COLUMN_STATUS, reachDatabase.getStatus());
 
         return values;
+    }
+
+    public static final String[] ADAPTER_LIST = new String[]{ //count = 14
+
+            ReachDatabaseHelper.COLUMN_ID, //0
+            ReachDatabaseHelper.COLUMN_LENGTH, //1
+            ReachDatabaseHelper.COLUMN_SENDER_ID, //2
+            ReachDatabaseHelper.COLUMN_PROCESSED, //3
+            ReachDatabaseHelper.COLUMN_PATH, //4
+            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
+            ReachDatabaseHelper.COLUMN_ARTIST_NAME, //6
+            ReachDatabaseHelper.COLUMN_IS_LIKED, //7
+            ReachDatabaseHelper.COLUMN_DURATION, //8
+
+            ///////////////
+
+            ReachDatabaseHelper.COLUMN_STATUS, //9
+            ReachDatabaseHelper.COLUMN_OPERATION_KIND, //10
+            ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
+            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //12
+            ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, //13
+            ReachDatabaseHelper.COLUMN_SONG_ID, //14
+    };
+
+    public static MusicData getMusicData(final Cursor cursor) {
+
+        final boolean liked;
+        final String temp = cursor.getString(7);
+        liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+
+        return new MusicData(
+                cursor.getLong(0), //id
+                cursor.getLong(1), //length
+                cursor.getLong(2), //senderId
+                cursor.getLong(3), //processed
+                cursor.getString(4), //path
+                cursor.getString(5), //displayName
+                cursor.getString(6), //artistName
+                liked, //liked
+                cursor.getLong(8), //duration
+                (byte) 0); //type
     }
 
     public ReachDatabaseHelper(Context context) {

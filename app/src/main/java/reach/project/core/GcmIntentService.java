@@ -137,7 +137,7 @@ public class GcmIntentService extends IntentService {
             final String count = message.substring(4);
             final int notification_id = message.hashCode();
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            Bundle bundle = new Bundle();
+            final Bundle bundle = new Bundle();
             bundle.putBoolean("oP", true);
             viewIntent.putExtras(bundle);
 

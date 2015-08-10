@@ -251,7 +251,7 @@ public class Player {
         return mediaPlayer.getDuration();
     }
 
-    protected int createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
+    protected long createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
 
 //        Log.i("Downloader", "Creating audio track");
         reset();
@@ -300,7 +300,7 @@ public class Player {
         if (frameHeader == null)
             throw new IOException("Probably corrupt file : null frameHeader");
 
-        final int duration = (int) frameHeader.total_ms((int) contentLength);
+        final long duration = frameHeader.total_ms(contentLength);
         final int sampleFrequency = frameHeader.frequency();
         final boolean mono = frameHeader.mode() == Header.SINGLE_CHANNEL;
         final int mode = mono ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;

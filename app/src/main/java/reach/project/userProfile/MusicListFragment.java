@@ -86,18 +86,19 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                     SharedPrefUtils.setReachQueueSeen(sharedPreferences);
                     mListener.anchorFooter(true);
                 }
+
                 mListener.addSongToQueue(
-                        cursor.getLong(1),
-                        cursor.getLong(2),
-                        cursor.getLong(8),
-                        cursor.getString(3),
-                        cursor.getString(4),
-                        false,
-                        senderCursor.getString(0),
-                        senderCursor.getShort(1) + "",
-                        senderCursor.getShort(2) + "",
-                        cursor.getString(5),
-                        cursor.getLong(7));
+                        cursor.getLong(1), //songId
+                        cursor.getLong(2), //senderId
+                        cursor.getLong(8), //size
+                        cursor.getString(3), //displayName
+                        cursor.getString(4), //actualName
+                        false, //multiple
+                        senderCursor.getString(0), //userName
+                        senderCursor.getShort(1) + "", //onlineStatus
+                        senderCursor.getShort(2) + "", //networkType
+                        cursor.getString(5), //artistName
+                        cursor.getLong(7)); //duration
                 senderCursor.close();
             }
         }

@@ -2,10 +2,12 @@ package reach.project.database.sql;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.auxiliaryClasses.Song;
 
 /**
@@ -98,6 +100,32 @@ public class ReachSongHelper extends SQLiteOpenHelper {
         values.put(COLUMN_DATE_ADDED, song.dateAdded);
         values.put(COLUMN_VISIBILITY, song.visibility);
         return values;
+    }
+
+    public static final String[] DISK_LIST = new String[]{ //count = 8
+            ReachSongHelper.COLUMN_SONG_ID, //0
+            ReachSongHelper.COLUMN_SIZE, //1
+            ReachSongHelper.COLUMN_PATH, //2
+            ReachSongHelper.COLUMN_DISPLAY_NAME, //3
+            ReachSongHelper.COLUMN_ARTIST, //4
+            ReachSongHelper.COLUMN_DURATION, //5
+            ReachSongHelper.COLUMN_ALBUM, //6
+            ReachSongHelper.COLUMN_ID //7 //useless
+    };
+
+    public static MusicData getMusicData(final Cursor cursor, final long serverId) {
+
+        return new MusicData(
+                cursor.getLong(0), //songId
+                cursor.getLong(1), //length
+                serverId, //senderId
+                cursor.getLong(1), //processed = length
+                cursor.getString(2), //path
+                cursor.getString(3), //displayName
+                cursor.getString(4), //artistName
+                false, //liked
+                cursor.getLong(5), //duration
+                (byte) 1); //type
     }
 
     public ReachSongHelper(Context context) {
