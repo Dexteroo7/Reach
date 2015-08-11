@@ -70,7 +70,8 @@ public class NotificationFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
@@ -97,7 +98,8 @@ public class NotificationFragment extends Fragment {
             notificationRefresher.shutdownNow();
         notificationRefresher = null;
 
-        adapter.clear();
+        if (adapter != null)
+            adapter.clear();
         adapter = null;
         super.onDestroyView();
     }

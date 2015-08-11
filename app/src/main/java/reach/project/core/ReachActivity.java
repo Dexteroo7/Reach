@@ -501,6 +501,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onResume();
 
+        Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
         currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
 
@@ -1157,7 +1158,7 @@ public class ReachActivity extends AppCompatActivity implements
         }
     }
 
-    private void processIntent(Intent intent) {
+    private synchronized void processIntent(Intent intent) {
 
         if (intent != null) {
 
@@ -1195,7 +1196,6 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
             }
-            setIntent(null);
         }
     }
 

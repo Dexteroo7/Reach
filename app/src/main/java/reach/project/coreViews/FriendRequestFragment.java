@@ -77,7 +77,7 @@ public class FriendRequestFragment extends Fragment {
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                         new String[]{ReachFriendsHelper.COLUMN_ID},
                         ReachFriendsHelper.COLUMN_ID + " = ?",
-                new String[]{userId+""}, null);
+                        new String[]{userId + ""}, null);
 
                 if (cursor == null || !cursor.moveToFirst()) {
 
@@ -99,7 +99,8 @@ public class FriendRequestFragment extends Fragment {
     private SuperInterface mListener;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
@@ -125,9 +126,9 @@ public class FriendRequestFragment extends Fragment {
             friendsRefresher.shutdownNow();
         friendsRefresher = null;
 
-        adapter.clear();
+        if (adapter != null)
+            adapter.clear();
         adapter = null;
-        super.onDestroyView();
         super.onDestroyView();
     }
 

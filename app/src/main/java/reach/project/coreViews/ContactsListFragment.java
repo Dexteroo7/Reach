@@ -151,24 +151,10 @@ public class ContactsListFragment extends Fragment implements
             } else if (object instanceof Contact) {
 
                 final Contact contact = (Contact) object;
-                if (contact.isInviteSent()) return;
+                if (contact.isInviteSent())
+                    return;
 
-                final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
-                        ".\nhttp://letsreach.co/app\n--\n" +
-                        SharedPrefUtils.getUserName(sharedPrefs);
-                final LinearLayout input = new LinearLayout(getActivity());
-                final EditText inputText = new EditText(getActivity());
-                inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
-                inputText.setTextColor(getResources().getColor(R.color.darkgrey));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT);
-                int margin = MiscUtils.dpToPx(20);
-                lp.setMargins(margin, 0, margin, 0);
-                inputText.setLayoutParams(lp);
-                inputText.setText(msg);
-                input.addView(inputText);
-                LocalUtils.showAlert(input, inviteAdapter, contact);
+                LocalUtils.showAlert(inviteAdapter, contact, view.getContext());
             }
         }
     };
@@ -852,14 +838,30 @@ public class ContactsListFragment extends Fragment implements
             return emptyInvite;
         }
 
-        public static void showAlert(LinearLayout linearLayout, ArrayAdapter arrayAdapter, final Contact contact) {
+        public static void showAlert(ArrayAdapter adapter, final Contact contact, final Context context) {
 
-            final WeakReference<LinearLayout> linearLayoutReference = new WeakReference<>(linearLayout);
-            final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(arrayAdapter);
+            final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
+                    ".\nhttp://letsreach.co/app\n--\n" +
+                    SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
 
-            new AlertDialog.Builder(linearLayout.getContext())
+            final LinearLayout input = new LinearLayout(context);
+            final EditText inputText = new EditText(context);
+            inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
+            inputText.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            int margin = MiscUtils.dpToPx(20);
+            lp.setMargins(margin, 0, margin, 0);
+            inputText.setLayoutParams(lp);
+            inputText.setText(msg);
+            input.addView(inputText);
+
+            final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(adapter);
+
+            new AlertDialog.Builder(context)
                     .setMessage("Send an invite to " + contact.getUserName() + " ?")
-                    .setView(linearLayout)
+                    .setView(input)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 
                         final class SendInvite extends AsyncTask<String, Void, Boolean> {
@@ -884,14 +886,14 @@ public class ContactsListFragment extends Fragment implements
                                 super.onPostExecute(aBoolean);
 
                                 if (!aBoolean) {
+                                    //fail
+                                    contact.setInviteSent(false);
+                                    LocalUtils.inviteSentTo.remove(contact.toString());
 
                                     final ArrayAdapter adapter = arrayAdapterReference.get();
                                     if (adapter == null)
                                         return;
-                                    //fail
-                                    contact.setInviteSent(false);
                                     adapter.notifyDataSetChanged();
-                                    LocalUtils.inviteSentTo.remove(contact.toString());
                                 }
                             }
                         }
@@ -901,22 +903,23 @@ public class ContactsListFragment extends Fragment implements
 
 
                             final ArrayAdapter adapter = arrayAdapterReference.get();
-                            final LinearLayout lLayout = linearLayoutReference.get();
-                            if (lLayout == null || adapter == null) {
+                            if (adapter == null) {
                                 dialog.dismiss();
                                 return;
                             }
 
-                            TextView inputText = (TextView) lLayout.getChildAt(0);
+                            final TextView inputText = (TextView) input.getChildAt(0);
                             final String txt = inputText.getText().toString();
                             if (!TextUtils.isEmpty(txt))
                                 new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
                             else
-                                Toast.makeText(lLayout.getContext(), "Please enter an invite message", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
+
+                            Log.i("Ayush", "Marking true " + contact.getUserName());
+                            LocalUtils.inviteSentTo.add(contact.toString());
 
                             contact.setInviteSent(true);
                             adapter.notifyDataSetChanged();
-                            LocalUtils.inviteSentTo.add(contact.toString());
                             dialog.dismiss();
                         }
                     })

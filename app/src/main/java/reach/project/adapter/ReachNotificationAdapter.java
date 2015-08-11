@@ -239,7 +239,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                             public Void doWork() throws IOException {
                                 return StaticData.notificationApi.pushAccepted(
                                         accepted.getFirstSongName(),
-                                        push.getPushContainer().hashCode(),
+                                        push.getNotificationId(),
                                         serverID,
                                         push.getHostId(),
                                         (int) pushContainer.getSongCount()).execute();
