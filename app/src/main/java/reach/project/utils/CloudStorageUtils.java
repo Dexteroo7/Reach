@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collection;
@@ -101,6 +102,7 @@ public enum CloudStorageUtils {
         public void run() {
 
 
+            //check if file is present
             InputStream check = null;
             try {
                 check = storage.objects().get(BUCKET_NAME_IMAGES, fileName).executeMediaAsInputStream();
@@ -113,12 +115,21 @@ public enum CloudStorageUtils {
             }
 
             Log.i("Ayush", "File not found, Uploading " + fileName);
-            final InputStreamContent content;
-            content = new InputStreamContent(
-                    "image/",
-                    inputStream);
 
-            //file not present
+            //guess content type and upload
+            final InputStreamContent content;
+            try {
+                content = new InputStreamContent(
+                        URLConnection.guessContentTypeFromStream
+                                (inputStream),
+                        inputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+                MiscUtils.closeAndIgnore(check, inputStream);
+                return;
+            }
+
+            //upload
             MiscUtils.autoRetry(
                     new DoWork<Void>() {
                         @Override
@@ -275,7 +286,7 @@ public enum CloudStorageUtils {
     /**
      * Fetches music data from server and also inserts into database
      *
-     * @param hostId      id of person to fetch from
+     * @param hostId  id of person to fetch from
      * @param context context to use
      * @return false : do not fetch music visibility
      * true : fetch music visibility

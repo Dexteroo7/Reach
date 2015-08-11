@@ -171,33 +171,33 @@ public class Player {
         else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
     }
 
-    /**
-     * @param data the bytes to be fed
-     * @return true : successfully fed the data
-     * false : some error occurred
-     */
-    public boolean feedData(short[] data) {
-
-        final int result = audioTrack.write(data, 0, data.length);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            return resultAnalyzeNew(result);
-        else
-            return resultAnalyzeOld(result);
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private boolean resultAnalyzeNew(int result) {
-        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
-                result == AudioTrack.ERROR_BAD_VALUE || //-2
-                result == AudioTrack.ERROR || //-1
-                result == AudioManager.ERROR_DEAD_OBJECT); //-6
-    }
-
-    private boolean resultAnalyzeOld(int result) {
-        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
-                result == AudioTrack.ERROR_BAD_VALUE || //-2
-                result == AudioTrack.ERROR); //-1
-    }
+//    /**
+//     * @param data the bytes to be fed
+//     * @return true : successfully fed the data
+//     * false : some error occurred
+//     */
+//    public boolean feedData(short[] data) {
+//
+//        final int result = audioTrack.write(data, 0, data.length);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+//            return resultAnalyzeNew(result);
+//        else
+//            return resultAnalyzeOld(result);
+//    }
+//
+//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    private boolean resultAnalyzeNew(int result) {
+//        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
+//                result == AudioTrack.ERROR_BAD_VALUE || //-2
+//                result == AudioTrack.ERROR || //-1
+//                result == AudioManager.ERROR_DEAD_OBJECT); //-6
+//    }
+//
+//    private boolean resultAnalyzeOld(int result) {
+//        return !(result == AudioTrack.ERROR_INVALID_OPERATION || //-3
+//                result == AudioTrack.ERROR_BAD_VALUE || //-2
+//                result == AudioTrack.ERROR); //-1
+//    }
 
     public void cleanUp() {
 
@@ -237,10 +237,11 @@ public class Player {
                                             MediaPlayer.OnErrorListener onErrorListener,
                                             String path) throws IOException, InterruptedException {
 
-        reset();
+        reset(); //throws InterruptedException
         whichPlayer = WhichPlayer.MediaPlayer;
 
         if (mediaPlayer == null) {
+
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setOnCompletionListener(completionListener);
@@ -254,7 +255,7 @@ public class Player {
     protected long createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
 
 //        Log.i("Downloader", "Creating audio track");
-        reset();
+        reset(); //throws InterruptedException
         whichPlayer = WhichPlayer.AudioTrack;
 
         if (!path.isPresent() || TextUtils.isEmpty(path.get()) || path.get().equals("hello_world"))
@@ -272,6 +273,7 @@ public class Player {
         final BitStream bitStream = new BitStream(playerSource.getSource(), StaticData.PLAYER_BUFFER_DEFAULT);
         final Header frameHeader;
 
+        //do like this to prevent blocking
         final Future<Header> getHeader = decoderService.submit(new Callable<Header>() {
             @Override
             public Header call() throws Exception {
@@ -288,9 +290,8 @@ public class Player {
                 bitStream.close();
             } catch (BitStreamException ignored) {
             }
-
-            playerSource.close();
-            pipeFuture.cancel(true);
+//            playerSource.close();
+//            pipeFuture.cancel(true);
             e.printStackTrace();
             throw new IOException("Probably corrupt file : header fetch timed out, " + e.getLocalizedMessage());
         } finally {

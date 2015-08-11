@@ -119,7 +119,8 @@ public class MusicScanner extends IntentService {
             if (music_column_name == -1 || is_music == -1 ||
                     music_column_id == -1 || music_column_actual_name == -1) continue;
             int isMusic = musicCursor.getInt(is_music);
-            if (isMusic == 0) continue;
+            if (isMusic == 0)
+                continue; //skip non-music files
 
             int music_column_size = musicCursor
                     .getColumnIndex(MediaStore.Audio.Media.SIZE);
@@ -147,9 +148,9 @@ public class MusicScanner extends IntentService {
             long size = musicCursor.getLong(music_column_size);
             long duration = musicCursor.getLong(music_column_duration);
 
-            if (size == 0 || duration == 0) {
+            if (size == 0 || duration == 0)
                 continue;
-            }
+
             builder.size(size);
             builder.duration(duration);
 
@@ -201,7 +202,10 @@ public class MusicScanner extends IntentService {
                         filter(builder.displayName) ||
                         filter(builder.album) ||
                         filter(builder.artist) ||
-                        builder.size > 100 * 1024 * 1024)
+                        builder.size > 100 * 1024 * 1024 || //100mb
+                        builder.duration > 60 * 60 * 1000 || //1hour
+                        builder.size < 400 * 1024 || //400kb
+                        builder.duration < 40 * 1000) //40 seconds
 
                     builder.visibility(false);
                 else

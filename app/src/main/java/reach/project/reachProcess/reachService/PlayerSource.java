@@ -69,8 +69,7 @@ public final class PlayerSource implements Runnable, Closeable {
                     Thread.sleep(StaticData.LUCKY_DELAY);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                    MiscUtils.closeAndIgnore(sinkChannel, sourceStream, source);
-                    return;
+                    break;
                 }
 
             else {
@@ -78,8 +77,7 @@ public final class PlayerSource implements Runnable, Closeable {
                     transferred += source.transferTo(transferred, count - transferred, sinkChannel);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    MiscUtils.closeAndIgnore(sinkChannel, sourceStream, source);
-                    return;
+                    break;
                 }
                 final short progress = (short) ((transferred * 100) / contentLength);
                 if (progress > lastSecondaryProgress)
@@ -88,6 +86,8 @@ public final class PlayerSource implements Runnable, Closeable {
                 Log.i("Downloader", "Transferred " + progress);
             }
         }
+
+        MiscUtils.closeAndIgnore(sinkChannel, sourceStream, source);
         /////////////////////////
     }
 }

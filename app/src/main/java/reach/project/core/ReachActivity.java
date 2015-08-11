@@ -371,7 +371,6 @@ public class ReachActivity extends AppCompatActivity implements
     private NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(MenuItem menuItem) {
-
             //Closing drawer on item click
             mDrawerLayout.closeDrawers();
 
@@ -503,16 +502,17 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onResume();
 
+        processIntent(getIntent());
+        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
+
         final PackageManager packageManager;
-        if (getIntent() == null || slidingUpPanelLayout == null || (packageManager = getPackageManager()) == null)
+        if ((packageManager = getPackageManager()) == null)
             return;
 
         packageManager.setComponentEnabledSetting(
                 new ComponentName(this, PlayerUpdateListener.class),
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
-
-        processIntent(getIntent());
     }
 
     @Override
@@ -1018,7 +1018,6 @@ public class ReachActivity extends AppCompatActivity implements
         final FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
         frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
         navListView.setLayoutParams(frameLayoutParams);
-        //navListView.setPadding(0,0,0,MiscUtils.dpToPx(70));
 
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
@@ -1162,10 +1161,10 @@ public class ReachActivity extends AppCompatActivity implements
     private void processIntent(Intent intent) {
 
         if (intent != null) {
-            if (intent.getBooleanExtra("openNotificationFragment", false)) {
+
+            if (intent.getBooleanExtra("openNotificationFragment", false))
                 onOpenNotificationDrawer();
-                setIntent(null);
-            } else if (intent.getBooleanExtra("openPlayer", false))
+            else if (intent.getBooleanExtra("openPlayer", false))
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -1174,9 +1173,30 @@ public class ReachActivity extends AppCompatActivity implements
                     }
                 }, 1500);
             else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
-                processMultiple(intent);
+
+                final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
+                final HashSet<TransferSong> transferSongs = new Gson().fromJson(
+                        pushContainer.getSongData(),
+                        new TypeToken<HashSet<TransferSong>>() {
+                        }.getType());
+
+                for (TransferSong transferSong : transferSongs) {
+
+                    addSongToQueue(transferSong.getSongId(),
+                            pushContainer.getSenderId(),
+                            transferSong.getSize(),
+                            transferSong.getDisplayName(),
+                            transferSong.getActualName(),
+                            true,
+                            pushContainer.getUserName(),
+                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                            pushContainer.getNetworkType(),
+                            transferSong.getArtistName(),
+                            transferSong.getDuration());
+                }
                 new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
             }
+            setIntent(null);
         }
     }
 
@@ -1235,30 +1255,6 @@ public class ReachActivity extends AppCompatActivity implements
             musicAdapter.swapCursor(null);
         if (loader.getId() == StaticData.DOWNLOAD_LOADER)
             queueAdapter.swapCursor(null);
-    }
-
-    public void processMultiple(Intent intent) {
-
-        final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
-        final HashSet<TransferSong> transferSongs = new Gson().fromJson(
-                pushContainer.getSongData(),
-                new TypeToken<HashSet<TransferSong>>() {
-                }.getType());
-
-        for (TransferSong transferSong : transferSongs) {
-
-            addSongToQueue(transferSong.getSongId(),
-                    pushContainer.getSenderId(),
-                    transferSong.getSize(),
-                    transferSong.getDisplayName(),
-                    transferSong.getActualName(),
-                    true,
-                    pushContainer.getUserName(),
-                    ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                    pushContainer.getNetworkType(),
-                    transferSong.getArtistName(),
-                    transferSong.getDuration());
-        }
     }
 
     @Override
