@@ -5,31 +5,33 @@ package reach.project.utils.auxiliaryClasses;
  */
 public class ReachDatabase {
 
-    private long id = -1;
-    private long songId = 0;
-    private long receiverId = 0;
-    private long senderId = 0;
+    private long id = -1; //0
+    private long songId = 0; //1
+    private long receiverId = 0; //2
+    private long senderId = 0; //3
 
-    private String path = "hello_world";
-    private String senderName = "hello_world";
-    private String onlineStatus = "hello_world";
-    private String artistName = "hello_world";
-    private String displayName = "hello_world";
-    private String actualName = "hello_world";
+    private short operationKind = 0;//4 (0 = download, 1 = upload)
 
-    private boolean isLiked = false;
-    private boolean isActivated = false;
+    private String path = "hello_world"; //5
+    private String senderName = "hello_world"; //6
+    private String onlineStatus = "hello_world"; //7
+    private String artistName = "hello_world"; //8
 
-    private long length = 0;
-    private long processed = 0;
-    private long added = 0;
-    private long lastActive = 0;
-    private long reference = 0;
+    private boolean isLiked = false; //9
 
-    private short operationKind = 0; //0 = download, 1 = upload
-    private short logicalClock = 0;
-    private short status = 0;
+    private String displayName = "hello_world"; //10
+    private String actualName = "hello_world"; //11
 
+    private long length = 0; //12
+    private long processed = 0; //13
+    private long added = 0; //14
+    private long duration = 0; //15
+
+    private short logicalClock = 0; //16
+    private short status = 0; //17
+
+    private long lastActive = 0; //not in sql
+    private long reference = 0; //not in sql
 
     //types of status
     public static final short NOT_WORKING = 0;
@@ -44,7 +46,7 @@ public class ReachDatabase {
 //    public static final short HOST_GONE = 9;    //paused by host
 
     public static void isPresent(short status) throws IllegalArgumentException {
-        if(status < 0 || status > 7)
+        if (status < 0 || status > 7)
             throw new IllegalArgumentException("Wrong status !");
         //else all good
     }
@@ -207,11 +209,11 @@ public class ReachDatabase {
         if (o == null || getClass() != o.getClass()) return false;
         final ReachDatabase that = (ReachDatabase) o;
         return added == that.added &&
-               length == that.length &&
-               operationKind == that.operationKind &&
-               receiverId == that.receiverId &&
-               senderId == that.senderId &&
-               songId == that.songId;
+                length == that.length &&
+                operationKind == that.operationKind &&
+                receiverId == that.receiverId &&
+                senderId == that.senderId &&
+                songId == that.songId;
     }
 
     @Override
@@ -241,11 +243,11 @@ public class ReachDatabase {
         this.isLiked = isLiked;
     }
 
-    public boolean isActivated() {
-        return isActivated;
+    public long getDuration() {
+        return duration;
     }
 
-    public void setIsActivated(boolean isActivated) {
-        this.isActivated = isActivated;
+    public void setDuration(long duration) {
+        this.duration = duration;
     }
 }

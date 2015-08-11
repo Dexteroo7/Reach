@@ -51,10 +51,10 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         final short visibility;
         switch (type) {
             case PLAYER : {
-                displayName = cursor.getString(2);
-                artist = cursor.getString(5);
+                displayName = cursor.getString(3);
+                artist = cursor.getString(4);
+                duration = cursor.getLong(5);
                 album = cursor.getString(6);
-                duration = cursor.getLong(4);
                 visibility = 1;
                 break;
             }

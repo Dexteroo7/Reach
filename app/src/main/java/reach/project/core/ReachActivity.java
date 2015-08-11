@@ -100,7 +100,6 @@ import reach.project.coreViews.PushSongsFragment;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UploadHistory;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
@@ -203,12 +202,13 @@ public class ReachActivity extends AppCompatActivity implements
         @Override
         public void onPanelCollapsed(View view) {
 
-            ActionBar actionBar = getSupportActionBar();
+            final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
+
                 actionBar.setTitle(actionBarTitle);
                 actionBar.setSubtitle(actionBarSubtitle);
                 actionBar.setIcon(actionBarIcon);
-                Menu mToolbarMenu = mToolbar.getMenu();
+                final Menu mToolbarMenu = mToolbar.getMenu();
                 if (searchView != null) {
                     searchView.setQuery(null, false);
                     ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
@@ -228,8 +228,9 @@ public class ReachActivity extends AppCompatActivity implements
         @Override
         public void onPanelExpanded(View view) {
 
-            ActionBar actionBar = getSupportActionBar();
+            final ActionBar actionBar = getSupportActionBar();
             if (actionBar != null && !actionBar.getTitle().equals("My Library")) {
+
                 actionBarTitle = (String) actionBar.getTitle();
                 actionBarSubtitle = (String) actionBar.getSubtitle();
                 actionBarIcon = mToolbar.getLogo();
@@ -237,7 +238,8 @@ public class ReachActivity extends AppCompatActivity implements
                 actionBar.setTitle("My Library");
                 actionBar.setSubtitle("");
                 actionBar.setIcon(0);
-                Menu mToolbarMenu = mToolbar.getMenu();
+
+                final Menu mToolbarMenu = mToolbar.getMenu();
                 for (int i = 0; i < mToolbarMenu.size(); i++)
                     mToolbarMenu.getItem(i).setVisible(false);
                 mToolbar.inflateMenu(R.menu.player_menu);
@@ -646,14 +648,17 @@ public class ReachActivity extends AppCompatActivity implements
 
             serverId = SharedPrefUtils.getServerId(preferences);
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
-            getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
-            getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
             slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
-            //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, MiscUtils.dpToPx(60));
-            addNotificationDrawer();
+
+            //load fragment
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
+            //load notification drawer
+            addNotificationDrawer();
+            //load adapters
+            new LoadAdapters().executeOnExecutor(StaticData.threadPool, this);
+
         } catch (IllegalStateException ignored) {
             finish();
         }
@@ -1007,9 +1012,9 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
-        View navListView = mNavigationView.getChildAt(0);
+        final View navListView = mNavigationView.getChildAt(0);
 
-        FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
+        final FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
         frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
         navListView.setLayoutParams(frameLayoutParams);
         //navListView.setPadding(0,0,0,MiscUtils.dpToPx(70));
@@ -1042,60 +1047,48 @@ public class ReachActivity extends AppCompatActivity implements
         selectionArgumentsDownloader = new String[]{"0"};
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
-        new LoadAdapters().executeOnExecutor(StaticData.threadPool, this);
-        StaticData.threadPool.submit(loadFragment);
+        //accountCreation ? numberVerification ? contactListFragment ? and other stuff
+        loadFragment();
     }
 
-    private final Runnable loadFragment = new Runnable() {
-        @Override
-        public void run() {
+    private void loadFragment() {
 
-            final String userName = SharedPrefUtils.getUserName(preferences);
-            final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
+        final String userName = SharedPrefUtils.getUserName(preferences);
+        final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
 
-            if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
+        if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
 
-                accountCreationError();
-                toggleSliding(false);
-            } else if (TextUtils.isEmpty(userName)) {
+            accountCreationError();
+            toggleSliding(false);
+        } else if (TextUtils.isEmpty(userName)) {
 
-                startAccountCreation(Optional.<OldUserContainerNew>absent());
-                toggleSliding(false);
-            } else {
+            startAccountCreation(Optional.<OldUserContainerNew>absent());
+            toggleSliding(false);
+        } else {
 
-                if (isFinishing())
-                    return;
-                try {
+            if (isFinishing())
+                return;
+            try {
 
-                    containerFrame.setPadding(0, topPadding, 0, 0);
-                    slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
-                    if (!StaticData.debugMode) {
-                        if (serverId != 0) {
-                            StaticData.threadPool.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    String locID = Localytics.getCustomerId();
-                                    if (locID == null || TextUtils.isEmpty(locID)) {
-                                        Localytics.setCustomerId(SharedPrefUtils.getUserNumber(preferences));
-                                        Localytics.setCustomerFullName(SharedPrefUtils.getUserName(preferences));
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    fragmentManager.beginTransaction()
-                            .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                            .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
-                } catch (IllegalStateException ignored) {
-                    finish();
-                }
+                containerFrame.setPadding(0, topPadding, 0, 0);
+                slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
+                fragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                        .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
+                //load notification drawer
+                addNotificationDrawer();
+                //load adapters
+                new LoadAdapters().executeOnExecutor(StaticData.threadPool, this);
+                //load last song
                 new LastSong().executeOnExecutor(StaticData.threadPool);
 
+            } catch (IllegalStateException ignored) {
+                finish();
             }
-
-            LocalUtils.initialize(userName, phoneNumber).run();
         }
-    };
+
+        StaticData.threadPool.submit(LocalUtils.initialize(userName, phoneNumber));
+    }
 
     private final class LoadAdapters extends AsyncTask<ReachActivity, Void, ReachActivity> {
 
@@ -1162,9 +1155,6 @@ public class ReachActivity extends AppCompatActivity implements
 
             shuffleBtn.setSelected(booleans[1]);
             repeatBtn.setSelected(booleans[2]);
-
-            //also do this !
-            addNotificationDrawer();
         }
     }
 
@@ -1197,7 +1187,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             return new CursorLoader(this,
                     ReachDatabaseProvider.CONTENT_URI,
-                    StaticData.DOWNLOADED_LIST,
+                    ReachDatabaseHelper.ADAPTER_LIST,
                     selectionDownloader,
                     selectionArgumentsDownloader,
                     ReachDatabaseHelper.COLUMN_ADDED + " DESC");
@@ -1205,7 +1195,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             return new CursorLoader(this,
                     ReachSongProvider.CONTENT_URI,
-                    StaticData.DISK_LIST,
+                    ReachSongHelper.DISK_LIST,
                     selectionMyLibrary,
                     selectionArgumentsMyLibrary,
                     ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
@@ -1296,14 +1286,17 @@ public class ReachActivity extends AppCompatActivity implements
             cursor = contentResolver.query(
                     ReachDatabaseProvider.CONTENT_URI,
                     new String[]{
-                            ReachDatabaseHelper.COLUMN_ID,
+
+                            ReachDatabaseHelper.COLUMN_ID, //0
+                            ReachDatabaseHelper.COLUMN_PROCESSED, //1
+                            ReachDatabaseHelper.COLUMN_PATH, //2
+
+                            ReachDatabaseHelper.COLUMN_IS_LIKED, //3
                             ReachDatabaseHelper.COLUMN_SENDER_ID,
                             ReachDatabaseHelper.COLUMN_RECEIVER_ID,
                             ReachDatabaseHelper.COLUMN_LENGTH,
 
-                            ReachDatabaseHelper.COLUMN_PROCESSED,
-                            ReachDatabaseHelper.COLUMN_PATH,
-                            ReachDatabaseHelper.COLUMN_IS_LIKED},
+                    },
 
                     ReachDatabaseHelper.COLUMN_SONG_ID + " = ? and " +
                             ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
@@ -1314,48 +1307,63 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (cursor != null) {
             if (cursor.moveToFirst()) {
+
+                //song already found
                 if (!multiple) {
-                    LocalUtils.playSong(cursor.getLong(0),
+
+                    //if not multiple addition, play the song
+                    final boolean liked;
+                    final String temp = cursor.getString(3);
+                    liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+
+                    final MusicData musicData = new MusicData(
+                            cursor.getLong(0), //id
                             size,
                             senderId,
-                            cursor.getLong(4),
-                            cursor.getString(5),
+                            cursor.getLong(1),
+                            cursor.getString(2),
                             displayName,
                             artistName,
-                            (byte) 0,
-                            cursor.getString(6),
-                            duration, this);
+                            liked,
+                            duration,
+                            (byte) 0);
+                    LocalUtils.playSong(musicData, this);
                 }
+                //in both cases close and continue
                 cursor.close();
                 return;
             }
             cursor.close();
         }
-        //TODO set artist name
+
+        //new song
+
         final ReachDatabase reachDatabase = new ReachDatabase();
 
         reachDatabase.setId(-1);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setArtistName("hello_world");
-        reachDatabase.setReference(0);
-
         reachDatabase.setSongId(songId);
+        reachDatabase.setReceiverId(serverId);
         reachDatabase.setSenderId(senderId);
+
+        reachDatabase.setOperationKind((short) 0);
+        reachDatabase.setPath("hello_world");
         reachDatabase.setSenderName(userName);
         reachDatabase.setOnlineStatus(onlineStatus);
-        reachDatabase.setReceiverId(serverId);
 
-        reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
-        reachDatabase.setOperationKind((short) 0);
+        reachDatabase.setArtistName(artistName);
+        reachDatabase.setIsLiked(false);
         reachDatabase.setDisplayName(displayName);
-        reachDatabase.setLogicalClock((short) 0);
         reachDatabase.setActualName(actualName);
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
+        reachDatabase.setAdded(System.currentTimeMillis());
+
+        reachDatabase.setDuration(duration);
+        reachDatabase.setLogicalClock((short) 0);
+        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+
         reachDatabase.setLastActive(0);
-        reachDatabase.setIsActivated(false);
-        reachDatabase.setIsLiked(false);
+        reachDatabase.setReference(0);
 
         //We call bulk starter always
         final String[] splitter = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
@@ -1444,7 +1452,7 @@ public class ReachActivity extends AppCompatActivity implements
             private boolean toggleLiked(Context context) {
 
                 final ContentValues values = new ContentValues();
-                values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() + "");
+                values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
 
                 return context.getContentResolver().update(
                         Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
@@ -1463,23 +1471,12 @@ public class ReachActivity extends AppCompatActivity implements
 
                 if (toggleLiked(context)) {
 
-                    final Cursor cursor = context.getContentResolver().query(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + currentPlaying.getSenderId()),
-                            new String[]{ReachFriendsHelper.COLUMN_USER_NAME, ReachFriendsHelper.COLUMN_IMAGE_ID},
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{currentPlaying.getSenderId() + ""}, null);
-
-                    if (cursor == null)
-                        return;
-                    if (!cursor.moveToFirst()) {
-                        cursor.close();
-                        return;
-                    }
                     MiscUtils.autoRetryAsync(new DoWork<Void>() {
                         @Override
                         public Void doWork() throws IOException {
 
-                            return StaticData.notificationApi.addLike(currentPlaying.getSenderId(),
+                            return StaticData.notificationApi.addLike(
+                                    currentPlaying.getSenderId(),
                                     serverId,
                                     currentPlaying.getDisplayName()).execute();
                         }
@@ -1522,6 +1519,10 @@ public class ReachActivity extends AppCompatActivity implements
             }
         };
 
+        /**
+         * Listener for music player click listener
+         * uses -> StaticData.DOWNLOADED_LIST & StaticData.DISK_LIST
+         */
         public static final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
 
             @Override
@@ -1530,58 +1531,10 @@ public class ReachActivity extends AppCompatActivity implements
                 final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
                 final Context context = view.getContext();
 
-                if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length) {
-
-                    final long senderId = cursor.getLong(8);
-                    final String artistName;
-                    final long duration;
-                    final Cursor artistCursor = context.getContentResolver().query(
-                            ReachSongProvider.CONTENT_URI,
-                            new String[]{ReachSongHelper.COLUMN_ID,
-                                    ReachSongHelper.COLUMN_USER_ID,
-                                    ReachSongHelper.COLUMN_SONG_ID,
-                                    ReachSongHelper.COLUMN_ARTIST,
-                                    ReachSongHelper.COLUMN_DURATION},
-                            ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                                    ReachSongHelper.COLUMN_SONG_ID + " = ?",
-                            new String[]{senderId + "", cursor.getLong(10) + ""}, null);
-
-                    if (artistCursor == null) {
-                        artistName = "";
-                        duration = 0;
-                    } else if (!artistCursor.moveToFirst()) {
-                        artistName = "";
-                        duration = 0;
-                        artistCursor.close();
-                    } else {
-                        artistName = artistCursor.getString(3);
-                        duration = artistCursor.getLong(4);
-                        artistCursor.close();
-                    }
-                    playSong(
-                            cursor.getLong(0),    //id
-                            cursor.getLong(1),    //length
-                            senderId,             //senderId
-                            cursor.getLong(3),    //processed
-                            cursor.getString(4),  //path
-                            cursor.getString(5),  //displayName
-                            artistName,           //artistName
-                            (byte) 0,
-                            cursor.getString(14),
-                            duration, context);
-                    return;
-                }
-                playSong(
-                        cursor.getLong(7),    //id
-                        cursor.getLong(0),    //length
-                        serverId,             //senderId
-                        cursor.getLong(0),    //processed = length
-                        cursor.getString(1),  //path
-                        cursor.getString(2),  //displayName
-                        cursor.getString(5), //artistName
-                        (byte) 1, //type
-                        "false", //isLiked
-                        cursor.getLong(4), context); //duration
+                if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
+                    playSong(ReachDatabaseHelper.getMusicData(cursor), context);
+                else
+                    playSong(ReachSongHelper.getMusicData(cursor, serverId), context);
             }
         };
 
@@ -1691,22 +1644,28 @@ public class ReachActivity extends AppCompatActivity implements
                     @Override
                     public Boolean work(ReachActivity activity) {
 
+                        if (!checkPlayServices(activity)) {
+                            Log.i("Ayush", "No valid Google Play Services APK found.");
+                            return false; //do not proceed
+                        }
+
                         if (!StaticData.debugMode) {
                             // Crittercism
                             Crittercism.initialize(activity, "552eac3c8172e25e67906922");
                             Crittercism.setUsername(userName + " " + phoneNumber);
-                            //  Get tracker
+                            //  Get GA tracker
                             final Tracker t = ((ReachApplication) activity.getApplication()).getTracker();
                             t.setScreenName("reach.project.core.ReachActivity");
                             t.send(new HitBuilders.ScreenViewBuilder().build());
                             // AppsFlyer
                             AppsFlyerLib.setAppsFlyerKey("JSwfk37zArmeNLNCd4grKR");
                             AppsFlyerLib.sendTracking(activity);
-                        }
-
-                        if (!checkPlayServices(activity)) {
-                            Log.i("Ayush", "No valid Google Play Services APK found.");
-                            return false; //do not proceed
+                            //Localytics
+                            final String locID = Localytics.getCustomerId();
+                            if (locID == null || TextUtils.isEmpty(locID)) {
+                                Localytics.setCustomerId(phoneNumber);
+                                Localytics.setCustomerFullName(userName);
+                            }
                         }
 
                         final NetworkInfo networkInfo =
@@ -1721,7 +1680,6 @@ public class ReachActivity extends AppCompatActivity implements
                 });
                 ////////////////////////////////////////
                 if (result.isPresent() && result.get()) {
-
                     //refresh gcm
                     checkGCM();
                     //check for update
@@ -1786,26 +1744,23 @@ public class ReachActivity extends AppCompatActivity implements
         }
 
         //id = -1 : disk else downloader
-        public static boolean playSong(long id, long length, long senderId, long processed, String path,
-                                       String displayName, String artistName, byte type, String isLiked, long duration, Context context) {
+        public static boolean playSong(MusicData musicData, Context context) {
 
             //stop any other play clicks till current is processed
             //sanity check
-            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
-            if (length == 0 || senderId == 0 || TextUtils.isEmpty(path) || TextUtils.isEmpty(displayName)) {
+//            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
+            if (musicData.getLength() == 0 || TextUtils.isEmpty(musicData.getPath())) {
                 Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
                 return false;
             }
 
-            if (processed == 0) {
+            if (musicData.getProcessed() == 0) {
                 Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
                 return false;
             }
 
-            final MusicData data = new MusicData(displayName, path, artistName, id, length,
-                    senderId, processed, type, isLiked.equals("true"), duration);
             ProcessManager.submitMusicRequest(context,
-                    Optional.of(data),
+                    Optional.of(musicData),
                     MusicHandler.ACTION_NEW_SONG);
             ////////////////////////////////////////
             return true;
@@ -2173,7 +2128,7 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 case ProcessManager.REPLY_ERROR: {
                     Log.i("Downloader", "REPLY_ERROR received");
-                    updateMusic(new MusicData("", "", "", 0, 0, 0, 0, (byte) 0, false, 0), true, activity);
+                    updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0), true, activity);
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

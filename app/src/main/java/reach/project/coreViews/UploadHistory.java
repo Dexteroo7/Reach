@@ -94,7 +94,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
         return new CursorLoader(getActivity(),
                 ReachDatabaseProvider.CONTENT_URI,
-                StaticData.DOWNLOADED_LIST,
+                ReachDatabaseHelper.ADAPTER_LIST,
                 ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?",
                 new String[]{1 + ""},
                 ReachDatabaseHelper.COLUMN_ADDED + " DESC");

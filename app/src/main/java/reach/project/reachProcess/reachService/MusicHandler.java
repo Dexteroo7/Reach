@@ -179,7 +179,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         handlerInterface.updateSongDetails(currentSong);
 
         final short toReturn;
-        final int duration;
+        final long duration;
 
         try {
             duration = (currentSong.getProcessed() < currentSong.getLength()) ?
@@ -198,10 +198,11 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             return 0;
         }
 
-        if(duration == 0)
-            return 0; //gg
-
+        //if we did not know the duration already try to set
         if(currentSong.getDuration() == 0) {
+
+            if(duration == 0)
+                return 0; //now if duration is not known fuck off
             currentSong.setDuration(duration); //only update duration for old songs
             toReturn = 1; //update the duration
         } else
