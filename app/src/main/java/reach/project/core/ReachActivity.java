@@ -1210,7 +1210,10 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
             }
-            //setIntent(null);
+            intent.removeExtra("openNotificationFragment");
+            intent.removeExtra("openPlayer");
+            intent.removeExtra("openFriendRequests");
+            intent.removeExtra("openNotifications");
         }
     }
 

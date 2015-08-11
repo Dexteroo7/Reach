@@ -44,6 +44,7 @@ public class FriendRequestFragment extends Fragment {
     private static WeakReference<FriendRequestFragment> reference = null;
     private ReachFriendRequestAdapter adapter = null;
     private ExecutorService friendsRefresher = null;
+    private ListView listView = null;
     private static long serverId = 0;
 
     public static FriendRequestFragment newInstance(long id) {
@@ -62,8 +63,8 @@ public class FriendRequestFragment extends Fragment {
 
     public void refresh() {
 
-        if (friendsRefresher != null && adapter != null)
-            new FetchRequests().executeOnExecutor(friendsRefresher, adapter);
+        if (friendsRefresher != null &&  listView!= null)
+            new FetchRequests().executeOnExecutor(friendsRefresher, listView);
     }
 
     private final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
@@ -107,7 +108,7 @@ public class FriendRequestFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
 
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
@@ -153,10 +154,10 @@ public class FriendRequestFragment extends Fragment {
         mListener = null;
     }
 
-    private static final class FetchRequests extends AsyncTask<ArrayAdapter, Void, ArrayAdapter> {
+    private static final class FetchRequests extends AsyncTask<ListView, Void, ListView> {
 
         @Override
-        protected ArrayAdapter doInBackground(ArrayAdapter... params) {
+        protected ListView doInBackground(ListView... params) {
 
             receivedRequests.clear();
 
@@ -178,12 +179,15 @@ public class FriendRequestFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ArrayAdapter adapter) {
+        protected void onPostExecute(ListView lView) {
 
-            super.onPostExecute(adapter);
-
-            if (adapter != null)
+            super.onPostExecute(lView);
+            if (lView != null) {
+                ArrayAdapter adapter = (ArrayAdapter) lView.getAdapter();
                 adapter.notifyDataSetChanged();
+                if (adapter.getCount()==0)
+                    MiscUtils.setEmptyTextforListView(lView,"No friend requests for you");
+            }
         }
     }
 }

@@ -51,6 +51,7 @@ public class NotificationFragment extends Fragment {
     private static WeakReference<NotificationFragment> reference = null;
     private  ReachNotificationAdapter adapter = null;
     private  ExecutorService notificationRefresher = null;
+    private ListView listView = null;
     private static long serverId = 0;
 
     public static NotificationFragment newInstance(long id) {
@@ -69,8 +70,8 @@ public class NotificationFragment extends Fragment {
 
     public void refresh() {
 
-        if (notificationRefresher != null && adapter != null)
-            new NotificationSync().executeOnExecutor(notificationRefresher, adapter);
+        if (notificationRefresher != null && listView != null)
+            new NotificationSync().executeOnExecutor(notificationRefresher, listView);
     }
 
     @Override
@@ -78,7 +79,7 @@ public class NotificationFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
 
         //listView.setBackgroundColor(getResources().getColor(R.color.default_grey));
@@ -173,10 +174,10 @@ public class NotificationFragment extends Fragment {
         }
     };
 
-    private static final class NotificationSync extends AsyncTask<ArrayAdapter, Void, ArrayAdapter> {
+    private static final class NotificationSync extends AsyncTask<ListView, Void, ListView> {
 
         @Override
-        protected ArrayAdapter doInBackground(ArrayAdapter... params) {
+        protected ListView doInBackground(ListView... params) {
 
             notifications.clear();
 
@@ -239,11 +240,15 @@ public class NotificationFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(final ArrayAdapter adapter) {
+        protected void onPostExecute(final ListView lView) {
 
-            super.onPostExecute(adapter);
-            if (adapter != null)
+            super.onPostExecute(lView);
+            if (lView != null) {
+                ArrayAdapter adapter = (ArrayAdapter) lView.getAdapter();
                 adapter.notifyDataSetChanged();
+                if (adapter.getCount()==0)
+                    MiscUtils.setEmptyTextforListView(lView,"No notifications for you");
+            }
         }
     }
 }
