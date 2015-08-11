@@ -4,7 +4,7 @@
 xmlns:android="http://schemas.android.com/apk/res/android"
 android:shape="rectangle">
 
-    <solid android:color="@color/reach_blue_fade" />
+    <solid android:color="@color/reach_color" />
     <corners android:radius="5dp" />
 
 </shape>

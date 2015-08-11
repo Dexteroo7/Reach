@@ -41,7 +41,7 @@
             android:background="@drawable/number_text_selector"
             android:textSize="16sp"
             android:layout_margin="10dp"
-            android:textColor="@color/reach_blue_fade"
+            android:textColor="@color/reach_color"
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
             android:layout_width="wrap_content"

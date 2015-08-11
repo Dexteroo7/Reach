@@ -1,7 +1,6 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -24,6 +23,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
@@ -168,7 +168,7 @@ public class ContactsListFragment extends Fragment implements
                 inputText.setLayoutParams(lp);
                 inputText.setText(msg);
                 input.addView(inputText);
-
+                LocalUtils.showAlert(input, inviteAdapter, contact);
             }
         }
     };

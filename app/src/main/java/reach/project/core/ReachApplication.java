@@ -18,9 +18,8 @@ public class ReachApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (!StaticData.debugMode)
-            registerActivityLifecycleCallbacks(
-                    new LocalyticsActivityLifecycleCallbacks(this));
+        registerActivityLifecycleCallbacks(
+                new LocalyticsActivityLifecycleCallbacks(this));
     }
 
     public synchronized Tracker getTracker() {

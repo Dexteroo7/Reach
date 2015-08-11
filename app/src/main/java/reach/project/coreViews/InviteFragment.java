@@ -55,21 +55,15 @@ public class InviteFragment extends Fragment {
                         R.drawable.messenger,
                         R.drawable.twitter,
                         R.drawable.google_plus2};
-        private final int [] divider = {
-                R.color.reach_color,
-                R.color.reach_color,
-                R.color.reach_color,0};
 
         private final class ViewHolder {
 
             private final ImageView listImage;
             private final TextView listTitle;
-            private final View dividerFooter;
 
-            private ViewHolder(ImageView listImage, TextView listTitle, View dividerFooter) {
+            private ViewHolder(ImageView listImage, TextView listTitle) {
                 this.listImage = listImage;
                 this.listTitle = listTitle;
-                this.dividerFooter = dividerFooter;
             }
         }
 
@@ -87,8 +81,7 @@ public class InviteFragment extends Fragment {
                 convertView = ((Activity)parent.getContext()).getLayoutInflater().inflate(layoutResourceId, parent, false);
                 viewHolder = new ViewHolder(
                         (ImageView) convertView.findViewById(R.id.listImage),
-                        (TextView) convertView.findViewById(R.id.listTitle),
-                        convertView.findViewById(R.id.dividerFooter));
+                        (TextView) convertView.findViewById(R.id.listTitle));
                 convertView.setTag(viewHolder);
             }
             else
@@ -96,7 +89,6 @@ public class InviteFragment extends Fragment {
 
             viewHolder.listTitle.setText(getItem(position));
             Picasso.with(convertView.getContext()).load(iconIds[position]).into(viewHolder.listImage);
-            viewHolder.dividerFooter.setBackgroundResource(divider[position]);
             return convertView;
         }
     }

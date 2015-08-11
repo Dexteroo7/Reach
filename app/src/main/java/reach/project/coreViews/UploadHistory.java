@@ -136,7 +136,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
             return rootView;
         uploadAdapter = new ReachUploadAdapter(getActivity(),
                 R.layout.upload_queue_item, completedOperations, friendLongSparseArray);
-        onGoingUploadsAdapter = new ReachQueueAdapter(getActivity(), R.layout.reach_queue_item, null, 0);
+        onGoingUploadsAdapter = new ReachQueueAdapter(getActivity(), null, 0);
         uploadList.setSelector(android.R.color.transparent);
 
         uploadHistoryAdapter = new MergeAdapter();

@@ -25,17 +25,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </FrameLayout>
-
-    <TextView
-        android:id="@+id/userNameList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/profilePhotoContainer"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="50dp"
-        android:textColor="#000"
-        android:textSize="16sp"
-        android:text="TITLE"/>
     <ImageView
         android:id="@+id/listToggle"
         android:layout_width="20dp"
@@ -44,4 +33,29 @@
         android:layout_alignParentRight="true"
         android:layout_marginRight="20dp"
         android:src="@drawable/icon_invite"/>
+    <LinearLayout
+        android:layout_toRightOf="@id/profilePhotoContainer"
+        android:layout_toLeftOf="@id/listToggle"
+        android:orientation="vertical"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/userNameList"
+            android:text="Title"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textSize="16sp"
+            android:textColor="#000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/listSubTitle"
+            android:layout_marginTop="2dp"
+            android:maxLines="1"
+            android:textColor="@color/reach_color"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 </RelativeLayout>

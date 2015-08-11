@@ -49,11 +49,12 @@
 
         <TextView
             android:id="@+id/listStatus"
-            android:layout_width="wrap_content"
+            android:layout_width="45dp"
             android:layout_height="wrap_content"
             android:layout_below="@id/listToggle"
             android:layout_centerHorizontal="true"
-            android:text="Offline"
+            android:gravity="center"
+            android:text="Pending"
             android:textColor="@color/darkgrey"
             android:textSize="12sp" />
     </RelativeLayout>
@@ -128,7 +129,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_centerVertical="true"
-                android:src="@drawable/note60" />
+                android:src="@drawable/ic_music_count_grey" />
 
             <TextView
                 android:id="@+id/telephoneNumberList"
@@ -138,7 +139,7 @@
                 android:layout_marginLeft="5dp"
                 android:layout_toRightOf="@id/note"
                 android:text="0"
-                android:textColor="@color/reach_grey"
+                android:textColor="#000"
                 android:textSize="13sp" />
         </RelativeLayout>
     </LinearLayout>
