@@ -169,6 +169,7 @@ public class ReachActivity extends AppCompatActivity implements
     private SeekBar progressBarMinimized;
     private ListView queueListView;
     private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+    private CustomViewPager viewPager;
 
     private MergeAdapter combinedAdapter = null;
 
@@ -541,7 +542,7 @@ public class ReachActivity extends AppCompatActivity implements
         } catch (IllegalStateException ignored) {
             finish();
         }*/
-        final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.viewPager);
+        viewPager = (CustomViewPager) findViewById(R.id.viewPager);
         viewPager.setAdapter(new ViewPagerReusable(
                 fragmentManager,
                 new String[]{"Requests", "Notifications"},
@@ -1171,6 +1172,16 @@ public class ReachActivity extends AppCompatActivity implements
                             slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                     }
                 }, 1500);
+            else if (intent.getBooleanExtra("openFriendRequests", false)) {
+                if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
+                    mDrawerLayout.openDrawer(Gravity.RIGHT);
+                viewPager.setCurrentItem(0);
+            }
+                else if (intent.getBooleanExtra("openNotifications", false)) {
+                if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
+                    mDrawerLayout.openDrawer(Gravity.RIGHT);
+                viewPager.setCurrentItem(1);
+            }
             else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
 
                 final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
@@ -1195,7 +1206,7 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
             }
-            setIntent(null);
+            //setIntent(null);
         }
     }
 

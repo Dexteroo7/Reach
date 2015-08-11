@@ -49,8 +49,8 @@ public class NotificationFragment extends Fragment {
 
     private static final List<NotificationBaseLocal> notifications = new ArrayList<>();
     private static WeakReference<NotificationFragment> reference = null;
-    private static ReachNotificationAdapter adapter = null;
-    private static ExecutorService notificationRefresher = null;
+    private  ReachNotificationAdapter adapter = null;
+    private  ExecutorService notificationRefresher = null;
     private static long serverId = 0;
 
     public static NotificationFragment newInstance(long id) {
@@ -63,7 +63,11 @@ public class NotificationFragment extends Fragment {
         return fragment;
     }
 
-    public static void refresh() {
+    public static WeakReference<NotificationFragment> getReference() {
+        return reference;
+    }
+
+    public void refresh() {
 
         if (notificationRefresher != null && adapter != null)
             new NotificationSync().executeOnExecutor(notificationRefresher, adapter);
