@@ -57,6 +57,7 @@ import android.widget.Toast;
 import com.appsflyer.AppsFlyerLib;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
+import com.daimajia.swipe.util.Attributes;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
@@ -290,76 +291,6 @@ public class ReachActivity extends AppCompatActivity implements
             downloadRefresh.setEnabled(enable);
         }
     };
-
-//    private final AdapterView.OnItemLongClickListener myLibraryLongClickListener = new AdapterView.OnItemLongClickListener() {
-//        @Override
-//        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long viewId) {
-//
-//            final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
-//            final short status = cursor.getShort(6);
-//            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length && status != ReachDatabase.FINISHED) {
-//                final long id = cursor.getLong(0);
-//                final short operationKind = cursor.getShort(7);
-//                final short logicalClock = cursor.getShort(9);
-//                final long senderId = cursor.getLong(8);
-//                final long receiverId = cursor.getLong(2);
-//                final long songId = cursor.getLong(10);
-//                final long processed = cursor.getLong(3);
-//                final long length = cursor.getLong(1);
-//
-//                String txt;
-//                if (status != ReachDatabase.PAUSED_BY_USER)
-//                    txt = "Pause download";
-//                else
-//                    txt = "Resume download";
-//
-//                AlertDialog.Builder builder = new AlertDialog.Builder(ReachActivity.this);
-//                builder.setPositiveButton(txt, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//
-//                        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
-//
-//                        if (status != ReachDatabase.PAUSED_BY_USER) {
-//
-//                            final ContentValues values = new ContentValues();
-//                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
-//                            getContentResolver().update(uri, values,
-//                                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                                    new String[]{id + ""});
-//                            Log.i("Ayush", "Pausing");
-//                        } else if (operationKind == 1) {
-//
-//                            getContentResolver().delete(uri, ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                                    new String[]{id + ""});
-//                        } else {
-//
-//                            final ContentValues values = new ContentValues();
-//                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-//                            values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, logicalClock + 1);
-//                            getContentResolver().update(uri, values,
-//                                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                                    new String[]{id + ""});
-//                            final ReachDatabase reachDatabase = new ReachDatabase();
-//                            reachDatabase.setSenderId(senderId);
-//                            reachDatabase.setReceiverId(receiverId);
-//                            reachDatabase.setSongId(songId);
-//                            reachDatabase.setProcessed(processed);
-//                            reachDatabase.setLength(length);
-//                            reachDatabase.setLogicalClock(logicalClock);
-//                            reachDatabase.setId(id);
-//                            StaticData.threadPool.submit(MiscUtils.startDownloadOperation(reachDatabase, getContentResolver()));
-//                            Log.i("Ayush", "Un-pausing");
-//                        }
-//                        dialog.dismiss();
-//                    }
-//                });
-//                AlertDialog dialog = builder.create();
-//                dialog.show();
-//            }
-//            return true;
-//        }
-//    };
 
 
     private View.OnClickListener navHeaderClickListener = new View.OnClickListener() {
@@ -1113,6 +1044,7 @@ public class ReachActivity extends AppCompatActivity implements
             emptyTV1 = LocalUtils.getEmptyDownload(params[0]);
             combinedAdapter.addView(emptyTV1, false);
             combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(params[0], null, 0));
+            queueAdapter.setMode(Attributes.Mode.Multiple);
             queueAdapter.getSwipeLayoutResourceId(0);
             combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(params[0]));
             emptyTV2 = LocalUtils.getEmptyLibrary(params[0]);
@@ -1214,13 +1146,11 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
             }
-<<<<<<< HEAD
-=======
+
             intent.removeExtra("openNotificationFragment");
             intent.removeExtra("openPlayer");
             intent.removeExtra("openFriendRequests");
             intent.removeExtra("openNotifications");
->>>>>>> 742096c0b28cd36946f6ee9a98a940ddb0648efa
         }
     }
 

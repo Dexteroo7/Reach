@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -49,8 +50,7 @@ public class NotificationFragment extends Fragment {
 
     private static final List<NotificationBaseLocal> notifications = new ArrayList<>();
     private static WeakReference<NotificationFragment> reference = null;
-    private  ReachNotificationAdapter adapter = null;
-    private  ExecutorService notificationRefresher = null;
+    private ExecutorService notificationRefresher = null;
     private ListView listView = null;
     private static long serverId = 0;
 
@@ -80,10 +80,9 @@ public class NotificationFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
+        final ReachNotificationAdapter adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
 
-        //listView.setBackgroundColor(getResources().getColor(R.color.default_grey));
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
@@ -102,10 +101,6 @@ public class NotificationFragment extends Fragment {
         if (notificationRefresher != null)
             notificationRefresher.shutdownNow();
         notificationRefresher = null;
-
-        if (adapter != null)
-            adapter.clear();
-        adapter = null;
         super.onDestroyView();
     }
 
@@ -242,14 +237,17 @@ public class NotificationFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(final ListView lView) {
+        protected void onPostExecute(final ListView listView) {
 
-            super.onPostExecute(lView);
-            if (lView != null) {
-                ArrayAdapter adapter = (ArrayAdapter) lView.getAdapter();
+            super.onPostExecute(listView);
+
+            final ListAdapter temp;
+            if (listView != null && (temp = listView.getAdapter()) != null) {
+
+                final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
-                if (adapter.getCount()==0)
-                    MiscUtils.setEmptyTextforListView(lView,"No notifications for you");
+                if (adapter.getCount() == 0)
+                    MiscUtils.setEmptyTextforListView(listView, "No notifications for you");
             }
         }
     }

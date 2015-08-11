@@ -53,8 +53,6 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -874,7 +872,7 @@ public class ContactsListFragment extends Fragment implements
                                 smsObj.setparams("alerts.sinfini.com ", "sms", "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM");
                                 try {
                                     smsObj.send_sms(params[0], params[1], "dlr_url");
-                                } catch (IOException | KeyManagementException | NoSuchAlgorithmException e) {
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                     return false;
                                 }

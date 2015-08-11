@@ -33,7 +33,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -240,7 +239,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         }
         //////////////////////////////////end infinite loop
         //noinspection unchecked
-        runOperation(Collections.EMPTY_LIST, handlerInterface);
+//        runOperation(networkManager.keys(), handlerInterface); needed ?
         handlerInterface.removeNetwork();
         Log.i("Downloader", "ConnectionManager QUIT !");
         //automatic cleaning will be called here
@@ -848,6 +847,18 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         }
 
         /**
+         * Safety check for paused operation
+         */
+        if (database.getStatus() == ReachDatabase.PAUSED_BY_USER) {
+
+            LocalUtils.closeSocket(database.getReference());
+            LocalUtils.keyCleanUp(selectionKey);
+            if (database.getOperationKind() == 0) //close fileChannel if download
+                MiscUtils.closeAndIgnore(openChannels.get(LocalUtils.getFileChannelIndex(database)));
+            return; //nothing more to do
+        }
+
+        /**
          * Check if socket is valid
          */
         final SocketChannel socketChannel;
@@ -1028,7 +1039,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
     /**
      * Kills the channels/keys that are sleeping for more than 60 secs
-     *Also sync with sql db
+     * Also sync with sql db
+     *
      * @param keys the set of keys to check
      */
     private void runOperation(Iterable<SelectionKey> keys,
@@ -1497,6 +1509,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 return;
             Log.i("Downloader", "Running cleanUp");
             MiscUtils.closeAndIgnore(selectionKey.channel());
+            selectionKey.attach(null); //discard old attachment
             selectionKey.cancel();
         }
 

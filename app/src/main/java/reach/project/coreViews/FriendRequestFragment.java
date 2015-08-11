@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -42,7 +43,6 @@ public class FriendRequestFragment extends Fragment {
 
     private static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
     private static WeakReference<FriendRequestFragment> reference = null;
-    private ReachFriendRequestAdapter adapter = null;
     private ExecutorService friendsRefresher = null;
     private ListView listView = null;
     private static long serverId = 0;
@@ -109,9 +109,9 @@ public class FriendRequestFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
+        final ReachFriendRequestAdapter adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
 
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
@@ -131,9 +131,6 @@ public class FriendRequestFragment extends Fragment {
             friendsRefresher.shutdownNow();
         friendsRefresher = null;
 
-        if (adapter != null)
-            adapter.clear();
-        adapter = null;
         super.onDestroyView();
     }
 
@@ -180,22 +177,17 @@ public class FriendRequestFragment extends Fragment {
         }
 
         @Override
-<<<<<<< HEAD
         protected void onPostExecute(ListView listView) {
 
             super.onPostExecute(listView);
 
-            if (listView != null && listView.getAdapter() != null)
-=======
-        protected void onPostExecute(ListView lView) {
+            final ListAdapter temp;
+            if (listView != null && (temp = listView.getAdapter()) != null) {
 
-            super.onPostExecute(lView);
-            if (lView != null) {
-                ArrayAdapter adapter = (ArrayAdapter) lView.getAdapter();
->>>>>>> 742096c0b28cd36946f6ee9a98a940ddb0648efa
+                final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
                 if (adapter.getCount()==0)
-                    MiscUtils.setEmptyTextforListView(lView,"No friend requests for you");
+                    MiscUtils.setEmptyTextforListView(listView,"No friend requests for you");
             }
         }
     }
