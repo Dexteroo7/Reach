@@ -193,10 +193,14 @@ public class ReachActivity extends AppCompatActivity implements
         @Override
         public void onPanelSlide(View view, float v) {
 
-            if (v > 0.99f)
+            if (v > 0.99f) {
                 findViewById(R.id.playerShadow).setVisibility(View.GONE);
-            else if (v < 0.99f)
+                findViewById(R.id.player).setVisibility(View.GONE);
+            }
+            else if (v < 0.99f) {
                 findViewById(R.id.playerShadow).setVisibility(View.VISIBLE);
+                findViewById(R.id.player).setVisibility(View.VISIBLE);
+            }
             findViewById(R.id.player).setAlpha(1f - v);
         }
 
