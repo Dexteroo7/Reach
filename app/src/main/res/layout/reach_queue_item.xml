@@ -10,18 +10,24 @@
         android:background="#efefef"
         android:layout_width="wrap_content"
         android:layout_height="match_parent">
-        <ImageView
-            android:id="@+id/pauseQueue"
-            android:src="@drawable/stop"
-            android:padding="20dp"
-            android:layout_width="90dp"
-            android:layout_height="match_parent" />
-        <ImageView
-            android:id="@+id/deleteQueue"
-            android:src="@drawable/del_brown"
-            android:padding="20dp"
-            android:layout_width="90dp"
-            android:layout_height="match_parent" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:background="#efefef"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+            <ImageView
+                android:id="@+id/pauseQueue"
+                android:src="@drawable/stop"
+                android:padding="10dp"
+                android:layout_width="50dp"
+                android:layout_height="match_parent" />
+            <ImageView
+                android:id="@+id/deleteQueue"
+                android:src="@drawable/del_brown"
+                android:padding="10dp"
+                android:layout_width="50dp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
     </LinearLayout>
     <RelativeLayout
         android:layout_width="match_parent"
