@@ -25,6 +25,8 @@ import com.google.gson.Gson;
 import java.io.IOException;
 
 import reach.project.R;
+import reach.project.coreViews.FriendRequestFragment;
+import reach.project.coreViews.NotificationFragment;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
@@ -37,6 +39,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
+import reach.project.utils.auxiliaryClasses.UseFragment;
 
 /**
  * Created by dexter on 21/6/14.
@@ -76,10 +79,17 @@ public class GcmIntentService extends IntentService {
             final String userName = splitter[2].trim();
 
             final int notification_id = message.hashCode();
-//            final Intent viewIntent = new Intent(this, ReachActivity.class);
-//            viewIntent.putExtra();
-//            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final Intent viewIntent = new Intent(this, ReachActivity.class);
+            viewIntent.putExtra("openFriendRequests",true);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+            MiscUtils.useFragment(FriendRequestFragment.getReference(), new UseFragment<Void, FriendRequestFragment>() {
+                @Override
+                public Void work(FriendRequestFragment fragment) {
+                    fragment.refresh();
+                    return null;
+                }
+            });
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)
@@ -88,7 +98,7 @@ public class GcmIntentService extends IntentService {
                             .setContentTitle(userName)
                             .setTicker(userName + " wants to access your Music")
                             .setContentText("wants to access your Music")
-//                            .setContentIntent(viewPendingIntent)
+                            .setContentIntent(viewPendingIntent)
                             .setPriority(NotificationCompat.PRIORITY_MAX)
                             .setWhen(System.currentTimeMillis());
 
@@ -103,10 +113,16 @@ public class GcmIntentService extends IntentService {
             final String count = message.substring(4);
             final int notification_id = message.hashCode();
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            final Bundle bundle = new Bundle();
-            bundle.putBoolean("oP", true);
-            viewIntent.putExtras(bundle);
+            viewIntent.putExtra("openNotifications", true);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+            MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
+                @Override
+                public Void work(NotificationFragment fragment) {
+                    fragment.refresh();
+                    return null;
+                }
+            });
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)
@@ -114,6 +130,7 @@ public class GcmIntentService extends IntentService {
                             .setSmallIcon(R.drawable.ic_icon_notif)
                             .setContentTitle("You have " + count + " new notification")
                             .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setContentIntent(viewPendingIntent)
                             .setWhen(System.currentTimeMillis());
             notificationManager.notify(notification_id, notificationBuilder.build());
         }
@@ -131,9 +148,6 @@ public class GcmIntentService extends IntentService {
             final int notification_id = message.hashCode();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            final Bundle bundle = new Bundle();
-            bundle.putBoolean("oP", true);
-            viewIntent.putExtras(bundle);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             final NotificationCompat.Builder notificationBuilder =

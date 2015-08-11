@@ -385,7 +385,8 @@ public class ContactsListFragment extends Fragment implements
                     ReachContactsAdapter.requiredProjection,
                     selection,
                     selectionArguments,
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
+                            ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
         else
             return null;
     }
@@ -846,7 +847,7 @@ public class ContactsListFragment extends Fragment implements
 
             final LinearLayout input = new LinearLayout(context);
             final EditText inputText = new EditText(context);
-            inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
+            inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             inputText.setTextColor(context.getResources().getColor(R.color.darkgrey));
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,

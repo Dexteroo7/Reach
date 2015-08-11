@@ -51,7 +51,9 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="com.appsflyer.MultipleInstallBroadcastReceiver" android:exported="true">
+        <receiver
+            android:name="com.appsflyer.MultipleInstallBroadcastReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
@@ -59,8 +61,8 @@
 
         <receiver android:name="com.appsflyer.AppsFlyerLib">
             <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_REMOVED"/>
-                <data android:scheme="package"/>
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <data android:scheme="package" />
             </intent-filter>
         </receiver>
 
