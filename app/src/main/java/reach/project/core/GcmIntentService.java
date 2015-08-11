@@ -66,72 +66,38 @@ public class GcmIntentService extends IntentService {
 
         final NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(this);
+
         /**
          * Service a permission request
          */
-//        if (message.startsWith("PERMISSION_REQUEST")) {
-//
-//            final String[] splitter = message.split("`");
-//            final String userId = splitter[1].trim();
-//            final String userName = splitter[2].trim();
-//            final Cursor getFriend = getContentResolver().query(
-//                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
-//                    ReachFriendsHelper.projection,
-//                    ReachFriendsHelper.COLUMN_ID + " = ?",
-//                    new String[]{userId}, null);
-//            final boolean shouldInsert;
-//            ReachFriend reachFriend;
-//            if (getFriend == null ||
-//                    !getFriend.moveToFirst() ||
-//                    (reachFriend = ReachFriendsHelper.cursorToProcess(getFriend)) == null) {
-//
-//                final long myId = SharedPrefUtils.getServerId(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-//                reachFriend = MiscUtils.autoRetry(new DoWork<ReachFriend>() {
-//                    @Override
-//                    protected ReachFriend doWork() throws IOException {
-//                        return null;
-////                        return StaticData.userEndpoint.getReachFriend(Long.parseLong(userId), myId).execute();
-//                    }
-//                }, Optional.<Predicate<ReachFriend>>absent()).orNull();
-//                shouldInsert = !(reachFriend == null);
-//            } else
-//                shouldInsert = false;
-//
-//            if (getFriend != null)
-//                getFriend.close();
-//            if (reachFriend == null) {
-//                GcmBroadcastReceiver.completeWakefulIntent(intent);
-//                return;
-//            }
-//            if (shouldInsert)
-//                getContentResolver().insert(ReachFriendsProvider.CONTENT_URI, ReachFriendsHelper.contentValuesCreator(reachFriend));
-//
-//            final int notification_id = message.hashCode();
-//            final Intent viewIntent = new Intent(this, ReachNotificationActivity.class);
-//            final Bundle bundle = new Bundle();
-//            bundle.putLong("number_of_songs", reachFriend.getNumberofSongs());
-//            bundle.putLong("host_id", reachFriend.getId());
-//            bundle.putString("image_id", reachFriend.getImageId());
-//            bundle.putString("user_name", userName);
-//            bundle.putInt("notification_id", notification_id);
-//            viewIntent.putExtras(bundle);
-//
-//            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            final NotificationCompat.Builder notificationBuilder =
-//                    new NotificationCompat.Builder(this)
-//                            .setAutoCancel(true)
-//                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-//                            .setSmallIcon(R.drawable.ic_icon_notif)
-//                            .setContentTitle(userName)
-//                            .setTicker(userName + " wants to access your Music")
-//                            .setContentText("wants to access your Music")
-//                            .setContentIntent(viewPendingIntent)
-//                            .setPriority(NotificationCompat.PRIORITY_MAX)
-//                            .setWhen(System.currentTimeMillis());
-//
-//            notificationManager.notify(notification_id, notificationBuilder.build());
-//        }
+        if (message.startsWith("PERMISSION_REQUEST")) {
 
+            final String[] splitter = message.split("`");
+            final String userName = splitter[2].trim();
+
+            final int notification_id = message.hashCode();
+//            final Intent viewIntent = new Intent(this, ReachActivity.class);
+//            viewIntent.putExtra();
+//            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            final NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setAutoCancel(true)
+                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                            .setSmallIcon(R.drawable.ic_icon_notif)
+                            .setContentTitle(userName)
+                            .setTicker(userName + " wants to access your Music")
+                            .setContentText("wants to access your Music")
+//                            .setContentIntent(viewPendingIntent)
+                            .setPriority(NotificationCompat.PRIORITY_MAX)
+                            .setWhen(System.currentTimeMillis());
+
+            notificationManager.notify(notification_id, notificationBuilder.build());
+        }
+
+        /**
+         * Service new notification
+         */
         if (message.startsWith("SYNC")) {
 
             final String count = message.substring(4);
@@ -200,7 +166,6 @@ public class GcmIntentService extends IntentService {
                     ReachFriendsHelper.COLUMN_ID + " = ?",
                     new String[]{hostId + ""});
             notificationManager.notify(notification_id, notificationBuilder.build());
-
         }
         /**
          * Service manual notification
@@ -298,64 +263,7 @@ public class GcmIntentService extends IntentService {
                             .setWhen(System.currentTimeMillis());
             notificationManager.notify(notification_id, notificationBuilder.build());
         }
-//        /**
-//         * Service LIKE
-//         */
-//        else if(message.startsWith("LIKE")) {
-//            final int notification_id = message.hashCode();
-//            final Intent viewIntent = new Intent(this, ReachActivity.class);
-//            Bundle bundle = new Bundle();
-//            bundle.putBoolean("oP",true);
-//            viewIntent.putExtras(bundle);
-//            viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-//            final String [] splitter = message.split("`");
-//            if(splitter.length < 4) {
-//                GcmBroadcastReceiver.completeWakefulIntent(intent);
-//                return;
-//            }
-//            Bitmap image;
-//            try {
-//                image = Picasso.with(this).load(splitter[2]).get();
-//            } catch (IOException | IllegalStateException e) {
-//                e.printStackTrace();
-//                image = null;
-//            }
-//            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            final NotificationCompat.Builder notificationBuilder =
-//                    new NotificationCompat.Builder(this)
-//                            .setAutoCancel(true)
-//                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-//                            .setSmallIcon(R.drawable.ic_icon_notif)
-//                            .setContentTitle(splitter[1])
-//                            .setContentText(splitter[1] + " likes your song " + splitter[3])
-//                            .setLargeIcon(image)
-//                            .setContentIntent(viewPendingIntent)
-//                            .setPriority(NotificationCompat.PRIORITY_MAX)
-//                            .setWhen(System.currentTimeMillis());
-//            notificationManager.notify(notification_id, notificationBuilder.build());
-//        }
-        /*if( message.startsWith("SYNC_NOTIFICATIONS")) {
 
-            //Pull Notifications from server and insert new ones. Accordingly notify the User
-            final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
-            final Optional<NotificationCollection> collection = MiscUtils.autoRetry(new DoWork<NotificationCollection>() {
-                @Override
-                protected NotificationCollection doWork() throws IOException {
-                    return StaticData.userEndpoint.getNotification(id).execute();
-                }
-            }, Optional.<Predicate<NotificationCollection>>absent());
-            if(!collection.isPresent()) {
-                GcmBroadcastReceiver.completeWakefulIntent(intent);
-                return;
-            }
-            final List<Notification> Notifications = collection.get().getItems();
-            if(Notifications == null || Notifications.isEmpty()) {
-                GcmBroadcastReceiver.completeWakefulIntent(intent);
-                return;
-            }
-
-
-        }*/
         /**
          * Service PONG
          */
@@ -393,6 +301,7 @@ public class GcmIntentService extends IntentService {
                             ReachDatabaseHelper.COLUMN_STATUS + " != ?",
                     new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
         }
+
         /**
          * Service PING
          */
@@ -421,6 +330,7 @@ public class GcmIntentService extends IntentService {
                 }
             }, Optional.<Predicate<Void>>absent()).orNull();
         }
+
         /**
          * Service CONNECT
          */

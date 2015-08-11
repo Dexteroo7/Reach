@@ -21,7 +21,11 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
@@ -44,18 +48,25 @@ public class NotificationFragment extends Fragment {
     private SuperInterface mListener;
 
     private static final List<NotificationBaseLocal> notifications = new ArrayList<>();
-    private static final AtomicBoolean refreshing = new AtomicBoolean(false);
     private static WeakReference<NotificationFragment> reference = null;
+    private static ReachNotificationAdapter adapter = null;
+    private static ExecutorService notificationRefresher = null;
     private static long serverId = 0;
 
-    public static NotificationFragment newInstance(long serverId) {
+    public static NotificationFragment newInstance(long id) {
 
-        NotificationFragment.serverId = serverId;
         NotificationFragment fragment;
         if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new NotificationFragment());
 
+        serverId = id;
         return fragment;
+    }
+
+    public static void refresh() {
+
+        if (notificationRefresher != null && adapter != null)
+            new NotificationSync().executeOnExecutor(notificationRefresher, adapter);
     }
 
     @Override
@@ -64,20 +75,31 @@ public class NotificationFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        final ReachNotificationAdapter adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
+        adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
 
         //listView.setBackgroundColor(getResources().getColor(R.color.default_grey));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
 
-        if (!refreshing.get()) {
+        notificationRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new SynchronousQueue<Runnable>()));
 
-            refreshing.set(true);
-            new NotificationSync().executeOnExecutor(StaticData.threadPool, adapter);
-        }
-
+        refresh();
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+
+        if (notificationRefresher != null)
+            notificationRefresher.shutdownNow();
+        notificationRefresher = null;
+
+        adapter.clear();
+        adapter = null;
+        super.onDestroyView();
     }
 
     @Override
@@ -209,7 +231,6 @@ public class NotificationFragment extends Fragment {
                     throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
             }
 
-            refreshing.set(false);
             return params[0];
         }
 
@@ -219,7 +240,6 @@ public class NotificationFragment extends Fragment {
             super.onPostExecute(adapter);
             if (adapter != null)
                 adapter.notifyDataSetChanged();
-            refreshing.set(false);
         }
     }
 }

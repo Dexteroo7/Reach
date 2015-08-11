@@ -22,7 +22,11 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
@@ -36,18 +40,26 @@ import reach.project.utils.auxiliaryClasses.DoWork;
 
 public class FriendRequestFragment extends Fragment {
 
-    private static long serverId;
-    private static AtomicBoolean refreshing = new AtomicBoolean(false);
     private static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
     private static WeakReference<FriendRequestFragment> reference = null;
+    private static ReachFriendRequestAdapter adapter = null;
+    private static ExecutorService friendsRefresher = null;
+    private static long serverId = 0;
 
-    public static FriendRequestFragment newInstance(long serverId) {
+    public static FriendRequestFragment newInstance(long id) {
 
-        FriendRequestFragment.serverId = serverId;
         FriendRequestFragment fragment;
         if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new FriendRequestFragment());
+
+        serverId = id;
         return fragment;
+    }
+
+    public static void refresh() {
+
+        if (friendsRefresher != null && adapter != null)
+            new FetchRequests().executeOnExecutor(friendsRefresher, adapter);
     }
 
     private final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
@@ -98,15 +110,24 @@ public class FriendRequestFragment extends Fragment {
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
 
-        if (!refreshing.get()) {
-            refreshing.set(true);
-            new FetchRequests().executeOnExecutor(StaticData.threadPool, adapter);
-        }
+        friendsRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new SynchronousQueue<Runnable>()));
+
+        refresh();
         return rootView;
     }
 
     @Override
     public void onDestroyView() {
+
+        if (friendsRefresher != null)
+            friendsRefresher.shutdownNow();
+        friendsRefresher = null;
+
+        adapter.clear();
+        adapter = null;
+        super.onDestroyView();
         super.onDestroyView();
     }
 
@@ -157,10 +178,8 @@ public class FriendRequestFragment extends Fragment {
 
             super.onPostExecute(adapter);
 
-            if (adapter != null) {
+            if (adapter != null)
                 adapter.notifyDataSetChanged();
-            }
-            refreshing.set(false);
         }
     }
 }
