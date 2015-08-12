@@ -239,7 +239,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                             public Void doWork() throws IOException {
                                 return StaticData.notificationApi.pushAccepted(
                                         accepted.getFirstSongName(),
-                                        push.getPushContainer().hashCode(),
+                                        push.getNotificationId(),
                                         serverID,
                                         push.getHostId(),
                                         (int) pushContainer.getSongCount()).execute();
@@ -251,13 +251,14 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.reject.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
                         MiscUtils.autoRetryAsync(new DoWork<Void>() {
                             @Override
                             public Void doWork() throws IOException {
                                 return StaticData.notificationApi.removeNotification(push.getNotificationId(), serverID).execute();
                             }
                         }, Optional.<Predicate<Void>>absent());
+                        remove(notificationBaseLocal);
+                        notifyDataSetChanged();
                     }
                 });
                 break;

@@ -1,5 +1,7 @@
 package reach.project.adapter;
 
+import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,11 +17,14 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.daimajia.swipe.SwipeLayout;
 import com.daimajia.swipe.adapters.CursorSwipeAdapter;
+import com.google.common.base.Optional;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -35,8 +40,10 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
 
     //TODO improve warnings
 
+    private static WeakReference<ReachQueueAdapter> reference;
     public ReachQueueAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
+        reference = new WeakReference<>(this);
     }
 
     @Override
@@ -48,12 +55,12 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
     public void closeAllItems() {
     }
 
-    private final class ViewHolder{
+    private final class ViewHolder {
 
-        private final TextView songTitle ,userName, songSize;
+        private final TextView songTitle, userName, songSize;
         private final ProgressBar progressBar;
-        private final ImageView albumArt ,listToggle, pauseQueue, deleteQueue;
-        private final SwipeLayout swipeLayout;
+        private final ImageView listToggle, pauseQueue, deleteQueue;
+//        private final SwipeLayout swipeLayout;
 
         private ViewHolder(ImageView albumArt,
                            TextView songTitle,
@@ -65,7 +72,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                            ImageView deleteQueue,
                            SwipeLayout swipeLayout) {
 
-            this.albumArt = albumArt;
+//            this.albumArt = albumArt;
             this.songTitle = songTitle;
             this.userName = userName;
             this.songSize = songSize;
@@ -73,7 +80,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             this.listToggle = listToggle;
             this.pauseQueue = pauseQueue;
             this.deleteQueue = deleteQueue;
-            this.swipeLayout = swipeLayout;
+//            this.swipeLayout = swipeLayout;
         }
     }
 
@@ -83,17 +90,17 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
 
         final long id = cursor.getLong(0);
         final long length = cursor.getLong(1);
-        final long senderId = cursor.getLong(2);
+//        final long senderId = cursor.getLong(2);
         final long processed = cursor.getLong(3);
-        final String path = cursor.getString(4);
+//        final String path = cursor.getString(4);
         final String displayName = cursor.getString(5);
-        final String artistName = cursor.getString(6);
+//        final String artistName = cursor.getString(6);
 
-        final boolean liked;
-        final String temp = cursor.getString(7);
-        liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+//        final boolean liked;
+//        final String temp = cursor.getString(7);
+//        liked = !TextUtils.isEmpty(temp) && temp.equals("1");
 
-        final long duration = cursor.getLong(8);
+//        final long duration = cursor.getLong(8);
 
         ///////////////
 
@@ -101,9 +108,9 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         final short operationKind = cursor.getShort(10);
         final String userName = cursor.getString(11);
 
-        final long receiverId = cursor.getLong(2);
-        final short logicalClock = cursor.getShort(9);
-        final long songId = cursor.getLong(10);
+//        final long receiverId = cursor.getLong(2);
+//        final short logicalClock = cursor.getShort(9);
+//        final long songId = cursor.getLong(10);
 
         final boolean finished = (processed + 1400 >= length) ||
                 status == ReachDatabase.FINISHED;
@@ -126,102 +133,22 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         } else {
 
             viewHolder.pauseQueue.setVisibility(View.VISIBLE);
-            viewHolder.pauseQueue.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            viewHolder.pauseQueue.setTag(id);
+            viewHolder.pauseQueue.setOnClickListener(LocalUtils.pauseListener);
 
-                    final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
-
-                    if (status != ReachDatabase.PAUSED_BY_USER) {
-
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
-                        context.getContentResolver().update(uri, values,
-                                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                                new String[]{id + ""});
-                        Log.i("Ayush", "Pausing");
-                    } else if (operationKind == 1) {
-
-                        context.getContentResolver().delete(uri, ReachDatabaseHelper.COLUMN_ID + " = ?",
-                                new String[]{id + ""});
-                    } else {
-
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-                        values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, logicalClock + 1);
-                        context.getContentResolver().update(uri, values,
-                                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                                new String[]{id + ""});
-                        final ReachDatabase reachDatabase = new ReachDatabase();
-                        reachDatabase.setSenderId(senderId);
-                        reachDatabase.setReceiverId(receiverId);
-                        reachDatabase.setSongId(songId);
-                        reachDatabase.setProcessed(processed);
-                        reachDatabase.setLength(length);
-                        reachDatabase.setLogicalClock(logicalClock);
-                        reachDatabase.setId(id);
-                        StaticData.threadPool.submit(MiscUtils.startDownloadOperation(
-                                context,
-                                MiscUtils.generateRequest(reachDatabase),
-                                reachDatabase.getReceiverId(), //myID
-                                reachDatabase.getSenderId(),   //the uploaded
-                                reachDatabase.getId()));
-                        Log.i("Ayush", "Un-pausing");
-                    }
-                }
-            });
-
-            if (status == ReachDatabase.WORKING ||
-                    status == ReachDatabase.RELAY ||
-                    processed + 1400 >= length) {
-
+            if (status == ReachDatabase.WORKING || status == ReachDatabase.RELAY)
                 viewHolder.progressBar.setProgressDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.reachq_progressbar, context.getTheme()));
-            }
-            else {
+            else
                 viewHolder.progressBar.setProgressDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.reachq_progressbar_stop, context.getTheme()));
-            }
 
-            viewHolder.songSize.setText((processed*100/length) + "%");
+            viewHolder.songSize.setText((processed * 100 / length) + "%");
             viewHolder.progressBar.setProgress((int) ((processed * 100) / length));
             viewHolder.progressBar.setVisibility(View.VISIBLE);
         }
 
         if (operationKind == 0) {
-            viewHolder.deleteQueue.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    builder
-                        .setMessage("Are you sure you want to delete it?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                closeAllItems();
-                                /**
-                                 * Can not remove from memory cache just yet, because some operation might be underway
-                                 * in connection manager
-                                 **/
-                                Log.i("Downloader", "Deleting " +
-                                        id + " " +
-                                        context.getContentResolver().delete(
-                                                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
-                                                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                                                new String[]{id + ""}));
-                                final File toDelete = new File(path);
-                                Log.i("Ayush", "Deleting " + toDelete.delete());
-                                dialog.dismiss();
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                }
-            });
+            viewHolder.deleteQueue.setTag(new Object[]{id, cursor.getPosition()});
+            viewHolder.deleteQueue.setOnClickListener(LocalUtils.deleteListener);
         } else {
             viewHolder.deleteQueue.setVisibility(View.GONE);
             viewHolder.listToggle.setVisibility(View.GONE);
@@ -257,5 +184,185 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                 (SwipeLayout) view.findViewById(getSwipeLayoutResourceId(0)));
         view.setTag(viewHolder);
         return view;
+    }
+
+    private enum LocalUtils {
+        ;
+
+        public static final View.OnClickListener deleteListener = new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+
+                final Object [] tag = (Object[]) view.getTag();
+                final long id = (long) tag[0];
+                final int position = (int) tag[1];
+
+                new AlertDialog.Builder(view.getContext())
+                        .setMessage("Are you sure you want to delete it?")
+                        .setPositiveButton("Yes", new ConfirmDelete(id, position))
+                        .setNegativeButton("No", cancelDelete).create().show();
+            }
+        };
+
+        private static final DialogInterface.OnClickListener cancelDelete = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                dialog.dismiss();
+            }
+        };
+
+        private static final class ConfirmDelete implements DialogInterface.OnClickListener {
+
+            final long id;
+            final int position;
+
+            private ConfirmDelete(long id, int position) {
+                this.id = id;
+                this.position = position;
+            }
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                /**
+                 * Can not remove from memory cache just yet, because some operation might be underway
+                 * in connection manager
+                 **/
+
+                final Context context = ((Dialog) dialogInterface).getContext();
+                //find path and delete the file
+                final Cursor pathCursor = context.getContentResolver().query(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        new String[]{ReachDatabaseHelper.COLUMN_PATH},
+                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        new String[]{id + ""}, null);
+
+                if (pathCursor != null) {
+
+                    if (pathCursor.moveToFirst()) {
+
+                        final String path = pathCursor.getString(0);
+                        if (!TextUtils.isEmpty(path) && !path.equals("hello_world")) {
+
+                            final File toDelete = new File(path);
+                            Log.i("Ayush", "Deleting " + toDelete.delete());
+                        }
+                    }
+                    pathCursor.close();
+                }
+
+                //delete the database entry
+                Log.i("Downloader", "Deleting " +
+                        id + " " +
+                        context.getContentResolver().delete(
+                                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
+                                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                new String[]{id + ""}));
+
+                if (reference != null) {
+
+                    final CursorSwipeAdapter adapter = reference.get();
+                    if (adapter != null)
+                        adapter.closeItem(position);
+
+                }
+                dialogInterface.dismiss();
+            }
+        }
+
+        public static final View.OnClickListener pauseListener = new View.OnClickListener() {
+
+            /**
+             * Resets the transaction, reset download only. Updates memory cache and disk table both.
+             * Update happens in MiscUtils.startDownloadOperation() method.
+             *
+             * @param reachDatabase    the transaction to reset
+             */
+            private Optional<Runnable> reset(ReachDatabase reachDatabase,
+                                             ContentResolver resolver,
+                                             Context context,
+                                             Uri uri) {
+
+                reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
+                reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+
+                final ContentValues values = new ContentValues();
+                values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+                values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
+
+                final boolean updateSuccess = resolver.update(
+                        uri,
+                        values,
+                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        new String[]{reachDatabase.getId() + ""}) > 0;
+
+                if (updateSuccess)
+                    //send REQ gcm
+                    return Optional.of((Runnable) MiscUtils.startDownloadOperation(
+                            context,
+                            MiscUtils.generateRequest(reachDatabase),
+                            reachDatabase.getReceiverId(), //myID
+                            reachDatabase.getSenderId(),   //the uploaded
+                            reachDatabase.getId()));
+
+                return Optional.absent(); //update failed !
+            }
+
+            @Override
+            public void onClick(View view) {
+
+                final long id = (long) view.getTag();
+                final Context context = view.getContext();
+                final ContentResolver resolver = context.getContentResolver();
+
+                final Cursor cursor = resolver.query(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        ReachDatabaseHelper.projection,
+                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        new String[]{id + ""}, null);
+
+                if (cursor == null)
+                    return;
+                if (!cursor.moveToFirst()) {
+                    cursor.close();
+                    return;
+                }
+
+                final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
+                final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
+
+                ///////////////
+
+                if (database.getStatus() != ReachDatabase.PAUSED_BY_USER) {
+
+                    //pause operation (both upload/download case)
+                    final ContentValues values = new ContentValues();
+                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
+                    context.getContentResolver().update(
+                            uri,
+                            values,
+                            ReachDatabaseHelper.COLUMN_ID + " = ?",
+                            new String[]{id + ""});
+                    Log.i("Ayush", "Pausing");
+                } else if (database.getOperationKind() == 1) {
+
+                    //un-paused upload operation
+                    context.getContentResolver().delete(
+                            uri,
+                            ReachDatabaseHelper.COLUMN_ID + " = ?",
+                            new String[]{id + ""});
+                } else {
+
+                    //un-paused download operation
+                    final Optional<Runnable> optional = reset(database, resolver, context, uri);
+                    if (optional.isPresent())
+                        StaticData.threadPool.submit(optional.get());
+                    else //should never happen
+                        Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
+                    Log.i("Ayush", "Un-pausing");
+                }
+            }
+        };
     }
 }

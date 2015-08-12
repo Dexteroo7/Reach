@@ -54,8 +54,6 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -214,7 +212,7 @@ public class ContactsListFragment extends Fragment implements
                                 StaticData.threadPool,
                                 clientId, serverId, (long) status);
 
-                        Toast.makeText(getActivity(), "Access Request " + clientId, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
                         final ContentValues values = new ContentValues();
                         values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
                         getActivity().getContentResolver().update(
@@ -227,24 +225,10 @@ public class ContactsListFragment extends Fragment implements
             } else if (object instanceof Contact) {
 
                 final Contact contact = (Contact) object;
-                if (contact.isInviteSent()) return;
+                if (contact.isInviteSent())
+                    return;
 
-                final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
-                        ".\nhttp://letsreach.co/app\n--\n" +
-                        SharedPrefUtils.getUserName(sharedPrefs);
-                final LinearLayout input = new LinearLayout(getActivity());
-                final EditText inputText = new EditText(getActivity());
-                inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
-                inputText.setTextColor(getResources().getColor(R.color.darkgrey));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT);
-                int margin = MiscUtils.dpToPx(20);
-                lp.setMargins(margin, 0, margin, 0);
-                inputText.setLayoutParams(lp);
-                inputText.setText(msg);
-                input.addView(inputText);
-                LocalUtils.showAlert(input, inviteAdapter, contact);
+                LocalUtils.showAlert(inviteAdapter, contact, view.getContext());
             }
         }
     };
@@ -475,7 +459,8 @@ public class ContactsListFragment extends Fragment implements
                     ReachContactsAdapter.requiredProjection,
                     selection,
                     selectionArguments,
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
+                            ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
         else
             return null;
     }
@@ -582,7 +567,25 @@ public class ContactsListFragment extends Fragment implements
         final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
         notificationContainer.setOnClickListener(openNotification);
         notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
-        notificationCount.setText("0");
+        StaticData.threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                reach.backend.notifications.notificationApi.model.MyString myString = null;
+                try {
+                    myString = StaticData.notificationApi.getNewCount(1l).execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (myString!=null && !TextUtils.isEmpty(myString.toString())){
+                    int nCount = Integer.parseInt(myString.toString());
+                    if (nCount>0)
+                        notificationCount.setVisibility(View.VISIBLE);
+                    else
+                        notificationCount.setVisibility(View.GONE);
+                }
+            }
+        });
+        //notificationCount.setText("0");
 
         searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
         if (searchView == null)
@@ -928,14 +931,30 @@ public class ContactsListFragment extends Fragment implements
             return emptyInvite;
         }
 
-        public static void showAlert(LinearLayout linearLayout, ArrayAdapter arrayAdapter, final Contact contact) {
+        public static void showAlert(ArrayAdapter adapter, final Contact contact, final Context context) {
 
-            final WeakReference<LinearLayout> linearLayoutReference = new WeakReference<>(linearLayout);
-            final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(arrayAdapter);
+            final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
+                    ".\nhttp://letsreach.co/app\n--\n" +
+                    SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
 
-            new AlertDialog.Builder(linearLayout.getContext())
+            final LinearLayout input = new LinearLayout(context);
+            final EditText inputText = new EditText(context);
+            inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            inputText.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            int margin = MiscUtils.dpToPx(20);
+            lp.setMargins(margin, 0, margin, 0);
+            inputText.setLayoutParams(lp);
+            inputText.setText(msg);
+            input.addView(inputText);
+
+            final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(adapter);
+
+            new AlertDialog.Builder(context)
                     .setMessage("Send an invite to " + contact.getUserName() + " ?")
-                    .setView(linearLayout)
+                    .setView(input)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 
                         final class SendInvite extends AsyncTask<String, Void, Boolean> {
@@ -947,7 +966,7 @@ public class ContactsListFragment extends Fragment implements
                                 smsObj.setparams("alerts.sinfini.com ", "sms", "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM");
                                 try {
                                     smsObj.send_sms(params[0], params[1], "dlr_url");
-                                } catch (IOException | KeyManagementException | NoSuchAlgorithmException e) {
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                     return false;
                                 }
@@ -960,14 +979,14 @@ public class ContactsListFragment extends Fragment implements
                                 super.onPostExecute(aBoolean);
 
                                 if (!aBoolean) {
+                                    //fail
+                                    contact.setInviteSent(false);
+                                    LocalUtils.inviteSentTo.remove(contact.toString());
 
                                     final ArrayAdapter adapter = arrayAdapterReference.get();
                                     if (adapter == null)
                                         return;
-                                    //fail
-                                    contact.setInviteSent(false);
                                     adapter.notifyDataSetChanged();
-                                    LocalUtils.inviteSentTo.remove(contact.toString());
                                 }
                             }
                         }
@@ -977,22 +996,23 @@ public class ContactsListFragment extends Fragment implements
 
 
                             final ArrayAdapter adapter = arrayAdapterReference.get();
-                            final LinearLayout lLayout = linearLayoutReference.get();
-                            if (lLayout == null || adapter == null) {
+                            if (adapter == null) {
                                 dialog.dismiss();
                                 return;
                             }
 
-                            TextView inputText = (TextView) lLayout.getChildAt(0);
+                            final TextView inputText = (TextView) input.getChildAt(0);
                             final String txt = inputText.getText().toString();
                             if (!TextUtils.isEmpty(txt))
                                 new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
                             else
-                                Toast.makeText(lLayout.getContext(), "Please enter an invite message", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
+
+                            Log.i("Ayush", "Marking true " + contact.getUserName());
+                            LocalUtils.inviteSentTo.add(contact.toString());
 
                             contact.setInviteSent(true);
                             adapter.notifyDataSetChanged();
-                            LocalUtils.inviteSentTo.add(contact.toString());
                             dialog.dismiss();
                         }
                     })

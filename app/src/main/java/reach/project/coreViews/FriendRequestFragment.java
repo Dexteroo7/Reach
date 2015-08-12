@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -42,7 +43,6 @@ public class FriendRequestFragment extends Fragment {
 
     private static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
     private static WeakReference<FriendRequestFragment> reference = null;
-    private ReachFriendRequestAdapter adapter = null;
     private ExecutorService friendsRefresher = null;
     private ListView listView = null;
     private static long serverId = 0;
@@ -82,7 +82,7 @@ public class FriendRequestFragment extends Fragment {
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                         new String[]{ReachFriendsHelper.COLUMN_ID},
                         ReachFriendsHelper.COLUMN_ID + " = ?",
-                new String[]{userId+""}, null);
+                        new String[]{userId + ""}, null);
 
                 if (cursor == null || !cursor.moveToFirst()) {
 
@@ -104,13 +104,14 @@ public class FriendRequestFragment extends Fragment {
     private SuperInterface mListener;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
+        final ReachFriendRequestAdapter adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
 
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(itemClickListener);
@@ -130,9 +131,6 @@ public class FriendRequestFragment extends Fragment {
             friendsRefresher.shutdownNow();
         friendsRefresher = null;
 
-        adapter.clear();
-        adapter = null;
-        super.onDestroyView();
         super.onDestroyView();
     }
 
@@ -179,14 +177,17 @@ public class FriendRequestFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ListView lView) {
+        protected void onPostExecute(ListView listView) {
 
-            super.onPostExecute(lView);
-            if (lView != null) {
-                ArrayAdapter adapter = (ArrayAdapter) lView.getAdapter();
+            super.onPostExecute(listView);
+
+            final ListAdapter temp;
+            if (listView != null && (temp = listView.getAdapter()) != null) {
+
+                final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
                 if (adapter.getCount()==0)
-                    MiscUtils.setEmptyTextforListView(lView,"No friend requests for you");
+                    MiscUtils.setEmptyTextforListView(listView,"No friend requests for you");
             }
         }
     }

@@ -31,7 +31,7 @@ public interface SuperInterface {
 
     void toggleSliding(boolean show);
 
-    void anchorFooter(boolean first);
+    void anchorFooter();
 
     void setUpNavigationViews();
 

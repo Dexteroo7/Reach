@@ -7,26 +7,25 @@
     android:layout_height="90dp" >
     <LinearLayout
         android:orientation="horizontal"
+        android:background="#efefef"
         android:layout_width="wrap_content"
         android:layout_height="match_parent">
-        <LinearLayout
-            android:orientation="horizontal"
-            android:background="#efefef"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
-            <ImageView
-                android:id="@+id/pauseQueue"
-                android:src="@drawable/ic_file_pause_download_grey600_48dp"
-                android:padding="10dp"
-                android:layout_width="50dp"
-                android:layout_height="match_parent" />
-            <ImageView
-                android:id="@+id/deleteQueue"
-                android:src="@drawable/ic_delete_grey600_48dp"
-                android:padding="12dp"
-                android:layout_width="50dp"
-                android:layout_height="match_parent" />
-        </LinearLayout>
+        <View
+            android:layout_width="3dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/shadow_left" />
+        <ImageView
+            android:id="@+id/pauseQueue"
+            android:src="@drawable/ic_file_pause_download_grey600_48dp"
+            android:padding="10dp"
+            android:layout_width="50dp"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:id="@+id/deleteQueue"
+            android:src="@drawable/ic_delete_grey600_48dp"
+            android:padding="12dp"
+            android:layout_width="50dp"
+            android:layout_height="match_parent" />
     </LinearLayout>
     <RelativeLayout
         android:layout_width="match_parent"

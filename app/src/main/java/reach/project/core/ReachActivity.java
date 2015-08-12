@@ -1,5 +1,6 @@
 package reach.project.core;
 
+import android.annotation.SuppressLint;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -196,8 +197,7 @@ public class ReachActivity extends AppCompatActivity implements
             if (v > 0.99f) {
                 findViewById(R.id.playerShadow).setVisibility(View.GONE);
                 findViewById(R.id.player).setVisibility(View.GONE);
-            }
-            else if (v < 0.99f) {
+            } else if (v < 0.99f) {
                 findViewById(R.id.playerShadow).setVisibility(View.VISIBLE);
                 findViewById(R.id.player).setVisibility(View.VISIBLE);
             }
@@ -234,15 +234,7 @@ public class ReachActivity extends AppCompatActivity implements
         public void onPanelExpanded(View view) {
 
             final ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null && !actionBar.getTitle().equals("My Library")) {
-
-                actionBarTitle = (String) actionBar.getTitle();
-                actionBarSubtitle = (String) actionBar.getSubtitle();
-                actionBarIcon = mToolbar.getLogo();
-                actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-                actionBar.setTitle("My Library");
-                actionBar.setSubtitle("");
-                actionBar.setIcon(0);
+            if (actionBar != null) {
 
                 final Menu mToolbarMenu = mToolbar.getMenu();
                 for (int i = 0; i < mToolbarMenu.size(); i++)
@@ -252,7 +244,19 @@ public class ReachActivity extends AppCompatActivity implements
                 //((EditText) searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)).setTextColor(Color.WHITE);
                 searchView.setOnQueryTextListener(ReachActivity.this);
                 searchView.setOnCloseListener(ReachActivity.this);
+
+                if (actionBar.getTitle() != null && actionBar.getTitle().equals("My Library")) {
+
+                    actionBarTitle = (String) actionBar.getTitle();
+                    actionBarSubtitle = (String) actionBar.getSubtitle();
+                    actionBarIcon = mToolbar.getLogo();
+                    actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+                    actionBar.setTitle("My Library");
+                    actionBar.setSubtitle("");
+                    actionBar.setIcon(0);
+                }
             }
+
             if (fragmentManager.getBackStackEntryCount() == 0)
                 toggleDrawer(true);
         }
@@ -286,76 +290,6 @@ public class ReachActivity extends AppCompatActivity implements
             downloadRefresh.setEnabled(enable);
         }
     };
-
-//    private final AdapterView.OnItemLongClickListener myLibraryLongClickListener = new AdapterView.OnItemLongClickListener() {
-//        @Override
-//        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long viewId) {
-//
-//            final Cursor cursor = (Cursor) combinedAdapter.getItem(position);
-//            final short status = cursor.getShort(6);
-//            if (cursor.getColumnCount() == StaticData.DOWNLOADED_LIST.length && status != ReachDatabase.FINISHED) {
-//                final long id = cursor.getLong(0);
-//                final short operationKind = cursor.getShort(7);
-//                final short logicalClock = cursor.getShort(9);
-//                final long senderId = cursor.getLong(8);
-//                final long receiverId = cursor.getLong(2);
-//                final long songId = cursor.getLong(10);
-//                final long processed = cursor.getLong(3);
-//                final long length = cursor.getLong(1);
-//
-//                String txt;
-//                if (status != ReachDatabase.PAUSED_BY_USER)
-//                    txt = "Pause download";
-//                else
-//                    txt = "Resume download";
-//
-//                AlertDialog.Builder builder = new AlertDialog.Builder(ReachActivity.this);
-//                builder.setPositiveButton(txt, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//
-//                        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
-//
-//                        if (status != ReachDatabase.PAUSED_BY_USER) {
-//
-//                            final ContentValues values = new ContentValues();
-//                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
-//                            getContentResolver().update(uri, values,
-//                                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                                    new String[]{id + ""});
-//                            Log.i("Ayush", "Pausing");
-//                        } else if (operationKind == 1) {
-//
-//                            getContentResolver().delete(uri, ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                                    new String[]{id + ""});
-//                        } else {
-//
-//                            final ContentValues values = new ContentValues();
-//                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-//                            values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, logicalClock + 1);
-//                            getContentResolver().update(uri, values,
-//                                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                                    new String[]{id + ""});
-//                            final ReachDatabase reachDatabase = new ReachDatabase();
-//                            reachDatabase.setSenderId(senderId);
-//                            reachDatabase.setReceiverId(receiverId);
-//                            reachDatabase.setSongId(songId);
-//                            reachDatabase.setProcessed(processed);
-//                            reachDatabase.setLength(length);
-//                            reachDatabase.setLogicalClock(logicalClock);
-//                            reachDatabase.setId(id);
-//                            StaticData.threadPool.submit(MiscUtils.startDownloadOperation(reachDatabase, getContentResolver()));
-//                            Log.i("Ayush", "Un-pausing");
-//                        }
-//                        dialog.dismiss();
-//                    }
-//                });
-//                AlertDialog dialog = builder.create();
-//                dialog.show();
-//            }
-//            return true;
-//        }
-//    };
 
 
     private View.OnClickListener navHeaderClickListener = new View.OnClickListener() {
@@ -506,6 +440,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onResume();
 
+        Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
         currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
 
@@ -774,25 +709,10 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void anchorFooter(boolean first) {
+    public void anchorFooter() {
         if (slidingUpPanelLayout == null)
             return;
-        if (first)
-            slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
-        else {
-            slidingUpPanelLayout.setAnchorPoint(0.3f);
-            slidingUpPanelLayout.setPanelState(PanelState.ANCHORED);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (slidingUpPanelLayout == null)
-                        return;
-                    if (slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED)
-                        slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                    slidingUpPanelLayout.setAnchorPoint(1f);
-                }
-            }, 2000);
-        }
+        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
     }
 
     @Override
@@ -885,7 +805,8 @@ public class ReachActivity extends AppCompatActivity implements
             final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
             if (actionBar.isPresent())
                 actionBar.get().setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-            toggleDrawer(true);
+            if (mDrawerLayout!=null)
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED,Gravity.LEFT);
         } else {
             setUpDrawer();
             toggleDrawer(false);
@@ -965,6 +886,7 @@ public class ReachActivity extends AppCompatActivity implements
         super.onNewIntent(intent);
     }
 
+    @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -987,7 +909,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         searchView = new SearchView(this);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        toggleDrawer(true);
 
         //small
         toggleSliding(false);
@@ -997,7 +919,6 @@ public class ReachActivity extends AppCompatActivity implements
         //navigation-drawer
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, Gravity.LEFT);
-        toggleDrawer(true);
 
         progressBarMinimized = (SeekBar) findViewById(R.id.progressBar);
         songNameMinimized = (TextView) findViewById(R.id.songNamePlaying);
@@ -1163,7 +1084,7 @@ public class ReachActivity extends AppCompatActivity implements
         }
     }
 
-    private void processIntent(Intent intent) {
+    private synchronized void processIntent(Intent intent) {
 
         if (intent != null) {
 
@@ -1181,13 +1102,11 @@ public class ReachActivity extends AppCompatActivity implements
                 if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
                     mDrawerLayout.openDrawer(Gravity.RIGHT);
                 viewPager.setCurrentItem(0);
-            }
-                else if (intent.getBooleanExtra("openNotifications", false)) {
+            } else if (intent.getBooleanExtra("openNotifications", false)) {
                 if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
                     mDrawerLayout.openDrawer(Gravity.RIGHT);
                 viewPager.setCurrentItem(1);
-            }
-            else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
+            } else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
 
                 final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
                 final HashSet<TransferSong> transferSongs = new Gson().fromJson(
@@ -1211,6 +1130,7 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
             }
+
             intent.removeExtra("openNotificationFragment");
             intent.removeExtra("openPlayer");
             intent.removeExtra("openFriendRequests");
@@ -1229,7 +1149,8 @@ public class ReachActivity extends AppCompatActivity implements
                     ReachDatabaseHelper.ADAPTER_LIST,
                     selectionDownloader,
                     selectionArgumentsDownloader,
-                    ReachDatabaseHelper.COLUMN_ADDED + " DESC");
+                    ReachDatabaseHelper.COLUMN_STATUS + " ASC," +
+                            ReachDatabaseHelper.COLUMN_ADDED + " DESC");
         } else if (id == StaticData.MY_LIBRARY_LOADER) {
 
             return new CursorLoader(this,
@@ -1412,6 +1333,8 @@ public class ReachActivity extends AppCompatActivity implements
 
     private enum LocalUtils {
         ;
+
+
 
         public static final SeekBar.OnSeekBarChangeListener playerSeekListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -1717,17 +1640,6 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
-        public static TextView getDownloadedTextView(Context context) {
-
-            final TextView textView = new TextView(context);
-            textView.setText("Downloading");
-            textView.setTextColor(context.getResources().getColor(R.color.reach_color));
-            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
-            textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
-            textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
-            return textView;
-        }
-
         public static TextView getMyLibraryTExtView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
@@ -1901,9 +1813,12 @@ public class ReachActivity extends AppCompatActivity implements
                     if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
 
                         //mark finished
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                        values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getLength());
-                        operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
+                        if (reachDatabase.getStatus() != ReachDatabase.FINISHED) {
+
+                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
+                            values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getLength());
+                            operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
+                        }
                         continue;
                     }
 
@@ -2015,6 +1930,8 @@ public class ReachActivity extends AppCompatActivity implements
 
     public static class PlayerUpdateListener extends BroadcastReceiver {
 
+
+
         private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
 
             activity.runOnUiThread(new Runnable() {
@@ -2085,8 +2002,6 @@ public class ReachActivity extends AppCompatActivity implements
                         activity.progressBarMinimized.setProgress(progress);
                 }
             });
-//            if (activity.paused)
-//                togglePlayPause(false, activity);
         }
 
         private synchronized void updateSecondaryProgress(final int progress, final ReachActivity activity) {

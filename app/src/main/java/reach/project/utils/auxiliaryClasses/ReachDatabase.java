@@ -34,14 +34,14 @@ public class ReachDatabase {
     private long reference = 0; //not in sql
 
     //types of status
-    public static final short NOT_WORKING = 0;
+    public static final short RELAY = 0;
     public static final short WORKING = 1;
-    public static final short RELAY = 2;
-    public static final short FINISHED = 3;
-    public static final short GCM_FAILED = 4;        //only applicable for download
-    public static final short FILE_NOT_FOUND = 5;    //404 from host
-    public static final short FILE_NOT_CREATED = 6;  //weird error
-    public static final short PAUSED_BY_USER = 7;    //paused by client
+    public static final short GCM_FAILED = 2;        //only applicable for download
+    public static final short FILE_NOT_FOUND = 3;    //404 from host
+    public static final short FILE_NOT_CREATED = 4;  //weird error
+    public static final short PAUSED_BY_USER = 5;    //paused by client
+    public static final short NOT_WORKING = 6;
+    public static final short FINISHED = 7;
 //    public static final short PAUSED_BY_HOST = 8;    //paused by host
 //    public static final short HOST_GONE = 9;    //paused by host
 

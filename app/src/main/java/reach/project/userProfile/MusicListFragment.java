@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -81,10 +82,17 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                             .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
                 SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
                 if (SharedPrefUtils.getReachQueueSeen(sharedPreferences)) {
-                    mListener.anchorFooter(false);
+                    Snackbar.make(parent, cursor.getString(3) + " added to your Queue", Snackbar.LENGTH_SHORT)
+                            .setAction("VIEW", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    mListener.anchorFooter();
+                                }
+                            })
+                            .show();
                 } else {
                     SharedPrefUtils.setReachQueueSeen(sharedPreferences);
-                    mListener.anchorFooter(true);
+                    mListener.anchorFooter();
                 }
 
                 mListener.addSongToQueue(
