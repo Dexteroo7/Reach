@@ -114,7 +114,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
          */
         ///////////////////////////////////
         viewHolder.userName.setText("");
-        viewHolder.userName.setText(userName);
+        viewHolder.userName.setText("from " + userName);
         ///////////////////////////////////
         /**
          * If finished no need for pause button
@@ -125,6 +125,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             viewHolder.songSize.setText(String.format("%.1f", (float) (length / 1024000.0f)) + " MB");
         } else {
 
+            viewHolder.pauseQueue.setVisibility(View.VISIBLE);
             viewHolder.pauseQueue.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -195,6 +196,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                closeAllItems();
                                 /**
                                  * Can not remove from memory cache just yet, because some operation might be underway
                                  * in connection manager
@@ -226,9 +228,9 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         }
 
         if (status == ReachDatabase.PAUSED_BY_USER)
-            viewHolder.pauseQueue.setImageResource(R.drawable.restart);
+            viewHolder.pauseQueue.setImageResource(R.drawable.ic_file_resume_download_grey600_48dp);
         else
-            viewHolder.pauseQueue.setImageResource(R.drawable.stop);
+            viewHolder.pauseQueue.setImageResource(R.drawable.ic_file_pause_download_grey600_48dp);
 
         if (status == ReachDatabase.GCM_FAILED)
             viewHolder.songSize.setText("Network error, retry");

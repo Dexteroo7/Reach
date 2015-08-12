@@ -1035,6 +1035,7 @@ public class ReachActivity extends AppCompatActivity implements
         pausePlayMinimized.setOnClickListener(LocalUtils.pauseClick);
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
         queueListView.setOnScrollListener(scrollListener);
+        downloadRefresh.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);

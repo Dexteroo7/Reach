@@ -70,7 +70,7 @@
                                 android:background="@color/white"
                                 android:layout_weight="0.7"
                                 android:layout_height="0dp">
-                                <RelativeLayout
+                                <FrameLayout
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent">
                                     <ListView
@@ -79,13 +79,19 @@
                                         android:dividerHeight="0dp"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent" />
-                                </RelativeLayout>
+                                    <View
+                                        android:id="@+id/fullPlayerShadow"
+                                        android:layout_gravity="bottom"
+                                        android:background="@drawable/shadow_top"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="3dp" />
+                                </FrameLayout>
                             </android.support.v4.widget.SwipeRefreshLayout>
                             <RelativeLayout
                                 android:layout_width="match_parent"
-                                android:layout_weight="0.3"
                                 android:background="@color/reach_grey"
                                 android:clickable="true"
+                                android:layout_weight="0.3"
                                 android:layout_height="0dp">
                                 <LinearLayout
                                     android:id="@+id/playerButtons"

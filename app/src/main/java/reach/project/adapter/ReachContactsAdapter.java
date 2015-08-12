@@ -4,11 +4,8 @@ package reach.project.adapter;
  * Created by dexter on 1/8/14.
  */
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,42 +14,26 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-
-import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.viewHelpers.CircleTransform;
 
 public class ReachContactsAdapter extends ResourceCursorAdapter {
 
-    private static WeakReference<Context> reference;
-
-    private final long myId;
     private final int grey;
     private final int color;
     private final int layoutParameter = MiscUtils.dpToPx(20);
     private final CircleTransform transform = new CircleTransform();
-//    private final Set<String> globalProfiles = new HashSet<>();
 
-    public ReachContactsAdapter(Context context, int layout, Cursor c, int flags, long serverId) {
+    public ReachContactsAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
         this.grey = context.getResources().getColor(R.color.darkgrey);
         this.color = context.getResources().getColor(R.color.reach_color);
-        this.myId = serverId;
-        reference = new WeakReference<>(context);
     }
 
     private final class ViewHolder {
@@ -112,7 +93,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         final int numberOfSongs = cursor.getShort(6);
 
         viewHolder.userInitials.setText(MiscUtils.generateInitials(userName));
-        viewHolder.userNameList.setText(userName);
+        viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
         viewHolder.telephoneNumberList.setText(numberOfSongs + " songs");
 
         //first invalidate
@@ -151,15 +132,6 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 params.setMargins(0, 0, 0, 0);
                 viewHolder.featured.setLayoutParams(params);
             }
-        }
-        //first invalidate
-        viewHolder.listToggle.setClickable(false);
-        viewHolder.listToggle.setOnClickListener(null);
-        if (status > 1) {
-
-            viewHolder.listToggle.setClickable(true);
-            viewHolder.listToggle.setTag(new Object[] {serverId, myId, status});
-            viewHolder.listToggle.setOnClickListener(listener);
         }
 
         //first invalidate
@@ -222,90 +194,4 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         view.setTag(viewHolder);
         return view;
     }
-
-    private static final View.OnClickListener listener = new View.OnClickListener() {
-
-        final class SendRequest extends AsyncTask<Long, Void, Long> {
-
-            @Override
-            protected Long doInBackground(final Long... params) {
-
-                /**
-                 * params[0] = other id
-                 * params[1] = my id
-                 * params[2] = status
-                 */
-
-                final MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<MyString>() {
-                    @Override
-                    public MyString doWork() throws IOException {
-                        return StaticData
-                                .messagingEndpoint
-                                .messagingEndpoint()
-                                .requestAccess(params[1], params[0]).execute();
-                    }
-                }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {
-                    @Override
-                    public boolean apply(MyString input) {
-                        return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
-                    }
-                })).orNull();
-
-                final String toParse;
-                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
-                    return params[0];
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(final Long response) {
-
-                super.onPostExecute(response);
-
-                if (response != null && response > 0) {
-
-                    //response becomes the id of failed person
-                    MiscUtils.useContext(reference, new UseContext<Void, Context>() {
-                        @Override
-                        public Void work(Context context) {
-
-                            Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                            final ContentValues values = new ContentValues();
-                            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                            context.getContentResolver().update(
-                                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                    values,
-                                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                                    new String[]{response + ""});
-                            return null;
-                        }
-                    });
-                }
-
-            }
-
-        }
-
-        @Override
-        public void onClick(View v) {
-
-            final Object [] items = (Object[]) v.getTag();
-            final long serverId = (long) items[0];
-            final long myId = (long) items[1];
-            final short status = (short) items[2];
-
-            new SendRequest().executeOnExecutor(
-                    StaticData.threadPool,
-                    serverId, myId, (long) status);
-
-            Toast.makeText(v.getContext(), "Access Request " + serverId, Toast.LENGTH_SHORT).show();
-            final ContentValues values = new ContentValues();
-            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-            v.getContext().getContentResolver().update(
-                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + serverId),
-                    values,
-                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                    new String[]{serverId + ""});
-        }
-    };
 }
