@@ -158,7 +158,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         if (status > 1) {
 
             viewHolder.listToggle.setClickable(true);
-            viewHolder.listToggle.setTag(new Object[] {serverId, myId, status});
+            viewHolder.listToggle.setTag(new Object[] {serverId, myId, status, userName});
             viewHolder.listToggle.setOnClickListener(listener);
         }
 
@@ -293,12 +293,13 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             final long serverId = (long) items[0];
             final long myId = (long) items[1];
             final short status = (short) items[2];
+            final String userName = (String) items[3];
 
             new SendRequest().executeOnExecutor(
                     StaticData.threadPool,
                     serverId, myId, (long) status);
 
-            Toast.makeText(v.getContext(), "Access Request " + serverId, Toast.LENGTH_SHORT).show();
+            Toast.makeText(v.getContext(), "Access Request " + userName, Toast.LENGTH_SHORT).show();
             final ContentValues values = new ContentValues();
             values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
             v.getContext().getContentResolver().update(
