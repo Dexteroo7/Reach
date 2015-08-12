@@ -94,18 +94,18 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             linearLayout.setTag(position);
             linearLayout.setOnClickListener(expander);
 
-            final Result onResult = new Result() {
+            accept.setTag(new Object[]{receivedRequest.getId(), new Result() {
                 @Override
                 public void result(Friend friend) {
 
                     if (friend == null) {
 
                         //fail
-                        expand(linearLayout, b, a);
-                        linearLayout.setClickable(false);
-                        actionBlock.setVisibility(View.GONE);
-                        libraryBtn.setVisibility(View.VISIBLE);
-                        notificationType.setText("added to your friends");
+//                        expand(linearLayout, b, a);
+//                        linearLayout.setClickable(false);
+//                        actionBlock.setVisibility(View.GONE);
+//                        libraryBtn.setVisibility(View.VISIBLE);
+//                        notificationType.setText("added to your friends");
 
                     } else {
                         //success
@@ -120,9 +120,8 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                         notificationType.setText("added to your friends");
                     }
                 }
-            };
+            }});
 
-            accept.setTag(new Object[]{receivedRequest.getId(), onResult});
             accept.setOnClickListener(acceptClick);
             reject.setOnClickListener(new View.OnClickListener() {
                 @Override

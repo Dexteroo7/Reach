@@ -31,7 +31,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STATUS = "status";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachFriendsHelper";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "

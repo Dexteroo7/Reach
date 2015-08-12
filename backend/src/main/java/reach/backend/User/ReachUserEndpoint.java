@@ -545,7 +545,7 @@ public class ReachUserEndpoint {
                     .limit(200)
                     .iterator();
         else
-            userQueryResultIterator = ofy().load().type(ReachUser.class).limit(100).iterator();
+            userQueryResultIterator = ofy().load().type(ReachUser.class).limit(200).iterator();
 
         ReachUser reachUser;
         int count = 0;

@@ -21,6 +21,7 @@ import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
 
@@ -100,6 +101,11 @@ public class UpdateReceiver extends BroadcastReceiver {
             } catch (RemoteException | OperationApplicationException e) {
                 e.printStackTrace();
             }
+
+        //refresh music list
+        final Intent musicScannerIntent = new Intent(context, MusicScanner.class);
+        intent.putExtra("first", true);
+        context.startService(intent);
 
         // an Intent broadcast.
         Log.i("Ayush", "Application updated");

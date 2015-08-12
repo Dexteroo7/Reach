@@ -26,7 +26,7 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ARRAY_OF_SONG_IDS = "arrayOfSongIds";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachPlayListHelper";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "

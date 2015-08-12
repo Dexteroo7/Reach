@@ -249,6 +249,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                         try {
                             StaticData.notificationApi.addPush(
                                     pushContainer,
+                                    params[0].getCustomMessage(),
                                     params[0].getFirstSongName(),
                                     params[0].getReceiverId(),
                                     params[0].getSenderId(),

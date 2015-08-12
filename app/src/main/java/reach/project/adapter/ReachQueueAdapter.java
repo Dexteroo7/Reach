@@ -41,6 +41,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
     //TODO improve warnings
 
     private static WeakReference<ReachQueueAdapter> reference;
+
     public ReachQueueAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
         reference = new WeakReference<>(this);
@@ -194,7 +195,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             @Override
             public void onClick(View view) {
 
-                final Object [] tag = (Object[]) view.getTag();
+                final Object[] tag = (Object[]) view.getTag();
                 final long id = (long) tag[0];
                 final int position = (int) tag[1];
 

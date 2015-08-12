@@ -118,6 +118,9 @@ public class MessagingEndpoint {
     public MyString requestAccess(@Named("clientId") final long clientId,
                                   @Named("hostId") final long hostId) {
 
+        if (clientId == 0 || hostId == 0)
+            return null;
+
         final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
         syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
@@ -145,29 +148,6 @@ public class MessagingEndpoint {
             log.info("Saving Received Request on " + host.getUserName() + " " + host.getReceivedRequests().add(clientId));
             ofy().save().entities(host).now();
         }
-
-//        final Notification notification = new Notification();
-//        notification.setId(-1);
-//        notification.setType(0);
-//        notification.setReceiverId(hostId);
-//        notification.setReceiverName(host.getUserName());
-//        notification.setReceiverImage(host.getImageId());
-//
-//        notification.setSenderId(clientId);
-//        notification.setSenderName(client.getUserName());
-//        notification.setSenderImage(client.getImageId());
-//
-//        notification.setActionComplete(false);
-//        notification.setSystemTime(System.currentTimeMillis());
-//        notification.setAdditionalData(null);
-//
-//        if((host.getNotifications() == null || !host.getNotifications().contains(notification))) {
-//
-//            if(host.getNotifications() == null)
-//                host.setNotifications(new HashSet<Notification>());
-//            log.info("Saving Received Request on " + host.getUserName() + " " + host.getNotifications().add(notification));
-//            OfyService.ofy().save().entities(host).now();
-//        }
 
         if (host.getGcmId() == null || host.getGcmId().equals("")) {
             log.info("Error handling reply " + hostId + " " + clientId);

@@ -4,7 +4,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Base64;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +17,6 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -35,9 +34,7 @@ import reach.project.database.notifications.PushAccepted;
 import reach.project.database.notifications.Types;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.viewHelpers.CircleTransform;
 
 /**
@@ -45,9 +42,10 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
 
-    private int resID;
-    private Activity activity;
-    private long serverID;
+    private final CircleTransform transform = new CircleTransform();
+    private final int resID;
+    private final Activity activity;
+    private final long serverID;
 
     public ReachNotificationAdapter(Activity mActivity, int resourceID, List<NotificationBaseLocal> notificationBaseLocalList, long serverId) {
         super(mActivity, resourceID, notificationBaseLocalList);
@@ -116,8 +114,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                     (RelativeLayout) convertView.findViewById(R.id.acceptBlock),
                     (RelativeLayout) convertView.findViewById(R.id.rejectBlock));
             convertView.setTag(viewHolder);
-        }
-        else
+        } else
             viewHolder = (ViewHolder) convertView.getTag();
 
         final int a = MiscUtils.dpToPx(70);
@@ -131,7 +128,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 throw new IllegalArgumentException();
             case LIKE:
 
-                Like like = (Like) notificationBaseLocal;
+                final Like like = (Like) notificationBaseLocal;
                 viewHolder.userName.setText(like.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(like.getHostName()));
                 viewHolder.linearLayout.getLayoutParams().height = a;
@@ -140,41 +137,35 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText(" likes " + like.getSongName());
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + like.getImageId())
-                        .transform(new CircleTransform())
+                        .transform(transform)
                         .into(viewHolder.profilePhoto);
                 break;
+
             case PUSH:
+
                 final Push push = (Push) notificationBaseLocal;
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(new CircleTransform()).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(transform).into(viewHolder.profilePhoto);
 
-                final String unCompressed;
-                try {
-                    unCompressed = StringCompress.decompress(Base64.decode(push.getPushContainer(), Base64.DEFAULT));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-                final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
                 viewHolder.librarayBtn.setVisibility(View.GONE);
                 viewHolder.actionBlock.setVisibility(View.VISIBLE);
 
-                String cMsg = pushContainer.getCustomMessage();
-                String msg;
-                if (cMsg != null && cMsg.length() > 0)
-                    msg = cMsg + ". Start listening to ";
+                final String customMessage = push.getCustomMessage();
+                final StringBuilder buffer = new StringBuilder();
+                if (!TextUtils.isEmpty(customMessage))
+                    buffer.append(customMessage).append(". Start listening to ");
                 else
-                    msg = "wants you to listen to ";
+                    buffer.append("wants you to listen to ");
 
-                msg = msg + pushContainer.getFirstSongName();
+                buffer.append(push.getFirstSongName());
 
-                if (pushContainer.getSongCount() == 2)
-                    msg = msg + " and 1 other song";
-                else if (pushContainer.getSongCount() > 2)
-                    msg = msg + " and " + (pushContainer.getSongCount() - 1) + " other songs";
+                if (push.getSize() == 2)
+                    buffer.append(" and 1 other song");
+                else if (push.getSize() > 2)
+                    buffer.append(" and ").append(push.getSize() - 1).append(" other songs");
 
-                viewHolder.notifType.setText(msg);
+                viewHolder.notifType.setText(buffer.toString());
 
                 if (push.getExpanded() == 0)
                     viewHolder.linearLayout.getLayoutParams().height = a;
@@ -184,6 +175,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+
                         if (push.getExpanded() == 0) {
                             expand(viewHolder.linearLayout, a, b);
                             push.setExpanded((short) 1);
@@ -199,29 +191,28 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                     public void onClick(View view) {
 
                         final Intent pushAddSong = new Intent(activity, ReachActivity.class);
-
-                        if (!StaticData.debugMode) {
-                            ((ReachApplication)activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("Accept - Pushed song")
-                                    .setAction("User - " + SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                    .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                    .setLabel("Sender - " + pushContainer.getUserName() + ", Songs - " + pushContainer.getSongCount())
-                                    .setValue(pushContainer.getSongCount())
-                                    .build());
-                        }
                         pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         pushAddSong.setAction("process_multiple");
-                        pushAddSong.putExtra("data", unCompressed);
+                        pushAddSong.putExtra("data", push.getPushContainer());
                         //start the Activity
                         activity.startActivity(pushAddSong);
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Accept - Pushed song")
+                                .setAction("User - " + SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setLabel("Sender - " + push.getHostName() + ", Songs - " + push.getSize())
+                                .setValue(push.getSize())
+                                .build());
+
                         expand(viewHolder.linearLayout, b, a);
                         viewHolder.linearLayout.setClickable(false);
                         viewHolder.actionBlock.setVisibility(View.GONE);
                         viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                         String txt = " song";
-                        if (pushContainer.getSongCount() > 1)
+                        if (push.getSize() > 1)
                             txt = txt + "s";
-                        viewHolder.notifType.setText(" pushed " + pushContainer.getSongCount() + txt + " to you");
+                        viewHolder.notifType.setText(" pushed " + push.getSize() + txt + " to you");
 
                         final PushAccepted accepted = new PushAccepted();
                         accepted.setHostName(push.getHostName());
@@ -231,8 +222,8 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                         accepted.setSystemTime(push.getSystemTime());
                         accepted.setExpanded((short) 0);
                         accepted.setTypes(Types.PUSH_ACCEPTED);
-                        accepted.setSize(pushContainer.getSongCount());
-                        accepted.setFirstSongName(pushContainer.getFirstSongName());
+                        accepted.setSize(push.getSize());
+                        accepted.setFirstSongName(push.getHostName());
 
                         MiscUtils.autoRetryAsync(new DoWork<Void>() {
                             @Override
@@ -242,7 +233,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                                         push.getNotificationId(),
                                         serverID,
                                         push.getHostId(),
-                                        (int) pushContainer.getSongCount()).execute();
+                                        push.getSize()).execute();
                             }
                         }, Optional.<Predicate<Void>>absent());
 
@@ -252,6 +243,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                     @Override
                     public void onClick(View v) {
 
+                        remove(push);
                         MiscUtils.autoRetryAsync(new DoWork<Void>() {
                             @Override
                             public Void doWork() throws IOException {
@@ -263,7 +255,8 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 break;
 
             case BECAME_FRIENDS:
-                BecameFriends becameFriends = (BecameFriends) notificationBaseLocal;
+
+                final BecameFriends becameFriends = (BecameFriends) notificationBaseLocal;
                 viewHolder.userName.setText(becameFriends.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(becameFriends.getHostName()));
                 viewHolder.linearLayout.getLayoutParams().height = a;
@@ -271,21 +264,25 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).transform(new CircleTransform()).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).transform(transform).into(viewHolder.profilePhoto);
                 break;
             case PUSH_ACCEPTED:
-                PushAccepted pushAccepted = (PushAccepted) notificationBaseLocal;
+
+                final PushAccepted pushAccepted = (PushAccepted) notificationBaseLocal;
                 viewHolder.userName.setText(pushAccepted.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(pushAccepted.getHostName()));
                 viewHolder.linearLayout.getLayoutParams().height = a;
                 viewHolder.linearLayout.setClickable(false);
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
-                String txt = " song";
+
+                final StringBuilder builder = new StringBuilder();
+                builder.append("pushed ").append(pushAccepted.getSize()).append(" song");
                 if (pushAccepted.getSize() > 1)
-                    txt = txt + "s";
-                viewHolder.notifType.setText("pushed " + pushAccepted.getSize() + txt + " to you");
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + pushAccepted.getImageId()).transform(new CircleTransform()).into(viewHolder.profilePhoto);
+                    builder.append("s ");
+                builder.append(" to you");
+                viewHolder.notifType.setText(builder.toString());
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + pushAccepted.getImageId()).transform(transform).into(viewHolder.profilePhoto);
                 break;
         }
         return convertView;

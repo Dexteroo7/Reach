@@ -283,7 +283,7 @@ public class Player {
 
         try {
             //caller should handle InterruptedException
-            frameHeader = getHeader.get(12, TimeUnit.SECONDS);
+            frameHeader = getHeader.get(5, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException e) {
 
             try {
@@ -329,7 +329,7 @@ public class Player {
         Arrays.fill(zeroes, 0, zeroes.length, (byte) 0);
         audioTrack.write(zeroes, 0, zeroes.length);
 
-        decodeFuture = decoderService.submit(new Decode(bitStream, frameHeader, mono, bufferSize));
+        decodeFuture = decoderService.submit(new Decode(bitStream, frameHeader, mono, bufferSize / 2));
 
         return duration;
     }

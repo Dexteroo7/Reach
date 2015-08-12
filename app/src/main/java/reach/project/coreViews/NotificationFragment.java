@@ -217,6 +217,7 @@ public class NotificationFragment extends Fragment {
 
                     push.setPushContainer((String) base.get("pushContainer"));
                     push.setFirstSongName((String) base.get("firstSongName"));
+                    push.setCustomMessage((String) base.get("customMessage"));
                     push.setSize(Integer.parseInt(base.get("size").toString()));
                     notifications.add(push);
 

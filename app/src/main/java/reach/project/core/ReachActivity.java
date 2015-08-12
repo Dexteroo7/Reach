@@ -36,6 +36,7 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -118,6 +119,7 @@ import reach.project.userProfile.UserProfileView;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.StringCompress;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.PushContainer;
@@ -1124,27 +1126,39 @@ public class ReachActivity extends AppCompatActivity implements
                 viewPager.setCurrentItem(1);
             } else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
 
-                final PushContainer pushContainer = new Gson().fromJson(intent.getStringExtra("data"), PushContainer.class);
-                final HashSet<TransferSong> transferSongs = new Gson().fromJson(
-                        pushContainer.getSongData(),
-                        new TypeToken<HashSet<TransferSong>>() {
-                        }.getType());
-
-                for (TransferSong transferSong : transferSongs) {
-
-                    addSongToQueue(transferSong.getSongId(),
-                            pushContainer.getSenderId(),
-                            transferSong.getSize(),
-                            transferSong.getDisplayName(),
-                            transferSong.getActualName(),
-                            true,
-                            pushContainer.getUserName(),
-                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                            pushContainer.getNetworkType(),
-                            transferSong.getArtistName(),
-                            transferSong.getDuration());
+                final String compressed = intent.getStringExtra("data");
+                String unCompressed;
+                try {
+                    unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    unCompressed = "";
                 }
-                new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
+
+                if (!TextUtils.isEmpty(unCompressed)) {
+
+                    final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
+                    final HashSet<TransferSong> transferSongs = new Gson().fromJson(
+                            pushContainer.getSongData(),
+                            new TypeToken<HashSet<TransferSong>>() {
+                            }.getType());
+
+                    for (TransferSong transferSong : transferSongs) {
+
+                        addSongToQueue(transferSong.getSongId(),
+                                pushContainer.getSenderId(),
+                                transferSong.getSize(),
+                                transferSong.getDisplayName(),
+                                transferSong.getActualName(),
+                                true,
+                                pushContainer.getUserName(),
+                                ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                pushContainer.getNetworkType(),
+                                transferSong.getArtistName(),
+                                transferSong.getDuration());
+                    }
+                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
+                }
             }
 
             intent.removeExtra("openNotificationFragment");
@@ -1349,7 +1363,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     private enum LocalUtils {
         ;
-
 
 
         public static final SeekBar.OnSeekBarChangeListener playerSeekListener = new SeekBar.OnSeekBarChangeListener() {
@@ -1945,7 +1958,6 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     public static class PlayerUpdateListener extends BroadcastReceiver {
-
 
 
         private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {

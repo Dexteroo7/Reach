@@ -63,7 +63,7 @@ public class FriendRequestFragment extends Fragment {
 
     public void refresh() {
 
-        if (friendsRefresher != null &&  listView!= null)
+        if (friendsRefresher != null && listView != null)
             new FetchRequests().executeOnExecutor(friendsRefresher, listView);
     }
 
@@ -186,8 +186,8 @@ public class FriendRequestFragment extends Fragment {
 
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
-                if (adapter.getCount()==0)
-                    MiscUtils.setEmptyTextforListView(listView,"No friend requests for you");
+                if (adapter.getCount() == 0)
+                    MiscUtils.setEmptyTextforListView(listView, "No friend requests for you");
             }
         }
     }

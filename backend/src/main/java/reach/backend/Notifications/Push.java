@@ -12,7 +12,17 @@ public class Push extends NotificationBase{
 
     private int size = 0;
     private String firstSongName = "";
+    private String customMessage = "";
     private String pushContainer = "";
+
+    public String getCustomMessage() {
+        return customMessage;
+    }
+
+    public void setCustomMessage(String customMessage) {
+        this.customMessage = customMessage;
+    }
+
 
     public String getPushContainer() {
         return pushContainer;
@@ -105,7 +115,6 @@ public class Push extends NotificationBase{
         this.firstSongName = firstSongName;
     }
 
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Push)) return false;
@@ -116,15 +125,19 @@ public class Push extends NotificationBase{
         if (size != push.size) return false;
         if (firstSongName != null ? !firstSongName.equals(push.firstSongName) : push.firstSongName != null)
             return false;
-        return !(pushContainer != null ? !pushContainer.equals(push.pushContainer) : push.pushContainer != null);
+        if (customMessage != null ? !customMessage.equals(push.customMessage) : push.customMessage != null)
+            return false;
+        if (pushContainer != null ? !pushContainer.equals(push.pushContainer) : push.pushContainer != null)
+            return false;
 
+        return true;
     }
 
-    @Override
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + size;
         result = 31 * result + (firstSongName != null ? firstSongName.hashCode() : 0);
+        result = 31 * result + (customMessage != null ? customMessage.hashCode() : 0);
         result = 31 * result + (pushContainer != null ? pushContainer.hashCode() : 0);
         return result;
     }
