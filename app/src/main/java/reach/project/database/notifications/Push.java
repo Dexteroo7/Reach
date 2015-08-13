@@ -7,6 +7,7 @@ public class Push extends NotificationBaseLocal {
 
     private int size = 0;
     private String firstSongName = "";
+    private String customMessage = "";
     private String pushContainer = ""; //compressed Base64
 
     public String getPushContainer() {
@@ -120,6 +121,14 @@ public class Push extends NotificationBaseLocal {
         this.firstSongName = firstSongName;
     }
 
+    public String getCustomMessage() {
+        return customMessage;
+    }
+
+    public void setCustomMessage(String customMessage) {
+        this.customMessage = customMessage;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -129,8 +138,11 @@ public class Push extends NotificationBaseLocal {
         Push push = (Push) o;
 
         if (size != push.size) return false;
-        if (!firstSongName.equals(push.firstSongName)) return false;
-        return pushContainer.equals(push.pushContainer);
+        if (firstSongName != null ? !firstSongName.equals(push.firstSongName) : push.firstSongName != null)
+            return false;
+        if (customMessage != null ? !customMessage.equals(push.customMessage) : push.customMessage != null)
+            return false;
+        return !(pushContainer != null ? !pushContainer.equals(push.pushContainer) : push.pushContainer != null);
 
     }
 
@@ -138,8 +150,9 @@ public class Push extends NotificationBaseLocal {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + size;
-        result = 31 * result + firstSongName.hashCode();
-        result = 31 * result + pushContainer.hashCode();
+        result = 31 * result + (firstSongName != null ? firstSongName.hashCode() : 0);
+        result = 31 * result + (customMessage != null ? customMessage.hashCode() : 0);
+        result = 31 * result + (pushContainer != null ? pushContainer.hashCode() : 0);
         return result;
     }
 }

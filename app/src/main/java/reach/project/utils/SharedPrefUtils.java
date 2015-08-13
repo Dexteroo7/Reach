@@ -30,12 +30,9 @@ public enum SharedPrefUtils {
 
         sharedPreferences.edit().putString("phoneNumber", reachUserDatabase.getPhoneNumber())
                 .putString("userName", reachUserDatabase.getUserName())
-                .putString("promoCode", reachUserDatabase.getPromoCode())
                 .putString("deviceId", reachUserDatabase.getDeviceId())
-
                 .putString("imageId", reachUserDatabase.getImageId())
                 .putString("statusSong", reachUserDatabase.getStatusSong())
-
                 .putLong("megaBytesReceived", reachUserDatabase.getMegaBytesReceived())
                 .putLong("megaBytesSent", reachUserDatabase.getMegaBytesSent())
                 .putLong("serverId", reachUserDatabase.getId())

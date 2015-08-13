@@ -237,6 +237,7 @@ public class NotificationEndpoint {
             httpMethod = ApiMethod.HttpMethod.PUT)
     public void addPush(@Named("container") String container,
                         @Named("firstSongName") String firstSongName,
+                        @Named("customMessage") String customMessage,
                         @Named("size") int size,
                         @Named("receiverId") long receiverId,
                         @Named("senderId") long senderId) {
@@ -250,6 +251,7 @@ public class NotificationEndpoint {
         push.setSystemTime(System.currentTimeMillis());
         push.setTypes(Types.PUSH);
 
+        push.setCustomMessage(customMessage);
         push.setFirstSongName(firstSongName);
         push.setPushContainer(container);
         push.setSize(size);

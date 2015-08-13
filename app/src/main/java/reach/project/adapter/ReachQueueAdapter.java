@@ -19,7 +19,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.daimajia.swipe.SwipeLayout;
 import com.daimajia.swipe.adapters.CursorSwipeAdapter;
 import com.google.common.base.Optional;
 
@@ -60,7 +59,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         private final TextView songTitle, userName, songSize;
         private final ProgressBar progressBar;
         private final ImageView listToggle, pauseQueue, deleteQueue;
-//        private final SwipeLayout swipeLayout;
 
         private ViewHolder(ImageView albumArt,
                            TextView songTitle,
@@ -69,8 +67,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                            ProgressBar progressBar,
                            ImageView listToggle,
                            ImageView pauseQueue,
-                           ImageView deleteQueue,
-                           SwipeLayout swipeLayout) {
+                           ImageView deleteQueue) {
 
 //            this.albumArt = albumArt;
             this.songTitle = songTitle;
@@ -80,7 +77,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             this.listToggle = listToggle;
             this.pauseQueue = pauseQueue;
             this.deleteQueue = deleteQueue;
-//            this.swipeLayout = swipeLayout;
         }
     }
 
@@ -180,8 +176,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                 (ProgressBar) view.findViewById(R.id.progressBar),
                 (ImageView) view.findViewById(R.id.listToggle),
                 (ImageView) view.findViewById(R.id.pauseQueue),
-                (ImageView) view.findViewById(R.id.deleteQueue),
-                (SwipeLayout) view.findViewById(getSwipeLayoutResourceId(0)));
+                (ImageView) view.findViewById(R.id.deleteQueue));
         view.setTag(viewHolder);
         return view;
     }
@@ -194,7 +189,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             @Override
             public void onClick(View view) {
 
-                final Object [] tag = (Object[]) view.getTag();
+                final Object[] tag = (Object[]) view.getTag();
                 final long id = (long) tag[0];
                 final int position = (int) tag[1];
 

@@ -25,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -43,14 +42,13 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
 import reach.project.core.ReachActivity;
-import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
@@ -65,8 +63,7 @@ public class AccountCreation extends Fragment {
             final OldUserContainerNew userContainer = container.get();
             bundle.putStringArray("oldData", new String[]{
                     userContainer.getName() == null ? "" : userContainer.getName(),
-                    userContainer.getImageId() == null ? "" : userContainer.getImageId(),
-                    userContainer.getPromoCode() == null ? "" : userContainer.getPromoCode()});
+                    userContainer.getImageId() == null ? "" : userContainer.getImageId()});
             fragment.setArguments(bundle);
         }
         return fragment;
@@ -86,7 +83,6 @@ public class AccountCreation extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_account_creation, container, false);
         final EditText userName = (EditText) rootView.findViewById(R.id.firstName);
-        final EditText promoCode = (EditText) rootView.findViewById(R.id.rCode);
         final TextView progress = (TextView) rootView.findViewById(R.id.syncStatus);
 
         uploadText = (TextView) rootView.findViewById(R.id.uploadText);
@@ -100,11 +96,10 @@ public class AccountCreation extends Fragment {
         final String[] oldData;
         if ((arguments = getArguments()) != null &&
                 (oldData = arguments.getStringArray("oldData")) != null &&
-                oldData.length == 3) {
+                oldData.length == 2) {
             /**
              * oldData[0] = name;
              * oldData[1] = imageId;
-             * oldData[2] = promoCode;
              */
             if (!TextUtils.isEmpty(oldData[0]))
                 userName.setText(oldData[0]);
@@ -118,8 +113,6 @@ public class AccountCreation extends Fragment {
                         .transform(new CircleTransform())
                         .into((ImageView) profilePhotoSelector.findViewById(R.id.displayPic));
             }
-            if (!TextUtils.isEmpty(oldData[2]))
-                promoCode.setText(oldData[2]);
         }
 
         rootView.findViewById(R.id.importMusic).setOnClickListener(new View.OnClickListener() {
@@ -158,11 +151,6 @@ public class AccountCreation extends Fragment {
                 rootView.findViewById(R.id.bottomPart2).setVisibility(View.VISIBLE);
                 progress.setText("Starting Profile Creation");
 
-                String code;
-                if (TextUtils.isEmpty(promoCode.getText()) ||
-                        TextUtils.isEmpty(code = promoCode.getText().toString().trim()))
-                    code = "hello_world";
-
                 new SaveUserData(
                         rootView.findViewById(R.id.bottomPart2),
                         rootView.findViewById(R.id.bottomPart3),
@@ -171,16 +159,7 @@ public class AccountCreation extends Fragment {
                         progress).executeOnExecutor(
                         StaticData.threadPool,
                         name,
-                        phoneNumber,
-                        code);
-                if (!StaticData.debugMode) {
-                    ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                            .setCategory("Promo Code")
-                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                            .setLabel("Code - " + code)
-                            .setValue(1)
-                            .build());
-                }
+                        phoneNumber);
 
             }
         });
@@ -308,7 +287,6 @@ public class AccountCreation extends Fragment {
             user.setGcmId(gcmId);
             user.setUserName(strings[0]);
             user.setPhoneNumber(strings[1]);
-            user.setPromoCode(strings[2]);
             user.setImageId(imageId);
             //insert User-object and get the userID
             final long id;

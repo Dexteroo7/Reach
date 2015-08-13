@@ -48,6 +48,7 @@ public class GcmIntentService extends IntentService {
     }
 
     private static long lastPong = 0;
+    private static final int NOTIFICATION_ID = 314134;
 
     @Override
     protected void onHandleIntent(final Intent intent) {
@@ -75,10 +76,9 @@ public class GcmIntentService extends IntentService {
             final String[] splitter = message.split("`");
             final String userName = splitter[2].trim();
 
-            final int notification_id = message.hashCode();
             final Intent viewIntent = new Intent(this, ReachActivity.class);
             viewIntent.putExtra("openFriendRequests",true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             MiscUtils.useFragment(FriendRequestFragment.getReference(), new UseFragment<Void, FriendRequestFragment>() {
                 @Override
@@ -99,7 +99,7 @@ public class GcmIntentService extends IntentService {
                             .setPriority(NotificationCompat.PRIORITY_MAX)
                             .setWhen(System.currentTimeMillis());
 
-            notificationManager.notify(notification_id, notificationBuilder.build());
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
         }
 
         /**
@@ -108,10 +108,9 @@ public class GcmIntentService extends IntentService {
         if (message.startsWith("SYNC")) {
 
             final String count = message.substring(4);
-            final int notification_id = message.hashCode();
             final Intent viewIntent = new Intent(this, ReachActivity.class);
             viewIntent.putExtra("openNotifications", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
                 @Override
@@ -129,7 +128,7 @@ public class GcmIntentService extends IntentService {
                             .setPriority(NotificationCompat.PRIORITY_HIGH)
                             .setContentIntent(viewPendingIntent)
                             .setWhen(System.currentTimeMillis());
-            notificationManager.notify(notification_id, notificationBuilder.build());
+            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
         }
 
         /**
@@ -145,7 +144,16 @@ public class GcmIntentService extends IntentService {
             final int notification_id = message.hashCode();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            viewIntent.putExtra("openNotifications", true);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
+                @Override
+                public Void work(NotificationFragment fragment) {
+                    fragment.refresh();
+                    return null;
+                }
+            });
 
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)

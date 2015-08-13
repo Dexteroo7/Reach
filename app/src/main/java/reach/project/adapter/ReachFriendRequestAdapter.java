@@ -24,6 +24,7 @@ import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.backend.notifications.notificationApi.model.Friend;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
@@ -35,13 +36,14 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
-    public final SparseBooleanArray accepted = new SparseBooleanArray();
-
+    public static final SparseBooleanArray accepted = new SparseBooleanArray();
     private static final SparseBooleanArray opened = new SparseBooleanArray();
+
     private static final int a = MiscUtils.dpToPx(70);
     private static final int b = MiscUtils.dpToPx(110);
     private static long serverId;
     private final int rId;
+    private static int pos;
 
     public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long id) {
         super(context, resourceId, receivedRequestList);
@@ -52,11 +54,18 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
     }
 
     @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        ContactsListFragment.checkNewNotifications();
+    }
+
+    @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
 
         if (convertView == null)
             convertView = LayoutInflater.from(getContext()).inflate(rId, parent, false);
 
+        pos = position;
         final View linearLayout = convertView.findViewById(R.id.linearLayout);
 
         final ImageView profilePhoto = (ImageView) convertView.findViewById(R.id.profilePhotoList);
@@ -94,18 +103,18 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             linearLayout.setTag(position);
             linearLayout.setOnClickListener(expander);
 
-            final Result onResult = new Result() {
+            accept.setTag(new Object[]{receivedRequest.getId(), new Result() {
                 @Override
                 public void result(Friend friend) {
 
                     if (friend == null) {
 
                         //fail
-                        expand(linearLayout, b, a);
-                        linearLayout.setClickable(false);
-                        actionBlock.setVisibility(View.GONE);
-                        libraryBtn.setVisibility(View.VISIBLE);
-                        notificationType.setText("added to your friends");
+//                        expand(linearLayout, b, a);
+//                        linearLayout.setClickable(false);
+//                        actionBlock.setVisibility(View.GONE);
+//                        libraryBtn.setVisibility(View.VISIBLE);
+//                        notificationType.setText("added to your friends");
 
                     } else {
                         //success
@@ -120,9 +129,8 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                         notificationType.setText("added to your friends");
                     }
                 }
-            };
+            }});
 
-            accept.setTag(new Object[]{receivedRequest.getId(), onResult});
             accept.setOnClickListener(acceptClick);
             reject.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -271,6 +279,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                 return;
             }
 
+            accepted.put(pos,true);
             //disable and send request
             accept.setEnabled(false);
             //hostId, reference, view to enable

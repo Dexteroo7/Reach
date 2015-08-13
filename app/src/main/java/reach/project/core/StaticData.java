@@ -96,7 +96,7 @@ public final class StaticData {
     public static final short UPLOAD_LOADER = 6;
     public static final short MY_LIBRARY_LOADER = 7;
 
-    public static final int PLAYER_BUFFER_DEFAULT = 8192;
+    public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;

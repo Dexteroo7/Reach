@@ -16,10 +16,7 @@ public interface SuperInterface {
 
     void accountCreationError();
 
-    /**
-     * ContactsListFragment
-     */
-    void onOpenProfileView(long id);
+    void closeDrawers();
 
     void onOpenLibrary(long id);
 

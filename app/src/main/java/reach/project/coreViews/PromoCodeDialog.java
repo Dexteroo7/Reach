@@ -140,8 +140,10 @@ public class PromoCodeDialog extends DialogFragment {
                 Cursor frndCursor = activity.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
                         ReachFriendsHelper.projection,null,null,null);
                 int frndCount = 0;
-                if (frndCursor!=null)
+                if (frndCursor!=null) {
                     frndCount = frndCursor.getCount();
+                    frndCursor.close();
+                }
                 ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Promo Code")
                         .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))

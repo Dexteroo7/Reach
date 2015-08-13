@@ -113,12 +113,35 @@ public class ContactsListFragment extends Fragment implements
 
     private static long serverId;
 
-    public static void setNotificationCount(int count) {
+    private static int friendRequestCount = 0;
+
+    private static int notificationsCount = 0;
+
+    public static void checkNewNotifications() {
 
         final ContactsListFragment fragment;
         if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
             return;
-        fragment.notificationCount.setText("" + count);
+        MiscUtils.useFragment(FriendRequestFragment.getReference(), new UseFragment<Void, FriendRequestFragment>() {
+            @Override
+            public Void work(FriendRequestFragment fragment) {
+                friendRequestCount = fragment.adapter.getCount();
+                return null;
+            }
+        });
+        MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
+            @Override
+            public Void work(NotificationFragment fragment) {
+                notificationsCount = fragment.adapter.getCount();
+                return null;
+            }
+        });
+        if (friendRequestCount == 0 && notificationsCount == 0)
+            fragment.notificationCount.setVisibility(View.GONE);
+        else {
+            fragment.notificationCount.setVisibility(View.VISIBLE);
+            fragment.notificationCount.setText(String.valueOf(friendRequestCount+notificationsCount));
+        }
     }
 
     private final View.OnClickListener openNotification = new View.OnClickListener() {
@@ -333,6 +356,7 @@ public class ContactsListFragment extends Fragment implements
         if (activity == null || activity.isFinishing())
             return;
 
+        setHasOptionsMenu(true);
         mListener.setUpDrawer();
         mListener.toggleDrawer(false);
         mListener.toggleSliding(true);
@@ -559,45 +583,24 @@ public class ContactsListFragment extends Fragment implements
 
         inflater.inflate(R.menu.myreach_menu, menu);
 
-        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
-        if (notificationButton == null)
-            return;
-        notificationButton.setActionView(R.layout.reach_queue_counter);
-
-        final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
-        notificationContainer.setOnClickListener(openNotification);
-        notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
-        StaticData.threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                reach.backend.notifications.notificationApi.model.MyString myString = null;
-                try {
-                    myString = StaticData.notificationApi.getNewCount(1l).execute();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (myString!=null && !TextUtils.isEmpty(myString.toString())){
-                    int nCount = Integer.parseInt(myString.toString());
-                    if (nCount>0)
-                        notificationCount.setVisibility(View.VISIBLE);
-                    else
-                        notificationCount.setVisibility(View.GONE);
-                }
-            }
-        });
-        //notificationCount.setText("0");
-
         searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
         if (searchView == null)
             return;
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
+
+        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
+        if (notificationButton == null)
+            return;
+        notificationButton.setActionView(R.layout.reach_queue_counter);
+        final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
+        notificationContainer.setOnClickListener(openNotification);
+        notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        setHasOptionsMenu(true);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
