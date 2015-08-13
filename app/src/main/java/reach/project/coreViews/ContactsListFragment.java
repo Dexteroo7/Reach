@@ -111,13 +111,13 @@ public class ContactsListFragment extends Fragment implements
 
     private static long serverId;
 
-    public static void setNotificationCount(int count) {
-
-        final ContactsListFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
-            return;
-        fragment.notificationCount.setText("" + count);
-    }
+//    public static void setNotificationCount(boolean state) {
+//
+//        final ContactsListFragment fragment;
+//        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
+//            return;
+//        fragment.notificationCount.setText("" + count);
+//    }
 
     private final View.OnClickListener openNotification = new View.OnClickListener() {
         @Override

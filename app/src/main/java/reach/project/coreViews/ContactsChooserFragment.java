@@ -398,7 +398,8 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                 ReachContactsAdapter.requiredProjection,
                 selection,
                 selectionArguments,
-                ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
+                        ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
     }
 
     @Override
