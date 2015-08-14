@@ -96,7 +96,7 @@ public class FriendRequestFragment extends Fragment {
                     return;
                 }
                 cursor.close();
-
+                mListener.closeDrawers();
                 mListener.onOpenLibrary(receivedRequest.getId());
             }
         }
