@@ -3,6 +3,7 @@
 .navigation/
 Reach.iml
 app/app.iml
+app/app-release.apk
 app/build/
 backend/backend.iml
 build/

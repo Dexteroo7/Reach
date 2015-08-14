@@ -139,7 +139,7 @@ public enum MiscUtils {
             case 2:
                 return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
             default:
-                return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
+                return "A";
         }
     }
 

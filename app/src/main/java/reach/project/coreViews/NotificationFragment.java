@@ -258,8 +258,7 @@ public class NotificationFragment extends Fragment {
 
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
-                if (adapter.getCount() == 0)
-                    MiscUtils.setEmptyTextforListView(listView, "No notifications");
+                MiscUtils.setEmptyTextforListView(listView, "No notifications");
             }
         }
     }
