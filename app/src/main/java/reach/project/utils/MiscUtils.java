@@ -96,6 +96,10 @@ public enum MiscUtils {
         return (int) (px / Resources.getSystem().getDisplayMetrics().density);
     }
 
+    public static String capitalizeFirst(String string) {
+        return string.substring(0, 1).toUpperCase() + string.substring(1);
+    }
+
     public static String dateFormatter(final long seconds) {
 
         return new SimpleDateFormat("dd-MM-yyyy HH-mm-ss", Locale.getDefault()).format(

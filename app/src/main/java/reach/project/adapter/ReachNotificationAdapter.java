@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,15 +18,19 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.notifications.BecameFriends;
 import reach.project.database.notifications.Like;
 import reach.project.database.notifications.NotificationBaseLocal;
@@ -41,6 +46,8 @@ import reach.project.viewHelpers.CircleTransform;
  * Created by ashish on 10/07/15.
  */
 public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
+
+    public final SparseBooleanArray accepted = new SparseBooleanArray();
 
     private final CircleTransform transform = new CircleTransform();
     private final int resID;
@@ -98,7 +105,13 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        ContactsListFragment.checkNewNotifications();
+    }
+
+    @Override
+    public View getView(final int position, View convertView, ViewGroup parent) {
 
         final ViewHolder viewHolder;
         if (convertView == null) {
@@ -144,114 +157,122 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
             case PUSH:
 
                 final Push push = (Push) notificationBaseLocal;
+
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(transform).into(viewHolder.profilePhoto);
 
-                viewHolder.librarayBtn.setVisibility(View.GONE);
-                viewHolder.actionBlock.setVisibility(View.VISIBLE);
-
-                final String customMessage = push.getCustomMessage();
-                final StringBuilder buffer = new StringBuilder();
-                if (!TextUtils.isEmpty(customMessage))
-                    buffer.append(customMessage).append(". Start listening to ");
-                else
-                    buffer.append("wants you to listen to ");
-
-                buffer.append(push.getFirstSongName());
-
-                if (push.getSize() == 2)
-                    buffer.append(" and 1 other song");
-                else if (push.getSize() > 2)
-                    buffer.append(" and ").append(push.getSize() - 1).append(" other songs");
-
-                viewHolder.notifType.setText(buffer.toString());
-
-                if (push.getExpanded() == 0)
+                if (accepted.get(position)) {
                     viewHolder.linearLayout.getLayoutParams().height = a;
-                else
-                    viewHolder.linearLayout.getLayoutParams().height = b;
+                    viewHolder.linearLayout.setClickable(false);
+                    viewHolder.actionBlock.setVisibility(View.GONE);
+                    viewHolder.librarayBtn.setVisibility(View.VISIBLE);
+                    final StringBuilder builder = new StringBuilder();
+                    builder.append("shared ").append(push.getSize()).append(" song");
+                    if (push.getSize() > 1)
+                        builder.append("s ");
+                    builder.append(" with you");
+                    viewHolder.notifType.setText(builder.toString());
+                }
+                else {
+                    viewHolder.librarayBtn.setVisibility(View.GONE);
+                    viewHolder.actionBlock.setVisibility(View.VISIBLE);
 
-                viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+                    final String customMessage = push.getCustomMessage();
+                    final StringBuilder buffer = new StringBuilder();
+                    if (!TextUtils.isEmpty(customMessage))
+                        buffer.append(customMessage).append(". Start listening to ");
+                    else
+                        buffer.append("wants you to listen to ");
 
-                        if (push.getExpanded() == 0) {
-                            expand(viewHolder.linearLayout, a, b);
-                            push.setExpanded((short) 1);
-                        } else {
-                            expand(viewHolder.linearLayout, b, a);
-                            push.setExpanded((short) 0);
+                    buffer.append(push.getFirstSongName());
+
+                    if (push.getSize() == 2)
+                        buffer.append(" and 1 other song");
+                    else if (push.getSize() > 2)
+                        buffer.append(" and ").append(push.getSize() - 1).append(" other songs");
+
+                    viewHolder.notifType.setText(buffer.toString());
+
+                    if (push.getExpanded() == 0)
+                        viewHolder.linearLayout.getLayoutParams().height = a;
+                    else
+                        viewHolder.linearLayout.getLayoutParams().height = b;
+
+                    viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            if (push.getExpanded() == 0) {
+                                expand(viewHolder.linearLayout, a, b);
+                                push.setExpanded((short) 1);
+                            } else {
+                                expand(viewHolder.linearLayout, b, a);
+                                push.setExpanded((short) 0);
+                            }
                         }
-                    }
-                });
+                    });
 
-                viewHolder.accept.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
+                    viewHolder.accept.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
 
-                        final Intent pushAddSong = new Intent(activity, ReachActivity.class);
-                        pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        pushAddSong.setAction("process_multiple");
-                        pushAddSong.putExtra("data", push.getPushContainer());
-                        //start the Activity
-                        activity.startActivity(pushAddSong);
+                            final Intent pushAddSong = new Intent(activity, ReachActivity.class);
+                            pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                            pushAddSong.setAction("process_multiple");
+                            pushAddSong.putExtra("data", push.getPushContainer());
+                            //start the Activity
+                            activity.startActivity(pushAddSong);
 
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Accept - Pushed song")
-                                .setAction("User - " + SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                .setLabel("Sender - " + push.getHostName() + ", Songs - " + push.getSize())
-                                .setValue(push.getSize())
-                                .build());
+                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                    .setCategory("Accept - Pushed song")
+                                    .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                    .setLabel("Sender - " + push.getHostName() + ", Songs - " + push.getSize())
+                                    .setValue(push.getSize())
+                                    .build());
+                            Map<String, String> tagValues = new HashMap<>();
+                            tagValues.put("User Name", SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+                            tagValues.put("Sender", push.getHostName());
+                            tagValues.put("Songs", String.valueOf(push.getSize()));
+                            Localytics.tagEvent("Accept - Pushed song", tagValues);
 
-                        expand(viewHolder.linearLayout, b, a);
-                        viewHolder.linearLayout.setClickable(false);
-                        viewHolder.actionBlock.setVisibility(View.GONE);
-                        viewHolder.librarayBtn.setVisibility(View.VISIBLE);
-                        String txt = " song";
-                        if (push.getSize() > 1)
-                            txt = txt + "s";
-                        viewHolder.notifType.setText(" pushed " + push.getSize() + txt + " to you");
+                            expand(viewHolder.linearLayout, b, a);
+                            viewHolder.linearLayout.setClickable(false);
+                            viewHolder.actionBlock.setVisibility(View.GONE);
+                            viewHolder.librarayBtn.setVisibility(View.VISIBLE);
+                            String txt = " song";
+                            if (push.getSize() > 1)
+                                txt = txt + "s";
+                            viewHolder.notifType.setText(" shared " + push.getSize() + txt + " with you");
 
-                        final PushAccepted accepted = new PushAccepted();
-                        accepted.setHostName(push.getHostName());
-                        accepted.setRead(push.getRead());
-                        accepted.setHostId(push.getHostId());
-                        accepted.setImageId(push.getImageId());
-                        accepted.setSystemTime(push.getSystemTime());
-                        accepted.setExpanded((short) 0);
-                        accepted.setTypes(Types.PUSH_ACCEPTED);
-                        accepted.setSize(push.getSize());
-                        accepted.setFirstSongName(push.getHostName());
+                            MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                                @Override
+                                public Void doWork() throws IOException {
+                                    return StaticData.notificationApi.pushAccepted(
+                                            push.getFirstSongName(),
+                                            push.getNotificationId(),
+                                            serverID,
+                                            push.getHostId(),
+                                            push.getSize()).execute();
+                                }
+                            }, Optional.<Predicate<Void>>absent());
+                            accepted.put(position, true);
 
-                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                            @Override
-                            public Void doWork() throws IOException {
-                                return StaticData.notificationApi.pushAccepted(
-                                        accepted.getFirstSongName(),
-                                        push.getNotificationId(),
-                                        serverID,
-                                        push.getHostId(),
-                                        push.getSize()).execute();
-                            }
-                        }, Optional.<Predicate<Void>>absent());
-
-                    }
-                });
-                viewHolder.reject.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        remove(push);
-                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                            @Override
-                            public Void doWork() throws IOException {
-                                return StaticData.notificationApi.removeNotification(push.getNotificationId(), serverID).execute();
-                            }
-                        }, Optional.<Predicate<Void>>absent());
-                    }
-                });
+                        }
+                    });
+                    viewHolder.reject.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                                @Override
+                                public Void doWork() throws IOException {
+                                    return StaticData.notificationApi.removeNotification(push.getNotificationId(), serverID).execute();
+                                }
+                            }, Optional.<Predicate<Void>>absent());
+                            remove(push);
+                        }
+                    });
+                }
                 break;
 
             case BECAME_FRIENDS:
@@ -277,10 +298,10 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
 
                 final StringBuilder builder = new StringBuilder();
-                builder.append("pushed ").append(pushAccepted.getSize()).append(" song");
+                builder.append("shared ").append(pushAccepted.getSize()).append(" song");
                 if (pushAccepted.getSize() > 1)
                     builder.append("s ");
-                builder.append(" to you");
+                builder.append(" with you");
                 viewHolder.notifType.setText(builder.toString());
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + pushAccepted.getImageId()).transform(transform).into(viewHolder.profilePhoto);
                 break;

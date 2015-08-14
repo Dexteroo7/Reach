@@ -144,7 +144,16 @@ public class GcmIntentService extends IntentService {
             final int notification_id = message.hashCode();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            viewIntent.putExtra("openNotifications", true);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
+                @Override
+                public Void work(NotificationFragment fragment) {
+                    fragment.refresh();
+                    return null;
+                }
+            });
 
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)

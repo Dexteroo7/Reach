@@ -46,6 +46,7 @@ public class FriendRequestFragment extends Fragment {
     private ExecutorService friendsRefresher = null;
     private ListView listView = null;
     private static long serverId = 0;
+    public ReachFriendRequestAdapter adapter;
 
     public static FriendRequestFragment newInstance(long id) {
 
@@ -72,7 +73,7 @@ public class FriendRequestFragment extends Fragment {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
             final ReachFriendRequestAdapter adapter = (ReachFriendRequestAdapter) parent.getAdapter();
-            if (adapter.accepted.get(position)) {
+            if (ReachFriendRequestAdapter.accepted.get(position)) {
 
                 final ReceivedRequest receivedRequest = adapter.getItem(position);
                 final long userId = receivedRequest.getId();
@@ -109,7 +110,7 @@ public class FriendRequestFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ReachFriendRequestAdapter adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
+        adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
@@ -187,7 +188,7 @@ public class FriendRequestFragment extends Fragment {
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
                 if (adapter.getCount() == 0)
-                    MiscUtils.setEmptyTextforListView(listView, "No friend requests for you");
+                    MiscUtils.setEmptyTextforListView(listView, "No friend requests");
             }
         }
     }

@@ -1,6 +1,5 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <ImageView
@@ -107,23 +106,6 @@
                     android:inputType="text"
                     android:textColorHint="#b2b2b2"
                     android:hint="     Enter your name     " />
-                <EditText
-                    android:id="@+id/rCode"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginBottom="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:textCursorDrawable="@null"
-                    android:layout_centerHorizontal="true"
-                    android:textColor="@color/white"
-                    android:background="@drawable/edittext_white"
-                    android:padding="7dp"
-                    android:textSize="14sp"
-                    android:gravity="center"
-                    android:lines="1"
-                    android:inputType="text"
-                    android:textColorHint="#b2b2b2"
-                    android:hint="Promo code" />
             </RelativeLayout>
             <LinearLayout
                 android:orientation="vertical"

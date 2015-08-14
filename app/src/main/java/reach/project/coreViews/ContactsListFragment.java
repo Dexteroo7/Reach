@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -74,6 +75,7 @@ import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
 import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.viewHelpers.Contact;
 
 public class ContactsListFragment extends Fragment implements
@@ -111,13 +113,36 @@ public class ContactsListFragment extends Fragment implements
 
     private static long serverId;
 
-//    public static void setNotificationCount(boolean state) {
-//
-//        final ContactsListFragment fragment;
-//        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
-//            return;
-//        fragment.notificationCount.setText("" + count);
-//    }
+    private static int friendRequestCount = 0;
+
+    private static int notificationsCount = 0;
+
+    public static void checkNewNotifications() {
+
+        final ContactsListFragment fragment;
+        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
+            return;
+        MiscUtils.useFragment(FriendRequestFragment.getReference(), new UseFragment<Void, FriendRequestFragment>() {
+            @Override
+            public Void work(FriendRequestFragment fragment) {
+                friendRequestCount = fragment.adapter.getCount();
+                return null;
+            }
+        });
+        MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
+            @Override
+            public Void work(NotificationFragment fragment) {
+                notificationsCount = fragment.adapter.getCount();
+                return null;
+            }
+        });
+        if (friendRequestCount == 0 && notificationsCount == 0)
+            fragment.notificationCount.setVisibility(View.GONE);
+        else {
+            fragment.notificationCount.setVisibility(View.VISIBLE);
+            fragment.notificationCount.setText(String.valueOf(friendRequestCount+notificationsCount));
+        }
+    }
 
     private final View.OnClickListener openNotification = new View.OnClickListener() {
         @Override
@@ -127,6 +152,66 @@ public class ContactsListFragment extends Fragment implements
     };
 
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
+
+        final class SendRequest extends AsyncTask<Long, Void, Long> {
+
+            @Override
+            protected Long doInBackground(final Long... params) {
+
+                /**
+                 * params[0] = other id
+                 * params[1] = my id
+                 * params[2] = status
+                 */
+
+                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<reach.backend.entities.messaging.model.MyString>() {
+                    @Override
+                    public reach.backend.entities.messaging.model.MyString doWork() throws IOException {
+                        return StaticData
+                                .messagingEndpoint
+                                .messagingEndpoint()
+                                .requestAccess(params[1], params[0]).execute();
+                    }
+                }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(new Predicate<reach.backend.entities.messaging.model.MyString>() {
+                    @Override
+                    public boolean apply(reach.backend.entities.messaging.model.MyString input) {
+                        return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
+                    }
+                })).orNull();
+
+                final String toParse;
+                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
+                    return params[0];
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(final Long response) {
+
+                super.onPostExecute(response);
+
+                if (response != null && response > 0) {
+
+                    //response becomes the id of failed person
+                    MiscUtils.useFragment(reference, new UseFragment<Void, ContactsListFragment>() {
+                        @Override
+                        public Void work(ContactsListFragment fragment) {
+                            Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
+                            final ContentValues values = new ContentValues();
+                            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                            reference.get().getActivity().getContentResolver().update(
+                                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
+                                    values,
+                                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                                    new String[]{response + ""});
+                            return null;
+                        }
+                    });
+                }
+
+            }
+
+        }
 
         @Override
         public void onItemClick(final AdapterView<?> adapterView, final View view, int position, long l) {
@@ -143,8 +228,22 @@ public class ContactsListFragment extends Fragment implements
                 if (mListener != null) {
                     if (status < 2)
                         mListener.onOpenLibrary(id);
-                    else
-                        mListener.onOpenProfileView(id);
+                    else {
+                        final long clientId = cursor.getLong(0);
+
+                        new SendRequest().executeOnExecutor(
+                                StaticData.threadPool,
+                                clientId, serverId, (long) status);
+
+                        Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
+                        final ContentValues values = new ContentValues();
+                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+                        getActivity().getContentResolver().update(
+                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
+                                values,
+                                ReachFriendsHelper.COLUMN_ID + " = ?",
+                                new String[]{clientId + ""});
+                    }
                 }
             } else if (object instanceof Contact) {
 
@@ -257,6 +356,7 @@ public class ContactsListFragment extends Fragment implements
         if (activity == null || activity.isFinishing())
             return;
 
+        setHasOptionsMenu(true);
         mListener.setUpDrawer();
         mListener.toggleDrawer(false);
         mListener.toggleSliding(true);
@@ -288,7 +388,7 @@ public class ContactsListFragment extends Fragment implements
             }
         };
 
-        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0, serverId);
+        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0);
         mergeAdapter = new MergeAdapter();
         //setup friends adapter
         mergeAdapter.addView(LocalUtils.createFriendsHeader(activity));
@@ -483,27 +583,24 @@ public class ContactsListFragment extends Fragment implements
 
         inflater.inflate(R.menu.myreach_menu, menu);
 
-        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
-        if (notificationButton == null)
-            return;
-        notificationButton.setActionView(R.layout.reach_queue_counter);
-
-        final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
-        notificationContainer.setOnClickListener(openNotification);
-        notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
-        notificationCount.setText("0");
-
         searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
         if (searchView == null)
             return;
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
+
+        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
+        if (notificationButton == null)
+            return;
+        notificationButton.setActionView(R.layout.reach_queue_counter);
+        final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
+        notificationContainer.setOnClickListener(openNotification);
+        notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        setHasOptionsMenu(true);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {

@@ -53,6 +53,7 @@ public class NotificationFragment extends Fragment {
     private ExecutorService notificationRefresher = null;
     private ListView listView = null;
     private static long serverId = 0;
+    public ReachNotificationAdapter adapter;
 
     public static NotificationFragment newInstance(long id) {
 
@@ -69,7 +70,7 @@ public class NotificationFragment extends Fragment {
     }
 
     public void refresh() {
-
+        getActivity().invalidateOptionsMenu();
         if (notificationRefresher != null && listView != null)
             new NotificationSync().executeOnExecutor(notificationRefresher, listView);
     }
@@ -80,7 +81,7 @@ public class NotificationFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ReachNotificationAdapter adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
+        adapter = new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId);
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
@@ -129,12 +130,15 @@ public class NotificationFragment extends Fragment {
             final NotificationBaseLocal notificationBaseLocal = adapter.getItem(position);
             final Types type = notificationBaseLocal.getTypes();
             final long hostID = notificationBaseLocal.getHostId();
-
             switch (type) {
                 case DEFAULT:
                     throw new IllegalArgumentException("Default notification in list !");
+                case PUSH:
+                    if (adapter.accepted.get(position))
+                        mListener.anchorFooter();
+                    break;
                 case LIKE:
-                    mListener.anchorFooter(true);
+                    mListener.anchorFooter();
                     break;
                 case BECAME_FRIENDS:
                     //check validity
@@ -144,7 +148,6 @@ public class NotificationFragment extends Fragment {
                             ReachFriendsHelper.COLUMN_ID + " = ?",
                             new String[]{hostID + ""}, null);
 
-                    //check validity
                     if (cursor == null || !cursor.moveToFirst()) {
 
                         MiscUtils.autoRetryAsync(new DoWork<Void>() {
@@ -165,9 +168,17 @@ public class NotificationFragment extends Fragment {
                     mListener.onOpenLibrary(hostID);
                     break;
                 case PUSH_ACCEPTED:
-                    mListener.anchorFooter(true);
+                    mListener.anchorFooter();
                     break;
             }
+            mListener.closeDrawers();
+            adapter.remove(notificationBaseLocal);
+            MiscUtils.autoRetryAsync(new DoWork<Void>() {
+                @Override
+                public Void doWork() throws IOException {
+                    return StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute();
+                }
+            }, Optional.<Predicate<Void>>absent());
         }
     };
 
@@ -248,7 +259,7 @@ public class NotificationFragment extends Fragment {
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
                 if (adapter.getCount() == 0)
-                    MiscUtils.setEmptyTextforListView(listView, "No notifications for you");
+                    MiscUtils.setEmptyTextforListView(listView, "No notifications");
             }
         }
     }

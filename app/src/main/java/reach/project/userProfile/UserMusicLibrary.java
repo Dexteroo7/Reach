@@ -169,12 +169,12 @@ public class UserMusicLibrary extends Fragment {
         if (!StaticData.debugMode) {
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Browsing Library")
-                    .setAction("User - " + SharedPrefUtils.getUserName(sharedPreferences))
-                    .setAction("Friend - " + userId)
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
+                    .setLabel("Friend - " + userId)
                     .setValue(1)
                     .build());
             Map<String, String> tagValues = new HashMap<>();
-            tagValues.put("User Name", SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            tagValues.put("User Name", SharedPrefUtils.getUserName(sharedPreferences));
             tagValues.put("Friend", String.valueOf(userId));
             Localytics.tagEvent("Browsing Library", tagValues);
         }

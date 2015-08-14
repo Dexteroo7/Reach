@@ -4,7 +4,8 @@
 Reach.iml
 app/app.iml
 app/build/
-app/.DS_Store
 build/
 local.properties
 .DS_Store
+settings.gradle
+httptest/*

@@ -376,7 +376,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         }
 
         if (reachContactsAdapter == null)
-            reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0, serverId);
+            reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0);
         selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
         selectionArguments = new String[]{2 + ""};
 

@@ -19,7 +19,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.daimajia.swipe.SwipeLayout;
 import com.daimajia.swipe.adapters.CursorSwipeAdapter;
 import com.google.common.base.Optional;
 
@@ -41,7 +40,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
     //TODO improve warnings
 
     private static WeakReference<ReachQueueAdapter> reference;
-
     public ReachQueueAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
         reference = new WeakReference<>(this);
@@ -61,7 +59,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         private final TextView songTitle, userName, songSize;
         private final ProgressBar progressBar;
         private final ImageView listToggle, pauseQueue, deleteQueue;
-//        private final SwipeLayout swipeLayout;
 
         private ViewHolder(ImageView albumArt,
                            TextView songTitle,
@@ -70,8 +67,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                            ProgressBar progressBar,
                            ImageView listToggle,
                            ImageView pauseQueue,
-                           ImageView deleteQueue,
-                           SwipeLayout swipeLayout) {
+                           ImageView deleteQueue) {
 
 //            this.albumArt = albumArt;
             this.songTitle = songTitle;
@@ -81,7 +77,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             this.listToggle = listToggle;
             this.pauseQueue = pauseQueue;
             this.deleteQueue = deleteQueue;
-//            this.swipeLayout = swipeLayout;
         }
     }
 
@@ -122,7 +117,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
          */
         ///////////////////////////////////
         viewHolder.userName.setText("");
-        viewHolder.userName.setText(userName);
+        viewHolder.userName.setText("from " + userName);
         ///////////////////////////////////
         /**
          * If finished no need for pause button
@@ -133,6 +128,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             viewHolder.songSize.setText(String.format("%.1f", (float) (length / 1024000.0f)) + " MB");
         } else {
 
+            viewHolder.pauseQueue.setVisibility(View.VISIBLE);
             viewHolder.pauseQueue.setTag(id);
             viewHolder.pauseQueue.setOnClickListener(LocalUtils.pauseListener);
 
@@ -147,7 +143,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         }
 
         if (operationKind == 0) {
-
             viewHolder.deleteQueue.setTag(new Object[]{id, cursor.getPosition()});
             viewHolder.deleteQueue.setOnClickListener(LocalUtils.deleteListener);
         } else {
@@ -156,9 +151,9 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         }
 
         if (status == ReachDatabase.PAUSED_BY_USER)
-            viewHolder.pauseQueue.setImageResource(R.drawable.restart);
+            viewHolder.pauseQueue.setImageResource(R.drawable.ic_file_resume_download_grey600_48dp);
         else
-            viewHolder.pauseQueue.setImageResource(R.drawable.stop);
+            viewHolder.pauseQueue.setImageResource(R.drawable.ic_file_pause_download_grey600_48dp);
 
         if (status == ReachDatabase.GCM_FAILED)
             viewHolder.songSize.setText("Network error, retry");
@@ -181,8 +176,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                 (ProgressBar) view.findViewById(R.id.progressBar),
                 (ImageView) view.findViewById(R.id.listToggle),
                 (ImageView) view.findViewById(R.id.pauseQueue),
-                (ImageView) view.findViewById(R.id.deleteQueue),
-                (SwipeLayout) view.findViewById(getSwipeLayoutResourceId(0)));
+                (ImageView) view.findViewById(R.id.deleteQueue));
         view.setTag(viewHolder);
         return view;
     }
@@ -226,7 +220,6 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
 
             @Override
             public void onClick(DialogInterface dialogInterface, int which) {
-
                 /**
                  * Can not remove from memory cache just yet, because some operation might be underway
                  * in connection manager

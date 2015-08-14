@@ -58,7 +58,6 @@ import android.widget.Toast;
 import com.appsflyer.AppsFlyerLib;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
-import com.daimajia.swipe.util.Attributes;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
@@ -115,7 +114,6 @@ import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.userProfile.MusicListFragment;
 import reach.project.userProfile.UserMusicLibrary;
-import reach.project.userProfile.UserProfileView;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
@@ -244,11 +242,10 @@ public class ReachActivity extends AppCompatActivity implements
                     mToolbarMenu.getItem(i).setVisible(false);
                 mToolbar.inflateMenu(R.menu.player_menu);
                 searchView = (SearchView) mToolbar.getMenu().findItem(R.id.player_search).getActionView();
-                //((EditText) searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text)).setTextColor(Color.WHITE);
                 searchView.setOnQueryTextListener(ReachActivity.this);
                 searchView.setOnCloseListener(ReachActivity.this);
 
-                if (actionBar.getTitle() != null && actionBar.getTitle().equals("My Library")) {
+                if (actionBar.getTitle() != null && !actionBar.getTitle().equals("My Library")) {
 
                     actionBarTitle = (String) actionBar.getTitle();
                     actionBarSubtitle = (String) actionBar.getSubtitle();
@@ -564,6 +561,12 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void closeDrawers() {
+        if (mDrawerLayout!=null)
+            mDrawerLayout.closeDrawers();
+    }
+
+    @Override
     public void onBackPressed() {
 
         if (isFinishing())
@@ -634,19 +637,6 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onOpenProfileView(long id) {
-        if (isFinishing())
-            return;
-        try {
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right).addToBackStack(null)
-                    .addToBackStack(null).replace(R.id.container, UserProfileView.newInstance(id), "user_profile").commit();
-        } catch (IllegalStateException ignored) {
-            finish();
-        }
-    }
-
-    @Override
     public void onOpenLibrary(long id) {
         if (isFinishing())
             return;
@@ -712,25 +702,10 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void anchorFooter(boolean first) {
+    public void anchorFooter() {
         if (slidingUpPanelLayout == null)
             return;
-        if (first)
-            slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
-        else {
-            slidingUpPanelLayout.setAnchorPoint(0.3f);
-            slidingUpPanelLayout.setPanelState(PanelState.ANCHORED);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (slidingUpPanelLayout == null)
-                        return;
-                    if (slidingUpPanelLayout.getPanelState() == PanelState.ANCHORED)
-                        slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                    slidingUpPanelLayout.setAnchorPoint(1f);
-                }
-            }, 2000);
-        }
+        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
     }
 
     @Override
@@ -823,7 +798,8 @@ public class ReachActivity extends AppCompatActivity implements
             final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
             if (actionBar.isPresent())
                 actionBar.get().setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-            toggleDrawer(true);
+            if (mDrawerLayout!=null)
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED,Gravity.LEFT);
         } else {
             setUpDrawer();
             toggleDrawer(false);
@@ -926,7 +902,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         searchView = new SearchView(this);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        toggleDrawer(true);
 
         //small
         toggleSliding(false);
@@ -936,7 +912,6 @@ public class ReachActivity extends AppCompatActivity implements
         //navigation-drawer
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, Gravity.LEFT);
-        toggleDrawer(true);
 
         progressBarMinimized = (SeekBar) findViewById(R.id.progressBar);
         songNameMinimized = (TextView) findViewById(R.id.songNamePlaying);
@@ -974,6 +949,7 @@ public class ReachActivity extends AppCompatActivity implements
         pausePlayMinimized.setOnClickListener(LocalUtils.pauseClick);
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
         queueListView.setOnScrollListener(scrollListener);
+        downloadRefresh.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
@@ -1046,7 +1022,6 @@ public class ReachActivity extends AppCompatActivity implements
             emptyTV1 = LocalUtils.getEmptyDownload(params[0]);
             combinedAdapter.addView(emptyTV1, false);
             combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(params[0], null, 0));
-            queueAdapter.setMode(Attributes.Mode.Multiple);
             queueAdapter.getSwipeLayoutResourceId(0);
             combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(params[0]));
             emptyTV2 = LocalUtils.getEmptyLibrary(params[0]);

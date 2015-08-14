@@ -5,11 +5,10 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/reach_color</item>
         <item name="colorPrimaryDark">@color/reach_dark</item>
-        <item name="colorAccent">@color/reach_grey</item>
+        <item name="colorAccent">@color/reach_color</item>
         <item name="windowActionBarOverlay">true</item>
-        <item name="colorControlActivated">@color/reach_color</item>
         <item name="colorSwitchThumbNormal">@color/reach_grey</item>
-        <item name="android:colorForeground">@color/reach_grey</item>
+        <item name="android:colorForeground">@color/reach_grey_light</item>
     </style>
     <style name="menu_labels_style">
         <item name="android:background">@drawable/fab_menu_bg</item>
