@@ -82,7 +82,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                             .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
                 SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
                 if (SharedPrefUtils.getReachQueueSeen(sharedPreferences)) {
-                    Snackbar.make(parent, cursor.getString(3) + " added to your Queue", Snackbar.LENGTH_SHORT)
+                    Snackbar.make(parent, cursor.getString(3) + " added to your Queue", Snackbar.LENGTH_LONG)
                             .setAction("VIEW", new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {

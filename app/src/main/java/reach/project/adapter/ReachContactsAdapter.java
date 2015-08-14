@@ -110,10 +110,11 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         if (networkType == 1) {
             Picasso.with(context).load(R.drawable.wifi).into(viewHolder.networkStatus);
             viewHolder.netType.setText("");
-        } else if (networkType > 1 && networkType < 5) {
+        } else if (networkType > 1 && networkType < 6) {
             Picasso.with(context).load(R.drawable.phone).into(viewHolder.networkStatus);
             viewHolder.netType.setTextColor(grey);
-            viewHolder.netType.setText(networkType + "G");
+            if (networkType<5)
+                viewHolder.netType.setText(networkType + "G");
         } else {
             viewHolder.networkStatus.setImageBitmap(null);
             viewHolder.netType.setText("");
@@ -149,18 +150,12 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 viewHolder.listStatus.setText("Offline");
                 break;
             case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
-                if (networkType == (short) 5) {
-                    viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
-                    viewHolder.listStatus.setText("Offline");
-                }
-                else {
                     viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
                     viewHolder.listStatus.setText("Online");
                     viewHolder.note.setImageResource(R.drawable.ic_music_count);
                     viewHolder.userNameList.setTextColor(color);
                     viewHolder.telephoneNumberList.setTextColor(color);
                     viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
-                }
                 break;
             case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
 

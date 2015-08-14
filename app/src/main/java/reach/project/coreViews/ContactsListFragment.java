@@ -16,6 +16,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
@@ -223,11 +224,15 @@ public class ContactsListFragment extends Fragment implements
                 final Cursor cursor = (Cursor) object;
                 final long id = cursor.getLong(0);
                 final short status = cursor.getShort(5);
-
+                final short networkType = cursor.getShort(4);
 
                 if (mListener != null) {
-                    if (status < 2)
+                    if (status < 2) {
+                        if (networkType == 5)
+                            Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
+                                    .show();
                         mListener.onOpenLibrary(id);
+                    }
                     else {
                         final long clientId = cursor.getLong(0);
 

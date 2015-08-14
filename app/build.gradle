@@ -7,25 +7,18 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 22
-        versionCode 51
-        versionName "0.9.16-beta"
-
+        versionCode 52
+        versionName "0.9.17-beta"
         //meant for release
         multiDexEnabled true
     }
-//    buildTypes {
-//        release {
-//            shrinkResources true
-//            minifyEnabled true
-//            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-//        }
-//
-//        debug {
-//            shrinkResources true
-//            minifyEnabled true
-//            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-//        }
-//    }
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -52,7 +45,6 @@ dependencies {
     compile 'com.crittercism:crittercism-android-agent:5.0.6'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
-//    compile 'org.apache.httpcomponents:httpasyncclient:4.1'
 
     // to remove
     compile "com.daimajia.swipelayout:library:1.1.9@aar"
