@@ -59,27 +59,24 @@ public class NumberVerification extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
         resetDatabases(container.getContext().getContentResolver());
 
-        rootView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+        rootView.postDelayed(() -> {
 
-                rootView.setBackgroundResource(0);
-                rootView.findViewById(R.id.reach_logo).setVisibility(View.GONE);
-                rootView.findViewById(R.id.otherStuff).setVisibility(View.VISIBLE);
-                rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
+            rootView.setBackgroundResource(0);
+            rootView.findViewById(R.id.reach_logo).setVisibility(View.GONE);
+            rootView.findViewById(R.id.otherStuff).setVisibility(View.VISIBLE);
+            rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
 
-                final View telephone = rootView.findViewById(R.id.telephoneNumber);
-                final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
+            final View telephone = rootView.findViewById(R.id.telephoneNumber);
+            final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
 
-                telephone.requestFocus();
-                viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
-                ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
+            telephone.requestFocus();
+            viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
+            ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
 
-                rootView.findViewById(R.id.verify).setOnClickListener(new ClickListener(
-                        rootView.findViewById(R.id.bottomPart1),
-                        rootView.findViewById(R.id.bottomPart2),
-                        telephone));
-            }
+            rootView.findViewById(R.id.verify).setOnClickListener(new ClickListener(
+                    rootView.findViewById(R.id.bottomPart1),
+                    rootView.findViewById(R.id.bottomPart2),
+                    telephone));
         }, 2000);
         return rootView;
     }

@@ -1,1 +1,1 @@
-include ':app', ':backend', ':httptest'
+include ':app'

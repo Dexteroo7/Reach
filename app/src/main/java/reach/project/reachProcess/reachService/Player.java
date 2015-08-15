@@ -13,7 +13,6 @@ import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -35,7 +34,6 @@ import reach.project.utils.CustomThreadFactoryBuilder;
 /**
  * Created by Dexter on 22-06-2015.
  */
-@SuppressWarnings("DefaultFileTemplate")
 public class Player {
 
     //which player is playing
@@ -274,12 +272,7 @@ public class Player {
         final Header frameHeader;
 
         //do like this to prevent blocking
-        final Future<Header> getHeader = decoderService.submit(new Callable<Header>() {
-            @Override
-            public Header call() throws Exception {
-                return bitStream.readFrame();
-            }
-        });
+        final Future<Header> getHeader = decoderService.submit(bitStream::readFrame);
 
         try {
             //caller should handle InterruptedException

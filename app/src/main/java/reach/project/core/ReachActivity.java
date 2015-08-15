@@ -438,7 +438,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
 
-        super.onResume();
+        //TODO onResume is called twice
 
         Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
@@ -452,6 +452,9 @@ public class ReachActivity extends AppCompatActivity implements
                 new ComponentName(this, PlayerUpdateListener.class),
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
+        Log.i("Ayush", "Took " + (System.currentTimeMillis() - startTime));
+
+        super.onResume();
     }
 
     @Override
@@ -879,10 +882,13 @@ public class ReachActivity extends AppCompatActivity implements
         super.onNewIntent(intent);
     }
 
+    long startTime = 0;
+
     @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        startTime = System.currentTimeMillis();
         preferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
@@ -968,6 +974,9 @@ public class ReachActivity extends AppCompatActivity implements
 
         //accountCreation ? numberVerification ? contactListFragment ? and other stuff
         loadFragment();
+        final long temp = System.currentTimeMillis();
+        Log.i("Ayush", "Took " + (temp - startTime));
+        startTime = temp;
     }
 
     private void loadFragment() {
@@ -1084,12 +1093,9 @@ public class ReachActivity extends AppCompatActivity implements
             if (intent.getBooleanExtra("openNotificationFragment", false))
                 onOpenNotificationDrawer();
             else if (intent.getBooleanExtra("openPlayer", false))
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (slidingUpPanelLayout != null)
-                            slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
-                    }
+                new Handler().postDelayed(() -> {
+                    if (slidingUpPanelLayout != null)
+                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }, 1500);
             else if (intent.getBooleanExtra("openFriendRequests", false)) {
                 if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))

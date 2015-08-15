@@ -545,12 +545,7 @@ public enum MiscUtils {
         if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
             return;
 
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                task.work(activity);
-            }
-        });
+        activity.runOnUiThread(() -> task.work(activity));
     }
 
     public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
