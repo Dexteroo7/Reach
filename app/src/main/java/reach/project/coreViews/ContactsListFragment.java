@@ -58,7 +58,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -76,8 +75,6 @@ import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
-import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.viewHelpers.Contact;
 
 public class ContactsListFragment extends Fragment implements
@@ -124,25 +121,19 @@ public class ContactsListFragment extends Fragment implements
         final ContactsListFragment fragment;
         if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
             return;
-        MiscUtils.useFragment(FriendRequestFragment.getReference(), new UseFragment<Void, FriendRequestFragment>() {
-            @Override
-            public Void work(FriendRequestFragment fragment) {
-                friendRequestCount = fragment.adapter.getCount();
-                return null;
-            }
+        MiscUtils.useFragment(FriendRequestFragment.getReference(), friendRequestFragment -> {
+            friendRequestCount = friendRequestFragment.adapter.getCount();
+            return null;
         });
-        MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
-            @Override
-            public Void work(NotificationFragment fragment) {
-                notificationsCount = fragment.adapter.getCount();
-                return null;
-            }
+        MiscUtils.useFragment(NotificationFragment.getReference(), notificationFragment -> {
+            notificationsCount = notificationFragment.adapter.getCount();
+            return null;
         });
         if (friendRequestCount == 0 && notificationsCount == 0)
             fragment.notificationCount.setVisibility(View.GONE);
         else {
             fragment.notificationCount.setVisibility(View.VISIBLE);
-            fragment.notificationCount.setText(String.valueOf(friendRequestCount+notificationsCount));
+            fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
         }
     }
 
@@ -166,20 +157,9 @@ public class ContactsListFragment extends Fragment implements
                  * params[2] = status
                  */
 
-                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<reach.backend.entities.messaging.model.MyString>() {
-                    @Override
-                    public reach.backend.entities.messaging.model.MyString doWork() throws IOException {
-                        return StaticData
-                                .messagingEndpoint
-                                .messagingEndpoint()
-                                .requestAccess(params[1], params[0]).execute();
-                    }
-                }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(new Predicate<reach.backend.entities.messaging.model.MyString>() {
-                    @Override
-                    public boolean apply(reach.backend.entities.messaging.model.MyString input) {
-                        return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
-                    }
-                })).orNull();
+                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData
+                        .messagingEndpoint
+                        .requestAccess(params[1], params[0]).execute(), Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
                 final String toParse;
                 if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
@@ -195,19 +175,17 @@ public class ContactsListFragment extends Fragment implements
                 if (response != null && response > 0) {
 
                     //response becomes the id of failed person
-                    MiscUtils.useFragment(reference, new UseFragment<Void, ContactsListFragment>() {
-                        @Override
-                        public Void work(ContactsListFragment fragment) {
-                            Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
-                            final ContentValues values = new ContentValues();
-                            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                            reference.get().getActivity().getContentResolver().update(
-                                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                    values,
-                                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                                    new String[]{response + ""});
-                            return null;
-                        }
+                    MiscUtils.useFragment(reference, (ContactsListFragment fragment) -> {
+
+                        Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
+                        final ContentValues values = new ContentValues();
+                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                        reference.get().getActivity().getContentResolver().update(
+                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
+                                values,
+                                ReachFriendsHelper.COLUMN_ID + " = ?",
+                                new String[]{response + ""});
+                        return null;
                     });
                 }
 
@@ -233,12 +211,11 @@ public class ContactsListFragment extends Fragment implements
                             Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
                                     .show();
                         mListener.onOpenLibrary(id);
-                    }
-                    else {
+                    } else {
                         final long clientId = cursor.getLong(0);
 
                         new SendRequest().executeOnExecutor(
-                                StaticData.threadPool,
+                                AsyncTask.THREAD_POOL_EXECUTOR,
                                 clientId, serverId, (long) status);
 
                         Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
@@ -270,7 +247,7 @@ public class ContactsListFragment extends Fragment implements
 
                 Log.i("Ayush", "Starting refresh !");
                 pinging.set(true);
-                new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+                new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
             }
         }
     };
@@ -376,8 +353,6 @@ public class ContactsListFragment extends Fragment implements
         pinging.set(false);
         synchronizing.set(false);
         synchronizeOnce.set(false);
-        LocalUtils.contactData.clear();
-        LocalUtils.inviteSentTo.clear();
         //create adapters
         inviteAdapter = new ReachAllContactsAdapter(activity, R.layout.allcontacts_user, LocalUtils.contactData) {
 
@@ -407,7 +382,7 @@ public class ContactsListFragment extends Fragment implements
         mergeAdapter.setActive(emptyInvite, false);
         mergeAdapter.addAdapter(inviteAdapter);
         //mark those who we have already invited !
-        LocalUtils.inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<String>()));
+        LocalUtils.inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<>()));
     }
 
     @Override
@@ -453,26 +428,16 @@ public class ContactsListFragment extends Fragment implements
             if (isOnline) {
                 synchronizing.set(true);
                 pinging.set(true);
-                swipeRefreshLayout.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        swipeRefreshLayout.setRefreshing(true);
-                    }
-                });
-                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+                swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
+                new LocalUtils.ContactsSync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
             }
-            new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(StaticData.threadPool);
+            new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
-            swipeRefreshLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(true);
-                }
-            });
-            new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+            swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
+            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
         }
 
         getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
@@ -513,7 +478,7 @@ public class ContactsListFragment extends Fragment implements
             mergeAdapter.setActive(emptyFriends, false);
             mergeAdapter.setActive(reachContactsAdapter, true);
             if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
-                StaticData.threadPool.execute(LocalUtils.devikaSendMeSomeLove);
+                AsyncTask.THREAD_POOL_EXECUTOR.execute(LocalUtils.devikaSendMeSomeLove);
                 SharedPrefUtils.setFirstIntroSeen(sharedPrefs);
             }
             actionMenu.setVisibility(View.VISIBLE);
@@ -666,11 +631,17 @@ public class ContactsListFragment extends Fragment implements
             @Override
             protected HashSet<Contact> doInBackground(Void... voids) {
 
-                Optional<ContentResolver> optional = getResolver();
+                final Optional<ContentResolver> optional = getResolver();
                 if (!optional.isPresent())
                     return null;
-                final Cursor phones = optional.get().query(ContactsContract.
-                        CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+
+                final Cursor phones = optional.get().query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[]{
+                                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID},
+                        null, null, null);
                 if (phones == null)
                     return null;
 
@@ -681,16 +652,11 @@ public class ContactsListFragment extends Fragment implements
                     final String number, displayName;
                     final long userID;
 
-                    if (phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER) == -1 ||
-                            phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME) == -1 ||
-                            phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID) == -1)
-                        continue;
+                    number = phones.getString(0);
+                    displayName = phones.getString(1);
+                    userID = phones.getLong(2);
 
-                    number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    displayName = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    userID = phones.getLong(phones.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
-
-                    if (TextUtils.isEmpty(displayName))
+                    if (TextUtils.isEmpty(displayName) || TextUtils.isEmpty(number))
                         continue;
                     contact = new Contact(displayName, number, userID);
 
@@ -699,10 +665,6 @@ public class ContactsListFragment extends Fragment implements
                     contacts.add(contact);
                 }
                 phones.close();
-
-                if (contacts.isEmpty())
-                    return null;
-
                 return contacts;
             }
 
@@ -714,21 +676,18 @@ public class ContactsListFragment extends Fragment implements
                 if (mergeAdapter == null || inviteAdapter == null || emptyInvite == null || isDead())
                     return;
 
-                if (contactHashSet != null) {
-                    contactData.clear();
-                    contactData.addAll(contactHashSet);
-                    Collections.sort(contactData, new Comparator<Contact>() {
-                        @Override
-                        public int compare(Contact lhs, Contact rhs) {
-                            return lhs.getUserName().compareToIgnoreCase(rhs.getUserName());
-                        }
-                    });
-                    mergeAdapter.setActive(emptyInvite, false);
-                    mergeAdapter.setActive(inviteAdapter, true);
-                } else {
+                if (contactHashSet == null || contactHashSet.isEmpty()) {
                     mergeAdapter.setActive(emptyInvite, true);
                     mergeAdapter.setActive(inviteAdapter, false);
+                } else {
+
+                    contactData.clear();
+                    contactData.addAll(contactHashSet);
+                    Collections.sort(contactData, (lhs, rhs) -> lhs.getUserName().compareToIgnoreCase(rhs.getUserName()));
+                    mergeAdapter.setActive(emptyInvite, false);
+                    mergeAdapter.setActive(inviteAdapter, true);
                 }
+
                 inviteAdapter.notifyDataSetChanged();
                 inviteAdapter.getFilter().filter("");
             }
@@ -763,11 +722,7 @@ public class ContactsListFragment extends Fragment implements
                 StaticData.networkCache.clear();
 
                 try {
-                    final QuickSyncFriends.Status status = new QuickSyncFriends(reference.get().getActivity(), serverId, phoneNumber).call();
-                    if (status == QuickSyncFriends.Status.FULL_SYNC) {
-                        //full sync was performed
-//                    new ForceSyncFriends(weakReference, serverId, phoneNumber).run();
-                    }
+                    new QuickSyncFriends(reference.get().getActivity(), serverId, phoneNumber).call();
                 } catch (NullPointerException ignored) {
                 }
                 return params[0];
@@ -782,7 +737,7 @@ public class ContactsListFragment extends Fragment implements
                 synchronizeOnce.set(true);
                 //we are still refreshing !
                 pinging.set(true);
-                new SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+                new SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
             }
         }
 
@@ -791,12 +746,7 @@ public class ContactsListFragment extends Fragment implements
             protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
 
                 StaticData.networkCache.clear();
-                MiscUtils.autoRetry(new DoWork<MyString>() {
-                    @Override
-                    public MyString doWork() throws IOException {
-                        return StaticData.userEndpoint.pingMyReach(serverId).execute();
-                    }
-                }, Optional.<Predicate<MyString>>absent()).orNull();
+                MiscUtils.autoRetry(() -> StaticData.userEndpoint.pingMyReach(serverId).execute(), Optional.<Predicate<MyString>>absent()).orNull();
 
                 /**
                  * Invalidate those who were online 30 secs ago
@@ -831,61 +781,53 @@ public class ContactsListFragment extends Fragment implements
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                refreshLayout.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshLayout.setRefreshing(false);
-                    }
-                });
+                refreshLayout.post(() -> refreshLayout.setRefreshing(false));
             }
         }
 
-        public static final Runnable devikaSendMeSomeLove = new Runnable() {
-            @Override
-            public void run() {
+        public static final Runnable devikaSendMeSomeLove = () -> {
 
-                final ContactsListFragment fragment;
-                if (reference == null || (fragment = reference.get()) == null)
-                    return;
-                final Activity activity = fragment.getActivity();
-                if (activity == null || activity.isFinishing())
-                    return;
+            final ContactsListFragment fragment;
+            if (reference == null || (fragment = reference.get()) == null)
+                return;
+            final Activity activity = fragment.getActivity();
+            if (activity == null || activity.isFinishing())
+                return;
 
-                Bitmap bmp = null;
-                final NotificationManagerCompat managerCompat = NotificationManagerCompat.from(activity);
-                final int px = MiscUtils.dpToPx(64);
-                try {
-                    bmp = Picasso.with(activity)
-                            .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
-                            .centerCrop()
-                            .resize(px, px)
-                            .get();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                final Intent intent = new Intent(activity, PushActivity.class);
-                intent.putExtra("type", 1);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                final NotificationCompat.Builder builder = new NotificationCompat.Builder(activity)
-                        .setAutoCancel(true)
-                        .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                        .setSmallIcon(R.drawable.ic_icon_notif)
-                        .setLargeIcon(bmp)
-                        .setContentIntent(pendingIntent)
-                                //.addAction(0, "Okay! I got it", pendingIntent)
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText("I am Devika from Team Reach! \n" +
-                                        "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
-                                        "Keep Reaching ;)"))
-                        .setContentTitle("Hey!")
-                        .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my Music collection. Keep Reaching ;)")
-                        .setContentText("I am Devika from Team Reach! \n" +
-                                "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
-                                "Keep Reaching ;)")
-                        .setPriority(NotificationCompat.PRIORITY_MAX);
-                managerCompat.notify(99910, builder.build());
+            Bitmap bmp = null;
+            final NotificationManagerCompat managerCompat = NotificationManagerCompat.from(activity);
+            final int px = MiscUtils.dpToPx(64);
+            try {
+                bmp = Picasso.with(activity)
+                        .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
+                        .centerCrop()
+                        .resize(px, px)
+                        .get();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            final Intent intent = new Intent(activity, PushActivity.class);
+            intent.putExtra("type", 1);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+            final NotificationCompat.Builder builder = new NotificationCompat.Builder(activity)
+                    .setAutoCancel(true)
+                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                    .setSmallIcon(R.drawable.ic_icon_notif)
+                    .setLargeIcon(bmp)
+                    .setContentIntent(pendingIntent)
+                            //.addAction(0, "Okay! I got it", pendingIntent)
+                    .setStyle(new NotificationCompat.BigTextStyle()
+                            .bigText("I am Devika from Team Reach! \n" +
+                                    "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
+                                    "Keep Reaching ;)"))
+                    .setContentTitle("Hey!")
+                    .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my Music collection. Keep Reaching ;)")
+                    .setContentText("I am Devika from Team Reach! \n" +
+                            "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
+                            "Keep Reaching ;)")
+                    .setPriority(NotificationCompat.PRIORITY_MAX);
+            managerCompat.notify(99910, builder.build());
         };
 
 //        public static ScaleAnimation createScaleAnimation() {
@@ -949,7 +891,7 @@ public class ContactsListFragment extends Fragment implements
             final EditText inputText = new EditText(context);
             inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             inputText.setTextColor(context.getResources().getColor(R.color.darkgrey));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             int margin = MiscUtils.dpToPx(20);
@@ -1012,24 +954,21 @@ public class ContactsListFragment extends Fragment implements
 
                             final TextView inputText = (TextView) input.getChildAt(0);
                             final String txt = inputText.getText().toString();
+
                             if (!TextUtils.isEmpty(txt)) {
                                 Log.i("Ayush", "Marking true " + contact.getUserName());
                                 LocalUtils.inviteSentTo.add(String.valueOf(contact.hashCode()));
                                 contact.setInviteSent(true);
                                 Picasso.with(context).load(R.drawable.add_tick).into(listToggle);
                                 adapter.notifyDataSetChanged();
-                                new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
-                            }
-                            else
+                                new SendInvite().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, contact.getPhoneNumber(), txt);
+                            } else
                                 Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                         }
                     })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
+                    .setNegativeButton("No", (dialog, which) -> {
+                        dialog.dismiss();
                     }).create().show();
         }
     }

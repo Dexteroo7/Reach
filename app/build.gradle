@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+//must apply retrolambda plugin last ! (https://github.com/evant/gradle-retrolambda)
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 22
@@ -20,8 +22,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     dexOptions {
         incremental true
@@ -39,10 +41,12 @@ dependencies {
     compile 'com.android.support:design:22.2.1'
     //meant for release
     compile 'com.android.support:multidex:1.0.1'
+
     // non-google stuff
     compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
+
     // to remove
     compile 'com.daimajia.swipelayout:library:1.1.9@aar'
     compile 'com.viewpagerindicator:library:2.4.1'

@@ -28,7 +28,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -39,9 +38,9 @@ import java.lang.ref.WeakReference;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
@@ -84,20 +83,18 @@ public class EditProfileFragment extends Fragment {
         editProfileContainer = rootView.findViewById(R.id.editProfilecontainer);
         loadingBar = (ProgressBar) rootView.findViewById(R.id.loadingBar);
 
-        rootView.findViewById(R.id.editLibrary).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (firstName.length() == 0)
-                    Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
-                else {
-                    ((InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE))
-                            .hideSoftInputFromWindow(firstName.getWindowToken(), 0);
-                    editProfileContainer.setVisibility(View.INVISIBLE);
-                    loadingBar.setVisibility(View.VISIBLE);
-                    uploadText.setText("");
-                    firstName.setEnabled(false);
-                    new UpdateProfile().executeOnExecutor(StaticData.threadPool, firstName.getText().toString());
-                }
+        rootView.findViewById(R.id.editLibrary).setOnClickListener(v -> {
+
+            if (firstName.length() == 0)
+                Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
+            else {
+                ((InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE))
+                        .hideSoftInputFromWindow(firstName.getWindowToken(), 0);
+                editProfileContainer.setVisibility(View.INVISIBLE);
+                loadingBar.setVisibility(View.VISIBLE);
+                uploadText.setText("");
+                firstName.setEnabled(false);
+                new UpdateProfile().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, firstName.getText().toString());
             }
         });
 
@@ -187,11 +184,8 @@ public class EditProfileFragment extends Fragment {
         final File tempFile;
         try {
             tempFile = File.createTempFile("profilePhoto", ".jpg");
-            Files.copy(new InputSupplier<InputStream>() {
-                @Override
-                public InputStream getInput() throws IOException {
-                    return activity.getContentResolver().openInputStream(mImageUri);
-                }
+            Files.copy(() -> {
+                return activity.getContentResolver().openInputStream(mImageUri);
             }, tempFile);
         } catch (IOException e) {
             e.printStackTrace();
@@ -199,15 +193,13 @@ public class EditProfileFragment extends Fragment {
             return;
         }
 
-        StaticData.threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
-                Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
-                if (newImage.isPresent())
-                    imageId = newImage.get();
-                else
-                    imageId = "hello_world";
-            }
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+
+            Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
+            if (newImage.isPresent())
+                imageId = newImage.get();
+            else
+                imageId = "hello_world";
         });
 
         uploadText.setVisibility(View.INVISIBLE);

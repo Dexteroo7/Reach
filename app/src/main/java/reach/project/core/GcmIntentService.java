@@ -343,7 +343,7 @@ public class GcmIntentService extends IntentService {
                 @Override
                 public Void doWork() throws IOException {
 
-                    return StaticData.messagingEndpoint.messagingEndpoint()
+                    return StaticData.messagingEndpoint
                             .handleAnnounce(id, networkType[0] + "")
                             .execute();
                 }

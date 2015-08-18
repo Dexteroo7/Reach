@@ -84,7 +84,7 @@ public class ReachNotificationActivity extends Activity {
 
                     StaticData.notificationApi.addBecameFriends(true, clientId, hostId).execute();
 
-                    return StaticData.messagingEndpoint.messagingEndpoint().handleReply(clientId, hostId, message).execute();
+                    return StaticData.messagingEndpoint.handleReply(clientId, hostId, message).execute();
                 }
             }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {
                 @Override

@@ -76,7 +76,7 @@ public class PromoCodeDialog extends DialogFragment {
                 lowerPart.setVisibility(View.INVISIBLE);
                 promoLoading.setVisibility(View.VISIBLE);
                 new VerifyPromoCode().executeOnExecutor
-                        (StaticData.threadPool, promoCode.getText().toString().toUpperCase());
+                        (AsyncTask.THREAD_POOL_EXECUTOR, promoCode.getText().toString().toUpperCase());
             }
         });
         return rootView;

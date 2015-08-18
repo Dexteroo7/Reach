@@ -2,16 +2,11 @@ package reach.project.core;
 
 import android.support.v4.util.LongSparseArray;
 
-import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-
-import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
@@ -31,17 +26,13 @@ public final class StaticData {
 
         final HttpTransport transport = new NetHttpTransport();
         final JsonFactory factory = new JacksonFactory();
-        final HttpRequestInitializer initialize = new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-                request.setConnectTimeout(request.getConnectTimeout() * 2);
-                request.setReadTimeout(request.getReadTimeout() * 2);
-//                connection.setRequestProperty("Accept-Encoding", "gzip");
-//                connection.setRequestProperty("User-Agent", "gzip");
-            }
+        final HttpRequestInitializer initialize = request -> {
+
+            request.setConnectTimeout(request.getConnectTimeout() * 2);
+            request.setReadTimeout(request.getReadTimeout() * 2);
         };
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
-        messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build();
+        messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         notificationApi = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
         musicVisibility = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
@@ -99,6 +90,8 @@ public final class StaticData {
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
 
+    public static final long devika = 5666668701286400L;
+
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout
     public static final short NETWORK_CALL_WAIT = 300;
@@ -112,16 +105,12 @@ public final class StaticData {
 
     public static final UserApi userEndpoint;
     public static final FeedBackApi feedBackApi;
-    public static final Messaging messagingEndpoint;
+    public static final Messaging.MessagingEndpoint messagingEndpoint;
     public static final MusicVisibilityApi musicVisibility;
     public static final NotificationApi notificationApi;
 
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
     public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
-
-    //When using threadPool in ReachProcess, take care, as its a parameter to kill service
-    public static final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
 
     ////meant for release

@@ -1,6 +1,7 @@
 package reach.project.core;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -46,7 +47,6 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -71,9 +71,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
@@ -81,6 +79,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.UUID;
 
 import reach.backend.entities.messaging.model.MyBoolean;
@@ -119,11 +118,9 @@ import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.SuperInterface;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.utils.auxiliaryClasses.TransferSong;
-import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.viewHelpers.CustomViewPager;
 import reach.project.viewHelpers.ViewPagerReusable;
 
@@ -147,7 +144,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     private SharedPreferences preferences;
     private FragmentManager fragmentManager;
-    private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
 
@@ -178,13 +174,8 @@ public class ReachActivity extends AppCompatActivity implements
     private ImageButton pausePlayMinimized; //small
     private SwipeRefreshLayout downloadRefresh;
 
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
-
-            new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
-        }
-    };
+    private final SwipeRefreshLayout.OnRefreshListener refreshListener = () ->
+            new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
 
@@ -292,19 +283,9 @@ public class ReachActivity extends AppCompatActivity implements
     };
 
 
-    private View.OnClickListener navHeaderClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            onOpenProfile();
-        }
-    };
+    private View.OnClickListener navHeaderClickListener = v -> onOpenProfile();
 
-    private View.OnClickListener footerClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
-        }
-    };
+    private View.OnClickListener footerClickListener = v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
 
     private NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
         @Override
@@ -382,7 +363,6 @@ public class ReachActivity extends AppCompatActivity implements
         combinedAdapter = null;
         queueAdapter = null;
         musicAdapter = null;
-        mNavigationView = null;
         mDrawerLayout = null;
         slidingUpPanelLayout = null;
         currentPlaying = null;
@@ -441,10 +421,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
 
-        super.onResume();
-
-        Log.i("Ayush", "Called onResume");
-        processIntent(getIntent());
+        //TODO onResume is called twice sometimes
         currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
 
         final PackageManager packageManager;
@@ -455,6 +432,16 @@ public class ReachActivity extends AppCompatActivity implements
                 new ComponentName(this, PlayerUpdateListener.class),
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
+
+        super.onResume();
+    }
+
+    @Override
+    protected void onPostResume() {
+
+        Log.i("Ayush", "Called onResume");
+        processIntent(getIntent());
+        super.onPostResume();
     }
 
     @Override
@@ -475,15 +462,7 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     private void addNotificationDrawer() {
-        /*if (isFinishing())
-            return;
-        try {
-            if (fragmentManager.findFragmentById(R.id.notification_drawer) == null)
-                fragmentManager.beginTransaction()
-                        .add(R.id.drawer_layout, new NotificationCenterFragment()).commit();
-        } catch (IllegalStateException ignored) {
-            finish();
-        }*/
+
         viewPager = (CustomViewPager) findViewById(R.id.viewPager);
         viewPager.setAdapter(new ViewPagerReusable(
                 fragmentManager,
@@ -494,20 +473,7 @@ public class ReachActivity extends AppCompatActivity implements
         viewPager.setPagingEnabled(false);
 
         final TabLayout slidingTabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
-        /*slidingTabLayout.setDistributeEvenly(true);
-        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
-            @Override
-            public int getIndicatorColor(int position) {
-                return Color.parseColor("#FFCC0000");
-            }
-        });*/
-        slidingTabLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                slidingTabLayout.setupWithViewPager(viewPager);
-            }
-        });
-
+        slidingTabLayout.post(() -> slidingTabLayout.setupWithViewPager(viewPager));
     }
 
     @Override
@@ -565,7 +531,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void closeDrawers() {
-        if (mDrawerLayout!=null)
+        if (mDrawerLayout != null)
             mDrawerLayout.closeDrawers();
     }
 
@@ -606,7 +572,7 @@ public class ReachActivity extends AppCompatActivity implements
             //load notification drawer
             addNotificationDrawer();
             //load adapters
-            new LoadAdapters().executeOnExecutor(StaticData.threadPool, this);
+            new LoadAdapters().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, this);
 
         } catch (IllegalStateException ignored) {
             finish();
@@ -646,7 +612,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library").commit();
+                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library " + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
@@ -686,19 +652,17 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void toggleSliding(final boolean show) {
 
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                if (slidingUpPanelLayout != null) {
-                    if (show) {
-                        slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
-                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(63));
-                        slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
-                    } else {
-                        slidingUpPanelLayout.getChildAt(1).setVisibility(View.GONE);
-                        slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(0));
-                        slidingUpPanelLayout.setPanelState(PanelState.HIDDEN);
-                    }
+        new Handler().post(() -> {
+
+            if (slidingUpPanelLayout != null) {
+                if (show) {
+                    slidingUpPanelLayout.getChildAt(1).setVisibility(View.VISIBLE);
+                    slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(63));
+                    slidingUpPanelLayout.setPanelState(PanelState.COLLAPSED);
+                } else {
+                    slidingUpPanelLayout.getChildAt(1).setVisibility(View.GONE);
+                    slidingUpPanelLayout.setPanelHeight(MiscUtils.dpToPx(0));
+                    slidingUpPanelLayout.setPanelState(PanelState.HIDDEN);
                 }
             }
         });
@@ -721,22 +685,19 @@ public class ReachActivity extends AppCompatActivity implements
         else
             netToggle.setChecked(false);
 
-        netToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        netToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                if (isChecked)
-                    SharedPrefUtils.setDataOn(sharedPreferences);
-                else {
-                    SharedPrefUtils.setDataOff(sharedPreferences);
-                    ////////////////////purge all upload operations, but retain paused operations
-                    getContentResolver().delete(
-                            ReachDatabaseProvider.CONTENT_URI,
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                            new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
-                }
+            if (isChecked)
+                SharedPrefUtils.setDataOn(sharedPreferences);
+            else {
+                SharedPrefUtils.setDataOff(sharedPreferences);
+                ////////////////////purge all upload operations, but retain paused operations
+                //TODO
+                getContentResolver().delete(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                        new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
             }
         });
         final String path = SharedPrefUtils.getImageId(sharedPreferences);
@@ -801,8 +762,8 @@ public class ReachActivity extends AppCompatActivity implements
             final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
             if (actionBar.isPresent())
                 actionBar.get().setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-            if (mDrawerLayout!=null)
-                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED,Gravity.LEFT);
+            if (mDrawerLayout != null)
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
         } else {
             setUpDrawer();
             toggleDrawer(false);
@@ -933,9 +894,8 @@ public class ReachActivity extends AppCompatActivity implements
         queueListView = (ListView) findViewById(R.id.queueListView);
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
-        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
         final View navListView = mNavigationView.getChildAt(0);
-
         final FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
         frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
         navListView.setLayoutParams(frameLayoutParams);
@@ -975,8 +935,50 @@ public class ReachActivity extends AppCompatActivity implements
 
     private void loadFragment() {
 
+        final boolean networkPresent;
+        final NetworkInfo networkInfo =
+                ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        if (networkInfo == null || !networkInfo.isConnected()) {
+            // There are no active networks.
+            Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();
+            networkPresent = false;
+        } else
+            networkPresent = true;
+
+        //fetch username and phoneNumber
         final String userName = SharedPrefUtils.getUserName(preferences);
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
+
+        //initialize bug tracking
+        if (!StaticData.debugMode) {
+            Crittercism.initialize(this, "552eac3c8172e25e67906922");
+            Crittercism.setUsername(userName + " " + phoneNumber);
+        }
+
+        //initialize GA tracker
+        final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
+        tracker.setScreenName("reach.project.core.ReachActivity");
+        tracker.send(new HitBuilders.ScreenViewBuilder().build());
+
+        //initialize AppsFlyer
+        AppsFlyerLib.setAppsFlyerKey("JSwfk37zArmeNLNCd4grKR");
+        AppsFlyerLib.sendTracking(this);
+
+        //initialize Localytics
+        AsyncTask.SERIAL_EXECUTOR.execute(() -> {
+
+            final String locID = Localytics.getCustomerId();
+            if (locID == null || TextUtils.isEmpty(locID)) {
+                Localytics.setCustomerId(phoneNumber);
+                Localytics.setCustomerFullName(userName);
+            }
+        });
+
+        //first check playServices
+        if (!LocalUtils.checkPlayServices(this)) {
+            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber).build());
+            return; //fail
+        }
 
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
 
@@ -988,8 +990,6 @@ public class ReachActivity extends AppCompatActivity implements
             toggleSliding(false);
         } else {
 
-            if (isFinishing())
-                return;
             try {
 
                 containerFrame.setPadding(0, topPadding, 0, 0);
@@ -1000,17 +1000,18 @@ public class ReachActivity extends AppCompatActivity implements
                 //load notification drawer
                 addNotificationDrawer();
                 //load adapters
-                new LoadAdapters().executeOnExecutor(StaticData.threadPool, this);
+                new LoadAdapters().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, this);
                 //load last song
-                new LastSong().executeOnExecutor(StaticData.threadPool);
+                new LastSong().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
             } catch (IllegalStateException ignored) {
-                finish();
             }
         }
 
-        StaticData.threadPool.submit(LocalUtils.initialize(userName, phoneNumber));
+        if (networkPresent)
+            AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
     }
+
 
     private final class LoadAdapters extends AsyncTask<ReachActivity, Void, ReachActivity> {
 
@@ -1087,12 +1088,9 @@ public class ReachActivity extends AppCompatActivity implements
             if (intent.getBooleanExtra("openNotificationFragment", false))
                 onOpenNotificationDrawer();
             else if (intent.getBooleanExtra("openPlayer", false))
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (slidingUpPanelLayout != null)
-                            slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
-                    }
+                new Handler().postDelayed(() -> {
+                    if (slidingUpPanelLayout != null)
+                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }, 1500);
             else if (intent.getBooleanExtra("openFriendRequests", false)) {
                 if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
@@ -1135,7 +1133,7 @@ public class ReachActivity extends AppCompatActivity implements
                                 transferSong.getArtistName(),
                                 transferSong.getDuration());
                     }
-                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
+                    new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }
 
@@ -1317,9 +1315,9 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
         //start this operation
         if (!multiple)
-            StaticData.threadPool.submit(MiscUtils.startDownloadOperation(
+            AsyncTask.THREAD_POOL_EXECUTOR.execute(MiscUtils.startDownloadOperation(
                     this,
-                    MiscUtils.generateRequest(reachDatabase),
+                    reachDatabase,
                     reachDatabase.getReceiverId(), //myID
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
@@ -1359,38 +1357,23 @@ public class ReachActivity extends AppCompatActivity implements
             }
         };
 
-        public static final View.OnClickListener repeatClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        public static final View.OnClickListener repeatClick = view -> {
 
-                if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
-                    view.setSelected(true);
-                else
-                    view.setSelected(false);
-            }
+            if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+                view.setSelected(true);
+            else
+                view.setSelected(false);
         };
 
-        public static final View.OnClickListener nextClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        public static final View.OnClickListener nextClick = v -> ProcessManager.submitMusicRequest(
+                v.getContext(),
+                Optional.<String>absent(),
+                MusicHandler.ACTION_NEXT);
 
-                ProcessManager.submitMusicRequest(
-                        v.getContext(),
-                        Optional.<String>absent(),
-                        MusicHandler.ACTION_NEXT);
-            }
-        };
-
-        public static final View.OnClickListener previousClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                ProcessManager.submitMusicRequest(
-                        v.getContext(),
-                        Optional.<String>absent(),
-                        MusicHandler.ACTION_PREVIOUS);
-            }
-        };
+        public static final View.OnClickListener previousClick = v -> ProcessManager.submitMusicRequest(
+                v.getContext(),
+                Optional.<String>absent(),
+                MusicHandler.ACTION_PREVIOUS);
 
         public static final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
 
@@ -1416,16 +1399,10 @@ public class ReachActivity extends AppCompatActivity implements
 
                 if (toggleLiked(context)) {
 
-                    MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                        @Override
-                        public Void doWork() throws IOException {
-
-                            return StaticData.notificationApi.addLike(
-                                    currentPlaying.getSenderId(),
-                                    serverId,
-                                    currentPlaying.getDisplayName()).execute();
-                        }
-                    }, Optional.<Predicate<Void>>absent());
+                    MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.addLike(
+                            currentPlaying.getSenderId(),
+                            serverId,
+                            currentPlaying.getDisplayName()).execute(), Optional.<Predicate<Void>>absent());
                     currentPlaying.setIsLiked(true);
                     ((ImageView) view).setImageResource(R.drawable.like_pink);
                 } else {
@@ -1436,216 +1413,127 @@ public class ReachActivity extends AppCompatActivity implements
             }
         };
 
-        public static final View.OnClickListener pauseClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        public static final View.OnClickListener pauseClick = v -> {
 
-                if (currentPlaying != null)
-                    ProcessManager.submitMusicRequest(
-                            v.getContext(),
-                            Optional.of(new Gson().toJson(currentPlaying, MusicData.class)),
-                            MusicHandler.ACTION_PLAY_PAUSE);
-                else
-                    ProcessManager.submitMusicRequest(
-                            v.getContext(),
-                            Optional.<String>absent(),
-                            MusicHandler.ACTION_PLAY_PAUSE);
-            }
+            if (currentPlaying != null)
+                ProcessManager.submitMusicRequest(
+                        v.getContext(),
+                        Optional.of(new Gson().toJson(currentPlaying, MusicData.class)),
+                        MusicHandler.ACTION_PLAY_PAUSE);
+            else
+                ProcessManager.submitMusicRequest(
+                        v.getContext(),
+                        Optional.<String>absent(),
+                        MusicHandler.ACTION_PLAY_PAUSE);
         };
 
-        public static final View.OnClickListener shuffleClick = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        public static final View.OnClickListener shuffleClick = view -> {
 
-                if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
-                    view.setSelected(true);
-                else
-                    view.setSelected(false);
-            }
+            if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+                view.setSelected(true);
+            else
+                view.setSelected(false);
         };
 
         /**
          * Listener for music player click listener
          * uses -> StaticData.DOWNLOADED_LIST & StaticData.DISK_LIST
          */
-        public static final AdapterView.OnItemClickListener myLibraryClickListener = new AdapterView.OnItemClickListener() {
+        public static final AdapterView.OnItemClickListener myLibraryClickListener = (adapterView, view, position, l) -> {
 
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
+            final Context context = view.getContext();
 
-                final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-                final Context context = view.getContext();
-
-                if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
-                    playSong(ReachDatabaseHelper.getMusicData(cursor), context);
-                else
-                    playSong(ReachSongHelper.getMusicData(cursor, serverId), context);
-            }
+            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
+                playSong(ReachDatabaseHelper.getMusicData(cursor), context);
+            else
+                playSong(ReachSongHelper.getMusicData(cursor, serverId), context);
         };
 
         public static void toast(final String message) {
 
-            MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
-                @Override
-                public Void work(final ReachActivity activity) {
-
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    return null;
-                }
+            MiscUtils.useContextFromContext(reference, activity -> {
+                activity.runOnUiThread(() -> Toast.makeText(activity, message, Toast.LENGTH_SHORT).show());
+                return null;
             });
         }
 
-        public static Runnable initialize(String userName, String phoneNumber) {
-            return new Initialize(userName, phoneNumber);
+        /**
+         * Check the device to make sure it has the Google Play Services APK. If
+         * it doesn't, display a dialog that allows users to download the APK from
+         * the Google Play Store or enable it in the device's system settings.
+         *
+         * @param activity to use
+         * @return true : continue, false : fail
+         */
+        public static boolean checkPlayServices(Activity activity) {
+
+            final int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
+            if (resultCode == ConnectionResult.SUCCESS)
+                return true;
+
+            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+
+                GooglePlayServicesUtil.getErrorDialog(resultCode, activity,
+                        StaticData.PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+
+                Toast.makeText(activity, "This device is not supported", Toast.LENGTH_LONG).show();
+                Log.i("GCM_UTILS", "This device is not supported.");
+                activity.finish();
+            }
+
+            return false;
         }
 
-        private static final class Initialize implements Runnable {
+        public static Runnable networkOps = new Runnable() {
 
-            private final String userName, phoneNumber;
-
-            public Initialize(String userName, String phoneNumber) {
-                this.userName = userName;
-                this.phoneNumber = phoneNumber;
-            }
-
-            /**
-             * Check the device to make sure it has the Google Play Services APK. If
-             * it doesn't, display a dialog that allows users to download the APK from
-             * the Google Play Store or enable it in the device's system settings.
-             */
-            private boolean checkPlayServices(Context context) {
-
-                final int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
-                if (resultCode == ConnectionResult.SUCCESS)
-                    return true;
-
-                MiscUtils.runOnUiThread(reference, new UseContext<Void, ReachActivity>() {
-                    @Override
-                    public Void work(ReachActivity activity) {
-
-                        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-
-                            GooglePlayServicesUtil.getErrorDialog(resultCode, activity,
-                                    StaticData.PLAY_SERVICES_RESOLUTION_REQUEST).show();
-                        } else {
-
-                            Toast.makeText(activity, "This device is not supported", Toast.LENGTH_LONG).show();
-                            Log.i("GCM_UTILS", "This device is not supported.");
-                            activity.finish();
-                        }
-                        return null;
-                    }
-                });
-
-                return false;
-            }
-
-            private boolean checkGCM() {
+            private void checkGCM() {
 
                 if (serverId == 0)
-                    return false;
+                    return;
 
-                final MyString dataToReturn = MiscUtils.autoRetry(new DoWork<MyString>() {
-                    @Override
-                    public MyString doWork() throws IOException {
-                        return StaticData.userEndpoint.getGcmId(serverId).execute();
-                    }
-                }, Optional.<Predicate<MyString>>absent()).orNull();
+                final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getGcmId(serverId).execute(), Optional.<Predicate<MyString>>absent()).orNull();
 
+                //check returned gcm
                 final String gcmId;
-                if (dataToReturn == null || TextUtils.isEmpty(gcmId = dataToReturn.getString())) {
+                if (dataToReturn == null || //fetch failed
+                        TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
+                        gcmId.equals("hello_world")) { //bad gcm
 
-                    Log.i("Ayush", "GcmId ObjectFetch failed");
-                    toast("Network error, GCM failed");
-                    return false;
-
-                } else if (gcmId.equals("user_deleted")) {
-                    return false;
-                    //TODO restart app sign-up
-                } else if (gcmId.equals("hello_world")) {
-
+                    //network operation
                     if (MiscUtils.updateGCM(serverId, reference))
-                        Log.d("Ayush", "GCM updated !");
+                        Log.i("Ayush", "GCM updated !");
                     else {
-
                         Log.i("Ayush", "GCM check failed");
                         toast("Network error, GCM failed");
-                        return false;
                     }
+                } else if (gcmId.equals("user_deleted")) {
+                    //TODO restart app sign-up
                 }
-
-                return true;
             }
 
             @Override
             public void run() {
 
-                final Optional<Boolean> result = MiscUtils.useContext(reference, new UseContext<Boolean, ReachActivity>() {
-                    @Override
-                    public Boolean work(ReachActivity activity) {
+                ////////////////////////////////////////
+                //refresh gcm
+                checkGCM();
+                //check for update
+                new LocalUtils.CheckUpdate().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                //refresh download ops
+                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                //Music scanner
+                MiscUtils.useContextFromContext(reference, activity -> {
 
-                        if (!checkPlayServices(activity)) {
-                            Log.i("Ayush", "No valid Google Play Services APK found.");
-                            return false; //do not proceed
-                        }
-
-                        if (!StaticData.debugMode) {
-                            // Crittercism
-                            Crittercism.initialize(activity, "552eac3c8172e25e67906922");
-                            Crittercism.setUsername(userName + " " + phoneNumber);
-                            //  Get GA tracker
-                            final Tracker t = ((ReachApplication) activity.getApplication()).getTracker();
-                            t.setScreenName("reach.project.core.ReachActivity");
-                            t.send(new HitBuilders.ScreenViewBuilder().build());
-                            // AppsFlyer
-                            AppsFlyerLib.setAppsFlyerKey("JSwfk37zArmeNLNCd4grKR");
-                            AppsFlyerLib.sendTracking(activity);
-                            //Localytics
-                            final String locID = Localytics.getCustomerId();
-                            if (locID == null || TextUtils.isEmpty(locID)) {
-                                Localytics.setCustomerId(phoneNumber);
-                                Localytics.setCustomerFullName(userName);
-                            }
-                        }
-
-                        final NetworkInfo networkInfo =
-                                ((ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-                        if (networkInfo == null || !networkInfo.isConnected()) {
-                            // There are no active networks.
-                            toast("No active networks detected");
-                            return false;
-                        }
-                        return true;
-                    }
+                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    intent.putExtra("first", false);
+                    activity.startService(intent);
+                    return null;
                 });
                 ////////////////////////////////////////
-                if (result.isPresent() && result.get()) {
-                    //refresh gcm
-                    checkGCM();
-                    //check for update
-                    new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.threadPool);
-                    //refresh download ops
-                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.threadPool);
-                    //Music scanner
-                    MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
-                        @Override
-                        public Void work(ReachActivity activity) {
-
-                            final Intent intent = new Intent(activity, MusicScanner.class);
-                            intent.putExtra("first", false);
-                            activity.startService(intent);
-                            return null;
-                        }
-                    });
-                }
-                ////////////////////////////////////////
             }
-        }
+        };
 
         public static TextView getMyLibraryTExtView(Context context) {
             final TextView textView = new TextView(context);
@@ -1700,69 +1588,52 @@ public class ReachActivity extends AppCompatActivity implements
             return true;
         }
 
-        private static class CheckUpdate extends AsyncTask<Void, Void, String> {
+        private static class CheckUpdate extends AsyncTask<Void, Void, Integer> {
 
             @Override
-            protected String doInBackground(Void... params) {
+            protected Integer doInBackground(Void... params) {
 
-                BufferedReader reader = null;
+                Scanner reader = null;
                 try {
-
-                    reader = new BufferedReader(new InputStreamReader(new URL(StaticData.dropBox).openStream()));
-                    final StringBuilder total = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        total.append(line);
-                    }
-                    final String result = total.toString();
-                    return result.trim();
+                    reader = new Scanner(new URL(StaticData.dropBox).openStream());
+                    return reader.nextInt();
                 } catch (Exception ignored) {
                 } finally {
-                    if (reader != null)
-                        try {
-                            reader.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    MiscUtils.closeAndIgnore(reader);
                 }
                 return null;
             }
 
             @Override
-            protected void onPostExecute(String result) {
+            protected void onPostExecute(Integer result) {
 
                 super.onPostExecute(result);
 
-                final int currentVersion;
-                try {
-                    currentVersion = Integer.parseInt(result);
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
+                if (result == null)
                     return;
-                }
 
-                MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
-                    @Override
-                    public Void work(ReachActivity activity) {
+                Log.i("Ayush", "LATEST VERSION " + result);
 
-                        final int version;
-                        try {
-                            version = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
-                        } catch (PackageManager.NameNotFoundException e) {
-                            e.printStackTrace();
-                            return null;
-                        }
-                        if (version < currentVersion) {
+                MiscUtils.useContextFromContext(reference, activity -> {
 
-                            final UpdateFragment updateFragment = new UpdateFragment();
-                            updateFragment.setCancelable(false);
-                            try {
-                                updateFragment.show(activity.fragmentManager, "update");
-                            } catch (IllegalStateException ignored) {
-                            }
-                        }
+                    final int version;
+                    try {
+                        version = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
                         return null;
                     }
+
+                    if (version < result) {
+
+                        final UpdateFragment updateFragment = new UpdateFragment();
+                        updateFragment.setCancelable(false);
+                        try {
+                            updateFragment.show(activity.fragmentManager, "update");
+                        } catch (IllegalStateException ignored) {
+                        }
+                    }
+                    return null;
                 });
             }
         }
@@ -1805,6 +1676,37 @@ public class ReachActivity extends AppCompatActivity implements
                         .build();
             }
 
+            private String generateRequest(ReachDatabase reachDatabase) {
+
+                return "CONNECT" + new Gson().toJson
+                        (new Connection(
+                                ////Constructing connection object
+                                "REQ",
+                                reachDatabase.getSenderId(),
+                                reachDatabase.getReceiverId(),
+                                reachDatabase.getSongId(),
+                                reachDatabase.getProcessed(),
+                                reachDatabase.getLength(),
+                                UUID.randomUUID().getMostSignificantBits(),
+                                UUID.randomUUID().getMostSignificantBits(),
+                                reachDatabase.getLogicalClock(), ""));
+            }
+
+            private String fakeResponse(ReachDatabase reachDatabase) {
+
+                return new Gson().toJson
+                        (new Connection(
+                                ////Constructing connection object
+                                "RELAY",
+                                reachDatabase.getSenderId(),
+                                reachDatabase.getReceiverId(),
+                                reachDatabase.getSongId(),
+                                reachDatabase.getProcessed(),
+                                reachDatabase.getLength(),
+                                UUID.randomUUID().getMostSignificantBits(),
+                                UUID.randomUUID().getMostSignificantBits(),
+                                reachDatabase.getLogicalClock(), ""));
+            }
 
             private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
 
@@ -1829,20 +1731,26 @@ public class ReachActivity extends AppCompatActivity implements
                         continue;
                     }
 
-                    final String message = "CONNECT" + new Gson().toJson
-                            (new Connection(
-                                    ////Constructing connection object
-                                    "REQ",
-                                    reachDatabase.getSenderId(),
-                                    reachDatabase.getReceiverId(),
-                                    reachDatabase.getSongId(),
-                                    reachDatabase.getProcessed(),
-                                    reachDatabase.getLength(),
-                                    UUID.randomUUID().getMostSignificantBits(),
-                                    UUID.randomUUID().getMostSignificantBits(),
-                                    reachDatabase.getLogicalClock(), ""));
+                    final MyBoolean myBoolean;
+                    if (reachDatabase.getSenderId() == StaticData.devika) {
 
-                    final MyBoolean myBoolean = MiscUtils.sendGCM(message, reachDatabase.getSenderId(), reachDatabase.getReceiverId());
+                        //hit cloud
+                        MiscUtils.useContextFromContext(reference, context -> {
+                            ProcessManager.submitNetworkRequest(context, fakeResponse(reachDatabase));
+                            return null;
+                        });
+
+                        myBoolean = new MyBoolean();
+                        myBoolean.setGcmexpired(false);
+                        myBoolean.setOtherGCMExpired(false);
+                    } else {
+                        //sending REQ to senderId
+                        myBoolean = MiscUtils.sendGCM(
+                                generateRequest(reachDatabase),
+                                reachDatabase.getSenderId(),
+                                reachDatabase.getReceiverId());
+                    }
+
                     if (myBoolean == null) {
                         Log.i("Ayush", "GCM sending resulted in shit");
                         values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
@@ -1864,19 +1772,16 @@ public class ReachActivity extends AppCompatActivity implements
             @Override
             protected Void doInBackground(Void... params) {
 
-                final Cursor cursor = MiscUtils.useContext(reference, new UseContext<Cursor, ReachActivity>() {
-                    @Override
-                    public Cursor work(ReachActivity activity) {
+                final Cursor cursor = MiscUtils.useContextFromContext(reference, activity -> {
 
-                        return activity.getContentResolver().query(
-                                ReachDatabaseProvider.CONTENT_URI,
-                                ReachDatabaseHelper.projection,
-                                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                                new String[]{
-                                        "0", //only downloads
-                                        ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
-                    }
+                    return activity.getContentResolver().query(
+                            ReachDatabaseProvider.CONTENT_URI,
+                            ReachDatabaseHelper.projection,
+                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                            new String[]{
+                                    "0", //only downloads
+                                    ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
                 }).orNull();
 
                 if (cursor == null) {
@@ -1895,18 +1800,15 @@ public class ReachActivity extends AppCompatActivity implements
                     final ArrayList<ContentProviderOperation> operations = bulkStartDownloads(reachDatabaseList);
                     if (operations.size() > 0) {
 
-                        MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
-                            @Override
-                            public Void work(ReachActivity activity) {
+                        MiscUtils.useContextFromContext(reference, activity -> {
 
-                                try {
-                                    Log.i("Downloader", "Starting Download op " + operations.size());
-                                    activity.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
-                                } catch (RemoteException | OperationApplicationException e) {
-                                    e.printStackTrace();
-                                }
-                                return null;
+                            try {
+                                Log.i("Downloader", "Starting Download op " + operations.size());
+                                activity.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+                            } catch (RemoteException | OperationApplicationException e) {
+                                e.printStackTrace();
                             }
+                            return null;
                         });
                     }
                 }
@@ -1921,14 +1823,11 @@ public class ReachActivity extends AppCompatActivity implements
 
                 super.onPostExecute(gg);
 
-                MiscUtils.useContext(reference, new UseContext<Void, ReachActivity>() {
-                    @Override
-                    public Void work(final ReachActivity reachActivity) {
+                MiscUtils.useContextFromContext(reference, reachActivity -> {
 
-                        if (reachActivity.downloadRefresh != null)
-                            reachActivity.downloadRefresh.setRefreshing(false);
-                        return null;
-                    }
+                    if (reachActivity.downloadRefresh != null)
+                        reachActivity.downloadRefresh.setRefreshing(false);
+                    return null;
                 });
             }
         }
@@ -1940,55 +1839,49 @@ public class ReachActivity extends AppCompatActivity implements
 
         private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
 
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
+            activity.runOnUiThread(() -> {
 
-                    if (activity.pausePlayMaximized != null) {
+                if (activity.pausePlayMaximized != null) {
 //                        if (activity.paused = pause)
-                        if (pause)
-                            activity.pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
-                        else
-                            activity.pausePlayMaximized.setImageResource(R.drawable.pause_white_selector);
-                    }
+                    if (pause)
+                        activity.pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
+                    else
+                        activity.pausePlayMaximized.setImageResource(R.drawable.pause_white_selector);
+                }
 
-                    if (activity.pausePlayMinimized != null) {
-                        if (pause)
-                            activity.pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
-                        else
-                            activity.pausePlayMinimized.setImageResource(R.drawable.pause_white_selector);
-                    }
+                if (activity.pausePlayMinimized != null) {
+                    if (pause)
+                        activity.pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
+                    else
+                        activity.pausePlayMinimized.setImageResource(R.drawable.pause_white_selector);
                 }
             });
         }
 
         private synchronized void updateMusic(final MusicData data, boolean paused, final ReachActivity activity) {
 
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
+            activity.runOnUiThread(() -> {
 
-                    if (activity.songNameMinimized != null)
-                        activity.songNameMinimized.setText(data.getDisplayName());
-                    if (activity.songNameMaximized != null)
-                        activity.songNameMaximized.setText(data.getDisplayName());
-                    if (activity.songDuration != null)
-                        activity.songDuration.setText(MiscUtils.combinationFormatter(data.getDuration()));
-                    if (activity.artistName != null)
-                        activity.artistName.setText(data.getArtistName());
-                    if (activity.likeButton != null) {
+                if (activity.songNameMinimized != null)
+                    activity.songNameMinimized.setText(data.getDisplayName());
+                if (activity.songNameMaximized != null)
+                    activity.songNameMaximized.setText(data.getDisplayName());
+                if (activity.songDuration != null)
+                    activity.songDuration.setText(MiscUtils.combinationFormatter(data.getDuration()));
+                if (activity.artistName != null)
+                    activity.artistName.setText(data.getArtistName());
+                if (activity.likeButton != null) {
 
-                        if (data.getType() == 0) {
-                            activity.likeButton.setVisibility(View.VISIBLE);
-                            if (data.isLiked())
-                                activity.likeButton.setImageResource(R.drawable.like_pink);
-                            else
-                                activity.likeButton.setImageResource(R.drawable.like_white);
-                        } else
-                            activity.likeButton.setVisibility(View.GONE);
-                    }
-
+                    if (data.getType() == 0) {
+                        activity.likeButton.setVisibility(View.VISIBLE);
+                        if (data.isLiked())
+                            activity.likeButton.setImageResource(R.drawable.like_pink);
+                        else
+                            activity.likeButton.setImageResource(R.drawable.like_white);
+                    } else
+                        activity.likeButton.setVisibility(View.GONE);
                 }
+
             });
             updatePrimaryProgress(data.getPrimaryProgress(), data.getCurrentPosition(), activity);
             updateSecondaryProgress(data.getSecondaryProgress(), activity);
@@ -1997,40 +1890,31 @@ public class ReachActivity extends AppCompatActivity implements
 
         private synchronized void updatePrimaryProgress(final int progress, final int pos, final ReachActivity activity) {
 
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.playerPos != null)
-                        activity.playerPos.setText(MiscUtils.combinationFormatter(pos));
-                    if (activity.progressBarMaximized != null)
-                        activity.progressBarMaximized.setProgress(progress);
-                    if (activity.progressBarMinimized != null)
-                        activity.progressBarMinimized.setProgress(progress);
-                }
+            activity.runOnUiThread(() -> {
+                if (activity.playerPos != null)
+                    activity.playerPos.setText(MiscUtils.combinationFormatter(pos));
+                if (activity.progressBarMaximized != null)
+                    activity.progressBarMaximized.setProgress(progress);
+                if (activity.progressBarMinimized != null)
+                    activity.progressBarMinimized.setProgress(progress);
             });
         }
 
         private synchronized void updateSecondaryProgress(final int progress, final ReachActivity activity) {
 
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.progressBarMaximized != null)
-                        activity.progressBarMaximized.setSecondaryProgress(progress);
-                    if (activity.progressBarMinimized != null)
-                        activity.progressBarMinimized.setSecondaryProgress(progress);
-                }
+            activity.runOnUiThread(() -> {
+                if (activity.progressBarMaximized != null)
+                    activity.progressBarMaximized.setSecondaryProgress(progress);
+                if (activity.progressBarMinimized != null)
+                    activity.progressBarMinimized.setSecondaryProgress(progress);
             });
         }
 
         private synchronized void updateDuration(final String duration, final ReachActivity activity) {
 
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.songDuration != null)
-                        activity.songDuration.setText(duration);
-                }
+            activity.runOnUiThread(() -> {
+                if (activity.songDuration != null)
+                    activity.songDuration.setText(duration);
             });
         }
 
@@ -2065,12 +1949,7 @@ public class ReachActivity extends AppCompatActivity implements
                 case ProcessManager.REPLY_ERROR: {
                     Log.i("Downloader", "REPLY_ERROR received");
                     updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0), true, activity);
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    activity.runOnUiThread(() -> Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show());
                     break;
                 }
                 case ProcessManager.REPLY_PAUSED: {

@@ -63,7 +63,7 @@
 //        }
 //        while (!kill.get() && lanSupplier.isOpen()) {
 //            try {
-//                StaticData.threadPool.submit(new HandleLAN(lanSupplier.accept()));
+//                AsyncTask.THREAD_POOL_EXECUTOR.execute(new HandleLAN(lanSupplier.accept()));
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
@@ -71,7 +71,7 @@
 //    }
 //
 //    /**
-//     * Being part of StaticData.threadPool, this Runnable gets accounted for
+//     * Being part of AsyncTask.THREAD_POOL_EXECUTOR, this Runnable gets accounted for
 //     * in out controller kill check automatically
 //     */
 //    private final class HandleLAN implements Runnable {

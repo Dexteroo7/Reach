@@ -23,8 +23,10 @@ import com.google.gson.JsonSyntaxException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.FileChannel;
@@ -50,14 +52,13 @@ import reach.project.database.sql.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
 
 /**
  * Created by Dexter on 18-05-2015.
  * This is an auto-close type parent thread.
  * Explicit close only if User requests, using kill (Exit)
- * <p/>
+ * <p>
  * Process all network operations on a single thread.
  * a) scan for new requests
  * b) process current network operations
@@ -79,9 +80,16 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
     //prevent GC of sockets and channels
     private static final LongSparseArray<Channel> openChannels = new LongSparseArray<>(100); //needs closing
     //message holder
-    private final ConcurrentLinkedQueue<String> pendingNetworkRequests = new ConcurrentLinkedQueue<>();
+    private static final ConcurrentLinkedQueue<String> pendingNetworkRequests = new ConcurrentLinkedQueue<>();
     //    private final ConcurrentLinkedQueue<Pair<SocketChannel, Connection>> pendingLanRequests = new ConcurrentLinkedQueue<>(); //needs closing
-    private final ByteBuffer transferBuffer = ByteBuffer.allocateDirect(4096);
+    private static final ByteBuffer transferBuffer = ByteBuffer.allocateDirect(4096);
+    private static final StringBuilder requestDefaults = new StringBuilder()
+            .append("User-Agent: ").append(System.getProperty("http.agent")).append("\r\n") //user agent
+            .append("Accept: */*\r\n") //accept type
+            .append("Cache-Control: no-cache\r\n") //specify no cache
+            .append("Referer: http://letsreach.co\r\n") //the Referer
+            .append("Connection: Keep-Alive\r\n") //connection type
+            .append("Host: s3.amazonaws.com\r\n"); //specify the host
 
     private File reachDirectory = null;
     private Selector networkManager = null; //needs closing
@@ -249,7 +257,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
      * Message exchange scheme :
      * a) Send/Receive confirmation for pause, for both upload and download
      * b) Send/Receive confirmation for delete, for download
-     * <p/>
+     * <p>
      * Uploader : send paused, get paused, get deleted/get bytes
      * Downloader : send paused, get paused, send deleted
      *
@@ -526,7 +534,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 else if (reachDatabase.getLogicalClock() < connection.getLogicalClock()) {
 
                     LocalUtils.removeKeyWithId(networkManager.keys(), reachDatabase.getId());
-                    LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+                    LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
                     Log.i("Downloader", "Servicing higher logical clock " + connection.getLogicalClock());
                     return handleSend(connection);
                 } else
@@ -555,13 +563,14 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     if (optional.isPresent())
                         threadPool.submit(optional.get());
                     else
-                        LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+                        LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
                     break;
                 } else {
                     //everything good
                     return handleReceive(reachDatabase, connection);
                 }
             }
+
             default:
                 Log.i("Downloader", "ILLEGAL CONNECT OP !");
         }
@@ -608,17 +617,25 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                         handlerInterface,
                         reachDatabase.getId());
                 if (!updateSuccess) //remove entry if update failed
-                    LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+                    LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
                 Log.i("Downloader", "Error loading file");
                 return false; //end
             }
         }
 
-        final boolean connectSuccess = LocalUtils.connectReceiver(
-                reachDatabase,
-                networkManager,
-                connection.getUniqueIdReceiver(),
-                connection.getUniqueIdSender());
+        Log.i("Downloader", "File creation completed");
+
+        final boolean connectSuccess;
+        if (reachDatabase.getSenderId() == StaticData.devika)
+            //try cloud if Devika
+            connectSuccess = LocalUtils.connectCloud(reachDatabase, networkManager);
+        else
+            //else go with p2p
+            connectSuccess = LocalUtils.connectReceiver(
+                    reachDatabase,
+                    networkManager,
+                    connection.getUniqueIdReceiver(),
+                    connection.getUniqueIdSender());
 
         if (!connectSuccess) { //reset and fail
 
@@ -627,7 +644,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 threadPool.submit(optional.get());
             else {
                 LocalUtils.removeKeyWithId(networkManager.keys(), reachDatabase.getId());
-                LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+                LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
                 LocalUtils.closeSocket(reachDatabase.getReference());
             }
             return false;
@@ -640,7 +657,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
         if (!updateSuccess) {
             LocalUtils.removeKeyWithId(networkManager.keys(), reachDatabase.getId());
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
             LocalUtils.closeSocket(reachDatabase.getReference());
         }
         return updateSuccess;
@@ -648,7 +665,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 //        try {
 //        } finally {
 //            //attempt a LAN connection (even if relay failed)
-//            StaticData.threadPool.submit(new LanRequester(connection));
+//            AsyncTask.THREAD_POOL_EXECUTOR.execute(new LanRequester(connection));
 //        }
     }
 
@@ -756,7 +773,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             MiscUtils.sendGCM("CONNECT" + new Gson().toJson(connection, Connection.class),
                     connection.getReceiverId(), connection.getSenderId());
             Log.i("Downloader", "File Channel could not be created");
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
             return false;
         }
         //////////////////////////////////
@@ -772,12 +789,12 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
         //TODO handle the situation when friend  not found
         if (receiverName == null) {
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
             return false;
         }
         if (!receiverName.moveToFirst()) {
             receiverName.close();
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
             return false;
         }
 
@@ -802,7 +819,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 connection.getUniqueIdReceiver(),
                 connection.getUniqueIdSender());
         if (!tryRelay) { //remove and fail
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
             return false;
         }
 
@@ -814,7 +831,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         if (!tryDB) {
 
             LocalUtils.removeKeyWithId(networkManager.keys(), reachDatabase.getId());
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
             LocalUtils.closeSocket(reachDatabase.getReference());
             return false;
         }
@@ -826,7 +843,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         tryGCM = !(myBoolean == null || myBoolean.getOtherGCMExpired());
         if (!tryGCM) {
             Log.i("Downloader", "GCM FAILED NOT SENDING " + connection.toString());
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
             return false;
         }
 
@@ -851,6 +868,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          */
         if (database.getStatus() == ReachDatabase.PAUSED_BY_USER) {
 
+            Log.i("Ayush", "Pausing operation");
             LocalUtils.closeSocket(database.getReference());
             LocalUtils.keyCleanUp(selectionKey);
             if (database.getOperationKind() == 0) //close fileChannel if download
@@ -877,11 +895,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     threadPool.submit(optional.get());
                 else {
                     LocalUtils.keyCleanUp(selectionKey);
-                    LocalUtils.removeReachDatabase(handlerInterface, database.getId());
+                    LocalUtils.removeReachDatabase(handlerInterface, database.getId(), false);
                     LocalUtils.closeSocket(database.getReference());
                 }
             } else //for upload just remove
-                LocalUtils.removeReachDatabase(handlerInterface, database.getId());
+                LocalUtils.removeReachDatabase(handlerInterface, database.getId(), true);
             return;
         }
 
@@ -940,7 +958,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 //illegal operation
                 LocalUtils.keyCleanUp(selectionKey);
                 LocalUtils.closeSocket(database.getReference());
-                LocalUtils.removeReachDatabase(handlerInterface, database.getId());
+                LocalUtils.removeReachDatabase(handlerInterface, database.getId(), true);
                 return; //illegal operation
             }
         }
@@ -957,7 +975,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             if (optional.isPresent())
                 threadPool.submit(optional.get());
             else
-                LocalUtils.removeReachDatabase(handlerInterface, database.getId());
+                LocalUtils.removeReachDatabase(handlerInterface, database.getId(), false);
             Log.i("Downloader", "DOWNLOAD ERROR " + database.getDisplayName());
             return;
         }
@@ -965,7 +983,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             //Has to be an upload
             LocalUtils.keyCleanUp(selectionKey);
             LocalUtils.closeSocket(database.getReference());
-            LocalUtils.removeReachDatabase(handlerInterface, database.getId());
+            LocalUtils.removeReachDatabase(handlerInterface, database.getId(), true);
             Log.i("Downloader", "UPLOAD ERROR " + database.getDisplayName());
             return;
         }
@@ -992,6 +1010,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
              */
             case SelectionKey.OP_READ: {
 
+                database.setProcessed(database.getLength());
                 database.setStatus(ReachDatabase.FINISHED); //download finished
                 Log.i("Downloader", "Download ended " + database.getProcessed() + " " + database.getLength());
 
@@ -1004,20 +1023,14 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 final ContentValues contentValues = new ContentValues();
                 contentValues.put(ReachDatabaseHelper.COLUMN_PROCESSED, database.getLength());
                 contentValues.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                LocalUtils.updateReachDatabase(contentValues, handlerInterface, database.getId());
+                LocalUtils.forceUpdateReachDatabase(contentValues, handlerInterface, database.getId());
 
                 //Sync upload success to server
-                MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                    @Override
-                    public Void doWork() throws IOException {
-
-                        return StaticData.userEndpoint.updateCompletedOperations(
-                                database.getReceiverId(),
-                                database.getSenderId(),
-                                database.getDisplayName(),
-                                database.getLength()).execute();
-                    }
-                }, Optional.<Predicate<Void>>absent());
+                MiscUtils.autoRetryAsync(() -> StaticData.userEndpoint.updateCompletedOperations(
+                        database.getReceiverId(),
+                        database.getSenderId(),
+                        database.getDisplayName(),
+                        database.getLength()).execute(), Optional.<Predicate<Void>>absent());
 
                 return; //download complete
             }
@@ -1030,7 +1043,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             case SelectionKey.OP_WRITE: {
 
                 Log.i("Downloader", "Upload ended " + database.getProcessed() + " " + database.getLength());
-                LocalUtils.removeReachDatabase(handlerInterface, database.getId());
+                LocalUtils.removeReachDatabase(handlerInterface, database.getId(), true);
                 selectionKey.cancel();
             }
             //default case already handled
@@ -1092,6 +1105,9 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 if (memoryReach.getOperationKind() == 0) //close fileChannel if download
                     MiscUtils.closeAndIgnore(openChannels.get(LocalUtils.getFileChannelIndex(memoryReach)));
                 needToUpdate = true;
+
+                if (diskReach != null) //mark paused
+                    memoryReach.setStatus(ReachDatabase.PAUSED_BY_USER);
                 continue; //nothing more to do
             } else if (memoryReach.getProcessed() != diskReach.getProcessed()) {
 
@@ -1101,7 +1117,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 operations.add(LocalUtils.getUpdateOperation(contentValues, memoryReach.getId()));
             } else if (memoryReach.getStatus() != diskReach.getStatus()) {
 
-                //mark finished
+                //update status
                 final ContentValues contentValues = new ContentValues();
                 contentValues.put(ReachDatabaseHelper.COLUMN_STATUS, memoryReach.getStatus());
                 operations.add(LocalUtils.getUpdateOperation(contentValues, memoryReach.getId()));
@@ -1226,6 +1242,113 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         }
 
         /**
+         * Connects to the cloud and registers into selector
+         *
+         * @return weather successful or not
+         */
+        public static boolean connectCloud(ReachDatabase reachDatabase,
+                                           Selector networkManager) {
+
+            //create a random reference for socket
+            //In NIO, the default behaviour is blocking.
+            final long reference = UUID.randomUUID().getMostSignificantBits();
+            final StringBuilder stringBuilder = new StringBuilder()
+                    .append("GET /reach-again/music/").append(reachDatabase.getActualName()).append(" HTTP/1.1\r\n"); //specify the file
+            if (reachDatabase.getProcessed() > 0)
+                stringBuilder.append("Range: bytes=").append(reachDatabase.getProcessed()).append("-\r\n"); //specify the range if required
+            stringBuilder.append(requestDefaults)
+                    .append("\r\n"); //end with this
+
+            final String request = stringBuilder.toString();
+            Log.i("Downloader", request);
+            final ByteBuffer header = ByteBuffer.wrap(request.getBytes());
+            final SocketChannel socketChannel;
+
+            try {
+
+                //open socket and send request
+                openChannels.append(reference, socketChannel = SocketChannel.open(new InetSocketAddress("s3.amazonaws.com", 80)));
+                final Socket socket = socketChannel.socket();
+                socket.setKeepAlive(true);
+                socketChannel.write(header);
+
+                final InputStream reader = socket.getInputStream();
+                stringBuilder.setLength(0);
+                //first fetch header
+                while (true) {
+
+                    final char read = (char) reader.read();
+                    if (read < 1) {
+                        //fail
+                        MiscUtils.closeAndIgnore(socket, reader);
+                        LocalUtils.closeSocket(reference);
+                        return false;
+                    }
+
+                    stringBuilder.append(read);
+                    if (read == '\n')
+                        break; //status header fetched
+                }
+
+                //check status
+                final String status = stringBuilder.toString();
+                Log.i("Downloader", status);
+                if (!(status.contains("200") || status.contains("206"))) {
+                    //fail
+                    MiscUtils.closeAndIgnore(socket, reader);
+                    LocalUtils.closeSocket(reference);
+                    return false;
+                }
+
+                //now consume the header
+                stringBuilder.setLength(0);
+                while (true) {
+
+                    final char read = (char) reader.read();
+                    if (read < 1) {
+                        MiscUtils.closeAndIgnore(socket, reader);
+                        LocalUtils.closeSocket(reference);
+                        return false;
+                    }
+
+                    stringBuilder.append(read);
+                    final int currentCount = stringBuilder.length();
+                    if (currentCount > 4 &&
+                            stringBuilder.charAt(currentCount - 1) == '\n' &&
+                            stringBuilder.charAt(currentCount - 2) == '\r' &&
+                            stringBuilder.charAt(currentCount - 3) == '\n' &&
+                            stringBuilder.charAt(currentCount - 4) == '\r') {
+                        break; //response consumed
+                    }
+                }
+
+                //print the header
+                final String completeResponse = stringBuilder.toString();
+                Log.i("Downloader", completeResponse);
+
+                //register
+                socketChannel.configureBlocking(false).register(
+                        networkManager,
+                        SelectionKey.OP_READ,
+                        reachDatabase);
+
+            } catch (IOException | AssertionError e) {
+
+                //removal of selectionKey will be done in keyKiller
+                e.printStackTrace();
+                LocalUtils.toast("Firewall issue");
+                LocalUtils.closeSocket(reference);
+                return false;
+            }
+
+            Log.i("Downloader", "Connected to cloud");
+            //cloud established !
+            reachDatabase.setReference(reference);
+            reachDatabase.setLastActive(System.currentTimeMillis());
+            return true;
+        }
+
+        /**
          * Connects to the relay and registers into selector
          *
          * @return weather successful or not
@@ -1241,13 +1364,10 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             reachDatabase.setLastActive(System.currentTimeMillis());
 
             try {
-                //Update fileChannel
+
                 final SocketChannel socketChannel;
                 openChannels.append(reference, socketChannel = SocketChannel.open(vmAddress));
-//                socketChannel.configureBlocking(true);
-//                socketChannel.socket().setSoLinger(true, 1);
                 socketChannel.socket().setKeepAlive(true);
-//                socketChannel.socket().connect(vmAddress, 5000);
                 socketChannel.write(ByteBuffer.wrap((
                         uniqueReceiverId + "\n" +
                                 uniqueSenderId + "\n" +
@@ -1256,11 +1376,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                         networkManager,
                         SelectionKey.OP_READ,
                         reachDatabase);
-//                final PrintWriter printWriter = new PrintWriter(socketChannel.socket().getOutputStream());
-//                printWriter.println(uniqueReceiverId);
-//                printWriter.println(uniqueSenderId);
-//                printWriter.println("Receiver");
-//                printWriter.flush(); //Blocking mode exception, cant put after set to non-blocking
 
             } catch (IOException | AssertionError e) {
 
@@ -1290,13 +1405,10 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             reachDatabase.setLastActive(System.currentTimeMillis());
 
             try {
-                //Update fileChannel
+
                 final SocketChannel socketChannel;
                 openChannels.append(reference, socketChannel = SocketChannel.open(vmAddress));
-//                socketChannel.configureBlocking(true);
-//                socketChannel.socket().setSoLinger(true, 1);
                 socketChannel.socket().setKeepAlive(true);
-//                socketChannel.socket().connect(vmAddress, 5000);
                 socketChannel.write(ByteBuffer.wrap((
                         uniqueSenderId + "\n" +
                                 uniqueReceiverId + "\n" +
@@ -1305,12 +1417,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                         networkManager,
                         SelectionKey.OP_WRITE,
                         reachDatabase);
-
-//                final PrintWriter printWriter = new PrintWriter(socketChannel.socket().getOutputStream());
-//                printWriter.println(uniqueSenderId);
-//                printWriter.println(uniqueReceiverId);
-//                printWriter.println("Sender");
-//                printWriter.flush(); //Blocking mode exception, cant put after set to non-blocking
 
             } catch (IOException | AssertionError e) {
 
@@ -1490,7 +1596,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 //send REQ gcm
                 return Optional.of((Runnable) MiscUtils.startDownloadOperation(
                         handlerInterface.getContext(),
-                        MiscUtils.generateRequest(reachDatabase),
+                        reachDatabase,
                         reachDatabase.getReceiverId(), //myID
                         reachDatabase.getSenderId(),   //the uploaded
                         reachDatabase.getId()));
@@ -1540,7 +1646,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          * @param contentValues the values that need to be updated
          * @param id            the id of the row that needs to be updated (reachDatabase id)
          * @return weather update was successful or not
-         */
+         */ //TODO
         public static boolean updateReachDatabase(ContentValues contentValues,
                                                   NetworkHandlerInterface handlerInterface,
                                                   long id) {
@@ -1554,18 +1660,51 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         }
 
         /**
+         * Force update the reachDatabase table
+         *
+         * @param contentValues the values that need to be updated
+         * @param id            the id of the row that needs to be updated (reachDatabase id)
+         * @return weather update was successful or not
+         */
+        public static boolean forceUpdateReachDatabase(ContentValues contentValues,
+                                                       NetworkHandlerInterface handlerInterface,
+                                                       long id) {
+
+            return handlerInterface.getContentResolver().update(
+                    Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
+                    contentValues,
+                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    new String[]{id + ""}) > 0;
+        }
+
+
+        /**
          * Removes the reachDatabase entry from disk and memory
          *
          * @param id of reachDatabase to remove
          */
         public static void removeReachDatabase(NetworkHandlerInterface handlerInterface,
-                                               long id) {
+                                               long id,
+                                               boolean force) {
 
-            handlerInterface.getContentResolver().delete(
-                    Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{id + ""});
-            handlerInterface.updateNetworkDetails();
+            if (force) {
+
+                //if force don't check
+                if (handlerInterface.getContentResolver().delete(
+                        Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
+                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        new String[]{id + ""}) > 0)
+                    handlerInterface.updateNetworkDetails();
+            } else {
+
+                //else check
+                if (handlerInterface.getContentResolver().delete(
+                        Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
+                        ReachDatabaseHelper.COLUMN_ID + " = ? and " +
+                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                        new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER}) > 0)
+                    handlerInterface.updateNetworkDetails();
+            }
         }
 
         /**
@@ -1602,31 +1741,31 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             return reachDatabase;
         }
 
-        /**
-         * @param databaseId the databaseId
-         * @return the reachDatabase object corresponding to parameters
-         */
-        public static ReachDatabase getReachDatabase(NetworkHandlerInterface handlerInterface,
-                                                     long databaseId) {
-
-            final Cursor cursor = handlerInterface.getContentResolver().query(
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.projection,
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{databaseId + ""},
-                    null);
-
-            if (cursor == null)
-                return null;
-            if (!cursor.moveToFirst()) {
-                cursor.close();
-                return null;
-            }
-
-            final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
-            cursor.close();
-            return reachDatabase;
-        }
+//        /**
+//         * @param databaseId the databaseId
+//         * @return the reachDatabase object corresponding to parameters
+//         */
+//        public static ReachDatabase getReachDatabase(NetworkHandlerInterface handlerInterface,
+//                                                     long databaseId) {
+//
+//            final Cursor cursor = handlerInterface.getContentResolver().query(
+//                    ReachDatabaseProvider.CONTENT_URI,
+//                    ReachDatabaseHelper.projection,
+//                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+//                    new String[]{databaseId + ""},
+//                    null);
+//
+//            if (cursor == null)
+//                return null;
+//            if (!cursor.moveToFirst()) {
+//                cursor.close();
+//                return null;
+//            }
+//
+//            final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
+//            cursor.close();
+//            return reachDatabase;
+//        }
 //    @Override
 //    public boolean submitLanRequest(SocketChannel channel, Connection connection) {
 //        return pendingLanRequests.insertMessage(new Pair<>(channel, connection));

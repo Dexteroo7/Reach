@@ -1,10 +1,9 @@
 package reach.project.onBoarding;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -32,12 +31,12 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.ContactsListFragment;
-import reach.project.database.contentProvider.ReachAlbumProvider;
-import reach.project.database.contentProvider.ReachArtistProvider;
-import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.contentProvider.ReachPlayListProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
+import reach.project.database.sql.ReachAlbumHelper;
+import reach.project.database.sql.ReachArtistHelper;
+import reach.project.database.sql.ReachDatabaseHelper;
+import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.database.sql.ReachPlayListHelper;
+import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -52,34 +51,60 @@ public class NumberVerification extends Fragment {
         return new NumberVerification();
     }
 
+    private void resetDatabases(Context context) {
+
+        SQLiteOpenHelper helper;
+
+        helper = new ReachAlbumHelper(context);
+        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachAlbumHelper.ALBUM_TABLE);
+        helper.close();
+
+        helper = new ReachArtistHelper(context);
+        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachArtistHelper.ARTIST_TABLE);
+        helper.close();
+
+        helper = new ReachDatabaseHelper(context);
+        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachDatabaseHelper.REACH_TABLE);
+        helper.close();
+
+        helper = new ReachFriendsHelper(context);
+        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachFriendsHelper.FRIENDS_TABLE);
+        helper.close();
+
+        helper = new ReachPlayListHelper(context);
+        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachPlayListHelper.PLAY_LIST_TABLE);
+        helper.close();
+
+        helper = new ReachSongHelper(context);
+        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachSongHelper.SONG_TABLE);
+        helper.close();
+    }
+
     @Override
     public View onCreateView (LayoutInflater inflater, ViewGroup container,
                               Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
-        resetDatabases(container.getContext().getContentResolver());
+        resetDatabases(container.getContext());
 
-        rootView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+        rootView.postDelayed(() -> {
 
-                rootView.setBackgroundResource(0);
-                rootView.findViewById(R.id.reach_logo).setVisibility(View.GONE);
-                rootView.findViewById(R.id.otherStuff).setVisibility(View.VISIBLE);
-                rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
+            rootView.setBackgroundResource(0);
+            rootView.findViewById(R.id.reach_logo).setVisibility(View.GONE);
+            rootView.findViewById(R.id.otherStuff).setVisibility(View.VISIBLE);
+            rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
 
-                final View telephone = rootView.findViewById(R.id.telephoneNumber);
-                final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
+            final View telephone = rootView.findViewById(R.id.telephoneNumber);
+            final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
 
-                telephone.requestFocus();
-                viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
-                ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
+            telephone.requestFocus();
+            viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
+            ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
 
-                rootView.findViewById(R.id.verify).setOnClickListener(new ClickListener(
-                        rootView.findViewById(R.id.bottomPart1),
-                        rootView.findViewById(R.id.bottomPart2),
-                        telephone));
-            }
+            rootView.findViewById(R.id.verify).setOnClickListener(new ClickListener(
+                    rootView.findViewById(R.id.bottomPart1),
+                    rootView.findViewById(R.id.bottomPart2),
+                    telephone));
         }, 2000);
         return rootView;
     }
@@ -153,7 +178,7 @@ public class NumberVerification extends Fragment {
 
             final int length = parsed.length();
             //take last 10 digits
-            new GetOldAccount().executeOnExecutor(StaticData.threadPool, parsed.substring(length - 10, length));
+            new GetOldAccount().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, parsed.substring(length - 10, length));
             bottomPart1.setVisibility(View.INVISIBLE);
             bottomPart2.setVisibility(View.VISIBLE);
         }
@@ -172,7 +197,7 @@ public class NumberVerification extends Fragment {
 
                 //start sync
                 ContactsListFragment.synchronizeOnce.set(true);
-                StaticData.threadPool.submit(new ForceSyncFriends(getActivity(), container == null ? 0 : container.getServerId(), params[0]));
+                AsyncTask.THREAD_POOL_EXECUTOR.execute(new ForceSyncFriends(getActivity(), container == null ? 0 : container.getServerId(), params[0]));
                 return new Pair<>(container, params[0]);
             }
 
@@ -190,34 +215,6 @@ public class NumberVerification extends Fragment {
                 SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
                 mListener.startAccountCreation(Optional.fromNullable(pair.first));
             }
-        }
-    }
-
-    private void resetDatabases(ContentResolver resolver) {
-
-        try {
-            resolver.delete(ReachFriendsProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignored) {
-        }
-        try {
-            resolver.delete(ReachSongProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignored) {
-        }
-        try {
-            resolver.delete(ReachAlbumProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignored) {
-        }
-        try {
-            resolver.delete(ReachArtistProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignored) {
-        }
-        try {
-            resolver.delete(ReachPlayListProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignored) {
-        }
-        try {
-            resolver.delete(ReachDatabaseProvider.CONTENT_URI, 1 + "", null);
-        } catch (SQLiteException ignore) {
         }
     }
 

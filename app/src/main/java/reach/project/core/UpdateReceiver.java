@@ -15,7 +15,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
@@ -28,7 +27,7 @@ import reach.project.utils.auxiliaryClasses.ReachDatabase;
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override
-    public void onReceive(final Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent) {
 
         final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         sharedPreferences.edit().remove("song_hash").apply();
@@ -49,7 +48,9 @@ public class UpdateReceiver extends BroadcastReceiver {
 
             final Cursor songCursor = context.getContentResolver().query(
                     ReachSongProvider.CONTENT_URI,
-                    new String[]{ReachSongHelper.COLUMN_ARTIST, ReachSongHelper.COLUMN_DURATION},
+                    new String[]{
+                            ReachSongHelper.COLUMN_ARTIST,
+                            ReachSongHelper.COLUMN_DURATION},
                     ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                             ReachSongHelper.COLUMN_SONG_ID + " = ?",
                     new String[]{database.getSenderId() + "", database.getSongId() + ""}, null);
@@ -65,26 +66,9 @@ public class UpdateReceiver extends BroadcastReceiver {
             final long duration = songCursor.getLong(1);
             songCursor.close();
 
-            final Cursor userCursor = context.getContentResolver().query(
-                    ReachFriendsProvider.CONTENT_URI,
-                    new String[]{ReachFriendsHelper.COLUMN_USER_NAME},
-                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                    new String[]{database.getSenderId() + ""}, null);
-
-            if (userCursor == null)
-                continue;
-            if (!userCursor.moveToFirst()) {
-                songCursor.close();
-                continue;
-            }
-
-            final String userName = userCursor.getString(0);
-            userCursor.close();
-
             final ContentValues values = new ContentValues();
             values.put(ReachDatabaseHelper.COLUMN_ARTIST_NAME, artistName);
             values.put(ReachDatabaseHelper.COLUMN_DURATION, duration);
-            values.put(ReachDatabaseHelper.COLUMN_SENDER_NAME, userName);
             values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, "0");
             values.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
             operations.add(ContentProviderOperation.newUpdate(
@@ -92,6 +76,7 @@ public class UpdateReceiver extends BroadcastReceiver {
                     .withValues(values)
                     .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?", new String[]{database.getId() + ""})
                     .build());
+            Log.i("Ayush", "Updated reachDatabase " + artistName + " " + duration);
         }
 
         if (operations.size() > 0)
@@ -110,24 +95,9 @@ public class UpdateReceiver extends BroadcastReceiver {
         // an Intent broadcast.
         Log.i("Ayush", "Application updated");
         if (MiscUtils.isOnline(context))
-            new Thread(new GCMUpdate(new WeakReference<>(context),
-                    SharedPrefUtils.getServerId(sharedPreferences))).start();
-    }
-
-    private static final class GCMUpdate implements Runnable {
-
-        private final WeakReference<Context> reference;
-        private final long serverId;
-
-        private GCMUpdate(WeakReference<Context> reference, long serverId) {
-            this.reference = reference;
-            this.serverId = serverId;
-        }
-
-        @Override
-        public void run() {
-
-            MiscUtils.updateGCM(serverId, reference);
-        }
+            new Thread(() -> {
+                MiscUtils.updateGCM(SharedPrefUtils.getServerId(sharedPreferences),
+                        new WeakReference<>(context));
+            }, "GCM_UPDATER").start();
     }
 }

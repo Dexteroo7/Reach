@@ -11,7 +11,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
@@ -29,7 +28,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
 import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
@@ -48,7 +46,6 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
@@ -115,67 +112,62 @@ public class AccountCreation extends Fragment {
             }
         }
 
-        rootView.findViewById(R.id.importMusic).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        rootView.findViewById(R.id.importMusic).setOnClickListener(view -> {
 
-                final String name;
-                if (TextUtils.isEmpty(userName.getText()) ||
-                        TextUtils.isEmpty(name = userName.getText().toString().trim())) {
-                    Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                final InputMethodManager inputMethodManager =
-                        (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                final String phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
-                inputMethodManager.hideSoftInputFromWindow(userName.getWindowToken(), 0);
-
-                if (TextUtils.isEmpty(phoneNumber)) {
-                    Log.i("Downloader", "Account creation could not find number");
-                    mListener.accountCreationError();
-                    return;
-                }
-
-                view.setOnClickListener(null);
-                view.setEnabled(false);
-                if (isRemoving() || isDetached() || activity.isFinishing())
-                    return;
-                //reset the whole databases
-                sharedPreferences.edit().clear().apply();
-                Log.i("Ayush", "Cleared everything : AccountCreation underway");
-                profilePhotoSelector.setOnClickListener(null);
-                uploadText.setVisibility(View.GONE);
-                ((TextView) rootView.findViewById(R.id.tourText)).setText(name);
-                rootView.findViewById(R.id.bottomPart1).setVisibility(View.INVISIBLE);
-                rootView.findViewById(R.id.bottomPart2).setVisibility(View.VISIBLE);
-                progress.setText("Starting Profile Creation");
-
-                new SaveUserData(
-                        rootView.findViewById(R.id.bottomPart2),
-                        rootView.findViewById(R.id.bottomPart3),
-                        rootView.findViewById(R.id.nextBtn),
-                        (TextView) rootView.findViewById(R.id.telephoneNumber),
-                        progress).executeOnExecutor(
-                        StaticData.threadPool,
-                        name,
-                        phoneNumber);
-
+            final String name;
+            if (TextUtils.isEmpty(userName.getText()) ||
+                    TextUtils.isEmpty(name = userName.getText().toString().trim())) {
+                Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            final InputMethodManager inputMethodManager =
+                    (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            final String phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
+            inputMethodManager.hideSoftInputFromWindow(userName.getWindowToken(), 0);
+
+            if (TextUtils.isEmpty(phoneNumber)) {
+                Log.i("Downloader", "Account creation could not find number");
+                mListener.accountCreationError();
+                return;
+            }
+
+            view.setOnClickListener(null);
+            view.setEnabled(false);
+            if (isRemoving() || isDetached() || activity.isFinishing())
+                return;
+            //reset the whole databases
+            sharedPreferences.edit().clear().apply();
+            Log.i("Ayush", "Cleared everything : AccountCreation underway");
+            profilePhotoSelector.setOnClickListener(null);
+            uploadText.setVisibility(View.GONE);
+            ((TextView) rootView.findViewById(R.id.tourText)).setText(name);
+            rootView.findViewById(R.id.bottomPart1).setVisibility(View.INVISIBLE);
+            rootView.findViewById(R.id.bottomPart2).setVisibility(View.VISIBLE);
+            progress.setText("Starting Profile Creation");
+
+            new SaveUserData(
+                    rootView.findViewById(R.id.bottomPart2),
+                    rootView.findViewById(R.id.bottomPart3),
+                    rootView.findViewById(R.id.nextBtn),
+                    (TextView) rootView.findViewById(R.id.telephoneNumber),
+                    progress).executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR,
+                    name,
+                    phoneNumber);
+
         });
         return rootView;
     }
 
-    private final View.OnClickListener imagePicker = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            final Intent intent = new Intent(Intent.ACTION_PICK,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setType("image/*");
-            // intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select Photo"),
-                    IMAGE_PICKER_SELECT);
-        }
+    private final View.OnClickListener imagePicker = v -> {
+
+        final Intent intent = new Intent(Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        // intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Photo"),
+                IMAGE_PICKER_SELECT);
     };
 
     private final View.OnClickListener proceed = new View.OnClickListener() {
@@ -211,11 +203,8 @@ public class AccountCreation extends Fragment {
         final File tempFile;
         try {
             tempFile = File.createTempFile("profilePhoto", ".jpg");
-            Files.copy(new InputSupplier<InputStream>() {
-                @Override
-                public InputStream getInput() throws IOException {
-                    return activity.getContentResolver().openInputStream(mImageUri);
-                }
+            Files.copy(() -> {
+                return activity.getContentResolver().openInputStream(mImageUri);
             }, tempFile);
         } catch (IOException e) {
             e.printStackTrace();
@@ -223,15 +212,12 @@ public class AccountCreation extends Fragment {
             return;
         }
 
-        StaticData.threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
-                Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
-                if (newImage.isPresent())
-                    imageId = newImage.get();
-                else
-                    imageId = "hello_world";
-            }
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+            Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
+            if (newImage.isPresent())
+                imageId = newImage.get();
+            else
+                imageId = "hello_world";
         });
 
         uploadText.setVisibility(View.INVISIBLE);
@@ -261,21 +247,13 @@ public class AccountCreation extends Fragment {
 
             final FragmentActivity activity = getActivity();
 
-            final String gcmId = MiscUtils.autoRetry(new DoWork<String>() {
-                @Override
-                public String doWork() throws IOException {
+            final String gcmId = MiscUtils.autoRetry(() -> {
 
-                    if (activity == null || activity.isFinishing())
-                        return "QUIT";
-                    return GoogleCloudMessaging.getInstance(activity)
-                            .register("528178870551");
-                }
-            }, Optional.<Predicate<String>>of(new Predicate<String>() {
-                @Override
-                public boolean apply(@Nullable String input) {
-                    return TextUtils.isEmpty(input);
-                }
-            })).orNull();
+                if (activity == null || activity.isFinishing())
+                    return "QUIT";
+                return GoogleCloudMessaging.getInstance(activity)
+                        .register("528178870551");
+            }, Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
 
             if (activity == null || activity.isFinishing() || TextUtils.isEmpty(gcmId) || gcmId.equals("QUIT"))
                 return null;
@@ -291,12 +269,7 @@ public class AccountCreation extends Fragment {
             //insert User-object and get the userID
             final long id;
             final String toParse;
-            final MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<MyString>() {
-                @Override
-                public MyString doWork() throws IOException {
-                    return StaticData.userEndpoint.insert(user).execute();
-                }
-            }, Optional.<Predicate<MyString>>absent()).orNull();
+            final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insert(user).execute(), Optional.<Predicate<MyString>>absent()).orNull();
             if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()))
                 id = 0;
             else
@@ -325,14 +298,11 @@ public class AccountCreation extends Fragment {
             ReachActivity.serverId = user.getId();
             if (!StaticData.debugMode) {
                 if (user.getId() != 0) {
-                    StaticData.threadPool.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            String locID = Localytics.getCustomerId();
-                            if (locID == null || TextUtils.isEmpty(locID)) {
-                                Localytics.setCustomerId(String.valueOf(user.getPhoneNumber()));
-                                Localytics.setCustomerFullName(user.getUserName());
-                            }
+                    AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+                        String locID = Localytics.getCustomerId();
+                        if (locID == null || TextUtils.isEmpty(locID)) {
+                            Localytics.setCustomerId(String.valueOf(user.getPhoneNumber()));
+                            Localytics.setCustomerFullName(user.getUserName());
                         }
                     });
                 }
