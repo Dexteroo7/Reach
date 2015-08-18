@@ -303,7 +303,10 @@ public class ReachActivity extends AppCompatActivity implements
                             .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
                     return true;
                 case R.id.navigation_item_2:
-                    PromoCodeDialog.newInstance().show(getSupportFragmentManager(), "promo_dialog");
+                    PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
+                    if (promoCodeDialog.isAdded())
+                        promoCodeDialog.dismiss();
+                    promoCodeDialog.show(fragmentManager, "promo_dialog");
                     return true;
                 case R.id.navigation_item_3:
                     fragmentManager

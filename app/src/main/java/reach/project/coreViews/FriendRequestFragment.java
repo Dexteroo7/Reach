@@ -60,6 +60,7 @@ public class FriendRequestFragment extends Fragment {
         return reference;
     }
 
+    //TODO fix crash
     public void refresh() {
 
         if (friendsRefresher != null && listView != null)
@@ -152,12 +153,13 @@ public class FriendRequestFragment extends Fragment {
         mListener = null;
     }
 
-    private static final class FetchRequests extends AsyncTask<ListView, Void, ListView> {
+    private static final class FetchRequests extends AsyncTask<ListView, Void, List<ReceivedRequest>> {
 
+        private ListView lView;
         @Override
-        protected ListView doInBackground(ListView... params) {
+        protected List<ReceivedRequest> doInBackground(ListView... params) {
 
-            receivedRequests.clear();
+            lView = params[0];
 
             final Optional<List<ReceivedRequest>> optional = MiscUtils.autoRetry(() -> {
 
@@ -168,23 +170,26 @@ public class FriendRequestFragment extends Fragment {
             }, Optional.<Predicate<List<ReceivedRequest>>>absent());
 
             if (optional.isPresent())
-                receivedRequests.addAll(optional.get());
+                return optional.get();
 
-            return params[0];
+            return null;
         }
 
         @Override
-        protected void onPostExecute(ListView listView) {
+        protected void onPostExecute(List<ReceivedRequest> receivedRequestList) {
 
-            super.onPostExecute(listView);
+            super.onPostExecute(receivedRequestList);
+
+            receivedRequests.clear();
+            if (receivedRequestList!=null)
+                receivedRequests.addAll(receivedRequestList);
 
             final ListAdapter temp;
-            if (listView != null && (temp = listView.getAdapter()) != null) {
-
+            if (lView != null && (temp = lView.getAdapter()) != null ) {
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
                 if (adapter.getCount() == 0)
-                    MiscUtils.setEmptyTextforListView(listView, "No friend requests");
+                    MiscUtils.setEmptyTextforListView(lView, "No friend requests");
             }
         }
     }

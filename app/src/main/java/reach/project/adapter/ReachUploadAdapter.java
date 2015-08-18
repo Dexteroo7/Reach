@@ -69,7 +69,7 @@ public class ReachUploadAdapter extends ArrayAdapter<CompletedOperation> {
         String name = "";
         while (index >= 0 && TextUtils.isEmpty(name = friends.get(operation.getReceiver().get(index), null)))
             index--;
-        viewHolder.userName.setText(name);
+        viewHolder.userName.setText("to " + name);
 
         String container = operationSize.get(operation.hashCode(), null);
         if(TextUtils.isEmpty(container)) {

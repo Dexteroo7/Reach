@@ -148,6 +148,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         } else {
             viewHolder.deleteQueue.setVisibility(View.GONE);
             viewHolder.listToggle.setVisibility(View.GONE);
+            viewHolder.userName.setText("to " + userName);
         }
 
         if (status == ReachDatabase.PAUSED_BY_USER)
