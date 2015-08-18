@@ -42,6 +42,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -252,11 +253,11 @@ public class ContactsListFragment extends Fragment implements
                 }
             } else if (object instanceof Contact) {
 
+                ImageView listToggle = (ImageView) view.findViewById(R.id.listToggle);
                 final Contact contact = (Contact) object;
                 if (contact.isInviteSent())
                     return;
-
-                LocalUtils.showAlert(inviteAdapter, contact, view.getContext());
+                LocalUtils.showAlert(inviteAdapter, contact, listToggle, view.getContext());
             }
         }
     };
@@ -444,7 +445,6 @@ public class ContactsListFragment extends Fragment implements
 
         selection = null;
         selectionArguments = null;
-
         final boolean isOnline = MiscUtils.isOnline(getActivity());
         //we have not already synchronized !
         if (!synchronizeOnce.get() && !synchronizing.get()) {
@@ -648,7 +648,7 @@ public class ContactsListFragment extends Fragment implements
             return Optional.of(activity.getContentResolver());
         }
 
-        public static final class InitializeData extends AsyncTask<Void, Void, Boolean> {
+        public static final class InitializeData extends AsyncTask<Void, Void, HashSet<Contact>> {
 
             private final MergeAdapter mergeAdapter;
             private final ReachAllContactsAdapter inviteAdapter;
@@ -664,15 +664,15 @@ public class ContactsListFragment extends Fragment implements
             }
 
             @Override
-            protected Boolean doInBackground(Void... voids) {
+            protected HashSet<Contact> doInBackground(Void... voids) {
 
                 Optional<ContentResolver> optional = getResolver();
                 if (!optional.isPresent())
-                    return false;
+                    return null;
                 final Cursor phones = optional.get().query(ContactsContract.
                         CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
                 if (phones == null)
-                    return false;
+                    return null;
 
                 final HashSet<Contact> contacts = new HashSet<>(phones.getCount());
                 while (phones.moveToNext()) {
@@ -694,43 +694,43 @@ public class ContactsListFragment extends Fragment implements
                         continue;
                     contact = new Contact(displayName, number, userID);
 
-                    if (inviteSentTo.contains(contact.toString()))
+                    if (inviteSentTo.contains(String.valueOf(contact.hashCode())))
                         contact.setInviteSent(true);
                     contacts.add(contact);
                 }
                 phones.close();
 
                 if (contacts.isEmpty())
-                    return false;
+                    return null;
 
-                contactData.clear();
-                contactData.addAll(contacts);
-                Collections.sort(contactData, new Comparator<Contact>() {
-                    @Override
-                    public int compare(Contact lhs, Contact rhs) {
-                        return lhs.getUserName().compareToIgnoreCase(rhs.getUserName());
-                    }
-                });
-
-                return true;
+                return contacts;
             }
 
             @Override
-            protected void onPostExecute(Boolean success) {
+            protected void onPostExecute(HashSet<Contact> contactHashSet) {
 
-                super.onPostExecute(success);
+                super.onPostExecute(contactHashSet);
 
                 if (mergeAdapter == null || inviteAdapter == null || emptyInvite == null || isDead())
                     return;
 
-                inviteAdapter.notifyDataSetChanged();
-                if (success) {
+                if (contactHashSet != null) {
+                    contactData.clear();
+                    contactData.addAll(contactHashSet);
+                    Collections.sort(contactData, new Comparator<Contact>() {
+                        @Override
+                        public int compare(Contact lhs, Contact rhs) {
+                            return lhs.getUserName().compareToIgnoreCase(rhs.getUserName());
+                        }
+                    });
                     mergeAdapter.setActive(emptyInvite, false);
                     mergeAdapter.setActive(inviteAdapter, true);
                 } else {
                     mergeAdapter.setActive(emptyInvite, true);
                     mergeAdapter.setActive(inviteAdapter, false);
                 }
+                inviteAdapter.notifyDataSetChanged();
+                inviteAdapter.getFilter().filter("");
             }
         }
 
@@ -939,7 +939,7 @@ public class ContactsListFragment extends Fragment implements
             return emptyInvite;
         }
 
-        public static void showAlert(ArrayAdapter adapter, final Contact contact, final Context context) {
+        public static void showAlert(ArrayAdapter adapter, final Contact contact, final ImageView listToggle, final Context context) {
 
             final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
                     ".\nhttp://letsreach.co/app\n--\n" +
@@ -971,7 +971,7 @@ public class ContactsListFragment extends Fragment implements
                             protected Boolean doInBackground(String... params) {
 
                                 final SendSMS smsObj = new SendSMS();
-                                smsObj.setparams("alerts.sinfini.com ", "sms", "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM");
+                                smsObj.setparams("alerts.sinfini.com", "sms", "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM");
                                 try {
                                     smsObj.send_sms(params[0], params[1], "dlr_url");
                                 } catch (Exception e) {
@@ -989,7 +989,8 @@ public class ContactsListFragment extends Fragment implements
                                 if (!aBoolean) {
                                     //fail
                                     contact.setInviteSent(false);
-                                    LocalUtils.inviteSentTo.remove(contact.toString());
+                                    LocalUtils.inviteSentTo.remove(String.valueOf(contact.hashCode()));
+                                    Picasso.with(context).load(R.drawable.icon_invite).into(listToggle);
 
                                     final ArrayAdapter adapter = arrayAdapterReference.get();
                                     if (adapter == null)
@@ -1011,16 +1012,16 @@ public class ContactsListFragment extends Fragment implements
 
                             final TextView inputText = (TextView) input.getChildAt(0);
                             final String txt = inputText.getText().toString();
-                            if (!TextUtils.isEmpty(txt))
+                            if (!TextUtils.isEmpty(txt)) {
+                                Log.i("Ayush", "Marking true " + contact.getUserName());
+                                LocalUtils.inviteSentTo.add(String.valueOf(contact.hashCode()));
+                                contact.setInviteSent(true);
+                                Picasso.with(context).load(R.drawable.add_tick).into(listToggle);
+                                adapter.notifyDataSetChanged();
                                 new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
+                            }
                             else
                                 Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
-
-                            Log.i("Ayush", "Marking true " + contact.getUserName());
-                            LocalUtils.inviteSentTo.add(contact.toString());
-
-                            contact.setInviteSent(true);
-                            adapter.notifyDataSetChanged();
                             dialog.dismiss();
                         }
                     })

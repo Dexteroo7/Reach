@@ -33,25 +33,15 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
     private final List<Contact> filteredData;
     private final CircleTransform transform = new CircleTransform();
 
-    public void cleanUp() {
-
-        if(this.originalData != null)
-            this.originalData.clear();
-        if(this.filteredData != null)
-            this.filteredData.clear();
-    }
-
     public ReachAllContactsAdapter(Context context, int ResourceId,
                                    List<Contact> friends) {
 
         super(context, ResourceId, friends);
         this.context = context;
         this.layoutResourceId = ResourceId;
-        this.filteredData = friends;
-        /**
-         * Needed to avoid messing up original data
-         */
-        this.originalData = new ArrayList<>(friends);
+        this.originalData = friends;
+        this.filteredData = new ArrayList<>();
+        this.filteredData.addAll(friends);
     }
 
     public int getCount() {

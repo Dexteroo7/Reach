@@ -104,8 +104,8 @@ public class UpdateReceiver extends BroadcastReceiver {
 
         //refresh music list
         final Intent musicScannerIntent = new Intent(context, MusicScanner.class);
-        intent.putExtra("first", true);
-        context.startService(intent);
+        musicScannerIntent.putExtra("first", true);
+        context.startService(musicScannerIntent);
 
         // an Intent broadcast.
         Log.i("Ayush", "Application updated");

@@ -69,6 +69,7 @@ public class NotificationFragment extends Fragment {
         return reference;
     }
 
+    //TODO fix crash
     public void refresh() {
         getActivity().invalidateOptionsMenu();
         if (notificationRefresher != null && listView != null)
@@ -182,12 +183,14 @@ public class NotificationFragment extends Fragment {
         }
     };
 
-    private static final class NotificationSync extends AsyncTask<ListView, Void, ListView> {
+    private static final class NotificationSync extends AsyncTask<ListView, Void, List<NotificationBase>> {
+
+        private ListView lView;
 
         @Override
-        protected ListView doInBackground(ListView... params) {
+        protected List<NotificationBase> doInBackground(ListView... params) {
 
-            notifications.clear();
+            lView = params[0];
 
             final Optional<List<NotificationBase>> list = MiscUtils.autoRetry(
                     new DoWork<List<NotificationBase>>() {
@@ -199,66 +202,68 @@ public class NotificationFragment extends Fragment {
                         }
                     }, Optional.<Predicate<List<NotificationBase>>>absent());
 
-            if (!list.isPresent())
-                return params[0];
+            if (list.isPresent())
+                return list.get();
 
-            /**
-             * Clear all Notifications and add latest ones
-             */
-            for (NotificationBase base : list.get()) {
-
-                if (base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
-
-                    final BecameFriends becameFriends = new BecameFriends();
-                    becameFriends.portData(base);
-                    notifications.add(becameFriends);
-
-                } else if (base.getTypes().equals(Types.LIKE.name())) {
-
-                    final Like like = new Like();
-                    like.portData(base);
-
-                    like.setSongName((String) base.get("songName"));
-                    notifications.add(like);
-
-                } else if (base.getTypes().equals(Types.PUSH.name())) {
-
-                    final Push push = new Push();
-                    push.portData(base);
-
-                    push.setPushContainer((String) base.get("pushContainer"));
-                    push.setFirstSongName((String) base.get("firstSongName"));
-                    push.setCustomMessage((String) base.get("customMessage"));
-                    push.setSize(Integer.parseInt(base.get("size").toString()));
-                    notifications.add(push);
-
-                } else if (base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
-
-                    final PushAccepted accepted = new PushAccepted();
-                    accepted.portData(base);
-
-                    accepted.setFirstSongName((String) base.get("firstSongName"));
-                    accepted.setSize(Integer.parseInt(base.get("size").toString()));
-                    notifications.add(accepted);
-
-                } else
-                    throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
-            }
-
-            return params[0];
+            return null;
         }
 
         @Override
-        protected void onPostExecute(final ListView listView) {
+        protected void onPostExecute(List<NotificationBase> notificationBaseList) {
 
-            super.onPostExecute(listView);
+            super.onPostExecute(notificationBaseList);
 
+            notifications.clear();
+            if (notificationBaseList!=null) {
+                /**
+                 * Clear all Notifications and add latest ones
+                 */
+                for (NotificationBase base : notificationBaseList) {
+
+                    if (base.getTypes().equals(Types.BECAME_FRIENDS.name())) {
+
+                        final BecameFriends becameFriends = new BecameFriends();
+                        becameFriends.portData(base);
+                        notifications.add(becameFriends);
+
+                    } else if (base.getTypes().equals(Types.LIKE.name())) {
+
+                        final Like like = new Like();
+                        like.portData(base);
+
+                        like.setSongName((String) base.get("songName"));
+                        notifications.add(like);
+
+                    } else if (base.getTypes().equals(Types.PUSH.name())) {
+
+                        final Push push = new Push();
+                        push.portData(base);
+
+                        push.setPushContainer((String) base.get("pushContainer"));
+                        push.setFirstSongName((String) base.get("firstSongName"));
+                        push.setCustomMessage((String) base.get("customMessage"));
+                        push.setSize(Integer.parseInt(base.get("size").toString()));
+                        notifications.add(push);
+
+                    } else if (base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
+
+                        final PushAccepted accepted = new PushAccepted();
+                        accepted.portData(base);
+
+                        accepted.setFirstSongName((String) base.get("firstSongName"));
+                        accepted.setSize(Integer.parseInt(base.get("size").toString()));
+                        notifications.add(accepted);
+
+                    } else
+                        throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
+                }
+            }
             final ListAdapter temp;
-            if (listView != null && (temp = listView.getAdapter()) != null) {
+            if (lView != null && (temp = lView.getAdapter()) != null) {
 
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
                 adapter.notifyDataSetChanged();
-                MiscUtils.setEmptyTextforListView(listView, "No notifications");
+                MiscUtils.setEmptyTextforListView(lView, "No notifications");
             }
         }
     }

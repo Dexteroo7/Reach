@@ -294,10 +294,11 @@ public class UserMusicLibrary extends Fragment {
 
                 operations.add(ContentProviderOperation
                         .newUpdate(ReachSongProvider.CONTENT_URI)
-                .withSelection(
-                        ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                                ReachSongHelper.COLUMN_SONG_ID + "  = ?",
-                        new String[]{hostId+"", songId+""}).build());
+                        .withValues(values)
+                        .withSelection(
+                                ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+                                        ReachSongHelper.COLUMN_SONG_ID + "  = ?",
+                                new String[]{hostId + "", songId + ""}).build());
             }
 
             //update visibility into database
