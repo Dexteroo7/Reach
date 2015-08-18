@@ -295,7 +295,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     stringBuilder2.append("</b></font>");
                     textMain.setText(Html.fromHtml(stringBuilder2.toString()), TextView.BufferType.SPANNABLE);
                     pushContainer.setCustomMessage(captionText.getText().toString());
-                    new PushSongs().executeOnExecutor(StaticData.threadPool, pushContainer);
+                    new PushSongs().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, pushContainer);
                     exit.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {

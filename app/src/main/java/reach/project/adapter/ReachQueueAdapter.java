@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
@@ -26,7 +27,6 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.utils.MiscUtils;
@@ -296,7 +296,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                     //send REQ gcm
                     return Optional.of((Runnable) MiscUtils.startDownloadOperation(
                             context,
-                            MiscUtils.generateRequest(reachDatabase),
+                            reachDatabase,
                             reachDatabase.getReceiverId(), //myID
                             reachDatabase.getSenderId(),   //the uploaded
                             reachDatabase.getId()));
@@ -352,7 +352,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                     //un-paused download operation
                     final Optional<Runnable> optional = reset(database, resolver, context, uri);
                     if (optional.isPresent())
-                        StaticData.threadPool.submit(optional.get());
+                        AsyncTask.THREAD_POOL_EXECUTOR.execute(optional.get());
                     else //should never happen
                         Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
                     Log.i("Ayush", "Un-pausing");

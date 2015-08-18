@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -68,7 +67,6 @@ public class MusicScanner extends IntentService {
             MediaStore.Audio.Media.YEAR, //9
             MediaStore.Audio.Media.DATE_ADDED}; //10
 
-    private final String[] projectionIds = {MediaStore.Audio.Albums._ID};
     /*
     Map of songs and playLists is needed to preserve
      */
@@ -254,12 +252,7 @@ public class MusicScanner extends IntentService {
         }
 
         musicCursor.close();
-        Collections.sort(toSend, new Comparator<Song>() {
-            @Override
-            public int compare(Song lhs, Song rhs) {
-                return lhs.dateAdded.compareTo(rhs.dateAdded);
-            }
-        });
+        Collections.sort(toSend, (lhs, rhs) -> lhs.dateAdded.compareTo(rhs.dateAdded));
         return ImmutableList.copyOf(toSend);
     }
 
@@ -321,7 +314,7 @@ public class MusicScanner extends IntentService {
         final Cursor playLists = resolver.query(uri, columns, null, null, null);
 
         if (playLists == null) {
-            Log.e("Playlist", "Found no playlists.");
+            Log.e("Playlist", "Found no play lists.");
             return null;
         }
 
@@ -341,21 +334,27 @@ public class MusicScanner extends IntentService {
             builder.visibility((int) reachPlayListVisibility.get(playListName.hashCode(), (short) 1) == 1);
             builder.playlistName(playListName);
 
-            uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playLists.getLong(play_list_id));
-            final Cursor musicCursor = resolver.query(uri, projectionIds, null, null, null);
+            Log.i("Ayush", playListName);
+
+            final Cursor musicCursor = resolver.query(
+                    MediaStore.Audio.Playlists.Members.getContentUri("external", playLists.getLong(play_list_id)), //specify the URI
+                    new String[]{MediaStore.Audio.Playlists.Members.AUDIO_ID}, //specify the projection
+                    null, null, null);
             final List<Long> songIds = new ArrayList<>(musicCursor.getCount());
             while (musicCursor.moveToNext()) {
 
-                final int music_column_id = musicCursor
-                        .getColumnIndex(MediaStore.Audio.Media._ID);
-                final long songID = musicCursor.getLong(music_column_id);
-                final Song reachSongDatabase = songSparse.get(songID);
-                if (reachSongDatabase != null) {
+//                final int music_column_id = musicCursor
+//                        .getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID);
+                final long songID = musicCursor.getLong(0);
+                final Song song = songSparse.get(songID);
+                if (song != null)
                     songIds.add(songID);
-                }
             }
-            if (songIds.isEmpty())
+
+            if (songIds.isEmpty()) {
+                Log.i("Ayush", "Song ids not present");
                 continue;
+            }
 
             builder.reachSongs(songIds);
             int last_modified = playLists.getColumnIndex(MediaStore.Audio.Playlists.DATE_MODIFIED);
@@ -418,8 +417,8 @@ public class MusicScanner extends IntentService {
             while (reachSongInitialCursor.moveToNext()) {
                 //songId = key, visibility = value;
                 reachSongVisibility.append(
-                        reachSongInitialCursor.getLong(0),  //
-                        reachSongInitialCursor.getShort(1));
+                        reachSongInitialCursor.getLong(0),  //songId
+                        reachSongInitialCursor.getShort(1)); //visibility
             }
             reachSongInitialCursor.close();
         }
@@ -435,7 +434,7 @@ public class MusicScanner extends IntentService {
         if (reachPlaylistInitialCursor != null) {
             while (reachPlaylistInitialCursor.moveToNext()) {
                 reachPlayListVisibility.append(
-                        reachPlaylistInitialCursor.getString(0).hashCode(), //playListId
+                        reachPlaylistInitialCursor.getString(0).hashCode(), //playListName
                         reachPlaylistInitialCursor.getShort(1)); //visibility
             }
             reachPlaylistInitialCursor.close();
@@ -480,6 +479,8 @@ public class MusicScanner extends IntentService {
             sendMessage(FINISHED, -1);
             return;
         }
+
+        Log.i("Ayush", "Play lists found " + playListSet.size());
         ////////////////////PlayLists Added
         SharedPrefUtils.storeGenres(sharedPreferences, genreHashSet);
         ////////////////////Genres Added

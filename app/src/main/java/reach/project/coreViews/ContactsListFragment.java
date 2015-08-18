@@ -57,7 +57,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -141,7 +140,7 @@ public class ContactsListFragment extends Fragment implements
             fragment.notificationCount.setVisibility(View.GONE);
         else {
             fragment.notificationCount.setVisibility(View.VISIBLE);
-            fragment.notificationCount.setText(String.valueOf(friendRequestCount+notificationsCount));
+            fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
         }
     }
 
@@ -165,20 +164,9 @@ public class ContactsListFragment extends Fragment implements
                  * params[2] = status
                  */
 
-                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(new DoWork<reach.backend.entities.messaging.model.MyString>() {
-                    @Override
-                    public reach.backend.entities.messaging.model.MyString doWork() throws IOException {
-                        return StaticData
-                                .messagingEndpoint
-                                .messagingEndpoint()
-                                .requestAccess(params[1], params[0]).execute();
-                    }
-                }, Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(new Predicate<reach.backend.entities.messaging.model.MyString>() {
-                    @Override
-                    public boolean apply(reach.backend.entities.messaging.model.MyString input) {
-                        return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
-                    }
-                })).orNull();
+                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData
+                        .messagingEndpoint
+                        .requestAccess(params[1], params[0]).execute(), Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
                 final String toParse;
                 if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
@@ -194,19 +182,17 @@ public class ContactsListFragment extends Fragment implements
                 if (response != null && response > 0) {
 
                     //response becomes the id of failed person
-                    MiscUtils.useFragment(reference, new UseFragment<Void, ContactsListFragment>() {
-                        @Override
-                        public Void work(ContactsListFragment fragment) {
-                            Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
-                            final ContentValues values = new ContentValues();
-                            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                            reference.get().getActivity().getContentResolver().update(
-                                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                    values,
-                                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                                    new String[]{response + ""});
-                            return null;
-                        }
+                    MiscUtils.useFragment(reference, (ContactsListFragment fragment) -> {
+
+                        Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
+                        final ContentValues values = new ContentValues();
+                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                        reference.get().getActivity().getContentResolver().update(
+                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
+                                values,
+                                ReachFriendsHelper.COLUMN_ID + " = ?",
+                                new String[]{response + ""});
+                        return null;
                     });
                 }
 
@@ -232,12 +218,11 @@ public class ContactsListFragment extends Fragment implements
                             Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
                                     .show();
                         mListener.onOpenLibrary(id);
-                    }
-                    else {
+                    } else {
                         final long clientId = cursor.getLong(0);
 
                         new SendRequest().executeOnExecutor(
-                                StaticData.threadPool,
+                                AsyncTask.THREAD_POOL_EXECUTOR,
                                 clientId, serverId, (long) status);
 
                         Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
@@ -269,7 +254,7 @@ public class ContactsListFragment extends Fragment implements
 
                 Log.i("Ayush", "Starting refresh !");
                 pinging.set(true);
-                new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+                new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
             }
         }
     };
@@ -375,8 +360,6 @@ public class ContactsListFragment extends Fragment implements
         pinging.set(false);
         synchronizing.set(false);
         synchronizeOnce.set(false);
-        LocalUtils.contactData.clear();
-        LocalUtils.inviteSentTo.clear();
         //create adapters
         inviteAdapter = new ReachAllContactsAdapter(activity, R.layout.allcontacts_user, LocalUtils.contactData) {
 
@@ -406,7 +389,7 @@ public class ContactsListFragment extends Fragment implements
         mergeAdapter.setActive(emptyInvite, false);
         mergeAdapter.addAdapter(inviteAdapter);
         //mark those who we have already invited !
-        LocalUtils.inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<String>()));
+        LocalUtils.inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<>()));
     }
 
     @Override
@@ -459,9 +442,9 @@ public class ContactsListFragment extends Fragment implements
                         swipeRefreshLayout.setRefreshing(true);
                     }
                 });
-                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+                new LocalUtils.ContactsSync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
             }
-            new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(StaticData.threadPool);
+            new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
@@ -472,7 +455,7 @@ public class ContactsListFragment extends Fragment implements
                     swipeRefreshLayout.setRefreshing(true);
                 }
             });
-            new LocalUtils.SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
         }
 
         getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
@@ -513,7 +496,7 @@ public class ContactsListFragment extends Fragment implements
             mergeAdapter.setActive(emptyFriends, false);
             mergeAdapter.setActive(reachContactsAdapter, true);
             if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
-                StaticData.threadPool.execute(LocalUtils.devikaSendMeSomeLove);
+                AsyncTask.THREAD_POOL_EXECUTOR.execute(LocalUtils.devikaSendMeSomeLove);
                 SharedPrefUtils.setFirstIntroSeen(sharedPrefs);
             }
             actionMenu.setVisibility(View.VISIBLE);
@@ -666,11 +649,16 @@ public class ContactsListFragment extends Fragment implements
             @Override
             protected Boolean doInBackground(Void... voids) {
 
-                Optional<ContentResolver> optional = getResolver();
+                final Optional<ContentResolver> optional = getResolver();
                 if (!optional.isPresent())
                     return false;
-                final Cursor phones = optional.get().query(ContactsContract.
-                        CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+                final Cursor phones = optional.get().query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[]{
+                                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID},
+                        null, null, null);
                 if (phones == null)
                     return false;
 
@@ -681,16 +669,11 @@ public class ContactsListFragment extends Fragment implements
                     final String number, displayName;
                     final long userID;
 
-                    if (phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER) == -1 ||
-                            phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME) == -1 ||
-                            phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID) == -1)
-                        continue;
+                    number = phones.getString(0);
+                    displayName = phones.getString(1);
+                    userID = phones.getLong(2);
 
-                    number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    displayName = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    userID = phones.getLong(phones.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
-
-                    if (TextUtils.isEmpty(displayName))
+                    if (TextUtils.isEmpty(displayName) || TextUtils.isEmpty(phoneNumber))
                         continue;
                     contact = new Contact(displayName, number, userID);
 
@@ -705,12 +688,7 @@ public class ContactsListFragment extends Fragment implements
 
                 contactData.clear();
                 contactData.addAll(contacts);
-                Collections.sort(contactData, new Comparator<Contact>() {
-                    @Override
-                    public int compare(Contact lhs, Contact rhs) {
-                        return lhs.getUserName().compareToIgnoreCase(rhs.getUserName());
-                    }
-                });
+                Collections.sort(contactData, (lhs, rhs) -> lhs.getUserName().compareToIgnoreCase(rhs.getUserName()));
 
                 return true;
             }
@@ -782,7 +760,7 @@ public class ContactsListFragment extends Fragment implements
                 synchronizeOnce.set(true);
                 //we are still refreshing !
                 pinging.set(true);
-                new SendPing().executeOnExecutor(StaticData.threadPool, swipeRefreshLayout);
+                new SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
             }
         }
 
@@ -1012,7 +990,7 @@ public class ContactsListFragment extends Fragment implements
                             final TextView inputText = (TextView) input.getChildAt(0);
                             final String txt = inputText.getText().toString();
                             if (!TextUtils.isEmpty(txt))
-                                new SendInvite().executeOnExecutor(StaticData.threadPool, contact.getPhoneNumber(), txt);
+                                new SendInvite().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, contact.getPhoneNumber(), txt);
                             else
                                 Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
 

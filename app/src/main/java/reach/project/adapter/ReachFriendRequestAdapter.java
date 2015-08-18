@@ -43,7 +43,6 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
     private static final int b = MiscUtils.dpToPx(110);
     private static long serverId;
     private final int rId;
-    private static int pos;
 
     public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long id) {
         super(context, resourceId, receivedRequestList);
@@ -65,7 +64,6 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         if (convertView == null)
             convertView = LayoutInflater.from(getContext()).inflate(rId, parent, false);
 
-        pos = position;
         final View linearLayout = convertView.findViewById(R.id.linearLayout);
 
         final ImageView profilePhoto = (ImageView) convertView.findViewById(R.id.profilePhotoList);
@@ -103,53 +101,37 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             linearLayout.setTag(position);
             linearLayout.setOnClickListener(expander);
 
-            accept.setTag(new Object[]{receivedRequest.getId(), new Result() {
-                @Override
-                public void result(Friend friend) {
+            accept.setTag(new Object[]{receivedRequest.getId(), (Result) friend -> {
 
-                    if (friend == null) {
+                if (friend != null) {
+                    //success
+                    getContext().getContentResolver().insert(
+                            ReachFriendsProvider.CONTENT_URI,
+                            ReachFriendsHelper.contentValuesCreator(friend));
 
-                        //fail
-//                        expand(linearLayout, b, a);
-//                        linearLayout.setClickable(false);
-//                        actionBlock.setVisibility(View.GONE);
-//                        libraryBtn.setVisibility(View.VISIBLE);
-//                        notificationType.setText("added to your friends");
-
-                    } else {
-                        //success
-                        getContext().getContentResolver().insert(
-                                ReachFriendsProvider.CONTENT_URI,
-                                ReachFriendsHelper.contentValuesCreator(friend));
-
-                        expand(linearLayout, b, a);
-                        linearLayout.setClickable(false);
-                        actionBlock.setVisibility(View.GONE);
-                        libraryBtn.setVisibility(View.VISIBLE);
-                        notificationType.setText("added to your friends");
-                    }
+                    accepted.put(position, true);
+                    expand(linearLayout, b, a);
+                    linearLayout.setClickable(false);
+                    actionBlock.setVisibility(View.GONE);
+                    libraryBtn.setVisibility(View.VISIBLE);
+                    notificationType.setText("added to your friends");
                 }
+
             }});
 
             accept.setOnClickListener(acceptClick);
-            reject.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            reject.setOnClickListener(v -> {
 
-                    MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                        @Override
-                        public Void doWork() throws IOException {
-                            StaticData.notificationApi.addBecameFriends(false, serverId, receivedRequest.getId()).execute();
-                            return null;
-                        }
-                    }, Optional.<Predicate<Void>>absent());
+                MiscUtils.autoRetryAsync(() -> {
+                    StaticData.notificationApi.addBecameFriends(false, serverId, receivedRequest.getId()).execute();
+                    return null;
+                }, Optional.<Predicate<Void>>absent());
 
-                    //delete entry
-                    remove(receivedRequest);
-                    accepted.delete(position);
-                    opened.delete(position);
-                    notifyDataSetChanged();
-                }
+                //delete entry
+                remove(receivedRequest);
+                accepted.delete(position);
+                opened.delete(position);
+                notifyDataSetChanged();
             });
         }
         return convertView;
@@ -159,11 +141,9 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
         final ValueAnimator va = ValueAnimator.ofInt(a, b);
         va.setDuration(300);
-        va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            public void onAnimationUpdate(ValueAnimator animation) {
-                view.getLayoutParams().height = (Integer) animation.getAnimatedValue();
-                view.requestLayout();
-            }
+        va.addUpdateListener(animation -> {
+            view.getLayoutParams().height = (Integer) animation.getAnimatedValue();
+            view.requestLayout();
         });
         //va.setInterpolator(new DecelerateInterpolator());
         va.start();
@@ -175,11 +155,9 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
             final ValueAnimator va = ValueAnimator.ofInt(a, b);
             va.setDuration(300)
-                    .addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                        public void onAnimationUpdate(ValueAnimator animation) {
-                            view.getLayoutParams().height = (Integer) animation.getAnimatedValue();
-                            view.requestLayout();
-                        }
+                    .addUpdateListener(animation -> {
+                        view.getLayoutParams().height = (Integer) animation.getAnimatedValue();
+                        view.requestLayout();
                     });
             va.start();
         }
@@ -279,11 +257,10 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                 return;
             }
 
-            accepted.put(pos,true);
             //disable and send request
             accept.setEnabled(false);
             //hostId, reference, view to enable
-            new HandleAccept().executeOnExecutor(StaticData.threadPool, data[0], new SoftReference<>(data[1]), accept);
+            new HandleAccept().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data[0], new SoftReference<>(data[1]), accept);
         }
     };
 

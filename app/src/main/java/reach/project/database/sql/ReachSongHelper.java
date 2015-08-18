@@ -18,7 +18,7 @@ public class ReachSongHelper extends SQLiteOpenHelper {
     public static final String SONG_TABLE = "songs";
     public static final String COLUMN_ID = "_id";
     public static final String COLUMN_SONG_ID = "songId";
-    public static final String COLUMN_FILE_HASH = "fileHash";
+    public static final String COLUMN_FILE_HASH = "fileHash"; //TODO
     public static final String COLUMN_DISPLAY_NAME = "displayName";
     public static final String COLUMN_ACTUAL_NAME = "actualName";
     public static final String COLUMN_GENRE = "genre";

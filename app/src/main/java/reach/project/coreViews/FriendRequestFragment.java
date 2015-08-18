@@ -18,7 +18,6 @@ import android.widget.Toast;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +36,6 @@ import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
-import reach.project.utils.auxiliaryClasses.DoWork;
 
 public class FriendRequestFragment extends Fragment {
 
@@ -119,7 +117,8 @@ public class FriendRequestFragment extends Fragment {
 
         friendsRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<Runnable>()));
+                new SynchronousQueue<>(),
+                (r, executor) -> {/**ignored**/}));
 
         refresh();
         return rootView;
@@ -160,15 +159,12 @@ public class FriendRequestFragment extends Fragment {
 
             receivedRequests.clear();
 
-            final Optional<List<ReceivedRequest>> optional = MiscUtils.autoRetry(new DoWork<List<ReceivedRequest>>() {
-                @Override
-                public List<ReceivedRequest> doWork() throws IOException {
+            final Optional<List<ReceivedRequest>> optional = MiscUtils.autoRetry(() -> {
 
-                    final List<ReceivedRequest> receivedRequests =
-                            StaticData.userEndpoint.getReceivedRequests(serverId).execute().getItems();
-                    Collections.reverse(receivedRequests);
-                    return receivedRequests;
-                }
+                final List<ReceivedRequest> receivedRequests1 =
+                        StaticData.userEndpoint.getReceivedRequests(serverId).execute().getItems();
+                Collections.reverse(receivedRequests1);
+                return receivedRequests1;
             }, Optional.<Predicate<List<ReceivedRequest>>>absent());
 
             if (optional.isPresent())

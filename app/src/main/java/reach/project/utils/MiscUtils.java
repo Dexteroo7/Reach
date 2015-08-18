@@ -8,8 +8,8 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -27,7 +27,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
@@ -57,6 +56,7 @@ import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
+import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.Playlist;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
@@ -340,23 +340,6 @@ public enum MiscUtils {
         }
     }
 
-    /**
-     * Get a quick hash of song
-     *
-     * @param actualName  name1 of song
-     * @param displayName name2 of song
-     * @param duration    of song
-     * @param size        of song
-     * @return hash using above parameters
-     */
-    public static String quickHash(String actualName, String displayName, long duration, long size) {
-        return Hashing.md5().newHasher()
-                .putString(actualName)
-                .putString(displayName)
-                .putLong(duration)
-                .putLong(size).hash().toString();
-    }
-
     public static void bulkInsertPlayLists(List<Playlist> playlistList,
                                            ContentResolver contentResolver,
                                            long serverId) {
@@ -421,37 +404,12 @@ public enum MiscUtils {
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
 
-        return MiscUtils.autoRetry(new DoWork<MyBoolean>() {
-            @Override
-            public MyBoolean doWork() throws IOException {
-                Log.i("Downloader", "Sending message " + message);
-                return StaticData.messagingEndpoint.messagingEndpoint()
-                        .sendMessage(message, hostId, clientId).execute();
-            }
-        }, Optional.<Predicate<MyBoolean>>of(new Predicate<MyBoolean>() {
-            @Override
-            public boolean apply(@Nullable MyBoolean input) {
-                return input == null;
-            }
-        })).orNull();
+        return MiscUtils.autoRetry(() -> {
+            Log.i("Downloader", "Sending message " + message);
+            return StaticData.messagingEndpoint.sendMessage(message, hostId, clientId).execute();
+        }, Optional.<Predicate<MyBoolean>>of(input -> input == null)).orNull();
     }
 
-//    public static int getReachDatabaseCount(ContentResolver contentResolver) {
-//
-//        final Cursor countCursor;
-//        countCursor = contentResolver.query(
-//                ReachDatabaseProvider.CONTENT_URI,
-//                new String[]{ReachDatabaseHelper.COLUMN_ID},
-//                null, null, null);
-//        if(countCursor == null)
-//            return 0;
-//        try {
-//            return countCursor.getCount();
-//        } finally {
-//            countCursor.close();
-//        }
-//    }
-//
 //    /**
 //     * //TODO improve/fix/replace this hack
 //     * @return The current localIP
@@ -472,31 +430,31 @@ public enum MiscUtils {
 //        return localIpAddress;
 //    }
 
-    public static <T extends Context, Result> Optional<Result> useContext(final WeakReference<T> reference,
-                                                                          final UseContext<Result, T>... tasks) {
+//    public static <T extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<T> reference,
+//                                                                          final UseContext<Result, T>... tasks) {
+//
+//        final boolean isActivity = reference.get() instanceof Activity;
+//
+//        Optional<Result> result = Optional.absent();
+//        for (UseContext<Result, T> task : tasks) {
+//
+//            final T context;
+//
+//            final boolean contextLost = (context = reference.get()) == null;
+//            if (contextLost)
+//                return Optional.absent();
+//            final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
+//            if (activityIsFinishing)
+//                return Optional.absent();
+//
+//            result = Optional.fromNullable(task.work(context));
+//        }
+//
+//        return result;
+//    }
 
-        final boolean isActivity = reference.get() instanceof Activity;
-
-        Optional<Result> result = Optional.absent();
-        for (UseContext<Result, T> task : tasks) {
-
-            final T context;
-
-            final boolean contextLost = (context = reference.get()) == null;
-            if (contextLost)
-                return Optional.absent();
-            final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-            if (activityIsFinishing)
-                return Optional.absent();
-
-            result = Optional.fromNullable(task.work(context));
-        }
-
-        return result;
-    }
-
-    public static <T extends Context, Result> Optional<Result> useContext(final WeakReference<T> reference,
-                                                                          final UseContext<Result, T> task) {
+    public static <T extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<T> reference,
+                                                                                     final UseContext<Result, T> task) {
 
         final T context;
         if (reference == null || (context = reference.get()) == null)
@@ -510,8 +468,8 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(context));
     }
 
-    public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
-                                                                            final UseContext<Result, Activity> task) {
+    public static <T extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<T> reference,
+                                                                                      final UseContext<Result, Activity> task) {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)
@@ -538,65 +496,55 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(fragment));
     }
 
-    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
-                                                          final UseContext<Void, T> task) {
+//    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+//                                                          final UseContext<Void, T> task) {
+//
+//        final T activity;
+//        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+//            return;
+//
+//        activity.runOnUiThread(() -> task.work(activity));
+//    }
+//
+//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+//                                                                  final UseContext<Void, Activity> task) {
+//
+//        final T fragment;
+//        if (reference == null || (fragment = reference.get()) == null)
+//            return;
+//        final Activity activity = fragment.getActivity();
+//        if (activity.isFinishing())
+//            return;
+//
+//        activity.runOnUiThread(() -> task.work(activity));
+//    }
 
-        final T activity;
-        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
-            return;
-
-        activity.runOnUiThread(() -> task.work(activity));
-    }
-
-    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseContext<Void, Activity> task) {
-
-        final T fragment;
-        if (reference == null || (fragment = reference.get()) == null)
-            return;
-        final Activity activity = fragment.getActivity();
-        if (activity.isFinishing())
-            return;
-
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                task.work(activity);
-            }
-        });
-    }
-
+    /**
+     * @param id        id of the person to update gcm of
+     * @param reference the context reference
+     * @param <T>       something which extends context
+     * @return false : failed, true : OK
+     */
     public static <T extends Context> boolean updateGCM(final long id, final WeakReference<T> reference) {
 
-        final String regId = autoRetry(new DoWork<String>() {
-            @Override
-            public String doWork() throws IOException {
+        final String regId = autoRetry(() -> {
 
-                final Context context;
-                if (reference == null || (context = reference.get()) == null)
-                    return "QUIT";
-                return GoogleCloudMessaging.getInstance(context)
-                        .register("528178870551");
-            }
-        }, Optional.<Predicate<String>>of(new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String input) {
-                return TextUtils.isEmpty(input);
-            }
-        })).orNull();
+            final Context context;
+            if (reference == null || (context = reference.get()) == null)
+                return "QUIT";
+            return GoogleCloudMessaging.getInstance(context)
+                    .register("528178870551");
+        }, Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
 
         if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
             return false;
         //if everything is fine, send to server
         Log.i("Ayush", "Uploading newGcmId to server");
-        final Boolean result = autoRetry(new DoWork<Boolean>() {
-            @Override
-            public Boolean doWork() throws IOException {
+        final Boolean result = autoRetry(() -> {
 
-                StaticData.userEndpoint.setGCMId(id, regId).execute();
-                Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
-                return true;
-            }
+            StaticData.userEndpoint.setGCMId(id, regId).execute();
+            Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
+            return true;
         }, Optional.<Predicate<Boolean>>absent()).orNull();
         //set locally
         return !(result == null || !result);
@@ -679,84 +627,109 @@ public enum MiscUtils {
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
 
-        StaticData.threadPool.submit(new Runnable() {
-            @Override
-            public void run() {
-                for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
 
-                    try {
+            for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
 
-                        Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
-                        final T resultAfterWork = task.doWork();
-                        /**
-                         * If the result was not
-                         * desirable we RETRY.
-                         */
-                        if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
-                            continue;
-                        /**
-                         * Else we return
-                         */
-                        return;
-                    } catch (InterruptedException | UnknownHostException e) {
-                        e.printStackTrace();
-                        return;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                try {
+
+                    Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                    final T resultAfterWork = task.doWork();
+                    /**
+                     * If the result was not
+                     * desirable we RETRY.
+                     */
+                    if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                        continue;
+                    /**
+                     * Else we return
+                     */
+                    return;
+                } catch (InterruptedException | UnknownHostException e) {
+                    e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
     }
 
-    public static String generateRequest(ReachDatabase reachDatabase) {
-
-        return "CONNECT" + new Gson().toJson
-                (new Connection(
-                        ////Constructing connection object
-                        "REQ",
-                        reachDatabase.getSenderId(),
-                        reachDatabase.getReceiverId(),
-                        reachDatabase.getSongId(),
-                        reachDatabase.getProcessed(),
-                        reachDatabase.getLength(),
-                        UUID.randomUUID().getMostSignificantBits(),
-                        UUID.randomUUID().getMostSignificantBits(),
-                        reachDatabase.getLogicalClock(), ""));
-    }
-
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,
-                                                                             String connection,
+                                                                             ReachDatabase reachDatabase,
                                                                              long receiverId,
                                                                              long senderId,
                                                                              long databaseId) {
-        return new StartDownloadOperation(context, connection, receiverId, senderId, databaseId);
+        return new StartDownloadOperation(context, reachDatabase, receiverId, senderId, databaseId);
     }
 
     private static class StartDownloadOperation implements Runnable {
 
-        private final String connection;
+        private final ReachDatabase reachDatabase;
         private final long receiverId, senderId, databaseId;
         private final WeakReference<Context> contextReference;
 
         private StartDownloadOperation(Context context,
-                                       String connection,
+                                       ReachDatabase reachDatabase,
                                        long receiverId,
                                        long senderId,
                                        long databaseId) {
 
             this.contextReference = new WeakReference<>(context);
-            this.connection = connection;
+            this.reachDatabase = reachDatabase;
             this.receiverId = receiverId;
             this.senderId = senderId;
             this.databaseId = databaseId;
         }
 
+        private String generateRequest(ReachDatabase reachDatabase) {
+
+            return "CONNECT" + new Gson().toJson
+                    (new Connection(
+                            ////Constructing connection object
+                            "REQ",
+                            reachDatabase.getSenderId(),
+                            reachDatabase.getReceiverId(),
+                            reachDatabase.getSongId(),
+                            reachDatabase.getProcessed(),
+                            reachDatabase.getLength(),
+                            UUID.randomUUID().getMostSignificantBits(),
+                            UUID.randomUUID().getMostSignificantBits(),
+                            reachDatabase.getLogicalClock(), ""));
+        }
+
+        private String fakeResponse(ReachDatabase reachDatabase) {
+
+            return new Gson().toJson
+                    (new Connection(
+                            ////Constructing connection object
+                            "RELAY",
+                            reachDatabase.getSenderId(),
+                            reachDatabase.getReceiverId(),
+                            reachDatabase.getSongId(),
+                            reachDatabase.getProcessed(),
+                            reachDatabase.getLength(),
+                            UUID.randomUUID().getMostSignificantBits(),
+                            UUID.randomUUID().getMostSignificantBits(),
+                            reachDatabase.getLogicalClock(), ""));
+        }
+
         @Override
         public void run() {
 
-            //sending REQ to senderId
-            final MyBoolean myBoolean = sendGCM(connection, senderId, receiverId);
+            final MyBoolean myBoolean;
+            if (reachDatabase.getSenderId() == StaticData.devika) {
+
+                //hit cloud
+                ProcessManager.submitNetworkRequest(contextReference.get(), fakeResponse(reachDatabase));
+                myBoolean = new MyBoolean();
+                myBoolean.setGcmexpired(false);
+                myBoolean.setOtherGCMExpired(false);
+            } else {
+                //sending REQ to senderId
+                myBoolean = sendGCM(generateRequest(reachDatabase), senderId, receiverId);
+            }
+
             final short status;
 
             if (myBoolean == null) {
@@ -786,15 +759,12 @@ public enum MiscUtils {
             final ContentValues values = new ContentValues();
             values.put(ReachDatabaseHelper.COLUMN_STATUS, status);
 
-            MiscUtils.useContext(contextReference, new UseContext<Void, Context>() {
-                @Override
-                public Void work(Context context) {
+            MiscUtils.useContextFromContext(contextReference, context -> {
 
-                    Log.i("Downloader", "Updating DB on GCM sent " + (context.getContentResolver().update(
-                            Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + databaseId),
-                            values, condition, arguments) > 0));
-                    return null;
-                }
+                Log.i("Downloader", "Updating DB on GCM sent " + (context.getContentResolver().update(
+                        Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + databaseId),
+                        values, condition, arguments) > 0));
+                return null;
             });
         }
     }

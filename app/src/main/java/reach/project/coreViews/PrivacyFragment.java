@@ -72,7 +72,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
              * params[1] = songId
              * params[2] = userId
              */
-            new ToggleVisibility().executeOnExecutor(StaticData.threadPool,
+            new ToggleVisibility().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
                     (long) reachSongCursor.getShort(9),
                     reachSongCursor.getLong(1),
                     reachSongCursor.getLong(2));

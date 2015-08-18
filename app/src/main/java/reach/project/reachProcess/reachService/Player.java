@@ -370,17 +370,15 @@ public class Player {
 
             while (!stopDecoding.get()) {
 
-                if (pauseDecoding.get()) {
-                    Log.i("Downloader", "PAUSING DECODER -> User");
+                if (pauseDecoding.get())
                     try {
                         Thread.sleep(500L);
+                        continue;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         stopDecoding.set(true);
                         break;
                     }
-                    continue;
-                }
                 //Log.i("Downloader", frameHeader.mode() + " " + frameHeader.frequency());
                 short[] toFeed = null;
                 try {

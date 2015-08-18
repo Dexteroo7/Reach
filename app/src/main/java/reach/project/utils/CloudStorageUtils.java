@@ -3,13 +3,13 @@ package reach.project.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
@@ -38,7 +38,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 
-import reach.project.core.StaticData;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.MusicList;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
@@ -82,7 +81,7 @@ public enum CloudStorageUtils {
         }
 
         Log.i("Ayush", "Uploading file name " + fileName);
-        StaticData.threadPool.submit(new UploadIfNotPresent(storage.get(), fileName, stream));
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(new UploadIfNotPresent(storage.get(), fileName, stream));
         return Optional.of(fileName);
     }
 
@@ -125,22 +124,19 @@ public enum CloudStorageUtils {
                         inputStream);
             } catch (IOException e) {
                 e.printStackTrace();
-                MiscUtils.closeAndIgnore(check, inputStream);
+                MiscUtils.closeAndIgnore(inputStream);
                 return;
             }
 
             //upload
             MiscUtils.autoRetry(
-                    new DoWork<Void>() {
-                        @Override
-                        public Void doWork() throws IOException {
-                            final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
-                            insert.setPredefinedAcl("publicRead");
-                            insert.setName(fileName);
-                            insert.execute();
-                            Log.i("Ayush", "Upload complete");
-                            return null;
-                        }
+                    () -> {
+                        final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
+                        insert.setPredefinedAcl("publicRead");
+                        insert.setName(fileName);
+                        insert.execute();
+                        Log.i("Ayush", "Upload complete");
+                        return null;
                     }, Optional.<Predicate<Void>>absent());
         }
     }
@@ -458,10 +454,9 @@ public enum CloudStorageUtils {
 
         final HttpTransport transport = new NetHttpTransport();
         final JsonFactory factory = new JacksonFactory();
-        final HttpRequestInitializer initializer = new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-            }
+        final HttpRequestInitializer initializer = request -> {
+            request.setConnectTimeout(request.getConnectTimeout() * 2);
+            request.setReadTimeout(request.getReadTimeout() * 2);
         };
 
         final PrivateKey key;

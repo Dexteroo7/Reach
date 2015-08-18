@@ -18,7 +18,6 @@ import android.widget.Toast;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +41,6 @@ import reach.project.database.notifications.Types;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SuperInterface;
-import reach.project.utils.auxiliaryClasses.DoWork;
 
 public class NotificationFragment extends Fragment {
 
@@ -90,7 +88,8 @@ public class NotificationFragment extends Fragment {
 
         notificationRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<Runnable>()));
+                new SynchronousQueue<>(),
+                (r, executor) -> {/**ignored**/}));
 
         refresh();
         return rootView;
@@ -150,12 +149,8 @@ public class NotificationFragment extends Fragment {
 
                     if (cursor == null || !cursor.moveToFirst()) {
 
-                        MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                            @Override
-                            public Void doWork() throws IOException {
-                                return StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute();
-                            }
-                        }, Optional.<Predicate<Void>>absent());
+                        MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(),
+                                Optional.<Predicate<Void>>absent());
 
                         if (cursor != null)
                             cursor.close();
@@ -173,12 +168,7 @@ public class NotificationFragment extends Fragment {
             }
             mListener.closeDrawers();
             adapter.remove(notificationBaseLocal);
-            MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                @Override
-                public Void doWork() throws IOException {
-                    return StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute();
-                }
-            }, Optional.<Predicate<Void>>absent());
+            MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.<Predicate<Void>>absent());
         }
     };
 
@@ -190,13 +180,10 @@ public class NotificationFragment extends Fragment {
             notifications.clear();
 
             final Optional<List<NotificationBase>> list = MiscUtils.autoRetry(
-                    new DoWork<List<NotificationBase>>() {
-                        @Override
-                        public List<NotificationBase> doWork() throws IOException {
-                            if (serverId == 0)
-                                return null;
-                            return StaticData.notificationApi.getNotifications(serverId, (int) NotificationBaseLocal.GET_UN_READ).execute().getItems();
-                        }
+                    () -> {
+                        if (serverId == 0)
+                            return null;
+                        return StaticData.notificationApi.getNotifications(serverId, (int) NotificationBaseLocal.GET_UN_READ).execute().getItems();
                     }, Optional.<Predicate<List<NotificationBase>>>absent());
 
             if (!list.isPresent())

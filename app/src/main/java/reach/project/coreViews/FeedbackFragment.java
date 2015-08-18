@@ -1,6 +1,7 @@
 package reach.project.coreViews;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
@@ -41,27 +42,21 @@ public class FeedbackFragment extends Fragment {
         if(actionBar != null)
             actionBar.setTitle("Feedback");
         final TextView fb = (TextView) rootView.findViewById(R.id.query);
-        rootView.findViewById(R.id.send_feedback).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        rootView.findViewById(R.id.send_feedback).setOnClickListener(v -> {
 
-                final FeedBack feedBack = new FeedBack();
-                feedBack.setClientId(SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-                feedBack.setReply1("");
-                feedBack.setReply2("");
-                feedBack.setReply3(fb.getText().toString());
-                StaticData.threadPool.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            StaticData.feedBackApi.insert(feedBack).execute();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                getActivity().onBackPressed();
-            }
+            final FeedBack feedBack = new FeedBack();
+            feedBack.setClientId(SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            feedBack.setReply1("");
+            feedBack.setReply2("");
+            feedBack.setReply3(fb.getText().toString());
+            AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+                try {
+                    StaticData.feedBackApi.insert(feedBack).execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            getActivity().onBackPressed();
         });
         return rootView;
     }
