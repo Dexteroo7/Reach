@@ -1,5 +1,7 @@
 package reach.project.database.notifications;
 
+import reach.backend.notifications.notificationApi.model.NotificationBase;
+
 /**
  * Created by dexter on 08/07/15.
  */
@@ -26,7 +28,7 @@ public abstract class NotificationBaseLocal {
     private int read = UN_READ;
     private int expanded = NOT_EXPANDED;
 
-    public NotificationBaseLocal portData(reach.backend.notifications.notificationApi.model.NotificationBase base) {
+    public NotificationBaseLocal portData(NotificationBase base) {
 
         if (base.getTypes().equals(Types.PUSH_ACCEPTED.name()))
             this.setTypes(Types.PUSH_ACCEPTED);

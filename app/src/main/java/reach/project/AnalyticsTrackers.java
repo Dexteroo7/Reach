@@ -1,12 +1,10 @@
 package reach.project;
 
 import android.content.Context;
+import android.support.v4.util.SimpleArrayMap;
 
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.Tracker;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A collection of Google Analytics trackers. Fetch the tracker you need using
@@ -43,7 +41,7 @@ public final class AnalyticsTrackers {
         return sInstance;
     }
 
-    private final Map<Target, Tracker> mTrackers = new HashMap<Target, Tracker>();
+    private final SimpleArrayMap<Target, Tracker> mTrackers = new SimpleArrayMap<>();
     private final Context mContext;
 
     /**
@@ -54,6 +52,7 @@ public final class AnalyticsTrackers {
     }
 
     public synchronized Tracker get(Target target) {
+
         if (!mTrackers.containsKey(target)) {
             Tracker tracker;
             switch (target) {

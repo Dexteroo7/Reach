@@ -66,18 +66,16 @@ public class PromoCodeDialog extends DialogFragment {
 
         promoCode.setText(SharedPrefUtils.getPromoCode(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
         rootView.findViewById(R.id.exit).setOnClickListener(exitListener);
-        rootView.findViewById(R.id.done).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (TextUtils.isEmpty(promoCode.getText())) {
-                    Toast.makeText(activity, "Please enter a code", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                lowerPart.setVisibility(View.INVISIBLE);
-                promoLoading.setVisibility(View.VISIBLE);
-                new VerifyPromoCode().executeOnExecutor
-                        (AsyncTask.THREAD_POOL_EXECUTOR, promoCode.getText().toString().toUpperCase());
+        rootView.findViewById(R.id.done).setOnClickListener(v -> {
+
+            if (TextUtils.isEmpty(promoCode.getText())) {
+                Toast.makeText(activity, "Please enter a code", Toast.LENGTH_SHORT).show();
+                return;
             }
+            lowerPart.setVisibility(View.INVISIBLE);
+            promoLoading.setVisibility(View.VISIBLE);
+            new VerifyPromoCode().executeOnExecutor
+                    (AsyncTask.THREAD_POOL_EXECUTOR, promoCode.getText().toString().toUpperCase());
         });
         return rootView;
     }
@@ -162,10 +160,5 @@ public class PromoCodeDialog extends DialogFragment {
         }
     }
 
-    private final View.OnClickListener exitListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            dismiss();
-        }
-    };
+    private final View.OnClickListener exitListener = v -> dismiss();
 }

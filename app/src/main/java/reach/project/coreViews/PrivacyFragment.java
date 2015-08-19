@@ -356,12 +356,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             TextView done = (TextView) v.findViewById(R.id.done);
             done.setText("Okay, I got it!");
             done.setVisibility(View.VISIBLE);
-            done.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
+            done.setOnClickListener(v1 -> dismiss());
             getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
             return v;
         }

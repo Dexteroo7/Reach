@@ -19,19 +19,13 @@ public  class UpdateFragment extends DialogFragment {
         final View rootView = inflater.inflate(R.layout.update_dialog, container, false);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         setCancelable(false);
-        rootView.findViewById(R.id.yes).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
-                //dismiss();
-            }
+        rootView.findViewById(R.id.yes).setOnClickListener(v -> {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+            //dismiss();
         });
-        rootView.findViewById(R.id.no).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getActivity().finish();
-                //dismiss();
-            }
+        rootView.findViewById(R.id.no).setOnClickListener(v -> {
+            getActivity().finish();
+            //dismiss();
         });
         return rootView;
     }

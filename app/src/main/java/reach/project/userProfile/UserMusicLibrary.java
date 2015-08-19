@@ -226,9 +226,7 @@ public class UserMusicLibrary extends Fragment {
         public void run() {
 
             //fetch Music
-            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Activity context) -> {
-                return CloudStorageUtils.getMusicData(hostId, context);
-            }).orNull();
+            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Activity context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
 
             //do we check for visibility ?
             final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit

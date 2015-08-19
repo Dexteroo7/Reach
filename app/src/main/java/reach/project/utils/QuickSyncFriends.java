@@ -124,13 +124,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         currentIds.close();
         Log.i("Ayush", "Prepared callData quickSync" + ids.size() + " " + hashes.size());
 
-        final QuickSync quickSync = MiscUtils.autoRetry(
-                new DoWork<QuickSync>() {
-                    @Override
-                    public QuickSync doWork() throws IOException {
-                        return StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute();
-                    }
-                }, Optional.<Predicate<QuickSync>>absent()).orNull();
+        final QuickSync quickSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute(), Optional.<Predicate<QuickSync>>absent()).orNull();
 
         activity = activityWeakReference.get();
         if (checkDead(activity))

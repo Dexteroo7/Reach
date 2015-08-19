@@ -24,11 +24,9 @@ import com.commonsware.cwac.merge.MergeAdapter;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +41,6 @@ import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachDatabaseHelper;
 import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -191,12 +188,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         @Override
         protected Void doInBackground(final Long... params) {
 
-            final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(new DoWork<CompletedOperationCollection>() {
-                @Override
-                public CompletedOperationCollection doWork() throws IOException {
-                    return StaticData.userEndpoint.getCompletedOperations(params[0]).execute();
-                }
-            }, Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
+            final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getCompletedOperations(params[0]).execute(), Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
             final List<CompletedOperation> list;
             if(dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty()) return null;
 
@@ -235,12 +227,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
             }
             completedOperations.clear();
             completedOperations.addAll(list);
-            Collections.sort(completedOperations, new Comparator<CompletedOperation>() {
-                @Override
-                public int compare(CompletedOperation lhs, CompletedOperation rhs) {
-                    return rhs.getTime().compareTo(lhs.getTime());
-                }
-            });
+            Collections.sort(completedOperations, (lhs, rhs) -> rhs.getTime().compareTo(lhs.getTime()));
 
             return null;
         }

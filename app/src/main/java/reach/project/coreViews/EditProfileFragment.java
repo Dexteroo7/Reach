@@ -40,7 +40,6 @@ import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
@@ -111,16 +110,14 @@ public class EditProfileFragment extends Fragment {
         return rootView;
     }
 
-    private final View.OnClickListener imagePicker = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            final Intent intent = new Intent(Intent.ACTION_PICK,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setType("image/*");
-            // intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select Photo"),
-                    IMAGE_PICKER_SELECT);
-        }
+    private final View.OnClickListener imagePicker = v -> {
+
+        final Intent intent = new Intent(Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        // intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Photo"),
+                IMAGE_PICKER_SELECT);
     };
 
     private class UpdateProfile extends AsyncTask<String, Void, Void> {
@@ -132,12 +129,7 @@ public class EditProfileFragment extends Fragment {
             SharedPrefUtils.storeUserName(sharedPreferences, name[0]);
             SharedPrefUtils.storeImageId(sharedPreferences, imageId);
 
-            MiscUtils.autoRetry(new DoWork<Void>() {
-                @Override
-                public Void doWork() throws IOException {
-                    return StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute();
-                }
-            }, Optional.<Predicate<Void>>absent()).orNull();
+            MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.<Predicate<Void>>absent()).orNull();
             return null;
         }
 
