@@ -141,7 +141,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     private Toolbar mToolbar;
 
-
     private SharedPreferences preferences;
     private FragmentManager fragmentManager;
     private DrawerLayout mDrawerLayout;
@@ -516,7 +515,7 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void accountCreationError() {
+    public void startNumberVerification() {
 
         if (isFinishing())
             return;
@@ -945,6 +944,9 @@ public class ReachActivity extends AppCompatActivity implements
         } else
             networkPresent = true;
 
+        if (networkPresent) //check for update
+            new LocalUtils.CheckUpdate().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         //fetch username and phoneNumber
         final String userName = SharedPrefUtils.getUserName(preferences);
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
@@ -982,7 +984,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
 
-            accountCreationError();
+            startNumberVerification();
             toggleSliding(false);
         } else if (TextUtils.isEmpty(userName)) {
 
@@ -1003,15 +1005,14 @@ public class ReachActivity extends AppCompatActivity implements
                 new LoadAdapters().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, this);
                 //load last song
                 new LastSong().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                //some stuff
+                if (networkPresent)
+                    AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
 
             } catch (IllegalStateException ignored) {
             }
         }
-
-        if (networkPresent)
-            AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
     }
-
 
     private final class LoadAdapters extends AsyncTask<ReachActivity, Void, ReachActivity> {
 
@@ -1519,8 +1520,6 @@ public class ReachActivity extends AppCompatActivity implements
                 ////////////////////////////////////////
                 //refresh gcm
                 checkGCM();
-                //check for update
-                new LocalUtils.CheckUpdate().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 //refresh download ops
                 new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 //Music scanner

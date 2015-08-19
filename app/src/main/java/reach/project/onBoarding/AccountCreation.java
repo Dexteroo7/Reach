@@ -128,7 +128,7 @@ public class AccountCreation extends Fragment {
 
             if (TextUtils.isEmpty(phoneNumber)) {
                 Log.i("Downloader", "Account creation could not find number");
-                mListener.accountCreationError();
+                mListener.startNumberVerification();
                 return;
             }
 
