@@ -1,11 +1,10 @@
-package reach.project.utils;
+package reach.project.utils.auxiliaryClasses;
 
 import com.google.common.base.Optional;
 
 import java.util.HashSet;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
-import reach.project.utils.auxiliaryClasses.TransferSong;
 
 /**
  * Created by Dexter on 13-04-2015.

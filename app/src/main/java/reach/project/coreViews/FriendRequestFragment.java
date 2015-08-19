@@ -35,7 +35,7 @@ import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 public class FriendRequestFragment extends Fragment {
 

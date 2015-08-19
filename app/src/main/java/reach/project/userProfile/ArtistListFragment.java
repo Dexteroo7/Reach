@@ -22,7 +22,7 @@ import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachArtistProvider;
 import reach.project.database.sql.ReachArtistHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.ReachArtist;
 
 public class ArtistListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {

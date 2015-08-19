@@ -35,7 +35,7 @@ import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.TransferSong;
 
 public class PushSongsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,

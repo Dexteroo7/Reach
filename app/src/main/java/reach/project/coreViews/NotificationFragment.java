@@ -40,7 +40,7 @@ import reach.project.database.notifications.PushAccepted;
 import reach.project.database.notifications.Types;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 public class NotificationFragment extends Fragment {
 

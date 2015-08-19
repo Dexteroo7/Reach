@@ -22,7 +22,7 @@ import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachAlbumProvider;
 import reach.project.database.sql.ReachAlbumHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
 
 public class AlbumListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {

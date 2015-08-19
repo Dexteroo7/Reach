@@ -45,7 +45,7 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
