@@ -14,7 +14,6 @@ import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.common.collect.ImmutableList;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
     private final  Context context;
     private final int layoutResourceId;
-    private final ImmutableList<Contact> originalData;
+    private final List<Contact> originalData;
     private final List<Contact> filteredData;
     private final CircleTransform transform = new CircleTransform();
 
@@ -39,9 +38,9 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
         super(context, ResourceId, friends);
         this.context = context;
         this.layoutResourceId = ResourceId;
-
-        this.originalData = ImmutableList.copyOf(friends);
-        this.filteredData = new ArrayList<>(friends);
+        this.originalData = friends;
+        this.filteredData = new ArrayList<>();
+        this.filteredData.addAll(friends);
     }
 
     public int getCount() {
