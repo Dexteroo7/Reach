@@ -104,7 +104,7 @@ public enum CloudStorageUtils {
             //check if file is present
             InputStream check = null;
             try {
-                check = storage.objects().get(BUCKET_NAME_IMAGES, fileName).executeMediaAsInputStream();
+                check = storage.objects().get(BUCKET_NAME_IMAGES, fileName).executeAsInputStream();
                 Log.i("Ayush", "File found" + fileName);
                 return;
             } catch (IOException e) {

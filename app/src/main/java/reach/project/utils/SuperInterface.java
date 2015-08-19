@@ -14,7 +14,7 @@ public interface SuperInterface {
 
     void onAccountCreated(); //AccountCreationFragment
 
-    void accountCreationError();
+    void startNumberVerification();
 
     void closeDrawers();
 

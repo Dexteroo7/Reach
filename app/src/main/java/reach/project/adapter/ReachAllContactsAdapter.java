@@ -107,12 +107,14 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
             protected FilterResults performFiltering(CharSequence charSequence) {
 
                 final FilterResults results = new FilterResults();
-                if(charSequence == null || charSequence.length() == 0) {
+                if(charSequence
+                        == null || charSequence.length() == 0) {
                     results.values = originalData;
                     results.count = originalData.size();
                     Log.i("Ayush", "Filtering with original data");
                 } else {
                     final List<Contact> filterResultsData = new ArrayList<>();
+                    //noinspection Convert2streamapi
                     for(Contact data : originalData){
                         if(data.getUserName().toLowerCase().contains(charSequence.toString().toLowerCase()))
                             filterResultsData.add(data);
@@ -136,6 +138,7 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
                         onNotEmptyContacts();
 
                     filteredData.clear();
+                    //noinspection Convert2streamapi
                     for(Object contact : (List) filterResults.values) {
                         if(contact instanceof Contact)
                             filteredData.add((Contact) contact);

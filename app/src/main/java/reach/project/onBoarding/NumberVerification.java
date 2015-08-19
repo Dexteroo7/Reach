@@ -3,7 +3,6 @@ package reach.project.onBoarding;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -25,23 +24,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.viewpagerindicator.CirclePageIndicator;
 
-import java.io.IOException;
-
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.ContactsListFragment;
-import reach.project.database.sql.ReachAlbumHelper;
-import reach.project.database.sql.ReachArtistHelper;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.database.sql.ReachPlayListHelper;
-import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.SuperInterface;
-import reach.project.utils.auxiliaryClasses.DoWork;
 
 public class NumberVerification extends Fragment {
 
@@ -51,41 +41,11 @@ public class NumberVerification extends Fragment {
         return new NumberVerification();
     }
 
-    private void resetDatabases(Context context) {
-
-        SQLiteOpenHelper helper;
-
-        helper = new ReachAlbumHelper(context);
-        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachAlbumHelper.ALBUM_TABLE);
-        helper.close();
-
-        helper = new ReachArtistHelper(context);
-        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachArtistHelper.ARTIST_TABLE);
-        helper.close();
-
-        helper = new ReachDatabaseHelper(context);
-        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachDatabaseHelper.REACH_TABLE);
-        helper.close();
-
-        helper = new ReachFriendsHelper(context);
-        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachFriendsHelper.FRIENDS_TABLE);
-        helper.close();
-
-        helper = new ReachPlayListHelper(context);
-        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachPlayListHelper.PLAY_LIST_TABLE);
-        helper.close();
-
-        helper = new ReachSongHelper(context);
-        helper.getWritableDatabase().execSQL("DROP TABLE IF EXISTS" + ReachSongHelper.SONG_TABLE);
-        helper.close();
-    }
-
     @Override
     public View onCreateView (LayoutInflater inflater, ViewGroup container,
                               Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
-        resetDatabases(container.getContext());
 
         rootView.postDelayed(() -> {
 
@@ -188,12 +148,8 @@ public class NumberVerification extends Fragment {
             @Override
             protected final Pair<OldUserContainerNew, String> doInBackground (final String... params) {
 
-                final OldUserContainerNew container = MiscUtils.autoRetry(new DoWork<OldUserContainerNew>() {
-                    @Override
-                    public OldUserContainerNew doWork() throws IOException {
-                        return StaticData.userEndpoint.isAccountPresentNew(params[0]).execute();
-                    }
-                }, Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
+                final OldUserContainerNew container = MiscUtils.autoRetry(() ->
+                        StaticData.userEndpoint.isAccountPresentNew(params[0]).execute(), Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
 
                 //start sync
                 ContactsListFragment.synchronizeOnce.set(true);
