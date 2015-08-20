@@ -43,7 +43,6 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.database.contentProvider.ReachDatabaseProvider;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.contentProvider.ReachSongProvider;
@@ -53,6 +52,7 @@ import reach.project.database.sql.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.auxiliaryClasses.ReachDatabase;
 
 /**
  * Created by Dexter on 14-05-2015.
@@ -163,7 +163,7 @@ public class ProcessManager extends Service implements
 
     private final Random random = new Random();
     private final ExecutorService fixedPool = Executors.newFixedThreadPool(8); //buffer of 1 thread
-    private final ListeningExecutorService sameThreadExecutor = MoreExecutors.sameThreadExecutor();
+    private final ListeningExecutorService sameThreadExecutor = MoreExecutors.newDirectExecutorService();
     private final Semaphore killCheck = new Semaphore(2, true); //fixed 2 parents
     private final NetworkHandler networkHandler = new NetworkHandler(this);
     private final MusicHandler musicHandler = new MusicHandler(this);
@@ -695,26 +695,23 @@ public class ProcessManager extends Service implements
     private Runnable makeParentTask(final ReachTask task) {
 
         final ListenableFutureTask toSubmit = ListenableFutureTask.create(task, null);
-        toSubmit.addListener(new Runnable() {
-            @Override
-            public void run() {
+        toSubmit.addListener(() -> {
 
-                try {
-                    toSubmit.get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Log.i("Downloader", "INTERRUPTED EXCEPTION IN REACH TASK");
-                    close(); //shut down process
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    Log.i("Downloader", "EXCEPTION IN REACH TASK " + e.getLocalizedMessage());
-                } finally {
-                    killCheck.release();
-                    Log.i("Downloader", "DEATH CHECK " + killCheck.availablePermits());
-                    if (killCheck.availablePermits() == 2)
-                        //No parent is active !
-                        close();
-                }
+            try {
+                toSubmit.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Log.i("Downloader", "INTERRUPTED EXCEPTION IN REACH TASK");
+                close(); //shut down process
+            } catch (Throwable e) {
+                e.printStackTrace();
+                Log.i("Downloader", "EXCEPTION IN REACH TASK " + e.getLocalizedMessage());
+            } finally {
+                killCheck.release();
+                Log.i("Downloader", "DEATH CHECK " + killCheck.availablePermits());
+                if (killCheck.availablePermits() == 2)
+                    //No parent is active !
+                    close();
             }
         }, sameThreadExecutor);
         return toSubmit;
@@ -724,7 +721,6 @@ public class ProcessManager extends Service implements
     public final IBinder onBind(Intent intent) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
-
 
     @Override
     public final int onStartCommand(Intent intent, int flags, int startId) {

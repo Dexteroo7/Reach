@@ -29,12 +29,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
@@ -452,10 +452,10 @@ public class MusicScanner extends IntentService {
 
         sendMessage(ALBUM_ARTIST, -1);
         ////////////////////Adding albums and artists
-        final Pair<Collection<ReachAlbum>, Collection<ReachArtist>>
+        final Pair<Set<ReachAlbum>, Set<ReachArtist>>
                 albums_artists = MiscUtils.getAlbumsAndArtists(songs, serverId);
-        final Collection<ReachAlbum> reachAlbums = albums_artists.first;
-        final Collection<ReachArtist> reachArtists = albums_artists.second;
+        final Set<ReachAlbum> reachAlbums = albums_artists.first;
+        final Set<ReachArtist> reachArtists = albums_artists.second;
         ////////////////////Albums and artists added
         ////////////////////Adding playLists
         final Playlist.Builder defaultPlayList = new Playlist.Builder();

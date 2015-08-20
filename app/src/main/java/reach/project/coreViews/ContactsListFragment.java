@@ -74,7 +74,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.viewHelpers.Contact;
 
 public class ContactsListFragment extends Fragment implements

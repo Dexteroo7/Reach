@@ -117,7 +117,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
 import reach.project.utils.auxiliaryClasses.TransferSong;

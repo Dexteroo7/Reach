@@ -24,7 +24,6 @@ import reach.project.utils.MiscUtils;
 import reach.project.viewHelpers.CircleTransform;
 import reach.project.viewHelpers.Contact;
 
-
 public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
     private final  Context context;
@@ -137,7 +136,6 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
                         onNotEmptyContacts();
 
                     filteredData.clear();
-                    //noinspection Convert2streamapi
                     for(Object contact : (List) filterResults.values) {
                         if(contact instanceof Contact)
                             filteredData.add((Contact) contact);

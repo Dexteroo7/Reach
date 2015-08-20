@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.SimpleArrayMap;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
@@ -36,10 +37,10 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -121,6 +122,14 @@ public enum MiscUtils {
                     closeable.close();
                 } catch (IOException ignored) {
                 }
+    }
+
+    public static void closeAndIgnore(Closeable closeable) {
+        if (closeable != null)
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
     }
 
     public static String generateInitials(String name) {
@@ -310,8 +319,8 @@ public enum MiscUtils {
     }
 
     public static void bulkInsertSongs(List<Song> songList,
-                                       Collection<ReachAlbum> reachAlbums,
-                                       Collection<ReachArtist> reachArtists,
+                                       Set<ReachAlbum> reachAlbums,
+                                       Set<ReachArtist> reachArtists,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
@@ -355,10 +364,12 @@ public enum MiscUtils {
         } else Log.i("Ayush", "NO playLists to save");
     }
 
-    public static Pair<Collection<ReachAlbum>, Collection<ReachArtist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
+    public static Pair<Set<ReachAlbum>, Set<ReachArtist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
 
-        final Map<String, ReachAlbum> albumHashMap = new HashMap<>();
-        final Map<String, ReachArtist> artistHashMap = new HashMap<>();
+        final Set<ReachAlbum> albums = new HashSet<>();
+        final Set<ReachArtist> artists = new HashSet<>();
+        final SimpleArrayMap<String, ReachAlbum> albumMap = new SimpleArrayMap<>();
+        final SimpleArrayMap<String, ReachArtist> artistMap = new SimpleArrayMap<>();
 
         for (Song song : songs) {
 
@@ -368,38 +379,32 @@ public enum MiscUtils {
 
             if (!TextUtils.isEmpty(song.album)) {
 
-                final ReachAlbum album;
-
-                if (albumHashMap.containsKey(song.album))
-                    album = albumHashMap.get(song.album);
+                ReachAlbum album = albumMap.get(song.album);
+                if (album == null)
+                    albums.add(albumMap.put(song.album, album = new ReachAlbum()));
                 else {
-                    album = new ReachAlbum();
                     album.setAlbumName(song.album);
                     album.setUserId(serverId);
                     album.setArtist(song.artist);
                 }
                 album.incrementSize();
-                albumHashMap.put(song.album, album);
             }
 
             if (!TextUtils.isEmpty(song.artist)) {
 
-                final ReachArtist artist;
-
-                if (artistHashMap.containsKey(song.artist))
-                    artist = artistHashMap.get(song.artist);
+                ReachArtist artist = artistMap.get(song.artist);
+                if (artist == null)
+                    artists.add(artistMap.put(song.artist, artist = new ReachArtist()));
                 else {
-                    artist = new ReachArtist();
                     artist.setArtistName(song.artist);
                     artist.setUserID(serverId);
                     artist.setAlbum(song.album);
                 }
                 artist.incrementSize();
-                artistHashMap.put(song.artist, artist);
             }
         }
         ///////////////////////
-        return new Pair<>(albumHashMap.values(), artistHashMap.values());
+        return new Pair<>(albums, artists);
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
@@ -469,7 +474,7 @@ public enum MiscUtils {
     }
 
     public static <T extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<T> reference,
-                                                                                      final UseContext<Result, Activity> task) {
+                                                                                       final UseContext<Result, Activity> task) {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)

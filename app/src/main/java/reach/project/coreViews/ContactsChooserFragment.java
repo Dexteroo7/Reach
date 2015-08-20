@@ -223,12 +223,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                 return rootView;
             }
 
-            exit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
+            exit.setOnClickListener(v -> dismiss());
 
             done.setOnClickListener(new View.OnClickListener() {
 
@@ -296,19 +291,12 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     textMain.setText(Html.fromHtml(stringBuilder2.toString()), TextView.BufferType.SPANNABLE);
                     pushContainer.setCustomMessage(captionText.getText().toString());
                     new PushSongs().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, pushContainer);
-                    exit.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            getActivity().onBackPressed();
-                            getActivity().onBackPressed();
-                        }
+                    exit.setOnClickListener(v1 -> {
+
+                        getActivity().onBackPressed();
+                        getActivity().onBackPressed();
                     });
-                    done.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            dismiss();
-                        }
-                    });
+                    done.setOnClickListener(v1 -> dismiss());
                 }
             });
 

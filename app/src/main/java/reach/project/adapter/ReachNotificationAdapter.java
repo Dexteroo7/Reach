@@ -230,7 +230,8 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                                     .setLabel("Sender - " + push.getHostName() + ", Songs - " + push.getSize())
                                     .setValue(push.getSize())
                                     .build());
-                            Map<String, String> tagValues = new HashMap<>();
+
+                            final Map<String, String> tagValues = new HashMap<>();
                             tagValues.put("User Name", SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
                             tagValues.put("Sender", push.getHostName());
                             tagValues.put("Songs", String.valueOf(push.getSize()));

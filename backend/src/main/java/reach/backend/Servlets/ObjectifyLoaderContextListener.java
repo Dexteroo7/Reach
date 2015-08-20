@@ -36,6 +36,7 @@ public class ObjectifyLoaderContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(@Nonnull final ServletContextEvent sce) {
+
         final ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setUrls(ClasspathHelper.forPackage(""));
         final ExecutorService es = Executors.newCachedThreadPool(ThreadManager.currentRequestThreadFactory());

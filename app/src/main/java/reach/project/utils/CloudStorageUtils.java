@@ -34,11 +34,10 @@ import java.io.InputStream;
 import java.net.URLConnection;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.MusicList;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
 import reach.project.utils.auxiliaryClasses.ReachArtist;
@@ -371,10 +370,10 @@ public enum CloudStorageUtils {
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
-        final Pair<Collection<ReachAlbum>, Collection<ReachArtist>> pair =
+        final Pair<Set<ReachAlbum>, Set<ReachArtist>> pair =
                 MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
-        final Collection<ReachAlbum> reachAlbums = pair.first;
-        final Collection<ReachArtist> reachArtists = pair.second;
+        final Set<ReachAlbum> reachAlbums = pair.first;
+        final Set<ReachArtist> reachArtists = pair.second;
         MiscUtils.bulkInsertSongs(
                 musicList.song,
                 reachAlbums,
@@ -433,18 +432,15 @@ public enum CloudStorageUtils {
         content = new InputStreamContent("application/octet-stream", stream);
 
         MiscUtils.autoRetry(
-                new DoWork<Void>() {
-                    @Override
-                    public Void doWork() throws IOException {
+                () -> {
 
-                        final String uploadedHash = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content)
-                                .setName(fileName)
-                                .execute().getMd5Hash();
+                    final String uploadedHash = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content)
+                            .setName(fileName)
+                            .execute().getMd5Hash();
 
-                        MiscUtils.closeAndIgnore(stream);
-                        Log.i("Ayush", "Upload complete " + uploadedHash);
-                        return null;
-                    }
+                    MiscUtils.closeAndIgnore(stream);
+                    Log.i("Ayush", "Upload complete " + uploadedHash);
+                    return null;
                 }, Optional.<Predicate<Void>>absent());
 
         return true;

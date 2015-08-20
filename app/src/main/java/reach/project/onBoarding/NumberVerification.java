@@ -31,7 +31,7 @@ import reach.project.coreViews.ContactsListFragment;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 public class NumberVerification extends Fragment {
 

@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -31,7 +30,6 @@ import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.SharedPrefUtils;
-
 
 public class InviteFragment extends Fragment {
 
@@ -107,38 +105,32 @@ public class InviteFragment extends Fragment {
         final String [] packageNames = {"com.whatsapp","com.facebook.orca","com.twitter.android","com.google.android.apps.plus"};
 
         inviteList.setAdapter(new InviteListAdapter(getActivity(),R.layout.invite_list_item,inviteOptions));
-        inviteList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        inviteList.setOnItemClickListener((parent, view, position, id) -> {
 
-                /**
-                 * GA stuff
-                 */
-                if (!StaticData.debugMode) {
-                    ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                            .setCategory("Invite Page")
-                            .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                            .setLabel(inviteOptions[position])
-                            .setValue(1)
-                            .build());
-                    Map<String, String> tagValues = new HashMap<>();
-                    tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-                    tagValues.put("Option", inviteOptions[position]);
-                    Localytics.tagEvent("Invite Page", tagValues);
-                }
-                final Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.putExtra(Intent.EXTRA_TEXT,
-                        "Hey! Checkout and download my phone Music collection with just a click!" +
-                                ".\nhttp://msg.mn/reach\n--\n"+SharedPrefUtils.getUserName(preferences));
-                sendIntent.setType("text/plain");
-                sendIntent.setPackage(packageNames[position]);
-                try{
-                    startActivity(sendIntent);
-                }
-                catch (android.content.ActivityNotFoundException ex) {
-                    Toast.makeText(getActivity(),inviteOptions[position]+" is not Installed",Toast.LENGTH_SHORT).show();
-                }
+            if (!StaticData.debugMode) {
+                ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Invite Page")
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setLabel(inviteOptions[position])
+                        .setValue(1)
+                        .build());
+                Map<String, String> tagValues = new HashMap<>();
+                tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+                tagValues.put("Option", inviteOptions[position]);
+                Localytics.tagEvent("Invite Page", tagValues);
+            }
+            final Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            sendIntent.putExtra(Intent.EXTRA_TEXT,
+                    "Hey! Checkout and download my phone Music collection with just a click!" +
+                            ".\nhttp://msg.mn/reach\n--\n"+SharedPrefUtils.getUserName(preferences));
+            sendIntent.setType("text/plain");
+            sendIntent.setPackage(packageNames[position]);
+            try{
+                startActivity(sendIntent);
+            }
+            catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(getActivity(),inviteOptions[position]+" is not Installed",Toast.LENGTH_SHORT).show();
             }
         });
         return rootView;

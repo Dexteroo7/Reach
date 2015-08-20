@@ -27,10 +27,11 @@ import android.widget.Toast;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
+import com.google.common.io.ByteStreams;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -40,7 +41,6 @@ import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
@@ -111,16 +111,14 @@ public class EditProfileFragment extends Fragment {
         return rootView;
     }
 
-    private final View.OnClickListener imagePicker = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            final Intent intent = new Intent(Intent.ACTION_PICK,
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setType("image/*");
-            // intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select Photo"),
-                    IMAGE_PICKER_SELECT);
-        }
+    private final View.OnClickListener imagePicker = v -> {
+
+        final Intent intent = new Intent(Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        // intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Photo"),
+                IMAGE_PICKER_SELECT);
     };
 
     private class UpdateProfile extends AsyncTask<String, Void, Void> {
@@ -132,12 +130,7 @@ public class EditProfileFragment extends Fragment {
             SharedPrefUtils.storeUserName(sharedPreferences, name[0]);
             SharedPrefUtils.storeImageId(sharedPreferences, imageId);
 
-            MiscUtils.autoRetry(new DoWork<Void>() {
-                @Override
-                public Void doWork() throws IOException {
-                    return StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute();
-                }
-            }, Optional.<Predicate<Void>>absent()).orNull();
+            MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.<Predicate<Void>>absent()).orNull();
             return null;
         }
 
@@ -182,15 +175,17 @@ public class EditProfileFragment extends Fragment {
         }
 
         final File tempFile;
+        FileOutputStream outputStream = null;
         try {
             tempFile = File.createTempFile("profilePhoto", ".jpg");
-            Files.copy(() -> {
-                return activity.getContentResolver().openInputStream(mImageUri);
-            }, tempFile);
+            outputStream = new FileOutputStream(tempFile);
+            ByteStreams.copy(activity.getContentResolver().openInputStream(mImageUri), outputStream);
         } catch (IOException e) {
             e.printStackTrace();
             MiscUtils.closeAndIgnore(stream);
             return;
+        } finally {
+            MiscUtils.closeAndIgnore(outputStream);
         }
 
         AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {

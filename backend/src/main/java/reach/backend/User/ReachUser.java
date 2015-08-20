@@ -47,7 +47,7 @@ public class ReachUser {
 
     //shit to remove
     private long splitterId = 0;
-    private String genres = "hello_world";    //Genres
+    private String genres = "hello_world"; //Genres
     @Unindex
     private HashSet<ReachSong> mySongs; //switch to compressed blob
     @Unindex

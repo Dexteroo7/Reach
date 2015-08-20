@@ -21,7 +21,6 @@ import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
-import reach.project.coreViews.ContactsListFragment;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.auxiliaryClasses.DoWork;
@@ -59,15 +58,12 @@ public class ForceSyncFriends implements Runnable {
          * First we fetch the list of 'KNOWN' friends
          */
          fullSync = serverId == 0 ? null : MiscUtils.autoRetry(
-                new DoWork<List<Friend>>() {
-                    @Override
-                    public List<Friend> doWork() throws IOException {
-                        final FriendCollection collection = StaticData.userEndpoint.longSync(serverId).execute();
-                        if(collection != null && collection.size() > 0)
-                            return collection.getItems();
-                        return null;
-                    }
-                }, Optional.<Predicate<List<Friend>>>absent()).orNull();
+                 () -> {
+                     final FriendCollection collection = StaticData.userEndpoint.longSync(serverId).execute();
+                     if(collection != null && collection.size() > 0)
+                         return collection.getItems();
+                     return null;
+                 }, Optional.<Predicate<List<Friend>>>absent()).orNull();
 
 
         Activity activity = activityWeakReference.get();

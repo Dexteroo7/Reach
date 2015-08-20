@@ -35,7 +35,7 @@ import reach.project.database.contentProvider.ReachSongProvider;
 import reach.project.database.sql.ReachSongHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.TransferSong;
 
 public class PushSongsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
@@ -53,41 +53,38 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     private long serverId;
     private final HashSet<TransferSong> selectedList = new HashSet<>();
 
-    private final AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    private final AdapterView.OnItemClickListener listener = (parent, view, position, id) -> {
 
-            final ImageView toggle = (ImageView) view.findViewById(R.id.listToggle);
-            final Cursor songCursor = (Cursor) pushSongAdapter.getItem(position);
-            final TransferSong transferSong = new TransferSong(
-                    songCursor.getLong(7), //size of song
-                    songCursor.getLong(1), //songId
-                    songCursor.getLong(5), //duration
-                    songCursor.getString(2), //displayName
-                    songCursor.getString(3), //actualName
-                    songCursor.getString(4)); //artistName
-            final int hashCode = transferSong.hashCode();
+        final ImageView toggle = (ImageView) view.findViewById(R.id.listToggle);
+        final Cursor songCursor = (Cursor) pushSongAdapter.getItem(position);
+        final TransferSong transferSong = new TransferSong(
+                songCursor.getLong(7), //size of song
+                songCursor.getLong(1), //songId
+                songCursor.getLong(5), //duration
+                songCursor.getString(2), //displayName
+                songCursor.getString(3), //actualName
+                songCursor.getString(4)); //artistName
+        final int hashCode = transferSong.hashCode();
 
-            if (!pushSongAdapter.getCheck(hashCode)) {
+        if (!pushSongAdapter.getCheck(hashCode)) {
 
-                if (selectedList.size() < 5) {
+            if (selectedList.size() < 5) {
 
-                    pushSongAdapter.setCheck(hashCode, true);
-                    selectedList.add(transferSong);
-                    toggle.setBackgroundResource(R.drawable.circular_background_dark);
-                    toggle.setImageResource(R.drawable.check_white);
-                    final int pad = MiscUtils.dpToPx(5);
-                    toggle.setPadding(pad, pad, pad, pad);
-                } else
-                    Toast.makeText(getActivity(), "Maximum 5 Songs allowed", Toast.LENGTH_SHORT).show();
-            } else {
+                pushSongAdapter.setCheck(hashCode, true);
+                selectedList.add(transferSong);
+                toggle.setBackgroundResource(R.drawable.circular_background_dark);
+                toggle.setImageResource(R.drawable.check_white);
+                final int pad = MiscUtils.dpToPx(5);
+                toggle.setPadding(pad, pad, pad, pad);
+            } else
+                Toast.makeText(getActivity(), "Maximum 5 Songs allowed", Toast.LENGTH_SHORT).show();
+        } else {
 
-                pushSongAdapter.setCheck(transferSong.hashCode(), false);
-                selectedList.remove(transferSong);
-                toggle.setBackgroundResource(0);
-                toggle.setImageResource(R.drawable.add_grey);
-                toggle.setPadding(0, 0, 0, 0);
-            }
+            pushSongAdapter.setCheck(transferSong.hashCode(), false);
+            selectedList.remove(transferSong);
+            toggle.setBackgroundResource(0);
+            toggle.setImageResource(R.drawable.add_grey);
+            toggle.setPadding(0, 0, 0, 0);
         }
     };
 

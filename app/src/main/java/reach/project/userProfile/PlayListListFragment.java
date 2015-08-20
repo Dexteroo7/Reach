@@ -22,7 +22,7 @@ import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachPlayListProvider;
 import reach.project.database.sql.ReachPlayListHelper;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SuperInterface;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 public class PlayListListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
