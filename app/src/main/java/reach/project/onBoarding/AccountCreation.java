@@ -27,11 +27,12 @@ import android.widget.Toast;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.io.Files;
+import com.google.common.io.ByteStreams;
 import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -201,18 +202,21 @@ public class AccountCreation extends Fragment {
         }
 
         final File tempFile;
+        FileOutputStream outputStream = null;
         try {
             tempFile = File.createTempFile("profilePhoto", ".jpg");
-            Files.copy(() -> {
-                return activity.getContentResolver().openInputStream(mImageUri);
-            }, tempFile);
+            outputStream = new FileOutputStream(tempFile);
+            ByteStreams.copy(activity.getContentResolver().openInputStream(mImageUri), outputStream);
         } catch (IOException e) {
             e.printStackTrace();
             MiscUtils.closeAndIgnore(stream);
             return;
+        } finally {
+            MiscUtils.closeAndIgnore(outputStream);
         }
 
         AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+
             Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
             if (newImage.isPresent())
                 imageId = newImage.get();

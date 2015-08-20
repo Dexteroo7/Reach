@@ -539,13 +539,15 @@ public class ReachUserEndpoint {
         final ImmutableList.Builder<DataCall.Statistics> builder = new ImmutableList.Builder<>();
         final QueryResultIterator<ReachUser> userQueryResultIterator;
 
-        if (cursor != null && !cursor.trim().equals(""))
+        if (cursor != null && !(cursor = cursor.trim()).equals(""))
             userQueryResultIterator = ofy().load().type(ReachUser.class)
                     .startAt(Cursor.fromWebSafeString(cursor))
-                    .limit(200)
+                    .limit(300)
                     .iterator();
         else
-            userQueryResultIterator = ofy().load().type(ReachUser.class).limit(200).iterator();
+            userQueryResultIterator = ofy().load().type(ReachUser.class)
+                    .limit(300)
+                    .iterator();
 
         ReachUser reachUser;
         int count = 0;
@@ -565,10 +567,11 @@ public class ReachUserEndpoint {
             count++;
         }
 
-        //if no more friends return null cursor
-        return new DataCall(
-                builder.build(),
-                (count == 200) ? userQueryResultIterator.getCursor().toWebSafeString() : "");
+        //count < 300 means this was possibly the last call
+        final String cursorToReturn = (count >= 300) ? userQueryResultIterator.getCursor().toWebSafeString() : "";
+        logger.info("Get stats fetched " + count + " " + cursorToReturn);
+
+        return new DataCall(builder.build(), cursorToReturn);
     }
 
     @ApiMethod(
