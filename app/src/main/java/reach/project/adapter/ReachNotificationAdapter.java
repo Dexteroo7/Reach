@@ -162,7 +162,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(transform).into(viewHolder.profilePhoto);
 
-                if (accepted.get(position)) {
+                if (accepted.get(notificationBaseLocal.getNotificationId())) {
                     viewHolder.linearLayout.getLayoutParams().height = a;
                     viewHolder.linearLayout.setClickable(false);
                     viewHolder.actionBlock.setVisibility(View.GONE);
@@ -256,7 +256,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                                             push.getSize()).execute();
                                 }
                             }, Optional.<Predicate<Void>>absent());
-                            accepted.put(position, true);
+                            accepted.put(notificationBaseLocal.getNotificationId(), true);
 
                         }
                     });
@@ -270,6 +270,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                                 }
                             }, Optional.<Predicate<Void>>absent());
                             remove(push);
+                            accepted.delete(notificationBaseLocal.getNotificationId());
                         }
                     });
                 }
