@@ -163,7 +163,7 @@ public class ProcessManager extends Service implements
 
     private final Random random = new Random();
     private final ExecutorService fixedPool = Executors.newFixedThreadPool(8); //buffer of 1 thread
-    private final ListeningExecutorService sameThreadExecutor = MoreExecutors.newDirectExecutorService();
+    private final ListeningExecutorService sameThreadExecutor = MoreExecutors.sameThreadExecutor();
     private final Semaphore killCheck = new Semaphore(2, true); //fixed 2 parents
     private final NetworkHandler networkHandler = new NetworkHandler(this);
     private final MusicHandler musicHandler = new MusicHandler(this);

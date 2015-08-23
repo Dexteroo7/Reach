@@ -121,7 +121,7 @@ public enum SharedPrefUtils {
     }
 
     public static boolean getMobileData (SharedPreferences sharedPreferences) {
-        return sharedPreferences.getBoolean("mobileDataOn", false);
+        return sharedPreferences.getBoolean("mobileDataOn", true);
     }
 
     public static boolean getFirstIntroSeen(SharedPreferences sharedPreferences) {

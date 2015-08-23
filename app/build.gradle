@@ -9,8 +9,8 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 55
-        versionName "0.9.18.1-beta"
+        versionCode 56
+        versionName "0.9.18.2-beta"
         //meant for release
         multiDexEnabled true
     }
@@ -31,16 +31,11 @@ android {
     }
 }
 
-configurations {
-    compile.exclude module: 'guava-jdk5'
-}
-
 dependencies {
 
     compile fileTree(dir: 'libs', includes: ['*.jar'])
     compile 'com.google.apis:google-api-services-storage:v1-rev40-1.20.0'
-    compile 'com.google.guava:guava:18.0'
-    compile 'com.google.android.gms:play-services:7.8.0'
+    compile 'com.google.android.gms:play-services:7.3.0'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.android.support:appcompat-v7:23.0.0'
     compile 'com.android.support:support-v4:23.0.0'

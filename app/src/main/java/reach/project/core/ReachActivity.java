@@ -478,6 +478,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void onOpenNotificationDrawer() {
 
+        if (mDrawerLayout == null)
+            return;
         if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
             mDrawerLayout.openDrawer(Gravity.RIGHT);
         else
@@ -1040,6 +1042,8 @@ public class ReachActivity extends AppCompatActivity implements
         protected void onPostExecute(ReachActivity activity) {
 
             super.onPostExecute(activity);
+            if (combinedAdapter == null)
+                return;
             queueListView.setAdapter(combinedAdapter);
             getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, activity);
             getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, activity);
@@ -1067,7 +1071,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             super.onPostExecute(booleans);
 
-            if (booleans[0]) {
+            if (booleans[0] && currentPlaying!=null) {
                 //last song is present
                 songNameMinimized.setText(currentPlaying.getDisplayName());
                 songNameMaximized.setText(currentPlaying.getDisplayName());
