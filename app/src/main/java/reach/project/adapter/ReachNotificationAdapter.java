@@ -162,7 +162,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(transform).into(viewHolder.profilePhoto);
 
-                if (accepted.get(notificationBaseLocal.getNotificationId())) {
+                if (accepted.get(notificationBaseLocal.getNotificationId(),false)) {
                     viewHolder.linearLayout.getLayoutParams().height = a;
                     viewHolder.linearLayout.setClickable(false);
                     viewHolder.actionBlock.setVisibility(View.GONE);

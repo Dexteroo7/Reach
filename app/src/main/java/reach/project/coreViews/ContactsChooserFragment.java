@@ -396,7 +396,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
             reachContactsAdapter.swapCursor(cursor);
             if (cursor.getCount() == 0)
-                MiscUtils.setEmptyTextforListView(listView, "No friends found");
+                MiscUtils.setEmptyTextForListView(listView, "No friends found");
         }
     }
 

@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -31,11 +32,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLConnection;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import reach.project.utils.auxiliaryClasses.MusicList;
@@ -101,36 +100,25 @@ public enum CloudStorageUtils {
 
 
             //check if file is present
-            InputStream check = null;
             try {
-                check = storage.objects().get(BUCKET_NAME_IMAGES, fileName).executeAsInputStream();
+                storage.objects().get(BUCKET_NAME_IMAGES, fileName).execute();
                 Log.i("Ayush", "File found" + fileName);
                 return;
             } catch (IOException e) {
+                //throw error if not present !
                 e.printStackTrace();
-            } finally {
-                MiscUtils.closeAndIgnore(check);
             }
 
             Log.i("Ayush", "File not found, Uploading " + fileName);
 
-            //guess content type and upload
-            final InputStreamContent content;
-            try {
-                content = new InputStreamContent(
-                        URLConnection.guessContentTypeFromStream
-                                (inputStream),
-                        inputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-                MiscUtils.closeAndIgnore(inputStream);
-                return;
-            }
-
             //upload
             MiscUtils.autoRetry(
                     () -> {
-                        final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
+                        final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null,
+                                new InputStreamContent(
+                                        "image/",
+                                        inputStream));
+
                         insert.setPredefinedAcl("publicRead");
                         insert.setName(fileName);
                         insert.execute();
@@ -370,14 +358,12 @@ public enum CloudStorageUtils {
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
-        final Pair<Set<ReachAlbum>, Set<ReachArtist>> pair =
+        final Pair<ArrayMap<String, ReachAlbum>, ArrayMap<String, ReachArtist>> pair =
                 MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
-        final Set<ReachAlbum> reachAlbums = pair.first;
-        final Set<ReachArtist> reachArtists = pair.second;
         MiscUtils.bulkInsertSongs(
                 musicList.song,
-                reachAlbums,
-                reachArtists,
+                pair.first,
+                pair.second,
                 resolver,
                 hostId);
 
