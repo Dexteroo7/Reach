@@ -5,10 +5,12 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
@@ -37,8 +39,10 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -128,6 +132,53 @@ public enum MiscUtils {
                 closeable.close();
             } catch (IOException ignored) {
             }
+    }
+
+    /**
+     * Scan the phoneBook for numbers and return a collection
+     * @param resolver to query
+     * @return collection of phoneNumbers (won't return null :) )
+     */
+    public static Set<String> scanPhoneBook(ContentResolver resolver) {
+
+        final StringBuilder builder = new StringBuilder();
+        final HashSet<String> container = new HashSet<>();
+        final Cursor phoneNumbers = resolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER}, //fetch only numbers
+                null, null, null); //fetch all rows
+        if (phoneNumbers == null)
+            return container;
+
+        String phoneNumber;
+
+        while (phoneNumbers.moveToNext()) {
+
+            //reset
+            builder.setLength(0);
+
+            //get the number
+            phoneNumber = phoneNumbers.getString(0);
+            if (TextUtils.isEmpty(phoneNumber))
+                continue;
+
+            //if character is a number append !
+            for (int i=0; i<phoneNumber.length(); i++) {
+                final char test = phoneNumber.charAt(i);
+                if (Character.isDigit(test))
+                    builder.append(test);
+            }
+
+            //ignore if at-least 10 digits not found !
+            if (builder.length() < 10)
+                continue;
+
+            //take the last 10 digits
+            container.add(builder.substring(builder.length() - 10));
+        }
+
+        phoneNumbers.close();
+        return container;
     }
 
     public static String generateInitials(String name) {
