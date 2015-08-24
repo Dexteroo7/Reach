@@ -44,6 +44,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -1633,7 +1634,7 @@ public class ReachActivity extends AppCompatActivity implements
                         updateFragment.setCancelable(false);
                         try {
                             updateFragment.show(activity.fragmentManager, "update");
-                        } catch (IllegalStateException ignored) {
+                        } catch (IllegalStateException | WindowManager.BadTokenException ignored) {
                         }
                     }
                     return null;

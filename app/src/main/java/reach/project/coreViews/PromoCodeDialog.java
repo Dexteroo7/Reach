@@ -64,7 +64,7 @@ public class PromoCodeDialog extends DialogFragment {
         lowerPart = (RelativeLayout) rootView.findViewById(R.id.lowerContainer);
         promoLoading = (ProgressBar) rootView.findViewById(R.id.promoLoading);
 
-        promoCode.setText(SharedPrefUtils.getPromoCode(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+        promoCode.setText(SharedPrefUtils.getPromoCode(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
         rootView.findViewById(R.id.exit).setOnClickListener(exitListener);
         rootView.findViewById(R.id.done).setOnClickListener(v -> {
 
@@ -117,7 +117,10 @@ public class PromoCodeDialog extends DialogFragment {
 
             super.onPostExecute(result);
 
-            if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing() || result == null) {
+            if (isRemoving() || isDetached() || activity == null || activity.isFinishing())
+                return;
+
+            if (isCancelled() || result == null) {
                 dismiss();
                 return;
             }
@@ -131,7 +134,7 @@ public class PromoCodeDialog extends DialogFragment {
                 return;
             }
             SharedPrefUtils.storePromoCode(
-                    getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS),
+                    activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS),
                     pCode);
 
             if (!StaticData.debugMode) {
@@ -142,14 +145,14 @@ public class PromoCodeDialog extends DialogFragment {
                     frndCount = frndCursor.getCount();
                     frndCursor.close();
                 }
-                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                         .setCategory("Promo Code")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
                         .setLabel("Code - " + pCode + ", Friend Count - " + frndCount)
                         .setValue(1)
                         .build());
                 Map<String, String> tagValues = new HashMap<>();
-                tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+                tagValues.put("User Name", SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
                 tagValues.put("Code", pCode);
                 tagValues.put("Friend Count", String.valueOf(frndCount));
                 Localytics.tagEvent("Promo Code", tagValues);
