@@ -49,7 +49,6 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
         this.rId = resourceId;
         serverId = id;
-        opened.clear();
     }
 
     @Override
@@ -82,7 +81,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 
-        if (accepted.get(position, false)) {
+        if (accepted.get(receivedRequest.getId().intValue(), false)) {
 
             linearLayout.getLayoutParams().height = a;
             actionBlock.setVisibility(View.GONE);
@@ -94,11 +93,11 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             libraryBtn.setVisibility(View.GONE);
             actionBlock.setVisibility(View.VISIBLE);
 
-            if (!opened.get(position, false))
+            if (!opened.get(receivedRequest.getId().intValue(), false))
                 linearLayout.getLayoutParams().height = a;
             else
                 linearLayout.getLayoutParams().height = b;
-            linearLayout.setTag(position);
+            linearLayout.setTag(receivedRequest.getId().intValue());
             linearLayout.setOnClickListener(expander);
 
             accept.setTag(new Object[]{receivedRequest.getId(), (Result) friend -> {
@@ -109,7 +108,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                             ReachFriendsProvider.CONTENT_URI,
                             ReachFriendsHelper.contentValuesCreator(friend));
 
-                    accepted.put(position, true);
+                    accepted.put(receivedRequest.getId().intValue(), true);
                     expand(linearLayout, b, a);
                     linearLayout.setClickable(false);
                     actionBlock.setVisibility(View.GONE);
@@ -129,8 +128,8 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
                 //delete entry
                 remove(receivedRequest);
-                accepted.delete(position);
-                opened.delete(position);
+                accepted.delete(receivedRequest.getId().intValue());
+                opened.delete(receivedRequest.getId().intValue());
                 notifyDataSetChanged();
             });
         }

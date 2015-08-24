@@ -134,8 +134,10 @@ public class NotificationFragment extends Fragment {
                 case DEFAULT:
                     throw new IllegalArgumentException("Default notification in list !");
                 case PUSH:
-                    if (adapter.accepted.get(position))
+                    if (adapter.accepted.get(position)) {
                         mListener.anchorFooter();
+                        adapter.accepted.delete(position);
+                    }
                     break;
                 case LIKE:
                     mListener.anchorFooter();
@@ -238,12 +240,12 @@ public class NotificationFragment extends Fragment {
 
                         } else if (base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
 
-                            final PushAccepted accepted = new PushAccepted();
-                            accepted.portData(base);
+                            final PushAccepted pushAccepted = new PushAccepted();
+                            pushAccepted.portData(base);
 
-                            accepted.setFirstSongName((String) base.get("firstSongName"));
-                            accepted.setSize(Integer.parseInt(base.get("size").toString()));
-                            notifications.add(accepted);
+                            pushAccepted.setFirstSongName((String) base.get("firstSongName"));
+                            pushAccepted.setSize(Integer.parseInt(base.get("size").toString()));
+                            notifications.add(pushAccepted);
 
                         } else
                             throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
