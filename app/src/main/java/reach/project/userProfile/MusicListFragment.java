@@ -236,7 +236,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
 
                     if (cursor != null)
                         cursor.close();
-                    MiscUtils.setEmptyTextforListView(musicList, "No visible songs found");
+                    MiscUtils.setEmptyTextForListView(musicList, "No visible songs found");
                     return rootView;
                 }
                 cursor.close();
@@ -327,7 +327,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
 //            int count = cursor.getCount();
 //            final Future<?> isMusicFetching = ContactsListFragment.isMusicFetching.get(userId);
 //            if((isMusicFetching == null || isMusicFetching.isCancelled() || isMusicFetching.isDone()) && count==0 && musicList!=null)
-//                MiscUtils.setEmptyTextforListView(musicList,"No visible songs found");
+//                MiscUtils.setEmptyTextForListView(musicList,"No visible songs found");
 //            if (getArguments().getInt("type") != 0) {
 //
 //                final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();

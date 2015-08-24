@@ -52,12 +52,6 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         this.myNumber = myNumber;
     }
 
-    public QuickSyncFriends(WeakReference<Activity> activity, long serverId, String myNumber) {
-        this.activityWeakReference = activity;
-        this.serverId = serverId;
-        this.myNumber = myNumber;
-    }
-
     private boolean checkDead(Activity activity) {
         return (activity == null || activity.isFinishing());
     }
@@ -89,6 +83,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                 final int columnIndex = phoneNumbers.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
                 if (columnIndex == -1)
                     continue;
+                //TODO optimize memory here
                 String phoneNumber = phoneNumbers.getString(columnIndex);
                 if (TextUtils.isEmpty(phoneNumber))
                     continue;
@@ -100,6 +95,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             }
             phoneNumbers.close();
         }
+
         Log.i("Ayush", "Prepared numbers" + numbers.size());
         /////phone numbers prepared
         final Cursor currentIds = resolver.query(

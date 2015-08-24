@@ -177,7 +177,7 @@ public class FriendRequestFragment extends Fragment {
 
                 if (receivedRequestList == null || receivedRequestList.isEmpty()) {
 
-                    MiscUtils.setEmptyTextforListView(fragment.listView, "No friend requests");
+                    MiscUtils.setEmptyTextForListView(fragment.listView, "No friend requests");
                     adapter.clear();
                 } else {
 

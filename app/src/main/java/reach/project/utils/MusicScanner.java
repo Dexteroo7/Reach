@@ -12,6 +12,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.support.v4.util.ArrayMap;
 import android.support.v4.util.LongSparseArray;
 import android.support.v4.util.SparseArrayCompat;
 import android.text.TextUtils;
@@ -34,7 +35,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
@@ -451,12 +451,9 @@ public class MusicScanner extends IntentService {
         }
 
         sendMessage(ALBUM_ARTIST, -1);
-        ////////////////////Adding albums and artists
-        final Pair<Set<ReachAlbum>, Set<ReachArtist>>
+        final Pair<ArrayMap<String, ReachAlbum>, ArrayMap<String, ReachArtist>>
                 albums_artists = MiscUtils.getAlbumsAndArtists(songs, serverId);
-        final Set<ReachAlbum> reachAlbums = albums_artists.first;
-        final Set<ReachArtist> reachArtists = albums_artists.second;
-        ////////////////////Albums and artists added
+
         ////////////////////Adding playLists
         final Playlist.Builder defaultPlayList = new Playlist.Builder();
         defaultPlayList.dateModified("");
@@ -511,8 +508,8 @@ public class MusicScanner extends IntentService {
         Log.i("Ayush", "Updating songs");
         MiscUtils.bulkInsertSongs(
                 songs,
-                reachAlbums,
-                reachArtists,
+                albums_artists.first,
+                albums_artists.second,
                 resolver, serverId);
 
         //save playLists to database
@@ -520,12 +517,6 @@ public class MusicScanner extends IntentService {
         MiscUtils.bulkInsertPlayLists(
                 playListSet,
                 resolver, serverId);
-
-        MiscUtils.closeAndIgnore(
-                songIds,
-                reachAlbums,
-                reachArtists
-        );
 
         songSparse.clear();
         reachPlayListVisibility.clear();

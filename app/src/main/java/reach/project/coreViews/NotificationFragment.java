@@ -202,7 +202,7 @@ public class NotificationFragment extends Fragment {
 
                 if (notificationBaseList == null || notificationBaseList.isEmpty()) {
 
-                    MiscUtils.setEmptyTextforListView(fragment.listView, "No friend requests");
+                    MiscUtils.setEmptyTextForListView(fragment.listView, "No friend requests");
                     adapter.clear();
                 } else {
 

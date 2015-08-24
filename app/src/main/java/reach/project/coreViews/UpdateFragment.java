@@ -12,8 +12,10 @@ import android.view.Window;
 import reach.project.R;
 
 public  class UpdateFragment extends DialogFragment {
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.update_dialog, container, false);

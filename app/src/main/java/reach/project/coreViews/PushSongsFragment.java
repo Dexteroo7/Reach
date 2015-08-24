@@ -118,7 +118,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             pushSongAdapter.swapCursor(cursor);
             songsCount.setText(count + " Songs");
             if (count == 0 && pushLibraryList != null)
-                MiscUtils.setEmptyTextforListView(pushLibraryList, "No songs found");
+                MiscUtils.setEmptyTextForListView(pushLibraryList, "No songs found");
         }
     }
 

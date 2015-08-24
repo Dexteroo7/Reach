@@ -120,7 +120,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             reachMusicAdapter.swapCursor(cursor);
             songsCount.setText(count + " Songs");
             if (count==0 && privacyList!=null)
-            MiscUtils.setEmptyTextforListView(privacyList, "No songs found");
+            MiscUtils.setEmptyTextForListView(privacyList, "No songs found");
         }
     }
 

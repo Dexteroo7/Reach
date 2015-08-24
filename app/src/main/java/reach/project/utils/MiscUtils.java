@@ -11,7 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.SimpleArrayMap;
+import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
@@ -37,10 +37,8 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -173,7 +171,7 @@ public enum MiscUtils {
         }
     }
 
-    public static void setEmptyTextforListView(ListView listView, String emptyText) {
+    public static void setEmptyTextForListView(ListView listView, String emptyText) {
 
         if (listView.getContext() == null)
             return;
@@ -319,8 +317,8 @@ public enum MiscUtils {
     }
 
     public static void bulkInsertSongs(List<Song> songList,
-                                       Set<ReachAlbum> reachAlbums,
-                                       Set<ReachArtist> reachArtists,
+                                       ArrayMap<String, ReachAlbum> reachAlbums,
+                                       ArrayMap<String, ReachArtist> reachArtists,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
@@ -330,21 +328,34 @@ public enum MiscUtils {
         final ContentValues[] artists = new ContentValues[reachArtists.size()];
 
         int i = 0;
-        for (Song song : songList) {
-            songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
+        if (songList.size() > 0) {
+
+            for (Song song : songList)
+                songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
+            i = 0;
+            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
         }
-        i = 0;
-        Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
 
         if (reachAlbums.size() > 0) {
-            for (ReachAlbum reachAlbum : reachAlbums)
-                albums[i++] = ReachAlbumHelper.contentValuesCreator(reachAlbum);
+
+            for (int j = 0; j < reachAlbums.size(); j++) {
+
+                final ReachAlbum album = reachAlbums.valueAt(j);
+                if (album != null)
+                    albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
+            }
             Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
             i = 0;
         }
+
         if (reachArtists.size() > 0) {
-            for (ReachArtist reachArtist : reachArtists)
-                artists[i++] = ReachArtistHelper.contentValuesCreator(reachArtist);
+
+            for (int j = 0; i < reachArtists.size(); j++) {
+
+                final ReachArtist artist = reachArtists.valueAt(j);
+                if (artist != null)
+                    artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
+            }
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
         }
     }
@@ -364,12 +375,10 @@ public enum MiscUtils {
         } else Log.i("Ayush", "NO playLists to save");
     }
 
-    public static Pair<Set<ReachAlbum>, Set<ReachArtist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
+    public static Pair<ArrayMap<String, ReachAlbum>, ArrayMap<String, ReachArtist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
 
-        final Set<ReachAlbum> albums = new HashSet<>();
-        final Set<ReachArtist> artists = new HashSet<>();
-        final SimpleArrayMap<String, ReachAlbum> albumMap = new SimpleArrayMap<>();
-        final SimpleArrayMap<String, ReachArtist> artistMap = new SimpleArrayMap<>();
+        final ArrayMap<String, ReachAlbum> albumMap = new ArrayMap<>();
+        final ArrayMap<String, ReachArtist> artistMap = new ArrayMap<>();
 
         for (Song song : songs) {
 
@@ -381,7 +390,7 @@ public enum MiscUtils {
 
                 ReachAlbum album = albumMap.get(song.album);
                 if (album == null)
-                    albums.add(albumMap.put(song.album, album = new ReachAlbum()));
+                    albumMap.put(song.album, album = new ReachAlbum());
                 else {
                     album.setAlbumName(song.album);
                     album.setUserId(serverId);
@@ -394,7 +403,7 @@ public enum MiscUtils {
 
                 ReachArtist artist = artistMap.get(song.artist);
                 if (artist == null)
-                    artists.add(artistMap.put(song.artist, artist = new ReachArtist()));
+                    artistMap.put(song.artist, artist = new ReachArtist());
                 else {
                     artist.setArtistName(song.artist);
                     artist.setUserID(serverId);
@@ -404,7 +413,7 @@ public enum MiscUtils {
             }
         }
         ///////////////////////
-        return new Pair<>(albums, artists);
+        return new Pair<>(albumMap, artistMap);
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {

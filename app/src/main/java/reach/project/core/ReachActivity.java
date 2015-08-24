@@ -1156,8 +1156,7 @@ public class ReachActivity extends AppCompatActivity implements
                     ReachDatabaseHelper.ADAPTER_LIST,
                     selectionDownloader,
                     selectionArgumentsDownloader,
-                    ReachDatabaseHelper.COLUMN_STATUS + " ASC," +
-                            ReachDatabaseHelper.COLUMN_ADDED + " DESC");
+                    ReachDatabaseHelper.COLUMN_ADDED + " DESC");
         } else if (id == StaticData.MY_LIBRARY_LOADER) {
 
             return new CursorLoader(this,
