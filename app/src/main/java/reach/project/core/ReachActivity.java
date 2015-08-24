@@ -981,7 +981,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
-            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber).build());
+            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
             return; //fail
         }
 

@@ -3,8 +3,8 @@ package reach.project.adapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.v4.util.LongSparseArray;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,8 +36,8 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
-    public static final SparseBooleanArray accepted = new SparseBooleanArray();
-    private static final SparseBooleanArray opened = new SparseBooleanArray();
+    public static final LongSparseArray <Boolean> accepted = new LongSparseArray<>();
+    private static final LongSparseArray <Boolean> opened = new LongSparseArray<>();
 
     private static final int a = MiscUtils.dpToPx(70);
     private static final int b = MiscUtils.dpToPx(110);

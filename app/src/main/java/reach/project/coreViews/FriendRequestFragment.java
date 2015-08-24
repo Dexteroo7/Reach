@@ -72,10 +72,9 @@ public class FriendRequestFragment extends Fragment {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
             final ReachFriendRequestAdapter adapter = (ReachFriendRequestAdapter) parent.getAdapter();
-            if (ReachFriendRequestAdapter.accepted.get(position)) {
-
-                final ReceivedRequest receivedRequest = adapter.getItem(position);
-                final long userId = receivedRequest.getId();
+            final ReceivedRequest receivedRequest = adapter.getItem(position);
+            final long userId = receivedRequest.getId();
+            if (ReachFriendRequestAdapter.accepted.get(userId)) {
 
                 //check validity
                 final Cursor cursor = view.getContext().getContentResolver().query(

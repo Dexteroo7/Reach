@@ -134,9 +134,9 @@ public class NotificationFragment extends Fragment {
                 case DEFAULT:
                     throw new IllegalArgumentException("Default notification in list !");
                 case PUSH:
-                    if (adapter.accepted.get(position)) {
+                    if (adapter.accepted.get(notificationBaseLocal.getNotificationId())) {
                         mListener.anchorFooter();
-                        adapter.accepted.delete(position);
+                        adapter.accepted.delete(notificationBaseLocal.getNotificationId());
                     }
                     break;
                 case LIKE:

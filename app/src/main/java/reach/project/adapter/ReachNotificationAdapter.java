@@ -4,8 +4,8 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,7 +47,7 @@ import reach.project.viewHelpers.CircleTransform;
  */
 public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
 
-    public final SparseBooleanArray accepted = new SparseBooleanArray();
+    public final LongSparseArray <Boolean> accepted = new LongSparseArray<>();
 
     private final CircleTransform transform = new CircleTransform();
     private final int resID;
