@@ -185,30 +185,20 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
     private enum LocalUtils {
         ;
 
-        public static final View.OnClickListener deleteListener = new View.OnClickListener() {
+        private static final DialogInterface.OnClickListener cancelDelete = (dialog, which) -> dialog.dismiss();
 
-            @Override
-            public void onClick(View view) {
+        public static final View.OnClickListener deleteListener = view -> {
 
-                final Object[] tag = (Object[]) view.getTag();
-                final long id = (long) tag[0];
-                final int position = (int) tag[1];
+            final Object[] tag = (Object[]) view.getTag();
+            final long id = (long) tag[0];
+            final int position = (int) tag[1];
 
-                new AlertDialog.Builder(view.getContext())
-                        .setMessage("Are you sure you want to delete it?")
-                        .setPositiveButton("Yes", new ConfirmDelete(id, position))
-                        .setNegativeButton("No", cancelDelete).create().show();
-            }
+            new AlertDialog.Builder(view.getContext())
+                    .setMessage("Are you sure you want to delete it?")
+                    .setPositiveButton("Yes", new ConfirmDelete(id, position))
+                    .setNegativeButton("No", cancelDelete).create().show();
         };
-
-        private static final DialogInterface.OnClickListener cancelDelete = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                dialog.dismiss();
-            }
-        };
-
+        
         private static final class ConfirmDelete implements DialogInterface.OnClickListener {
 
             final long id;

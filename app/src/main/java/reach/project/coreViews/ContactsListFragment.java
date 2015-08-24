@@ -112,23 +112,15 @@ public class ContactsListFragment extends Fragment implements
 
     private static long serverId;
 
-    private static int friendRequestCount = 0;
-
-    private static int notificationsCount = 0;
-
     public static void checkNewNotifications() {
 
         final ContactsListFragment fragment;
         if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
             return;
-        MiscUtils.useFragment(FriendRequestFragment.getReference(), friendRequestFragment -> {
-            friendRequestCount = friendRequestFragment.adapter.getCount();
-            return null;
-        });
-        MiscUtils.useFragment(NotificationFragment.getReference(), notificationFragment -> {
-            notificationsCount = notificationFragment.adapter.getCount();
-            return null;
-        });
+
+        final int friendRequestCount = FriendRequestFragment.receivedRequests.size();
+        final int notificationsCount = NotificationFragment.notifications.size();
+
         if (friendRequestCount == 0 && notificationsCount == 0)
             fragment.notificationCount.setVisibility(View.GONE);
         else {
@@ -175,12 +167,12 @@ public class ContactsListFragment extends Fragment implements
                 if (response != null && response > 0) {
 
                     //response becomes the id of failed person
-                    MiscUtils.useFragment(reference, (ContactsListFragment fragment) -> {
+                    MiscUtils.useContextFromFragment(reference, context -> {
 
-                        Toast.makeText(reference.get().getActivity(), "Request Failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
                         final ContentValues values = new ContentValues();
                         values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                        reference.get().getActivity().getContentResolver().update(
+                        context.getContentResolver().update(
                                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
                                 values,
                                 ReachFriendsHelper.COLUMN_ID + " = ?",
@@ -239,16 +231,13 @@ public class ContactsListFragment extends Fragment implements
         }
     };
 
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-        @Override
-        public void onRefresh() {
+    private final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
 
-            if (!pinging.get()) {
+        if (!pinging.get()) {
 
-                Log.i("Ayush", "Starting refresh !");
-                pinging.set(true);
-                new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
-            }
+            Log.i("Ayush", "Starting refresh !");
+            pinging.set(true);
+            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     };
 
@@ -359,13 +348,11 @@ public class ContactsListFragment extends Fragment implements
             @Override
             protected void onEmptyContacts() {
                 mergeAdapter.setActive(emptyInvite, true);
-                mergeAdapter.setActive(inviteAdapter, false);
             }
 
             @Override
             protected void onNotEmptyContacts() {
                 mergeAdapter.setActive(emptyInvite, false);
-                mergeAdapter.setActive(inviteAdapter, true);
             }
         };
 
@@ -429,15 +416,15 @@ public class ContactsListFragment extends Fragment implements
                 synchronizing.set(true);
                 pinging.set(true);
                 swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
-                new LocalUtils.ContactsSync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
+                new LocalUtils.ContactsSync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
-            new LocalUtils.InitializeData(mergeAdapter, inviteAdapter, emptyInvite).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new LocalUtils.InitializeData().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
             swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
-            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
+            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
         getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
@@ -592,16 +579,6 @@ public class ContactsListFragment extends Fragment implements
         public static final HashSet<String> inviteSentTo = new HashSet<>();
         public static final List<Contact> contactData = new ArrayList<>();
 
-        private static boolean isDead() {
-
-            final Fragment fragment;
-            if (reference == null || (fragment = reference.get()) == null)
-                return true;
-            final Activity activity = fragment.getActivity();
-            return activity == null || activity.isFinishing();
-
-        }
-
         private static Optional<ContentResolver> getResolver() {
 
             final Fragment fragment;
@@ -610,23 +587,10 @@ public class ContactsListFragment extends Fragment implements
             final Activity activity = fragment.getActivity();
             if (activity == null || activity.isFinishing())
                 return Optional.absent();
-            return Optional.of(activity.getContentResolver());
+            return Optional.fromNullable(activity.getContentResolver());
         }
 
         public static final class InitializeData extends AsyncTask<Void, Void, HashSet<Contact>> {
-
-            private final MergeAdapter mergeAdapter;
-            private final ReachAllContactsAdapter inviteAdapter;
-            private final View emptyInvite;
-
-            public InitializeData(MergeAdapter mergeAdapter,
-                                  ReachAllContactsAdapter inviteAdapter,
-                                  View emptyInvite) {
-
-                this.mergeAdapter = mergeAdapter;
-                this.inviteAdapter = inviteAdapter;
-                this.emptyInvite = emptyInvite;
-            }
 
             @Override
             protected HashSet<Contact> doInBackground(Void... voids) {
@@ -673,31 +637,29 @@ public class ContactsListFragment extends Fragment implements
 
                 super.onPostExecute(contactHashSet);
 
-                if (mergeAdapter == null || inviteAdapter == null || emptyInvite == null || isDead())
-                    return;
+                MiscUtils.useFragment(reference, fragment -> {
 
-                if (contactHashSet == null || contactHashSet.isEmpty()) {
-                    mergeAdapter.setActive(emptyInvite, true);
-                    mergeAdapter.setActive(inviteAdapter, false);
-                } else {
+                    if (contactHashSet == null || contactHashSet.isEmpty()) {
 
-                    contactData.clear();
-                    contactData.addAll(contactHashSet);
-                    Collections.sort(contactData, (lhs, rhs) -> lhs.getUserName().compareToIgnoreCase(rhs.getUserName()));
-                    mergeAdapter.setActive(emptyInvite, false);
-                    mergeAdapter.setActive(inviteAdapter, true);
-                }
+                        fragment.mergeAdapter.setActive(fragment.emptyInvite, true);
+                        fragment.inviteAdapter.clear();
+                    } else {
 
-                inviteAdapter.notifyDataSetChanged();
-                inviteAdapter.getFilter().filter("");
+                        contactData.clear();
+                        contactData.addAll(contactHashSet);
+                        Collections.sort(contactData, (lhs, rhs) -> lhs.getUserName().compareToIgnoreCase(rhs.getUserName()));
+                        fragment.mergeAdapter.setActive(fragment.emptyInvite, false);
+                        fragment.inviteAdapter.notifyDataSetChanged();
+                    }
+                    return null;
+                });
             }
         }
 
-        public static final class ContactsSync extends AsyncTask<SwipeRefreshLayout, Void, SwipeRefreshLayout> {
+        public static final class ContactsSync extends AsyncTask<Void, Void, Void> {
 
             @Override
-            protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
-
+            protected Void doInBackground(Void... params) {
 
                 /**
                  * Invalidate everyone
@@ -725,25 +687,24 @@ public class ContactsListFragment extends Fragment implements
                     new QuickSyncFriends(reference.get().getActivity(), serverId, phoneNumber).call();
                 } catch (NullPointerException ignored) {
                 }
-                return params[0];
+                return null;
             }
 
             @Override
-            protected void onPostExecute(SwipeRefreshLayout swipeRefreshLayout) {
+            protected void onPostExecute(Void aVoid) {
 
-                super.onPostExecute(swipeRefreshLayout);
-                if (swipeRefreshLayout == null || isDead())
-                    return;
+                super.onPostExecute(aVoid);
                 synchronizeOnce.set(true);
                 //we are still refreshing !
                 pinging.set(true);
-                new SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, swipeRefreshLayout);
+                new SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         }
 
-        public static final class SendPing extends AsyncTask<SwipeRefreshLayout, String, SwipeRefreshLayout> {
+        public static final class SendPing extends AsyncTask<Void, String, Void> {
+
             @Override
-            protected SwipeRefreshLayout doInBackground(SwipeRefreshLayout... params) {
+            protected Void doInBackground(Void... params) {
 
                 StaticData.networkCache.clear();
                 MiscUtils.autoRetry(() -> StaticData.userEndpoint.pingMyReach(serverId).execute(), Optional.<Predicate<MyString>>absent()).orNull();
@@ -769,19 +730,17 @@ public class ContactsListFragment extends Fragment implements
                                 ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
                         new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + ""});
                 contentValues.clear();
-                return params[0];
+                return null;
             }
 
             @Override
-            protected void onPostExecute(final SwipeRefreshLayout refreshLayout) {
+            protected void onPostExecute (Void aVoid) {
 
-                super.onPostExecute(refreshLayout);
-                if (refreshLayout == null || isDead())
-                    return;
+                super.onPostExecute(aVoid);
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                refreshLayout.post(() -> refreshLayout.setRefreshing(false));
+                MiscUtils.useFragment(reference, fragment -> fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false)));
             }
         }
 

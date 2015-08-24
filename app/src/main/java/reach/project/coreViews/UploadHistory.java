@@ -49,21 +49,22 @@ import reach.project.utils.SharedPrefUtils;
  */
 public class UploadHistory extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private final List<CompletedOperation> completedOperations = new ArrayList<>();
-    private final LongSparseArray<String> friendLongSparseArray = new LongSparseArray<>();
+    private static final List<CompletedOperation> completedOperations = new ArrayList<>();
+    private static final LongSparseArray<String> friendLongSparseArray = new LongSparseArray<>();
 
-    private ReachQueueAdapter onGoingUploadsAdapter;
     private ReachUploadAdapter uploadAdapter;
+    private ReachQueueAdapter onGoingUploadsAdapter;
     private ListView uploadList;
     private ProgressBar loading;
     private MergeAdapter uploadHistoryAdapter;
-    private TextView emptyTV1,emptyTV2;
+    private TextView emptyTV1, emptyTV2;
 
     private static WeakReference<UploadHistory> reference;
+
     public static UploadHistory newUploadInstance() {
 
         UploadHistory fragment;
-        if(reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new UploadHistory());
         return fragment;
     }
@@ -72,16 +73,15 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
     public void onDestroyView() {
 
         getLoaderManager().destroyLoader(StaticData.UPLOAD_LOADER);
-        if(onGoingUploadsAdapter != null &&
+        if (onGoingUploadsAdapter != null &&
                 onGoingUploadsAdapter.getCursor() != null &&
                 !onGoingUploadsAdapter.getCursor().isClosed())
             onGoingUploadsAdapter.getCursor().close();
         onGoingUploadsAdapter = null;
 
+        uploadAdapter = null;
         friendLongSparseArray.clear();
         completedOperations.clear();
-        if(uploadAdapter != null)
-            uploadAdapter.cleanUp();
         uploadList = null;
         super.onDestroyView();
     }
@@ -100,14 +100,12 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
 
-        if(cursorLoader.getId() == StaticData.UPLOAD_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.UPLOAD_LOADER && cursor != null && !cursor.isClosed()) {
 
             onGoingUploadsAdapter.swapCursor(cursor);
             final int count = cursor.getCount();
-            if (count == 0 && uploadList != null) {
+            if (count == 0 && uploadList != null)
                 uploadHistoryAdapter.setActive(emptyTV1, true);
-                MiscUtils.setEmptyTextforListView(uploadList, "No one is streaming from you currently");
-            }
             else
                 uploadHistoryAdapter.setActive(emptyTV1, false);
         }
@@ -115,7 +113,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if(cursorLoader.getId() == StaticData.UPLOAD_LOADER)
+        if (cursorLoader.getId() == StaticData.UPLOAD_LOADER)
             onGoingUploadsAdapter.swapCursor(null);
     }
 
@@ -123,16 +121,14 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
-        if (actionBar!=null)
+        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        if (actionBar != null)
             actionBar.setTitle("Upload History");
-        uploadList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        uploadList = (ListView) rootView.findViewById(R.id.listView);
 
         long myId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
-        if(myId == 0)
+        if (myId == 0)
             return rootView;
-        uploadAdapter = new ReachUploadAdapter(getActivity(),
-                R.layout.upload_queue_item, completedOperations, friendLongSparseArray);
         onGoingUploadsAdapter = new ReachQueueAdapter(getActivity(), null, 0);
         uploadList.setSelector(android.R.color.transparent);
 
@@ -149,9 +145,9 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         emptyTV1.setText("No one is streaming currently");
         emptyTV1.setTextColor(getResources().getColor(R.color.darkgrey));
         emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        emptyTV1.setPadding(MiscUtils.dpToPx(15),MiscUtils.dpToPx(15),0,MiscUtils.dpToPx(15));
-        uploadHistoryAdapter.addView(emptyTV1,false);
-        uploadHistoryAdapter.setActive(emptyTV1,false);
+        emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
+        uploadHistoryAdapter.addView(emptyTV1, false);
+        uploadHistoryAdapter.setActive(emptyTV1, false);
 
         uploadHistoryAdapter.addAdapter(onGoingUploadsAdapter);
         TextView textView2 = new TextView(rootView.getContext());
@@ -171,11 +167,12 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         emptyTV2.setText("No uploads completed");
         emptyTV2.setTextColor(getResources().getColor(R.color.darkgrey));
         emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        emptyTV2.setPadding(MiscUtils.dpToPx(15),MiscUtils.dpToPx(15),0,MiscUtils.dpToPx(15));
-        uploadHistoryAdapter.addView(emptyTV2,false);
-        uploadHistoryAdapter.setActive(emptyTV2,false);
+        emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
+        uploadHistoryAdapter.addView(emptyTV2, false);
+        uploadHistoryAdapter.setActive(emptyTV2, false);
 
-        uploadHistoryAdapter.addAdapter(uploadAdapter);
+        uploadHistoryAdapter.addAdapter(uploadAdapter = new ReachUploadAdapter(getActivity(),
+                R.layout.upload_queue_item, completedOperations, friendLongSparseArray));
         uploadList.setAdapter(uploadHistoryAdapter);
 
         getLoaderManager().initLoader(StaticData.UPLOAD_LOADER, null, this);
@@ -183,70 +180,80 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         return rootView;
     }
 
-    private class GetUploadHistory extends AsyncTask<Long, Void, Void> {
+    private static class GetUploadHistory extends AsyncTask<Long, Void, List<CompletedOperation>> {
 
         @Override
-        protected Void doInBackground(final Long... params) {
+        protected List<CompletedOperation> doInBackground(final Long... params) {
 
             final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getCompletedOperations(params[0]).execute(), Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
             final List<CompletedOperation> list;
-            if(dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty()) return null;
+            if (dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty())
+                return null;
 
             final Set<Long> ids = new HashSet<>();
-            for(CompletedOperation completedOperation : list)
+            for (CompletedOperation completedOperation : list)
                 ids.addAll(completedOperation.getReceiver());
-            final String [] whereArgument = new String[ids.size()];
+            final String[] whereArgument = new String[ids.size()];
             int i = 0;
-            for(Long id : ids)
-                whereArgument[i++] = id+"";
+            for (Long id : ids)
+                whereArgument[i++] = id + "";
 
             final int argCount = ids.size(); // number of IN arguments
-            final StringBuilder inList = new StringBuilder(argCount*2);
-            for(i=0;i<argCount;i++) {
-                if(i > 0)
+            final StringBuilder inList = new StringBuilder(argCount * 2);
+            for (i = 0; i < argCount; i++) {
+                if (i > 0)
                     inList.append(",");
                 inList.append("?");
             }
-            final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN ("+inList.toString()+")";
-            if(getActivity() == null)
-                return null;
+            final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN (" + inList.toString() + ")";
 
-            final Cursor cursor = getActivity().getContentResolver().query(
+            final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> context.getContentResolver().query(
                     ReachFriendsProvider.CONTENT_URI,
                     new String[]{
                             ReachFriendsHelper.COLUMN_ID,
                             ReachFriendsHelper.COLUMN_USER_NAME
                     },
                     whereClause,
-                    whereArgument, null);
-            if(cursor != null) {
-                friendLongSparseArray.clear();
-                while (cursor.moveToNext())
-                    friendLongSparseArray.append(cursor.getLong(0), cursor.getString(1));
-                cursor.close();
-            }
-            completedOperations.clear();
-            completedOperations.addAll(list);
-            Collections.sort(completedOperations, (lhs, rhs) -> rhs.getTime().compareTo(lhs.getTime()));
+                    whereArgument, null)).orNull();
 
-            return null;
+            if (cursor == null)
+                return null;
+
+            if (!cursor.moveToFirst()) {
+                cursor.close();
+                return null;
+            }
+
+            friendLongSparseArray.clear();
+            while (cursor.moveToNext())
+                friendLongSparseArray.append(cursor.getLong(0), cursor.getString(1));
+            cursor.close();
+            Collections.sort(list, (lhs, rhs) -> rhs.getTime().compareTo(lhs.getTime()));
+            return list;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(List<CompletedOperation> operations) {
 
-            if(isCancelled() || getActivity() == null || getActivity().isFinishing()  || uploadList == null)
-                return;
-            uploadHistoryAdapter.setActive(loading,false);
-            if (completedOperations == null || completedOperations.size()==0) {
-                uploadHistoryAdapter.setActive(emptyTV2,true);
-                MiscUtils.setEmptyTextforListView(uploadList, "No uploads done yet");
-            }
-            else {
-                uploadHistoryAdapter.setActive(emptyTV2, false);
-            }
-            uploadAdapter.notifyDataSetChanged();
-            super.onPostExecute(aVoid);
+            super.onPostExecute(operations);
+
+            MiscUtils.useFragment(reference, fragment -> {
+
+                fragment.uploadHistoryAdapter.setActive(fragment.loading, false);
+
+                if (operations == null || operations.isEmpty()) {
+
+                    fragment.uploadHistoryAdapter.setActive(fragment.emptyTV2, true);
+                    fragment.uploadAdapter.clear();
+                } else {
+
+                    completedOperations.clear();
+                    completedOperations.addAll(operations);
+                    fragment.uploadHistoryAdapter.setActive(fragment.emptyTV2, false);
+                    fragment.uploadAdapter.notifyDataSetChanged();
+                }
+                return null;
+            });
         }
     }
 }

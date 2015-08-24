@@ -18,10 +18,7 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.gson.Gson;
-
-import java.io.IOException;
 
 import reach.project.R;
 import reach.project.coreViews.FriendRequestFragment;
@@ -34,9 +31,7 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
-import reach.project.utils.auxiliaryClasses.UseFragment;
 
 /**
  * Created by dexter on 21/6/14.
@@ -80,12 +75,9 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("openFriendRequests",true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            MiscUtils.useFragment(FriendRequestFragment.getReference(), new UseFragment<Void, FriendRequestFragment>() {
-                @Override
-                public Void work(FriendRequestFragment fragment) {
-                    fragment.refresh();
-                    return null;
-                }
+            MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
+                fragment.refresh();
+                return null;
             });
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
@@ -112,12 +104,9 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("openNotifications", true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
-                @Override
-                public Void work(NotificationFragment fragment) {
-                    fragment.refresh();
-                    return null;
-                }
+            MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
+                fragment.refresh();
+                return null;
             });
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
@@ -147,12 +136,9 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("openNotifications", true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            MiscUtils.useFragment(NotificationFragment.getReference(), new UseFragment<Void, NotificationFragment>() {
-                @Override
-                public Void work(NotificationFragment fragment) {
-                    fragment.refresh();
-                    return null;
-                }
+            MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
+                fragment.refresh();
+                return null;
             });
 
             final NotificationCompat.Builder notificationBuilder =
@@ -339,15 +325,9 @@ public class GcmIntentService extends IntentService {
                 return;
             }
             lastPong = currentTime;
-            MiscUtils.autoRetry(new DoWork<Void>() {
-                @Override
-                public Void doWork() throws IOException {
-
-                    return StaticData.messagingEndpoint
-                            .handleAnnounce(id, networkType[0] + "")
-                            .execute();
-                }
-            }, Optional.<Predicate<Void>>absent()).orNull();
+            MiscUtils.autoRetry(() -> StaticData.messagingEndpoint
+                    .handleAnnounce(id, networkType[0] + "")
+                    .execute(), Optional.absent()).orNull();
         }
 
         /**

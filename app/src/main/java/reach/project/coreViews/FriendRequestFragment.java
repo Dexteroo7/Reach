@@ -16,11 +16,9 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,12 +37,12 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 public class FriendRequestFragment extends Fragment {
 
-    private static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
+    public static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
     private static WeakReference<FriendRequestFragment> reference = null;
+    private static long serverId = 0;
+
     private ExecutorService friendsRefresher = null;
     private ListView listView = null;
-    private static long serverId = 0;
-    public ReachFriendRequestAdapter adapter;
 
     public static FriendRequestFragment newInstance(long id) {
 
@@ -60,11 +58,10 @@ public class FriendRequestFragment extends Fragment {
         return reference;
     }
 
-    //TODO fix crash
     public void refresh() {
 
         if (friendsRefresher != null && listView != null)
-            new FetchRequests().executeOnExecutor(friendsRefresher, listView);
+            new FetchRequests().executeOnExecutor(friendsRefresher);
     }
 
     private final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
@@ -109,11 +106,10 @@ public class FriendRequestFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        adapter = new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId);
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
-        listView.setAdapter(adapter);
+        listView.setAdapter(new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId));
         listView.setOnItemClickListener(itemClickListener);
 
         friendsRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
@@ -131,6 +127,8 @@ public class FriendRequestFragment extends Fragment {
         if (friendsRefresher != null)
             friendsRefresher.shutdownNow();
         friendsRefresher = null;
+
+        listView = null;
 
         super.onDestroyView();
     }
@@ -153,26 +151,15 @@ public class FriendRequestFragment extends Fragment {
         mListener = null;
     }
 
-    private static final class FetchRequests extends AsyncTask<ListView, Void, List<ReceivedRequest>> {
+    private static final class FetchRequests extends AsyncTask<Void, Void, List<ReceivedRequest>> {
 
-        private ListView lView;
         @Override
-        protected List<ReceivedRequest> doInBackground(ListView... params) {
+        protected List<ReceivedRequest> doInBackground(Void... params) {
 
-            lView = params[0];
+            if (serverId == 0)
+                return null;
 
-            final Optional<List<ReceivedRequest>> optional = MiscUtils.autoRetry(() -> {
-
-                final List<ReceivedRequest> receivedRequests1 =
-                        StaticData.userEndpoint.getReceivedRequests(serverId).execute().getItems();
-                Collections.reverse(receivedRequests1);
-                return receivedRequests1;
-            }, Optional.<Predicate<List<ReceivedRequest>>>absent());
-
-            if (optional.isPresent())
-                return optional.get();
-
-            return null;
+            return MiscUtils.autoRetry(() -> StaticData.userEndpoint.getReceivedRequests(serverId).execute().getItems(), Optional.absent()).orNull();
         }
 
         @Override
@@ -180,17 +167,27 @@ public class FriendRequestFragment extends Fragment {
 
             super.onPostExecute(receivedRequestList);
 
-            receivedRequests.clear();
-            if (receivedRequestList!=null)
-                receivedRequests.addAll(receivedRequestList);
+            MiscUtils.useFragment(reference, fragment -> {
 
-            final ListAdapter temp;
-            if (lView != null && (temp = lView.getAdapter()) != null ) {
+                final ListAdapter temp;
+                if (fragment.listView == null || (temp = fragment.listView.getAdapter()) == null)
+                    return null;
+
                 final ArrayAdapter adapter = (ArrayAdapter) temp;
-                adapter.notifyDataSetChanged();
-                if (adapter.getCount() == 0)
-                    MiscUtils.setEmptyTextforListView(lView, "No friend requests");
-            }
+
+                if (receivedRequestList == null || receivedRequestList.isEmpty()) {
+
+                    MiscUtils.setEmptyTextforListView(fragment.listView, "No friend requests");
+                    adapter.clear();
+                } else {
+
+                    receivedRequests.clear();
+                    receivedRequests.addAll(receivedRequestList);
+                    adapter.notifyDataSetChanged();
+                }
+
+                return null;
+            });
         }
     }
 }
