@@ -1602,7 +1602,7 @@ public class ReachActivity extends AppCompatActivity implements
                     return reader.nextInt();
                 } catch (Exception ignored) {
                 } finally {
-                    MiscUtils.closeAndIgnore(reader);
+                    reader.close();
                 }
                 return null;
             }

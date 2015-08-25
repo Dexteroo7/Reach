@@ -164,12 +164,12 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         @Override
         public void onClick(View view) {
 
-            final int position = (int) view.getTag();
-            if (!opened.get(position, false))
+            final long uId = (long) view.getTag();
+            if (!opened.get(uId, false))
                 expand(view, a, b);
             else
                 expand(view, b, a);
-            opened.put(position, !opened.get(position, false));
+            opened.put(uId, !opened.get(uId, false));
         }
     };
 
