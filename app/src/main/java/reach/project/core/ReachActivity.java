@@ -1145,6 +1145,7 @@ public class ReachActivity extends AppCompatActivity implements
         }
     }
 
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -1597,7 +1598,9 @@ public class ReachActivity extends AppCompatActivity implements
                     return reader.nextInt();
                 } catch (Exception ignored) {
                 } finally {
-                    MiscUtils.closeAndIgnore(reader);
+                    if (reader != null) {
+                        reader.close();
+                    }
                 }
                 return null;
             }

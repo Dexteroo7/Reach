@@ -33,6 +33,7 @@ import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
@@ -109,7 +110,7 @@ public enum MiscUtils {
                 new Date(seconds));
     }
 
-    public static void closeAndIgnore(Collection... collections) {
+    public static void closeQuietly(Collection... collections) {
         if (collections == null || collections.length == 0)
             return;
         for (Collection collection : collections)
@@ -117,7 +118,7 @@ public enum MiscUtils {
                 collection.clear();
     }
 
-    public static void closeAndIgnore(Closeable... closeables) {
+    public static void closeQuietly(Closeable... closeables) {
         for (Closeable closeable : closeables)
             if (closeable != null)
                 try {
@@ -126,7 +127,7 @@ public enum MiscUtils {
                 }
     }
 
-    public static void closeAndIgnore(Closeable closeable) {
+    public static void closeQuietly(Closeable closeable) {
         if (closeable != null)
             try {
                 closeable.close();
@@ -561,28 +562,43 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(fragment));
     }
 
-//    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
-//                                                          final UseContext<Void, T> task) {
-//
-//        final T activity;
-//        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
-//            return;
-//
-//        activity.runOnUiThread(() -> task.work(activity));
-//    }
-//
-//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-//                                                                  final UseContext<Void, Activity> task) {
-//
-//        final T fragment;
-//        if (reference == null || (fragment = reference.get()) == null)
-//            return;
-//        final Activity activity = fragment.getActivity();
-//        if (activity.isFinishing())
-//            return;
-//
-//        activity.runOnUiThread(() -> task.work(activity));
-//    }
+    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+                                                          final UseContext<Void, T> task) {
+
+        final T activity;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext<Void, Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseFragment<Void, T> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(fragment));
+    }
 
     /**
      * @param id        id of the person to update gcm of
@@ -718,6 +734,12 @@ public enum MiscUtils {
                 }
             }
         });
+    }
+
+    public static File compressImage(File image) {
+
+        //TODO
+        return image;
     }
 
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,

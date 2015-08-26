@@ -97,7 +97,7 @@ public class ReachFriend {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        } finally {
-//            MiscUtils.closeAndIgnore(inputStream, stream);
+//            MiscUtils.closeQuietly(inputStream, stream);
 //        }
 //
 //        return null;
@@ -114,7 +114,7 @@ public class ReachFriend {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        } finally {
-//            MiscUtils.closeAndIgnore(stream, outputStream);
+//            MiscUtils.closeQuietly(stream, outputStream);
 //        }
 //
 //        return null;

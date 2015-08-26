@@ -71,8 +71,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
             COLUMN_LOGICAL_CLOCK + " short" + "," +
             COLUMN_STATUS + " short" + " )";
-
-    public static final String[] projection =
+        public static final String[] projection =
             {
                     COLUMN_ID, //0
 

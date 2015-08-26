@@ -130,14 +130,16 @@ public class NotificationFragment extends Fragment {
             final NotificationBaseLocal notificationBaseLocal = adapter.getItem(position);
             final Types type = notificationBaseLocal.getTypes();
             final long hostID = notificationBaseLocal.getHostId();
+
             switch (type) {
+
                 case DEFAULT:
                     throw new IllegalArgumentException("Default notification in list !");
                 case PUSH:
-                    if (adapter.accepted.get(position)) {
+                    if (ReachNotificationAdapter.accepted.get(notificationBaseLocal.getNotificationId())) {
                         mListener.anchorFooter();
-                        adapter.accepted.delete(position);
-                    }
+                        ReachNotificationAdapter.accepted.delete(notificationBaseLocal.getNotificationId());
+                    } else return; //TODO fix this hack
                     break;
                 case LIKE:
                     mListener.anchorFooter();
@@ -169,6 +171,7 @@ public class NotificationFragment extends Fragment {
                     mListener.anchorFooter();
                     break;
             }
+
             mListener.closeDrawers();
             adapter.remove(notificationBaseLocal);
             MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.<Predicate<Void>>absent());

@@ -64,7 +64,7 @@ public class PromoCodeDialog extends DialogFragment {
         lowerPart = (RelativeLayout) rootView.findViewById(R.id.lowerContainer);
         promoLoading = (ProgressBar) rootView.findViewById(R.id.promoLoading);
 
-        promoCode.setText(SharedPrefUtils.getPromoCode(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+        promoCode.setText(SharedPrefUtils.getPromoCode(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
         rootView.findViewById(R.id.exit).setOnClickListener(exitListener);
         rootView.findViewById(R.id.done).setOnClickListener(v -> {
 

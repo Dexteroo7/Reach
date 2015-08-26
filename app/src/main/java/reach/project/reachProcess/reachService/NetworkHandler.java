@@ -127,7 +127,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 //        Log.i("Downloader", "NetworkManager released");
         //////////////////////////////////
         for (int i = 0, size = openChannels.size(); i < size; i++)
-            MiscUtils.closeAndIgnore(openChannels.valueAt(i));
+            MiscUtils.closeQuietly(openChannels.valueAt(i));
         openChannels.clear();
 //        Log.i("Downloader", "Downloader openChannels released");
         //////////////////////////////////
@@ -872,7 +872,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             LocalUtils.closeSocket(database.getReference());
             LocalUtils.keyCleanUp(selectionKey);
             if (database.getOperationKind() == 0) //close fileChannel if download
-                MiscUtils.closeAndIgnore(openChannels.get(LocalUtils.getFileChannelIndex(database)));
+                MiscUtils.closeQuietly(openChannels.get(LocalUtils.getFileChannelIndex(database)));
             return; //nothing more to do
         }
 
@@ -1103,7 +1103,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 LocalUtils.closeSocket(memoryReach.getReference());
                 LocalUtils.keyCleanUp(selectionKey);
                 if (memoryReach.getOperationKind() == 0) //close fileChannel if download
-                    MiscUtils.closeAndIgnore(openChannels.get(LocalUtils.getFileChannelIndex(memoryReach)));
+                    MiscUtils.closeQuietly(openChannels.get(LocalUtils.getFileChannelIndex(memoryReach)));
                 needToUpdate = true;
 
                 if (diskReach != null) //mark paused
@@ -1256,6 +1256,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     .append("GET /reach-again/music/").append(reachDatabase.getActualName()).append(" HTTP/1.1\r\n"); //specify the file
             if (reachDatabase.getProcessed() > 0)
                 stringBuilder.append("Range: bytes=").append(reachDatabase.getProcessed()).append("-\r\n"); //specify the range if required
+
             stringBuilder.append(requestDefaults)
                     .append("\r\n"); //end with this
 
@@ -1280,7 +1281,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     final char read = (char) reader.read();
                     if (read < 1) {
                         //fail
-                        MiscUtils.closeAndIgnore(socket, reader);
+                        MiscUtils.closeQuietly(socket, reader);
                         LocalUtils.closeSocket(reference);
                         return false;
                     }
@@ -1295,7 +1296,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 Log.i("Downloader", status);
                 if (!(status.contains("200") || status.contains("206"))) {
                     //fail
-                    MiscUtils.closeAndIgnore(socket, reader);
+                    MiscUtils.closeQuietly(socket, reader);
                     LocalUtils.closeSocket(reference);
                     return false;
                 }
@@ -1306,7 +1307,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                     final char read = (char) reader.read();
                     if (read < 1) {
-                        MiscUtils.closeAndIgnore(socket, reader);
+                        MiscUtils.closeQuietly(socket, reader);
                         LocalUtils.closeSocket(reference);
                         return false;
                     }
@@ -1614,7 +1615,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             if (selectionKey == null || !selectionKey.isValid())
                 return;
             Log.i("Downloader", "Running cleanUp");
-            MiscUtils.closeAndIgnore(selectionKey.channel());
+            MiscUtils.closeQuietly(selectionKey.channel());
             selectionKey.attach(null); //discard old attachment
             selectionKey.cancel();
         }
@@ -1827,7 +1828,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          * @param reference of the socket
          */
         public static void closeSocket(long reference) {
-            MiscUtils.closeAndIgnore(openChannels.get(reference, null));
+            MiscUtils.closeQuietly(openChannels.get(reference, null));
             openChannels.remove(reference);
         }
 

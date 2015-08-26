@@ -3,7 +3,6 @@ package reach.project.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -11,6 +10,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
@@ -29,7 +29,6 @@ import com.squareup.wire.Wire;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
@@ -40,6 +39,7 @@ import java.util.zip.GZIPInputStream;
 import reach.project.utils.auxiliaryClasses.MusicList;
 import reach.project.utils.auxiliaryClasses.ReachAlbum;
 import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.utils.auxiliaryClasses.UploadProgress;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -53,8 +53,9 @@ public enum CloudStorageUtils {
     private static final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
-    public static Optional<String> uploadFile(final File file, InputStream key) {
+    public static void uploadFile(final File file, InputStream key, UploadProgress uploadProgress) {
 
+        //get file name
         String fileName;
         try {
             fileName = Files.hash(file, Hashing.md5()).toString();
@@ -62,70 +63,81 @@ public enum CloudStorageUtils {
             e.printStackTrace();
             fileName = null;
         }
-
-        if (TextUtils.isEmpty(fileName))
-            return Optional.absent();
-
-        final Optional<Storage> storage = getStorage(key);
-        if (!storage.isPresent())
-            return Optional.absent();
-
-        final FileInputStream stream;
-        try {
-            stream = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return Optional.absent();
+        if (TextUtils.isEmpty(fileName)) {
+            uploadProgress.error();
+            return;
         }
 
-        Log.i("Ayush", "Uploading file name " + fileName);
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(new UploadIfNotPresent(storage.get(), fileName, stream));
-        return Optional.of(fileName);
-    }
-
-    private static final class UploadIfNotPresent implements Runnable {
-
-        final Storage storage;
-        final String fileName;
-        final InputStream inputStream;
-
-        private UploadIfNotPresent(Storage storage, String fileName, InputStream inputStream) {
-            this.storage = storage;
-            this.fileName = fileName;
-            this.inputStream = inputStream;
+        //get storage object
+        final Optional<Storage> optional = getStorage(key);
+        if (!optional.isPresent()) {
+            uploadProgress.error();
+            return;
         }
 
-        @Override
-        public void run() {
+        final Storage storage = optional.get();
+        final AbstractInputStreamContent content = new AbstractInputStreamContent("image/") {
 
-
-            //check if file is present
-            try {
-                storage.objects().get(BUCKET_NAME_IMAGES, fileName).execute();
-                Log.i("Ayush", "File found" + fileName);
-                return;
-            } catch (IOException e) {
-                //throw error if not present !
-                e.printStackTrace();
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new FileInputStream(file); //can be retried
             }
 
-            Log.i("Ayush", "File not found, Uploading " + fileName);
+            @Override
+            public long getLength() throws IOException {
+                return file.length();
+            }
 
-            //upload
-            MiscUtils.autoRetry(
-                    () -> {
-                        final Storage.Objects.Insert insert = storage.objects().insert(BUCKET_NAME_IMAGES, null,
-                                new InputStreamContent(
-                                        "image/",
-                                        inputStream));
+            @Override
+            public boolean retrySupported() {
+                return true;
+            }
+        };
 
-                        insert.setPredefinedAcl("publicRead");
-                        insert.setName(fileName);
-                        insert.execute();
-                        Log.i("Ayush", "Upload complete");
-                        return null;
-                    }, Optional.<Predicate<Void>>absent());
+        //check if file is present
+        try {
+            storage.objects().get(BUCKET_NAME_IMAGES, fileName).execute();
+            Log.i("Ayush", "File found" + fileName);
+            uploadProgress.success(fileName);
+            return; //quit since found
+        } catch (IOException e) {
+
+            //file not present, hence the error, we upload
+            e.printStackTrace();
         }
+
+        //prepare upload
+        Log.i("Ayush", "File not found, Uploading " + fileName);
+        final Storage.Objects.Insert insert;
+        try {
+            insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            Log.i("Ayush", "Error while creating request" + fileName);
+            uploadProgress.error();
+            return; //quit if error
+        }
+
+        insert.setPredefinedAcl("publicRead");
+        insert.setName(fileName);
+        insert.getMediaHttpUploader().setDirectUploadEnabled(true);
+        insert.getMediaHttpUploader().setProgressListener(uploadProgress);
+
+        //upload
+        final String md5;
+        try {
+            md5 = insert.execute().getMd5Hash();
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            Log.i("Ayush", "Error while uploading" + fileName);
+            uploadProgress.error();
+            return; //quit if error
+        }
+
+        Log.i("Ayush", "Upload complete " + md5);
+        uploadProgress.success(fileName);
     }
 
 //    public byte [] downloadFile(String fileName) {
@@ -295,7 +307,7 @@ public enum CloudStorageUtils {
 
         //prepare storage object
         final Storage storage = getStorage(stream).orNull();
-        MiscUtils.closeAndIgnore(stream);
+        MiscUtils.closeQuietly(stream);
         if (storage == null)
             return toReturn; //fail but fetch visibility if music already present
 
@@ -320,9 +332,8 @@ public enum CloudStorageUtils {
             return toReturn;
         }
 
-        if (currentHash.equals(serverHash)) {
+        if (currentHash.equals(serverHash))
             return toReturn; //same music found, but still verify for music visibility
-        }
 
         InputStream download = null;
         GZIPInputStream compressedData = null;
@@ -337,7 +348,7 @@ public enum CloudStorageUtils {
             e.printStackTrace();
             return toReturn; //fail but fetch visibility if music already present
         } finally {
-            MiscUtils.closeAndIgnore(download, compressedData);
+            MiscUtils.closeQuietly(download, compressedData);
         }
 
         final ContentResolver resolver = context.getContentResolver();
@@ -387,7 +398,7 @@ public enum CloudStorageUtils {
 
         //prepare storage object
         final Storage storage = getStorage(key).orNull();
-        MiscUtils.closeAndIgnore(key);
+        MiscUtils.closeQuietly(key);
         if (storage == null)
             return true;
 
@@ -424,7 +435,7 @@ public enum CloudStorageUtils {
                             .setName(fileName)
                             .execute().getMd5Hash();
 
-                    MiscUtils.closeAndIgnore(stream);
+                    MiscUtils.closeQuietly(stream);
                     Log.i("Ayush", "Upload complete " + uploadedHash);
                     return null;
                 }, Optional.<Predicate<Void>>absent());
@@ -454,7 +465,7 @@ public enum CloudStorageUtils {
                 transport.shutdown();
             } catch (IOException ignored) {
             }
-            MiscUtils.closeAndIgnore(stream);
+            MiscUtils.closeQuietly(stream);
             return Optional.absent();
         }
 

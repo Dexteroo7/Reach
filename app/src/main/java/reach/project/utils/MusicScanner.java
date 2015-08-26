@@ -84,6 +84,7 @@ public class MusicScanner extends IntentService {
         super("MusicScanner");
     }
 
+    //TODO save track number
     private ImmutableList<Song> getSongListing(Uri uri) {
 
         final List<Song> toSend = new ArrayList<>();
@@ -552,7 +553,7 @@ public class MusicScanner extends IntentService {
             e.printStackTrace();
             return true;
         } finally {
-            MiscUtils.closeAndIgnore(outputStream, gzipOutputStream);
+            MiscUtils.closeQuietly(outputStream, gzipOutputStream);
         }
 
         //TODO track

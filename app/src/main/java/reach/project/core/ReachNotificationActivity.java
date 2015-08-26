@@ -30,7 +30,6 @@ import reach.project.viewHelpers.CircleTransform;
 
 public class ReachNotificationActivity extends Activity {
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 

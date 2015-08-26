@@ -21,10 +21,12 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.io.ByteStreams;
@@ -32,9 +34,11 @@ import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 
 import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
@@ -47,9 +51,14 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
+
+    private static Uri imageUri;
+    private static String imageId = "hello_world";
+    private static WeakReference<AccountCreation> reference;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
 
@@ -64,27 +73,32 @@ public class AccountCreation extends Fragment {
                     userContainer.getImageId() == null ? "" : userContainer.getImageId()});
             fragment.setArguments(bundle);
         }
+
+        reference = new WeakReference<>(fragment);
         return fragment;
     }
 
     private final int IMAGE_PICKER_SELECT = 999;
-    private String imageId = "hello_world";
     private SuperInterface mListener;
-
     private TextView uploadText;
-    private View profilePhotoSelector;
+    private ImageView profilePhotoSelector;
 
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
 
+        // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_account_creation, container, false);
         final EditText userName = (EditText) rootView.findViewById(R.id.firstName);
         final TextView progress = (TextView) rootView.findViewById(R.id.syncStatus);
 
+        //give reference to uploadProgress
+        final ProgressBar progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+        progressBar.setIndeterminate(false);
+        SaveUserData.uploadProgress.dialogWeakReference = new WeakReference<>(progressBar);
+
         uploadText = (TextView) rootView.findViewById(R.id.uploadText);
-        profilePhotoSelector = rootView.findViewById(R.id.profilePhoto);
+        profilePhotoSelector = (ImageView) rootView.findViewById(R.id.displayPic);
         profilePhotoSelector.setOnClickListener(imagePicker);
         userName.requestFocus();
 
@@ -109,7 +123,7 @@ public class AccountCreation extends Fragment {
                         .resize(350, 350)
                         .centerCrop()
                         .transform(new CircleTransform())
-                        .into((ImageView) profilePhotoSelector.findViewById(R.id.displayPic));
+                        .into(profilePhotoSelector);
             }
         }
 
@@ -152,7 +166,8 @@ public class AccountCreation extends Fragment {
                     rootView.findViewById(R.id.bottomPart3),
                     rootView.findViewById(R.id.nextBtn),
                     (TextView) rootView.findViewById(R.id.telephoneNumber),
-                    progress).executeOnExecutor(
+                    progress,
+                    SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-")).executeOnExecutor(
                     AsyncTask.THREAD_POOL_EXECUTOR,
                     name,
                     phoneNumber);
@@ -171,98 +186,68 @@ public class AccountCreation extends Fragment {
                 IMAGE_PICKER_SELECT);
     };
 
-    private final View.OnClickListener proceed = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mListener.onAccountCreated();
-        }
-    };
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
 
-        final FragmentActivity activity;
-        if ((activity = getActivity()) == null ||
-                activity.isFinishing()) return;
-        final Uri mImageUri;
-        if (requestCode != IMAGE_PICKER_SELECT ||
-                resultCode != Activity.RESULT_OK ||
-                (mImageUri = data.getData()) == null) {
+        final Activity activity;
+        if ((activity = getActivity()) == null || activity.isFinishing())
+            return;
+
+        if (requestCode != IMAGE_PICKER_SELECT || resultCode != Activity.RESULT_OK || (imageUri = data.getData()) == null) {
 
             Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        final InputStream stream;
-        try {
-            stream = activity.getAssets().open("key.p12");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        final File tempFile;
-        FileOutputStream outputStream = null;
-        try {
-            tempFile = File.createTempFile("profilePhoto", ".jpg");
-            outputStream = new FileOutputStream(tempFile);
-            ByteStreams.copy(activity.getContentResolver().openInputStream(mImageUri), outputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-            MiscUtils.closeAndIgnore(stream);
-            return;
-        } finally {
-            MiscUtils.closeAndIgnore(outputStream);
-        }
-
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
-
-            Optional<String> newImage = CloudStorageUtils.uploadFile(tempFile, stream);
-            if (newImage.isPresent())
-                imageId = newImage.get();
-            else
-                imageId = "hello_world";
-        });
-
-        uploadText.setVisibility(View.INVISIBLE);
+        //set image
         Picasso.with(activity)
-                .load(mImageUri)
+                .load(imageUri)
                 .resize(350, 350)
                 .centerCrop()
                 .transform(new CircleTransform())
-                .into((ImageView) profilePhotoSelector.findViewById(R.id.displayPic));
+                .into(profilePhotoSelector);
     }
 
-    private class SaveUserData extends AsyncTask<String, String, ReachUser> {
+    private static class SaveUserData extends AsyncTask<String, String, ReachUser> {
 
         final View bottomPart2, bottomPart3, next;
         final TextView phoneNumber, progress;
+        final String deviceId;
 
-        private SaveUserData(View bottomPart2, View bottomPart3, View next, TextView phoneNumber, TextView progress) {
+        private SaveUserData(View bottomPart2,
+                             View bottomPart3,
+                             View next,
+                             TextView phoneNumber,
+                             TextView progress,
+                             String deviceId) {
+
             this.bottomPart2 = bottomPart2;
             this.bottomPart3 = bottomPart3;
             this.next = next;
             this.phoneNumber = phoneNumber;
             this.progress = progress;
+            this.deviceId = deviceId;
         }
 
         @Override
         protected ReachUser doInBackground(String... strings) {
 
-            final FragmentActivity activity = getActivity();
+            //TODO no fall back !
+            uploadImage();
 
-            final String gcmId = MiscUtils.autoRetry(() -> {
+            final String gcmId;
+            final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment(reference, GoogleCloudMessaging::getInstance).orNull();
 
-                if (activity == null || activity.isFinishing())
-                    return "QUIT";
-                return GoogleCloudMessaging.getInstance(activity)
-                        .register("528178870551");
-            }, Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
+            if (messagingInstance == null)
+                gcmId = null;
+            else
+                gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
 
-            if (activity == null || activity.isFinishing() || TextUtils.isEmpty(gcmId) || gcmId.equals("QUIT"))
+            if (TextUtils.isEmpty(gcmId))
                 return null;
+
             final ReachUser user = new ReachUser();
-            user.setDeviceId(SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"));
+            user.setDeviceId(deviceId);
             user.setMegaBytesReceived(0L);
             user.setMegaBytesSent(0L);
             user.setStatusSong("hello_world");
@@ -290,43 +275,183 @@ public class AccountCreation extends Fragment {
         protected void onPostExecute(final ReachUser user) {
 
             super.onPostExecute(user);
-            final FragmentActivity activity = getActivity();
-            if (isCancelled() || isRemoving() || activity == null || activity.isFinishing())
-                return;
+
             if (user == null) {
-                Toast.makeText(activity, "Network failed !", Toast.LENGTH_LONG).show();
-                activity.finish();
+
+                MiscUtils.useContextFromFragment(reference, activity -> {
+
+                    Toast.makeText(activity, "Network failed !", Toast.LENGTH_LONG).show();
+                    activity.finish();
+                    return null;
+                });
+
                 return;
             }
 
             ReachActivity.serverId = user.getId();
             if (!StaticData.debugMode) {
-                if (user.getId() != 0) {
-                    AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
-                        String locID = Localytics.getCustomerId();
-                        if (locID == null || TextUtils.isEmpty(locID)) {
-                            Localytics.setCustomerId(String.valueOf(user.getPhoneNumber()));
-                            Localytics.setCustomerFullName(user.getUserName());
-                        }
-                    });
-                }
+
+                AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+
+                    final String locID = Localytics.getCustomerId();
+                    if (TextUtils.isEmpty(locID)) {
+
+                        Localytics.setCustomerId(user.getPhoneNumber());
+                        Localytics.setCustomerFullName(user.getUserName());
+                    }
+                });
             }
-            SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS), user);
-            final Intent intent = new Intent(activity, MusicScanner.class);
-            intent.putExtra("messenger", messenger);
-            intent.putExtra("first", true);
-            activity.startService(intent);
+
+            MiscUtils.useContextFromFragment(reference, activity -> {
+
+                SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS), user);
+                final Intent intent = new Intent(activity, MusicScanner.class);
+                intent.putExtra("messenger", messenger);
+                intent.putExtra("first", true);
+                activity.startService(intent);
+                return null;
+            });
+        }
+        private static void uploadImage() {
+
+            //get the image stream
+            final InputStream imageStream = MiscUtils.useContextFromFragment(reference, context -> {
+                try {
+                    return context.getContentResolver().openInputStream(imageUri);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).orNull();
+
+            if (imageStream == null) {
+
+                uploadProgress.error();
+                return;
+            }
+
+            //copy the file
+            File tempFile;
+            FileOutputStream outputStream = null;
+            try {
+                tempFile = File.createTempFile("profilePhoto", null);
+                outputStream = new FileOutputStream(tempFile);
+                ByteStreams.copy(imageStream, outputStream);
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                uploadProgress.error();
+                return;
+            } finally {
+                MiscUtils.closeQuietly(outputStream, imageStream);
+            }
+
+            //TODO make this
+            tempFile = MiscUtils.compressImage(tempFile);
+
+            //get the key
+            final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
+                try {
+                    return context.getAssets().open("key.p12");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).orNull();
+
+            if (keyStream == null) {
+                uploadProgress.error();
+                return;
+            }
+
+            CloudStorageUtils.uploadFile(tempFile, keyStream, uploadProgress);
         }
 
+        private static final UploadProgress uploadProgress = new UploadProgress() {
+
+            @Override
+            public void success(String fileName) {
+
+                //save fileName
+                imageId = fileName;
+
+                if (dialogWeakReference == null)
+                    return;
+                final ProgressBar progressBar = dialogWeakReference.get();
+                if (progressBar == null)
+                    return;
+
+                MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
+
+                    Toast.makeText(context, "Uploaded successfully", Toast.LENGTH_SHORT).show();
+                    return null;
+                });
+            }
+
+            @Override
+            public void error() {
+
+                if (dialogWeakReference == null)
+                    return;
+                final ProgressBar progressBar = dialogWeakReference.get();
+                if (progressBar == null)
+                    return;
+
+                imageId = null;
+                imageUri = null;
+
+                MiscUtils.runOnUiThreadFragment(reference, (AccountCreation fragment) -> {
+
+                    //fail
+                    Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
+                    fragment.profilePhotoSelector.setImageBitmap(null);
+                    return null;
+                });
+            }
+
+            @Override
+            public void progressChanged(MediaHttpUploader uploader) throws IOException {
+
+                switch (uploader.getUploadState()) {
+
+                    case INITIATION_STARTED:
+//                    System.out.println("Initiation Started");
+                        break;
+                    case INITIATION_COMPLETE:
+//                    System.out.println("Initiation Completed");
+                        break;
+                    case MEDIA_IN_PROGRESS:
+
+                        if (dialogWeakReference == null)
+                            return;
+                        final ProgressBar progressBar = dialogWeakReference.get();
+                        if (progressBar == null)
+                            return;
+                        progressBar.setProgress((int) (uploader.getProgress() * 100));
+                        break;
+                    case MEDIA_COMPLETE:
+                        break;
+                }
+            }
+        };
+
+
+        //cant be made static :(
         private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
 
             long songs = 0, playLists = 0;
+
+            private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
+                fragment.mListener.onAccountCreated();
+                return null;
+            });
 
             @Override
             public boolean handleMessage(Message message) {
 
                 if (message == null)
                     return false;
+
                 if (message.what == MusicScanner.FINISHED) {
 
                     bottomPart2.setVisibility(View.INVISIBLE);
@@ -342,6 +467,7 @@ public class AccountCreation extends Fragment {
                     playLists = message.arg1 + 1;
                 } else if (message.what == MusicScanner.ALBUM_ARTIST)
                     progress.setText("Creating account");
+
                 return true;
             }
         }));

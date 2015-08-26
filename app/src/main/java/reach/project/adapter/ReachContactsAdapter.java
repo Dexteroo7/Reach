@@ -7,6 +7,7 @@ package reach.project.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -77,20 +78,24 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             ReachFriendsHelper.COLUMN_NETWORK_TYPE, //4
             ReachFriendsHelper.COLUMN_STATUS, //5
             ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //6
+            ReachFriendsHelper.COLUMN_NEW_SONGS //7
     };
 
     @Override
     public void bindView(View view, final Context context, Cursor cursor) {
 
+        Log.i("Ayush", "Binding contacts adapter");
+
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
 
-        final long serverId = cursor.getLong(0);
+//        final long serverId = cursor.getLong(0);
         final String phoneNumber = cursor.getString(1);
         final String userName = cursor.getString(2);
         final String imageId = cursor.getString(3);
         final short networkType = cursor.getShort(4);
         final short status = cursor.getShort(5);
         final int numberOfSongs = cursor.getShort(6);
+        final String newSongs = cursor.getString(7);
 
         viewHolder.userInitials.setText(MiscUtils.generateInitials(userName));
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
@@ -99,8 +104,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         //first invalidate
         viewHolder.profilePhotoList.setImageBitmap(null);
         viewHolder.profilePhotoList.setVisibility(View.INVISIBLE);
-        if (!TextUtils.isEmpty(imageId) &&
-                !imageId.equals("hello_world")) {
+        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
 
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
                     imageId).transform(transform).noPlaceholder().into(viewHolder.profilePhotoList);
@@ -123,7 +127,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         //first invalidate
         viewHolder.featured.setVisibility(View.GONE);
         final RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.featured.getLayoutParams();
-        if (phoneNumber.equals("0000000001") || phoneNumber.equals("0000000002") || phoneNumber.equals("8860872102")) {
+        if (phoneNumber.equals("8860872102")) {
 
             viewHolder.featured.setVisibility(View.VISIBLE);
             if (status < 2) {
@@ -150,6 +154,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 viewHolder.listStatus.setText("Offline");
                 break;
             case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
+
                     viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
                     viewHolder.listStatus.setText("Online");
                     viewHolder.note.setImageResource(R.drawable.ic_music_count);
