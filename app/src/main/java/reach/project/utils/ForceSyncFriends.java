@@ -42,7 +42,6 @@ public class ForceSyncFriends implements Runnable {
         this.myNumber = myNumber;
     }
 
-
     @Override
     public void run() {
 
@@ -105,6 +104,6 @@ public class ForceSyncFriends implements Runnable {
         MiscUtils.useContextFromContext(reference, context -> context.getContentResolver().bulkInsert(ReachFriendsProvider.CONTENT_URI,
                 values.toArray(new ContentValues[size1 + size2])) > 0).or(false);
 
-        MiscUtils.closeAndIgnore(fullSync, numbers, values);
+        MiscUtils.closeQuietly(fullSync, numbers, values);
     }
 }

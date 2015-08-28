@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v4.util.LongSparseArray;
 import android.util.Log;
 
 import com.google.common.base.Optional;
@@ -68,7 +69,8 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                 new String[]{
                         ReachFriendsHelper.COLUMN_ID, //long
                         ReachFriendsHelper.COLUMN_HASH, //int
-                        ReachFriendsHelper.COLUMN_PHONE_NUMBER //int
+                        ReachFriendsHelper.COLUMN_PHONE_NUMBER, //int
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //old number of songs
                 }, null, null, null)).orNull();
 
         //if no previous data found run full sync
@@ -80,12 +82,15 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         //add data for quickSync
         final List<Long> ids = new ArrayList<>();
         final List<Integer> hashes = new ArrayList<>();
+        final LongSparseArray<Integer> oldNumberOfSongs = new LongSparseArray<>();
 
         while (currentIds.moveToNext()) {
 
-            ids.add(currentIds.getLong(0));
-            hashes.add(currentIds.getInt(1));
-            numbers.remove(currentIds.getString(2));
+            final long id = currentIds.getLong(0); //id
+            ids.add(id);
+            hashes.add(currentIds.getInt(1)); //hash
+            numbers.remove(currentIds.getString(2)); //phoneNumber
+            oldNumberOfSongs.append(id, currentIds.getInt(3)); //old numberOfSongs
         }
         currentIds.close();
 
@@ -138,11 +143,12 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                     context.getContentResolver(),
                     newFriends,
                     toDelete,
-                    quickSync != null ? quickSync.getNewStatus() : null);
+                    quickSync != null ? quickSync.getNewStatus() : null,
+                    oldNumberOfSongs);
             return null;
         });
 
-        MiscUtils.closeAndIgnore(numbers, ids, hashes, newFriends, toDelete);
+        MiscUtils.closeQuietly(numbers, ids, hashes, newFriends, toDelete);
         return Status.OK;
     }
 
@@ -150,7 +156,8 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                             ContentResolver resolver,
                             Iterable<Friend> toInsert,
                             Iterable<Long> toDelete,
-                            JsonMap statusChange) {
+                            JsonMap statusChange,
+                            LongSparseArray<Integer> oldNumberOfSongs) {
 
         final ReachFriendsHelper reachFriendsHelper = new ReachFriendsHelper(context);
         final SQLiteDatabase sqlDB = reachFriendsHelper.getWritableDatabase();
@@ -179,8 +186,9 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             }
 
             for (Friend friend : toInsert) {
+
                 Log.i("Ayush", "Inserting " + friend.getUserName());
-                final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend);
+                final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend, oldNumberOfSongs.get(friend.getId(), 0));
                 sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values);
             }
             sqlDB.setTransactionSuccessful();

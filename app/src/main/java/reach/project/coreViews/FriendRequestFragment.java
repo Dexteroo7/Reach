@@ -92,7 +92,7 @@ public class FriendRequestFragment extends Fragment {
                 }
                 cursor.close();
                 mListener.closeDrawers();
-                mListener.onOpenLibrary(receivedRequest.getId());
+                mListener.onOpenLibrary(userId);
             }
         }
     };

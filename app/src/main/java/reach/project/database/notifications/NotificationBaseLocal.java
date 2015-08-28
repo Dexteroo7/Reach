@@ -14,9 +14,6 @@ public abstract class NotificationBaseLocal {
     public static final byte UN_READ = 0;
     public static final byte READ = 1;
 
-    public static final byte NOT_EXPANDED = 0;
-    public static final byte EXPANDED = 1;
-
     private Types types = Types.DEFAULT;
 
     private String hostName = "";
@@ -26,7 +23,6 @@ public abstract class NotificationBaseLocal {
     private long systemTime = 0;
 
     private int read = UN_READ;
-    private int expanded = NOT_EXPANDED;
 
     public NotificationBaseLocal portData(NotificationBase base) {
 
@@ -46,7 +42,6 @@ public abstract class NotificationBaseLocal {
         this.setHostId(base.getHostId());
         this.setSystemTime(base.getSystemTime());
         this.setRead(base.getRead());
-        this.setExpanded(NOT_EXPANDED);
 
         return this;
     }
@@ -59,7 +54,6 @@ public abstract class NotificationBaseLocal {
         this.setHostId(base.getHostId());
         this.setSystemTime(base.getSystemTime());
         this.setRead(base.getRead());
-        this.setExpanded(NOT_EXPANDED);
 
         return this;
     }
@@ -110,14 +104,6 @@ public abstract class NotificationBaseLocal {
 
     public void setRead(int read) {
         this.read = read;
-    }
-
-    public int getExpanded() {
-        return expanded;
-    }
-
-    public void setExpanded(int expanded) {
-        this.expanded = expanded;
     }
 
     public int getNotificationId() {

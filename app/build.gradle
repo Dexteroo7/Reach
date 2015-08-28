@@ -25,8 +25,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    dexOptions {
-        incremental true
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
     }
 }
 
@@ -35,8 +37,7 @@ dependencies {
     compile fileTree(dir: 'libs', includes: ['*.jar'])
     compile 'com.google.apis:google-api-services-storage:v1-rev40-1.20.0'
 
-    compile 'com.google.android.gms:play-services-gcm:7.0.0'
-    compile 'com.google.android.gms:play-services-analytics:7.0.0'
+    compile 'com.google.android.gms:play-services:6.1.11'
 
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.android.support:appcompat-v7:22.2.1'
@@ -47,10 +48,10 @@ dependencies {
     compile 'com.android.support:multidex:1.0.1'
 
     // non-google stuff
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
     compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
-//    compile 'com.github.tchoulihan:musicbrainz-tagger:1.2.6'
 
     // to remove
     compile 'com.daimajia.swipelayout:library:1.1.9@aar'

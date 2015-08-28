@@ -114,170 +114,23 @@ public class ContactsListFragment extends Fragment implements
 
     public static void checkNewNotifications() {
 
-        final ContactsListFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
-            return;
+        MiscUtils.useFragment(reference, fragment -> {
 
-        final int friendRequestCount = FriendRequestFragment.receivedRequests.size();
-        final int notificationsCount = NotificationFragment.notifications.size();
-
-        if (friendRequestCount == 0 && notificationsCount == 0)
-            fragment.notificationCount.setVisibility(View.GONE);
-        else {
-            fragment.notificationCount.setVisibility(View.VISIBLE);
-            fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
-        }
-    }
-
-    private final View.OnClickListener openNotification = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mListener.onOpenNotificationDrawer();
-        }
-    };
-
-    private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
-
-        final class SendRequest extends AsyncTask<Long, Void, Long> {
-
-            @Override
-            protected Long doInBackground(final Long... params) {
-
-                /**
-                 * params[0] = other id
-                 * params[1] = my id
-                 * params[2] = status
-                 */
-
-                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData
-                        .messagingEndpoint
-                        .requestAccess(params[1], params[0]).execute(), Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
-
-                final String toParse;
-                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
-                    return params[0];
+            if (fragment.notificationCount == null)
                 return null;
+
+            final int friendRequestCount = FriendRequestFragment.receivedRequests.size();
+            final int notificationsCount = NotificationFragment.notifications.size();
+
+            if (friendRequestCount == 0 && notificationsCount == 0)
+                fragment.notificationCount.setVisibility(View.GONE);
+            else {
+                fragment.notificationCount.setVisibility(View.VISIBLE);
+                fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
             }
-
-            @Override
-            protected void onPostExecute(final Long response) {
-
-                super.onPostExecute(response);
-
-                if (response != null && response > 0) {
-
-                    //response becomes the id of failed person
-                    MiscUtils.useContextFromFragment(reference, context -> {
-
-                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                        context.getContentResolver().update(
-                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                values,
-                                ReachFriendsHelper.COLUMN_ID + " = ?",
-                                new String[]{response + ""});
-                        return null;
-                    });
-                }
-
-            }
-
-        }
-
-        @Override
-        public void onItemClick(final AdapterView<?> adapterView, final View view, int position, long l) {
-
-            final Object object = adapterView.getAdapter().getItem(position);
-
-            if (object instanceof Cursor) {
-
-                final Cursor cursor = (Cursor) object;
-                final long id = cursor.getLong(0);
-                final short status = cursor.getShort(5);
-                final short networkType = cursor.getShort(4);
-
-                if (mListener != null) {
-                    if (status < 2) {
-                        if (networkType == 5)
-                            Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
-                                    .show();
-                        mListener.onOpenLibrary(id);
-                    } else {
-                        final long clientId = cursor.getLong(0);
-
-                        new SendRequest().executeOnExecutor(
-                                AsyncTask.THREAD_POOL_EXECUTOR,
-                                clientId, serverId, (long) status);
-
-                        Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-                        getActivity().getContentResolver().update(
-                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
-                                values,
-                                ReachFriendsHelper.COLUMN_ID + " = ?",
-                                new String[]{clientId + ""});
-                    }
-                }
-            } else if (object instanceof Contact) {
-
-                ImageView listToggle = (ImageView) view.findViewById(R.id.listToggle);
-                final Contact contact = (Contact) object;
-                if (contact.isInviteSent())
-                    return;
-                LocalUtils.showAlert(inviteAdapter, contact, listToggle, view.getContext());
-            }
-        }
-    };
-
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
-
-        if (!pinging.get()) {
-
-            Log.i("Ayush", "Starting refresh !");
-            pinging.set(true);
-            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-    };
-
-    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
-
-        @Override
-        public void onScrollStateChanged(AbsListView absListView, int i) {
-
-        }
-
-        @Override
-        public void onScroll(AbsListView view, int firstVisibleItem,
-                             int visibleItemCount, int totalItemCount) {
-
-            boolean enable = false;
-            if (view.getChildCount() > 0) {
-
-                final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
-                final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
-                enable = firstItemVisible && topOfFirstItemVisible;
-            }
-
-            swipeRefreshLayout.setEnabled(enable);
-        }
-    };
-
-    private final View.OnClickListener pushLibraryListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-
-            mListener.onOpenPushLibrary();
-        }
-    };
-
-    private final View.OnClickListener inviteFriendListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mListener.onOpenInvitePage();
-        }
-    };
+            return null;
+        });
+    }
 
     public static ContactsListFragment newInstance() {
 
@@ -393,16 +246,22 @@ public class ContactsListFragment extends Fragment implements
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
         swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
         swipeRefreshLayout.setBackgroundResource(R.color.white);
-        swipeRefreshLayout.setOnRefreshListener(refreshListener);
+        swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
 
-        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
-        rootView.findViewById(R.id.invite_friend_fab).setOnClickListener(inviteFriendListener);
+        final View share = rootView.findViewById(R.id.share_music_fab);
+        share.setTag(mListener);
+        share.setOnClickListener(LocalUtils.pushLibraryListener);
+
+        final View invite = rootView.findViewById(R.id.invite_friend_fab);
+        invite.setTag(mListener);
+        invite.setOnClickListener(LocalUtils.inviteFriendListener);
 
         final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
         listView.setDivider(null);
         listView.setDividerHeight(0);
-        listView.setOnItemClickListener(clickListener);
-        listView.setOnScrollListener(scrollListener);
+        listView.setOnItemClickListener(LocalUtils.clickListener);
+        listView.setTag(swipeRefreshLayout); //MUST SET THE TAG !
+        listView.setOnScrollListener(LocalUtils.scrollListener);
         listView.setAdapter(mergeAdapter);
 
         selection = null;
@@ -549,9 +408,11 @@ public class ContactsListFragment extends Fragment implements
         final MenuItem notificationButton = menu.findItem(R.id.notif_button);
         if (notificationButton == null)
             return;
+
         notificationButton.setActionView(R.layout.reach_queue_counter);
         final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
-        notificationContainer.setOnClickListener(openNotification);
+        notificationContainer.setTag(mListener); //MUST SET THE TAG HERE !
+        notificationContainer.setOnClickListener(LocalUtils.openNotification);
         notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
     }
 
@@ -571,7 +432,6 @@ public class ContactsListFragment extends Fragment implements
         super.onDetach();
         mListener = null;
     }
-
 
     private enum LocalUtils {
         ;
@@ -735,7 +595,7 @@ public class ContactsListFragment extends Fragment implements
             }
 
             @Override
-            protected void onPostExecute (Void aVoid) {
+            protected void onPostExecute(Void aVoid) {
 
                 super.onPostExecute(aVoid);
                 //finally relax !
@@ -744,6 +604,153 @@ public class ContactsListFragment extends Fragment implements
                 MiscUtils.useFragment(reference, fragment -> fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false)));
             }
         }
+
+        public static final AdapterView.OnItemClickListener clickListener = (adapterView, view, position, l) -> {
+
+            final Object object = adapterView.getAdapter().getItem(position);
+
+            if (object instanceof Cursor) {
+
+                final Cursor cursor = (Cursor) object;
+                final long id = cursor.getLong(0);
+                final short status = cursor.getShort(5);
+                final short networkType = cursor.getShort(4);
+
+                if (status < 2) {
+
+                    if (networkType == 5)
+                        Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
+                                .show();
+
+                    MiscUtils.useFragment(reference, fragment -> {
+                        if (fragment.mListener != null)
+                            fragment.mListener.onOpenLibrary(id);
+                        return null;
+                    });
+
+                } else {
+                    final long clientId = cursor.getLong(0);
+
+                    new SendRequest().executeOnExecutor(
+                            AsyncTask.THREAD_POOL_EXECUTOR,
+                            clientId, serverId, (long) status);
+
+                    Toast.makeText(view.getContext(), "Access Request sent", Toast.LENGTH_SHORT).show();
+                    final ContentValues values = new ContentValues();
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+                    view.getContext().getContentResolver().update(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
+                            values,
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{clientId + ""});
+                }
+
+            } else if (object instanceof Contact) {
+
+                ImageView listToggle = (ImageView) view.findViewById(R.id.listToggle);
+                final Contact contact = (Contact) object;
+                if (contact.isInviteSent())
+                    return;
+                //2 -> ReachAllContactsAdapter
+                showAlert(contact, listToggle, view.getContext());
+            }
+        };
+
+        public static final View.OnClickListener pushLibraryListener = v -> {
+
+            final Object listener = v.getTag();
+            if (listener == null || !(listener instanceof SuperInterface))
+                return;
+            ((SuperInterface) listener).onOpenPushLibrary();
+        };
+
+        public static final View.OnClickListener inviteFriendListener = v -> {
+
+            final Object listener = v.getTag();
+            if (listener == null || !(listener instanceof SuperInterface))
+                return;
+            ((SuperInterface) listener).onOpenInvitePage();
+        };
+
+        private static final class SendRequest extends AsyncTask<Long, Void, Long> {
+
+            @Override
+            protected Long doInBackground(final Long... params) {
+
+                /**
+                 * params[0] = other id
+                 * params[1] = my id
+                 * params[2] = status
+                 */
+
+                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
+                        () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
+                        Optional.<Predicate<reach.backend.entities.messaging.model.MyString>>of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
+
+                final String toParse;
+                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
+                    return params[0];
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(final Long response) {
+
+                super.onPostExecute(response);
+
+                if (response != null && response > 0) {
+
+                    //response becomes the id of failed person
+                    MiscUtils.useContextFromFragment(reference, context -> {
+
+                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
+                        final ContentValues values = new ContentValues();
+                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                        context.getContentResolver().update(
+                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
+                                values,
+                                ReachFriendsHelper.COLUMN_ID + " = ?",
+                                new String[]{response + ""});
+                        return null;
+                    });
+                }
+            }
+        }
+
+        public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
+
+            if (!pinging.get()) {
+
+                Log.i("Ayush", "Starting refresh !");
+                pinging.set(true);
+                new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+        };
+
+        public static final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(AbsListView absListView, int i) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+
+                boolean enable = false;
+                if (view.getChildCount() > 0) {
+
+                    final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
+                    final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
+                    enable = firstItemVisible && topOfFirstItemVisible;
+                }
+
+                final SwipeRefreshLayout refreshLayout = (SwipeRefreshLayout) view.getTag();
+                if (refreshLayout != null)
+                    refreshLayout.setEnabled(enable);
+            }
+        };
 
         public static final Runnable devikaSendMeSomeLove = () -> {
 
@@ -766,6 +773,7 @@ public class ContactsListFragment extends Fragment implements
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             final Intent intent = new Intent(activity, PushActivity.class);
             intent.putExtra("type", 1);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -796,6 +804,14 @@ public class ContactsListFragment extends Fragment implements
 //            translation.setInterpolator(new BounceInterpolator());
 //            return translation;
 //        }
+
+        public static final View.OnClickListener openNotification = v -> {
+
+            final Object listener = v.getTag();
+            if (listener == null || !(listener instanceof SuperInterface))
+                return;
+            ((SuperInterface) listener).onOpenNotificationDrawer();
+        };
 
         public static View createFriendsHeader(Context context) {
 
@@ -841,7 +857,7 @@ public class ContactsListFragment extends Fragment implements
             return emptyInvite;
         }
 
-        public static void showAlert(ArrayAdapter adapter, final Contact contact, final ImageView listToggle, final Context context) {
+        public static void showAlert(final Contact contact, final ImageView listToggle, final Context context) {
 
             final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
                     ".\nhttp://letsreach.co/app\n--\n" +
@@ -859,8 +875,6 @@ public class ContactsListFragment extends Fragment implements
             inputText.setLayoutParams(lp);
             inputText.setText(msg);
             input.addView(inputText);
-
-            final WeakReference<ArrayAdapter> arrayAdapterReference = new WeakReference<>(adapter);
 
             new AlertDialog.Builder(context)
                     .setMessage("Send an invite to " + contact.getUserName() + " ?")
@@ -894,10 +908,12 @@ public class ContactsListFragment extends Fragment implements
                                     LocalUtils.inviteSentTo.remove(String.valueOf(contact.hashCode()));
                                     Picasso.with(context).load(R.drawable.icon_invite).into(listToggle);
 
-                                    final ArrayAdapter adapter = arrayAdapterReference.get();
-                                    if (adapter == null)
-                                        return;
-                                    adapter.notifyDataSetChanged();
+                                    MiscUtils.useFragment(reference, fragment -> {
+
+                                        if (fragment.inviteAdapter != null)
+                                            fragment.inviteAdapter.notifyDataSetChanged();
+                                        return null;
+                                    });
                                 }
                             }
                         }
@@ -905,8 +921,8 @@ public class ContactsListFragment extends Fragment implements
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
 
+                            final ArrayAdapter adapter = MiscUtils.useFragment(reference, fragment -> fragment.inviteAdapter).orNull();
 
-                            final ArrayAdapter adapter = arrayAdapterReference.get();
                             if (adapter == null) {
                                 dialog.dismiss();
                                 return;
@@ -916,6 +932,7 @@ public class ContactsListFragment extends Fragment implements
                             final String txt = inputText.getText().toString();
 
                             if (!TextUtils.isEmpty(txt)) {
+
                                 Log.i("Ayush", "Marking true " + contact.getUserName());
                                 LocalUtils.inviteSentTo.add(String.valueOf(contact.hashCode()));
                                 contact.setInviteSent(true);

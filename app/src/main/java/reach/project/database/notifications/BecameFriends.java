@@ -68,16 +68,6 @@ public class BecameFriends extends NotificationBaseLocal {
     }
 
     @Override
-    public int getExpanded() {
-        return super.getExpanded();
-    }
-
-    @Override
-    public void setExpanded(int expanded) {
-        super.setExpanded(expanded);
-    }
-
-    @Override
     public int getNotificationId() {
         return super.getNotificationId();
     }

@@ -6,6 +6,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -33,6 +35,9 @@ import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
@@ -109,7 +114,7 @@ public enum MiscUtils {
                 new Date(seconds));
     }
 
-    public static void closeAndIgnore(Collection... collections) {
+    public static void closeQuietly(Collection... collections) {
         if (collections == null || collections.length == 0)
             return;
         for (Collection collection : collections)
@@ -117,7 +122,7 @@ public enum MiscUtils {
                 collection.clear();
     }
 
-    public static void closeAndIgnore(Closeable... closeables) {
+    public static void closeQuietly(Closeable... closeables) {
         for (Closeable closeable : closeables)
             if (closeable != null)
                 try {
@@ -126,7 +131,7 @@ public enum MiscUtils {
                 }
     }
 
-    public static void closeAndIgnore(Closeable closeable) {
+    public static void closeQuietly(Closeable closeable) {
         if (closeable != null)
             try {
                 closeable.close();
@@ -561,28 +566,43 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(fragment));
     }
 
-//    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
-//                                                          final UseContext<Void, T> task) {
-//
-//        final T activity;
-//        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
-//            return;
-//
-//        activity.runOnUiThread(() -> task.work(activity));
-//    }
-//
-//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-//                                                                  final UseContext<Void, Activity> task) {
-//
-//        final T fragment;
-//        if (reference == null || (fragment = reference.get()) == null)
-//            return;
-//        final Activity activity = fragment.getActivity();
-//        if (activity.isFinishing())
-//            return;
-//
-//        activity.runOnUiThread(() -> task.work(activity));
-//    }
+    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+                                                          final UseContext<Void, T> task) {
+
+        final T activity;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext<Void, Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseFragment<Void, T> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(fragment));
+    }
 
     /**
      * @param id        id of the person to update gcm of
@@ -718,6 +738,85 @@ public enum MiscUtils {
                 }
             }
         });
+    }
+
+    public static File compressImage(File image, int sideLength) throws IOException {
+
+        // Decode just the boundries
+        final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
+        mBitmapOptions.inJustDecodeBounds = true;
+        FileInputStream fileInputStream = new FileInputStream(image);
+        BitmapFactory.decodeStream(fileInputStream, null, mBitmapOptions);
+
+        // Calculate inSampleSize
+        // Raw height and width of image
+        final int height = mBitmapOptions.outHeight;
+        final int width = mBitmapOptions.outWidth;
+        closeQuietly(fileInputStream);
+
+        int inSampleSize = 1;
+
+        int reqHeight = height;
+        int reqWidth = width;
+        final int inDensity;
+        final int inTargetDensity;
+        final float ratio;
+        if (height > width) {
+            inDensity = height;
+            inTargetDensity = reqHeight;
+            if (height > sideLength) {
+                reqHeight = sideLength;
+                ratio = height / sideLength;
+                reqWidth = (int) (width / ratio);
+            }
+        }
+        else if (width > height){
+            inDensity = width;
+            inTargetDensity = reqWidth;
+            if (width > sideLength) {
+                reqWidth = sideLength;
+                ratio = width / sideLength;
+                reqHeight = (int) (height / ratio);
+            }
+        }
+        else {
+            reqWidth = sideLength;
+            reqHeight = sideLength;
+            inDensity = height;
+            inTargetDensity = reqHeight;
+        }
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        mBitmapOptions.inSampleSize = inSampleSize;
+
+        //now go resize the image to the size you want
+        mBitmapOptions.inJustDecodeBounds = false;
+        mBitmapOptions.inScaled = true;
+        mBitmapOptions.inDensity = inDensity;
+        mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
+
+        File tempFile = File.createTempFile("compressed_profile_photo", null);
+        FileInputStream fInputStream = new FileInputStream(image);
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+
+        // will load & resize the image to be 1/inSampleSize dimensions
+        BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions)
+                .compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream);
+        closeQuietly(fInputStream,fileOutputStream);
+
+        return tempFile;
     }
 
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,

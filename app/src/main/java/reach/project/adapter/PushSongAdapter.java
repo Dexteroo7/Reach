@@ -22,6 +22,7 @@ import reach.project.utils.MiscUtils;
 public class PushSongAdapter extends ResourceCursorAdapter {
 
     private final SparseBooleanArray booleanArray = new SparseBooleanArray();
+    private final int pad = MiscUtils.dpToPx(5);
 
     public PushSongAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
@@ -78,12 +79,14 @@ public class PushSongAdapter extends ResourceCursorAdapter {
          */
         viewHolder.listToggle.setBackgroundResource(0);
         viewHolder.listToggle.setImageBitmap(null);
+
         if (booleanArray.get(getHashCode(cursor.getLong(7), cursor.getLong(1), cursor.getString(2), cursor.getString(3)), false)) {
-            int pad = MiscUtils.dpToPx(5);
+
             viewHolder.listToggle.setPadding(pad, pad, pad, pad);
             viewHolder.listToggle.setBackgroundResource(R.drawable.circular_background_dark);
             Picasso.with(context).load(R.drawable.check_white).noFade().into(viewHolder.listToggle);
         } else {
+
             viewHolder.listToggle.setPadding(0, 0, 0, 0);
             viewHolder.listToggle.setBackgroundResource(0);
             Picasso.with(context).load(R.drawable.add_grey).noFade().into(viewHolder.listToggle);

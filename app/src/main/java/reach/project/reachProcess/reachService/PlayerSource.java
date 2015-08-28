@@ -49,7 +49,7 @@ public final class PlayerSource implements Runnable, Closeable {
     @Override
     public void close() {
         kill.set(true);
-        MiscUtils.closeAndIgnore(sinkChannel, sourceStream, source);
+        MiscUtils.closeQuietly(sinkChannel, sourceStream, source);
     }
 
     @Override
@@ -87,7 +87,7 @@ public final class PlayerSource implements Runnable, Closeable {
             }
         }
 
-        MiscUtils.closeAndIgnore(sinkChannel, sourceStream, source);
+        MiscUtils.closeQuietly(sinkChannel, sourceStream, source);
         /////////////////////////
     }
 }
