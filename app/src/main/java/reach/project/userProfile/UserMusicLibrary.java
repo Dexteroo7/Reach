@@ -43,7 +43,7 @@ import java.util.Map;
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
-import reach.project.core.PushActivity;
+import reach.project.core.DialogActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
@@ -192,7 +192,7 @@ public class UserMusicLibrary extends Fragment {
         MiscUtils.useContextFromFragment(reference, context -> {
 
             final NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
-            final Intent intent = new Intent(context, PushActivity.class);
+            final Intent intent = new Intent(context, DialogActivity.class);
             intent.putExtra("type", 2);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);

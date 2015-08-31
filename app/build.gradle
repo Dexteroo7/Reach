@@ -35,8 +35,7 @@ dependencies {
     compile fileTree(dir: 'libs', includes: ['*.jar'])
     compile 'com.google.apis:google-api-services-storage:v1-rev40-1.20.0'
 
-    compile 'com.google.android.gms:play-services-gcm:7.0.0'
-    compile 'com.google.android.gms:play-services-analytics:7.0.0'
+    compile 'com.google.android.gms:play-services:6.1.11'
 
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.android.support:appcompat-v7:22.2.1'

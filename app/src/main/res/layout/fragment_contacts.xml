@@ -11,9 +11,12 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <ListView
+            <GridView
                 android:id="@+id/contactsList"
-                android:layout_width="match_parent"
+                android:numColumns="3"
+                android:paddingTop="10dp"
+                android:gravity="center_horizontal"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"/>
             <com.getbase.floatingactionbutton.FloatingActionsMenu
                 android:id="@+id/right_labels"

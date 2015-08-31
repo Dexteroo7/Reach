@@ -111,7 +111,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".core.PushActivity"
+            android:name=".core.DialogActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_reach_notification"
             android:launchMode="singleTop"

@@ -1,146 +1,80 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="90dp"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="105dp"
+    android:layout_height="135dp"
     android:descendantFocusability="blocksDescendants">
-
-    <FrameLayout
-        android:id="@+id/profilePhoto"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_centerVertical="true"
-        android:layout_marginBottom="15dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="15dp"
-        android:background="@drawable/circular_background_dark">
-
-        <TextView
-            android:id="@+id/userInitials"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
-
-        <ImageView
-            android:id="@+id/profilePhotoList"
+    <android.support.v7.widget.CardView
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:descendantFocusability="blocksDescendants"
+        android:id="@+id/card_view"
+        android:layout_marginTop="3dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        card_view:cardUseCompatPadding="true"
+        card_view:cardElevation="3dp"
+        card_view:cardCornerRadius="0dp">
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center" />
-
-    </FrameLayout>
-
-    <RelativeLayout
-        android:id="@+id/toggleContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="15dp">
-
-        <ImageView
-            android:id="@+id/listToggle"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_centerHorizontal="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/icon_user_offline" />
-
-        <TextView
-            android:id="@+id/listStatus"
-            android:layout_width="45dp"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/listToggle"
-            android:layout_centerHorizontal="true"
-            android:gravity="center"
-            android:text="Pending"
-            android:textColor="@color/darkgrey"
-            android:textSize="12sp" />
-    </RelativeLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toLeftOf="@id/toggleContainer"
-        android:layout_toRightOf="@id/profilePhoto"
-        android:orientation="vertical">
-
-        <RelativeLayout
-            android:id="@+id/titleContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/userNameList"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:maxWidth="120dp"
-                android:text="TITLE"
-                android:textColor="#000"
-                android:textSize="16sp" />
-
-            <ImageView
-                android:id="@+id/status"
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="5dp"
-                android:layout_toRightOf="@id/userNameList" />
-
-            <TextView
-                android:id="@+id/netType"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toRightOf="@id/status"
-                android:textColor="@color/darkgrey"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/featured"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:background="@drawable/textview_background_blue"
-                android:gravity="center"
-                android:paddingBottom="2dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:paddingTop="2dp"
-                android:text="Reach Manager"
-                android:textColor="@color/reach_grey"
-                android:textSize="12sp"
-                android:visibility="visible" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@id/titleContainer"
-            android:layout_below="@id/titleContainer"
-            android:layout_marginTop="2dp">
-
-            <ImageView
-                android:id="@+id/note"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_music_count_grey" />
-
-            <TextView
-                android:id="@+id/telephoneNumberList"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="5dp"
-                android:layout_toRightOf="@id/note"
-                android:text="0"
-                android:textColor="#000"
-                android:textSize="13sp" />
-        </RelativeLayout>
-    </LinearLayout>
-</RelativeLayout>
+            android:layout_height="match_parent">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="95dp">
+                <ImageView
+                    android:id="@+id/profilePhotoList"
+                    android:layout_width="match_parent"
+                    android:scaleType="centerCrop"
+                    android:layout_height="match_parent" />
+                <ImageView
+                    android:background="@drawable/nav_pic_gradient"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </FrameLayout>
+            <RelativeLayout
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <TextView
+                    android:id="@+id/telephoneNumberList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="9999"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:textColor="#000"
+                    android:textSize="11sp" />
+                <ImageView
+                    android:id="@+id/note"
+                    android:layout_toLeftOf="@id/telephoneNumberList"
+                    android:layout_centerVertical="true"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:src="@drawable/ic_music_count_grey" />
+                <TextView
+                    android:id="@+id/userNameList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_toLeftOf="@id/note"
+                    android:layout_centerVertical="true"
+                    android:ellipsize="marquee"
+                    android:maxWidth="120dp"
+                    android:lines="1"
+                    android:text="Title "
+                    android:textColor="#000"
+                    android:textSize="12sp" />
+            </RelativeLayout>
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+    <TextView
+        android:layout_gravity="end"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        android:text="99"
+        android:elevation="5dp"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:background="@drawable/circular_background_pink"
+        android:layout_width="20dp"
+        android:layout_height="20dp" />
+</FrameLayout>

@@ -42,9 +42,9 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,7 +66,7 @@ import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
 import reach.project.adapter.ReachAllContactsAdapter;
 import reach.project.adapter.ReachContactsAdapter;
-import reach.project.core.PushActivity;
+import reach.project.core.DialogActivity;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
@@ -359,7 +359,7 @@ public class ContactsListFragment extends Fragment implements
         reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0);
         mergeAdapter = new MergeAdapter();
         //setup friends adapter
-        mergeAdapter.addView(LocalUtils.createFriendsHeader(activity));
+        //mergeAdapter.addView(LocalUtils.createFriendsHeader(activity));
         mergeAdapter.addView(emptyFriends = LocalUtils.friendsEmpty(activity), false);
         mergeAdapter.setActive(emptyFriends, false);
         mergeAdapter.addAdapter(reachContactsAdapter);
@@ -398,12 +398,10 @@ public class ContactsListFragment extends Fragment implements
         rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
         rootView.findViewById(R.id.invite_friend_fab).setOnClickListener(inviteFriendListener);
 
-        final ListView listView = (ListView) rootView.findViewById(R.id.contactsList);
-        listView.setDivider(null);
-        listView.setDividerHeight(0);
-        listView.setOnItemClickListener(clickListener);
-        listView.setOnScrollListener(scrollListener);
-        listView.setAdapter(mergeAdapter);
+        final GridView gridView = (GridView) rootView.findViewById(R.id.contactsList);
+        gridView.setOnItemClickListener(clickListener);
+        gridView.setOnScrollListener(scrollListener);
+        gridView.setAdapter(mergeAdapter);
 
         selection = null;
         selectionArguments = null;
@@ -766,7 +764,7 @@ public class ContactsListFragment extends Fragment implements
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            final Intent intent = new Intent(activity, PushActivity.class);
+            final Intent intent = new Intent(activity, DialogActivity.class);
             intent.putExtra("type", 1);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
