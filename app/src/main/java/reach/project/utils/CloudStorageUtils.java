@@ -13,7 +13,6 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -21,7 +20,6 @@ import com.google.api.client.util.SecurityUtils;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.squareup.wire.Wire;
@@ -37,8 +35,8 @@ import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 
 import reach.project.utils.auxiliaryClasses.MusicList;
-import reach.project.utils.auxiliaryClasses.ReachAlbum;
-import reach.project.utils.auxiliaryClasses.ReachArtist;
+import reach.project.music.albums.Album;
+import reach.project.music.artists.Artist;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 
 /**
@@ -76,6 +74,22 @@ public enum CloudStorageUtils {
         }
 
         final Storage storage = optional.get();
+
+        //check if file is present
+        try {
+            storage.objects().get(BUCKET_NAME_IMAGES, fileName).execute();
+            Log.i("Ayush", "File found" + fileName);
+            uploadProgress.success(fileName);
+            return; //quit since found
+        } catch (IOException e) {
+
+            //file not present, hence the error, we upload
+            e.printStackTrace();
+        }
+
+        //prepare upload
+        Log.i("Ayush", "File not found, Uploading " + fileName);
+        final Storage.Objects.Insert insert;
         final AbstractInputStreamContent content = new AbstractInputStreamContent("image/") {
 
             @Override
@@ -94,21 +108,6 @@ public enum CloudStorageUtils {
             }
         };
 
-        //check if file is present
-        try {
-            storage.objects().get(BUCKET_NAME_IMAGES, fileName).execute();
-            Log.i("Ayush", "File found" + fileName);
-            uploadProgress.success(fileName);
-            return; //quit since found
-        } catch (IOException e) {
-
-            //file not present, hence the error, we upload
-            e.printStackTrace();
-        }
-
-        //prepare upload
-        Log.i("Ayush", "File not found, Uploading " + fileName);
-        final Storage.Objects.Insert insert;
         try {
             insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
         } catch (IOException e) {
@@ -139,69 +138,6 @@ public enum CloudStorageUtils {
         Log.i("Ayush", "Upload complete " + md5);
         uploadProgress.success(fileName);
     }
-
-//    public byte [] downloadFile(String fileName) {
-//
-//        try {
-//            getStorage();
-//            final ByteArrayOutputStream download = new ByteArrayOutputStream();
-//            BufferedInputStream bufferedInputStream = null;
-//            try {
-//                Log.i("Ayush", "Attempting to download " + fileName);
-//                Storage.Objects.Get get = storage.objects().get(StaticData.BUCKET_NAME, fileName);
-//
-//                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
-//                byte [] bytes = new byte[5000];
-//                int read;
-//                int total = 0;
-//                read = bufferedInputStream.read(bytes);
-//                while(read != -1) {
-//
-//                    total += read;
-//                    byte [] toCopy = new byte[read];
-//                    System.arraycopy(bytes, 0, toCopy, 0, read);
-//                    download.write(toCopy);
-//                    read = bufferedInputStream.read(bytes);
-//                }
-//            } catch (GoogleJsonResponseException |
-//                     UnknownHostException |
-//                     SocketTimeoutException e) {
-//
-//                e.printStackTrace();
-//                Log.i("Ayush", "Network error man");
-//                download.close();
-//                if (bufferedInputStream != null) {
-//                    bufferedInputStream.close();
-//                }
-//                return null;
-//            } catch(Exception e) {
-//                e.printStackTrace();
-//                Log.i("Ayush", "Retrying download");
-//                download.close();
-//                if (bufferedInputStream != null) {
-//                    bufferedInputStream.close();
-//                }
-//                try {
-//                    Thread.sleep(5000L);
-//                } catch (InterruptedException e1) {
-//                    e1.printStackTrace();
-//                    return downloadFile(fileName);
-//                }
-//                return downloadFile(fileName);
-//            } finally {
-//                download.close();
-//                if (bufferedInputStream != null) {
-//                    bufferedInputStream.close();
-//                }
-//            }
-//            Log.i("Ayush", "downloaded " + fileName + " " + download.size());
-//            return download.toByteArray();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            Log.i("Ayush", "Retrying download");
-//            return downloadFile(fileName);
-//        }
-//    }
 
 //    public static void deleteFile(String fileName) {
 //
@@ -294,7 +230,7 @@ public enum CloudStorageUtils {
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         final String fileName = MiscUtils.getMusicStorageKey(hostId);
         final String currentHash = SharedPrefUtils.getMusicHash(preferences, fileName);
-        final boolean toReturn = !TextUtils.isEmpty(currentHash);
+        final boolean toReturn = !TextUtils.isEmpty(currentHash); //if current hash present, return true !
 
         //get cloud key
         final InputStream stream;
@@ -332,8 +268,8 @@ public enum CloudStorageUtils {
             return toReturn;
         }
 
-        if (currentHash.equals(serverHash))
-            return toReturn; //same music found, but still verify for music visibility
+//        if (currentHash.equals(serverHash))
+//            return toReturn; //same music found, but still verify for music visibility
 
         InputStream download = null;
         GZIPInputStream compressedData = null;
@@ -369,7 +305,7 @@ public enum CloudStorageUtils {
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
-        final Pair<ArrayMap<String, ReachAlbum>, ArrayMap<String, ReachArtist>> pair =
+        final Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> pair =
                 MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
         MiscUtils.bulkInsertSongs(
                 musicList.song,
@@ -400,7 +336,7 @@ public enum CloudStorageUtils {
         final Storage storage = getStorage(key).orNull();
         MiscUtils.closeQuietly(key);
         if (storage == null)
-            return true;
+            return true; //error, but sync with local sql
 
         //compute hash of current Music data
         final String currentHash = Base64.encodeToString(Hashing.md5().newHasher()
@@ -421,26 +357,56 @@ public enum CloudStorageUtils {
         if (currentHash.equals(hash))
             return false; //hash was same
 
-        Log.i("Ayush", currentHash.compareTo(hash) + " ");
         //file not present OR old
         Log.i("Ayush", "File not found, Uploading " + fileName);
-        final ByteArrayInputStream stream = new ByteArrayInputStream(musicData);
-        final InputStreamContent content;
-        content = new InputStreamContent("application/octet-stream", stream);
+        final Storage.Objects.Insert insert;
+        final AbstractInputStreamContent content = new AbstractInputStreamContent("application/octet-stream") {
 
-        MiscUtils.autoRetry(
-                () -> {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(musicData); //can be retried
+            }
 
-                    final String uploadedHash = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content)
-                            .setName(fileName)
-                            .execute().getMd5Hash();
+            @Override
+            public long getLength() throws IOException {
+                return musicData.length;
+            }
 
-                    MiscUtils.closeQuietly(stream);
-                    Log.i("Ayush", "Upload complete " + uploadedHash);
-                    return null;
-                }, Optional.<Predicate<Void>>absent());
+            @Override
+            public boolean retrySupported() {
+                return true;
+            }
+        };
 
-        return true;
+        try {
+            insert = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content);
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            Log.i("Ayush", "Error while creating request" + fileName);
+            return true; //error, but sync with local sql
+        }
+
+        insert.setPredefinedAcl("publicRead");
+        insert.setName(fileName);
+        insert.getMediaHttpUploader().setDirectUploadEnabled(true);
+//        insert.getMediaHttpUploader().setProgressListener(uploadProgress);
+
+        //upload
+        final String md5;
+        try {
+            md5 = insert.execute().getMd5Hash();
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            Log.i("Ayush", "Error while uploading" + fileName);
+//            uploadProgress.error();
+            return true; //error, but sync with local sql
+        }
+
+        Log.i("Ayush", "Upload complete " + md5);
+//        uploadProgress.success(fileName);
+        return true; //success, sync with local
     }
 
     private static Optional<Storage> getStorage(InputStream stream) {

@@ -3,10 +3,6 @@ package reach.project.utils;
 import android.util.Log;
 
 import com.google.api.client.googleapis.services.AbstractGoogleClient;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
-
-import java.io.IOException;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -50,14 +46,11 @@ public enum CloudEndPointsUtils {;
         // only enable GZip when connecting to remote server
         final boolean enableGZip = builder.getRootUrl().startsWith("https:");
 
-        builder.setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-            public void initialize(AbstractGoogleClientRequest<?> request)
-                    throws IOException {
+        builder.setGoogleClientRequestInitializer(request -> {
 
-                if (!enableGZip) {
-                    Log.i("Ayush", "Disabling gzip Content");
-                    request.setDisableGZipContent(true);
-                }
+            if (!enableGZip) {
+                Log.i("Ayush", "Disabling gzip Content");
+                request.setDisableGZipContent(true);
             }
         });
 

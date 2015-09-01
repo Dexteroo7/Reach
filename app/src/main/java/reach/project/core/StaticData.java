@@ -13,8 +13,8 @@ import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
 import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachSongHelper;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.music.songs.ReachSongHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -59,14 +59,14 @@ public final class StaticData {
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{
             ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_LENGTH, //1
+            ReachDatabaseHelper.COLUMN_SIZE, //1
             ReachDatabaseHelper.COLUMN_SENDER_ID, //2
             ReachDatabaseHelper.COLUMN_PROCESSED, //3
             ReachDatabaseHelper.COLUMN_PATH, //4
             ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
             ReachDatabaseHelper.COLUMN_IS_LIKED, //6
             ReachDatabaseHelper.COLUMN_SONG_ID, //7
-            ReachDatabaseHelper.COLUMN_ARTIST_NAME, //8
+            ReachDatabaseHelper.COLUMN_ARTIST, //8
             ReachDatabaseHelper.COLUMN_DURATION}; //9
 
     public static final String[] DISK_PARTIAL = new String[]{

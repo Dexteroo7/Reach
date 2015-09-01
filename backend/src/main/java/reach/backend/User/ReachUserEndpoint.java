@@ -44,7 +44,7 @@ import static reach.backend.OfyService.ofy;
  * WARNING: This generated code is intended as a sample or starting point for using a
  * Google Cloud Endpoints RESTful API with an Objectify entity. It provides no data access
  * restrictions and no data validation.
- * <p/>
+ * <p>
  * DO NOT deploy this code unchanged as part of a real application to real users.
  */
 @Api(
@@ -74,7 +74,7 @@ public class ReachUserEndpoint {
     public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
         final HashSet<String> phoneNumbers;
-        if(contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.isEmpty())
+        if (contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.isEmpty())
             return null;
 
         logger.info(phoneNumbers.size() + " total");
@@ -105,6 +105,7 @@ public class ReachUserEndpoint {
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
         syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
         final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
         if (client == null)
             return null;
@@ -224,19 +225,24 @@ public class ReachUserEndpoint {
             if (!pair.containsKey(user.getId()))
                 throw new IllegalArgumentException("Parameter pair did not contain the id !");
 
-            //if hashcode did not change continue
             if (pair.get(user.getId()) == user.getDirtyCheck())
                 continue;
 
             final ReachUser reachUser = ofy().load().type(ReachUser.class).id(user.getId()).now();
-            if (reachUser.getGcmId() == null || reachUser.getGcmId().equals(""))
+            if (reachUser.getGcmId() == null || reachUser.getGcmId().equals("")) {
+
+                logger.info("Marking dead ! " + reachUser.getUserName());
                 toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
-            else
+            }
+            else {
+
+                logger.info("Marking for update ! " + reachUser.getUserName());
                 toUpdate.add(new Friend(reachUser, myReach, sentRequests,
                         (short) (computeLastSeen((byte[]) syncCache.get(reachUser.getId())) > ReachUser.ONLINE_LIMIT ? 1 : 0)));
+            }
         }
         //toUpdate built
-        if (newIds.size() == 0 || newIdQuery == null) {
+        if (newIds.size() == 0 || newIdQuery == null) { //TODO handle 0 count
             logger.info("No new friends " + client.getUserName());
             return new QuickSync(newStatus, null, toUpdate);
         }
@@ -253,6 +259,25 @@ public class ReachUserEndpoint {
         }
         logger.info("Slow " + client.getUserName());
         return new QuickSync(newStatus, friends, toUpdate);
+    }
+
+    @ApiMethod(
+            name = "getFriendFromId",
+            path = "user/getFriendFromId/{clientId}",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public Friend getFriendFromId(@Named("clientId") long clientId,
+                                  @Named("hostId") long hostId) {
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(), Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (!client.getMyReach().contains(hostId))
+            return null;
+
+        final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
+        return new Friend(host, true, computeLastSeen((byte[]) syncCache.get(host)));
     }
 
     private ImmutableList.Builder<Key> getKeyBuilder(Iterable<Long> ids) {

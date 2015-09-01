@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
@@ -52,13 +51,13 @@ import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
-import reach.project.viewHelpers.CircleTransform;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
 
-    private static Uri imageUri;
+    private static Uri imageUri = null;
     private static String imageId = "hello_world";
-    private static WeakReference<AccountCreation> reference;
+    private static WeakReference<AccountCreation> reference = null;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
 
@@ -79,9 +78,8 @@ public class AccountCreation extends Fragment {
     }
 
     private final int IMAGE_PICKER_SELECT = 999;
-    private SuperInterface mListener;
-    private TextView uploadText;
-    private ImageView profilePhotoSelector;
+    private SuperInterface mListener = null;
+    private ImageView profilePhotoSelector = null;
 
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
@@ -91,13 +89,13 @@ public class AccountCreation extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_account_creation, container, false);
         final EditText userName = (EditText) rootView.findViewById(R.id.firstName);
         final TextView progress = (TextView) rootView.findViewById(R.id.syncStatus);
+        final TextView uploadText = (TextView) rootView.findViewById(R.id.uploadText);
+        final ProgressBar progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
 
         //give reference to uploadProgress
-        final ProgressBar progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
         progressBar.setIndeterminate(false);
         SaveUserData.uploadProgress.dialogWeakReference = new WeakReference<>(progressBar);
 
-        uploadText = (TextView) rootView.findViewById(R.id.uploadText);
         profilePhotoSelector = (ImageView) rootView.findViewById(R.id.displayPic);
         profilePhotoSelector.setOnClickListener(imagePicker);
         userName.requestFocus();
@@ -106,9 +104,7 @@ public class AccountCreation extends Fragment {
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         final Bundle arguments;
         final String[] oldData;
-        if ((arguments = getArguments()) != null &&
-                (oldData = arguments.getStringArray("oldData")) != null &&
-                oldData.length == 2) {
+        if ((arguments = getArguments()) != null && (oldData = arguments.getStringArray("oldData")) != null && oldData.length == 2) {
             /**
              * oldData[0] = name;
              * oldData[1] = imageId;
@@ -120,9 +116,9 @@ public class AccountCreation extends Fragment {
                 imageId = oldData[1];
                 Picasso.with(activity)
                         .load(StaticData.cloudStorageImageBaseUrl + imageId)
-                        .resize(350, 350)
-                        .centerCrop()
                         .transform(new CircleTransform())
+                        .fit()
+                        .centerCrop()
                         .into(profilePhotoSelector);
             }
         }
@@ -130,16 +126,12 @@ public class AccountCreation extends Fragment {
         rootView.findViewById(R.id.importMusic).setOnClickListener(view -> {
 
             final String name;
-            if (TextUtils.isEmpty(userName.getText()) ||
-                    TextUtils.isEmpty(name = userName.getText().toString().trim())) {
+            if (TextUtils.isEmpty(name = userName.getText().toString().trim())) {
                 Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            final InputMethodManager inputMethodManager =
-                    (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
             final String phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
-            inputMethodManager.hideSoftInputFromWindow(userName.getWindowToken(), 0);
 
             if (TextUtils.isEmpty(phoneNumber)) {
                 Log.i("Downloader", "Account creation could not find number");
@@ -147,11 +139,10 @@ public class AccountCreation extends Fragment {
                 return;
             }
 
+            //OK
+            ((InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(userName.getWindowToken(), 0);
             view.setOnClickListener(null);
             view.setEnabled(false);
-            if (isRemoving() || isDetached() || activity.isFinishing())
-                return;
-            //reset the whole databases
             sharedPreferences.edit().clear().apply();
             Log.i("Ayush", "Cleared everything : AccountCreation underway");
             profilePhotoSelector.setOnClickListener(null);
@@ -167,23 +158,18 @@ public class AccountCreation extends Fragment {
                     rootView.findViewById(R.id.nextBtn),
                     (TextView) rootView.findViewById(R.id.telephoneNumber),
                     progress,
-                    SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-")).executeOnExecutor(
-                    AsyncTask.THREAD_POOL_EXECUTOR,
-                    name,
-                    phoneNumber);
-
+                    SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"))
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, name, phoneNumber);
         });
         return rootView;
     }
 
     private final View.OnClickListener imagePicker = v -> {
 
-        final Intent intent = new Intent(Intent.ACTION_PICK,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        final Intent intent = new Intent();
         intent.setType("image/*");
-        // intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Photo"),
-                IMAGE_PICKER_SELECT);
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_PICKER_SELECT);
     };
 
     @Override
@@ -202,23 +188,20 @@ public class AccountCreation extends Fragment {
         //set image
         Picasso.with(activity)
                 .load(imageUri)
-                .resize(350, 350)
-                .centerCrop()
                 .transform(new CircleTransform())
+                .fit()
+                .centerCrop()
                 .into(profilePhotoSelector);
     }
 
-    private static class SaveUserData extends AsyncTask<String, String, ReachUser> {
+    private static class SaveUserData extends AsyncTask<String, Void, ReachUser> {
 
         final View bottomPart2, bottomPart3, next;
         final TextView phoneNumber, progress;
         final String deviceId;
 
-        private SaveUserData(View bottomPart2,
-                             View bottomPart3,
-                             View next,
-                             TextView phoneNumber,
-                             TextView progress,
+        private SaveUserData(View bottomPart2, View bottomPart3, View next,
+                             TextView phoneNumber, TextView progress,
                              String deviceId) {
 
             this.bottomPart2 = bottomPart2;
@@ -232,8 +215,17 @@ public class AccountCreation extends Fragment {
         @Override
         protected ReachUser doInBackground(String... strings) {
 
-            //TODO no fall back !
-            uploadImage();
+            final ReachUser user = new ReachUser();
+
+            if (imageUri != null) { //upload only if image is set
+
+                uploadImage();
+                if (TextUtils.isEmpty(imageId)) {
+
+                    user.setImageId(null);
+                    return user;
+                }
+            }
 
             final String gcmId;
             final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment(reference, GoogleCloudMessaging::getInstance).orNull();
@@ -243,18 +235,16 @@ public class AccountCreation extends Fragment {
             else
                 gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
 
-            if (TextUtils.isEmpty(gcmId))
-                return null;
+            if (TextUtils.isEmpty(gcmId)) {
+                //TODO fail, TRACK continue
+            }
 
-            final ReachUser user = new ReachUser();
             user.setDeviceId(deviceId);
-            user.setMegaBytesReceived(0L);
-            user.setMegaBytesSent(0L);
-            user.setStatusSong("hello_world");
             user.setGcmId(gcmId);
             user.setUserName(strings[0]);
             user.setPhoneNumber(strings[1]);
             user.setImageId(imageId);
+
             //insert User-object and get the userID
             final long id;
             final String toParse;
@@ -264,8 +254,7 @@ public class AccountCreation extends Fragment {
             else
                 id = Long.parseLong(toParse);
             Log.i("Ayush", "Id received = " + id);
-            if (id == 0) //failed
-                return null;
+
             //finally set the userID, probably unnecessary
             user.setId(id);
             return user;
@@ -276,18 +265,27 @@ public class AccountCreation extends Fragment {
 
             super.onPostExecute(user);
 
-            if (user == null) {
+            if (imageUri != null && TextUtils.isEmpty(user.getImageId())) { //check only if image was selected
 
-                MiscUtils.useContextFromFragment(reference, activity -> {
+                //reset image stuff
+                imageUri = null;
+                imageId = null;
+                MiscUtils.useFragment(reference, fragment -> {
 
-                    Toast.makeText(activity, "Network failed !", Toast.LENGTH_LONG).show();
-                    activity.finish();
+                    Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
+                    if (fragment.profilePhotoSelector != null)
+                        fragment.profilePhotoSelector.setImageBitmap(null);
                     return null;
                 });
+                return; //user should retry OR continue by clicking again
+            }
 
+            if (user.getId() == 0) {
+                //retry
                 return;
             }
 
+            //set serverId here
             ReachActivity.serverId = user.getId();
             if (!StaticData.debugMode) {
 
@@ -312,6 +310,7 @@ public class AccountCreation extends Fragment {
                 return null;
             });
         }
+
         private static void uploadImage() {
 
             //get the image stream
@@ -346,8 +345,8 @@ public class AccountCreation extends Fragment {
                 MiscUtils.closeQuietly(outputStream, imageStream);
             }
 
-            //TODO make this
-            tempFile = MiscUtils.compressImage(tempFile);
+//            //TODO make this
+//            tempFile = MiscUtils.compressImage(tempFile);
 
             //get the key
             final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
@@ -374,39 +373,13 @@ public class AccountCreation extends Fragment {
 
                 //save fileName
                 imageId = fileName;
-
-                if (dialogWeakReference == null)
-                    return;
-                final ProgressBar progressBar = dialogWeakReference.get();
-                if (progressBar == null)
-                    return;
-
-                MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
-
-                    Toast.makeText(context, "Uploaded successfully", Toast.LENGTH_SHORT).show();
-                    return null;
-                });
             }
 
             @Override
             public void error() {
 
-                if (dialogWeakReference == null)
-                    return;
-                final ProgressBar progressBar = dialogWeakReference.get();
-                if (progressBar == null)
-                    return;
-
+                //mark null (fail)
                 imageId = null;
-                imageUri = null;
-
-                MiscUtils.runOnUiThreadFragment(reference, (AccountCreation fragment) -> {
-
-                    //fail
-                    Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
-                    fragment.profilePhotoSelector.setImageBitmap(null);
-                    return null;
-                });
             }
 
             @Override
@@ -414,12 +387,6 @@ public class AccountCreation extends Fragment {
 
                 switch (uploader.getUploadState()) {
 
-                    case INITIATION_STARTED:
-//                    System.out.println("Initiation Started");
-                        break;
-                    case INITIATION_COMPLETE:
-//                    System.out.println("Initiation Completed");
-                        break;
                     case MEDIA_IN_PROGRESS:
 
                         if (dialogWeakReference == null)
@@ -429,18 +396,14 @@ public class AccountCreation extends Fragment {
                             return;
                         progressBar.setProgress((int) (uploader.getProgress() * 100));
                         break;
-                    case MEDIA_COMPLETE:
-                        break;
                 }
             }
         };
 
-
-        //cant be made static :(
+        //TODO cant be made static :(
         private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
 
             long songs = 0, playLists = 0;
-
             private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
                 fragment.mListener.onAccountCreated();
                 return null;

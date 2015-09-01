@@ -26,8 +26,8 @@ import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.JsonMap;
 import reach.backend.entities.userApi.model.QuickSync;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.friends.ReachFriendsHelper;
 
 /**
  * Created by dexter on 19/07/15.
@@ -100,6 +100,8 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         Log.i("Ayush", "Prepared callData quickSync" + ids.size() + " " + hashes.size());
         final QuickSync quickSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute(), Optional.<Predicate<QuickSync>>absent()).orNull();
         if (quickSync != null) {
+
+            Log.i("Ayush", "Found quick sync");
 
             if (quickSync.getNewFriends() != null)
                 for (Friend friend : quickSync.getNewFriends()) {

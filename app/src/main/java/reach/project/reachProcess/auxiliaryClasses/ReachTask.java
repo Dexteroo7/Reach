@@ -1,7 +1,5 @@
 package reach.project.reachProcess.auxiliaryClasses;
 
-import android.util.Log;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by Dexter on 08-06-2015.
@@ -24,15 +22,11 @@ public abstract class ReachTask<T> implements Runnable {
     public void run() {
 
         //clean up before use
-        Log.i("Downloader", "Initialize sanitize");
         sanitize();
         //now execute the work
-        Log.i("Downloader", "Perform work");
         performTask();
         //clean up when done
-        Log.i("Downloader", "Post sanitize");
         sanitize();
-        Log.i("Downloader", "TASK COMPLETED");
     }
     protected abstract void sanitize();
     protected abstract void performTask();

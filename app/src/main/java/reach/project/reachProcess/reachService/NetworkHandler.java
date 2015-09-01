@@ -14,6 +14,7 @@ import android.os.RemoteException;
 import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -42,17 +43,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import reach.backend.entities.messaging.model.MyBoolean;
+import reach.backend.entities.userApi.model.Friend;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.database.sql.ReachSongHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.music.songs.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabase;
 
 /**
  * Created by Dexter on 18-05-2015.
@@ -776,31 +778,17 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
             return false;
         }
+
         //////////////////////////////////
 //        Log.i("Downloader", "Setting senderIp " + lanAddress.toString());
 //        connection.setSenderIp(lanAddress.toString()); //TODO verify
-        final Cursor receiverName = handlerInterface.getContentResolver().query(
-                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + connection.getReceiverId()),
-                new String[]{
-                        ReachFriendsHelper.COLUMN_USER_NAME,
-                        ReachFriendsHelper.COLUMN_STATUS},
-                ReachFriendsHelper.COLUMN_ID + " = ?",
-                new String[]{connection.getReceiverId() + ""}, null);
 
-        //TODO handle the situation when friend  not found
-        if (receiverName == null) {
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
+        final Pair<String, Short> nameAndStatus = LocalUtils.getNameAndStatus(connection.getReceiverId(), connection.getSenderId(), handlerInterface);
+        if (nameAndStatus == null)
             return false;
-        }
-        if (!receiverName.moveToFirst()) {
-            receiverName.close();
-            LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
-            return false;
-        }
 
-        reachDatabase.setSenderName(receiverName.getString(0));
-        reachDatabase.setOnlineStatus(receiverName.getShort(1) + "");
-        receiverName.close();
+        reachDatabase.setSenderName(nameAndStatus.first);
+        reachDatabase.setStatus(nameAndStatus.second);
 
         final ContentValues values = new ContentValues();
         reachDatabase.setDisplayName(setUpFile.get()[0]);
@@ -1603,6 +1591,51 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                         reachDatabase.getId()));
 
             return Optional.absent(); //update failed !
+        }
+
+        /**
+         * Get name and status for user
+         *
+         * @param id id of the user
+         * @return name and status
+         */
+        public static Pair<String, Short> getNameAndStatus(long id, long myId, NetworkHandlerInterface handlerInterface) {
+
+            final Cursor receiverName = handlerInterface.getContentResolver().query(
+                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + id),
+                    new String[]{
+                            ReachFriendsHelper.COLUMN_USER_NAME,
+                            ReachFriendsHelper.COLUMN_STATUS},
+                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                    new String[]{id + ""}, null);
+
+
+            final String name;
+            final short status;
+
+            if (receiverName != null && receiverName.moveToFirst()) {
+
+                name = receiverName.getString(0);
+                status = receiverName.getShort(1);
+                receiverName.close();
+            } else {
+
+                if (receiverName != null)
+                    receiverName.close();
+
+                //look up from net
+                final Friend friend = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getFriendFromId(myId, id).execute(), Optional.absent()).orNull();
+                if (friend == null)
+                    return null;
+                handlerInterface.getContentResolver().insert(
+                        ReachFriendsProvider.CONTENT_URI,
+                        ReachFriendsHelper.contentValuesCreator(friend));
+
+                name = friend.getUserName();
+                status = friend.getStatus().shortValue();
+            }
+
+            return new Pair<>(name, status);
         }
 
         /**

@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,7 +43,7 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
-import reach.project.viewHelpers.CircleTransform;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
 
@@ -135,8 +136,11 @@ public class EditProfileFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
 
         final Activity activity;
-        if ((activity = getActivity()) == null || activity.isFinishing())
+        if ((activity = getActivity()) == null || activity.isFinishing()) {
+
+            Log.i("Ayush", "ACTIVITY NOT FOUND !");
             return;
+        }
 
         if (requestCode != IMAGE_PICKER_SELECT || resultCode != Activity.RESULT_OK || (imageUri = data.getData()) == null) {
 
@@ -144,13 +148,54 @@ public class EditProfileFragment extends Fragment {
             return;
         }
 
-        //set image
-        Picasso.with(activity)
-                .load(imageUri)
-                .resize(350, 350)
-                .centerCrop()
-                .transform(new CircleTransform())
-                .into(profile);
+        //get the image stream
+        final InputStream imageStream = MiscUtils.useContextFromFragment(reference, context -> {
+            try {
+                return context.getContentResolver().openInputStream(imageUri);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).orNull();
+
+        if (imageStream == null) {
+
+//            uploadProgress.error();
+            return;
+        }
+
+        //copy the file
+        File tempFile;
+        FileOutputStream outputStream = null;
+        try {
+            tempFile = File.createTempFile("profile_photo", null);
+            outputStream = new FileOutputStream(tempFile);
+            ByteStreams.copy(imageStream, outputStream);
+        } catch (IOException e) {
+
+            e.printStackTrace();
+//            uploadProgress.error();
+            return;
+        } finally {
+            MiscUtils.closeQuietly(outputStream, imageStream);
+        }
+
+        Picasso.with(activity).load(tempFile).fit().into(profile);
+
+//        try {
+//            //TODO make this
+//            Log.i("Ayush", System.currentTimeMillis() + "");
+////            final File option1 = MiscUtils.compressImage(imageUri, reference.get().getActivity());
+////            Log.i("Ayush", System.currentTimeMillis() + "");
+//            final File option2 = MiscUtils.compressImage(tempFile, 800);
+//            Log.i("Ayush", System.currentTimeMillis() + "");
+//            Log.i("Ayush", "Length " + option2.length());
+//
+//            Picasso.with(activity).load(option2).fit().centerCrop().into(profile);
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private static final class UpdateProfile extends AsyncTask<String, Void, Boolean> {
@@ -158,7 +203,11 @@ public class EditProfileFragment extends Fragment {
         @Override
         protected Boolean doInBackground(final String... name) {
 
-            uploadImage();
+            try {
+                uploadImage();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             if (imageUri == null || TextUtils.isEmpty(imageId))
                 return false;
@@ -193,7 +242,7 @@ public class EditProfileFragment extends Fragment {
             });
         }
 
-        private static void uploadImage() {
+        private static void uploadImage() throws IOException {
 
             //get the image stream
             final InputStream imageStream = MiscUtils.useContextFromFragment(reference, context -> {
@@ -227,8 +276,9 @@ public class EditProfileFragment extends Fragment {
                 MiscUtils.closeQuietly(outputStream, imageStream);
             }
 
-            //TODO make this
             tempFile = MiscUtils.compressImage(tempFile);
+            //TODO
+//            Log.i("Ayush", "Length " + option1.length() + " " + option2.length());
 
             //get the key
             final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
@@ -255,12 +305,6 @@ public class EditProfileFragment extends Fragment {
 
                 //save fileName
                 imageId = fileName;
-
-                if (dialogWeakReference == null)
-                    return;
-                final ProgressBar progressBar = dialogWeakReference.get();
-                if (progressBar == null)
-                    return;
 
                 MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
 

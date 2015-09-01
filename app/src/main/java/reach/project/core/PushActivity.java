@@ -25,7 +25,7 @@ import reach.project.R;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.viewHelpers.CircleTransform;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 public class PushActivity extends Activity {
 

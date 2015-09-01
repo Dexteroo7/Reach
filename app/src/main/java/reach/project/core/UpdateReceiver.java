@@ -3,20 +3,13 @@ package reach.project.core;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.util.Log;
-
-import java.lang.ref.WeakReference;
-
-import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+//        final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
 //        sharedPreferences.edit().remove("song_hash").apply();
 //        sharedPreferences.edit().remove("play_list_hash").apply();
 //
@@ -80,11 +73,11 @@ public class UpdateReceiver extends BroadcastReceiver {
 //        context.startService(musicScannerIntent);
 
         // an Intent broadcast.
-        Log.i("Ayush", "Application updated");
-        if (MiscUtils.isOnline(context))
-            new Thread(() -> {
-                MiscUtils.updateGCM(SharedPrefUtils.getServerId(sharedPreferences),
-                        new WeakReference<>(context));
-            }, "GCM_UPDATER").start();
+//        Log.i("Ayush", "Application updated");
+//        if (MiscUtils.isOnline(context))
+//            new Thread(() -> {
+//                MiscUtils.updateGCM(SharedPrefUtils.getServerId(sharedPreferences),
+//                        new WeakReference<>(context));
+//            }, "GCM_UPDATER").start();
     }
 }

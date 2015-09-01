@@ -371,6 +371,7 @@ public class MessagingEndpoint {
         }
 
         if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
+
             result = result && actualSendMultiCastMessage(message, users, regIds);
             if (result)
                 log.info("refreshed gcm of " + totalSize);

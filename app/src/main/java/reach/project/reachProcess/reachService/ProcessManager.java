@@ -43,16 +43,16 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.database.sql.ReachSongHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.music.songs.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabase;
 
 /**
  * Created by Dexter on 14-05-2015.
@@ -329,7 +329,7 @@ public class ProcessManager extends Service implements
                     ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             ReachDatabaseHelper.COLUMN_STATUS + " = ?",
                     new String[]{"0", ReachDatabase.RELAY + ""},
-                    ReachDatabaseHelper.COLUMN_ADDED + " DESC");
+                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
 
             if (songNameCursor == null)
                 return totalDownloads + " songs are being downloaded";
@@ -832,7 +832,7 @@ public class ProcessManager extends Service implements
                 ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         ReachDatabaseHelper.COLUMN_PROCESSED + " > ?",
                 new String[]{"0", "0"},
-                ReachDatabaseHelper.COLUMN_ADDED + " DESC");
+                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
     }
 
     private Cursor getMyLibraryCursor() {

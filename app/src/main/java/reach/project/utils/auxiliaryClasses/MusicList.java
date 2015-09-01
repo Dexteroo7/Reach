@@ -5,6 +5,9 @@ import com.squareup.wire.ProtoField;
 import java.util.Collections;
 import java.util.List;
 
+import reach.project.music.playLists.Playlist;
+import reach.project.music.songs.Song;
+
 import static com.squareup.wire.Message.Datatype.INT64;
 import static com.squareup.wire.Message.Datatype.STRING;
 import static com.squareup.wire.Message.Label.REPEATED;

@@ -89,26 +89,26 @@
             android:exported="false" />
 
         <provider
-            android:name=".database.contentProvider.ReachFriendsProvider"
-            android:authorities="reach.project.database.contentProvider.ReachFriendsProvider"
+            android:name=".friends.ReachFriendsProvider"
+            android:authorities="reach.project.friends.ReachFriendsProvider"
             android:exported="false"
             android:multiprocess="true" />
         <provider
-            android:name=".database.contentProvider.ReachSongProvider"
-            android:authorities="reach.project.database.contentProvider.ReachSongProvider"
+            android:name=".music.songs.ReachSongProvider"
+            android:authorities="reach.project.music.songs.ReachSongProvider"
             android:exported="false"
             android:multiprocess="true" />
         <provider
-            android:name=".database.contentProvider.ReachAlbumProvider"
-            android:authorities="reach.project.database.contentProvider.ReachAlbumProvider"
+            android:name=".music.albums.ReachAlbumProvider"
+            android:authorities="reach.project.music.albums.ReachAlbumProvider"
             android:exported="false" />
         <provider
-            android:name=".database.contentProvider.ReachArtistProvider"
-            android:authorities="reach.project.database.contentProvider.ReachArtistProvider"
+            android:name=".music.artists.ReachArtistProvider"
+            android:authorities="reach.project.music.artists.ReachArtistProvider"
             android:exported="false" />
         <provider
-            android:name=".database.contentProvider.ReachPlayListProvider"
-            android:authorities="reach.project.database.contentProvider.ReachPlayListProvider"
+            android:name=".music.playLists.ReachPlayListProvider"
+            android:authorities="reach.project.music.playLists.ReachPlayListProvider"
             android:exported="false" />
 
         <activity
@@ -136,8 +136,8 @@
         <!-- Things on process :remote -->
 
         <provider
-            android:name=".database.contentProvider.ReachDatabaseProvider"
-            android:authorities="reach.project.database.contentProvider.ReachDatabaseProvider"
+            android:name=".uploadDownload.ReachDatabaseProvider"
+            android:authorities="reach.project.uploadDownload.ReachDatabaseProvider"
             android:exported="false"
             android:process=":remote" />
 

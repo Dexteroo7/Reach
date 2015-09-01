@@ -25,7 +25,8 @@ import reach.project.utils.MiscUtils;
  * album year<br>
  * song duration<br>
  */
-public enum  Song {;
+public enum Song {
+    ;
 
     private static final int DURATION_WINDOW_MS = 25000;
 
@@ -62,6 +63,24 @@ public enum  Song {;
 
     private static JsonNode getFirstRelease(JsonNode jsonNode) {
         return getFirstRecording(jsonNode).get("releases").get(0);
+    }
+
+    /**
+     * Fetches the musicbrainz MBID for the artist.
+     *
+     * @return musicbrainz-MBID
+     */
+    public static String getArtistMBID(JsonNode jsonNode) {
+        return getFirstArtistCredit(jsonNode).get("id").asText().toLowerCase();
+    }
+
+    /**
+     * Fetches the name of the artist.
+     *
+     * @return name
+     */
+    public static String getArtist(JsonNode jsonNode) {
+        return getFirstArtistCredit(jsonNode).get("name").asText();
     }
 
     /**
@@ -185,7 +204,6 @@ public enum  Song {;
             return primaryType;
         }
 
-
         public Set<String> getSecondaryTypes() {
             return secondaryTypes;
         }
@@ -203,25 +221,6 @@ public enum  Song {;
     private static JsonNode getFirstArtistCredit(JsonNode jsonNode) {
         return getFirstRecording(jsonNode).get("artist-credit").get(0).get("artist");
     }
-
-    /**
-     * Fetches the musicbrainz MBID for the artist.
-     *
-     * @return musicbrainz-MBID
-     */
-    public static String getArtistMBID(JsonNode jsonNode) {
-        return getFirstArtistCredit(jsonNode).get("id").asText().toLowerCase();
-    }
-
-    /**
-     * Fetches the name of the artist.
-     *
-     * @return name
-     */
-    public static String getArtist(JsonNode jsonNode) {
-        return getFirstArtistCredit(jsonNode).get("name").asText();
-    }
-
 
     /**
      * Here's a sample musicBrainz query
@@ -329,22 +328,27 @@ public enum  Song {;
                                      String album,
                                      String trackNumber,
                                      long duration,
-                                     @Nullable String year) throws UnsupportedEncodingException {
+                                     @Nullable String year) throws UnsupportedEncodingException, IllegalArgumentException {
+
+        if (TextUtils.isEmpty(title) || title.equals("hello_world") ||
+                TextUtils.isEmpty(artist) || artist.equals("hello_world") ||
+                duration == 0)
+            throw new IllegalArgumentException("required paras not supplied");
 
         // Construct the query
         final MusicBrainzRecordingQuery.Builder builder = new MusicBrainzRecordingQuery.Builder(title, artist, duration);
 
-        if (!TextUtils.isEmpty(trackNumber)) {
+        if (!TextUtils.isEmpty(trackNumber) && !trackNumber.equals("hello_world")) {
             // Check for 5/14 or a division sign, or a zero
             if (trackNumber.contains("/"))
                 trackNumber = trackNumber.split("/")[0];
             builder.number(Integer.parseInt(trackNumber));
         }
 
-        if (!TextUtils.isEmpty(year))
+        if (!TextUtils.isEmpty(year) && !year.equals("hello_world"))
             builder.date(year);
 
-        if (!TextUtils.isEmpty(album))
+        if (!TextUtils.isEmpty(album) && !album.equals("hello_world"))
             builder.release(album);
 
         final MusicBrainzRecordingQuery brainzRecordingQuery = builder.build();

@@ -21,17 +21,17 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 import reach.project.R;
-import reach.project.coreViews.FriendRequestFragment;
-import reach.project.coreViews.NotificationFragment;
-import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.notificationCentre.FriendRequestFragment;
+import reach.project.notificationCentre.NotificationFragment;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.friends.ReachFriendsHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabase;
 
 /**
  * Created by dexter on 21/6/14.

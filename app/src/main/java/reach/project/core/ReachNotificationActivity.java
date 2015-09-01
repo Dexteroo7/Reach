@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,12 +20,12 @@ import java.io.IOException;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.viewHelpers.CircleTransform;
+import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 public class ReachNotificationActivity extends Activity {
 
@@ -45,18 +44,8 @@ public class ReachNotificationActivity extends Activity {
             Picasso.with(this).load(StaticData.cloudStorageImageBaseUrl + imageId).transform(new CircleTransform()).into((ImageView) findViewById(R.id.userImage));
 
         final HandleReply handleReply = new HandleReply(bundle.getInt("notification_id"), NotificationManagerCompat.from(this), this);
-        findViewById(R.id.accept).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleReply.execute(myId + "", bundle.getLong("host_id") + "", "PERMISSION_GRANTED");
-            }
-        });
-        findViewById(R.id.reject).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleReply.execute(myId + "", bundle.getLong("host_id") + "", "PERMISSION_REJECTED");
-            }
-        });
+        findViewById(R.id.accept).setOnClickListener(v -> handleReply.execute(myId + "", bundle.getLong("host_id") + "", "PERMISSION_GRANTED"));
+        findViewById(R.id.reject).setOnClickListener(v -> handleReply.execute(myId + "", bundle.getLong("host_id") + "", "PERMISSION_REJECTED"));
     }
 
     private final class HandleReply extends AsyncTask<String, Void, Boolean> {

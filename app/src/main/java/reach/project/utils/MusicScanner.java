@@ -41,16 +41,15 @@ import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachPlayListProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.database.sql.ReachPlayListHelper;
-import reach.project.database.sql.ReachSongHelper;
-import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.music.playLists.ReachPlayListProvider;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.playLists.ReachPlayListHelper;
+import reach.project.music.songs.ReachSongHelper;
 import reach.project.utils.auxiliaryClasses.MusicList;
-import reach.project.utils.auxiliaryClasses.Playlist;
-import reach.project.utils.auxiliaryClasses.ReachAlbum;
-import reach.project.utils.auxiliaryClasses.ReachArtist;
-import reach.project.utils.auxiliaryClasses.Song;
+import reach.project.music.playLists.Playlist;
+import reach.project.music.albums.Album;
+import reach.project.music.artists.Artist;
+import reach.project.music.songs.Song;
 
 public class MusicScanner extends IntentService {
 
@@ -452,7 +451,7 @@ public class MusicScanner extends IntentService {
         }
 
         sendMessage(ALBUM_ARTIST, -1);
-        final Pair<ArrayMap<String, ReachAlbum>, ArrayMap<String, ReachArtist>>
+        final Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>>
                 albums_artists = MiscUtils.getAlbumsAndArtists(songs, serverId);
 
         ////////////////////Adding playLists
@@ -491,7 +490,8 @@ public class MusicScanner extends IntentService {
             return;
         }
 
-        if (!StaticData.debugMode) {
+        if (!StaticData.debugMode)
+        {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Update Music")
                     .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
@@ -568,7 +568,8 @@ public class MusicScanner extends IntentService {
         }
 
         //return false if same Music found !
-        return CloudStorageUtils.uploadMusicData(compressedMusic,
+        return CloudStorageUtils.uploadMusicData(
+                compressedMusic,
                 MiscUtils.getMusicStorageKey(serverId),
                 key);
     }
@@ -584,13 +585,10 @@ public class MusicScanner extends IntentService {
         musicData.setId(serverId);
 
         //update music visibility data
-        MiscUtils.autoRetry(new DoWork<Void>() {
-            @Override
-            public Void doWork() throws IOException {
+        MiscUtils.autoRetry(() -> {
 
-                StaticData.musicVisibility.insert(visibleSongs, musicData).execute();
-                return null;
-            }
+            StaticData.musicVisibility.insert(visibleSongs, musicData).execute();
+            return null;
         }, Optional.<Predicate<Void>>absent());
     }
 }

@@ -340,7 +340,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:background="@drawable/shadow_bottom"/>
-            <reach.project.viewHelpers.CustomViewPager
+            <reach.project.utils.viewHelpers.CustomViewPager
                 android:id="@+id/viewPager"
                 android:background="@color/white"
                 android:layout_width="match_parent"

@@ -32,8 +32,8 @@ import java.util.Map;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.friends.ReachFriendsHelper;
 import reach.project.utils.SharedPrefUtils;
 
 /**

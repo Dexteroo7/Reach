@@ -27,7 +27,7 @@ import com.viewpagerindicator.CirclePageIndicator;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.ContactsListFragment;
+import reach.project.friends.ContactsListFragment;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;

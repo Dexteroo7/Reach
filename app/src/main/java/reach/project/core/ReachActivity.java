@@ -86,43 +86,43 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
-import reach.project.adapter.ReachMusicAdapter;
-import reach.project.adapter.ReachQueueAdapter;
-import reach.project.coreViews.ContactsChooserFragment;
-import reach.project.coreViews.ContactsListFragment;
+import reach.project.music.songs.ReachMusicAdapter;
+import reach.project.uploadDownload.ReachQueueAdapter;
+import reach.project.friends.ContactsChooserFragment;
+import reach.project.friends.ContactsListFragment;
 import reach.project.coreViews.EditProfileFragment;
 import reach.project.coreViews.FeedbackFragment;
-import reach.project.coreViews.FriendRequestFragment;
+import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.coreViews.InviteFragment;
-import reach.project.coreViews.NotificationFragment;
-import reach.project.coreViews.PrivacyFragment;
+import reach.project.notificationCentre.NotificationFragment;
+import reach.project.music.songs.PrivacyFragment;
 import reach.project.coreViews.PromoCodeDialog;
-import reach.project.coreViews.PushSongsFragment;
+import reach.project.music.songs.PushSongsFragment;
 import reach.project.coreViews.UpdateFragment;
-import reach.project.coreViews.UploadHistory;
-import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachFriendsHelper;
-import reach.project.database.sql.ReachSongHelper;
+import reach.project.uploadDownload.UploadHistory;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.music.songs.ReachSongHelper;
 import reach.project.onBoarding.AccountCreation;
 import reach.project.onBoarding.NumberVerification;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.userProfile.MusicListFragment;
-import reach.project.userProfile.UserMusicLibrary;
+import reach.project.music.songs.MusicListFragment;
+import reach.project.coreViews.UserMusicLibrary;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
-import reach.project.utils.auxiliaryClasses.PushContainer;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
-import reach.project.utils.auxiliaryClasses.TransferSong;
-import reach.project.viewHelpers.CustomViewPager;
-import reach.project.viewHelpers.ViewPagerReusable;
+import reach.project.music.songs.PushContainer;
+import reach.project.uploadDownload.ReachDatabase;
+import reach.project.music.songs.TransferSong;
+import reach.project.utils.viewHelpers.CustomViewPager;
+import reach.project.utils.viewHelpers.ViewPagerReusable;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
@@ -571,7 +571,7 @@ public class ReachActivity extends AppCompatActivity implements
             //load notification drawer
             addNotificationDrawer();
             //load adapters
-            new LoadAdapters().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, this);
+            loadAdapter();
 
         } catch (IllegalStateException ignored) {
             finish();
@@ -1002,9 +1002,9 @@ public class ReachActivity extends AppCompatActivity implements
                 //load notification drawer
                 addNotificationDrawer();
                 //load adapters
-                new LoadAdapters().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, this);
+                loadAdapter();
                 //load last song
-                new LastSong().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                lastSong();
                 //some stuff
                 if (networkPresent)
                     AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
@@ -1014,72 +1014,49 @@ public class ReachActivity extends AppCompatActivity implements
         }
     }
 
-    private final class LoadAdapters extends AsyncTask<ReachActivity, Void, ReachActivity> {
+    private void loadAdapter() {
 
-        @Override
-        protected ReachActivity doInBackground(ReachActivity... params) {
+        /**
+         * Set up adapter for Music player
+         */
+        combinedAdapter = new MergeAdapter();
+        //combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
+        emptyTV1 = LocalUtils.getEmptyDownload(this);
+        combinedAdapter.addView(emptyTV1, false);
+        combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(this, null, 0));
+        queueAdapter.getSwipeLayoutResourceId(0);
+        combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(this));
+        emptyTV2 = LocalUtils.getEmptyLibrary(this);
+        combinedAdapter.addView(emptyTV2, false);
+        combinedAdapter.addAdapter(musicAdapter = new ReachMusicAdapter(this, R.layout.my_musiclist_item, null, 0,
+                ReachMusicAdapter.PLAYER));
 
-            /**
-             * Set up adapter for Music player
-             */
-            combinedAdapter = new MergeAdapter();
-            //combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
-            emptyTV1 = LocalUtils.getEmptyDownload(params[0]);
-            combinedAdapter.addView(emptyTV1, false);
-            combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(params[0], null, 0));
-            queueAdapter.getSwipeLayoutResourceId(0);
-            combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(params[0]));
-            emptyTV2 = LocalUtils.getEmptyLibrary(params[0]);
-            combinedAdapter.addView(emptyTV2, false);
-            combinedAdapter.addAdapter(musicAdapter = new ReachMusicAdapter(params[0], R.layout.my_musiclist_item, null, 0,
-                    ReachMusicAdapter.PLAYER));
-            return params[0];
-        }
-
-        @Override
-        protected void onPostExecute(ReachActivity activity) {
-
-            super.onPostExecute(activity);
-            queueListView.setAdapter(combinedAdapter);
-            getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, activity);
-            getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, activity);
-        }
+        queueListView.setAdapter(combinedAdapter);
+        getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
     }
 
-    private final class LastSong extends AsyncTask<Void, Void, Boolean[]> {
+    private void lastSong() {
 
-        @Override
-        protected Boolean[] doInBackground(Void... params) {
+        final Boolean[] toSend = new Boolean[]{false, false, false};
+        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
 
+        toSend[0] = (currentPlaying != null);
+        toSend[1] = SharedPrefUtils.getShuffle(preferences);
+        toSend[2] = SharedPrefUtils.getRepeat(preferences);
 
-            final Boolean[] toSend = new Boolean[]{false, false, false};
-            currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
-
-            toSend[0] = (currentPlaying != null);
-            toSend[1] = SharedPrefUtils.getShuffle(preferences);
-            toSend[2] = SharedPrefUtils.getRepeat(preferences);
-
-            return toSend;
+        if (toSend[0]) {
+            //last song is present
+            songNameMinimized.setText(currentPlaying.getDisplayName());
+            songNameMaximized.setText(currentPlaying.getDisplayName());
+            artistName.setText(currentPlaying.getArtistName());
+            songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
+            pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
+            pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
         }
 
-        @Override
-        protected void onPostExecute(Boolean[] booleans) {
-
-            super.onPostExecute(booleans);
-
-            if (booleans[0]) {
-                //last song is present
-                songNameMinimized.setText(currentPlaying.getDisplayName());
-                songNameMaximized.setText(currentPlaying.getDisplayName());
-                artistName.setText(currentPlaying.getArtistName());
-                songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
-                pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
-                pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
-            }
-
-            shuffleBtn.setSelected(booleans[1]);
-            repeatBtn.setSelected(booleans[2]);
-        }
+        shuffleBtn.setSelected(toSend[1]);
+        repeatBtn.setSelected(toSend[2]);
     }
 
     private synchronized void processIntent(Intent intent) {
@@ -1145,7 +1122,6 @@ public class ReachActivity extends AppCompatActivity implements
         }
     }
 
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -1157,7 +1133,7 @@ public class ReachActivity extends AppCompatActivity implements
                     ReachDatabaseHelper.ADAPTER_LIST,
                     selectionDownloader,
                     selectionArgumentsDownloader,
-                    ReachDatabaseHelper.COLUMN_ADDED + " DESC");
+                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
         } else if (id == StaticData.MY_LIBRARY_LOADER) {
 
             return new CursorLoader(this,
@@ -1237,14 +1213,14 @@ public class ReachActivity extends AppCompatActivity implements
                             ReachDatabaseHelper.COLUMN_IS_LIKED, //3
                             ReachDatabaseHelper.COLUMN_SENDER_ID,
                             ReachDatabaseHelper.COLUMN_RECEIVER_ID,
-                            ReachDatabaseHelper.COLUMN_LENGTH,
+                            ReachDatabaseHelper.COLUMN_SIZE,
 
                     },
 
                     ReachDatabaseHelper.COLUMN_SONG_ID + " = ? and " +
                             ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
                             ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_LENGTH + " = ?",
+                        ReachDatabaseHelper.COLUMN_SIZE + " = ?",
                     new String[]{songId + "", senderId + "", serverId + "", size + ""},
                     null);
 
@@ -1340,7 +1316,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     private enum LocalUtils {
         ;
-
 
         public static final SeekBar.OnSeekBarChangeListener playerSeekListener = new SeekBar.OnSeekBarChangeListener() {
             @Override

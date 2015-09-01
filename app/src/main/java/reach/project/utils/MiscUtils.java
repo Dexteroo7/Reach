@@ -6,6 +6,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -34,6 +36,8 @@ import com.google.gson.Gson;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
@@ -49,24 +53,24 @@ import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachAlbumProvider;
-import reach.project.database.contentProvider.ReachArtistProvider;
-import reach.project.database.contentProvider.ReachDatabaseProvider;
-import reach.project.database.contentProvider.ReachPlayListProvider;
-import reach.project.database.contentProvider.ReachSongProvider;
-import reach.project.database.sql.ReachAlbumHelper;
-import reach.project.database.sql.ReachArtistHelper;
-import reach.project.database.sql.ReachDatabaseHelper;
-import reach.project.database.sql.ReachPlayListHelper;
-import reach.project.database.sql.ReachSongHelper;
+import reach.project.music.albums.ReachAlbumProvider;
+import reach.project.music.artists.ReachArtistProvider;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.music.playLists.ReachPlayListProvider;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.albums.ReachAlbumHelper;
+import reach.project.music.artists.ReachArtistHelper;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.music.playLists.ReachPlayListHelper;
+import reach.project.music.songs.ReachSongHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.utils.auxiliaryClasses.Playlist;
-import reach.project.utils.auxiliaryClasses.ReachAlbum;
-import reach.project.utils.auxiliaryClasses.ReachArtist;
-import reach.project.utils.auxiliaryClasses.ReachDatabase;
-import reach.project.utils.auxiliaryClasses.Song;
+import reach.project.music.playLists.Playlist;
+import reach.project.music.albums.Album;
+import reach.project.music.artists.Artist;
+import reach.project.uploadDownload.ReachDatabase;
+import reach.project.music.songs.Song;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseFragment;
 
@@ -137,6 +141,7 @@ public enum MiscUtils {
 
     /**
      * Scan the phoneBook for numbers and return a collection
+     *
      * @param resolver to query
      * @return collection of phoneNumbers (won't return null :) )
      */
@@ -164,7 +169,7 @@ public enum MiscUtils {
                 continue;
 
             //if character is a number append !
-            for (int i=0; i<phoneNumber.length(); i++) {
+            for (int i = 0; i < phoneNumber.length(); i++) {
                 final char test = phoneNumber.charAt(i);
                 if (Character.isDigit(test))
                     builder.append(test);
@@ -369,8 +374,8 @@ public enum MiscUtils {
     }
 
     public static void bulkInsertSongs(List<Song> songList,
-                                       ArrayMap<String, ReachAlbum> reachAlbums,
-                                       ArrayMap<String, ReachArtist> reachArtists,
+                                       ArrayMap<String, Album> reachAlbums,
+                                       ArrayMap<String, Artist> reachArtists,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
@@ -386,30 +391,39 @@ public enum MiscUtils {
                 songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
             i = 0;
             Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
-        }
+        } else
+            contentResolver.delete(ReachSongProvider.CONTENT_URI,
+                    ReachSongHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{serverId + ""});
 
         if (reachAlbums.size() > 0) {
 
             for (int j = 0; j < reachAlbums.size(); j++) {
 
-                final ReachAlbum album = reachAlbums.valueAt(j);
+                final Album album = reachAlbums.valueAt(j);
                 if (album != null)
                     albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
             }
             Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
             i = 0;
-        }
+        } else
+            contentResolver.delete(ReachAlbumProvider.CONTENT_URI,
+                    ReachAlbumHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{serverId + ""});
 
         if (reachArtists.size() > 0) {
 
             for (int j = 0; i < reachArtists.size(); j++) {
 
-                final ReachArtist artist = reachArtists.valueAt(j);
+                final Artist artist = reachArtists.valueAt(j);
                 if (artist != null)
                     artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
             }
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
-        }
+        } else
+            contentResolver.delete(ReachArtistProvider.CONTENT_URI,
+                    ReachArtistHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{serverId + ""});
     }
 
     public static void bulkInsertPlayLists(List<Playlist> playlistList,
@@ -424,13 +438,16 @@ public enum MiscUtils {
                 playLists[i++] = ReachPlayListHelper.contentValuesCreator(playlist, serverId);
             }
             Log.i("Ayush", "PlayLists Inserted " + contentResolver.bulkInsert(ReachPlayListProvider.CONTENT_URI, playLists));
-        } else Log.i("Ayush", "NO playLists to save");
+        } else
+            contentResolver.delete(ReachPlayListProvider.CONTENT_URI,
+                    ReachPlayListHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{serverId + ""});
     }
 
-    public static Pair<ArrayMap<String, ReachAlbum>, ArrayMap<String, ReachArtist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
+    public static Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
 
-        final ArrayMap<String, ReachAlbum> albumMap = new ArrayMap<>();
-        final ArrayMap<String, ReachArtist> artistMap = new ArrayMap<>();
+        final ArrayMap<String, Album> albumMap = new ArrayMap<>();
+        final ArrayMap<String, Artist> artistMap = new ArrayMap<>();
 
         for (Song song : songs) {
 
@@ -440,30 +457,28 @@ public enum MiscUtils {
 
             if (!TextUtils.isEmpty(song.album)) {
 
-                ReachAlbum album = albumMap.get(song.album);
+                Album album = albumMap.get(song.album);
                 if (album == null)
-                    albumMap.put(song.album, album = new ReachAlbum());
-                else {
-                    album.setAlbumName(song.album);
-                    album.setUserId(serverId);
-                    album.setArtist(song.artist);
-                }
+                    albumMap.put(song.album, album = new Album());
+                album.setAlbumName(song.album);
+                album.setUserId(serverId);
+                album.setArtist(song.artist);
                 album.incrementSize();
             }
 
             if (!TextUtils.isEmpty(song.artist)) {
 
-                ReachArtist artist = artistMap.get(song.artist);
+                Artist artist = artistMap.get(song.artist);
                 if (artist == null)
-                    artistMap.put(song.artist, artist = new ReachArtist());
-                else {
-                    artist.setArtistName(song.artist);
-                    artist.setUserID(serverId);
-                    artist.setAlbum(song.album);
-                }
+                    artistMap.put(song.artist, artist = new Artist());
+                artist.setArtistName(song.artist);
+                artist.setUserID(serverId);
+                artist.setAlbum(song.album);
                 artist.incrementSize();
             }
         }
+
+        Log.i("Ayush", "Found " + albumMap.size() + " " + artistMap.size());
         ///////////////////////
         return new Pair<>(albumMap, artistMap);
     }
@@ -736,10 +751,83 @@ public enum MiscUtils {
         });
     }
 
-    public static File compressImage(File image) {
+    public static File compressImage(File image) throws IOException {
 
-        //TODO
-        return image;
+        // Decode just the boundaries
+        final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
+        mBitmapOptions.inJustDecodeBounds = true;
+
+        final FileInputStream fileInputStream = new FileInputStream(image);
+        BitmapFactory.decodeStream(fileInputStream, null, mBitmapOptions);
+
+        // Calculate inSampleSize
+        // Raw height and width of image
+        final int height = mBitmapOptions.outHeight;
+        final int width = mBitmapOptions.outWidth;
+        final int sideLength = 800;
+        closeQuietly(fileInputStream);
+
+        int reqHeight = height;
+        int reqWidth = width;
+        final int inDensity;
+        final int inTargetDensity;
+
+        if (height > width) {
+
+            inDensity = height;
+            inTargetDensity = reqHeight;
+            if (height > sideLength) {
+
+                reqHeight = sideLength;
+                reqWidth = (width * sideLength) / height;
+            }
+        } else if (width > height) {
+
+            inDensity = width;
+            inTargetDensity = reqWidth;
+            if (width > sideLength) {
+                reqWidth = sideLength;
+                reqHeight = (height * sideLength) / width;
+            }
+        } else {
+
+            reqWidth = sideLength;
+            reqHeight = sideLength;
+            inDensity = height;
+            inTargetDensity = reqHeight;
+        }
+
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth)
+                inSampleSize *= 2;
+        }
+
+        //now go resize the image to the size you want
+        mBitmapOptions.inSampleSize = inSampleSize;
+        mBitmapOptions.inJustDecodeBounds = false;
+        mBitmapOptions.inScaled = true;
+        mBitmapOptions.inDensity = inDensity;
+        mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
+
+        final File tempFile = File.createTempFile("compressed_profile_photo", null);
+        final FileInputStream fInputStream = new FileInputStream(image);
+        final FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+
+        // will load & resize the image to be 1/inSampleSize dimensions
+        BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions).compress(Bitmap.CompressFormat.JPEG, 85, fileOutputStream);
+        closeQuietly(fInputStream, fileOutputStream);
+
+        //noinspection ResultOfMethodCallIgnored
+        image.delete();
+        return tempFile;
     }
 
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,

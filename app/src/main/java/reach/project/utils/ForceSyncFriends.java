@@ -18,8 +18,8 @@ import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
-import reach.project.database.contentProvider.ReachFriendsProvider;
-import reach.project.database.sql.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.friends.ReachFriendsHelper;
 
 /**
  * Created by dexter on 19/07/15.
