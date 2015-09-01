@@ -349,11 +349,6 @@ public class ContactsListFragment extends Fragment implements
             protected void onEmptyContacts() {
                 mergeAdapter.setActive(emptyInvite, true);
             }
-
-            @Override
-            protected void onNotEmptyContacts() {
-                mergeAdapter.setActive(emptyInvite, false);
-            }
         };
 
         reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0);
