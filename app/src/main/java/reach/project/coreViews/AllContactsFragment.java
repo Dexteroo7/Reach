@@ -111,13 +111,14 @@ public class AllContactsFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        setHasOptionsMenu(true);
+        final View rootView = inflater.inflate(R.layout.fragment_allcontacts, container, false);
         final Activity activity = getActivity();
         if (activity == null || activity.isFinishing())
             return null;
         sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
 
-        final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.contactsList));
+        final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.allContactsList));
         listView.setOnItemClickListener(clickListener);
 
         inviteAdapter = new ReachAllContactsAdapter(activity, R.layout.allcontacts_user, LocalUtils.contactData) {
@@ -177,9 +178,9 @@ public class AllContactsFragment extends Fragment implements
 
         if (menu == null || inflater == null)
             return;
-        menu.clear();
+        //menu.clear();
 
-        inflater.inflate(R.menu.myreach_menu, menu);
+        inflater.inflate(R.menu.search_menu, menu);
 
         searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
         if (searchView == null)
@@ -303,7 +304,6 @@ public class AllContactsFragment extends Fragment implements
                     .setMessage("Send an invite to " + contact.getUserName() + " ?")
                     .setView(input)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-
                         final class SendInvite extends AsyncTask<String, Void, Boolean> {
 
                             @Override

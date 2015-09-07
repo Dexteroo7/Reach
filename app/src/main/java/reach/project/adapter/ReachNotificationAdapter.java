@@ -30,7 +30,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.coreViews.ContactsListFragment;
+import reach.project.coreViews.MyReachFragment;
 import reach.project.database.notifications.BecameFriends;
 import reach.project.database.notifications.Like;
 import reach.project.database.notifications.NotificationBaseLocal;
@@ -107,7 +107,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
-        ContactsListFragment.checkNewNotifications();
+        MyReachFragment.checkNewNotifications();
     }
 
     @Override

@@ -24,7 +24,7 @@ import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.backend.notifications.notificationApi.model.Friend;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.ContactsListFragment;
+import reach.project.coreViews.MyReachFragment;
 import reach.project.database.contentProvider.ReachFriendsProvider;
 import reach.project.database.sql.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
@@ -54,7 +54,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
-        ContactsListFragment.checkNewNotifications();
+        MyReachFragment.checkNewNotifications();
     }
 
     @Override

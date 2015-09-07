@@ -10,10 +10,10 @@
     <!-- As the main content view, the view below consumes the entire
          space available using match_parent in both dimensions. -->
     <android.support.design.widget.CoordinatorLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <android.support.design.widget.AppBarLayout
+            android:visibility="gone"
             android:layout_height="wrap_content"
             android:layout_width="match_parent">
             <android.support.v7.widget.Toolbar
@@ -28,7 +28,6 @@
         <FrameLayout
             android:id="@+id/containerFrame"
             android:layout_width="match_parent"
-            android:paddingTop="?attr/actionBarSize"
             android:layout_height="match_parent">
             <com.sothree.slidinguppanel.SlidingUpPanelLayout
                 xmlns:sothree="http://schemas.android.com/apk/res-auto"
@@ -328,7 +327,6 @@
                 android:id="@+id/sliding_tabs"
                 android:background="@color/reach_color"
                 app:tabMode="fixed"
-                app:tabBackground="@color/reach_color"
                 app:tabTextColor="@color/white"
                 app:tabSelectedTextColor="@color/white"
                 app:tabIndicatorColor="@color/white"

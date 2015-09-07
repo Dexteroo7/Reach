@@ -7,7 +7,6 @@
         android:id="@+id/sliding_tabs"
         android:background="@color/reach_color"
         app:tabMode="scrollable"
-        app:tabBackground="@color/reach_color"
         app:tabTextColor="@color/white"
         app:tabSelectedTextColor="@color/white"
         app:tabIndicatorColor="@color/white"

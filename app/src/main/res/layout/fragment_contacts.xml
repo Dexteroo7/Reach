@@ -10,7 +10,7 @@
             <GridView
                 android:id="@+id/contactsList"
                 android:numColumns="3"
-                android:paddingTop="10dp"
+                android:nestedScrollingEnabled="true"
                 android:gravity="center_horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"/>

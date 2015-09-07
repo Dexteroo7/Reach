@@ -90,11 +90,11 @@ import reach.project.R;
 import reach.project.adapter.ReachMusicAdapter;
 import reach.project.adapter.ReachQueueAdapter;
 import reach.project.coreViews.ContactsChooserFragment;
-import reach.project.coreViews.ContactsListFragment;
 import reach.project.coreViews.EditProfileFragment;
 import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.FriendRequestFragment;
 import reach.project.coreViews.InviteFragment;
+import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.NotificationFragment;
 import reach.project.coreViews.PrivacyFragment;
 import reach.project.coreViews.PromoCodeDialog;
@@ -118,9 +118,9 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
-import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.PushContainer;
 import reach.project.utils.auxiliaryClasses.ReachDatabase;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.TransferSong;
 import reach.project.viewHelpers.CustomViewPager;
 import reach.project.viewHelpers.ViewPagerReusable;
@@ -570,7 +570,7 @@ public class ReachActivity extends AppCompatActivity implements
             //load fragment
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
+                    .replace(R.id.container, MyReachFragment.newInstance(), "my_reach").commit();
             //load notification drawer
             addNotificationDrawer();
             //load adapters
@@ -1001,7 +1001,7 @@ public class ReachActivity extends AppCompatActivity implements
                 slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
                 fragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                        .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
+                        .replace(R.id.container, MyReachFragment.newInstance(), "my_reach").commit();
                 //load notification drawer
                 addNotificationDrawer();
                 //load adapters
