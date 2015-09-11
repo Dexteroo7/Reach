@@ -77,7 +77,7 @@ public class NotificationFragment extends Fragment {
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_notification, container, false);
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);

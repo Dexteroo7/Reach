@@ -1,21 +1,25 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
@@ -29,6 +33,8 @@ public class MyReachFragment extends Fragment {
     private TextView notificationCount;
 
     private SuperInterface mListener;
+
+    private SearchView searchView;
 
     private static WeakReference<MyReachFragment> reference = null;
 
@@ -91,8 +97,6 @@ public class MyReachFragment extends Fragment {
         final Activity activity = getActivity();
         if (activity == null || activity.isFinishing())
             return;
-        setHasOptionsMenu(true);
-        mListener.setUpDrawer();
         mListener.toggleDrawer(false);
         mListener.toggleSliding(true);
     }
@@ -104,45 +108,79 @@ public class MyReachFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_myreach, container, false);
 
-        ((AppCompatActivity) getActivity()).setSupportActionBar((Toolbar) rootView.findViewById(R.id.myReachToolbar));
-        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.show();
-            actionBar.setTitle("Reach");
-            mListener.setUpNavigationViews();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            FrameLayout myReachFrame = (FrameLayout) rootView.findViewById(R.id.myReachFrame);
+            CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) myReachFrame.getLayoutParams();
+            layoutParams.setMargins(0,0,0,0);
+            myReachFrame.setLayoutParams(layoutParams);
         }
-        mListener.setUpDrawer();
+        Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
+        mToolbar.setTitle("Reach");
+        mToolbar.setNavigationOnClickListener(v -> mListener.onOpenNavigationDrawer());
+        mToolbar.inflateMenu(R.menu.myreach_menu);
+        Menu menu = mToolbar.getMenu();
+        searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.search_button));
+
+        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
+        if (notificationButton != null) {
+            MenuItemCompat.setActionView(notificationButton, R.layout.reach_queue_counter);
+            final View notificationContainer = MenuItemCompat.getActionView(notificationButton).findViewById(R.id.counterContainer);
+            notificationContainer.setOnClickListener(openNotification);
+            notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
+        }
+
+        mListener.setUpNavigationViews();
         rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
         rootView.findViewById(R.id.invite_friend_fab).setOnClickListener(inviteFriendListener);
 
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
+        ContactsListFragment contactsListFragment = ContactsListFragment.newInstance();
+        AllContactsFragment allContactsFragment = AllContactsFragment.newInstance();
+
         viewPager.setAdapter(new ViewPagerReusable(
                 getChildFragmentManager(),
                 new String[]{"FRIENDS", "INVITE"},
                 new Fragment[]{
-                        ContactsListFragment.newInstance(), // Friends
-                        AllContactsFragment.newInstance()})); // Invite
+                        contactsListFragment, // Friends
+                        allContactsFragment})); // Invite
+        contactsListFragment.setSearchView(searchView);
         final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
         slidingTabLayout.post(() -> slidingTabLayout.setupWithViewPager(viewPager));
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (position == 0)
+                    contactsListFragment.setSearchView(searchView);
+                else if (position == 1)
+                    allContactsFragment.setSearchView(searchView);
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
         return rootView;
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onDestroyView() {
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(null);
+            searchView.setOnCloseListener(null);
+            searchView.setQuery(null, false);
+            ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
+                    .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+        }
 
-        if (menu == null || inflater == null)
-            return;
-        menu.clear();
-
-        inflater.inflate(R.menu.myreach_menu, menu);
-
-        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
-        if (notificationButton == null)
-            return;
-        notificationButton.setActionView(R.layout.reach_queue_counter);
-        final View notificationContainer = notificationButton.getActionView().findViewById(R.id.counterContainer);
-        notificationContainer.setOnClickListener(openNotification);
-        notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
+        searchView = null;
+        super.onDestroyView();
     }
 
     @Override

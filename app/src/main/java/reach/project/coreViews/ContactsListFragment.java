@@ -21,17 +21,13 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -149,21 +145,30 @@ public class ContactsListFragment extends Fragment implements
                         Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
                                 .show();
                     mListener.onOpenLibrary(id);
-                } else {
+                }
+                else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
                     final long clientId = cursor.getLong(0);
+                    new AlertDialog.Builder(getActivity())
+                            .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
+                            .setPositiveButton("Yes", (dialog, which) -> {
+                                new SendRequest().executeOnExecutor(
+                                        AsyncTask.THREAD_POOL_EXECUTOR,
+                                        clientId, serverId, (long) status);
 
-                    new SendRequest().executeOnExecutor(
-                            AsyncTask.THREAD_POOL_EXECUTOR,
-                            clientId, serverId, (long) status);
-
-                    Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
-                    final ContentValues values = new ContentValues();
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-                    getActivity().getContentResolver().update(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
-                            values,
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{clientId + ""});
+                                Snackbar.make(adapterView, "Access Request sent", Snackbar.LENGTH_SHORT).show();
+                                //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
+                                final ContentValues values = new ContentValues();
+                                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+                                getActivity().getContentResolver().update(
+                                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
+                                        values,
+                                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                                        new String[]{clientId + ""});
+                                dialog.dismiss();
+                            })
+                            .setNegativeButton("No", (dialog, which) -> {
+                                dialog.dismiss();
+                            }).create().show();
                 }
             }
         }
@@ -229,15 +234,6 @@ public class ContactsListFragment extends Fragment implements
 //            inviteAdapter.cleanUp();
 
         //listView.setOnScrollListener(null);
-        if (searchView != null) {
-            searchView.setOnQueryTextListener(null);
-            searchView.setOnCloseListener(null);
-            searchView.setQuery(null, false);
-            ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
-                    .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-        }
-
-        searchView = null;
         super.onDestroyView();
     }
 
@@ -250,7 +246,6 @@ public class ContactsListFragment extends Fragment implements
         if (activity == null || activity.isFinishing())
             return;
 
-        setHasOptionsMenu(true);
         /*if (getArguments().getBoolean("first", false))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
         sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
@@ -265,21 +260,22 @@ public class ContactsListFragment extends Fragment implements
         reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0);
     }
 
+    public void setSearchView(SearchView sView) {
+        searchView = sView;
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
+        searchView.setQuery(null, true);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
-
-        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.show();
-            actionBar.setTitle("Reach");
-            mListener.setUpNavigationViews();
-        }
 
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
         swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
@@ -288,7 +284,7 @@ public class ContactsListFragment extends Fragment implements
 
         gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         gridView.setOnItemClickListener(clickListener);
-        gridView.setOnScrollListener(scrollListener);
+        //gridView.setOnScrollListener(scrollListener);
         gridView.setAdapter(reachContactsAdapter);
 
         selection = null;
@@ -404,23 +400,6 @@ public class ContactsListFragment extends Fragment implements
         }
         getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
         return true;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
-        if (menu == null || inflater == null)
-            return;
-        //menu.clear();
-
-        inflater.inflate(R.menu.search_menu, menu);
-
-        searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-        if (searchView == null)
-            return;
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
-
     }
 
     @Override

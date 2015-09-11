@@ -13,20 +13,26 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
@@ -59,7 +65,9 @@ import reach.project.viewHelpers.ViewPagerReusable;
 
 public class UserMusicLibrary extends Fragment {
 
-    private ActionBar actionBar;
+    private Toolbar toolbar;
+
+    private SearchView searchView;
 
     private static WeakReference<UserMusicLibrary> reference = null;
 
@@ -80,13 +88,17 @@ public class UserMusicLibrary extends Fragment {
 
     @Override
     public void onDestroyView() {
-
-        if (actionBar != null) {
-            actionBar.setDisplayShowHomeEnabled(false);
-            actionBar.setSubtitle("");
+        toolbar.setSubtitle("");
+        toolbar = null;
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(null);
+            searchView.setOnCloseListener(null);
+            searchView.setQuery(null, false);
+            ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
+                    .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
         }
-        actionBar = null;
-        actionBar = null;
+
+        searchView = null;
         super.onDestroyView();
     }
 
@@ -102,6 +114,14 @@ public class UserMusicLibrary extends Fragment {
             AsyncTask.THREAD_POOL_EXECUTOR.execute(new GetMusic(userId));
 
         final View rootView = inflater.inflate(R.layout.library_view_pager, container, false);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            FrameLayout myReachFrame = (FrameLayout) rootView.findViewById(R.id.libraryFrame);
+            CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) myReachFrame.getLayoutParams();
+            layoutParams.setMargins(0,0,0,0);
+            myReachFrame.setLayoutParams(layoutParams);
+        }
+
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         final Cursor cursor = rootView.getContext().getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
@@ -130,12 +150,14 @@ public class UserMusicLibrary extends Fragment {
             SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
             AsyncTask.THREAD_POOL_EXECUTOR.execute(devikaSendMeSomeLove);
         }
-        actionBar = ((AppCompatActivity) activity).getSupportActionBar();
-        if (actionBar != null) {
+        toolbar = ((Toolbar)rootView.findViewById(R.id.libraryToolbar));
+        toolbar.setTitle(" " + userName);
+        toolbar.setSubtitle(" " + numberOfSongs + " Songs");
+        toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+        toolbar.inflateMenu(R.menu.search_menu);
+        MenuItem searchItem = toolbar.getMenu().findItem(R.id.search_button);
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
-            actionBar.setTitle(userName);
-            actionBar.setSubtitle(numberOfSongs + " Songs");
-        }
 
         final String path;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
@@ -149,13 +171,33 @@ public class UserMusicLibrary extends Fragment {
                 getChildFragmentManager(),
                 new String[]{"Tracks", "Playlists", "Albums", "Artists"},
                 new Fragment[]{
-                        MusicListFragment.newPagerInstance(userId, 0), // SONGS
+                        MusicListFragment.newPagerInstance(userId, 0, searchView), // SONGS
                         PlayListListFragment.newInstance(userId), // PLAY LISTS
                         AlbumListFragment.newInstance(userId), // ALBUMS
                         ArtistListFragment.newInstance(userId)})); // ARTISTS
 
         final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
         slidingTabLayout.post(() -> slidingTabLayout.setupWithViewPager(viewPager));
+
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (position != 0)
+                    searchItem.setVisible(false);
+                else
+                    searchItem.setVisible(true);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
 
         if (!StaticData.debugMode) {
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
@@ -324,22 +366,19 @@ public class UserMusicLibrary extends Fragment {
 
             MiscUtils.useFragment(reference, fragment -> {
 
-                final ActionBar bar = fragment.actionBar;
-                if (bar == null)
-                    return null;
+                final Toolbar toolbar = fragment.toolbar;
 
                 if (bitmap == null)
 
-                    bar.setIcon(TextDrawable.builder()
+                    toolbar.setLogo(TextDrawable.builder()
                             .beginConfig()
                             .width(margin)
                             .height(margin)
                             .endConfig()
                             .buildRound(MiscUtils.generateInitials(name), fragment.getResources().getColor(R.color.reach_grey)));
                 else
-                    bar.setIcon(new BitmapDrawable(fragment.getResources(), bitmap));
+                    toolbar.setLogo(new BitmapDrawable(fragment.getResources(), bitmap));
 
-                bar.setDisplayShowHomeEnabled(true);
                 return null;
             });
         }

@@ -12,25 +12,23 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +47,7 @@ import java.util.Map;
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.project.R;
 import reach.project.adapter.ReachContactsAdapter;
+import reach.project.adapter.ReachContactsChooserAdapter;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.database.contentProvider.ReachFriendsProvider;
@@ -67,9 +66,9 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     private static long serverId;
 
     private SharedPreferences preferences;
-    private GridView gridView;
+    private ListView listView;
     private SearchView searchView;
-    private ReachContactsAdapter reachContactsAdapter = null;
+    private ReachContactsChooserAdapter reachContactsAdapter = null;
 
     private String mCurFilter, selection;
     private String[] selectionArguments;
@@ -331,7 +330,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
 
-        gridView = null;
+        listView = null;
         if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
@@ -355,22 +354,23 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        setHasOptionsMenu(true);
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.show();
-            actionBar.setTitle("Choose contact");
-        }
+        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.listToolbar);
+        mToolbar.setTitle("Choose contact");
+        mToolbar.inflateMenu(R.menu.search_menu);
+        mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+        searchView = (SearchView) MenuItemCompat.getActionView(mToolbar.getMenu().findItem(R.id.search_button));
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
 
         if (reachContactsAdapter == null)
-            reachContactsAdapter = new ReachContactsAdapter(getActivity(), R.layout.myreach_item, null, 0);
+            reachContactsAdapter = new ReachContactsChooserAdapter(getActivity(), R.layout.contacts_chooser_item, null, 0);
         selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
         selectionArguments = new String[]{2 + ""};
 
-        gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.gridView));
-        gridView.setOnItemClickListener(clickListener);
-        gridView.setAdapter(reachContactsAdapter);
+        listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        listView.setOnItemClickListener(clickListener);
+        listView.setAdapter(reachContactsAdapter);
 
         getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
         return rootView;
@@ -394,7 +394,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
             reachContactsAdapter.swapCursor(cursor);
             if (cursor.getCount() == 0)
-                MiscUtils.setEmptyTextforGridView(gridView, "No friends found");
+                MiscUtils.setEmptyTextForListView(listView, "No friends found");
         }
     }
 
@@ -450,19 +450,5 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         }
         getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
         return true;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
-        menu.clear();
-        if (getArguments().getInt("type") == 0) {
-
-            inflater.inflate(R.menu.search_menu, menu);
-            searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-            searchView.setOnQueryTextListener(this);
-            searchView.setOnCloseListener(this);
-        } else
-            inflater.inflate(R.menu.menu, menu);
     }
 }

@@ -4,8 +4,9 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+
+
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,9 +39,11 @@ public class FeedbackFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_feedback, container, false);
-        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
-        if(actionBar != null)
-            actionBar.setTitle("Feedback");
+
+        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.feedbackToolbar);
+        mToolbar.setTitle("Feedback");
+        mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+
         final TextView fb = (TextView) rootView.findViewById(R.id.query);
         rootView.findViewById(R.id.send_feedback).setOnClickListener(v -> {
 

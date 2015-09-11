@@ -21,8 +21,6 @@ public interface SuperInterface {
 
     void onOpenPushLibrary();
 
-    void setUpDrawer();
-
     void toggleDrawer(boolean lock);
 
     void toggleSliding(boolean show);
@@ -50,6 +48,8 @@ public interface SuperInterface {
     void onOpenProfile();
 
     void onOpenNotificationDrawer();
+
+    void onOpenNavigationDrawer();
 
     void onPrivacyDone(); //PrivacyFragment
 

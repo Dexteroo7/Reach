@@ -8,14 +8,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -45,7 +41,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     private PushSongAdapter pushSongAdapter = null;
     private TextView songsCount;
     private SearchView searchView;
-    private ActionBar actionBar;
+    private Toolbar toolbar;
 
     private SuperInterface mListener;
     private String mCurFilter, selection;
@@ -131,8 +127,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onDestroyView() {
 
-        if (actionBar != null)
-            actionBar.setSubtitle("");
+        toolbar.setSubtitle("");
 
         selectedList.clear();
         selectionArguments = null;
@@ -154,7 +149,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         searchView = null;
         songsCount = null;
-        actionBar = null;
+        toolbar = null;
         super.onDestroyView();
     }
 
@@ -165,12 +160,24 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         final View rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         pushLibraryList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
-        actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
 
-        if (actionBar != null) {
-            actionBar.setTitle("Share Music");
-            actionBar.setSubtitle("Select upto 5 Songs");
-        }
+        toolbar = ((Toolbar)rootView.findViewById(R.id.privacyToolbar));
+        toolbar.setTitle("Share Music");
+        toolbar.setSubtitle("Select upto 5 Songs");
+        toolbar.inflateMenu(R.menu.push_songs_menu);
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (selectedList.size() == 0)
+                Toast.makeText(getActivity(), "Please select some songs first", Toast.LENGTH_SHORT).show();
+            else
+                mListener.onPushNext(selectedList);
+            return true;
+        });
+        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+        toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+        searchView = (SearchView) toolbar.getMenu().findItem(R.id.search_button).getActionView();
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
+
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
         if (pushSongAdapter == null)
             pushSongAdapter = new PushSongAdapter(getActivity(), R.layout.pushlibrary_item, null, 0);
@@ -181,31 +188,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         pushLibraryList.setOnItemClickListener(listener);
         getLoaderManager().initLoader(StaticData.SONGS_LOADER, null, this);
         return rootView;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
-        menu.clear();
-        inflater.inflate(R.menu.push_songs_menu, menu);
-        searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        final int id = item.getItemId();
-        switch (id) {
-
-            case R.id.done_button: {
-                if (selectedList.size() == 0)
-                    Toast.makeText(getActivity(), "Please select some songs first", Toast.LENGTH_SHORT).show();
-                else
-                    mListener.onPushNext(selectedList);
-                break;
-            }
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -258,7 +240,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        setHasOptionsMenu(true);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {

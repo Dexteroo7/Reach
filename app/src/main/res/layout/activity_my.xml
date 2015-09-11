@@ -9,60 +9,63 @@
     tools:context=".core.MyActivity">
     <!-- As the main content view, the view below consumes the entire
          space available using match_parent in both dimensions. -->
-    <android.support.design.widget.CoordinatorLayout
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
+        android:background="@color/white"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <android.support.design.widget.AppBarLayout
-            android:visibility="gone"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent">
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:minHeight="?attr/actionBarSize"
-                android:background="?attr/colorPrimary" />
-        </android.support.design.widget.AppBarLayout>
+        android:layout_height="match_parent"
+        sothree:umanoPanelHeight="63dp"
+        android:gravity="bottom"
+        sothree:umanoOverlay="true"
+        sothree:umanoDragView="@+id/player"
+        sothree:umanoShadowHeight="0dp">
         <FrameLayout
-            android:id="@+id/containerFrame"
+            android:id="@+id/container"
             android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:background="@null"
+            android:gravity="center|top"
+            android:orientation="vertical"
             android:layout_height="match_parent">
-            <com.sothree.slidinguppanel.SlidingUpPanelLayout
-                xmlns:sothree="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/sliding_layout"
-                android:background="@color/white"
+            <View
+                android:id="@+id/playerShadow"
+                android:background="@drawable/shadow_top"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                sothree:umanoPanelHeight="63dp"
-                android:gravity="bottom"
-                sothree:umanoOverlay="true"
-                sothree:umanoDragView="@+id/player"
-                sothree:umanoShadowHeight="0dp">
-                <FrameLayout
-                    android:id="@+id/container"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                android:layout_height="3dp" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
                 <LinearLayout
+                    android:id="@+id/fullPlayer"
                     android:layout_width="match_parent"
-                    android:background="@null"
-                    android:gravity="center|top"
-                    android:orientation="vertical"
-                    android:layout_height="match_parent">
-                    <View
-                        android:id="@+id/playerShadow"
-                        android:background="@drawable/shadow_top"
-                        android:layout_width="match_parent"
-                        android:layout_height="3dp" />
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+                    <android.support.design.widget.AppBarLayout
+                        android:id="@+id/toolbarLayout"
+                        android:alpha="0.0"
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent" >
+                        <android.support.v7.widget.Toolbar
+                            android:id="@+id/playerToolbar"
+                            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            app:navigationIcon="@drawable/abc_ic_ab_back_mtrl_am_alpha"
+                            android:minHeight="?attr/actionBarSize"
+                            android:background="?attr/colorPrimary" />
+                    </android.support.design.widget.AppBarLayout>
                     <FrameLayout
+                        app:layout_behavior="@string/appbar_scrolling_view_behavior"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
                         <LinearLayout
-                            android:id="@+id/fullPlayer"
+                            android:orientation="vertical"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical">
+                            android:layout_height="match_parent">
                             <android.support.v4.widget.SwipeRefreshLayout
                                 android:id="@+id/downloadRefresh"
                                 android:layout_width="match_parent"
@@ -204,79 +207,72 @@
                                 </RelativeLayout>
                             </RelativeLayout>
                         </LinearLayout>
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="60dp"
+                        <View
+                            android:id="@+id/mainShadow"
                             android:layout_gravity="top"
-                            android:id="@id/player"
-                            android:background="@color/reach_grey" >
-                            <ImageButton
-                                android:layout_width="50dp"
-                                android:layout_height="50dp"
-                                android:background="@null"
-                                android:scaleType="fitCenter"
-                                android:padding="7dp"
-                                android:src="@drawable/play_white_selector"
-                                android:layout_centerVertical="true"
-                                android:layout_alignParentRight="true"
-                                android:id="@+id/pause_play"/>
-                            <ImageView
-                                android:id="@+id/albumArt"
-                                android:layout_alignParentLeft="true"
-                                android:layout_centerVertical="true"
-                                android:layout_width="60dp"
-                                android:scaleType="fitXY"
-                                android:src="@drawable/song_cover_icon"
-                                android:layout_height="60dp" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:id="@+id/songNamePlaying"
-                                android:layout_marginLeft="10dp"
-                                android:text="Click to open Song Collection"
-                                android:textSize="16sp"
-                                android:layout_toRightOf="@id/albumArt"
-                                android:layout_toLeftOf="@id/pause_play"
-                                android:textColor="@color/white"
-                                android:maxLines="1"/>
-                            <SeekBar
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="10dp"
-                                android:id="@+id/progressBar"
-                                android:layout_below="@id/songNamePlaying"
-                                android:layout_toRightOf="@id/albumArt"
-                                android:layout_toLeftOf="@id/pause_play"
-                                android:thumbOffset="5dp"
-                                android:thumb="@drawable/thumb"
-                                android:progressDrawable="@drawable/player_progressbar"
-                                style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
-                        </RelativeLayout>
+                            android:background="@drawable/shadow_toolbar"
+                            android:layout_width="match_parent"
+                            android:layout_height="3dp" />
                     </FrameLayout>
                 </LinearLayout>
-            </com.sothree.slidinguppanel.SlidingUpPanelLayout>
-            <View
-                android:id="@+id/mainShadow"
-                android:layout_gravity="top"
-                android:background="@drawable/shadow_toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="3dp" />
-        </FrameLayout>
-    </android.support.design.widget.CoordinatorLayout>
-    <!-- android:layout_gravity="start" tells DrawerLayout to treat
-         this as a sliding drawer on the left side for left-to-right
-         languages and on the right side for right-to-left languages.
-         If you're not building against API 17 or higher, use
-         android:layout_gravity="left" instead. -->
-    <!-- The drawer is given a fixed width in dp and extends the full height of
-         the container. -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_gravity="top"
+                    android:id="@id/player"
+                    android:background="@color/reach_grey" >
+                    <ImageButton
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@null"
+                        android:scaleType="fitCenter"
+                        android:padding="7dp"
+                        android:src="@drawable/play_white_selector"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentRight="true"
+                        android:id="@+id/pause_play"/>
+                    <ImageView
+                        android:id="@+id/albumArt"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:layout_width="60dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/song_cover_icon"
+                        android:layout_height="60dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:id="@+id/songNamePlaying"
+                        android:layout_marginLeft="10dp"
+                        android:text="Click to open Song Collection"
+                        android:textSize="16sp"
+                        android:layout_toRightOf="@id/albumArt"
+                        android:layout_toLeftOf="@id/pause_play"
+                        android:textColor="@color/white"
+                        android:maxLines="1"/>
+                    <SeekBar
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:id="@+id/progressBar"
+                        android:layout_below="@id/songNamePlaying"
+                        android:layout_toRightOf="@id/albumArt"
+                        android:layout_toLeftOf="@id/pause_play"
+                        android:thumbOffset="5dp"
+                        android:thumb="@drawable/thumb"
+                        android:progressDrawable="@drawable/player_progressbar"
+                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
+                </RelativeLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
     <android.support.design.widget.NavigationView
         android:layout_width="wrap_content"
         android:id="@+id/navigation_view"
         android:layout_height="match_parent"
-        android:layout_gravity="left"
+        android:layout_gravity="start"
         app:headerLayout="@layout/nav_drawer_header"
         app:menu="@menu/nav_draw_menu">
         <FrameLayout
@@ -317,7 +313,7 @@
         android:layout_width="wrap_content"
         android:id="@+id/notification_view"
         android:layout_height="match_parent"
-        android:layout_gravity="right">
+        android:layout_gravity="end">
         <LinearLayout
             android:id="@+id/notification_drawer"
             android:orientation="vertical"
@@ -339,11 +335,9 @@
                 android:layout_height="3dp"
                 android:background="@drawable/shadow_bottom"/>
             <reach.project.viewHelpers.CustomViewPager
-                android:id="@+id/viewPager"
-                android:background="@color/white"
+                android:id="@+id/notifViewPager"
                 android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="0dp" />
+                android:layout_height="match_parent" />
         </LinearLayout>
     </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>

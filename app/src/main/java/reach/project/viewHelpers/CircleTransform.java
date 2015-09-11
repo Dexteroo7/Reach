@@ -18,7 +18,13 @@ public class CircleTransform implements Transformation {
         final int size = Math.min(source.getWidth(), source.getHeight());
         final int x = (source.getWidth() - size) / 2;
         final int y = (source.getHeight() - size) / 2;
-        final Bitmap squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+        final Bitmap squaredBitmap;
+        try {
+            squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return source;
+        }
         if (squaredBitmap != source)
             source.recycle();
 

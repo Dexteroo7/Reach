@@ -1,80 +1,80 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="105dp"
-    android:layout_height="135dp"
+<reach.project.viewHelpers.GridViewItem xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:descendantFocusability="blocksDescendants">
-    <android.support.v7.widget.CardView
-        xmlns:card_view="http://schemas.android.com/apk/res-auto"
-        android:descendantFocusability="blocksDescendants"
-        android:id="@+id/card_view"
-        android:layout_marginTop="3dp"
+    <ImageView
+        android:id="@+id/profilePhotoList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        card_view:cardUseCompatPadding="true"
-        card_view:cardElevation="3dp"
-        card_view:cardCornerRadius="0dp">
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="95dp">
-                <ImageView
-                    android:id="@+id/profilePhotoList"
-                    android:layout_width="match_parent"
-                    android:scaleType="centerCrop"
-                    android:layout_height="match_parent" />
-                <ImageView
-                    android:background="@drawable/nav_pic_gradient"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </FrameLayout>
-            <RelativeLayout
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-                <TextView
-                    android:id="@+id/telephoneNumberList"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="9999"
-                    android:layout_alignParentRight="true"
-                    android:layout_centerVertical="true"
-                    android:textColor="#000"
-                    android:textSize="11sp" />
-                <ImageView
-                    android:id="@+id/note"
-                    android:layout_toLeftOf="@id/telephoneNumberList"
-                    android:layout_centerVertical="true"
-                    android:layout_width="13dp"
-                    android:layout_height="13dp"
-                    android:src="@drawable/ic_music_count_grey" />
-                <TextView
-                    android:id="@+id/userNameList"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentLeft="true"
-                    android:layout_toLeftOf="@id/note"
-                    android:layout_centerVertical="true"
-                    android:ellipsize="marquee"
-                    android:maxWidth="120dp"
-                    android:lines="1"
-                    android:text="Title "
-                    android:textColor="#000"
-                    android:textSize="12sp" />
-            </RelativeLayout>
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
-    <TextView
-        android:layout_gravity="end"
-        android:textColor="@color/white"
+        android:scaleType="centerCrop"
+        android:layout_height="match_parent" />
+    <ImageView
+        android:id="@+id/profileGradient"
+        android:background="@drawable/gradient_light"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_gravity="right"
+        android:layout_width="wrap_content"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/onlineIcon"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dp"
+            android:src="@drawable/circular_online"
+            android:layout_width="15dp"
+            android:layout_height="15dp" />
+        <TextView
+            android:id="@+id/onlineText"
+            android:text="Online"
+            android:textColor="#fff"
+            android:layout_gravity="center_vertical"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:paddingLeft="8dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="8dp"
+        android:paddingRight="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/userNameList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@id/note"
+            android:layout_centerVertical="true"
+            android:ellipsize="marquee"
+            android:maxWidth="120dp"
+            android:lines="1"
+            android:textStyle="bold"
+            android:text="User Name"
+            android:textColor="#fff"
+            android:textSize="14sp" />
+        <TextView
+            android:id="@+id/telephoneNumberList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="100 Songs"
+            android:textStyle="bold"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:textColor="#fff"
+            android:textSize="12sp" />
+    </LinearLayout>
+    <ImageView
         android:visibility="gone"
-        android:text="99"
-        android:elevation="5dp"
-        android:textSize="11sp"
-        android:gravity="center"
-        android:background="@drawable/circular_background_pink"
-        android:layout_width="20dp"
-        android:layout_height="20dp" />
-</FrameLayout>
+        android:id="@+id/lockIcon"
+        android:src="@drawable/ic_locked_friends"
+        android:layout_gravity="top|right"
+        android:layout_margin="8dp"
+        android:layout_width="30dp"
+        android:alpha="0.8"
+        android:layout_height="30dp" />
+</reach.project.viewHelpers.GridViewItem>

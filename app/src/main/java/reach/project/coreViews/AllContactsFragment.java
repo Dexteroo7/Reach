@@ -17,11 +17,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -61,6 +58,7 @@ public class AllContactsFragment extends Fragment implements
 
     private static WeakReference<AllContactsFragment> reference = null;
 
+
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
 
         @Override
@@ -94,16 +92,15 @@ public class AllContactsFragment extends Fragment implements
 
         sharedPrefs.edit().putStringSet(inviteKey, LocalUtils.inviteSentTo).apply();
         //listView.setOnScrollListener(null);
-        if (searchView != null) {
-            searchView.setOnQueryTextListener(null);
-            searchView.setOnCloseListener(null);
-            searchView.setQuery(null, false);
-            ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
-                    .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-        }
 
-        searchView = null;
         super.onDestroyView();
+    }
+
+    public void setSearchView(SearchView sView) {
+        searchView = sView;
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
+        searchView.setQuery(null, true);
     }
 
     @Override
@@ -111,8 +108,8 @@ public class AllContactsFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        setHasOptionsMenu(true);
         final View rootView = inflater.inflate(R.layout.fragment_allcontacts, container, false);
+
         final Activity activity = getActivity();
         if (activity == null || activity.isFinishing())
             return null;
@@ -172,23 +169,6 @@ public class AllContactsFragment extends Fragment implements
         inviteAdapter.getFilter().filter(newText);
         return true;
     }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
-        if (menu == null || inflater == null)
-            return;
-        //menu.clear();
-
-        inflater.inflate(R.menu.search_menu, menu);
-
-        searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-        if (searchView == null)
-            return;
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
-    }
-
 
     private enum LocalUtils {
         ;

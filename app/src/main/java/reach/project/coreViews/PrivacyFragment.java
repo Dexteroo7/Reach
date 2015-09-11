@@ -11,15 +11,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -54,7 +50,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     private SearchView searchView;
     private ListView privacyList;
     private View rootView;
-    private ActionBar actionBar;
+    private Toolbar toolbar;
 
     private SuperInterface mListener;
     private String mCurFilter, selection;
@@ -133,8 +129,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onDestroyView() {
 
-        if(actionBar != null)
-            actionBar.setSubtitle("");
+        toolbar.setSubtitle("");
         getLoaderManager().destroyLoader(StaticData.SONGS_LOADER);
         if(reachMusicAdapter != null && reachMusicAdapter.getCursor() != null && !reachMusicAdapter.getCursor().isClosed())
             reachMusicAdapter.getCursor().close();
@@ -152,7 +147,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         searchView = null;
         rootView = null;
-        actionBar = null;
+        toolbar = null;
         super.onDestroyView();
     }
 
@@ -163,12 +158,28 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
-        actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
-
-        if(actionBar != null) {
-            actionBar.setTitle("Hide Songs");
-            actionBar.setSubtitle("Click to Hide/Unhide Songs");
+        toolbar = (Toolbar)rootView.findViewById(R.id.privacyToolbar);
+        toolbar.setTitle("Hide Songs");
+        toolbar.setSubtitle("Click to Hide/Unhide Songs");
+        if (getArguments()!=null&&getArguments().getBoolean("first")) {
+            toolbar.inflateMenu(R.menu.privacy_menu);
+            toolbar.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.done_button) {
+                    mListener.onPrivacyDone();
+                    return true;
+                }
+                return false;
+            });
         }
+        else {
+            toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+            toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+            toolbar.inflateMenu(R.menu.search_menu);
+        }
+
+        searchView = (SearchView) toolbar.getMenu().findItem(R.id.search_button).getActionView();
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
 
         if (getArguments().getBoolean("first"))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");
@@ -256,34 +267,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
-    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
-        menu.clear();
-        if (getArguments()!=null&&getArguments().getBoolean("first"))
-            inflater.inflate(R.menu.privacy_menu, menu);
-        else
-            inflater.inflate(R.menu.search_menu, menu);
-
-        searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        final int id = item.getItemId();
-        switch(id){
-
-            case R.id.done_button: {
-                mListener.onPrivacyDone();
-                break;
-            }
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
-
-    @Override
     public boolean onClose() {
 
         searchView.setQuery(null, true);
@@ -333,7 +316,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        setHasOptionsMenu(true);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {

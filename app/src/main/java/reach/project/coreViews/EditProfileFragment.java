@@ -11,8 +11,9 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+
+
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -72,9 +73,11 @@ public class EditProfileFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_edit_profile, container, false);
         final Activity activity = getActivity();
-        final ActionBar actionBar = ((AppCompatActivity) activity).getSupportActionBar();
-        if (actionBar != null)
-            actionBar.setTitle("Edit Profile");
+
+        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.editProfileToolbar);
+        mToolbar.setTitle("Edit Profile");
+        mToolbar.setNavigationOnClickListener(v -> activity.onBackPressed());
+
         sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_APPEND);
 
         profile = (ImageView) rootView.findViewById(R.id.profilePhoto);
