@@ -92,10 +92,10 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                     imageId).centerCrop().fit().into(viewHolder.profilePhotoList);
         }
         else {
-            if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
+            /*if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)de
                 Picasso.with(context).load(R.drawable.default_profile_new)
                         .centerCrop().fit().into(viewHolder.profilePhotoList);
-            else
+            else*/
                 Picasso.with(context).load(R.drawable.default_profile_offline)
                         .centerCrop().fit().into(viewHolder.profilePhotoList);
         }
