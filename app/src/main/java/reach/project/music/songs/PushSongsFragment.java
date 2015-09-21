@@ -53,13 +53,18 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         final ImageView toggle = (ImageView) view.findViewById(R.id.listToggle);
         final Cursor songCursor = (Cursor) pushSongAdapter.getItem(position);
+
+        //create transfer song object
         final TransferSong transferSong = new TransferSong(
                 songCursor.getLong(7), //size of song
                 songCursor.getLong(1), //songId
                 songCursor.getLong(5), //duration
                 songCursor.getString(2), //displayName
                 songCursor.getString(3), //actualName
-                songCursor.getString(4)); //artistName
+                songCursor.getString(4), //artistName
+                songCursor.getString(6), //album
+                songCursor.getString(8), //genre
+                songCursor.getBlob(9)); //albumArtData
         final int hashCode = transferSong.hashCode();
 
         if (!pushSongAdapter.getCheck(hashCode)) {

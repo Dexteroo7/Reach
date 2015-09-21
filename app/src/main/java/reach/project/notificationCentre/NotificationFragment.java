@@ -67,7 +67,6 @@ public class NotificationFragment extends Fragment {
 
     public void refresh() {
 
-        getActivity().invalidateOptionsMenu();
         if (notificationRefresher != null && listView != null)
             new NotificationSync().executeOnExecutor(notificationRefresher);
     }
@@ -204,7 +203,7 @@ public class NotificationFragment extends Fragment {
 
                 if (notificationBaseList == null || notificationBaseList.isEmpty()) {
 
-                    MiscUtils.setEmptyTextForListView(fragment.listView, "No friend requests");
+                    MiscUtils.setEmptyTextForListView(fragment.listView, "No notifications");
                     adapter.clear();
                 } else {
 

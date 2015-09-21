@@ -15,18 +15,30 @@ public class CircleTransform implements Transformation {
     @Override
     public Bitmap transform(Bitmap source) {
 
+        if (source == null)
+            return null;
+
         final int size = Math.min(source.getWidth(), source.getHeight());
         final int x = (source.getWidth() - size) / 2;
         final int y = (source.getHeight() - size) / 2;
-        final Bitmap squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+
+        final Bitmap squaredBitmap;
+        try {
+            squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+        } catch (NullPointerException ignored) {
+            return source;
+        }
+
+        if (squaredBitmap == null)
+            return source;
+
         if (squaredBitmap != source)
             source.recycle();
 
         final Bitmap bitmap;
         try {
             bitmap = Bitmap.createBitmap(size, size, source.getConfig());
-        } catch (NullPointerException e) {
-            e.printStackTrace();
+        } catch (NullPointerException ignored) {
             return squaredBitmap;
         }
 

@@ -32,17 +32,11 @@ public interface SuperInterface {
 
     void setUpNavigationViews();
 
-    void addSongToQueue(long songId,
-                        long senderId,
-                        long size,
-                        String displayName,
-                        String actualName,
-                        boolean multiple,
-                        String userName,
-                        String onlineStatus,
-                        String networkType,
-                        String artistName,
-                        long duration); //MusicListFragment
+    void addSongToQueue(long songId, long senderId, long size,
+                        String displayName, String actualName,
+                        boolean multiple, String userName, String onlineStatus,
+                        String networkType, String artistName, long duration,
+                        String albumName, String genre, byte[] albumArtData); //MusicListFragment
 
     void startAccountCreation(Optional<OldUserContainerNew> container); //NumberVerificationFragment
 

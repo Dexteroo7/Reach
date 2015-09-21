@@ -75,7 +75,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
         final ReceivedRequest receivedRequest = getItem(position);
 
-        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).transform(new CircleTransform()).into(profilePhoto);
+        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).fit().transform(new CircleTransform()).into(profilePhoto);
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 
@@ -107,7 +107,6 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                             ReachFriendsHelper.contentValuesCreator(friend));
 
                     accepted.put(receivedRequest.getId(), true);
-
                     expand(linearLayout, b, a);
                     linearLayout.setClickable(false);
                     actionBlock.setVisibility(View.GONE);

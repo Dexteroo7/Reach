@@ -71,8 +71,14 @@ public class Player {
     }
 
     public boolean isPlaying() {
-        return (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) ||
-                (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer.isPlaying());
+
+        try {
+            return (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) ||
+                    (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer.isPlaying());
+        } catch (IllegalStateException ignored) {
+        }
+
+        return false;
     }
 
     public void reset() throws InterruptedException {

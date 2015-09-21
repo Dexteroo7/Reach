@@ -24,14 +24,11 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.localytics.android.Localytics;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -43,16 +40,16 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.uploadDownload.ReachDatabaseProvider;
-import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.songs.ReachSongHelper;
+import reach.project.music.songs.ReachSongProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.uploadDownload.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.utils.SharedPrefUtils;
 
 /**
  * Created by Dexter on 14-05-2015.
@@ -152,7 +149,7 @@ public class ProcessManager extends Service implements
      * basically stop the infinite while loop. In the next loop cycle, the break will happen.
      * Once loop breaks sanitize() happens. close() is ALWAYS called by the parent. It basically
      * toggles an atomic boolean and thread-safety is assured.
-     * <p/>
+     * <p>
      * sanitize() : sanitize resets the global data of the current Runnable and calls
      * 'close()' of any child Runnable. By reset I mean, close all closeables, clear stuff etc.
      * The complete global space needs to be purged. Cleaning thread-local space might also be necessary.
@@ -531,16 +528,12 @@ public class ProcessManager extends Service implements
          * GA stuff
          */
         if (!StaticData.debugMode) {
-            ((ReachApplication)getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Play song")
                     .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("Song - " + musicData.getDisplayName())
+                    .setLabel("SongBrainz - " + musicData.getDisplayName())
                     .setValue(1)
                     .build());
-            Map<String, String> tagValues = new HashMap<>();
-            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-            tagValues.put("Song", musicData.getDisplayName());
-            Localytics.tagEvent("Play song", tagValues);
         }
 
         switch (notificationState) {
@@ -587,19 +580,15 @@ public class ProcessManager extends Service implements
     }
 
     @Override
-    public void downloadFail(String songName) {
-        if (!StaticData.debugMode) {
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Download Fail")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("Song - " + songName)
-                    .setValue(1)
-                    .build());
-            Map<String, String> tagValues = new HashMap<>();
-            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-            tagValues.put("Song", songName);
-            Localytics.tagEvent("Download Fail", tagValues);
-        }
+    public void downloadFail(String songName, String reason) {
+
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Download Fail")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setLabel("SongBrainz - " + songName)
+                .setLabel(reason)
+                .setValue(1)
+                .build());
     }
 
     @Override
@@ -815,6 +804,7 @@ public class ProcessManager extends Service implements
 
                 musicStack.clear();
                 musicHandler.close();
+                musicHandler.sanitize();
                 break;
             }
             default:
@@ -1021,13 +1011,9 @@ public class ProcessManager extends Service implements
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(missType)
                     .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("Song - " + songName)
+                    .setLabel("SongBrainz - " + songName)
                     .setValue(1)
                     .build());
-            Map<String, String> tagValues = new HashMap<>();
-            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-            tagValues.put("Song", songName);
-            Localytics.tagEvent(missType, tagValues);
         }
     }
 

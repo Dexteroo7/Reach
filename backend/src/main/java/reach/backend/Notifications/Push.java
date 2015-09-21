@@ -9,7 +9,6 @@ import com.googlecode.objectify.annotation.Subclass;
 
 public class Push extends NotificationBase{
 
-
     private int size = 0;
     private String firstSongName = "";
     private String customMessage = "";

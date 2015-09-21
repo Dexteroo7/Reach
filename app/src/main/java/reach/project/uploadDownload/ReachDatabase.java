@@ -9,6 +9,7 @@ public final class ReachDatabase {
     private long songId = 0; //1
     private long receiverId = 0; //2
     private long senderId = 0; //3
+    private long uniqueId = 0;
 
     private short operationKind = 0;//4 (0 = download, 1 = upload)
 
@@ -30,6 +31,11 @@ public final class ReachDatabase {
 
     private short logicalClock = 0; //16
     private short status = 0; //17
+
+    private String albumName = "hello_world"; //18
+    private String genre = "hello_world"; //19
+    private byte [] albumArtData; //20
+    private short visibility = 0; //21
 
     private long lastActive = 0; //not in sql
     private long reference = 0; //not in sql
@@ -261,5 +267,45 @@ public final class ReachDatabase {
 
     public void setMbid(String mbid) {
         this.mbid = mbid;
+    }
+
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    public void setAlbumName(String albumName) {
+        this.albumName = albumName;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
+    }
+
+    public byte[] getAlbumArtData() {
+        return albumArtData;
+    }
+
+    public void setAlbumArtData(byte[] albumArtData) {
+        this.albumArtData = albumArtData;
+    }
+
+    public short getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(short visibility) {
+        this.visibility = visibility;
+    }
+
+    public long getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(long uniqueId) {
+        this.uniqueId = uniqueId;
     }
 }

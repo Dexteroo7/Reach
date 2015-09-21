@@ -101,6 +101,19 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
         final short operationKind = cursor.getShort(10);
         final String userName = cursor.getString(11);
 
+//        final byte[] albumArtData = cursor.getBlob(15);
+//
+//        if (albumArtData != null && albumArtData.length > 0) {
+//
+//            final AlbumArtData artData;
+//            try {
+//                artData = new Wire(AlbumArtData.class).parseFrom(albumArtData, AlbumArtData.class);
+//                if (artData != null)
+//                    Log.i("Ayush", "ReachQueue Adapter " + artData.toString());
+//            } catch (IOException ignored) {
+//            }
+//        }
+
 //        final long receiverId = cursor.getLong(2);
 //        final short logicalClock = cursor.getShort(9);
 //        final long songId = cursor.getLong(10);

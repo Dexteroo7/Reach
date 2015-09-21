@@ -31,32 +31,31 @@ import android.view.ViewGroup;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
-import reach.project.music.albums.AlbumListFragment;
-import reach.project.music.artists.ArtistListFragment;
 import reach.project.core.PushActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.playLists.PlayListListFragment;
-import reach.project.music.songs.ReachSongProvider;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.music.songs.ReachSongHelper;
+import reach.project.friends.ReachFriendsProvider;
+import reach.project.music.albums.AlbumListFragment;
+import reach.project.music.artists.ArtistListFragment;
+import reach.project.music.playLists.PlayListListFragment;
 import reach.project.music.songs.MusicListFragment;
+import reach.project.music.songs.ReachSongHelper;
+import reach.project.music.songs.ReachSongProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.viewHelpers.CircleTransform;
 import reach.project.utils.viewHelpers.TextDrawable;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
@@ -168,10 +167,6 @@ public class UserMusicLibrary extends Fragment {
                     .setLabel("Friend - " + userId)
                     .setValue(1)
                     .build());
-            Map<String, String> tagValues = new HashMap<>();
-            tagValues.put("User Name", SharedPrefUtils.getUserName(sharedPreferences));
-            tagValues.put("Friend", String.valueOf(userId));
-            Localytics.tagEvent("Browsing Library", tagValues);
         }
 
         return rootView;
@@ -230,7 +225,8 @@ public class UserMusicLibrary extends Fragment {
         public void run() {
 
             //fetch Music
-            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Activity context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
+            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Activity>)
+                    (Activity context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
 
             //do we check for visibility ?
             final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit

@@ -46,17 +46,19 @@ public class PushSongAdapter extends ResourceCursorAdapter {
 
     private final String [] projection = new String[] {
 
-            ReachSongHelper.COLUMN_ID,
+            ReachSongHelper.COLUMN_ID, //0
 
-            ReachSongHelper.COLUMN_SONG_ID,
-            ReachSongHelper.COLUMN_DISPLAY_NAME,
-            ReachSongHelper.COLUMN_ACTUAL_NAME,
+            ReachSongHelper.COLUMN_SONG_ID, //1
+            ReachSongHelper.COLUMN_DISPLAY_NAME, //2
+            ReachSongHelper.COLUMN_ACTUAL_NAME, //3
 
-            ReachSongHelper.COLUMN_ARTIST,
-            ReachSongHelper.COLUMN_DURATION,
-            ReachSongHelper.COLUMN_ALBUM,
-            ReachSongHelper.COLUMN_SIZE,
+            ReachSongHelper.COLUMN_ARTIST, //4
+            ReachSongHelper.COLUMN_DURATION, //5
+            ReachSongHelper.COLUMN_ALBUM, //6
+            ReachSongHelper.COLUMN_SIZE, //7
 
+            ReachSongHelper.COLUMN_GENRE, //8
+            ReachSongHelper.COLUMN_ALBUM_ART_DATA, //9
     };
 
     @Override

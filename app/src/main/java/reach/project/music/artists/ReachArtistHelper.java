@@ -39,7 +39,8 @@ public class ReachArtistHelper extends SQLiteOpenHelper {
                     COLUMN_ALBUM,
                     COLUMN_ARTIST,
                     COLUMN_USER_ID,
-                    COLUMN_SIZE
+                    COLUMN_SIZE,
+                    COLUMN_ARTIST_MBID
             };
 
     public static Artist cursorToProcess(Cursor cursor) {

@@ -19,12 +19,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
-import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
@@ -114,10 +111,6 @@ public class InviteFragment extends Fragment {
                         .setLabel(inviteOptions[position])
                         .setValue(1)
                         .build());
-                Map<String, String> tagValues = new HashMap<>();
-                tagValues.put("User Name", SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-                tagValues.put("Option", inviteOptions[position]);
-                Localytics.tagEvent("Invite Page", tagValues);
             }
             final Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);

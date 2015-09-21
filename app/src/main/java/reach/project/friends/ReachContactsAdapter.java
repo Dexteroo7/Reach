@@ -7,7 +7,6 @@ package reach.project.friends;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -77,13 +76,11 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             ReachFriendsHelper.COLUMN_NETWORK_TYPE, //4
             ReachFriendsHelper.COLUMN_STATUS, //5
             ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //6
-            ReachFriendsHelper.COLUMN_NEW_SONGS //7
+            ReachFriendsHelper.COLUMN_NEW_SONGS, //7
     };
 
     @Override
     public void bindView(View view, final Context context, Cursor cursor) {
-
-        Log.i("Ayush", "Binding contacts adapter");
 
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
 
@@ -98,7 +95,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         viewHolder.userInitials.setText(MiscUtils.generateInitials(userName));
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
-        viewHolder.telephoneNumberList.setText(numberOfSongs + " songs");
+        viewHolder.telephoneNumberList.setText(numberOfSongs + " songs " + newSongs + " new");
 
         //first invalidate
         viewHolder.profilePhotoList.setImageBitmap(null);
@@ -106,7 +103,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
 
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
-                    imageId).transform(transform).noPlaceholder().into(viewHolder.profilePhotoList);
+                    imageId).fit().centerCrop().transform(transform).noPlaceholder().into(viewHolder.profilePhotoList);
             viewHolder.profilePhotoList.setVisibility(View.VISIBLE);
         }
 

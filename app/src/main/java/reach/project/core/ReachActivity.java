@@ -44,6 +44,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -55,7 +56,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.appsflyer.AppsFlyerLib;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
 import com.google.android.gms.analytics.HitBuilders;
@@ -66,7 +66,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.localytics.android.Localytics;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
@@ -74,11 +73,10 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -86,41 +84,42 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
-import reach.project.music.songs.ReachMusicAdapter;
-import reach.project.uploadDownload.ReachQueueAdapter;
-import reach.project.friends.ContactsChooserFragment;
-import reach.project.friends.ContactsListFragment;
 import reach.project.coreViews.EditProfileFragment;
 import reach.project.coreViews.FeedbackFragment;
-import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.coreViews.InviteFragment;
-import reach.project.notificationCentre.NotificationFragment;
-import reach.project.music.songs.PrivacyFragment;
 import reach.project.coreViews.PromoCodeDialog;
-import reach.project.music.songs.PushSongsFragment;
 import reach.project.coreViews.UpdateFragment;
-import reach.project.uploadDownload.UploadHistory;
-import reach.project.uploadDownload.ReachDatabaseProvider;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.coreViews.UserMusicLibrary;
+import reach.project.friends.ContactsChooserFragment;
+import reach.project.friends.ContactsListFragment;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.music.AlbumArtData;
+import reach.project.music.songs.MusicListFragment;
+import reach.project.music.songs.PrivacyFragment;
+import reach.project.music.songs.PushContainer;
+import reach.project.music.songs.PushSongsFragment;
+import reach.project.music.songs.ReachMusicAdapter;
 import reach.project.music.songs.ReachSongHelper;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.songs.TransferSong;
+import reach.project.notificationCentre.FriendRequestFragment;
+import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
 import reach.project.onBoarding.NumberVerification;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.music.songs.MusicListFragment;
-import reach.project.coreViews.UserMusicLibrary;
+import reach.project.uploadDownload.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.uploadDownload.ReachQueueAdapter;
+import reach.project.uploadDownload.UploadHistory;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
-import reach.project.music.songs.PushContainer;
-import reach.project.uploadDownload.ReachDatabase;
-import reach.project.music.songs.TransferSong;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
 
@@ -134,6 +133,7 @@ public class ReachActivity extends AppCompatActivity implements
     public static long serverId = 0;
 
     private static WeakReference<ReachActivity> reference = null;
+    private static SecureRandom secureRandom = new SecureRandom();
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -177,7 +177,6 @@ public class ReachActivity extends AppCompatActivity implements
             new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
-
 
         String actionBarTitle = "Reach", actionBarSubtitle = "";
         Drawable actionBarIcon;
@@ -282,11 +281,9 @@ public class ReachActivity extends AppCompatActivity implements
     };
 
 
-    private View.OnClickListener navHeaderClickListener = v -> onOpenProfile();
+    private final View.OnClickListener navHeaderClickListener = v -> onOpenProfile();
 
-    private View.OnClickListener footerClickListener = v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
-
-    private NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
+    private final NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(MenuItem menuItem) {
             //Closing drawer on item click
@@ -478,6 +475,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void onOpenNotificationDrawer() {
 
+        if (mDrawerLayout == null)
+            return;
         if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
             mDrawerLayout.openDrawer(Gravity.RIGHT);
         else
@@ -577,7 +576,6 @@ public class ReachActivity extends AppCompatActivity implements
             finish();
         }
     }
-
 
     @Override
     public void onPushNext(HashSet<TransferSong> songsList) {
@@ -701,11 +699,11 @@ public class ReachActivity extends AppCompatActivity implements
         });
         final String path = SharedPrefUtils.getImageId(sharedPreferences);
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path)
-                    .into((ImageView) findViewById(R.id.userImageNav));
+            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav))
                 .setText(SharedPrefUtils.getUserName(sharedPreferences));
         ////////////////////
+        //TODO update count
         final Cursor countCursor = getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
                 ReachSongHelper.projection,
@@ -903,7 +901,7 @@ public class ReachActivity extends AppCompatActivity implements
         fragmentManager.addOnBackStackChangedListener(this);
 
         findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
-        findViewById(R.id.footer).setOnClickListener(footerClickListener);
+        findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
 
@@ -962,23 +960,9 @@ public class ReachActivity extends AppCompatActivity implements
         tracker.setScreenName("reach.project.core.ReachActivity");
         tracker.send(new HitBuilders.ScreenViewBuilder().build());
 
-        //initialize AppsFlyer
-        AppsFlyerLib.setAppsFlyerKey("JSwfk37zArmeNLNCd4grKR");
-        AppsFlyerLib.sendTracking(this);
-
-        //initialize Localytics
-        AsyncTask.SERIAL_EXECUTOR.execute(() -> {
-
-            final String locID = Localytics.getCustomerId();
-            if (locID == null || TextUtils.isEmpty(locID)) {
-                Localytics.setCustomerId(phoneNumber);
-                Localytics.setCustomerFullName(userName);
-            }
-        });
-
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
-            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber).build());
+            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
             return; //fail
         }
 
@@ -1109,7 +1093,10 @@ public class ReachActivity extends AppCompatActivity implements
                                 ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
                                 pushContainer.getNetworkType(),
                                 transferSong.getArtistName(),
-                                transferSong.getDuration());
+                                transferSong.getDuration(),
+                                transferSong.getAlbumName(),
+                                transferSong.getGenre(),
+                                transferSong.getAlbumArtData());
                     }
                     new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
@@ -1124,7 +1111,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
 
         if (id == StaticData.DOWNLOAD_LOADER) {
 
@@ -1182,23 +1168,28 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void addSongToQueue(long songId, long senderId, long size,
                                String displayName, String actualName,
-                               boolean multiple, String userName,
-                               String onlineStatus, String networkType,
-                               String artistName, long duration) {
+                               boolean multiple, String userName, String onlineStatus,
+                               String networkType, String artistName, long duration,
+                               String albumName, String genre, byte[] albumArtData) {
 
         final ContentResolver contentResolver = getContentResolver();
         if (contentResolver == null)
             return;
+
+        /**
+         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
+         */
 
         final Cursor cursor;
         if (multiple)
             cursor = contentResolver.query(
                     ReachDatabaseProvider.CONTENT_URI,
                     new String[]{ReachDatabaseHelper.COLUMN_ID},
-                    ReachDatabaseHelper.COLUMN_SONG_ID + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?",
-                    new String[]{songId + "", senderId + "", serverId + ""},
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                    new String[]{displayName, actualName, size + "", duration + ""},
                     null);
         else
             //this cursor can be used to play if entry exists
@@ -1217,14 +1208,15 @@ public class ReachActivity extends AppCompatActivity implements
 
                     },
 
-                    ReachDatabaseHelper.COLUMN_SONG_ID + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_SIZE + " = ?",
-                    new String[]{songId + "", senderId + "", serverId + "", size + ""},
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                    new String[]{displayName, actualName, size + "", duration + ""},
                     null);
 
         if (cursor != null) {
+
             if (cursor.moveToFirst()) {
 
                 //song already found
@@ -1276,6 +1268,7 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
+        reachDatabase.setUniqueId(secureRandom.nextInt(Integer.MAX_VALUE));
 
         reachDatabase.setDuration(duration);
         reachDatabase.setLogicalClock((short) 0);
@@ -1283,6 +1276,22 @@ public class ReachActivity extends AppCompatActivity implements
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
+
+        reachDatabase.setAlbumName(albumName);
+        reachDatabase.setGenre(genre);
+
+        if (albumArtData == null || albumArtData.length == 0) {
+
+            final AlbumArtData.Builder builder = new AlbumArtData.Builder();
+            builder.duration(duration);
+            builder.artist(artistName);
+            builder.release(albumName);
+            builder.title(displayName);
+            albumArtData = builder.build().toByteArray();
+        }
+
+        reachDatabase.setAlbumArtData(albumArtData);
+        reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
         final String[] splitter = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
@@ -1301,16 +1310,11 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (!StaticData.debugMode) {
             ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Transaction - Add Song")
+                    .setCategory("Transaction - Add SongBrainz")
                     .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                     .setValue(1)
                     .build());
-            Map<String, String> tagValues = new HashMap<>();
-            tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-            tagValues.put("From", String.valueOf(reachDatabase.getSenderId()));
-            tagValues.put("Song", reachDatabase.getDisplayName());
-            Localytics.tagEvent("Transaction - Add Song", tagValues);
         }
     }
 
@@ -1509,6 +1513,9 @@ public class ReachActivity extends AppCompatActivity implements
             }
         };
 
+        private static final View.OnClickListener footerClickListener =
+                v -> v.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+
         public static TextView getMyLibraryTExtView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
@@ -1606,7 +1613,7 @@ public class ReachActivity extends AppCompatActivity implements
                         updateFragment.setCancelable(false);
                         try {
                             updateFragment.show(activity.fragmentManager, "update");
-                        } catch (IllegalStateException ignored) {
+                        } catch (IllegalStateException | WindowManager.BadTokenException ignored) {
                         }
                     }
                     return null;
@@ -1614,6 +1621,7 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
+        //TODO optimize database fetch !
         public static class RefreshOperations extends AsyncTask<Void, Void, Void> {
 
             /**

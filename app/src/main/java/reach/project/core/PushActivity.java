@@ -14,15 +14,12 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import reach.project.R;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CircleTransform;
@@ -41,8 +38,10 @@ public class PushActivity extends Activity {
         final LinearLayout accept = (LinearLayout) findViewById(R.id.accept);
         final LinearLayout reject = (LinearLayout) findViewById(R.id.reject);
         final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
-        final int type = getIntent().getIntExtra("type",0);
+        final int type = getIntent().getIntExtra("type", 0);
+
         if (type == 0) {
+
             final String userImage = getIntent().getStringExtra("user_image");
             final short song_count = getIntent().getShortExtra("song_count", (short) 0);
             final long receiverId = getIntent().getLongExtra("receiver_id", 0);
@@ -72,52 +71,38 @@ public class PushActivity extends Activity {
                 text = text + " and <font color=\"#F33B5B\"><b>" + String.valueOf(song_count - 1) + "</b></font> other songs";
             textView1.setText(Html.fromHtml(text), TextView.BufferType.SPANNABLE);
             if (!(TextUtils.isEmpty(userImage) || userImage.equals("hello_world")))
-                Picasso.with(this).load(StaticData.cloudStorageImageBaseUrl + userImage).transform(new CircleTransform()).into(userImageView);
+                Picasso.with(this).load(StaticData.cloudStorageImageBaseUrl + userImage).fit().transform(new CircleTransform()).into(userImageView);
 
-            accept.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            accept.setOnClickListener(v -> {
 
-                    MiscUtils.autoRetryAsync(new DoWork<Void>() {
-                        @Override
-                        public Void doWork() throws IOException {
-                            return StaticData.notificationApi.pushAccepted(firstSongName,
-                                    hashCode,
-                                    receiverId,
-                                    senderId,
-                                    (int) song_count).execute();
-                        }
-                    }, Optional.<Predicate<Void>>absent());
+                MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.pushAccepted(firstSongName,
+                        hashCode,
+                        receiverId,
+                        senderId,
+                        (int) song_count).execute(), Optional.<Predicate<Void>>absent());
 
-                    if (!StaticData.debugMode) {
-                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Accept - Pushed song")
-                                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                                .setLabel("Sender - " + getIntent().getStringExtra("user_name") + ", Songs - " + song_count)
-                                .setValue(song_count)
-                                .build());
-                        Map<String, String> tagValues = new HashMap<>();
-                        tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-                        tagValues.put("Sender", getIntent().getStringExtra("user_name"));
-                        tagValues.put("Songs", String.valueOf(song_count));
-                        Localytics.tagEvent("Accept - Pushed song", tagValues);
-                    }
-                    pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    pushAddSong.setAction("process_multiple");
-                    pushAddSong.putExtra("data", getIntent().getStringExtra("data"));
-                    //start the Activity
-                    startActivity(pushAddSong);
-                    finish();
+                if (!StaticData.debugMode) {
+                    ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Accept - Pushed song")
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                            .setLabel("Sender - " + getIntent().getStringExtra("user_name") + ", Songs - " + song_count)
+                            .setValue(song_count)
+                            .build());
+                    Map<String, String> tagValues = new HashMap<>();
+                    tagValues.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+                    tagValues.put("Sender", getIntent().getStringExtra("user_name"));
+                    tagValues.put("Songs", String.valueOf(song_count));
                 }
+                pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                pushAddSong.setAction("process_multiple");
+                pushAddSong.putExtra("data", getIntent().getStringExtra("data"));
+                //start the Activity
+                startActivity(pushAddSong);
+                finish();
             });
-            reject.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    finish();
-                }
-            });
-        }
-        else {
+
+            reject.setOnClickListener(v -> finish());
+        } else {
 
             final int px = MiscUtils.dpToPx(50);
             Picasso.with(PushActivity.this)
@@ -129,23 +114,17 @@ public class PushActivity extends Activity {
             reject.setVisibility(View.GONE);
             accept.setVisibility(View.GONE);
             exit.setVisibility(View.VISIBLE);
-            exit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    finish();
-                }
-            });
+            exit.setOnClickListener(v -> finish());
+
             if (type == 1) {
                 userName.setText("Hey!");
                 textView1.setText("I am Devika from Team Reach! \n" +
                         "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
                         "Keep Reaching ;)");
-            }
-            else if (type == 2) {
+            } else if (type == 2) {
                 userName.setText("Click and Grab!");
                 textView1.setText("You can add multiple songs instantly to your Reach Queue by just clicking on the songs here.");
-            }
-            else if (type == 3) {
+            } else if (type == 3) {
                 userName.setText(getIntent().getStringExtra("manual_title"));
                 textView1.setText(getIntent().getStringExtra("manual_text"));
             }

@@ -13,8 +13,8 @@ import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
 import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
-import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.music.songs.ReachSongHelper;
+import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -40,21 +40,24 @@ public final class StaticData {
 
     public static final String[] DISK_COMPLETE_NO_PATH =
             {
-                    ReachSongHelper.COLUMN_ID,
+                    ReachSongHelper.COLUMN_ID, //0
 
-                    ReachSongHelper.COLUMN_SONG_ID,
-                    ReachSongHelper.COLUMN_USER_ID,
+                    ReachSongHelper.COLUMN_SONG_ID, //1
+                    ReachSongHelper.COLUMN_USER_ID, //2
 
-                    ReachSongHelper.COLUMN_DISPLAY_NAME,
-                    ReachSongHelper.COLUMN_ACTUAL_NAME,
+                    ReachSongHelper.COLUMN_DISPLAY_NAME, //3
+                    ReachSongHelper.COLUMN_ACTUAL_NAME, //4
 
-                    ReachSongHelper.COLUMN_ARTIST,
-                    ReachSongHelper.COLUMN_ALBUM,
+                    ReachSongHelper.COLUMN_ARTIST, //5
+                    ReachSongHelper.COLUMN_ALBUM, //6
 
-                    ReachSongHelper.COLUMN_DURATION,
-                    ReachSongHelper.COLUMN_SIZE,
+                    ReachSongHelper.COLUMN_DURATION, //7
+                    ReachSongHelper.COLUMN_SIZE, //8
 
-                    ReachSongHelper.COLUMN_VISIBILITY,
+                    ReachSongHelper.COLUMN_VISIBILITY, //9
+
+                    ReachSongHelper.COLUMN_ALBUM_ART_DATA, //10
+                    ReachSongHelper.COLUMN_GENRE //11
             };
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{

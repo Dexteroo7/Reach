@@ -67,8 +67,6 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        Log.i("Ayush", "Binding all contacts adapter");
-
         final Contact contact = getItem(position);
         final ViewHolder viewHolder;
 

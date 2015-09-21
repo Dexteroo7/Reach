@@ -567,11 +567,11 @@ public class ReachUserEndpoint {
         if (cursor != null && !(cursor = cursor.trim()).equals(""))
             userQueryResultIterator = ofy().load().type(ReachUser.class)
                     .startAt(Cursor.fromWebSafeString(cursor))
-                    .limit(300)
+                    .limit(600)
                     .iterator();
         else
             userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .limit(300)
+                    .limit(600)
                     .iterator();
 
         ReachUser reachUser;
@@ -592,8 +592,8 @@ public class ReachUserEndpoint {
             count++;
         }
 
-        //count < 300 means this was possibly the last call
-        final String cursorToReturn = (count >= 300) ? userQueryResultIterator.getCursor().toWebSafeString() : "";
+        //count < 600 means this was possibly the last call
+        final String cursorToReturn = (count >= 600) ? userQueryResultIterator.getCursor().toWebSafeString() : "";
         logger.info("Get stats fetched " + count + " " + cursorToReturn);
 
         return new DataCall(builder.build(), cursorToReturn);

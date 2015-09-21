@@ -11,6 +11,7 @@ import android.util.Pair;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -25,6 +26,7 @@ import com.google.common.io.Files;
 import com.squareup.wire.Wire;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,8 +35,9 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
-import reach.project.utils.auxiliaryClasses.MusicList;
+import reach.project.music.MusicList;
 import reach.project.music.albums.Album;
 import reach.project.music.artists.Artist;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
@@ -268,18 +271,38 @@ public enum CloudStorageUtils {
             return toReturn;
         }
 
-//        if (currentHash.equals(serverHash))
-//            return toReturn; //same music found, but still verify for music visibility
+        if (currentHash.equals(serverHash))
+            return toReturn; //same music found, but still verify for music visibility
 
         InputStream download = null;
         GZIPInputStream compressedData = null;
 
         final MusicList musicList;
+        final String computedHash;
+
         try {
 
-            download = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).executeMediaAsInputStream();
-            compressedData = new GZIPInputStream(download);
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
+            final HttpHeaders httpHeaders = get.getRequestHeaders();
+            Log.i("Ayush", "Default cache " + httpHeaders.getCacheControl());
+            httpHeaders.setCacheControl("no-cache");
+
+            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+            download = get.executeMediaAsInputStream();
+
+            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(1024);
+            int read;
+            byte[] readBytes = new byte[1024];
+            while ((read = download.read(readBytes)) != -1)
+                outputStream.write(readBytes, 0, read);
+            //compute hash of current Music data
+            computedHash = Base64.encodeToString(Hashing.md5().newHasher()
+                    .putBytes(readBytes = outputStream.toByteArray())
+                    .hash().asBytes(), Base64.DEFAULT).trim();
+
+            compressedData = new GZIPInputStream(new ByteArrayInputStream(readBytes));
             musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+
         } catch (IOException e) {
             e.printStackTrace();
             return toReturn; //fail but fetch visibility if music already present
@@ -301,6 +324,9 @@ public enum CloudStorageUtils {
             SharedPrefUtils.removeMusicHash(preferences, fileName);
             return false; //no songs found !
         }
+
+        if (!computedHash.equals(serverHash))
+            Log.i("Ayush", "HASH NOT SAME ERROR");
 
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
@@ -326,11 +352,30 @@ public enum CloudStorageUtils {
     /**
      * Uploads the Music data to google cloud storage
      *
-     * @param musicData bytes of Music data
-     * @param fileName  the name of file (@MiscUtils.getMusicStorageKey())
-     * @param key       the cloud storage key as input stream
+     * @param music    bytes of Music data (un-compressed)
+     * @param fileName the name of file (@MiscUtils.getMusicStorageKey())
+     * @param key      the cloud storage key as input stream
      */
-    public static boolean uploadMusicData(byte[] musicData, final String fileName, InputStream key) {
+    public static boolean uploadMusicData(byte[] music, final String fileName, InputStream key) {
+
+        final byte[] musicData;
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(music.length);
+        GZIPOutputStream gzipOutputStream = null;
+
+        try {
+            gzipOutputStream = new GZIPOutputStream(outputStream);
+            gzipOutputStream.write(music);
+            gzipOutputStream.close();
+            musicData = outputStream.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return true;
+        } finally {
+            MiscUtils.closeQuietly(outputStream, gzipOutputStream);
+        }
+
+        //TODO track
+        Log.i("Ayush", "Compression ratio " + (musicData.length * 100) / music.length);
 
         //prepare storage object
         final Storage storage = getStorage(key).orNull();
@@ -409,11 +454,24 @@ public enum CloudStorageUtils {
         return true; //success, sync with local
     }
 
+    private static Storage storage = null;
+
     private static Optional<Storage> getStorage(InputStream stream) {
+
+//        final HttpResponseCache cache = HttpResponseCache.();
+//        if (cache != null)
+//            try {
+//                cache.delete();
+//            } catch (IOException ignored) {
+//            }
+
+        if (storage != null)
+            return Optional.of(storage);
 
         final HttpTransport transport = new NetHttpTransport();
         final JsonFactory factory = new JacksonFactory();
         final HttpRequestInitializer initializer = request -> {
+
             request.setConnectTimeout(request.getConnectTimeout() * 2);
             request.setReadTimeout(request.getReadTimeout() * 2);
         };
@@ -443,7 +501,7 @@ public enum CloudStorageUtils {
                 .setServiceAccountScopes(Collections.singletonList(StorageScopes.DEVSTORAGE_FULL_CONTROL))
                 .setRequestInitializer(initializer).build();
 
-        return Optional.of(new Storage.Builder(transport, factory, googleCredential)
+        return Optional.of(storage = new Storage.Builder(transport, factory, googleCredential)
                 .setApplicationName(APPLICATION_NAME_PROPERTY)
                 .build());
     }

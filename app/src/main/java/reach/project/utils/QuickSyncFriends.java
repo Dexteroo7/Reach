@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +25,8 @@ import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.JsonMap;
 import reach.backend.entities.userApi.model.QuickSync;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsProvider;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 
 /**
  * Created by dexter on 19/07/15.
@@ -64,14 +63,16 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         Log.i("Ayush", "Prepared numbers" + numbers.size());
 
         //prepare data for quickSync call
-        final Cursor currentIds = MiscUtils.useContextFromContext(reference, context -> context.getContentResolver().query(
-                ReachFriendsProvider.CONTENT_URI,
-                new String[]{
-                        ReachFriendsHelper.COLUMN_ID, //long
-                        ReachFriendsHelper.COLUMN_HASH, //int
-                        ReachFriendsHelper.COLUMN_PHONE_NUMBER, //int
-                        ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //old number of songs
-                }, null, null, null)).orNull();
+        final Cursor currentIds = MiscUtils.useContextFromContext(reference, context -> {
+            return context.getContentResolver().query(
+                    ReachFriendsProvider.CONTENT_URI,
+                    new String[]{
+                            ReachFriendsHelper.COLUMN_ID, //long
+                            ReachFriendsHelper.COLUMN_HASH, //int
+                            ReachFriendsHelper.COLUMN_PHONE_NUMBER, //int
+                            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //old number of songs
+                    }, null, null, null);
+        }).orNull();
 
         //if no previous data found run full sync
         if (currentIds == null || currentIds.getCount() == 0) {
@@ -134,8 +135,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             final ContactsWrapper wrapper = new ContactsWrapper();
             Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
             wrapper.setContacts(ImmutableList.copyOf(numbers));
-            //TODO test
-            newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems(), Optional.absent()).or(Collections.EMPTY_LIST));
+            newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems(), Optional.absent()).or(new ArrayList<>()));
         }
 
         //START DB COMMITS

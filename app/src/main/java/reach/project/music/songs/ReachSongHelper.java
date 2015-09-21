@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
@@ -18,34 +19,29 @@ public class ReachSongHelper extends SQLiteOpenHelper {
 
     public static final String COLUMN_SONG_ID = "songId";
     public static final String COLUMN_USER_ID = "userId";
-    public static final String COLUMN_RELEASE_GROUP_MBID = "fileHash"; //mbid
-    public static final String COLUMN_ARTIST_MBID = "artistMbid";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
     public static final String COLUMN_ACTUAL_NAME = "actualName";
     public static final String COLUMN_ARTIST = "artist"; //artist
     public static final String COLUMN_ALBUM = "album"; //album
-
     public static final String COLUMN_DURATION = "duration"; //duration
     public static final String COLUMN_SIZE = "size";
     public static final String COLUMN_GENRE = "genre";
+    public static final String COLUMN_ALBUM_ART_DATA = "albumArtData";
     public static final String COLUMN_PATH = "path";
-
-    public static final String COLUMN_YEAR = "year"; //year, fuk no, useless
-    public static final String COLUMN_TRACK_NUMBER = "formattedDateAdded"; //track number
+    public static final String COLUMN_YEAR = "year";
     public static final String COLUMN_DATE_ADDED = "dateAdded";
     public static final String COLUMN_VISIBILITY = "visibility";
     public static final String COLUMN_IS_LIKED = "isLiked";
 
+
     private static final String DATABASE_NAME = "reach.database.sql.ReachSongHelper";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
             + SONG_TABLE + "(" + COLUMN_ID
             + " integer primary key autoincrement, " +
-            COLUMN_RELEASE_GROUP_MBID + " text" + "," +
-            COLUMN_ARTIST_MBID + " text" + "," +
             COLUMN_SONG_ID + " long" + "," +
             COLUMN_DISPLAY_NAME + " text" + "," +
             COLUMN_ACTUAL_NAME + " text" + "," +
@@ -54,7 +50,7 @@ public class ReachSongHelper extends SQLiteOpenHelper {
             COLUMN_ARTIST + " text" + "," +
             COLUMN_DURATION + " long" + "," +
             COLUMN_ALBUM + " text" + "," +
-            COLUMN_TRACK_NUMBER + " text" + "," +
+            COLUMN_ALBUM_ART_DATA + " blob" + "," +
 
             COLUMN_USER_ID + " long" + "," +
             COLUMN_SIZE + " long" + "," +
@@ -66,7 +62,8 @@ public class ReachSongHelper extends SQLiteOpenHelper {
     public static final String[] projection =
             {
                     COLUMN_ID,
-                    COLUMN_RELEASE_GROUP_MBID,
+                    COLUMN_IS_LIKED,
+
                     COLUMN_SONG_ID,
                     COLUMN_DISPLAY_NAME,
                     COLUMN_ACTUAL_NAME,
@@ -75,7 +72,7 @@ public class ReachSongHelper extends SQLiteOpenHelper {
                     COLUMN_ARTIST,
                     COLUMN_DURATION,
                     COLUMN_ALBUM,
-                    COLUMN_TRACK_NUMBER,
+                    COLUMN_ALBUM_ART_DATA,
 
                     COLUMN_USER_ID,
                     COLUMN_SIZE,
@@ -89,7 +86,9 @@ public class ReachSongHelper extends SQLiteOpenHelper {
 
         final ContentValues values = new ContentValues();
 
+        values.put(COLUMN_IS_LIKED, song.isLiked);
         values.put(COLUMN_SONG_ID, song.songId);
+
         values.put(COLUMN_DISPLAY_NAME, song.displayName);
         values.put(COLUMN_ACTUAL_NAME, song.actualName);
         values.put(COLUMN_GENRE, song.genre);
@@ -97,15 +96,14 @@ public class ReachSongHelper extends SQLiteOpenHelper {
         values.put(COLUMN_ARTIST, song.artist);
         values.put(COLUMN_DURATION, song.duration);
         values.put(COLUMN_ALBUM, song.album);
+        if (song.albumArtData != null)
+            values.put(COLUMN_ALBUM_ART_DATA, song.albumArtData.toByteArray());
+
         values.put(COLUMN_USER_ID, serverId);
         values.put(COLUMN_SIZE, song.size);
         values.put(COLUMN_YEAR, song.year);
         values.put(COLUMN_DATE_ADDED, song.dateAdded);
         values.put(COLUMN_VISIBILITY, song.visibility);
-
-        values.put(COLUMN_RELEASE_GROUP_MBID, "hello_world");
-        values.put(COLUMN_ARTIST_MBID, "hello_world");
-        values.put(COLUMN_TRACK_NUMBER, song.formattedDataAdded);
 
         return values;
     }
@@ -118,9 +116,11 @@ public class ReachSongHelper extends SQLiteOpenHelper {
             ReachSongHelper.COLUMN_ARTIST, //4
             ReachSongHelper.COLUMN_DURATION, //5
             ReachSongHelper.COLUMN_ALBUM, //6
-            ReachSongHelper.COLUMN_ID //7
+            ReachSongHelper.COLUMN_ID, //7
+            ReachSongHelper.COLUMN_ALBUM_ART_DATA //8
     };
 
+    //DISK_LIST specific !
     public static MusicData getMusicData(final Cursor cursor, final long serverId) {
 
         return new MusicData(
@@ -141,18 +141,19 @@ public class ReachSongHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
-        db.execSQL(DATABASE_CREATE);
+    public void onCreate(SQLiteDatabase database) {
+        database.execSQL(DATABASE_CREATE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-//        Log.w(ReachAlbumHelper.class.getName(),
-//                "Upgrading database from version " + oldVersion + " to "
-//                        + newVersion + ", which will destroy all old data");
-//        db.execSQL("DROP TABLE IF EXISTS " + SONG_TABLE);
-        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_ARTIST_MBID + " text");
-        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_IS_LIKED + " short");
-//        onCreate(db);
+        Log.w(ReachSongHelper.class.getName(),
+                "Upgrading database from version " + oldVersion + " to "
+                        + newVersion + ", which will destroy all old data");
+        database.execSQL("DROP TABLE IF EXISTS " + SONG_TABLE);
+//        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_ARTIST_MBID + " text");
+//        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_RELEASE_GROUP_MBID + " text");
+//        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_IS_LIKED + " short");
+        onCreate(database);
     }
 }

@@ -51,20 +51,6 @@
         </activity>
 
         <receiver
-            android:name="com.appsflyer.MultipleInstallBroadcastReceiver"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="com.appsflyer.AppsFlyerLib" >
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_REMOVED" />
-
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
-        <receiver
             android:name=".core.GcmBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
@@ -74,6 +60,7 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
+
         <receiver android:name=".core.UpdateReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />

@@ -14,24 +14,29 @@ import reach.project.reachProcess.auxiliaryClasses.MusicData;
  */
 public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
+    /**
+     * COLUMN_ID : local dataBase table id, used exclusively for referencing locally
+     * COLUMN_SONG_ID : songId of where the song is located, used for referencing the reachSong table (upload/download both)
+     * COLUMN_UNIQUE_ID : a uniqueId which is used when this track will be uploaded (only downloads)
+     */
+
     public static final String REACH_TABLE = "reach";
     public static final String COLUMN_ID = "_id";
-
     public static final String COLUMN_SONG_ID = "songId";
+    public static final String COLUMN_UNIQUE_ID = "uniqueId";
+
     public static final String COLUMN_RECEIVER_ID = "receiverId"; //in-case of downloads = myId
     public static final String COLUMN_SENDER_ID = "senderId"; // in-case of uploads = myId
-    public static final String COLUMN_RELEASE_GROUP_MBID = "releaseGroupMbid";
-    public static final String COLUMN_ARTIST_MBID = "artistMbid";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
     public static final String COLUMN_ACTUAL_NAME = "actualName";
     public static final String COLUMN_ARTIST = "globalIp"; //artist
     public static final String COLUMN_ALBUM = "album"; //artist
-
     public static final String COLUMN_DURATION = "lastActive"; //duration
     public static final String COLUMN_SIZE = "length"; //size
     public static final String COLUMN_GENRE = "genre";
     public static final String COLUMN_PATH = "path";
+    public static final String COLUMN_ALBUM_ART_DATA = "albumArtData";
 
     public static final String COLUMN_DATE_ADDED = "added";
     public static final String COLUMN_VISIBILITY = "visibility";
@@ -46,7 +51,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IS_LIKED = "globalPort";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachDatabaseHelper";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
@@ -69,13 +74,13 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
             COLUMN_DISPLAY_NAME + " text" + "," +
             COLUMN_ACTUAL_NAME + " text" + "," +
-            COLUMN_RELEASE_GROUP_MBID + " text" + "," +
-            COLUMN_ARTIST_MBID + " text" + "," +
+            COLUMN_ALBUM_ART_DATA + " blob" + "," +
 
             COLUMN_SIZE + " long" + "," +
             COLUMN_PROCESSED + " long" + "," +
             COLUMN_DATE_ADDED + " long" + "," +
             COLUMN_DURATION + " long" + "," +
+            COLUMN_UNIQUE_ID + " long" + "," +
 
             COLUMN_LOGICAL_CLOCK + " short" + "," +
             COLUMN_VISIBILITY + " short" + "," +
@@ -106,6 +111,11 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     //shorts
                     COLUMN_LOGICAL_CLOCK, //16
                     COLUMN_STATUS, //17
+                    COLUMN_ALBUM, //18
+                    COLUMN_GENRE, //19
+                    COLUMN_ALBUM_ART_DATA, //20
+                    COLUMN_VISIBILITY, //21
+                    COLUMN_UNIQUE_ID
             };
 
     /**
@@ -180,6 +190,13 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
         values.put(COLUMN_STATUS, reachDatabase.getStatus());
 
+        values.put(COLUMN_ALBUM_ART_DATA, reachDatabase.getAlbumArtData());
+        values.put(COLUMN_ALBUM, reachDatabase.getAlbumName());
+        values.put(COLUMN_GENRE, reachDatabase.getGenre());
+        values.put(COLUMN_VISIBILITY, reachDatabase.getVisibility());
+
+        values.put(COLUMN_UNIQUE_ID, reachDatabase.getUniqueId());
+
         return values;
     }
 
@@ -203,6 +220,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             ReachDatabaseHelper.COLUMN_RECEIVER_ID, //12
             ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, //13
             ReachDatabaseHelper.COLUMN_SONG_ID, //14
+            ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA //15
     };
 
     public static MusicData getMusicData(final Cursor cursor) {
@@ -239,11 +257,11 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 //                "Upgrading database from version " + oldVersion + " to "
 //                        + newVersion + ", which will destroy all old data");
 //        db.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_RELEASE_GROUP_MBID + " text");
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ARTIST_MBID + " text");
+        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM_ART_DATA + " blob");
         database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM + " text");
         database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_GENRE + " text");
         database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_VISIBILITY + " short");
+        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_UNIQUE_ID + " long");
         onCreate(database);
     }
 }

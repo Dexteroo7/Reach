@@ -1,6 +1,7 @@
 package reach.project.onBoarding;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,7 +30,6 @@ import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.io.ByteStreams;
-import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -37,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 
 import reach.backend.entities.userApi.model.MyString;
@@ -51,11 +52,12 @@ import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
+import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
 
-    private static Uri imageUri = null;
+    private static File toUpload = null;
     private static String imageId = "hello_world";
     private static WeakReference<AccountCreation> reference = null;
 
@@ -77,6 +79,7 @@ public class AccountCreation extends Fragment {
         return fragment;
     }
 
+    private final CircleTransform transform = new CircleTransform();
     private final int IMAGE_PICKER_SELECT = 999;
     private SuperInterface mListener = null;
     private ImageView profilePhotoSelector = null;
@@ -116,7 +119,7 @@ public class AccountCreation extends Fragment {
                 imageId = oldData[1];
                 Picasso.with(activity)
                         .load(StaticData.cloudStorageImageBaseUrl + imageId)
-                        .transform(new CircleTransform())
+                        .transform(transform)
                         .fit()
                         .centerCrop()
                         .into(profilePhotoSelector);
@@ -176,22 +179,28 @@ public class AccountCreation extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
 
         final Activity activity;
-        if ((activity = getActivity()) == null || activity.isFinishing())
-            return;
+        if ((activity = getActivity()) == null || activity.isFinishing()) {
 
+            Log.i("Ayush", "ACTIVITY NOT FOUND !");
+            return;
+        }
+
+        final Uri imageUri;
         if (requestCode != IMAGE_PICKER_SELECT || resultCode != Activity.RESULT_OK || (imageUri = data.getData()) == null) {
 
             Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        //set image
-        Picasso.with(activity)
-                .load(imageUri)
-                .transform(new CircleTransform())
-                .fit()
-                .centerCrop()
-                .into(profilePhotoSelector);
+        InputStream imageStream;
+        try {
+            imageStream = activity.getContentResolver().openInputStream(imageUri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            imageStream = null;
+        }
+
+        new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
     }
 
     private static class SaveUserData extends AsyncTask<String, Void, ReachUser> {
@@ -217,23 +226,32 @@ public class AccountCreation extends Fragment {
 
             final ReachUser user = new ReachUser();
 
-            if (imageUri != null) { //upload only if image is set
+            //get the key
+            if (toUpload != null) {
 
-                uploadImage();
-                if (TextUtils.isEmpty(imageId)) {
+                final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
+                    try {
+                        return context.getAssets().open("key.p12");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }).orNull();
 
-                    user.setImageId(null);
-                    return user;
+                if (keyStream != null) {
+                    //try upload
+                    CloudStorageUtils.uploadFile(toUpload, keyStream, uploadProgress);
                 }
             }
 
             final String gcmId;
-            final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment(reference, GoogleCloudMessaging::getInstance).orNull();
+            final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
+                    (reference, (UseContext<GoogleCloudMessaging, Activity>) GoogleCloudMessaging::getInstance).orNull();
 
             if (messagingInstance == null)
                 gcmId = null;
             else
-                gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
+                gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.of(TextUtils::isEmpty)).orNull();
 
             if (TextUtils.isEmpty(gcmId)) {
                 //TODO fail, TRACK continue
@@ -265,11 +283,8 @@ public class AccountCreation extends Fragment {
 
             super.onPostExecute(user);
 
-            if (imageUri != null && TextUtils.isEmpty(user.getImageId())) { //check only if image was selected
+            if (toUpload != null && TextUtils.isEmpty(user.getImageId())) { //check only if image was selected
 
-                //reset image stuff
-                imageUri = null;
-                imageId = null;
                 MiscUtils.useFragment(reference, fragment -> {
 
                     Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
@@ -277,29 +292,19 @@ public class AccountCreation extends Fragment {
                         fragment.profilePhotoSelector.setImageBitmap(null);
                     return null;
                 });
-                return; //user should retry OR continue by clicking again
             }
 
             if (user.getId() == 0) {
-                //retry
+                //TODO TRACK !
+                MiscUtils.useFragment(reference, fragment -> {
+                    fragment.getActivity().finish();
+                    return null;
+                });
                 return;
             }
 
             //set serverId here
             ReachActivity.serverId = user.getId();
-            if (!StaticData.debugMode) {
-
-                AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
-
-                    final String locID = Localytics.getCustomerId();
-                    if (TextUtils.isEmpty(locID)) {
-
-                        Localytics.setCustomerId(user.getPhoneNumber());
-                        Localytics.setCustomerFullName(user.getUserName());
-                    }
-                });
-            }
-
             MiscUtils.useContextFromFragment(reference, activity -> {
 
                 SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS), user);
@@ -311,66 +316,10 @@ public class AccountCreation extends Fragment {
             });
         }
 
-        private static void uploadImage() {
-
-            //get the image stream
-            final InputStream imageStream = MiscUtils.useContextFromFragment(reference, context -> {
-                try {
-                    return context.getContentResolver().openInputStream(imageUri);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }).orNull();
-
-            if (imageStream == null) {
-
-                uploadProgress.error();
-                return;
-            }
-
-            //copy the file
-            File tempFile;
-            FileOutputStream outputStream = null;
-            try {
-                tempFile = File.createTempFile("profilePhoto", null);
-                outputStream = new FileOutputStream(tempFile);
-                ByteStreams.copy(imageStream, outputStream);
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                uploadProgress.error();
-                return;
-            } finally {
-                MiscUtils.closeQuietly(outputStream, imageStream);
-            }
-
-//            //TODO make this
-//            tempFile = MiscUtils.compressImage(tempFile);
-
-            //get the key
-            final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
-                try {
-                    return context.getAssets().open("key.p12");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }).orNull();
-
-            if (keyStream == null) {
-                uploadProgress.error();
-                return;
-            }
-
-            CloudStorageUtils.uploadFile(tempFile, keyStream, uploadProgress);
-        }
-
         private static final UploadProgress uploadProgress = new UploadProgress() {
 
             @Override
             public void success(String fileName) {
-
                 //save fileName
                 imageId = fileName;
             }
@@ -378,25 +327,42 @@ public class AccountCreation extends Fragment {
             @Override
             public void error() {
 
-                //mark null (fail)
-                imageId = null;
+//                if (dialogWeakReference == null)
+//                    return;
+//                final ProgressBar progressBar = dialogWeakReference.get();
+//                if (progressBar == null)
+//                    return;
+                toUpload = null;
+                MiscUtils.useFragment(reference, fragment -> {
+                    if (fragment.profilePhotoSelector != null)
+                        fragment.profilePhotoSelector.setImageBitmap(null);
+                    return null;
+                });
             }
 
             @Override
             public void progressChanged(MediaHttpUploader uploader) throws IOException {
 
-                switch (uploader.getUploadState()) {
-
-                    case MEDIA_IN_PROGRESS:
-
-                        if (dialogWeakReference == null)
-                            return;
-                        final ProgressBar progressBar = dialogWeakReference.get();
-                        if (progressBar == null)
-                            return;
-                        progressBar.setProgress((int) (uploader.getProgress() * 100));
-                        break;
-                }
+//                switch (uploader.getUploadState()) {
+//
+//                    case INITIATION_STARTED:
+////                    System.out.println("Initiation Started");
+//                        break;
+//                    case INITIATION_COMPLETE:
+////                    System.out.println("Initiation Completed");
+//                        break;
+//                    case MEDIA_IN_PROGRESS:
+//
+//                        if (dialogWeakReference == null)
+//                            return;
+//                        final ProgressBar progressBar = dialogWeakReference.get();
+//                        if (progressBar == null)
+//                            return;
+//                        progressBar.setProgress((int) (uploader.getProgress() * 100));
+//                        break;
+//                    case MEDIA_COMPLETE:
+//                        break;
+//                }
             }
         };
 
@@ -451,5 +417,83 @@ public class AccountCreation extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
+
+        @Override
+        protected File doInBackground(InputStream... params) {
+
+            if (params[0] == null)
+                return null;
+
+            File tempFile = null;
+            FileOutputStream outputStream = null;
+            try {
+                tempFile = File.createTempFile("profile_photo", ".tmp");
+                final RandomAccessFile accessFile = new RandomAccessFile(tempFile, "rws");
+                accessFile.setLength(0);
+                accessFile.close();
+                outputStream = new FileOutputStream(tempFile);
+                ByteStreams.copy(params[0], outputStream);
+                outputStream.flush();
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                if (tempFile != null)
+                    //noinspection ResultOfMethodCallIgnored
+                    tempFile.delete();
+                return null;
+            } finally {
+                MiscUtils.closeQuietly(outputStream, params[0]);
+            }
+
+            try {
+                return MiscUtils.compressImage(tempFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        private ProgressDialog dialog = null;
+
+        @Override
+        protected void onPreExecute() {
+
+            super.onPreExecute();
+            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Activity>) ProgressDialog::new).orNull();
+            if (dialog != null) {
+                dialog.setCancelable(false);
+                dialog.show();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(File file) {
+
+            super.onPostExecute(file);
+            MiscUtils.useFragment(reference, fragment -> {
+
+                final Context context = fragment.getActivity();
+                if (file == null) { //TODO track
+                    toUpload = null;
+                    Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
+                } else if (fragment.profilePhotoSelector != null) {
+
+                    toUpload = file;
+                    Picasso.with(context)
+                            .load(toUpload)
+                            .fit()
+                            .transform(fragment.transform)
+                            .centerCrop().into(fragment.profilePhotoSelector);
+                }
+                return null;
+            });
+
+            if (dialog != null)
+                dialog.dismiss();
+        }
     }
 }

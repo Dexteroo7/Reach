@@ -1,13 +1,59 @@
 package reach.project.core;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentProviderOperation;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
+import android.database.Cursor;
+import android.os.RemoteException;
+
+import java.security.SecureRandom;
+import java.util.ArrayList;
+
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
 
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        final Cursor cursor = context.getContentResolver().query(
+                ReachDatabaseProvider.CONTENT_URI,
+                new String[]{ReachDatabaseHelper.COLUMN_ID,
+                        ReachDatabaseHelper.COLUMN_UNIQUE_ID},
+                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{"0"}, null);
+
+        if (cursor == null)
+            return;
+
+        final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+        final SecureRandom secureRandom = new SecureRandom();
+
+        while (cursor.moveToNext()) {
+
+            final long localId = cursor.getLong(0);
+            final long uniqueId = cursor.getLong(1);
+            if (uniqueId == 0 || uniqueId == -1) {
+
+                final ContentValues values = new ContentValues(2);
+                values.put(ReachDatabaseHelper.COLUMN_UNIQUE_ID, secureRandom.nextInt(Integer.MAX_VALUE));
+                operations.add(ContentProviderOperation
+                        .newUpdate(ReachDatabaseProvider.CONTENT_URI)
+                        .withValues(values)
+                        .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?", new String[]{localId + ""}).build());
+            }
+        }
+
+        if (operations.size() > 0)
+            try {
+                context.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+            } catch (RemoteException | OperationApplicationException e) {
+                e.printStackTrace();
+            }
 
 //        final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
 //        sharedPreferences.edit().remove("song_hash").apply();

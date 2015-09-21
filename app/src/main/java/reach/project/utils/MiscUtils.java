@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -53,26 +54,28 @@ import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.project.core.StaticData;
-import reach.project.music.albums.ReachAlbumProvider;
-import reach.project.music.artists.ReachArtistProvider;
-import reach.project.uploadDownload.ReachDatabaseProvider;
-import reach.project.music.playLists.ReachPlayListProvider;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.albums.Album;
 import reach.project.music.albums.ReachAlbumHelper;
+import reach.project.music.albums.ReachAlbumProvider;
+import reach.project.music.artists.Artist;
 import reach.project.music.artists.ReachArtistHelper;
-import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.music.artists.ReachArtistProvider;
+import reach.project.music.playLists.Playlist;
 import reach.project.music.playLists.ReachPlayListHelper;
+import reach.project.music.playLists.ReachPlayListProvider;
 import reach.project.music.songs.ReachSongHelper;
+import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.songs.Song;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.music.playLists.Playlist;
-import reach.project.music.albums.Album;
-import reach.project.music.artists.Artist;
 import reach.project.uploadDownload.ReachDatabase;
-import reach.project.music.songs.Song;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseFragment;
+import reach.project.utils.auxiliaryClasses.UseFragment2;
 
 /**
  * Created by dexter on 1/10/14.
@@ -549,6 +552,19 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(context));
     }
 
+    public static <T extends Context> void useContextFromContext(final WeakReference<T> reference,
+                                                                 final UseContext2<T> task) {
+
+        final T context;
+        if (reference == null || (context = reference.get()) == null)
+            return;
+
+        final boolean isActivity = context instanceof Activity;
+        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
+        if (!activityIsFinishing)
+            task.work(context);
+    }
+
     public static <T extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<T> reference,
                                                                                        final UseContext<Result, Activity> task) {
 
@@ -561,6 +577,18 @@ public enum MiscUtils {
             return Optional.absent();
 
         return Optional.fromNullable(task.work(activity));
+    }
+
+    public static <T extends Fragment> void useContextFromFragment(final WeakReference<T> reference,
+                                                                   final UseContext2<Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity != null && !activity.isFinishing())
+            task.work(activity);
     }
 
     public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
@@ -577,43 +605,55 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(fragment));
     }
 
-    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
-                                                          final UseContext<Void, T> task) {
-
-        final T activity;
-        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
-            return;
-
-        activity.runOnUiThread(() -> task.work(activity));
-    }
-
-    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseContext<Void, Activity> task) {
+    public static <T extends Fragment> void useFragment(final WeakReference<T> reference,
+                                                        final UseFragment2<T> task) {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing())
-            return;
-
-        activity.runOnUiThread(() -> task.work(activity));
+        if (activity != null && !activity.isFinishing())
+            task.work(fragment);
     }
 
-    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseFragment<Void, T> task) {
-
-        final T fragment;
-        if (reference == null || (fragment = reference.get()) == null)
-            return;
-
-        final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing())
-            return;
-
-        activity.runOnUiThread(() -> task.work(fragment));
-    }
+//    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+//                                                          final UseContext<Void, T> task) {
+//
+//        final T activity;
+//        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+//            return;
+//
+//        activity.runOnUiThread(() -> task.work(activity));
+//    }
+//
+//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+//                                                                  final UseContext<Void, Activity> task) {
+//
+//        final T fragment;
+//        if (reference == null || (fragment = reference.get()) == null)
+//            return;
+//
+//        final Activity activity = fragment.getActivity();
+//        if (activity == null || activity.isFinishing())
+//            return;
+//
+//        activity.runOnUiThread(() -> task.work(activity));
+//    }
+//
+//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+//                                                                  final UseFragment<Void, T> task) {
+//
+//        final T fragment;
+//        if (reference == null || (fragment = reference.get()) == null)
+//            return;
+//
+//        final Activity activity = fragment.getActivity();
+//        if (activity == null || activity.isFinishing())
+//            return;
+//
+//        activity.runOnUiThread(() -> task.work(fragment));
+//    }
 
     /**
      * @param id        id of the person to update gcm of
@@ -758,7 +798,9 @@ public enum MiscUtils {
         mBitmapOptions.inJustDecodeBounds = true;
 
         final FileInputStream fileInputStream = new FileInputStream(image);
-        BitmapFactory.decodeStream(fileInputStream, null, mBitmapOptions);
+        final Bitmap temporary = BitmapFactory.decodeStream(fileInputStream, null, mBitmapOptions);
+        if (temporary != null)
+            temporary.recycle();
 
         // Calculate inSampleSize
         // Raw height and width of image
@@ -774,21 +816,23 @@ public enum MiscUtils {
 
         if (height > width) {
 
-            inDensity = height;
-            inTargetDensity = reqHeight;
             if (height > sideLength) {
 
                 reqHeight = sideLength;
                 reqWidth = (width * sideLength) / height;
             }
+            inDensity = height;
+            inTargetDensity = reqHeight;
+
         } else if (width > height) {
 
-            inDensity = width;
-            inTargetDensity = reqWidth;
             if (width > sideLength) {
                 reqWidth = sideLength;
                 reqHeight = (height * sideLength) / width;
             }
+            inDensity = width;
+            inTargetDensity = reqWidth;
+
         } else {
 
             reqWidth = sideLength;
@@ -812,21 +856,33 @@ public enum MiscUtils {
 
         //now go resize the image to the size you want
         mBitmapOptions.inSampleSize = inSampleSize;
+        mBitmapOptions.inDither = true;
+        mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
         mBitmapOptions.inJustDecodeBounds = false;
         mBitmapOptions.inScaled = true;
         mBitmapOptions.inDensity = inDensity;
         mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
 
-        final File tempFile = File.createTempFile("compressed_profile_photo", null);
+        final File tempFile = File.createTempFile("compressed_profile_photo", ".tmp");
+        final RandomAccessFile accessFile = new RandomAccessFile(tempFile, "rws");
+        accessFile.setLength(0);
+        accessFile.close();
+
         final FileInputStream fInputStream = new FileInputStream(image);
         final FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
 
         // will load & resize the image to be 1/inSampleSize dimensions
-        BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions).compress(Bitmap.CompressFormat.JPEG, 85, fileOutputStream);
+        Log.i("Ayush", "Starting compression");
+        final Bitmap bitmap = BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions);
+        bitmap.compress(Bitmap.CompressFormat.WEBP, 80, fileOutputStream);
+        fileOutputStream.flush();
         closeQuietly(fInputStream, fileOutputStream);
+        Log.i("Ayush", "Result " + bitmap.getHeight() + " " + bitmap.getWidth());
+        bitmap.recycle();
 
         //noinspection ResultOfMethodCallIgnored
         image.delete();
+        Log.i("Ayush", "Returning image");
         return tempFile;
     }
 
@@ -942,5 +998,6 @@ public enum MiscUtils {
                 return null;
             });
         }
+        ////////
     }
 }

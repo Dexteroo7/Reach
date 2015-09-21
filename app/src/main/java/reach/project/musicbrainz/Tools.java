@@ -19,18 +19,23 @@ public enum Tools {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String USER_AGENT = System.getProperty("http.agent");
 
-    public static String httpGet(String url) throws IOException {
+    public static String httpGet(String url) {
 
         final StringBuilder builder = new StringBuilder();
-        String inputLine;
+//        Log.i("Ayush", "Hitting with URL " + url);
 
-        final URLConnection connection = new URL(url).openConnection();
-        connection.setRequestProperty("User-Agent", USER_AGENT);
+        try {
+            final URLConnection connection = new URL(url).openConnection();
+            connection.setRequestProperty("User-Agent", USER_AGENT);
 
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        while ((inputLine = reader.readLine()) != null)
-            builder.append("\n").append(inputLine);
-        reader.close();
+            String inputLine;
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            while ((inputLine = reader.readLine()) != null)
+                builder.append("\n").append(inputLine);
+
+            reader.close();
+        } catch (IOException ignored) {
+        }
 
         return builder.toString();
     }
@@ -40,7 +45,8 @@ public enum Tools {
     }
 
     public static String surroundWithQuotes(String toSurround) throws UnsupportedEncodingException {
-        toSurround = toSurround.replaceAll("\"", ""); // remove all quotes in between
+//        toSurround = toSurround.replaceAll("\"", "");
+//        return toSurround.replaceAll("\"", ""); // remove all quotes in between
         return URLEncoder.encode("\"" + toSurround + "\"", "UTF-8");
     }
 

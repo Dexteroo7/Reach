@@ -2,6 +2,7 @@ package reach.project.coreViews;
 
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -25,7 +26,6 @@ import android.widget.Toast;
 
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.squareup.picasso.Picasso;
@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
@@ -43,11 +44,13 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
+import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
 
     private final int IMAGE_PICKER_SELECT = 999;
+    private final CircleTransform transform = new CircleTransform();
 
     private EditText firstName = null;
     private TextView uploadText = null;
@@ -56,9 +59,9 @@ public class EditProfileFragment extends Fragment {
     private ImageView profile = null;
     private SharedPreferences sharedPreferences = null;
 
-    private static Uri imageUri = null;
-    private static long userId = 0;
+    private static File toUpload = null;
     private static String imageId = null;
+    private static long userId = 0;
     private static WeakReference<EditProfileFragment> reference = null;
 
     public static EditProfileFragment newInstance() {
@@ -104,10 +107,7 @@ public class EditProfileFragment extends Fragment {
         uploadText = (TextView) rootView.findViewById(R.id.uploadText);
         firstName = (EditText) rootView.findViewById(R.id.firstName);
         editProfileContainer = rootView.findViewById(R.id.editProfilecontainer);
-
         loadingBar = (ProgressBar) rootView.findViewById(R.id.loadingBar);
-        loadingBar.setIndeterminate(false);
-        UpdateProfile.uploadProgress.dialogWeakReference = new WeakReference<>(loadingBar);
 
         final String imageId = SharedPrefUtils.getImageId(sharedPreferences);
         userId = SharedPrefUtils.getServerId(sharedPreferences);
@@ -115,7 +115,7 @@ public class EditProfileFragment extends Fragment {
 
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             profile.setBackgroundResource(0);
-            Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + imageId).transform(new CircleTransform()).into(profile);
+            Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + imageId).fit().transform(transform).into(profile);
         }
 
         profile.setOnClickListener(imagePicker);
@@ -142,60 +142,94 @@ public class EditProfileFragment extends Fragment {
             return;
         }
 
+        final Uri imageUri;
         if (requestCode != IMAGE_PICKER_SELECT || resultCode != Activity.RESULT_OK || (imageUri = data.getData()) == null) {
 
             Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        //get the image stream
-        final InputStream imageStream = MiscUtils.useContextFromFragment(reference, context -> {
+        InputStream imageStream;
+        try {
+            imageStream = activity.getContentResolver().openInputStream(imageUri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            imageStream = null;
+        }
+
+        new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
+    }
+
+    private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
+
+        @Override
+        protected File doInBackground(InputStream... params) {
+
+            if (params[0] == null)
+                return null;
+
+            File tempFile = null;
+            FileOutputStream outputStream = null;
             try {
-                return context.getContentResolver().openInputStream(imageUri);
-            } catch (FileNotFoundException e) {
+                tempFile = File.createTempFile("profile_photo", ".tmp");
+                new RandomAccessFile(tempFile, "rws").setLength(0);
+                outputStream = new FileOutputStream(tempFile);
+                ByteStreams.copy(params[0], outputStream);
+                outputStream.flush();
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                if (tempFile != null)
+                    //noinspection ResultOfMethodCallIgnored
+                    tempFile.delete();
+                return null;
+            } finally {
+                MiscUtils.closeQuietly(outputStream, params[0]);
+            }
+
+            try {
+                return MiscUtils.compressImage(tempFile);
+            } catch (IOException e) {
                 e.printStackTrace();
             }
+
             return null;
-        }).orNull();
-
-        if (imageStream == null) {
-
-//            uploadProgress.error();
-            return;
         }
 
-        //copy the file
-        File tempFile;
-        FileOutputStream outputStream = null;
-        try {
-            tempFile = File.createTempFile("profile_photo", null);
-            outputStream = new FileOutputStream(tempFile);
-            ByteStreams.copy(imageStream, outputStream);
-        } catch (IOException e) {
+        private ProgressDialog dialog = null;
 
-            e.printStackTrace();
-//            uploadProgress.error();
-            return;
-        } finally {
-            MiscUtils.closeQuietly(outputStream, imageStream);
+        @Override
+        protected void onPreExecute() {
+
+            super.onPreExecute();
+            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Activity>) ProgressDialog::new).orNull();
+            if (dialog != null) {
+                dialog.setCancelable(false);
+                dialog.show();
+            }
         }
 
-        Picasso.with(activity).load(tempFile).fit().into(profile);
+        @Override
+        protected void onPostExecute(File file) {
 
-//        try {
-//            //TODO make this
-//            Log.i("Ayush", System.currentTimeMillis() + "");
-////            final File option1 = MiscUtils.compressImage(imageUri, reference.get().getActivity());
-////            Log.i("Ayush", System.currentTimeMillis() + "");
-//            final File option2 = MiscUtils.compressImage(tempFile, 800);
-//            Log.i("Ayush", System.currentTimeMillis() + "");
-//            Log.i("Ayush", "Length " + option2.length());
-//
-//            Picasso.with(activity).load(option2).fit().centerCrop().into(profile);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+            super.onPostExecute(file);
+            MiscUtils.useFragment(reference, fragment -> {
+
+                final Context context = fragment.getActivity();
+                if (file == null) { //TODO track
+                    toUpload = null;
+                    Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
+                } else if (fragment.profile != null) {
+
+                    toUpload = file;
+                    Picasso.with(context).load(toUpload).fit().into(fragment.profile);
+                }
+                return null;
+            });
+
+            if (dialog != null)
+                dialog.dismiss();
+        }
     }
 
     private static final class UpdateProfile extends AsyncTask<String, Void, Boolean> {
@@ -203,17 +237,32 @@ public class EditProfileFragment extends Fragment {
         @Override
         protected Boolean doInBackground(final String... name) {
 
-            try {
-                uploadImage();
-            } catch (IOException e) {
-                e.printStackTrace();
+            //get the key
+            if (toUpload != null) {
+
+                final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
+                    try {
+                        return context.getAssets().open("key.p12");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }).orNull();
+
+                if (keyStream == null) {
+                    uploadProgress.error();
+                    return false;
+                }
+
+                //try upload
+                CloudStorageUtils.uploadFile(toUpload, keyStream, uploadProgress);
+
+                //uploadProgress will set the file name
+                if (TextUtils.isEmpty(imageId))
+                    return false;
             }
 
-            if (imageUri == null || TextUtils.isEmpty(imageId))
-                return false;
-
-            //TODO we are ignoring fail case !
-            MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.<Predicate<Void>>absent()).orNull();
+            MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.absent());
             return true;
         }
 
@@ -225,7 +274,7 @@ public class EditProfileFragment extends Fragment {
                 if (fragment.firstName == null || fragment.uploadText == null || fragment.editProfileContainer == null || fragment.loadingBar == null)
                     return null;
 
-                if (success)
+                if (success != null && success)
                     Toast.makeText(fragment.getActivity(), "Changes saved successfully!!", Toast.LENGTH_SHORT).show();
                 else {
                     Toast.makeText(fragment.getActivity(), "Failed, try again", Toast.LENGTH_SHORT).show();
@@ -242,113 +291,53 @@ public class EditProfileFragment extends Fragment {
             });
         }
 
-        private static void uploadImage() throws IOException {
-
-            //get the image stream
-            final InputStream imageStream = MiscUtils.useContextFromFragment(reference, context -> {
-                try {
-                    return context.getContentResolver().openInputStream(imageUri);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }).orNull();
-
-            if (imageStream == null) {
-
-                uploadProgress.error();
-                return;
-            }
-
-            //copy the file
-            File tempFile;
-            FileOutputStream outputStream = null;
-            try {
-                tempFile = File.createTempFile("profilePhoto", null);
-                outputStream = new FileOutputStream(tempFile);
-                ByteStreams.copy(imageStream, outputStream);
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                uploadProgress.error();
-                return;
-            } finally {
-                MiscUtils.closeQuietly(outputStream, imageStream);
-            }
-
-            tempFile = MiscUtils.compressImage(tempFile);
-            //TODO
-//            Log.i("Ayush", "Length " + option1.length() + " " + option2.length());
-
-            //get the key
-            final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
-                try {
-                    return context.getAssets().open("key.p12");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }).orNull();
-
-            if (keyStream == null) {
-                uploadProgress.error();
-                return;
-            }
-
-            CloudStorageUtils.uploadFile(tempFile, keyStream, uploadProgress);
-        }
-
         private static final UploadProgress uploadProgress = new UploadProgress() {
 
             @Override
             public void success(String fileName) {
-
                 //save fileName
                 imageId = fileName;
-
-                MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
-
-                    Toast.makeText(context, "Uploaded successfully", Toast.LENGTH_SHORT).show();
-                    return null;
-                });
             }
 
             @Override
             public void error() {
 
-                if (dialogWeakReference == null)
-                    return;
-                final ProgressBar progressBar = dialogWeakReference.get();
-                if (progressBar == null)
-                    return;
-
-                imageId = null;
-                imageUri = null;
+//                if (dialogWeakReference == null)
+//                    return;
+//                final ProgressBar progressBar = dialogWeakReference.get();
+//                if (progressBar == null)
+//                    return;
+                toUpload = null;
+                MiscUtils.useFragment(reference, fragment -> {
+                    if (fragment.profile != null)
+                        fragment.profile.setImageBitmap(null);
+                    return null;
+                });
             }
 
             @Override
             public void progressChanged(MediaHttpUploader uploader) throws IOException {
 
-                switch (uploader.getUploadState()) {
-
-                    case INITIATION_STARTED:
-//                    System.out.println("Initiation Started");
-                        break;
-                    case INITIATION_COMPLETE:
-//                    System.out.println("Initiation Completed");
-                        break;
-                    case MEDIA_IN_PROGRESS:
-
-                        if (dialogWeakReference == null)
-                            return;
-                        final ProgressBar progressBar = dialogWeakReference.get();
-                        if (progressBar == null)
-                            return;
-                        progressBar.setProgress((int) (uploader.getProgress() * 100));
-                        break;
-                    case MEDIA_COMPLETE:
-                        break;
-                }
+//                switch (uploader.getUploadState()) {
+//
+//                    case INITIATION_STARTED:
+////                    System.out.println("Initiation Started");
+//                        break;
+//                    case INITIATION_COMPLETE:
+////                    System.out.println("Initiation Completed");
+//                        break;
+//                    case MEDIA_IN_PROGRESS:
+//
+//                        if (dialogWeakReference == null)
+//                            return;
+//                        final ProgressBar progressBar = dialogWeakReference.get();
+//                        if (progressBar == null)
+//                            return;
+//                        progressBar.setProgress((int) (uploader.getProgress() * 100));
+//                        break;
+//                    case MEDIA_COMPLETE:
+//                        break;
+//                }
             }
         };
     }

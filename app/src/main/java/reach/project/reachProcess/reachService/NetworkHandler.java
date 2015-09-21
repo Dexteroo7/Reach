@@ -83,7 +83,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
     private static final LongSparseArray<Channel> openChannels = new LongSparseArray<>(100); //needs closing
     //message holder
     private static final ConcurrentLinkedQueue<String> pendingNetworkRequests = new ConcurrentLinkedQueue<>();
-    //    private final ConcurrentLinkedQueue<Pair<SocketChannel, Connection>> pendingLanRequests = new ConcurrentLinkedQueue<>(); //needs closing
     private static final ByteBuffer transferBuffer = ByteBuffer.allocateDirect(4096);
     private static final StringBuilder requestDefaults = new StringBuilder()
             .append("User-Agent: ").append(System.getProperty("http.agent")).append("\r\n") //user agent
@@ -96,12 +95,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
     private File reachDirectory = null;
     private Selector networkManager = null; //needs closing
     private WifiManager.WifiLock wifiLock = null; //needs closing
-    private ThreadPoolExecutor threadPool;
+    private ThreadPoolExecutor threadPool = null;
     private long lastOperation = 0;
-
-    //    private SocketAddress lanAddress = null; TODO
-//    private final LanHandler lanHandler = new LanHandler(this); //needs closing
-//    private Future<?> lanHandlerFuture = null;
     //////////////////////////////////
 
     @Override
@@ -114,11 +109,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         wifiLock = null;
 //        Log.i("Downloader", "Downloader wiFi lock released");
         reachDirectory = null;
-//        lanAddress = null;
-//        lanHandler.close(); TODO
-//        if (lanHandlerFuture != null)
-//            lanHandlerFuture.cancel(true);
-//        lanHandlerFuture = null;
         //////////////////////////////////
 //        Log.i("Downloader", "Releasing network manager");
         if (networkManager != null)
@@ -136,16 +126,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         if (threadPool != null)
             threadPool.shutdownNow();
         threadPool = null;
-//        Pair<SocketChannel, Connection> temp;
-//        while ((temp = pendingLanRequests.poll()) != null && temp.first != null) {
-//            try {
-//                temp.first.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        pendingLanRequests.clear();
-//        Log.i("Downloader", "Downloader pendingLanRequests released");
         //////////////////////////////////
         transferBuffer.clear();
         Log.i("Downloader", "Downloader cleaning up");
@@ -156,9 +136,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
         Log.i("Downloader", "Network handler thread started");
         kill.set(false);
-//        lanAddress = lanHandler.getLocalSocketAddress();
-//        Log.i("Downloader", "LAN address = " + lanAddress);
-
         //getDirectory
         if ((reachDirectory = LocalUtils.getDirectory()) == null &&
                 (reachDirectory = LocalUtils.getDirectory()) == null) {
@@ -180,7 +157,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
         LocalUtils.sanitizeReachDirectory(handlerInterface, reachDirectory); //sanitizeReachDirectory
         (wifiLock = handlerInterface.getWifiManager().createWifiLock(WifiManager.WIFI_MODE_FULL, "network_lock")).acquire(); //lock wifi
-        threadPool = (ThreadPoolExecutor) Executors.newCachedThreadPool(); //create thread pool
+        threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(5); //create thread pool
         //////////////////////////////////
         //////////////////////////////////
         long lastActive = System.currentTimeMillis(), currentTime;
@@ -188,19 +165,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         Set<SelectionKey> keySet;
         Log.i("Downloader", "Initialization done");
         while (true) { //start
-//            if (lanHandlerFuture == null || lanHandlerFuture.isCancelled() || lanHandlerFuture.isDone()) {
-//                lanHandler.sanitize();
-//                Log.i("Downloader", "Starting LAN handler");
-//                lanHandlerFuture = handlerInterface.submitChild(lanHandler);
-//            }
+
             final Optional<String> networkRequest = Optional.fromNullable(pendingNetworkRequests.poll());
-//            final Optional<Pair<SocketChannel, Connection>> lanRequest = Optional.fromNullable(pendingLanRequests.poll());
-//            if (!(taskAdded = processTask(networkRequest, lanRequest)) && lanRequest.isPresent())
-//                try {
-//                    lanRequest.get().first.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
             //Check for new request
             if (taskAdded = processTask(networkRequest))
                 handlerInterface.updateNetworkDetails();
@@ -218,11 +184,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 currentTime = System.currentTimeMillis();
                 if (sleeping && //no connections to service (sleeping)
-                        !taskAdded && //no work that is getting added (no taskAdded)
-                        threadPool.getQueue().isEmpty() && //no work that is in queue
-                        threadPool.getActiveCount() == 0 &&  //no work that is in running
-                        networkManager.keys().isEmpty() && //no active connections (network-manager has 0 keys)
-                        currentTime - lastActive > 5000) { //finally a sleep allowance of 5 seconds
+                    !taskAdded && //no work that is getting added (no taskAdded)
+                    threadPool.getQueue().isEmpty() && //no work that is in queue
+                    threadPool.getActiveCount() == 0 &&  //no work that is in running
+                    networkManager.keys().isEmpty() && //no active connections (network-manager has 0 keys)
+                    currentTime - lastActive > 5000) { //finally a sleep allowance of 5 seconds
                     Log.i("Downloader", "Service can be killed now");
                     kill = true;
                 } else {
@@ -280,226 +246,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             Log.i("Downloader", "Task Added " + taskAdded);
         }
         return taskAdded;
-//        if (!lanRequest.isPresent())
-//            return taskAdded;
-//        Log.i("Downloader", "LAN Request was not present");
-//        //////////////////////////////////service local_network requests
-//        final SocketChannel channel = lanRequest.get().first;
-//        if (!channel.isConnected() || !channel.isOpen())
-//            return taskAdded;
-//        connection = lanRequest.get().second;
-//        if (connection == null || TextUtils.isEmpty(connection.getMessageType()))
-//            return taskAdded; //low probability
-//        ReachDatabase reachDatabase = getReachDatabase(
-//                connection.getSongId(),
-//                connection.getSenderId(),
-//                connection.getReceiverId());
-//        //first we perform checks
-//        try {
-//            if (reachDatabase != null && reachDatabase.getStatus() == ReachDatabase.PAUSED_BY_USER) {
-//                channel.write(ByteBuffer.wrap(StaticData.sendFail)); //reply fail
-//                Log.i("Downloader", "LAN_CONNECT for Paused/deleted operation encountered " + reachDatabase.getDisplayName());
-//                return taskAdded; //high probability, paused operation
-//            }
-//            channel.write(ByteBuffer.wrap(StaticData.sendSuccess)); //reply success
-//            final BufferedReader reader = new BufferedReader(new InputStreamReader(channel.socket().getInputStream()));
-//            String message = reader.readLine();
-//            //catch message.a
-//            if (TextUtils.isEmpty(message) || message.equals(StaticData.getFail))
-//                return taskAdded; //other end says shit is paused !
-//            //////////////////////////////////
-//            if (connection.getMessageType().equals("REQ")) {
-//                message = reader.readLine();
-//                if (TextUtils.isEmpty(message) || message.equals(StaticData.getFail))
-//                    return taskAdded; //other end says shit is deleted !
-//                //else its the offset
-//                return (processLocalSend(channel, connection, reachDatabase, message) || taskAdded); // 1) process upload
-//            }
-//            //for download update latest info from memory
-//            if (reachDatabase == null || (reachDatabase = reachDatabaseMemory.get(reachDatabase.getId(), null)) == null) {
-//                channel.write(ByteBuffer.wrap(StaticData.sendFail)); //reply fail
-//                return taskAdded; ////high probability, deleted download op
-//            }
-//            return (processLocalReceive(channel, reachDatabase) || taskAdded); //2) process download
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return taskAdded;
-//        }
     }
-
-//    private boolean processLocalReceive(SocketChannel channel, ReachDatabase reachDatabase) {
-//
-//        final ContentValues values = new ContentValues();
-//        //setUp file
-//        switch (prepareDownloadFile(reachDatabase)) {
-//            case 0: { //created new file
-//                reachDatabase.setPath(reachDirectory + "/" + reachDatabase.getId());
-//                reachDatabase.setProcessed(0); //reset
-//                values.put(ReachDatabaseHelper.COLUMN_PATH, reachDatabase.getPath());
-//                values.put(ReachDatabaseHelper.COLUMN_PROCESSED, 0);
-//                break;
-//            }
-//            //case 1 : the path and offset does not change :)
-//            case 2: { //error
-//                reachDatabase.setStatus(ReachDatabase.FILE_NOT_CREATED); //file not created
-//                values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FILE_NOT_CREATED);
-//                updateReachDatabase(values, reachDatabase.getId());
-//                reachDatabaseMemory.put(reachDatabase.getId(), reachDatabase);
-//                return false;
-//            }
-//        }
-//        for (SelectionKey selectionKey : networkManager.keys()) {
-//            if (selectionKey == null || selectionKey.attachment() == null)
-//                continue;
-//            final DataBundle dataBundle = (DataBundle) selectionKey.attachment();
-//            if (dataBundle == null)
-//                continue;
-//            if (dataBundle.getId() == reachDatabase.getId()) {
-//                //drain and close old channel
-//                long drained = 0;
-//                try {
-//                    drained = drainBuffer((ReadableByteChannel) selectionKey.channel(),
-//                            openChannels.get(getFileChannelIndex(reachDatabase)));
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                reachDatabase.setProcessed(reachDatabase.getProcessed() + drained);
-//                values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getProcessed());
-//                MiscUtils.keyCleanUp(selectionKey);
-//                closeSocket(dataBundle.getReference());
-//                break;
-//            }
-//        }
-//        /** now the file is ready also we have the channel
-//         ** inform the sender about the offset, where to start from **/
-//        try {
-//            channel.write(ByteBuffer.wrap((reachDatabase.getProcessed() + "\n").getBytes()));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return false; //fail
-//        }
-//        reachDatabase.setStatus(ReachDatabase.RELAY);
-//        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.RELAY);
-//        //register into selector
-//        final long reference = UUID.randomUUID().getMostSignificantBits();
-//        openChannels.append(reference, channel);
-//        try {
-//            channel.configureBlocking(false).register(networkManager,
-//                    SelectionKey.OP_READ, new DataBundle(
-//                            reachDatabase.getId(),
-//                            reachDatabase.getSongId(),
-//                            reachDatabase.getReceiverId(),
-//                            reachDatabase.getSenderId(),
-//                            reachDatabase.getLength(),
-//                            reachDatabase.getProcessed(),
-//                            reference));
-//        } catch (IOException e) {
-//            //removal of selectionKey will be done in keyKiller
-//            e.printStackTrace();
-//            closeSocket(reference);
-//            reset(reachDatabase);
-//            toast("Firewall issue");
-//            return false;
-//        }
-//        reachDatabase.setLastActive(System.currentTimeMillis());
-//        values.put(ReachDatabaseHelper.COLUMN_LAST_ACTIVE, reachDatabase.getLastActive());
-//
-//        reachDatabaseMemory.put(reachDatabase.getId(), reachDatabase);
-//        return updateReachDatabase(values, reachDatabase.getId());
-//    }
-
-//    /**
-//     * @param channel    the current connection
-//     * @param byteBuffer the file where we were writing to
-//     * @return the new offset
-//     */
-//    private long drainBuffer(ReadableByteChannel channel, MappedByteBuffer byteBuffer) throws IOException {
-//        return channel.read(byteBuffer);
-//    }
-
-//    private boolean processLocalSend(SocketChannel channel, Connection connection, ReachDatabase reachDatabase, String offset) {
-//
-//        final ReachDatabase newDatabase = new ReachDatabase();
-//        newDatabase.setSongId(connection.getSongId());
-//        newDatabase.setReceiverId(connection.getReceiverId());
-//        newDatabase.setSenderId(connection.getSenderId());
-//        newDatabase.setOperationKind((short) 1);
-//
-//        newDatabase.setLength(connection.getLength());
-//        newDatabase.setProcessed(Long.parseLong(offset)); //NEW OFFSET !!
-//        newDatabase.setLastActive(System.currentTimeMillis());
-//        newDatabase.setAdded(System.currentTimeMillis());
-//
-//        newDatabase.setLogicalClock(connection.getLogicalClock());
-//        newDatabase.setStatus(ReachDatabase.RELAY);
-//
-//        final long id;
-//        if (reachDatabase != null) {
-//            //get rid of relay transaction
-//            for (SelectionKey selectionKey : networkManager.keys()) {
-//                if (selectionKey == null || selectionKey.attachment() == null)
-//                    continue; //maybe cleanup
-//                final DataBundle dataBundle = (DataBundle) selectionKey.attachment();
-//                if (dataBundle.getId() == reachDatabase.getId()) {
-//                    MiscUtils.keyCleanUp(selectionKey);
-//                    closeSocket(dataBundle.getReference());
-//                    break;
-//                }
-//            }
-//            id = reachDatabase.getId(); //reuse existing id :)
-//        } else {
-//            final String[] splitter = handlerInterface.getContentResolver().insert(ReachDatabaseProvider.CONTENT_URI,
-//                    ReachDatabaseHelper.contentValuesCreator(newDatabase)).toString().split("/");
-//            if (splitter.length == 0)
-//                return false;
-//            id = Long.parseLong(splitter[splitter.length - 1].trim());
-//        }
-//        newDatabase.setId(id);
-//        Log.i("Downloader", "Local Upload op inserted " + newDatabase.getId());
-//
-//        final Optional<String[]> setUpFile = prepareUploadFile(connection.getSongId(),
-//                connection.getSenderId()
-//        );
-//        if (!setUpFile.isPresent()) {
-//            connection.setMessageType("404");
-//            MiscUtils.sendGCM("CONNECT" + new Gson().toJson(connection, Connection.class),
-//                    connection.getReceiverId(), connection.getSenderId());
-//            Log.i("Downloader", "File Channel could not be created");
-//            removeReachDatabase(newDatabase.getId());
-//            return false;
-//        }
-//        //////////////////////////////////
-//        final ContentValues values = new ContentValues();
-//        newDatabase.setDisplayName(setUpFile.get()[0]);
-//        newDatabase.setDisplayName(setUpFile.get()[1]);
-//        values.put(ReachDatabaseHelper.COLUMN_DISPLAY_NAME, setUpFile.get()[0]);
-//        values.put(ReachDatabaseHelper.COLUMN_ACTUAL_NAME, setUpFile.get()[1]);
-//
-//        final long reference = UUID.randomUUID().getMostSignificantBits();
-//        openChannels.append(reference, channel);
-//        try {
-//            channel.configureBlocking(false).register(networkManager,
-//                    SelectionKey.OP_WRITE, new DataBundle(
-//                            newDatabase.getId(),
-//                            newDatabase.getSongId(),
-//                            newDatabase.getReceiverId(),
-//                            newDatabase.getSenderId(),
-//                            newDatabase.getLength(),
-//                            newDatabase.getProcessed(),
-//                            reference));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            toast("Firewall issue");
-//            closeSocket(reference);
-//            removeReachDatabase(newDatabase.getId());
-//            return false;
-//        }
-//        Log.i("Downloader", "REQ Registered in Selector " + newDatabase.toString());
-//        newDatabase.setLastActive(System.currentTimeMillis());
-//        values.put(ReachDatabaseHelper.COLUMN_LAST_ACTIVE, newDatabase.getLastActive());
-//        reachDatabaseMemory.put(newDatabase.getId(), newDatabase);
-//        return updateReachDatabase(values, newDatabase.getId());
-//    }
 
     /**
      * Pause and Delete in disk are newer.
@@ -520,11 +267,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 connection.getSongId(),
                 connection.getSenderId(),
                 connection.getReceiverId());
-        //already done in intentService
-//        if (reachDatabase != null && reachDatabase.getStatus() == ReachDatabase.PAUSED_BY_USER) {
-//            Log.i("Downloader", "CONNECT for Paused/deleted operation encountered " + reachDatabase.getDisplayName());
-//            return false;
-//        }
 
         switch (connection.getMessageType()) {
 
@@ -663,76 +405,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             LocalUtils.closeSocket(reachDatabase.getReference());
         }
         return updateSuccess;
-        //establish relay
-//        try {
-//        } finally {
-//            //attempt a LAN connection (even if relay failed)
-//            AsyncTask.THREAD_POOL_EXECUTOR.execute(new LanRequester(connection));
-//        }
     }
-
-//    private class LanRequester implements Runnable {
-//
-//        private final Connection connection;
-//
-//        private LanRequester(Connection connection) {
-//            this.connection = connection;
-//        }
-//
-//        private void fail(Closeable... closeables) {
-//            for (Closeable closeable : closeables)
-//                try {
-//                    closeable.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//        }
-//
-//        @Override
-//        public void run() {
-//
-//            Log.i("Downloader", "Received senderIp = " + connection.getSenderIp());
-//            final BufferedReader reader;
-//            final SocketChannel channel;
-//            final OutputStream stream;
-//            try {
-//                channel = SocketChannel.open();
-//                channel.configureBlocking(true);
-//                channel.connect(new InetSocketAddress(connection.getSenderIp(), 60001)); //TODO test and fix
-//                channel.finishConnect();
-//                stream = channel.socket().getOutputStream();
-//                reader = new BufferedReader(new InputStreamReader(channel.socket().getInputStream()));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                return;
-//            }
-//
-//            final String message = new Gson().toJson(connection, Connection.class);
-//            try {
-//                stream.write(message.getBytes());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                fail(channel, stream);
-//                return;
-//            }
-//
-//            final String reply;
-//            try {
-//                reply = reader.readLine();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                fail(channel, stream, reader);
-//                return;
-//            }
-//
-//            if (TextUtils.isEmpty(reply) || reply.equals("fail")) {
-//                fail(channel, stream, reader);
-//                return;
-//            }
-//            //if LAN was successful we add to LAN processing queue
-//            submitLanRequest(channel, connection);
-//        }
-//    }
 
     /**
      * Handles the REQ messages.
@@ -765,12 +438,14 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
         Log.i("Downloader", "Upload op inserted " + reachDatabase.getId());
 
-        final Optional<String[]> setUpFile = LocalUtils.prepareUploadFile(
+        final Optional<Object[]> setUpFile = LocalUtils.prepareUploadFile(
                 handlerInterface,
                 connection.getSongId(),
-                connection.getSenderId());
+                connection.getSenderId(),
+                connection.getLength());
 
         if (!setUpFile.isPresent()) {
+
             connection.setMessageType("404");
             MiscUtils.sendGCM("CONNECT" + new Gson().toJson(connection, Connection.class),
                     connection.getReceiverId(), connection.getSenderId());
@@ -780,10 +455,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         }
 
         //////////////////////////////////
-//        Log.i("Downloader", "Setting senderIp " + lanAddress.toString());
-//        connection.setSenderIp(lanAddress.toString()); //TODO verify
-
-        final Pair<String, Short> nameAndStatus = LocalUtils.getNameAndStatus(connection.getReceiverId(), connection.getSenderId(), handlerInterface);
+        final Pair<String, Short> nameAndStatus =
+                LocalUtils.getNameAndStatus(connection.getReceiverId(), connection.getSenderId(), handlerInterface);
         if (nameAndStatus == null)
             return false;
 
@@ -791,12 +464,13 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         reachDatabase.setStatus(nameAndStatus.second);
 
         final ContentValues values = new ContentValues();
-        reachDatabase.setDisplayName(setUpFile.get()[0]);
-        reachDatabase.setActualName(setUpFile.get()[1]);
-        values.put(ReachDatabaseHelper.COLUMN_DISPLAY_NAME, setUpFile.get()[0]);
-        values.put(ReachDatabaseHelper.COLUMN_ACTUAL_NAME, setUpFile.get()[1]);
-        values.put(ReachDatabaseHelper.COLUMN_SENDER_NAME, reachDatabase.getSenderName());
-        values.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus());
+        reachDatabase.setDisplayName((String) setUpFile.get()[0]);
+        reachDatabase.setActualName((String) setUpFile.get()[1]);
+        values.put(ReachDatabaseHelper.COLUMN_DISPLAY_NAME, (String) setUpFile.get()[0]);
+        values.put(ReachDatabaseHelper.COLUMN_ACTUAL_NAME, (String) setUpFile.get()[1]);
+        values.put(ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, (byte[]) setUpFile.get()[2]);
+        values.put(ReachDatabaseHelper.COLUMN_SENDER_NAME, nameAndStatus.first);
+        values.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, nameAndStatus.second);
 
         final boolean tryRelay, tryDB, tryGCM;
 
@@ -958,7 +632,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
             LocalUtils.keyCleanUp(selectionKey);
             LocalUtils.closeSocket(database.getReference());
-            handlerInterface.downloadFail(database.getDisplayName());
+            handlerInterface.downloadFail(database.getDisplayName(), "Failed during operation");
             final Optional<Runnable> optional = LocalUtils.reset(database, handlerInterface);
             if (optional.isPresent())
                 threadPool.submit(optional.get());
@@ -1011,8 +685,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 final ContentValues contentValues = new ContentValues();
                 contentValues.put(ReachDatabaseHelper.COLUMN_PROCESSED, database.getLength());
                 contentValues.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                LocalUtils.forceUpdateReachDatabase(contentValues, handlerInterface, database.getId());
 
+                LocalUtils.forceUpdateReachDatabase(contentValues, handlerInterface, database.getId());
                 //Sync upload success to server
                 MiscUtils.autoRetryAsync(() -> StaticData.userEndpoint.updateCompletedOperations(
                         database.getReceiverId(),
@@ -1129,7 +803,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                                     Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + memoryReach.getId())).build());
                             needToUpdate = true;
                         }
-                        handlerInterface.downloadFail(memoryReach.getDisplayName());
+                        handlerInterface.downloadFail(memoryReach.getDisplayName(), "Failed in keyKiller");
                     } else {
 
                         //for upload
@@ -1284,7 +958,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 Log.i("Downloader", status);
                 if (!(status.contains("200") || status.contains("206"))) {
                     //fail
-                    MiscUtils.closeQuietly(socket, reader);
+                    socket.close();reader.close();
                     LocalUtils.closeSocket(reference);
                     return false;
                 }
@@ -1425,38 +1099,73 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          * Prepares the fileChannel needed for upload
          *
          * @param handlerInterface the handlerInterface
-         * @param songId           the id of the song reuested
+         * @param songId           the id of the song requested
          * @param myId             my own id
          * @return display name and actual name of the song
          */
-        public static Optional<String[]> prepareUploadFile(NetworkHandlerInterface handlerInterface,
+        public static Optional<Object[]> prepareUploadFile(NetworkHandlerInterface handlerInterface,
                                                            long songId,
-                                                           long myId) {
+                                                           long myId,
+                                                           long length) {
 
-            final Cursor cursor = handlerInterface.getContentResolver().query(
+            /**
+             * We do not know which DB the request should look into. Problem ?
+             * First look in ReachSong table, then in ReachDatabase table.
+             * Probability of ID and SIZE, both being same. Low.
+             */
+
+            Cursor cursor = handlerInterface.getContentResolver().query(
                     ReachSongProvider.CONTENT_URI,
                     new String[]{
-                            ReachSongHelper.COLUMN_ID,
-                            ReachSongHelper.COLUMN_DISPLAY_NAME,
-                            ReachSongHelper.COLUMN_ACTUAL_NAME,
-                            ReachSongHelper.COLUMN_PATH,
-                            ReachSongHelper.COLUMN_VISIBILITY},
+                            ReachSongHelper.COLUMN_ID, //0
+                            ReachSongHelper.COLUMN_DISPLAY_NAME, //1
+                            ReachSongHelper.COLUMN_ACTUAL_NAME, //2
+                            ReachSongHelper.COLUMN_PATH, //3
+                            ReachSongHelper.COLUMN_VISIBILITY, //4
+                            ReachSongHelper.COLUMN_ALBUM_ART_DATA}, //5
+
                     ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " = ?",
-                    new String[]{myId + "", songId + ""}, null);
-            //handle visibility as well
+                            ReachSongHelper.COLUMN_SONG_ID + " = ? and " +
+                            ReachSongHelper.COLUMN_SIZE + " = ?",
+                    new String[]{myId + "", songId + "", length + ""}, null);
+
+            if (cursor == null || !cursor.moveToFirst()) {
+
+                Log.i("Ayush", "Picking from reachDatabase table");
+
+                if (cursor != null)
+                    cursor.close();
+                cursor = handlerInterface.getContentResolver().query(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        new String[]{
+                                ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
+                                ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //1
+                                ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //2
+                                ReachDatabaseHelper.COLUMN_PATH, //3
+                                ReachDatabaseHelper.COLUMN_VISIBILITY, //4
+                                ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA}, //5
+
+                        ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                                ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " +
+                                ReachDatabaseHelper.COLUMN_SIZE + " = ?",
+                        new String[]{myId + "", songId + "", length + ""}, null);
+            }
+
             if (cursor == null || !cursor.moveToFirst() || cursor.getShort(4) == 0) {
+                //TODO tell invisible
                 Log.i("Downloader", "Requested song path invalid");
                 return Optional.absent();
             }
-            final String[] names = new String[]{cursor.getString(1),  //display name
-                    cursor.getString(2)}; //actual name
+            final Object[] toSend = new Object[]{
+                    cursor.getString(1),  //display name
+                    cursor.getString(2), //actual name
+                    cursor.getBlob(5)}; //albumArtData
             final String filePath = cursor.getString(3);
             cursor.close();
             if (TextUtils.isEmpty(filePath))
                 return Optional.absent();
             //song found, continuing
-            final long fileChannelIndex = getFileChannelIndex(names[1], names[0]);
+            final long fileChannelIndex = getFileChannelIndex((String) toSend[1], (String) toSend[0], songId);
             final Channel channel = openChannels.get(fileChannelIndex, null);
             if (channel == null || !channel.isOpen()) { //not present or not open
 
@@ -1471,11 +1180,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     return Optional.absent();
                 }
                 openChannels.put(fileChannelIndex, file.getChannel());
-                Log.i("Downloader", "Index for " + names[0] + " = " + fileChannelIndex);
+                Log.i("Downloader", "Index for " + toSend[0] + " = " + fileChannelIndex);
             }
             //else channel already loaded
 
-            return Optional.of(names);
+            return Optional.of(toSend);
         }
 
         /**
@@ -1775,41 +1484,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             return reachDatabase;
         }
 
-//        /**
-//         * @param databaseId the databaseId
-//         * @return the reachDatabase object corresponding to parameters
-//         */
-//        public static ReachDatabase getReachDatabase(NetworkHandlerInterface handlerInterface,
-//                                                     long databaseId) {
-//
-//            final Cursor cursor = handlerInterface.getContentResolver().query(
-//                    ReachDatabaseProvider.CONTENT_URI,
-//                    ReachDatabaseHelper.projection,
-//                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                    new String[]{databaseId + ""},
-//                    null);
-//
-//            if (cursor == null)
-//                return null;
-//            if (!cursor.moveToFirst()) {
-//                cursor.close();
-//                return null;
-//            }
-//
-//            final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
-//            cursor.close();
-//            return reachDatabase;
-//        }
-//    @Override
-//    public boolean submitLanRequest(SocketChannel channel, Connection connection) {
-//        return pendingLanRequests.insertMessage(new Pair<>(channel, connection));
-//    }
-//
-//    @Override
-//    public long getMyId() {
-//        return SharedPrefUtils.getServerId(handlerInterface.getSharedPreferences());
-//    }
-
         /**
          * Right now only logs
          *
@@ -1819,17 +1493,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
             Log.i("Downloader", message + "TOAST");
             //TODO, this will be done using a messenger OR no toast, something else
-//        if (ReachQueueActivity.reference == null)
-//            return;
-//        final ReachQueueActivity activity = ReachQueueActivity.reference.get();
-//        if (activity == null)
-//            return;
-//        activity.runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-//            }
-//        });
         }
 
         /**
@@ -1839,7 +1502,10 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          * @return fileChannel index
          */
         public static long getFileChannelIndex(ReachDatabase reachDatabase) {
-            return getFileChannelIndex(reachDatabase.getActualName(), reachDatabase.getDisplayName());
+            return getFileChannelIndex(
+                    reachDatabase.getActualName(),
+                    reachDatabase.getDisplayName(),
+                    reachDatabase.getSongId());
         }
 
         /**
@@ -1849,10 +1515,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          * @param displayName of the song
          * @return fileChannel index
          */
-        public static long getFileChannelIndex(String actualName, String displayName) {
+        public static long getFileChannelIndex(String actualName, String displayName, long songId) {
             return Arrays.hashCode(new Object[]{
                     TextUtils.isEmpty(actualName) ? "" : actualName,
-                    TextUtils.isEmpty(displayName) ? "" : displayName});
+                    TextUtils.isEmpty(displayName) ? "" : displayName,
+                    songId});
         }
 
         /**
@@ -1900,6 +1567,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
         void removeNetwork();
 
-        void downloadFail(String songName);
+        void downloadFail(String songName, String reason);
     }
 }

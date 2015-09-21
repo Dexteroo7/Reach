@@ -70,7 +70,6 @@ public class FriendRequestFragment extends Fragment {
             final ReachFriendRequestAdapter adapter = (ReachFriendRequestAdapter) parent.getAdapter();
             final ReceivedRequest receivedRequest = adapter.getItem(position);
             final long userId = receivedRequest.getId();
-
             if (ReachFriendRequestAdapter.accepted.get(userId, false)) {
 
                 //check validity

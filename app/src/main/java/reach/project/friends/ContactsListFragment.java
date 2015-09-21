@@ -296,8 +296,7 @@ public class ContactsListFragment extends Fragment implements
                     ReachContactsAdapter.requiredProjection,
                     selection,
                     selectionArguments,
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
-                            ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC");
         else
             return null;
     }
@@ -506,9 +505,9 @@ public class ContactsListFragment extends Fragment implements
                         contactData.addAll(contactHashSet);
                         Collections.sort(contactData, (lhs, rhs) -> lhs.getUserName().compareToIgnoreCase(rhs.getUserName()));
                         fragment.mergeAdapter.setActive(fragment.emptyInvite, false);
-                        fragment.inviteAdapter.notifyDataSetChanged();
-                        fragment.inviteAdapter.getFilter().filter("");
                     }
+                    fragment.inviteAdapter.notifyDataSetChanged();
+                    fragment.inviteAdapter.getFilter().filter("");
                     return null;
                 });
             }
@@ -598,7 +597,10 @@ public class ContactsListFragment extends Fragment implements
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                MiscUtils.useFragment(reference, fragment -> fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false)));
+                MiscUtils.useFragment(reference, fragment ->
+                {
+                    fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false));
+                });
             }
         }
 

@@ -56,14 +56,15 @@ public enum CoverArt {
      * @param releaseGroupMBID the mbid
      * @return jsonNode
      */
-    private static Optional<JsonNode> fetchCoverImagesFromMBID(String releaseGroupMBID) {
+    public static Optional<JsonNode> fetchCoverImagesFromMBID(String releaseGroupMBID) {
 
         return MiscUtils.autoRetry(() -> {
 
             final String res = Tools.httpGet("https://coverartarchive.org/release-group/" + releaseGroupMBID);
             if (TextUtils.isEmpty(res))
                 return null;
+//            Log.i("Ayush", "HTTP GET RESULT " + res);
             return Tools.jsonToNode(res);
-        }, Optional.of(input -> input == null));
+        }, Optional.absent());
     }
 }

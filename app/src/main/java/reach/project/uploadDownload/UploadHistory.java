@@ -35,8 +35,8 @@ import reach.backend.entities.userApi.model.CompletedOperation;
 import reach.backend.entities.userApi.model.CompletedOperationCollection;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsProvider;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -181,7 +181,8 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         @Override
         protected List<CompletedOperation> doInBackground(final Long... params) {
 
-            final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getCompletedOperations(params[0]).execute(), Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
+            final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(() ->
+                    StaticData.userEndpoint.getCompletedOperations(params[0]).execute(), Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
             final List<CompletedOperation> list;
             if (dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty())
                 return null;
@@ -203,14 +204,17 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
             }
             final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN (" + inList.toString() + ")";
 
-            final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> context.getContentResolver().query(
-                    ReachFriendsProvider.CONTENT_URI,
-                    new String[]{
-                            ReachFriendsHelper.COLUMN_ID,
-                            ReachFriendsHelper.COLUMN_USER_NAME
-                    },
-                    whereClause,
-                    whereArgument, null)).orNull();
+            final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
+
+                return context.getContentResolver().query(
+                        ReachFriendsProvider.CONTENT_URI,
+                        new String[]{
+                                ReachFriendsHelper.COLUMN_ID,
+                                ReachFriendsHelper.COLUMN_USER_NAME
+                        },
+                        whereClause,
+                        whereArgument, null);
+            }).orNull();
 
             if (cursor == null)
                 return null;

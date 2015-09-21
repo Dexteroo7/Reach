@@ -30,10 +30,10 @@ import java.util.Arrays;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.playLists.ReachPlayListProvider;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.playLists.ReachPlayListHelper;
+import reach.project.music.playLists.ReachPlayListProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -103,7 +103,10 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                         senderCursor.getShort(1) + "", //onlineStatus
                         senderCursor.getShort(2) + "", //networkType
                         cursor.getString(5), //artistName
-                        cursor.getLong(7)); //duration
+                        cursor.getLong(7), //duration
+                        cursor.getString(6), //album
+                        cursor.getString(11), //genre
+                        cursor.getBlob(10)); //albumArtData
                 senderCursor.close();
             }
         }
@@ -312,7 +315,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                 StaticData.DISK_COMPLETE_NO_PATH,
                 whereClause,
                 whereArgs,
-                ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                ReachSongHelper.COLUMN_DATE_ADDED + " DESC");
     }
 
     @Override

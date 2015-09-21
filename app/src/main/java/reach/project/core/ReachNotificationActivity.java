@@ -41,7 +41,7 @@ public class ReachNotificationActivity extends Activity {
         ((TextView)findViewById(R.id.userName)).setText(bundle.getString("user_name"));
         ((TextView)findViewById(R.id.userMusic)).setText(bundle.getLong("number_of_songs") + "");
         if (!(TextUtils.isEmpty(imageId) || imageId.equals("hello_world")))
-            Picasso.with(this).load(StaticData.cloudStorageImageBaseUrl + imageId).transform(new CircleTransform()).into((ImageView) findViewById(R.id.userImage));
+            Picasso.with(this).load(StaticData.cloudStorageImageBaseUrl + imageId).fit().transform(new CircleTransform()).into((ImageView) findViewById(R.id.userImage));
 
         final HandleReply handleReply = new HandleReply(bundle.getInt("notification_id"), NotificationManagerCompat.from(this), this);
         findViewById(R.id.accept).setOnClickListener(v -> handleReply.execute(myId + "", bundle.getLong("host_id") + "", "PERMISSION_GRANTED"));

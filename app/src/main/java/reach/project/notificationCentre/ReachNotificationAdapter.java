@@ -4,8 +4,8 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +18,6 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.localytics.android.Localytics;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
@@ -45,8 +44,8 @@ import reach.project.utils.viewHelpers.CircleTransform;
  */
 public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
 
-    public static final LongSparseArray<Boolean> accepted = new LongSparseArray<>();
-    private static final LongSparseArray<Boolean> opened = new LongSparseArray<>();
+    public static final SparseBooleanArray accepted = new SparseBooleanArray();
+    private static final SparseBooleanArray opened = new SparseBooleanArray();
     private static final int a = MiscUtils.dpToPx(70);
     private static final int b = MiscUtils.dpToPx(110);
 
@@ -105,7 +104,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
     private static final View.OnClickListener expander = view -> {
 
-        final long itemId = (long) view.getTag();
+        final int itemId = (int) view.getTag();
         final boolean toggle = !opened.get(itemId, false);
 
         if (toggle)
@@ -162,6 +161,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText(" likes " + like.getSongName());
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + like.getImageId())
+                        .fit()
                         .transform(transform)
                         .into(viewHolder.profilePhoto);
                 break;
@@ -172,9 +172,10 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).fit().transform(transform).into(viewHolder.profilePhoto);
 
                 if (accepted.get(notificationBaseLocal.getNotificationId(), false)) {
+
                     viewHolder.linearLayout.getLayoutParams().height = a;
                     viewHolder.linearLayout.setClickable(false);
                     viewHolder.actionBlock.setVisibility(View.GONE);
@@ -229,12 +230,6 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                                 .setValue(push.getSize())
                                 .build());
 
-                        final Map<String, String> tagValues = new HashMap<>();
-                        tagValues.put("User Name", SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
-                        tagValues.put("Sender", push.getHostName());
-                        tagValues.put("Songs", String.valueOf(push.getSize()));
-                        Localytics.tagEvent("Accept - Pushed song", tagValues);
-
                         expand(viewHolder.linearLayout, b, a);
                         viewHolder.linearLayout.setClickable(false);
                         viewHolder.actionBlock.setVisibility(View.GONE);
@@ -273,7 +268,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).fit().transform(transform).into(viewHolder.profilePhoto);
                 break;
 
             case PUSH_ACCEPTED:

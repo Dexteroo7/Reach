@@ -39,7 +39,8 @@ public class ReachAlbumHelper extends SQLiteOpenHelper {
                     COLUMN_ALBUM,
                     COLUMN_ARTIST,
                     COLUMN_USER_ID,
-                    COLUMN_SIZE
+                    COLUMN_SIZE,
+                    COLUMN_RELEASE_GROUP_MBID
             };
 
     public static Album cursorToProcess(Cursor cursor) {

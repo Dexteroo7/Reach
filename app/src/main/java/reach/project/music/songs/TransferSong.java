@@ -12,14 +12,22 @@ public final class TransferSong {
     private final String actualName;
     private final String artistName;
 
+    private final String albumName;
+    private final String genre;
+    private final byte [] albumArtData;
+
     public TransferSong(long size, long songId, long duration,
-                        String displayName, String actualName, String artistName) {
+                        String displayName, String actualName, String artistName,
+                        String albumName, String genre, byte [] albumArtData) {
         this.size = size;
         this.songId = songId;
         this.duration = duration;
         this.artistName = artistName;
         this.displayName = displayName;
         this.actualName = actualName;
+        this.albumName = albumName;
+        this.genre = genre;
+        this.albumArtData = albumArtData;
     }
 
     public long getDuration() {
@@ -68,5 +76,17 @@ public final class TransferSong {
         result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
         result = 31 * result + (getActualName() != null ? getActualName().hashCode() : 0);
         return result;
+    }
+
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public byte[] getAlbumArtData() {
+        return albumArtData;
     }
 }

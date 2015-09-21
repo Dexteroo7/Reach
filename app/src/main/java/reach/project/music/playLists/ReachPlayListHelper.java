@@ -6,8 +6,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+import reach.project.utils.MiscUtils;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -23,8 +28,7 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
     public static final String COLUMN_SIZE = "size";
     public static final String COLUMN_VISIBILITY = "visibility";
     public static final String COLUMN_ARRAY_OF_SONG_IDS = "arrayOfSongIds";
-
-    public static final String COLUMN_MBID_BLOB = "mbidBlob";
+    public static final String COLUMN_ALBUM_ART = "mbidBlob";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachPlayListHelper";
     private static final int DATABASE_VERSION = 3;
@@ -36,7 +40,7 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
             COLUMN_PLAY_LIST_NAME + " text" + "," +
             COLUMN_DATE_MODIFIED + " text" + "," +
             COLUMN_ARRAY_OF_SONG_IDS + " blob" + "," + //long array
-            COLUMN_MBID_BLOB + " blob" + "," + //{string [] : releaseGroupMbids, string [] : artistMbids}
+            COLUMN_ALBUM_ART + " blob" + "," + //{string [] : hashes}
             COLUMN_VISIBILITY + " short" + "," +
             COLUMN_USER_ID + " long" + "," +
             COLUMN_SIZE + " int" + " )";
@@ -50,6 +54,7 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
                     COLUMN_VISIBILITY, //4
                     COLUMN_USER_ID, //5
                     COLUMN_SIZE, //6
+                    COLUMN_ALBUM_ART //7
             };
 
     public static byte[] toBytes(long data) {
@@ -94,26 +99,26 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
                 (long) (0xff & data[7]);
     }
 
-    public static long[] toLongArray(byte[] data) {
-
-        if (data == null || data.length == 0 || data.length % 8 != 0)
-            return new long[0];
-        // ----------
-        long[] longs = new long[data.length / 8];
-        for (int i = 0; i < longs.length; i++) {
-            longs[i] = toLong(new byte[]{
-                    data[(i * 8)],
-                    data[(i * 8) + 1],
-                    data[(i * 8) + 2],
-                    data[(i * 8) + 3],
-                    data[(i * 8) + 4],
-                    data[(i * 8) + 5],
-                    data[(i * 8) + 6],
-                    data[(i * 8) + 7],
-            });
-        }
-        return longs;
-    }
+//    public static long[] toLongArray(byte[] data) {
+//
+//        if (data == null || data.length == 0 || data.length % 8 != 0)
+//            return new long[0];
+//        // ----------
+//        long[] longs = new long[data.length / 8];
+//        for (int i = 0; i < longs.length; i++) {
+//            longs[i] = toLong(new byte[]{
+//                    data[(i * 8)],
+//                    data[(i * 8) + 1],
+//                    data[(i * 8) + 2],
+//                    data[(i * 8) + 3],
+//                    data[(i * 8) + 4],
+//                    data[(i * 8) + 5],
+//                    data[(i * 8) + 6],
+//                    data[(i * 8) + 7],
+//            });
+//        }
+//        return longs;
+//    }
 
     public static String[] toStringArray(byte[] data) {
 
@@ -122,7 +127,7 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
         if (data == null || data.length == 0 || data.length % 8 != 0)
             return new String[0];
         // ----------
-        String[] strings = new String[data.length / 8];
+        final String[] strings = new String[data.length / 8];
 
         for (int i = 0; i < strings.length; i++) {
             strings[i] = toLong(new byte[]{
@@ -147,9 +152,33 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
         values.put(COLUMN_DATE_MODIFIED, playlist.dateModified);
         values.put(COLUMN_VISIBILITY, (short) (playlist.visibility ? 1 : 0));
         values.put(COLUMN_USER_ID, serverId);
-
         values.put(COLUMN_SIZE, playlist.reachSongs.size());
         values.put(COLUMN_ARRAY_OF_SONG_IDS, toBytes(playlist.reachSongs));
+
+        if (playlist.listOfAlbumArtData == null ||
+                playlist.listOfAlbumArtData.albumArtData == null ||
+                playlist.listOfAlbumArtData.albumArtData.isEmpty())
+            return values;
+
+        final byte[] unCompressedData = playlist.listOfAlbumArtData.toByteArray();
+        final byte[] compressedAlbumArts;
+
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(unCompressedData.length);
+        GZIPOutputStream gzipOutputStream = null;
+
+        try {
+            gzipOutputStream = new GZIPOutputStream(outputStream);
+            gzipOutputStream.write(unCompressedData);
+            gzipOutputStream.close();
+            compressedAlbumArts = outputStream.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return values;
+        } finally {
+            MiscUtils.closeQuietly(outputStream, gzipOutputStream);
+        }
+
+        values.put(COLUMN_ALBUM_ART, compressedAlbumArts);
         return values;
     }
 
@@ -165,11 +194,11 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
 
-//        Log.w(ReachAlbumHelper.class.getName(),
-//                "Upgrading database from version " + oldVersion + " to "
-//                        + newVersion + ", which will destroy all old data");
-//        db.execSQL("DROP TABLE IF EXISTS " + PLAY_LIST_TABLE);
-        database.execSQL("ALTER TABLE " + PLAY_LIST_TABLE + " ADD COLUMN " + COLUMN_MBID_BLOB + " text");
-//        onCreate(database);
+        Log.w(ReachPlayListHelper.class.getName(),
+                "Upgrading database from version " + oldVersion + " to "
+                        + newVersion + ", which will destroy all old data");
+        database.execSQL("DROP TABLE IF EXISTS " + PLAY_LIST_TABLE);
+//        database.execSQL("ALTER TABLE " + PLAY_LIST_TABLE + " ADD COLUMN " + COLUMN_ALBUM_ART + " text");
+        onCreate(database);
     }
 }
