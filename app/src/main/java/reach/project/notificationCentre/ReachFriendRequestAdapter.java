@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
@@ -23,9 +22,9 @@ import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.backend.notifications.notificationApi.model.Friend;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ContactsListFragment;
-import reach.project.friends.ReachFriendsProvider;
+import reach.project.coreViews.MyReachFragment;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CircleTransform;
 
@@ -52,7 +51,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
-        ContactsListFragment.checkNewNotifications();
+        MyReachFragment.checkNewNotifications();
     }
 
     @Override
@@ -72,7 +71,6 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         final View actionBlock = convertView.findViewById(R.id.actionBlock);
         final View accept = convertView.findViewById(R.id.acceptBlock);
         final View reject = convertView.findViewById(R.id.rejectBlock);
-
         final ReceivedRequest receivedRequest = getItem(position);
 
         Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).fit().transform(new CircleTransform()).into(profilePhoto);
@@ -122,7 +120,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
                 MiscUtils.autoRetryAsync(() -> {
                     StaticData.notificationApi.addBecameFriends(false, serverId, receivedRequest.getId()).execute();
                     return null;
-                }, Optional.<Predicate<Void>>absent());
+                }, Optional.absent());
 
                 //delete entry
                 remove(receivedRequest);
@@ -197,7 +195,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
             return new Object[]{
                     params[1], //un-cast-reference
-                    MiscUtils.autoRetry(() -> StaticData.notificationApi.addBecameFriends(true, serverId, (long) params[0]).execute(), Optional.<Predicate<Friend>>absent()).orNull(),
+                    MiscUtils.autoRetry(() -> StaticData.notificationApi.addBecameFriends(true, serverId, (long) params[0]).execute(), Optional.absent()).orNull(),
                     params[2]}; //view to enable
         }
 

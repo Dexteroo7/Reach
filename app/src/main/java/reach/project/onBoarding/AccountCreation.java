@@ -28,7 +28,6 @@ import android.widget.Toast;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.io.ByteStreams;
 import com.squareup.picasso.Picasso;
 
@@ -266,7 +265,7 @@ public class AccountCreation extends Fragment {
             //insert User-object and get the userID
             final long id;
             final String toParse;
-            final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insert(user).execute(), Optional.<Predicate<MyString>>absent()).orNull();
+            final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insert(user).execute(), Optional.absent()).orNull();
             if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()))
                 id = 0;
             else

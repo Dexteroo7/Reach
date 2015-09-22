@@ -6,12 +6,11 @@ package reach.project.friends;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
@@ -37,33 +36,24 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
     private final class ViewHolder {
 
-        private final TextView userNameList, telephoneNumberList, netType, userInitials, featured, listStatus;
-        private final ImageView profilePhotoList, networkStatus, listToggle, note;
-        private final FrameLayout profilePhoto;
+        private final TextView userNameList, telephoneNumberList, onlineText;
+        private final ImageView profilePhotoList, onlineIcon, lockIcon, profileGradient;
 
         private ViewHolder(TextView userNameList,
                            TextView telephoneNumberList,
-                           TextView netType,
-                           TextView userInitials,
-                           TextView featured,
-                           TextView listStatus,
-                           ImageView listToggle,
+                           TextView onlineText,
+                           ImageView onlineIcon,
                            ImageView profilePhotoList,
-                           ImageView networkStatus,
-                           ImageView note,
-                           FrameLayout profilePhoto) {
+                           ImageView lockIcon,
+                           ImageView profileGradient) {
 
             this.userNameList = userNameList;
             this.telephoneNumberList = telephoneNumberList;
-            this.netType = netType;
-            this.userInitials = userInitials;
-            this.featured = featured;
-            this.listStatus = listStatus;
-            this.listToggle = listToggle;
+            this.onlineText = onlineText;
+            this.onlineIcon = onlineIcon;
             this.profilePhotoList = profilePhotoList;
-            this.networkStatus = networkStatus;
-            this.note = note;
-            this.profilePhoto = profilePhoto;
+            this.lockIcon = lockIcon;
+            this.profileGradient = profileGradient;
         }
     }
 
@@ -93,21 +83,28 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         final int numberOfSongs = cursor.getShort(6);
         final String newSongs = cursor.getString(7);
 
-        viewHolder.userInitials.setText(MiscUtils.generateInitials(userName));
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
         viewHolder.telephoneNumberList.setText(numberOfSongs + " songs " + newSongs + " new");
 
         //first invalidate
         viewHolder.profilePhotoList.setImageBitmap(null);
-        viewHolder.profilePhotoList.setVisibility(View.INVISIBLE);
-        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
-
+        int[] colors = context.getResources().getIntArray(R.array.androidcolors);
+        if (!TextUtils.isEmpty(imageId) &&
+                !imageId.equals("hello_world")) {
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
-                    imageId).fit().centerCrop().transform(transform).noPlaceholder().into(viewHolder.profilePhotoList);
-            viewHolder.profilePhotoList.setVisibility(View.VISIBLE);
+                    imageId).centerCrop().fit().into(viewHolder.profilePhotoList);
+        } else {
+            /*if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)de
+                Picasso.with(context).load(R.drawable.default_profile_new)
+                        .centerCrop().fit().into(viewHolder.profilePhotoList);
+            else*/
+            Picasso.with(context).load(R.drawable.default_profile_offline)
+                    .centerCrop().fit().into(viewHolder.profilePhotoList);
         }
 
-        if (networkType == 1) {
+
+
+        /*if (networkType == 1) {
             Picasso.with(context).load(R.drawable.wifi).into(viewHolder.networkStatus);
             viewHolder.netType.setText("");
         } else if (networkType > 1 && networkType < 6) {
@@ -118,9 +115,9 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         } else {
             viewHolder.networkStatus.setImageBitmap(null);
             viewHolder.netType.setText("");
-        }
+        }*/
 
-        //first invalidate
+        /*//first invalidate
         viewHolder.featured.setVisibility(View.GONE);
         final RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.featured.getLayoutParams();
         if (phoneNumber.equals("8860872102")) {
@@ -133,40 +130,51 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 params.setMargins(0, 0, 0, 0);
                 viewHolder.featured.setLayoutParams(params);
             }
-        }
+        }*/
 
         //first invalidate
-        viewHolder.userNameList.setTextColor(grey);
-        viewHolder.listStatus.setTextColor(grey);
-        viewHolder.telephoneNumberList.setTextColor(grey);
-        viewHolder.note.setImageResource(R.drawable.ic_music_count_grey);
-        viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_dark);
+        //viewHolder.userNameList.setTextColor(grey);
+        //viewHolder.listStatus.setTextColor(grey);
+        //viewHolder.telephoneNumberList.setTextColor(grey);
+        //viewHolder.note.setImageResource(R.drawable.ic_music_count_grey);
+        //viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_dark);
+        //viewHolder.onlineStatus.setVisibility(View.INVISIBLE);
+        viewHolder.onlineText.setText("");
+        viewHolder.onlineIcon.setImageBitmap(null);
+        viewHolder.lockIcon.setVisibility(View.GONE);
+        viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
+        viewHolder.profileGradient.setBackgroundResource(0);
 
         switch (status) {
 
             case ReachFriendsHelper.OFFLINE_REQUEST_GRANTED:
-
-                viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
-                viewHolder.listStatus.setText("Offline");
+                viewHolder.onlineText.setText("Offline");
+                viewHolder.onlineIcon.setImageResource(R.drawable.circular_offline);
+                //viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
+                //viewHolder.listStatus.setText("Offline");
                 break;
             case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
-
-                    viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
-                    viewHolder.listStatus.setText("Online");
-                    viewHolder.note.setImageResource(R.drawable.ic_music_count);
-                    viewHolder.userNameList.setTextColor(color);
-                    viewHolder.telephoneNumberList.setTextColor(color);
-                    viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
+                viewHolder.onlineText.setText("Online");
+                viewHolder.onlineIcon.setImageResource(R.drawable.circular_online);
+                //viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
+                //viewHolder.listStatus.setText("Online");
+                //viewHolder.note.setImageResource(R.drawable.ic_music_count);
+                //viewHolder.userNameList.setTextColor(color);
+                //viewHolder.telephoneNumberList.setTextColor(color);
+                //viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
                 break;
             case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
-
-                viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
-                viewHolder.listStatus.setText("Pending");
+                viewHolder.onlineText.setText("Pending");
+                viewHolder.onlineIcon.setImageResource(R.drawable.ic_pending_pink);
+                //viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
+                //viewHolder.listStatus.setText("Pending");
                 break;
             case ReachFriendsHelper.REQUEST_NOT_SENT:
-
-                viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
-                viewHolder.listStatus.setText("");
+                viewHolder.lockIcon.setVisibility(View.VISIBLE);
+                viewHolder.profileGradient.setImageBitmap(null);
+                viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
+                //viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
+                //viewHolder.listStatus.setText("");
                 break;
         }
     }
@@ -178,15 +186,11 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         final ViewHolder viewHolder = new ViewHolder(
                 (TextView) view.findViewById(R.id.userNameList),
                 (TextView) view.findViewById(R.id.telephoneNumberList),
-                (TextView) view.findViewById(R.id.netType),
-                (TextView) view.findViewById(R.id.userInitials),
-                (TextView) view.findViewById(R.id.featured),
-                (TextView) view.findViewById(R.id.listStatus),
-                (ImageView) view.findViewById(R.id.listToggle),
+                (TextView) view.findViewById(R.id.onlineText),
+                (ImageView) view.findViewById(R.id.onlineIcon),
                 (ImageView) view.findViewById(R.id.profilePhotoList),
-                (ImageView) view.findViewById(R.id.status),
-                (ImageView) view.findViewById(R.id.note),
-                (FrameLayout) view.findViewById(R.id.profilePhoto));
+                (ImageView) view.findViewById(R.id.lockIcon),
+                (ImageView) view.findViewById(R.id.profileGradient));
         view.setTag(viewHolder);
         return view;
     }

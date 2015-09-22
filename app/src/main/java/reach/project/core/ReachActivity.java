@@ -17,7 +17,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -29,9 +28,9 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SwitchCompat;
@@ -41,7 +40,6 @@ import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -57,13 +55,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
-import com.crittercism.app.Crittercism;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
@@ -87,11 +83,11 @@ import reach.project.R;
 import reach.project.coreViews.EditProfileFragment;
 import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.InviteFragment;
+import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UserMusicLibrary;
 import reach.project.friends.ContactsChooserFragment;
-import reach.project.friends.ContactsListFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.AlbumArtData;
 import reach.project.music.songs.MusicListFragment;
@@ -139,8 +135,6 @@ public class ReachActivity extends AppCompatActivity implements
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
 
-    private Toolbar mToolbar;
-
     private SharedPreferences preferences;
     private FragmentManager fragmentManager;
     private DrawerLayout mDrawerLayout;
@@ -153,8 +147,8 @@ public class ReachActivity extends AppCompatActivity implements
     private String[] selectionArgumentsDownloader;
     private String[] selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
-    private int topPadding;
-    private FrameLayout containerFrame;
+    //private int topPadding;
+    //private FrameLayout containerFrame;
     private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private static MusicData currentPlaying;
@@ -178,9 +172,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
 
-        String actionBarTitle = "Reach", actionBarSubtitle = "";
-        Drawable actionBarIcon;
-
         @Override
         public void onPanelSlide(View view, float v) {
 
@@ -192,59 +183,36 @@ public class ReachActivity extends AppCompatActivity implements
                 findViewById(R.id.player).setVisibility(View.VISIBLE);
             }
             findViewById(R.id.player).setAlpha(1f - v);
+            findViewById(R.id.toolbarLayout).setAlpha(v);
         }
 
         @Override
         public void onPanelCollapsed(View view) {
-
-            final ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-
-                actionBar.setTitle(actionBarTitle);
-                actionBar.setSubtitle(actionBarSubtitle);
-                actionBar.setIcon(actionBarIcon);
-                final Menu mToolbarMenu = mToolbar.getMenu();
-                if (searchView != null) {
-                    searchView.setQuery(null, false);
-                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
-                            .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-                    searchView = null;
-                }
-                mToolbarMenu.removeItem(R.id.player_search);
-                for (int i = 0; i < mToolbarMenu.size(); i++)
-                    mToolbarMenu.getItem(i).setVisible(true);
-            }
-            if (fragmentManager.getBackStackEntryCount() == 0) {
-                setUpDrawer();
+            if (fragmentManager.getBackStackEntryCount() == 0)
                 toggleDrawer(false);
-            }
         }
 
         @Override
         public void onPanelExpanded(View view) {
 
-            final ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
+            /*final Menu mToolbarMenu = mToolbar.getMenu();
+            for (int i = 0; i < mToolbarMenu.size(); i++)
+                mToolbarMenu.getItem(i).setVisible(false);
+            mToolbar.inflateMenu(R.menu.player_menu);
+            searchView = (SearchView) mToolbar.getMenu().findItem(R.id.player_search).getActionView();
+            searchView.setOnQueryTextListener(ReachActivity.this);
+            searchView.setOnCloseListener(ReachActivity.this);
 
-                final Menu mToolbarMenu = mToolbar.getMenu();
-                for (int i = 0; i < mToolbarMenu.size(); i++)
-                    mToolbarMenu.getItem(i).setVisible(false);
-                mToolbar.inflateMenu(R.menu.player_menu);
-                searchView = (SearchView) mToolbar.getMenu().findItem(R.id.player_search).getActionView();
-                searchView.setOnQueryTextListener(ReachActivity.this);
-                searchView.setOnCloseListener(ReachActivity.this);
+            if (actionBar.getTitle() != null && !actionBar.getTitle().equals("My Library")) {
 
-                if (actionBar.getTitle() != null && !actionBar.getTitle().equals("My Library")) {
-
-                    actionBarTitle = (String) actionBar.getTitle();
-                    actionBarSubtitle = (String) actionBar.getSubtitle();
-                    actionBarIcon = mToolbar.getLogo();
-                    actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-                    actionBar.setTitle("My Library");
-                    actionBar.setSubtitle("");
-                    actionBar.setIcon(0);
-                }
-            }
+                actionBarTitle = (String) actionBar.getTitle();
+                actionBarSubtitle = (String) actionBar.getSubtitle();
+                actionBarIcon = mToolbar.getLogo();
+                actionBar.setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+                actionBar.setTitle("My Library");
+                actionBar.setSubtitle("");
+                actionBar.setIcon(0);
+            }*/
 
             if (fragmentManager.getBackStackEntryCount() == 0)
                 toggleDrawer(true);
@@ -371,36 +339,6 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        if (isFinishing())
-            return super.onOptionsItemSelected(item);
-        final int id = item.getItemId();
-        try {
-            switch (id) {
-
-                case android.R.id.home: {
-
-                    if (slidingUpPanelLayout != null &&
-                            slidingUpPanelLayout.getPanelState() == PanelState.EXPANDED) {
-                        onBackPressed();
-                    } else {
-                        if (fragmentManager.getBackStackEntryCount() > 0)
-                            fragmentManager.popBackStack();
-                        else if ((fragmentManager.getBackStackEntryCount() == 0) && (!mDrawerLayout.isDrawerOpen(Gravity.LEFT))) {
-                            mDrawerLayout.openDrawer(Gravity.LEFT);
-                        }
-                    }
-                    return true;
-                }
-            }
-        } catch (IllegalStateException ignored) {
-            finish();
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     protected void onPause() {
 
         super.onPause();
@@ -459,7 +397,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     private void addNotificationDrawer() {
 
-        viewPager = (CustomViewPager) findViewById(R.id.viewPager);
+        viewPager = (CustomViewPager) findViewById(R.id.notifViewPager);
         viewPager.setAdapter(new ViewPagerReusable(
                 fragmentManager,
                 new String[]{"Requests", "Notifications"},
@@ -477,10 +415,20 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (mDrawerLayout == null)
             return;
-        if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
-            mDrawerLayout.openDrawer(Gravity.RIGHT);
+        if (!mDrawerLayout.isDrawerOpen(GravityCompat.END))
+            mDrawerLayout.openDrawer(GravityCompat.END);
         else
-            mDrawerLayout.closeDrawer(Gravity.RIGHT);
+            mDrawerLayout.closeDrawer(GravityCompat.END);
+    }
+
+    @Override
+    public void onOpenNavigationDrawer() {
+        if (mDrawerLayout == null)
+            return;
+        if (!mDrawerLayout.isDrawerOpen(GravityCompat.START))
+            mDrawerLayout.openDrawer(GravityCompat.START);
+        else
+            mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
     @Override
@@ -500,10 +448,7 @@ public class ReachActivity extends AppCompatActivity implements
 //        }
 
         try {
-            final Optional<ActionBar> optional = Optional.fromNullable(getSupportActionBar());
-            if (optional.isPresent())
-                optional.get().show();
-            containerFrame.setPadding(0, topPadding, 0, 0);
+            //containerFrame.setPadding(0, topPadding, 0, 0);
             //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
@@ -566,7 +511,7 @@ public class ReachActivity extends AppCompatActivity implements
             //load fragment
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
+                    .replace(R.id.container, MyReachFragment.newInstance(), "my_reach").commit();
             //load notification drawer
             addNotificationDrawer();
             //load adapters
@@ -624,16 +569,6 @@ public class ReachActivity extends AppCompatActivity implements
                     .addToBackStack(null).replace(R.id.container, PushSongsFragment.newInstance(), "push_library").commit();
         } catch (IllegalStateException ignored) {
             finish();
-        }
-    }
-
-    @Override
-    public void setUpDrawer() {
-        final ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_drawer);
-            actionBar.setHomeButtonEnabled(true);
         }
     }
 
@@ -756,15 +691,10 @@ public class ReachActivity extends AppCompatActivity implements
             if (searchView != null)
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                         .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-            final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
-            if (actionBar.isPresent())
-                actionBar.get().setHomeAsUpIndicator(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
             if (mDrawerLayout != null)
                 mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.LEFT);
-        } else {
-            setUpDrawer();
+        } else
             toggleDrawer(false);
-        }
     }
 
     @Override
@@ -851,15 +781,16 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-        final Optional<ActionBar> actionBar = Optional.fromNullable(getSupportActionBar());
-        if (actionBar.isPresent()) {
-            actionBar.get().setDisplayShowHomeEnabled(false);
-            actionBar.get().hide();
-        }
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
+        toolbar.setTitle("My Library");
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        toolbar.inflateMenu(R.menu.player_menu);
+        searchView = (SearchView) toolbar.getMenu().findItem(R.id.player_search).getActionView();
+        searchView.setOnQueryTextListener(ReachActivity.this);
+        searchView.setOnCloseListener(ReachActivity.this);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         searchView = new SearchView(this);
@@ -867,9 +798,9 @@ public class ReachActivity extends AppCompatActivity implements
 
         //small
         toggleSliding(false);
-        containerFrame = (FrameLayout) findViewById(R.id.containerFrame);
-        topPadding = containerFrame.getPaddingTop();
-        containerFrame.setPadding(0, 0, 0, 0);
+//        containerFrame = (FrameLayout) findViewById(R.id.containerFrame);
+//        topPadding = containerFrame.getPaddingTop();
+//        containerFrame.setPadding(0, 0, 0, 0);
         //navigation-drawer
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, Gravity.LEFT);
@@ -950,10 +881,8 @@ public class ReachActivity extends AppCompatActivity implements
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
 
         //initialize bug tracking
-        if (!StaticData.debugMode) {
-            Crittercism.initialize(this, "552eac3c8172e25e67906922");
-            Crittercism.setUsername(userName + " " + phoneNumber);
-        }
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+//        Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
@@ -972,17 +901,17 @@ public class ReachActivity extends AppCompatActivity implements
             toggleSliding(false);
         } else if (TextUtils.isEmpty(userName)) {
 
-            startAccountCreation(Optional.<OldUserContainerNew>absent());
+            startAccountCreation(Optional.absent());
             toggleSliding(false);
         } else {
 
             try {
 
-                containerFrame.setPadding(0, topPadding, 0, 0);
+                //containerFrame.setPadding(0, topPadding, 0, 0);
                 slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
                 fragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                        .replace(R.id.container, ContactsListFragment.newInstance(), "my_reach").commit();
+                        .replace(R.id.container, MyReachFragment.newInstance(), "my_reach").commit();
                 //load notification drawer
                 addNotificationDrawer();
                 //load adapters
@@ -1294,8 +1223,12 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
-        final String[] splitter = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.contentValuesCreator(reachDatabase)).toString().split("/");
+        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
+                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
+        if (uri == null)
+            return; //TODO track this should never happen
+
+        final String[] splitter = uri.toString().split("/");
         if (splitter.length == 0)
             return;
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
@@ -1308,14 +1241,12 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
 
-        if (!StaticData.debugMode) {
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Transaction - Add SongBrainz")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                    .setValue(1)
-                    .build());
-        }
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                .setValue(1)
+                .build());
     }
 
     private enum LocalUtils {
@@ -1347,12 +1278,12 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener nextClick = v -> ProcessManager.submitMusicRequest(
                 v.getContext(),
-                Optional.<String>absent(),
+                Optional.absent(),
                 MusicHandler.ACTION_NEXT);
 
         public static final View.OnClickListener previousClick = v -> ProcessManager.submitMusicRequest(
                 v.getContext(),
-                Optional.<String>absent(),
+                Optional.absent(),
                 MusicHandler.ACTION_PREVIOUS);
 
         public static final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
@@ -1382,7 +1313,7 @@ public class ReachActivity extends AppCompatActivity implements
                     MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.addLike(
                             currentPlaying.getSenderId(),
                             serverId,
-                            currentPlaying.getDisplayName()).execute(), Optional.<Predicate<Void>>absent());
+                            currentPlaying.getDisplayName()).execute(), Optional.absent());
                     currentPlaying.setIsLiked(true);
                     ((ImageView) view).setImageResource(R.drawable.like_pink);
                 } else {
@@ -1403,7 +1334,7 @@ public class ReachActivity extends AppCompatActivity implements
             else
                 ProcessManager.submitMusicRequest(
                         v.getContext(),
-                        Optional.<String>absent(),
+                        Optional.absent(),
                         MusicHandler.ACTION_PLAY_PAUSE);
         };
 
@@ -1473,7 +1404,7 @@ public class ReachActivity extends AppCompatActivity implements
                 if (serverId == 0)
                     return;
 
-                final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getGcmId(serverId).execute(), Optional.<Predicate<MyString>>absent()).orNull();
+                final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getGcmId(serverId).execute(), Optional.absent()).orNull();
 
                 //check returned gcm
                 final String gcmId;
@@ -1580,6 +1511,7 @@ public class ReachActivity extends AppCompatActivity implements
                     return reader.nextInt();
                 } catch (Exception ignored) {
                 } finally {
+
                     if (reader != null) {
                         reader.close();
                     }

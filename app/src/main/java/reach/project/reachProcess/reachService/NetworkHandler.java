@@ -17,7 +17,6 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -45,16 +44,16 @@ import java.util.concurrent.ThreadPoolExecutor;
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.Friend;
 import reach.project.core.StaticData;
-import reach.project.uploadDownload.ReachDatabaseProvider;
-import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.songs.ReachSongHelper;
+import reach.project.music.songs.ReachSongProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
-import reach.project.utils.MiscUtils;
 import reach.project.uploadDownload.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.utils.MiscUtils;
 
 /**
  * Created by Dexter on 18-05-2015.
@@ -692,7 +691,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                         database.getReceiverId(),
                         database.getSenderId(),
                         database.getDisplayName(),
-                        database.getLength()).execute(), Optional.<Predicate<Void>>absent());
+                        database.getLength()).execute(), Optional.absent());
 
                 return; //download complete
             }

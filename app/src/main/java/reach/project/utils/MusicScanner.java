@@ -19,7 +19,6 @@ import android.util.Pair;
 import android.util.SparseBooleanArray;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.squareup.wire.Wire;
@@ -626,7 +625,9 @@ public class MusicScanner extends IntentService {
          */
         final ImmutableList<Playlist> myPlayLists = myPlayListsBuilder.build();
         final ImmutableList<Song> myLibrary = myLibraryBuilder.build();
-        final Iterable<Song> combinedView = Iterables.unmodifiableIterable(Iterables.concat(myLibrary, LocalUtils.getDownloadedSongs(resolver)));
+        final Iterable<Song> combinedView = Iterables.unmodifiableIterable(Iterables.concat(
+                myLibrary,  //myLibrary songs
+                LocalUtils.getDownloadedSongs(resolver))); //downloaded songs
 
         final byte[] music = new MusicList.Builder()
                 .clientId(serverId)
@@ -770,6 +771,7 @@ public class MusicScanner extends IntentService {
 
             int visibleSongs = 0;
             for (Song song : songs) {
+
                 visibilityMap.put(song.songId + "", song.visibility);
                 if (song.visibility)
                     visibleSongs++;
@@ -785,7 +787,7 @@ public class MusicScanner extends IntentService {
 
                 StaticData.musicVisibility.insert(finalVisibleSongs, musicData).execute();
                 return null;
-            }, Optional.<Predicate<Void>>absent());
+            }, Optional.absent());
         }
     }
 }

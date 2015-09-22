@@ -17,18 +17,15 @@ import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.friends.ContactsListFragment;
+import reach.project.coreViews.MyReachFragment;
 import reach.project.notificationCentre.notifications.BecameFriends;
 import reach.project.notificationCentre.notifications.Like;
 import reach.project.notificationCentre.notifications.NotificationBaseLocal;
@@ -117,7 +114,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
-        ContactsListFragment.checkNewNotifications();
+        MyReachFragment.checkNewNotifications();
     }
 
     @Override
@@ -244,14 +241,14 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                                 push.getNotificationId(),
                                 serverID,
                                 push.getHostId(),
-                                push.getSize()).execute(), Optional.<Predicate<Void>>absent());
+                                push.getSize()).execute(), Optional.absent());
                         accepted.put(notificationBaseLocal.getNotificationId(), true);
 
                     });
 
                     viewHolder.reject.setOnClickListener(v -> {
 
-                        MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(push.getNotificationId(), serverID).execute(), Optional.<Predicate<Void>>absent());
+                        MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(push.getNotificationId(), serverID).execute(), Optional.absent());
                         remove(push);
                         accepted.delete(notificationBaseLocal.getNotificationId());
                     });

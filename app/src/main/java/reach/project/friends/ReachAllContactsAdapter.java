@@ -132,8 +132,6 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
                     if (((List) filterResults.values).size() == 0)
                         onEmptyContacts();
-                    else
-                        onNotEmptyContacts();
 
                     filteredData.clear();
                     for (Object contact : (List) filterResults.values) {
@@ -148,6 +146,4 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
     }
 
     protected abstract void onEmptyContacts();
-
-    protected abstract void onNotEmptyContacts();
 }

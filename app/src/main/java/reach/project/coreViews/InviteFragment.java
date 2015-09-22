@@ -6,8 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +24,6 @@ import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
-import reach.project.core.StaticData;
 import reach.project.utils.SharedPrefUtils;
 
 public class InviteFragment extends Fragment {
@@ -93,9 +91,11 @@ public class InviteFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_invite, container, false);
-        final ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
-        if(actionBar != null)
-            actionBar.setTitle("Invite Friends");
+
+        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.inviteToolbar);
+        mToolbar.setTitle("Invite Friends");
+        mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+
         final ListView inviteList = (ListView) rootView.findViewById(R.id.listView);
         final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};
@@ -104,14 +104,12 @@ public class InviteFragment extends Fragment {
         inviteList.setAdapter(new InviteListAdapter(getActivity(),R.layout.invite_list_item,inviteOptions));
         inviteList.setOnItemClickListener((parent, view, position, id) -> {
 
-            if (!StaticData.debugMode) {
-                ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("Invite Page")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                        .setLabel(inviteOptions[position])
-                        .setValue(1)
-                        .build());
-            }
+            ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Invite Page")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setLabel(inviteOptions[position])
+                    .setValue(1)
+                    .build());
             final Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_TEXT,

@@ -43,9 +43,10 @@ public class PromoCodeDialog extends DialogFragment {
     private ProgressBar promoLoading;
 
     private Activity activity;
+
     public static PromoCodeDialog newInstance() {
         PromoCodeDialog fragment;
-        if(reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new PromoCodeDialog());
         return fragment;
     }
@@ -80,10 +81,11 @@ public class PromoCodeDialog extends DialogFragment {
     private final class VerifyPromoCode extends AsyncTask<String, Void, String> {
 
         private String pCode;
+
         @Override
         protected String doInBackground(final String... params) {
 
-            if(TextUtils.isEmpty(params[0]))
+            if (TextUtils.isEmpty(params[0]))
                 return null;
 
             pCode = params[0];
@@ -110,7 +112,7 @@ public class PromoCodeDialog extends DialogFragment {
         }
 
         @Override
-        protected void onPostExecute(String  result) {
+        protected void onPostExecute(String result) {
 
             super.onPostExecute(result);
 
@@ -134,21 +136,20 @@ public class PromoCodeDialog extends DialogFragment {
                     activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS),
                     pCode);
 
-            if (!StaticData.debugMode) {
-                Cursor frndCursor = activity.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
-                        ReachFriendsHelper.projection,null,null,null);
-                int frndCount = 0;
-                if (frndCursor!=null) {
-                    frndCount = frndCursor.getCount();
-                    frndCursor.close();
-                }
-                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("Promo Code")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                        .setLabel("Code - " + pCode + ", Friend Count - " + frndCount)
-                        .setValue(1)
-                        .build());
+            final Cursor friendCursor = activity.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
+                    ReachFriendsHelper.projection, null, null, null);
+            int friendCount = 0;
+            if (friendCursor != null) {
+                friendCount = friendCursor.getCount();
+                friendCursor.close();
             }
+
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Promo Code")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setLabel("Code - " + pCode + ", Friend Count - " + friendCount)
+                    .setValue(1)
+                    .build());
 
             Toast.makeText(activity, "Promo code applied", Toast.LENGTH_SHORT).show();
             dismiss();

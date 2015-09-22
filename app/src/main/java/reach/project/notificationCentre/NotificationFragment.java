@@ -16,7 +16,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -30,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.notifications.BecameFriends;
 import reach.project.notificationCentre.notifications.Like;
@@ -37,7 +37,6 @@ import reach.project.notificationCentre.notifications.NotificationBaseLocal;
 import reach.project.notificationCentre.notifications.Push;
 import reach.project.notificationCentre.notifications.PushAccepted;
 import reach.project.notificationCentre.notifications.Types;
-import reach.project.friends.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 
@@ -76,7 +75,7 @@ public class NotificationFragment extends Fragment {
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_notification, container, false);
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
@@ -153,7 +152,7 @@ public class NotificationFragment extends Fragment {
                     if (cursor == null || !cursor.moveToFirst()) {
 
                         MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(),
-                                Optional.<Predicate<Void>>absent());
+                                Optional.absent());
 
                         if (cursor != null)
                             cursor.close();
@@ -172,7 +171,7 @@ public class NotificationFragment extends Fragment {
 
             mListener.closeDrawers();
             adapter.remove(notificationBaseLocal);
-            MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.<Predicate<Void>>absent());
+            MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.absent());
         }
     };
 

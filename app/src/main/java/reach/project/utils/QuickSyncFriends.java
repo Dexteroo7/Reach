@@ -10,7 +10,6 @@ import android.support.v4.util.LongSparseArray;
 import android.util.Log;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
 import java.lang.ref.WeakReference;
@@ -99,7 +98,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final HashSet<Friend> newFriends = new HashSet<>();
         final HashSet<Long> toDelete = new HashSet<>();
         Log.i("Ayush", "Prepared callData quickSync" + ids.size() + " " + hashes.size());
-        final QuickSync quickSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute(), Optional.<Predicate<QuickSync>>absent()).orNull();
+        final QuickSync quickSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute(), Optional.absent()).orNull();
         if (quickSync != null) {
 
             Log.i("Ayush", "Found quick sync");

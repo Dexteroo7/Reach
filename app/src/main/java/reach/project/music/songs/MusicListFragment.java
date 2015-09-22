@@ -11,18 +11,16 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.lang.ref.WeakReference;
@@ -42,7 +40,7 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 public class MusicListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
         SearchView.OnQueryTextListener, SearchView.OnCloseListener {
 
-    private SearchView searchView;
+    private static SearchView searchView;
 
     private SuperInterface mListener;
     private ReachMusicAdapter reachMusicAdapter = null;
@@ -50,6 +48,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     private String whereClause;
     private String[] whereArgs;
     private long userId;
+    private Toolbar toolbar;
 
     private final AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
 
@@ -115,8 +114,10 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     private static WeakReference<MusicListFragment> pagerReference;
     private static WeakReference<MusicListFragment> typeReference;
 
-    public static MusicListFragment newPagerInstance(long id, int type) {
+    public static MusicListFragment newPagerInstance(long id, int type, SearchView sView) {
 
+        if (type == 0)
+            searchView = sView;
         final Bundle args;
         MusicListFragment fragment;
         if (pagerReference == null || (fragment = pagerReference.get()) == null) {
@@ -155,39 +156,35 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
-    public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
-        menu.clear();
-        if (getArguments().getInt("type") == 0) {
-            inflater.inflate(R.menu.search_menu, menu);
-            searchView = (SearchView) menu.findItem(R.id.search_button).getActionView();
-            searchView.setOnQueryTextListener(this);
-            searchView.setOnCloseListener(this);
-        } else
-            inflater.inflate(R.menu.menu, menu);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         final ListView musicList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        toolbar = ((Toolbar)rootView.findViewById(R.id.listToolbar));
+        toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
-        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         final int type = getArguments().getInt("type");
-
-        if (actionBar != null) {
-            switch (type) {
-                case 1:
-                    actionBar.setTitle(getArguments().getString("albumName"));
-                    break;
-                case 2:
-                    actionBar.setTitle(getArguments().getString("artistName"));
-                    break;
-                case 3:
-                    actionBar.setTitle(getArguments().getString("playListName"));
-                    break;
-            }
+        if (type != 0) {
+            toolbar.inflateMenu(R.menu.search_menu);
+            searchView = (SearchView) toolbar.getMenu().findItem(R.id.search_button).getActionView();
+        }
+        searchView.setOnQueryTextListener(this);
+        searchView.setOnCloseListener(this);
+        switch (type) {
+            case 0:
+                rootView.findViewById(R.id.musicListShadow).setVisibility(View.INVISIBLE);
+                ((LinearLayout) rootView).removeViewAt(0);
+                break;
+            case 1:
+                toolbar.setTitle(getArguments().getString("albumName"));
+                break;
+            case 2:
+                toolbar.setTitle(getArguments().getString("artistName"));
+                break;
+            case 3:
+                toolbar.setTitle(getArguments().getString("playListName"));
+                break;
         }
 
         userId = getArguments().getLong("id");
@@ -268,9 +265,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     public void onDestroyView() {
 
         if (getArguments().getInt("type") != 0) {
-            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-            if (actionBar != null)
-                actionBar.setSubtitle("");
+            toolbar.setSubtitle("");
         }
         getLoaderManager().destroyLoader(StaticData.SONGS_LOADER);
         if (reachMusicAdapter != null && reachMusicAdapter.getCursor() != null && !reachMusicAdapter.getCursor().isClosed())
@@ -285,14 +280,13 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                     .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
         }
 
-        searchView = null;
+        //searchView = null;
         super.onDestroyView();
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        setHasOptionsMenu(true);
         try {
             mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {

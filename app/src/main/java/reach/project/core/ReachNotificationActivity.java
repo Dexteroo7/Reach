@@ -13,10 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.squareup.picasso.Picasso;
-
-import java.io.IOException;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
@@ -24,7 +21,6 @@ import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.viewHelpers.CircleTransform;
 
 public class ReachNotificationActivity extends Activity {
@@ -66,20 +62,12 @@ public class ReachNotificationActivity extends Activity {
             final long clientId = Long.parseLong(params[0]);
             final long hostId = Long.parseLong(params[1]);
             final String message = params[2];
-            final MyString myString = MiscUtils.autoRetry(new DoWork<MyString>() {
-                @Override
-                public MyString doWork() throws IOException {
+            final MyString myString = MiscUtils.autoRetry(() -> {
 
-                    StaticData.notificationApi.addBecameFriends(true, clientId, hostId).execute();
+                StaticData.notificationApi.addBecameFriends(true, clientId, hostId).execute();
 
-                    return StaticData.messagingEndpoint.handleReply(clientId, hostId, message).execute();
-                }
-            }, Optional.<Predicate<MyString>>of(new Predicate<MyString>() {
-                @Override
-                public boolean apply(MyString input) {
-                    return (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false"));
-                }
-            })).orNull();
+                return StaticData.messagingEndpoint.handleReply(clientId, hostId, message).execute();
+            }, Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
             if(myString == null || TextUtils.isEmpty(myString.getString()) || myString.getString().equals("false"))
                 return false;
             else if(message.equals("PERMISSION_GRANTED") && getContentResolver() != null) {

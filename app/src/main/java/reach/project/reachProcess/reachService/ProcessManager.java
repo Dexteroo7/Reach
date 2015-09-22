@@ -527,14 +527,12 @@ public class ProcessManager extends Service implements
         /**
          * GA stuff
          */
-        if (!StaticData.debugMode) {
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Play song")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("SongBrainz - " + musicData.getDisplayName())
-                    .setValue(1)
-                    .build());
-        }
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Play song")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setLabel("SongBrainz - " + musicData.getDisplayName())
+                .setValue(1)
+                .build());
 
         switch (notificationState) {
 
@@ -1005,16 +1003,14 @@ public class ProcessManager extends Service implements
     @Override
     public void errorReport(String songName, String missType) {
 
-//        pushNextSong(nextSong(Optional.<MusicData>absent(), false));
+//        pushNextSong(nextSong(Optional.absent(), false));
         sendMessage(this, Optional.absent(), REPLY_ERROR);
-        if (!StaticData.debugMode) {
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory(missType)
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
-                    .setLabel("SongBrainz - " + songName)
-                    .setValue(1)
-                    .build());
-        }
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory(missType)
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setLabel("SongBrainz - " + songName)
+                .setValue(1)
+                .build());
     }
 
     @Override

@@ -36,15 +36,21 @@ import reach.project.uploadDownload.ReachDatabase;
 /**
  * Created by dexter on 21/6/14.
  */
+
 public class GcmIntentService extends IntentService {
 
     public GcmIntentService() {
+        // Setting project ID
         super("able-door-616");
     }
 
     private static long lastPong = 0;
     private static final int NOTIFICATION_ID = 314134;
 
+    /**
+     * Handle GCM receipt intent
+     * @param intent
+     */
     @Override
     protected void onHandleIntent(final Intent intent) {
 
@@ -186,7 +192,7 @@ public class GcmIntentService extends IntentService {
                 viewIntent.putExtra("openPlayer", true);
             }
             else {
-                viewIntent = new Intent(this, PushActivity.class);
+                viewIntent = new Intent(this, DialogActivity.class);
                 viewIntent.putExtra("type", 3);
                 viewIntent.putExtra("manual_title", splitter[2].trim());
                 viewIntent.putExtra("manual_text", splitter[3].trim());
@@ -209,66 +215,6 @@ public class GcmIntentService extends IntentService {
                             .setWhen(System.currentTimeMillis());
             notificationManager.notify(message.hashCode(), notificationBuilder.build());
         }
-//        /**
-//         * Service push request
-//         */
-//        else if (message.startsWith("PUSH")) {
-//
-//            final int notification_id = message.hashCode();
-//            final Intent viewIntent = new Intent(this, PushActivity.class);
-//            viewIntent.putExtra("type", 0);
-//            viewIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//
-//            final String payLoad = message.substring(4);
-//
-//            final String unCompressed;
-//            try {
-//                unCompressed = StringCompress.decompress(Base64.decode(payLoad, Base64.DEFAULT));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                GcmBroadcastReceiver.completeWakefulIntent(intent);
-//                return;
-//            }
-//            final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
-//            viewIntent.putExtra("data", unCompressed);
-//            viewIntent.putExtra("song_count", pushContainer.getSongCount());
-//            viewIntent.putExtra("user_name", pushContainer.getUserName());
-//            viewIntent.putExtra("receiver_id", pushContainer.getReceiverId());
-//            viewIntent.putExtra("sender_id", pushContainer.getSenderId());
-//            viewIntent.putExtra("user_image", pushContainer.getUserImage());
-//            viewIntent.putExtra("first_song", pushContainer.getFirstSongName());
-//            viewIntent.putExtra("hash", payLoad.hashCode()); //hash of compressed String
-//            viewIntent.putExtra("custom_message", pushContainer.getCustomMessage());
-//
-//            String cMsg = pushContainer.getCustomMessage();
-//            String count;
-//            if (cMsg != null && cMsg.length() > 0)
-//                count = cMsg + ". Start listening to ";
-//            else
-//                count = "wants you to listen to ";
-//
-//            count = count + pushContainer.getFirstSongName();
-//
-//            if (pushContainer.getSongCount() == 2)
-//                count = count + " and 1 other song";
-//            else if (pushContainer.getSongCount() > 2)
-//                count = count + " and " + (pushContainer.getSongCount() - 1) + " other songs";
-//
-//            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, notification_id, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//            final NotificationCompat.Builder notificationBuilder =
-//                    new NotificationCompat.Builder(this)
-//                            .setAutoCancel(true)
-//                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-//                            .setSmallIcon(R.drawable.ic_icon_notif)
-//                            .setContentTitle(pushContainer.getUserName())
-//                            .setTicker(pushContainer.getUserName() + " " + count)
-//                            .setContentText(count)
-//                            .setContentIntent(viewPendingIntent)
-//                            .setPriority(NotificationCompat.PRIORITY_MAX)
-//                            .setWhen(System.currentTimeMillis());
-//            notificationManager.notify(notification_id, notificationBuilder.build());
-//        }
-
         /**
          * Service PONG
          */

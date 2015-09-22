@@ -6,7 +6,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
 import java.lang.ref.WeakReference;
@@ -18,8 +17,8 @@ import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsProvider;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 
 /**
  * Created by dexter on 19/07/15.
@@ -52,7 +51,7 @@ public class ForceSyncFriends implements Runnable {
                     if (collection != null && collection.size() > 0)
                         return collection.getItems();
                     return null;
-                }, Optional.<Predicate<List<Friend>>>absent()).orNull();
+                }, Optional.absent()).orNull();
 
         //Now we collect the phoneNumbers on device
         final HashSet<String> numbers = new HashSet<>();

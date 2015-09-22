@@ -21,7 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.viewpagerindicator.CirclePageIndicator;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
@@ -149,7 +148,7 @@ public class NumberVerification extends Fragment {
             protected final Pair<OldUserContainerNew, String> doInBackground (final String... params) {
 
                 final OldUserContainerNew container = MiscUtils.autoRetry(() ->
-                        StaticData.userEndpoint.isAccountPresentNew(params[0]).execute(), Optional.<Predicate<OldUserContainerNew>>absent()).orNull();
+                        StaticData.userEndpoint.isAccountPresentNew(params[0]).execute(), Optional.absent()).orNull();
 
                 //start sync
                 ContactsListFragment.synchronizeOnce.set(true);

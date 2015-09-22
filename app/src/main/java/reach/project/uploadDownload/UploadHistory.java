@@ -10,8 +10,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +21,6 @@ import android.widget.TextView;
 
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -117,9 +115,11 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        final ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        if (actionBar != null)
-            actionBar.setTitle("Upload History");
+
+        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.listToolbar);
+        mToolbar.setTitle("Upload History");
+        mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+
         uploadList = (ListView) rootView.findViewById(R.id.listView);
 
         long myId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
@@ -182,7 +182,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         protected List<CompletedOperation> doInBackground(final Long... params) {
 
             final CompletedOperationCollection dataToReturn = MiscUtils.autoRetry(() ->
-                    StaticData.userEndpoint.getCompletedOperations(params[0]).execute(), Optional.<Predicate<CompletedOperationCollection>>absent()).orNull();
+                    StaticData.userEndpoint.getCompletedOperations(params[0]).execute(), Optional.absent()).orNull();
             final List<CompletedOperation> list;
             if (dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty())
                 return null;

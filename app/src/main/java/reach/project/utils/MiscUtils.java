@@ -491,7 +491,7 @@ public enum MiscUtils {
         return MiscUtils.autoRetry(() -> {
             Log.i("Downloader", "Sending message " + message);
             return StaticData.messagingEndpoint.sendMessage(message, hostId, clientId).execute();
-        }, Optional.<Predicate<MyBoolean>>of(input -> input == null)).orNull();
+        }, Optional.of(input -> input == null)).orNull();
     }
 
 //    /**
@@ -670,7 +670,7 @@ public enum MiscUtils {
                 return "QUIT";
             return GoogleCloudMessaging.getInstance(context)
                     .register("528178870551");
-        }, Optional.<Predicate<String>>of(TextUtils::isEmpty)).orNull();
+        }, Optional.of(TextUtils::isEmpty)).orNull();
 
         if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
             return false;
@@ -681,7 +681,7 @@ public enum MiscUtils {
             StaticData.userEndpoint.setGCMId(id, regId).execute();
             Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
             return true;
-        }, Optional.<Predicate<Boolean>>absent()).orNull();
+        }, Optional.absent()).orNull();
         //set locally
         return !(result == null || !result);
     }
