@@ -1,6 +1,5 @@
 package reach.project.music.songs;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -180,7 +179,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         if (getArguments().getBoolean("first"))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");
-        serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+        serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE));
         reachMusicAdapter = new ReachMusicAdapter(getActivity(), R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST);
         selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
         selectionArguments = new String[]{serverId+""};
@@ -311,12 +310,12 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnDoneClickListener");
         }
     }

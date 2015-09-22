@@ -1,6 +1,5 @@
 package reach.project.music.songs;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -179,7 +178,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
-        serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+        serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE));
         if (pushSongAdapter == null)
             pushSongAdapter = new PushSongAdapter(getActivity(), R.layout.pushlibrary_item, null, 0);
         selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_VISIBILITY + " = ?";
@@ -239,12 +238,12 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnNextListener");
         }
     }

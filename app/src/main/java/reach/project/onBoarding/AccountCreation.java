@@ -103,7 +103,7 @@ public class AccountCreation extends Fragment {
         userName.requestFocus();
 
         final FragmentActivity activity = getActivity();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final Bundle arguments;
         final String[] oldData;
         if ((arguments = getArguments()) != null && (oldData = arguments.getStringArray("oldData")) != null && oldData.length == 2) {
@@ -245,7 +245,7 @@ public class AccountCreation extends Fragment {
 
             final String gcmId;
             final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
-                    (reference, (UseContext<GoogleCloudMessaging, Activity>) GoogleCloudMessaging::getInstance).orNull();
+                    (reference, (UseContext<GoogleCloudMessaging, Context>) GoogleCloudMessaging::getInstance).orNull();
 
             if (messagingInstance == null)
                 gcmId = null;
@@ -306,7 +306,7 @@ public class AccountCreation extends Fragment {
             ReachActivity.serverId = user.getId();
             MiscUtils.useContextFromFragment(reference, activity -> {
 
-                SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS), user);
+                SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
                 final Intent intent = new Intent(activity, MusicScanner.class);
                 intent.putExtra("messenger", messenger);
                 intent.putExtra("first", true);
@@ -402,12 +402,12 @@ public class AccountCreation extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }
@@ -462,7 +462,7 @@ public class AccountCreation extends Fragment {
         protected void onPreExecute() {
 
             super.onPreExecute();
-            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Activity>) ProgressDialog::new).orNull();
+            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Context>) ProgressDialog::new).orNull();
             if (dialog != null) {
                 dialog.setCancelable(false);
                 dialog.show();

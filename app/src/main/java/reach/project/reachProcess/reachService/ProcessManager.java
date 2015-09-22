@@ -523,13 +523,13 @@ public class ProcessManager extends Service implements
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
         final String toSend = new Gson().toJson(musicData, MusicData.class);
-        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS), toSend);
+        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE), toSend);
         /**
          * GA stuff
          */
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Play song")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                 .setLabel("SongBrainz - " + musicData.getDisplayName())
                 .setValue(1)
                 .build());
@@ -582,7 +582,7 @@ public class ProcessManager extends Service implements
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Download Fail")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                 .setLabel("SongBrainz - " + songName)
                 .setLabel(reason)
                 .setValue(1)
@@ -1007,7 +1007,7 @@ public class ProcessManager extends Service implements
         sendMessage(this, Optional.absent(), REPLY_ERROR);
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory(missType)
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                 .setLabel("SongBrainz - " + songName)
                 .setValue(1)
                 .build());
@@ -1036,7 +1036,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public SharedPreferences getSharedPreferences() {
-        return getSharedPreferences("Reach", MODE_MULTI_PROCESS);
+        return getSharedPreferences("Reach", MODE_PRIVATE);
     }
 
     public static InputStream getSERStream(String name) throws IOException {

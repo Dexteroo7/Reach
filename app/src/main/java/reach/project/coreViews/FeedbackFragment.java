@@ -48,7 +48,7 @@ public class FeedbackFragment extends Fragment {
         rootView.findViewById(R.id.send_feedback).setOnClickListener(v -> {
 
             final FeedBack feedBack = new FeedBack();
-            feedBack.setClientId(SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+            feedBack.setClientId(SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)));
             feedBack.setReply1("");
             feedBack.setReply2("");
             feedBack.setReply3(fb.getText().toString());

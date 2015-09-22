@@ -19,19 +19,20 @@ import com.squareup.picasso.Picasso;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 public class ReachContactsAdapter extends ResourceCursorAdapter {
 
-    private final int grey;
-    private final int color;
-    private final int layoutParameter = MiscUtils.dpToPx(20);
-    private final CircleTransform transform = new CircleTransform();
+//    private final int grey;
+//    private final int color;
+//    private final int layoutParameter = MiscUtils.dpToPx(20);
+//    private final CircleTransform transform = new CircleTransform();
+//    private final int[] colors;
 
     public ReachContactsAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
-        this.grey = context.getResources().getColor(R.color.darkgrey);
-        this.color = context.getResources().getColor(R.color.reach_color);
+//        this.grey = ContextCompat.getColor(context, R.color.darkgrey);
+//        this.color = ContextCompat.getColor(context, R.color.reach_color);
+//        this.colors = context.getResources().getIntArray(R.array.androidcolors);
     }
 
     private final class ViewHolder {
@@ -75,10 +76,10 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
 
 //        final long serverId = cursor.getLong(0);
-        final String phoneNumber = cursor.getString(1);
+//        final String phoneNumber = cursor.getString(1);
         final String userName = cursor.getString(2);
         final String imageId = cursor.getString(3);
-        final short networkType = cursor.getShort(4);
+//        final short networkType = cursor.getShort(4);
         final short status = cursor.getShort(5);
         final int numberOfSongs = cursor.getShort(6);
         final String newSongs = cursor.getString(7);
@@ -88,7 +89,6 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         //first invalidate
         viewHolder.profilePhotoList.setImageBitmap(null);
-        int[] colors = context.getResources().getIntArray(R.array.androidcolors);
         if (!TextUtils.isEmpty(imageId) &&
                 !imageId.equals("hello_world")) {
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +

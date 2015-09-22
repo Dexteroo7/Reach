@@ -508,7 +508,7 @@ public class MusicScanner extends IntentService {
 
         messenger = intent.getParcelableExtra("messenger");
         Log.i("Ayush", "Starting Scan");
-        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
+        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
         resolver = getContentResolver();
 

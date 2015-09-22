@@ -21,6 +21,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
@@ -120,7 +121,7 @@ public class UserMusicLibrary extends Fragment {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             FrameLayout myReachFrame = (FrameLayout) rootView.findViewById(R.id.libraryFrame);
             CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) myReachFrame.getLayoutParams();
-            layoutParams.setMargins(0,0,0,0);
+            layoutParams.setMargins(0, 0, 0, 0);
             myReachFrame.setLayoutParams(layoutParams);
         }
 
@@ -145,14 +146,14 @@ public class UserMusicLibrary extends Fragment {
         final int numberOfSongs = cursor.getInt(2);
         final String imageId = cursor.getString(3);
 
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         if (phoneNumber.equals("8860872102") && !SharedPrefUtils.getSecondIntroSeen(sharedPreferences)) {
 
             SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
             AsyncTask.SERIAL_EXECUTOR.execute(devikaSendMeSomeLove);
         }
-        toolbar = ((Toolbar)rootView.findViewById(R.id.libraryToolbar));
+        toolbar = ((Toolbar) rootView.findViewById(R.id.libraryToolbar));
         toolbar.setTitle(" " + userName);
         toolbar.setSubtitle(" " + numberOfSongs + " Songs");
         toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
@@ -264,8 +265,8 @@ public class UserMusicLibrary extends Fragment {
         public void run() {
 
             //fetch Music
-            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Activity>)
-                    (Activity context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
+            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Context>)
+                    (Context context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
 
             //do we check for visibility ?
             final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit
@@ -370,7 +371,7 @@ public class UserMusicLibrary extends Fragment {
                             .width(margin)
                             .height(margin)
                             .endConfig()
-                            .buildRound(MiscUtils.generateInitials(name), fragment.getResources().getColor(R.color.reach_grey)));
+                            .buildRound(MiscUtils.generateInitials(name), ContextCompat.getColor(fragment.getContext(), R.color.reach_grey)));
                 else
                     toolbar.setLogo(new BitmapDrawable(fragment.getResources(), bitmap));
 

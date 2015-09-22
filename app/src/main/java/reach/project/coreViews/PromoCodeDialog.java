@@ -62,7 +62,7 @@ public class PromoCodeDialog extends DialogFragment {
         lowerPart = (RelativeLayout) rootView.findViewById(R.id.lowerContainer);
         promoLoading = (ProgressBar) rootView.findViewById(R.id.promoLoading);
 
-        promoCode.setText(SharedPrefUtils.getPromoCode(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)));
+        promoCode.setText(SharedPrefUtils.getPromoCode(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE)));
         rootView.findViewById(R.id.exit).setOnClickListener(exitListener);
         rootView.findViewById(R.id.done).setOnClickListener(v -> {
 
@@ -133,7 +133,7 @@ public class PromoCodeDialog extends DialogFragment {
                 return;
             }
             SharedPrefUtils.storePromoCode(
-                    activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS),
+                    activity.getSharedPreferences("Reach", Context.MODE_PRIVATE),
                     pCode);
 
             final Cursor friendCursor = activity.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
@@ -146,7 +146,7 @@ public class PromoCodeDialog extends DialogFragment {
 
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Promo Code")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                     .setLabel("Code - " + pCode + ", Friend Count - " + friendCount)
                     .setValue(1)
                     .build());

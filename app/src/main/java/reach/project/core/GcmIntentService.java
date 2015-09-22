@@ -49,6 +49,7 @@ public class GcmIntentService extends IntentService {
 
     /**
      * Handle GCM receipt intent
+     *
      * @param intent
      */
     @Override
@@ -78,7 +79,7 @@ public class GcmIntentService extends IntentService {
             final String userName = splitter[2].trim();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.putExtra("openFriendRequests",true);
+            viewIntent.putExtra("openFriendRequests", true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
@@ -190,8 +191,7 @@ public class GcmIntentService extends IntentService {
             if (splitter[3].split(" ")[0].equals("likes")) {
                 viewIntent = new Intent(this, ReachActivity.class);
                 viewIntent.putExtra("openPlayer", true);
-            }
-            else {
+            } else {
                 viewIntent = new Intent(this, DialogActivity.class);
                 viewIntent.putExtra("type", 3);
                 viewIntent.putExtra("manual_title", splitter[2].trim());
@@ -258,11 +258,11 @@ public class GcmIntentService extends IntentService {
          */
         else if (message.startsWith("PING")) {
             //Handle announce
-            final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_MULTI_PROCESS));
+            final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE));
             if (id == 0)
                 return;
             final short[] networkType = new short[]{getNetworkType(this)};
-            if (networkType[0] > 1 && !SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+            if (networkType[0] > 1 && !SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)))
                 networkType[0] = 5;
 
             final long currentTime = System.currentTimeMillis();
@@ -294,21 +294,21 @@ public class GcmIntentService extends IntentService {
                     ReachDatabaseProvider.CONTENT_URI,
                     new String[]{ReachDatabaseHelper.COLUMN_STATUS},
                     ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
-                    ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                    ReachDatabaseHelper.COLUMN_SONG_ID + " = ?",
+                            ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                            ReachDatabaseHelper.COLUMN_SONG_ID + " = ?",
                     new String[]{connection.getSenderId() + "",
                             connection.getReceiverId() + "",
                             connection.getSongId() + ""}, null);
 
-            if(isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.PAUSED_BY_USER) {
+            if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.PAUSED_BY_USER) {
                 isPaused.close();
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
-            } else if(isPaused != null)
+            } else if (isPaused != null)
                 isPaused.close();
 
             Log.i("Downloader", message + " Received");
-            if (!SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_MULTI_PROCESS)) && getNetworkType(this) != 1 && message.contains("REQ"))
+            if (!SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)) && getNetworkType(this) != 1 && message.contains("REQ"))
                 Log.i("Downloader", "Dropping request on mobile network");
             else
                 ProcessManager.submitNetworkRequest(this, actualMessage);
