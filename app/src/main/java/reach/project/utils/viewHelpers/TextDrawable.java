@@ -13,7 +13,6 @@ public class TextDrawable extends ShapeDrawable {
     private final Paint borderPaint;
     private static final float SHADE_FACTOR = 0.9f;
     private final String text;
-    private final int color;
     private final RectShape shape;
     private final int height;
     private final int width;
@@ -32,7 +31,7 @@ public class TextDrawable extends ShapeDrawable {
 
         // text and color
         text = builder.toUpperCase ? builder.text.toUpperCase() : builder.text;
-        color = builder.color;
+        final int color = builder.color;
 
         // text paint settings
         fontSize = builder.fontSize;

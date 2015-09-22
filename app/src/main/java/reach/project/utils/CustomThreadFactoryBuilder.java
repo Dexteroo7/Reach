@@ -1,7 +1,5 @@
 package reach.project.utils;
 
-import android.support.annotation.NonNull;
-
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -50,17 +48,14 @@ public class CustomThreadFactoryBuilder {
         final Integer priority = builder.priority;
         final AtomicLong count = new AtomicLong(0);
 
-        return new ThreadFactory() {
-            @Override
-            public Thread newThread(@NonNull Runnable runnable) {
-                Thread thread = new Thread(runnable);
-                if (namePrefix != null) {
-                    thread.setName(namePrefix + "-" + count.getAndIncrement());
-                }
-                thread.setDaemon(daemon);
-                thread.setPriority(priority);
-                return thread;
+        return runnable -> {
+            Thread thread = new Thread(runnable);
+            if (namePrefix != null) {
+                thread.setName(namePrefix + "-" + count.getAndIncrement());
             }
+            thread.setDaemon(daemon);
+            thread.setPriority(priority);
+            return thread;
         };
     }
 }

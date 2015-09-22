@@ -1,6 +1,5 @@
 package reach.project.onBoarding;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -174,12 +173,12 @@ public class NumberVerification extends Fragment {
     }
 
     @Override
-    public void onAttach (Activity activity) {
-        super.onAttach(activity);
+    public void onAttach (Context context) {
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                                                  + " must implement OnFragmentInteractionListener");
         }
     }

@@ -56,8 +56,6 @@ import reach.project.utils.StringCompress;
  */
 public class ContactsChooserFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, SearchView.OnQueryTextListener, SearchView.OnCloseListener {
 
-    private static long serverId;
-
     private SharedPreferences preferences;
     private ListView listView;
     private SearchView searchView;
@@ -336,7 +334,6 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        serverId = SharedPrefUtils.getServerId(preferences);
     }
 
     @Override
