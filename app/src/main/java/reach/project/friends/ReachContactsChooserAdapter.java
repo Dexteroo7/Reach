@@ -1,4 +1,4 @@
-package reach.project.adapter;
+package reach.project.friends;
 
 /**
  * Created by dexter on 1/8/14.
@@ -6,6 +6,7 @@ package reach.project.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -27,13 +28,13 @@ public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
 
     private final int grey;
     private final int color;
-    private final int layoutParameter = MiscUtils.dpToPx(20);
+//    private final int layoutParameter = MiscUtils.dpToPx(20);
     private final CircleTransform transform = new CircleTransform();
 
     public ReachContactsChooserAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
-        this.grey = context.getResources().getColor(R.color.darkgrey);
-        this.color = context.getResources().getColor(R.color.reach_color);
+        this.grey = ContextCompat.getColor(context, R.color.darkgrey);
+        this.color = ContextCompat.getColor(context, R.color.reach_color);
     }
 
     private final class ViewHolder {
@@ -70,7 +71,7 @@ public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
         final ViewHolder viewHolder = (ViewHolder) view.getTag();
 
 //        final long serverId = cursor.getLong(0);
-        final String phoneNumber = cursor.getString(1);
+//        final String phoneNumber = cursor.getString(1);
         final String userName = cursor.getString(2);
         final String imageId = cursor.getString(3);
         final short status = cursor.getShort(5);
