@@ -141,6 +141,14 @@ public class UserMusicLibrary extends Fragment {
             return rootView;
         }
 
+        final ContentValues values = new ContentValues(1);
+        values.put(ReachFriendsHelper.COLUMN_NEW_SONGS, "0");
+        rootView.getContext().getContentResolver().update(
+                ReachFriendsProvider.CONTENT_URI,
+                values,
+                ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{""+userId});
+
         final String phoneNumber = cursor.getString(0);
         final String userName = cursor.getString(1);
         final int numberOfSongs = cursor.getInt(2);
@@ -208,6 +216,7 @@ public class UserMusicLibrary extends Fragment {
                 .setLabel("Friend - " + userId)
                 .setValue(1)
                 .build());
+
 
         return rootView;
     }

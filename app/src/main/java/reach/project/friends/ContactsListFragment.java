@@ -155,11 +155,14 @@ public class ContactsListFragment extends Fragment implements
 
             if (mListener != null) {
                 if (status < 2) {
+
                     if (networkType == 5)
                         Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
                                 .show();
                     mListener.onOpenLibrary(id);
+
                 } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
+
                     final long clientId = cursor.getLong(0);
                     new AlertDialog.Builder(getActivity())
                             .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
