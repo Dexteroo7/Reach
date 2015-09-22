@@ -43,7 +43,6 @@ import java.util.HashSet;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.project.R;
-import reach.project.adapter.ReachContactsChooserAdapter;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.songs.PushContainer;
