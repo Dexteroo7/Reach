@@ -28,6 +28,7 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -356,7 +357,7 @@ public class ReachActivity extends AppCompatActivity implements
     protected void onResume() {
 
         //TODO onResume is called twice sometimes
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
+        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();
 
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
@@ -610,9 +611,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void setUpNavigationViews() {
 
-        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
         final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
-        if (SharedPrefUtils.getMobileData(sharedPreferences))
+        if (SharedPrefUtils.getMobileData(preferences))
             netToggle.setChecked(true);
         else
             netToggle.setChecked(false);
@@ -620,9 +620,9 @@ public class ReachActivity extends AppCompatActivity implements
         netToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
             if (isChecked)
-                SharedPrefUtils.setDataOn(sharedPreferences);
+                SharedPrefUtils.setDataOn(preferences);
             else {
-                SharedPrefUtils.setDataOff(sharedPreferences);
+                SharedPrefUtils.setDataOff(preferences);
                 ////////////////////purge all upload operations, but retain paused operations
                 //TODO
                 getContentResolver().delete(
@@ -632,18 +632,18 @@ public class ReachActivity extends AppCompatActivity implements
                         new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
             }
         });
-        final String path = SharedPrefUtils.getImageId(sharedPreferences);
+        final String path = SharedPrefUtils.getImageId(preferences);
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
             Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav))
-                .setText(SharedPrefUtils.getUserName(sharedPreferences));
+                .setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
         //TODO update count
         final Cursor countCursor = getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
                 ReachSongHelper.projection,
                 ReachSongHelper.COLUMN_USER_ID + " = ?",
-                new String[]{SharedPrefUtils.getServerId(sharedPreferences) + ""},
+                new String[]{SharedPrefUtils.getServerId(preferences) + ""},
                 null);
         if (countCursor == null) return;
         if (!countCursor.moveToFirst()) {
@@ -774,7 +774,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        preferences = getSharedPreferences("Reach", MODE_MULTI_PROCESS);
+        preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
         serverId = SharedPrefUtils.getServerId(preferences);
@@ -840,7 +840,9 @@ public class ReachActivity extends AppCompatActivity implements
         pausePlayMinimized.setOnClickListener(LocalUtils.pauseClick);
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
         queueListView.setOnScrollListener(scrollListener);
-        downloadRefresh.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
+        downloadRefresh.setColorSchemeColors(
+                ContextCompat.getColor(this, R.color.reach_color),
+                ContextCompat.getColor(this, R.color.reach_grey));
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
@@ -952,7 +954,7 @@ public class ReachActivity extends AppCompatActivity implements
     private void lastSong() {
 
         final Boolean[] toSend = new Boolean[]{false, false, false};
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_MULTI_PROCESS)).orNull();
+        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();
 
         toSend[0] = (currentPlaying != null);
         toSend[1] = SharedPrefUtils.getShuffle(preferences);
@@ -1243,7 +1245,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
@@ -1270,7 +1272,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener repeatClick = view -> {
 
-            if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+            if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
                 view.setSelected(true);
             else
                 view.setSelected(false);
@@ -1340,7 +1342,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener shuffleClick = view -> {
 
-            if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_MULTI_PROCESS)))
+            if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
                 view.setSelected(true);
             else
                 view.setSelected(false);
@@ -1419,9 +1421,10 @@ public class ReachActivity extends AppCompatActivity implements
                         Log.i("Ayush", "GCM check failed");
                         toast("Network error, GCM failed");
                     }
-                } else if (gcmId.equals("user_deleted")) {
-                    //TODO restart app sign-up
                 }
+//                else if (gcmId.equals("user_deleted")) {
+//                    //TODO restart app sign-up
+//                }
             }
 
             @Override
@@ -1450,7 +1453,7 @@ public class ReachActivity extends AppCompatActivity implements
         public static TextView getMyLibraryTExtView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
-            textView.setTextColor(context.getResources().getColor(R.color.reach_color));
+            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1461,7 +1464,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("Add songs to download");
-            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV1;
@@ -1471,7 +1474,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
-            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV2;

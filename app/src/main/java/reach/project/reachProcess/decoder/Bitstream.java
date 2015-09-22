@@ -216,7 +216,7 @@ public final class BitStream implements BitstreamErrors {
             int majorVersion = id3header[0];
             int revision = id3header[1];
             stream.read(id3header, 0, 4);
-            size = (int) (id3header[0] << 21) + (id3header[1] << 14) + (id3header[2] << 7) + (id3header[3]);
+            size = (id3header[0] << 21) + (id3header[1] << 14) + (id3header[2] << 7) + (id3header[3]);
         }
         return (size + 10);
     }

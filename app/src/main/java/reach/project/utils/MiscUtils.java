@@ -566,29 +566,29 @@ public enum MiscUtils {
     }
 
     public static <T extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<T> reference,
-                                                                                       final UseContext<Result, Activity> task) {
+                                                                                       final UseContext<Result, Context> task) {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
-        final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing())
+        final Context context = fragment.getContext();
+        if (context == null)
             return Optional.absent();
 
-        return Optional.fromNullable(task.work(activity));
+        return Optional.fromNullable(task.work(context));
     }
 
     public static <T extends Fragment> void useContextFromFragment(final WeakReference<T> reference,
-                                                                   final UseContext2<Activity> task) {
+                                                                   final UseContext2<Context> task) {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
-        final Activity activity = fragment.getActivity();
-        if (activity != null && !activity.isFinishing())
-            task.work(activity);
+        final Context context = fragment.getContext();
+        if (context != null)
+            task.work(context);
     }
 
     public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
@@ -599,7 +599,7 @@ public enum MiscUtils {
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing())
+        if (activity == null || activity.isFinishing() || fragment.getContext() == null)
             return Optional.absent();
 
         return Optional.fromNullable(task.work(fragment));
@@ -972,7 +972,7 @@ public enum MiscUtils {
 //                final Context context = contextReference.get();
 //                if(context == null)
 //                    return;
-//                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+//                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 //                MiscUtils.updateGCM(SharedPrefUtils.getServerId(preferences), contextReference);
                 Log.i("Ayush", "GCM re-registry needed");
                 status = ReachDatabase.GCM_FAILED;

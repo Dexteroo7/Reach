@@ -314,6 +314,5 @@ public class Decoder implements DecoderErrors {
 
     }
 
-    ;
 }
 

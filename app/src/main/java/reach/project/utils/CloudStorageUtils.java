@@ -230,7 +230,7 @@ public enum CloudStorageUtils {
         if (!MiscUtils.isOnline(context))
             return false; //not online no use
 
-        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String fileName = MiscUtils.getMusicStorageKey(hostId);
         final String currentHash = SharedPrefUtils.getMusicHash(preferences, fileName);
         final boolean toReturn = !TextUtils.isEmpty(currentHash); //if current hash present, return true !

@@ -1,6 +1,6 @@
 package reach.project.music.albums;
 
-import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -90,12 +90,12 @@ public class AlbumListFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }

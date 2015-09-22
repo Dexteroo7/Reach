@@ -43,7 +43,6 @@ import java.util.HashSet;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.project.R;
-import reach.project.adapter.ReachContactsChooserAdapter;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.songs.PushContainer;
@@ -134,7 +133,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
             ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Push song")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                     .setLabel("Receiver - " + pushContainer.getReceiverName() + ", Songs - " + pushContainer.getSongCount())
                     .setValue(pushContainer.getSongCount())
                     .build());
@@ -336,7 +335,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        preferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
     }
 

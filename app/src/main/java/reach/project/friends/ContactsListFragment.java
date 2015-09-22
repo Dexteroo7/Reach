@@ -18,6 +18,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -28,7 +29,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
@@ -159,8 +159,7 @@ public class ContactsListFragment extends Fragment implements
                         Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
                                 .show();
                     mListener.onOpenLibrary(id);
-                }
-                else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
+                } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
                     final long clientId = cursor.getLong(0);
                     new AlertDialog.Builder(getActivity())
                             .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
@@ -185,39 +184,6 @@ public class ContactsListFragment extends Fragment implements
                             }).create().show();
                 }
             }
-        }
-    };
-
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
-
-        if (!pinging.get()) {
-
-            Log.i("Ayush", "Starting refresh !");
-            pinging.set(true);
-            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-    };
-
-    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
-
-        @Override
-        public void onScrollStateChanged(AbsListView absListView, int i) {
-
-        }
-
-        @Override
-        public void onScroll(AbsListView view, int firstVisibleItem,
-                             int visibleItemCount, int totalItemCount) {
-
-            boolean enable = false;
-            if (view.getChildCount() > 0) {
-
-                final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
-                final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
-                enable = firstItemVisible && topOfFirstItemVisible;
-            }
-
-            swipeRefreshLayout.setEnabled(enable);
         }
     };
 
@@ -262,7 +228,7 @@ public class ContactsListFragment extends Fragment implements
 
         /*if (getArguments().getBoolean("first", false))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-        sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(sharedPrefs);
         phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPrefs);
 
@@ -292,7 +258,9 @@ public class ContactsListFragment extends Fragment implements
             return null;
 
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.reach_color), getResources().getColor(R.color.reach_grey));
+        swipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(getContext(), R.color.reach_color),
+                ContextCompat.getColor(getContext(), R.color.reach_grey));
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
 
@@ -416,13 +384,13 @@ public class ContactsListFragment extends Fragment implements
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context context) {
 
-        super.onAttach(activity);
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }
@@ -535,51 +503,6 @@ public class ContactsListFragment extends Fragment implements
                 {
                     fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false));
                 });
-            }
-        }
-
-        private static final class SendRequest extends AsyncTask<Long, Void, Long> {
-
-            @Override
-            protected Long doInBackground(final Long... params) {
-
-                /**
-                 * params[0] = other id
-                 * params[1] = my id
-                 * params[2] = status
-                 */
-
-                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
-                        () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
-                        Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
-
-                final String toParse;
-                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
-                    return params[0];
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(final Long response) {
-
-                super.onPostExecute(response);
-
-                if (response != null && response > 0) {
-
-                    //response becomes the id of failed person
-                    MiscUtils.useContextFromFragment(reference, context -> {
-
-                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                        context.getContentResolver().update(
-                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                values,
-                                ReachFriendsHelper.COLUMN_ID + " = ?",
-                                new String[]{response + ""});
-                        return null;
-                    });
-                }
             }
         }
 

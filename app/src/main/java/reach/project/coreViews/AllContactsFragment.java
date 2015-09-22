@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
@@ -113,7 +114,7 @@ public class AllContactsFragment extends Fragment implements
         final Activity activity = getActivity();
         if (activity == null || activity.isFinishing())
             return null;
-        sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         final ListView listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.allContactsList));
         listView.setOnItemClickListener(clickListener);
@@ -263,12 +264,12 @@ public class AllContactsFragment extends Fragment implements
 
             final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
                     ".\nhttp://letsreach.co/app\n--\n" +
-                    SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS));
+                    SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_PRIVATE));
 
             final LinearLayout input = new LinearLayout(context);
             final EditText inputText = new EditText(context);
             inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-            inputText.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            inputText.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);

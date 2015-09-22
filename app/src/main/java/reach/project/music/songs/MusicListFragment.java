@@ -1,6 +1,5 @@
 package reach.project.music.songs;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -76,7 +75,7 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
                 if (searchView != null)
                     ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
                             .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
                 if (SharedPrefUtils.getReachQueueSeen(sharedPreferences)) {
                     Snackbar.make(parent, cursor.getString(3) + " added to your Queue", Snackbar.LENGTH_LONG)
                             .setAction("VIEW", new View.OnClickListener() {
@@ -285,12 +284,12 @@ public class MusicListFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }

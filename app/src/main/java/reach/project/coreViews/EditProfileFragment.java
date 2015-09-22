@@ -202,7 +202,7 @@ public class EditProfileFragment extends Fragment {
         protected void onPreExecute() {
 
             super.onPreExecute();
-            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Activity>) ProgressDialog::new).orNull();
+            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Context>) ProgressDialog::new).orNull();
             if (dialog != null) {
                 dialog.setCancelable(false);
                 dialog.show();

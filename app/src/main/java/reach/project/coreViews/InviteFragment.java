@@ -97,7 +97,7 @@ public class InviteFragment extends Fragment {
         mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
         final ListView inviteList = (ListView) rootView.findViewById(R.id.listView);
-        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS);
+        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};
         final String [] packageNames = {"com.whatsapp","com.facebook.orca","com.twitter.android","com.google.android.apps.plus"};
 
@@ -106,7 +106,7 @@ public class InviteFragment extends Fragment {
 
             ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Invite Page")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                     .setLabel(inviteOptions[position])
                     .setValue(1)
                     .build());

@@ -1,6 +1,6 @@
 package reach.project.notificationCentre;
 
-import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsProvider;
 import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 
@@ -132,13 +132,13 @@ public class FriendRequestFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context context) {
 
-        super.onAttach(activity);
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement SuperInterface");
         }
     }

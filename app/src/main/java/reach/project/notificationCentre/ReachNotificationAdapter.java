@@ -222,7 +222,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Accept - Pushed song")
-                                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_MULTI_PROCESS)))
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
                                 .setLabel("Sender - " + push.getHostName() + ", Songs - " + push.getSize())
                                 .setValue(push.getSize())
                                 .build());

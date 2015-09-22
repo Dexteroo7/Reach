@@ -710,10 +710,7 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 		 }
 
 	  	samplenumber = 0;
-		  if (++groupnumber == 12)
-			 return true;
-		  else
-			 return false;
+		  return ++groupnumber == 12;
 	  }
 
 	  /**
@@ -735,15 +732,12 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 	  		sample *= scalefactor3;
 	  	 filter1.input_sample(sample, subbandnumber);
 	    }
-	  
-	    if (++samplenumber == 3)
-	  	 return true;
-	    else
-		 return false;
+
+		  return ++samplenumber == 3;
 	  }
-	};
-	
-	 /**
+	}
+
+	/**
 	  * Class for layer II subbands in joint stereo mode.
 	  */
 	static class SubbandLayer2IntensityStereo extends SubbandLayer2
@@ -880,15 +874,12 @@ class LayerIIDecoder extends LayerIDecoder implements FrameDecoder
 					filter1.input_sample(sample, subbandnumber);
 			 	}
 		  	}
-		
-		  if (++samplenumber == 3)
-			 return true;
-		  else
-		 return false;
-	  }
-	};
 
-	 /**
+		  return ++samplenumber == 3;
+	  }
+	}
+
+	/**
 	  * Class for layer II subbands in stereo mode.
 	  */
 	static class SubbandLayer2Stereo extends SubbandLayer2
