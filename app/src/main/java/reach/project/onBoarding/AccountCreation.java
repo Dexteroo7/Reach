@@ -485,6 +485,7 @@ public class AccountCreation extends Fragment {
                     Picasso.with(context)
                             .load(toUpload)
                             .fit()
+                            .centerCrop()
                             .transform(fragment.transform)
                             .centerCrop().into(fragment.profilePhotoSelector);
                 }

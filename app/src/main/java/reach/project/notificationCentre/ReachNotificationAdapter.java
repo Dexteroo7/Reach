@@ -159,6 +159,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.notifType.setText(" likes " + like.getSongName());
                 Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + like.getImageId())
                         .fit()
+                        .centerCrop()
                         .transform(transform)
                         .into(viewHolder.profilePhoto);
                 break;
@@ -169,7 +170,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).fit().transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).fit().centerCrop().transform(transform).into(viewHolder.profilePhoto);
 
                 if (accepted.get(notificationBaseLocal.getNotificationId(), false)) {
 
@@ -265,7 +266,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
-                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).fit().transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).fit().centerCrop().transform(transform).into(viewHolder.profilePhoto);
                 break;
 
             case PUSH_ACCEPTED:

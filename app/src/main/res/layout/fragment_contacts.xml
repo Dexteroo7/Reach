@@ -10,9 +10,6 @@
         <GridView
             android:id="@+id/contactsList"
             android:numColumns="2"
-            android:fastScrollEnabled="true"
-            android:fastScrollAlwaysVisible="true"
-            android:scrollbarStyle="outsideInset"
             android:padding="2dp"
             android:verticalSpacing="2dp"
             android:horizontalSpacing="2dp"

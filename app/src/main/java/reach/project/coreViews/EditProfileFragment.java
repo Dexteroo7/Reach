@@ -115,7 +115,7 @@ public class EditProfileFragment extends Fragment {
 
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             profile.setBackgroundResource(0);
-            Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + imageId).fit().transform(transform).into(profile);
+            Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + imageId).fit().centerCrop().transform(transform).into(profile);
         }
 
         profile.setOnClickListener(imagePicker);
@@ -222,7 +222,7 @@ public class EditProfileFragment extends Fragment {
                 } else if (fragment.profile != null) {
 
                     toUpload = file;
-                    Picasso.with(context).load(toUpload).fit().into(fragment.profile);
+                    Picasso.with(context).load(toUpload).fit().centerCrop().into(fragment.profile);
                 }
                 return null;
             });

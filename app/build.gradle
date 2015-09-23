@@ -9,18 +9,18 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 58
-        versionName "0.9.19-beta"
+        versionCode 60
+        versionName "0.9.20.1-beta"
         //meant for release
-//        multiDexEnabled true
+        //multiDexEnabled true
     }
-//    buildTypes {
-//        release {
-//            shrinkResources true
-//            minifyEnabled true
-//            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-//        }
-//    }
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -44,7 +44,7 @@ dependencies {
     compile 'com.android.support:cardview-v7:23.0.1'
     compile 'com.android.support:design:23.0.1'
     //meant for release
-    //    compile 'com.android.support:multidex:1.0.1'
+    //compile 'com.android.support:multidex:1.0.1'
     // non-google stuff
     compile 'com.fasterxml.jackson.core:jackson-databind:2.6.2'
     compile 'com.crittercism:crittercism-android-agent:5.3.3'
