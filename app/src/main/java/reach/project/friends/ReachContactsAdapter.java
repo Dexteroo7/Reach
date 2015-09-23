@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
@@ -37,12 +38,13 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
     private final class ViewHolder {
 
-        private final TextView userNameList, telephoneNumberList, onlineText;
+        private final TextView userNameList, telephoneNumberList, onlineText, newSongs;
         private final ImageView profilePhotoList, onlineIcon, lockIcon, profileGradient;
 
         private ViewHolder(TextView userNameList,
                            TextView telephoneNumberList,
                            TextView onlineText,
+                           TextView newSongs,
                            ImageView onlineIcon,
                            ImageView profilePhotoList,
                            ImageView lockIcon,
@@ -52,6 +54,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             this.telephoneNumberList = telephoneNumberList;
             this.onlineText = onlineText;
             this.onlineIcon = onlineIcon;
+            this.newSongs = newSongs;
             this.profilePhotoList = profilePhotoList;
             this.lockIcon = lockIcon;
             this.profileGradient = profileGradient;
@@ -85,21 +88,33 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         final String newSongs = cursor.getString(7);
 
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
-        viewHolder.telephoneNumberList.setText(numberOfSongs + " songs " + newSongs + " new");
+        viewHolder.telephoneNumberList.setText(numberOfSongs + " songs ");
+        if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) && Integer.parseInt(newSongs)>0) {
+            viewHolder.newSongs.setVisibility(View.VISIBLE);
+            viewHolder.newSongs.setText("+"+newSongs);
+        }
+        else {
+            viewHolder.newSongs.setVisibility(View.INVISIBLE);
+            viewHolder.newSongs.setText("");
+        }
 
         //first invalidate
         viewHolder.profilePhotoList.setImageBitmap(null);
+        viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
+        viewHolder.profileGradient.setBackgroundResource(0);
         if (!TextUtils.isEmpty(imageId) &&
                 !imageId.equals("hello_world")) {
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
-                    imageId).centerCrop().fit().into(viewHolder.profilePhotoList);
+                    imageId).centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
         } else {
-            /*if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)de
-                Picasso.with(context).load(R.drawable.default_profile_new)
-                        .centerCrop().fit().into(viewHolder.profilePhotoList);
-            else*/
-            Picasso.with(context).load(R.drawable.default_profile_offline)
-                    .centerCrop().fit().into(viewHolder.profilePhotoList);
+            viewHolder.profileGradient.setImageBitmap(null);
+            viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
+            if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
+                Picasso.with(context).load(R.drawable.default_profile01)
+                        .centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
+            else
+                Picasso.with(context).load(R.drawable.default_profile02)
+                        .centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
         }
 
 
@@ -142,8 +157,8 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         viewHolder.onlineText.setText("");
         viewHolder.onlineIcon.setImageBitmap(null);
         viewHolder.lockIcon.setVisibility(View.GONE);
-        viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
-        viewHolder.profileGradient.setBackgroundResource(0);
+
+        ((LinearLayout) viewHolder.onlineIcon.getParent()).setVisibility(View.VISIBLE);
 
         switch (status) {
 
@@ -171,6 +186,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 break;
             case ReachFriendsHelper.REQUEST_NOT_SENT:
                 viewHolder.lockIcon.setVisibility(View.VISIBLE);
+                ((LinearLayout) viewHolder.onlineIcon.getParent()).setVisibility(View.GONE);
                 viewHolder.profileGradient.setImageBitmap(null);
                 viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
                 //viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
@@ -187,6 +203,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 (TextView) view.findViewById(R.id.userNameList),
                 (TextView) view.findViewById(R.id.telephoneNumberList),
                 (TextView) view.findViewById(R.id.onlineText),
+                (TextView) view.findViewById(R.id.newSongs),
                 (ImageView) view.findViewById(R.id.onlineIcon),
                 (ImageView) view.findViewById(R.id.profilePhotoList),
                 (ImageView) view.findViewById(R.id.lockIcon),

@@ -73,7 +73,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         final View reject = convertView.findViewById(R.id.rejectBlock);
         final ReceivedRequest receivedRequest = getItem(position);
 
-        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).fit().transform(new CircleTransform()).into(profilePhoto);
+        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).fit().centerCrop().transform(new CircleTransform()).into(profilePhoto);
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 

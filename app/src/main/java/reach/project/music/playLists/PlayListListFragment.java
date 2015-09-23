@@ -3,7 +3,6 @@ package reach.project.music.playLists;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -11,8 +10,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.GridView;
+import android.widget.ListView;
 
 import java.lang.ref.WeakReference;
 
@@ -20,15 +20,18 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.viewHelpers.kmshack.newsstand.ScrollTabHolderFragment;
 
-public class PlayListListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class PlayListListFragment extends ScrollTabHolderFragment implements LoaderManager.LoaderCallbacks<Cursor> , AbsListView.OnScrollListener {
 
-    private GridView playListGrid;
+    private ListView playListGrid;
     private View rootView;
     private long userId = 0;
 
     private SuperInterface mListener;
     private ReachPlayListsAdapter reachPlayListsAdapter = null;
+    private int mPosition;
+
     private final AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -48,7 +51,7 @@ public class PlayListListFragment extends Fragment implements LoaderManager.Load
 
     private static WeakReference<PlayListListFragment> reference = null;
 
-    public static PlayListListFragment newInstance(long id) {
+    public static PlayListListFragment newInstance(long id, int pos) {
 
         final Bundle args;
         PlayListListFragment fragment;
@@ -61,6 +64,7 @@ public class PlayListListFragment extends Fragment implements LoaderManager.Load
         }
 
         args.putLong("id", id);
+        args.putInt("position", pos);
         return fragment;
     }
 
@@ -101,9 +105,13 @@ public class PlayListListFragment extends Fragment implements LoaderManager.Load
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_album, container, false);
-        playListGrid = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.albumGrid));
+        mPosition = getArguments().getInt("position");
+        playListGrid = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.albumGrid));
+        View placeHolderView = inflater.inflate(R.layout.view_header_placeholder, playListGrid, false);
+        playListGrid.addHeaderView(placeHolderView);
         if (reachPlayListsAdapter == null)
             reachPlayListsAdapter = new ReachPlayListsAdapter(getActivity(), R.layout.musiclist_playlist_item, null, 0);
+        playListGrid.setOnScrollListener(this);
         playListGrid.setAdapter(reachPlayListsAdapter);
         playListGrid.setOnItemClickListener(listener);
         userId = getArguments().getLong("id");
@@ -140,5 +148,26 @@ public class PlayListListFragment extends Fragment implements LoaderManager.Load
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void adjustScroll(int scrollHeight) {
+        if (scrollHeight == 0 && playListGrid.getFirstVisiblePosition() >= 1) {
+            return;
+        }
+
+        playListGrid.setSelectionFromTop(1, scrollHeight);
+
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if (mScrollTabHolder != null)
+            mScrollTabHolder.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount, mPosition);
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        // nothing
     }
 }

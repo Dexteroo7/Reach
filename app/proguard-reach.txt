@@ -168,3 +168,9 @@
     @com.squareup.wire.ProtoField public *;
     @com.squareup.wire.ProtoEnum public *;
 }
+
+-dontwarn org.apache.**
+-dontwarn com.fasterxml.jackson.databind.ext.DOMSerializer
+-dontwarn com.google.api.client.http.apache.ApacheHttpRequest
+-dontwarn com.google.api.client.http.apache.HttpExtensionMethod
+-dontwarn com.viewpagerindicator.LinePageIndicator

@@ -437,17 +437,6 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (isFinishing())
             return;
-
-//        if (!StaticData.debugMode) {
-//            // Crittercism
-//            Crittercism.initialize(this, "552eac3c8172e25e67906922");
-//            Crittercism.setUsername(userName + " " + phoneNumber);
-//            //  Get tracker
-//            final Tracker t = ((ReachApplication) activity.getApplication()).getTracker();
-//            t.setScreenName("reach.project.core.ReachActivity");
-//            t.send(new HitBuilders.ScreenViewBuilder().build());
-//        }
-
         try {
             //containerFrame.setPadding(0, topPadding, 0, 0);
             //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
@@ -634,7 +623,7 @@ public class ReachActivity extends AppCompatActivity implements
         });
         final String path = SharedPrefUtils.getImageId(preferences);
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().into((ImageView) findViewById(R.id.userImageNav));
+            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav))
                 .setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////

@@ -306,7 +306,7 @@ public class ContactsListFragment extends Fragment implements
                     ReachContactsAdapter.requiredProjection,
                     selection,
                     selectionArguments,
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_NEW_SONGS + " DESC");
         else
             return null;
     }
