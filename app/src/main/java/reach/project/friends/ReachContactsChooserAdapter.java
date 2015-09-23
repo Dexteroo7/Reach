@@ -85,8 +85,8 @@ public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
         viewHolder.profilePhotoList.setVisibility(View.INVISIBLE);
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
 
-            Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
-                    imageId).transform(transform).noPlaceholder().into(viewHolder.profilePhotoList);
+            Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + imageId)
+                    .fit().centerCrop().transform(transform).into(viewHolder.profilePhotoList);
             viewHolder.profilePhotoList.setVisibility(View.VISIBLE);
         }
 

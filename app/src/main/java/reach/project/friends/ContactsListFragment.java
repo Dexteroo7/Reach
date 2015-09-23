@@ -164,6 +164,7 @@ public class ContactsListFragment extends Fragment implements
                 } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
 
                     final long clientId = cursor.getLong(0);
+
                     new AlertDialog.Builder(getActivity())
                             .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
                             .setPositiveButton("Yes", (dialog, which) -> {

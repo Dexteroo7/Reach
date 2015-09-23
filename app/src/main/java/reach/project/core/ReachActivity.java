@@ -702,11 +702,13 @@ public class ReachActivity extends AppCompatActivity implements
 
         searchView.setQuery(null, true);
         searchView.clearFocus();
+
         selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
         selectionArgumentsDownloader = new String[]{0 + ""};
-        selectionArgumentsMyLibrary = new String[]{serverId + ""};
         getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
+
+        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+        selectionArgumentsMyLibrary = new String[]{serverId + ""};
         getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         return false;
     }
@@ -756,6 +758,7 @@ public class ReachActivity extends AppCompatActivity implements
                     "%" + mCurFilter + "%",
                     "%" + mCurFilter + "%"};
         }
+
         getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
         getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         Log.i("Downloader", "SEARCH SUBMITTED !");
@@ -936,13 +939,13 @@ public class ReachActivity extends AppCompatActivity implements
          */
         combinedAdapter = new MergeAdapter();
         //combinedAdapter.addView(LocalUtils.getDownloadedTextView(params[0]));
-        emptyTV1 = LocalUtils.getEmptyDownload(this);
-        combinedAdapter.addView(emptyTV1, false);
+        combinedAdapter.addView(emptyTV1 = LocalUtils.getEmptyDownload(this), false);
         combinedAdapter.addAdapter(queueAdapter = new ReachQueueAdapter(this, null, 0));
+
         queueAdapter.getSwipeLayoutResourceId(0);
-        combinedAdapter.addView(LocalUtils.getMyLibraryTExtView(this));
-        emptyTV2 = LocalUtils.getEmptyLibrary(this);
-        combinedAdapter.addView(emptyTV2, false);
+
+        combinedAdapter.addView(LocalUtils.getMyLibraryTextView(this));
+        combinedAdapter.addView(emptyTV2 = LocalUtils.getEmptyLibrary(this), false);
         combinedAdapter.addAdapter(musicAdapter = new ReachMusicAdapter(this, R.layout.my_musiclist_item, null, 0,
                 ReachMusicAdapter.PLAYER));
 
@@ -1068,19 +1071,16 @@ public class ReachActivity extends AppCompatActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER && data != null && !data.isClosed()) {
+
             musicAdapter.swapCursor(data);
-            int count = data.getCount();
-            if (count == 0 && queueListView != null)
+            if (data.getCount() == 0 && queueListView != null)
                 combinedAdapter.setActive(emptyTV2, true);
             else
                 combinedAdapter.setActive(emptyTV2, false);
-        }
-
-        if (loader.getId() == StaticData.DOWNLOAD_LOADER && data != null && !data.isClosed()) {
+        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER && data != null && !data.isClosed()) {
 
             queueAdapter.swapCursor(data);
-            int count = data.getCount();
-            if (count == 0 && queueListView != null)
+            if (data.getCount() == 0 && queueListView != null)
                 combinedAdapter.setActive(emptyTV1, true);
             else
                 combinedAdapter.setActive(emptyTV1, false);
@@ -1450,7 +1450,7 @@ public class ReachActivity extends AppCompatActivity implements
         private static final View.OnClickListener footerClickListener =
                 v -> v.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
 
-        public static TextView getMyLibraryTExtView(Context context) {
+        public static TextView getMyLibraryTextView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
             textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));

@@ -1,5 +1,6 @@
 package reach.project.friends;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -64,7 +65,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     private String mCurFilter, selection;
     private String[] selectionArguments;
 
-    private short getNetworkType(Context context) {
+    private static short getNetworkType(Context context) {
 
         if (context == null)
             return 0;
@@ -117,21 +118,23 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
             final Cursor cursor = (Cursor) reachContactsAdapter.getItem(position);
+            final Bundle arguments = getArguments();
+            final Activity activity = getActivity();
 
             final PushContainer pushContainer = new PushContainer(
                     cursor.getLong(0),                             //receiverID
                     SharedPrefUtils.getServerId(preferences),      //senderID
-                    getArguments().getString("songs"),             //songData
+                    arguments.getString("songs"),             //songData
                     SharedPrefUtils.getUserName(preferences),      //userName
                     cursor.getString(2),                           //receiverName
-                    getArguments().getShort("song_count"),         //songCount
+                    arguments.getShort("song_count"),         //songCount
                     SharedPrefUtils.getImageId(preferences),       //imageID
-                    getArguments().getString("song_name"),         //firstSongName
-                    getNetworkType(getActivity()) + "");           //networkType
+                    arguments.getString("song_name"),         //firstSongName
+                    getNetworkType(activity) + "");           //networkType
 
-            ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Push song")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                     .setLabel("Receiver - " + pushContainer.getReceiverName() + ", Songs - " + pushContainer.getSongCount())
                     .setValue(pushContainer.getSongCount())
                     .build());
@@ -176,6 +179,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
             getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
             final View rootView = inflater.inflate(R.layout.push_dialog, container, false);
             final TextView textMain = (TextView) rootView.findViewById(R.id.textMain);
@@ -250,12 +254,13 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     protected void onPostExecute(MyBoolean myBoolean) {
                         super.onPostExecute(myBoolean);
 
-                        if (getActivity() == null || getActivity().isFinishing() || isCancelled())
+                        final Activity activity = getActivity();
+                        if (activity == null || activity.isFinishing() || isCancelled())
                             return;
                         if (myBoolean == null || myBoolean.getGcmexpired())
-                            Toast.makeText(getActivity(), "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
                         else if (myBoolean.getOtherGCMExpired())
-                            Toast.makeText(getActivity(), "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -340,7 +345,8 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
-        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.listToolbar);
+        final Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.listToolbar);
+
         mToolbar.setTitle("Choose contact");
         mToolbar.inflateMenu(R.menu.search_menu);
         mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());

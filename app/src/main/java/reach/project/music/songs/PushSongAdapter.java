@@ -3,7 +3,6 @@ package reach.project.music.songs;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.TextUtils;
-import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -13,6 +12,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import reach.project.R;
+import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.utils.MiscUtils;
 
 /**
@@ -20,15 +20,20 @@ import reach.project.utils.MiscUtils;
  */
 public class PushSongAdapter extends ResourceCursorAdapter {
 
-    private final SparseBooleanArray booleanArray = new SparseBooleanArray();
+    private final IsItemSelected itemSelected;
     private final int pad = MiscUtils.dpToPx(5);
 
-    public PushSongAdapter(Context context, int layout, Cursor c, int flags) {
+    public PushSongAdapter(Context context, int layout, Cursor c, int flags, IsItemSelected itemSelected) {
         super(context, layout, c, flags);
+        this.itemSelected = itemSelected;
     }
 
-    public String[] getProjection() {
-        return projection;
+    public String[] getProjectionMyLibrary() {
+        return projectionMyLibrary;
+    }
+
+    public String[] getProjectionDownloaded() {
+        return projectionDownloaded;
     }
 
     private final class ViewHolder{
@@ -44,7 +49,7 @@ public class PushSongAdapter extends ResourceCursorAdapter {
         }
     }
 
-    private final String [] projection = new String[] {
+    private final String [] projectionMyLibrary = new String[] {
 
             ReachSongHelper.COLUMN_ID, //0
 
@@ -59,6 +64,23 @@ public class PushSongAdapter extends ResourceCursorAdapter {
 
             ReachSongHelper.COLUMN_GENRE, //8
             ReachSongHelper.COLUMN_ALBUM_ART_DATA, //9
+    };
+
+    private final String [] projectionDownloaded = new String[] {
+
+            ReachDatabaseHelper.COLUMN_ID, //0
+
+            ReachDatabaseHelper.COLUMN_UNIQUE_ID, //1
+            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
+            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
+
+            ReachDatabaseHelper.COLUMN_ARTIST, //4
+            ReachDatabaseHelper.COLUMN_DURATION, //5
+            ReachDatabaseHelper.COLUMN_ALBUM, //6
+            ReachDatabaseHelper.COLUMN_SIZE, //7
+
+            ReachDatabaseHelper.COLUMN_GENRE, //8
+            ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, //9
     };
 
     @Override
@@ -81,7 +103,7 @@ public class PushSongAdapter extends ResourceCursorAdapter {
         viewHolder.listToggle.setBackgroundResource(0);
         viewHolder.listToggle.setImageBitmap(null);
 
-        if (booleanArray.get(getHashCode(cursor.getLong(7), cursor.getLong(1), cursor.getString(2), cursor.getString(3)), false)) {
+        if (itemSelected.isSelected(getHashCode(cursor.getLong(7), cursor.getLong(1), cursor.getString(2), cursor.getString(3)))) {
 
             viewHolder.listToggle.setPadding(pad, pad, pad, pad);
             viewHolder.listToggle.setBackgroundResource(R.drawable.circular_background_dark);
@@ -108,23 +130,15 @@ public class PushSongAdapter extends ResourceCursorAdapter {
         return view;
     }
 
-    public void cleanUp() {
-        booleanArray.clear();
-    }
-
-    public boolean getCheck(int hashCode) {
-        return booleanArray.get(hashCode, false);
-    }
-
-    public void setCheck(int hashCode, boolean status) {
-        booleanArray.put(hashCode, status);
-    }
-
     public int getHashCode(long size, long songId, String displayName, String actualName) {
         int result = (int) (size ^ (size >>> 32));
         result = 31 * result + (int) (songId ^ (songId >>> 32));
         result = 31 * result + displayName.hashCode();
         result = 31 * result + actualName.hashCode();
         return result;
+    }
+
+    public interface IsItemSelected {
+        boolean isSelected(int hashCode);
     }
 }

@@ -572,11 +572,11 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
-        final Context context = fragment.getContext();
-        if (context == null)
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing() || fragment.getContext() == null)
             return Optional.absent();
 
-        return Optional.fromNullable(task.work(context));
+        return Optional.fromNullable(task.work(activity));
     }
 
     public static <T extends Fragment> void useContextFromFragment(final WeakReference<T> reference,
