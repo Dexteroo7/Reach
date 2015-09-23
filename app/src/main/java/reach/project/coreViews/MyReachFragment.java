@@ -117,6 +117,7 @@ public class MyReachFragment extends Fragment {
             layoutParams.setMargins(0,0,0,0);
             myReachFrame.setLayoutParams(layoutParams);
         }
+
         Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Reach");
         mToolbar.setNavigationOnClickListener(v -> mListener.onOpenNavigationDrawer());
@@ -150,6 +151,7 @@ public class MyReachFragment extends Fragment {
         final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
         slidingTabLayout.post(() -> slidingTabLayout.setupWithViewPager(viewPager));
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 

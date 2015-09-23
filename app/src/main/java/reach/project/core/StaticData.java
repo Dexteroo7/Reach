@@ -92,6 +92,9 @@ public final class StaticData {
     public static final byte PUSH_MY_LIBRARY_LOADER = 8;
     public static final byte PUSH_DOWNLOADED_LOADER = 9;
 
+    public static final byte FULL_LIST_LOADER = 10;
+    public static final byte RECENT_LIST_LOADER = 11;
+
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
 

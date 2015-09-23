@@ -91,7 +91,6 @@ import reach.project.coreViews.UserMusicLibrary;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.AlbumArtData;
-import reach.project.music.songs.MusicListFragment;
 import reach.project.music.songs.PrivacyFragment;
 import reach.project.music.songs.PushContainer;
 import reach.project.music.songs.PushSongsFragment;
@@ -661,17 +660,17 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void startMusicListFragment(long id, String albumName, String artistName, String playListName, int type) {
 
-        if (isFinishing())
-            return;
-        try {
-            fragmentManager.beginTransaction()
-                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null)
-                    .replace(R.id.container, MusicListFragment.newTypeInstance(id, albumName, artistName, playListName, type), "now_playing")
-                    .commit();
-        } catch (IllegalStateException ignored) {
-            finish();
-        }
+//        if (isFinishing())
+//            return;
+//        try {
+//            fragmentManager.beginTransaction()
+//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+//                    .addToBackStack(null)
+//                    .replace(R.id.container, MusicListFragment.newTypeInstance(id, albumName, artistName, playListName, type), "now_playing")
+//                    .commit();
+//        } catch (IllegalStateException ignored) {
+//            finish();
+//        }
     }
 
     @Override

@@ -148,45 +148,46 @@ public class ContactsListFragment extends Fragment implements
         @Override
         public void onItemClick(final AdapterView<?> adapterView, final View view, int position, long l) {
 
+            if (mListener == null)
+                return;
+
             final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
             final long id = cursor.getLong(0);
             final short status = cursor.getShort(5);
             final short networkType = cursor.getShort(4);
 
-            if (mListener != null) {
-                if (status < 2) {
+            if (status < 2) {
 
-                    if (networkType == 5)
-                        Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
-                                .show();
-                    mListener.onOpenLibrary(id);
+                if (networkType == 5)
+                    Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
+                            .show();
+                mListener.onOpenLibrary(id);
 
-                } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
+            } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
 
-                    final long clientId = cursor.getLong(0);
+                final long clientId = cursor.getLong(0);
 
-                    new AlertDialog.Builder(getActivity())
-                            .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
-                            .setPositiveButton("Yes", (dialog, which) -> {
-                                new SendRequest().executeOnExecutor(
-                                        AsyncTask.THREAD_POOL_EXECUTOR,
-                                        clientId, serverId, (long) status);
+                new AlertDialog.Builder(getActivity())
+                        .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            new SendRequest().executeOnExecutor(
+                                    AsyncTask.THREAD_POOL_EXECUTOR,
+                                    clientId, serverId, (long) status);
 
-                                Snackbar.make(adapterView, "Access Request sent", Snackbar.LENGTH_SHORT).show();
-                                //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
-                                final ContentValues values = new ContentValues();
-                                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-                                getActivity().getContentResolver().update(
-                                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
-                                        values,
-                                        ReachFriendsHelper.COLUMN_ID + " = ?",
-                                        new String[]{clientId + ""});
-                                dialog.dismiss();
-                            })
-                            .setNegativeButton("No", (dialog, which) -> {
-                                dialog.dismiss();
-                            }).create().show();
-                }
+                            Snackbar.make(adapterView, "Access Request sent", Snackbar.LENGTH_SHORT).show();
+                            //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
+                            final ContentValues values = new ContentValues();
+                            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+                            getActivity().getContentResolver().update(
+                                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
+                                    values,
+                                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                                    new String[]{clientId + ""});
+                            dialog.dismiss();
+                        })
+                        .setNegativeButton("No", (dialog, which) -> {
+                            dialog.dismiss();
+                        }).create().show();
             }
         }
     };
