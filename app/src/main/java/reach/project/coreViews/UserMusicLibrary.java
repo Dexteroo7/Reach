@@ -487,12 +487,11 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
             super(fm);
 
-            final MusicListFragment fullList = MusicListFragment.newFullListInstance(uID, 0);
+            final MusicListFragment fullList = MusicListFragment.newFullListInstance(uID, 1);
             fullList.setSearchView(searchView);
 
             this.mScrollTabHolderFragments = new ScrollTabHolderFragment[]{
-
-                    MusicListFragment.newRecentListInstance(uID, 1),
+                    MusicListFragment.newRecentListInstance(uID, 0),
                     fullList
             };
             this.mScrollTabHolders = new ScrollTabHolder[TITLES.length];
