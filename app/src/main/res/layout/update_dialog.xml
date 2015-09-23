@@ -33,8 +33,6 @@
         <Button
             android:id="@+id/no"
             style="?android:buttonBarButtonStyle"
-            android:layout_toRightOf="@id/yes"
-            android:layout_alignBottom="@id/yes"
             android:layout_width="90dp"
             android:layout_height="30dp"
             android:textSize="14sp"

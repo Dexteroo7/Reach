@@ -104,9 +104,9 @@ public class PlayListListFragment extends ScrollTabHolderFragment implements Loa
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_album, container, false);
+        rootView = inflater.inflate(R.layout.fragment_simple_list, container, false);
         mPosition = getArguments().getInt("position");
-        playListGrid = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.albumGrid));
+        playListGrid = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         View placeHolderView = inflater.inflate(R.layout.view_header_placeholder, playListGrid, false);
         playListGrid.addHeaderView(placeHolderView);
         if (reachPlayListsAdapter == null)

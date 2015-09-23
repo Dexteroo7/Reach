@@ -222,7 +222,8 @@ public class EditProfileFragment extends Fragment {
                 } else if (fragment.profile != null) {
 
                     toUpload = file;
-                    Picasso.with(context).load(toUpload).fit().centerCrop().into(fragment.profile);
+                    Picasso.with(context).load(toUpload).fit().centerCrop().transform(new CircleTransform()).into(fragment.profile);
+
                 }
                 return null;
             });

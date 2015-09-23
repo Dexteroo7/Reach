@@ -47,7 +47,7 @@ import reach.project.R;
 public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	public interface IconTabProvider {
-		public int getPageIconResId(int position);
+		int getPageIconResId(int position);
 	}
 
 	// @formatter:off
@@ -178,7 +178,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 			throw new IllegalStateException("ViewPager does not have adapter instance.");
 		}
 
-		pager.setOnPageChangeListener(pageListener);
+		pager.addOnPageChangeListener(pageListener);
 
 		notifyDataSetChanged();
 	}
@@ -393,11 +393,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		invalidate();
 	}
 
-	public void setIndicatorColorResource(int resId) {
-		this.indicatorColor = getResources().getColor(resId);
-		invalidate();
-	}
-
 	public int getIndicatorColor() {
 		return this.indicatorColor;
 	}
@@ -416,22 +411,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		invalidate();
 	}
 
-	public void setUnderlineColorResource(int resId) {
-		this.underlineColor = getResources().getColor(resId);
-		invalidate();
-	}
-
 	public int getUnderlineColor() {
 		return underlineColor;
 	}
 
 	public void setDividerColor(int dividerColor) {
 		this.dividerColor = dividerColor;
-		invalidate();
-	}
-
-	public void setDividerColorResource(int resId) {
-		this.dividerColor = getResources().getColor(resId);
 		invalidate();
 	}
 
@@ -494,11 +479,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	public void setTextColor(int textColor) {
 		this.tabTextColor = textColor;
-		updateTabStyles();
-	}
-
-	public void setTextColorResource(int resId) {
-		this.tabTextColor = getResources().getColor(resId);
 		updateTabStyles();
 	}
 

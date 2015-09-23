@@ -81,17 +81,13 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     private View mHeader;
 
-    private PagerSlidingTabStrip mPagerSlidingTabStrip;
     private ViewPager viewPager;
     private PagerAdapter mPagerAdapter;
 
-    private int mMinHeaderHeight;
     private int mHeaderHeight;
     private int mMinHeaderTranslation;
     private SpannableString mSpannableString;
     private AlphaForegroundColorSpan mAlphaForegroundColorSpan;
-
-    private MenuItem searchItem;
 
 
     private static WeakReference<UserMusicLibrary> reference = null;
@@ -150,16 +146,16 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         toolbar = ((Toolbar) rootView.findViewById(R.id.libraryToolbar));
         toolbar.setNavigationOnClickListener(backListener);
         toolbar.inflateMenu(R.menu.search_menu);
-        searchItem = toolbar.getMenu().findItem(R.id.search_button);
+        MenuItem searchItem = toolbar.getMenu().findItem(R.id.search_button);
         searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
-        mMinHeaderHeight = getResources().getDimensionPixelSize(R.dimen.min_header_height);
+        int mMinHeaderHeight = getResources().getDimensionPixelSize(R.dimen.min_header_height);
         mHeaderHeight = getResources().getDimensionPixelSize(R.dimen.header_height);
         mMinHeaderTranslation = -mMinHeaderHeight + toolbar.getHeight();
 
         mHeader = rootView.findViewById(R.id.header);
 
-        mPagerSlidingTabStrip = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabs);
+        PagerSlidingTabStrip mPagerSlidingTabStrip = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabs);
 
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

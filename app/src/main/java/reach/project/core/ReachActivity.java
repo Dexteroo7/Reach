@@ -56,6 +56,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
+import com.crittercism.app.Crittercism;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
@@ -872,8 +873,8 @@ public class ReachActivity extends AppCompatActivity implements
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
 
         //initialize bug tracking
-//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-//        Crittercism.setUsername(userName + " " + phoneNumber);
+        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();

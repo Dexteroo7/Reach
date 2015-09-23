@@ -19,7 +19,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.lang.ref.WeakReference;
@@ -161,8 +160,14 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        final int type = getArguments().getInt("type");
+        int layoutFile;
+        if (type==0)
+            layoutFile = R.layout.fragment_simple_list;
+        else
+            layoutFile = R.layout.fragment_list;
 
-        final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        final View rootView = inflater.inflate(layoutFile, container, false);
         mPosition = getArguments().getInt("position");
         musicList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         View placeHolderView = inflater.inflate(R.layout.view_header_placeholder, musicList, false);
@@ -171,7 +176,6 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
         toolbar = ((Toolbar)rootView.findViewById(R.id.listToolbar));
         toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
-        final int type = getArguments().getInt("type");
         if (type != 0) {
             toolbar.inflateMenu(R.menu.search_menu);
             searchView = (SearchView) toolbar.getMenu().findItem(R.id.search_button).getActionView();
@@ -179,10 +183,6 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
         switch (type) {
-            case 0:
-                rootView.findViewById(R.id.musicListShadow).setVisibility(View.INVISIBLE);
-                ((LinearLayout) rootView).removeViewAt(0);
-                break;
             case 1:
                 toolbar.setTitle(getArguments().getString("albumName"));
                 break;

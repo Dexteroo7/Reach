@@ -36,9 +36,6 @@
             android:id="@+id/userNameList"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_toLeftOf="@id/note"
-            android:layout_centerVertical="true"
             android:ellipsize="marquee"
             android:maxWidth="120dp"
             android:lines="1"
@@ -52,8 +49,6 @@
             android:layout_height="wrap_content"
             android:text="100 Songs"
             android:textStyle="bold"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
             android:textColor="#fff"
             android:textSize="12sp" />
         <LinearLayout

@@ -45,7 +45,6 @@
             android:id="@+id/accept"
             android:clickable="false"
             android:layout_marginRight="20dp"
-            android:layout_alignLeft="@id/userContainer"
             android:layout_width="110dp"
             android:layout_height="30dp"
             android:gravity="center"
@@ -65,8 +64,6 @@
         <LinearLayout
             android:id="@+id/reject"
             android:clickable="false"
-            android:layout_toRightOf="@id/accept"
-            android:layout_alignBottom="@id/accept"
             android:layout_width="110dp"
             android:layout_height="30dp"
             android:background="@drawable/reject_button_selector"
