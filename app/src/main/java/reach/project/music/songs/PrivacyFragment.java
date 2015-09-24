@@ -50,7 +50,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
     private SuperInterface mListener;
     private String mCurFilter, selection;
-    private String [] selectionArguments;
+    private String[] selectionArguments;
     private long serverId;
 
     private final AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
@@ -58,7 +58,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
             privacyList.setEnabled(false);
-            final Cursor reachSongCursor = (Cursor)reachMusicAdapter.getItem(position);
+            final Cursor reachSongCursor = (Cursor) reachMusicAdapter.getItem(position);
             /**
              * params[0] = oldVisibility
              * params[1] = songId
@@ -72,15 +72,15 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     };
 
     private static WeakReference<PrivacyFragment> reference = null;
+
     public static PrivacyFragment newInstance(boolean first) {
 
         final Bundle args;
         PrivacyFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null) {
             reference = new WeakReference<>(fragment = new PrivacyFragment());
             fragment.setArguments(args = new Bundle());
-        }
-        else {
+        } else {
             Log.i("Ayush", "Reusing album list fragment object :)");
             args = fragment.getArguments();
         }
@@ -94,7 +94,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
 
-        if(getActivity() == null) return null;
+        if (getActivity() == null) return null;
         return new CursorLoader(getActivity(),
                 ReachSongProvider.CONTENT_URI,
                 StaticData.DISK_COMPLETE_NO_PATH,
@@ -106,19 +106,19 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
 
-        if(cursorLoader.getId() == StaticData.SONGS_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.SONGS_LOADER && cursor != null && !cursor.isClosed()) {
 
             int count = cursor.getCount();
             reachMusicAdapter.swapCursor(cursor);
             songsCount.setText(count + " Songs");
-            if (count==0 && privacyList!=null)
-            MiscUtils.setEmptyTextForListView(privacyList, "No songs found");
+            if (count == 0 && privacyList != null)
+                MiscUtils.setEmptyTextForListView(privacyList, "No songs found");
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if(cursorLoader.getId() == StaticData.SONGS_LOADER)
+        if (cursorLoader.getId() == StaticData.SONGS_LOADER)
             reachMusicAdapter.swapCursor(null);
     }
 
@@ -127,13 +127,13 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         toolbar.setSubtitle("");
         getLoaderManager().destroyLoader(StaticData.SONGS_LOADER);
-        if(reachMusicAdapter != null && reachMusicAdapter.getCursor() != null && !reachMusicAdapter.getCursor().isClosed())
+        if (reachMusicAdapter != null && reachMusicAdapter.getCursor() != null && !reachMusicAdapter.getCursor().isClosed())
             reachMusicAdapter.getCursor().close();
 
         reachMusicAdapter = null;
         songsCount = null;
         privacyList = null;
-        if(searchView != null) {
+        if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
             searchView.setQuery(null, false);
@@ -154,10 +154,10 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
-        toolbar = (Toolbar)rootView.findViewById(R.id.privacyToolbar);
+        toolbar = (Toolbar) rootView.findViewById(R.id.privacyToolbar);
         toolbar.setTitle("Hide Songs");
         toolbar.setSubtitle("Click to Hide/Unhide Songs");
-        if (getArguments()!=null&&getArguments().getBoolean("first")) {
+        if (getArguments() != null && getArguments().getBoolean("first")) {
             toolbar.inflateMenu(R.menu.privacy_menu);
             toolbar.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == R.id.done_button) {
@@ -177,11 +177,11 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         searchView.setOnCloseListener(this);
 
         if (getArguments().getBoolean("first"))
-            new InfoDialog().show(getChildFragmentManager(),"info_dialog");
+            new InfoDialog().show(getChildFragmentManager(), "info_dialog");
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE));
         reachMusicAdapter = new ReachMusicAdapter(getActivity(), R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST);
         selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
-        selectionArguments = new String[]{serverId+""};
+        selectionArguments = new String[]{serverId + ""};
         getLoaderManager().initLoader(StaticData.SONGS_LOADER, null, this);
 
         privacyList.setAdapter(reachMusicAdapter);
@@ -191,9 +191,9 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
     private class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
 
-        private synchronized void updateDatabase (ContentValues contentValues, long songId, long userId) {
+        private synchronized void updateDatabase(ContentValues contentValues, long songId, long userId) {
 
-            if(getActivity() == null || contentValues == null || songId == 0 || userId == 0)
+            if (getActivity() == null || contentValues == null || songId == 0 || userId == 0)
                 return;
             Log.i("Ayush", "Toggle Visibility " + getActivity().getContentResolver().update(
                     ReachSongProvider.CONTENT_URI,
@@ -227,7 +227,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                         params[2], //serverId
                         params[1], //songId
                         params[0] == 0).execute(); //if 0 (false) make it true and vice-versa
-                if(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
                     failed = true; //mark failed
             } catch (IOException e) {
                 e.printStackTrace();
@@ -247,17 +247,21 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         protected void onPostExecute(Boolean failed) {
             super.onPostExecute(failed);
 
-            if(isCancelled() || getActivity() == null || getActivity().isFinishing())
+            if (isCancelled() || getActivity() == null || getActivity().isFinishing())
                 return;
 
-            if(failed)
+            if (failed)
                 Toast.makeText(getActivity(), "Network error", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         protected void onProgressUpdate(Void... values) {
+
             super.onProgressUpdate(values);
-            privacyList.setEnabled(true);
+            if (privacyList == null)
+                cancel(true);
+            else
+                privacyList.setEnabled(true);
         }
     }
 
@@ -266,7 +270,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         searchView.setQuery(null, true);
         selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
-        selectionArguments = new String[]{serverId+""};
+        selectionArguments = new String[]{serverId + ""};
         //TODO test if restart is needed here
         getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
         return false;
@@ -280,7 +284,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public boolean onQueryTextChange(String newText) {
 
-        if(searchView == null)
+        if (searchView == null)
             return false;
 
         // Called when the action bar search text has changed.  Update
@@ -291,14 +295,15 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         // Prevents restarting the loader when restoring state.
         if (mCurFilter == null && newFilter == null) {
             return true;
-        } if (mCurFilter != null && mCurFilter.equals(newFilter)) {
+        }
+        if (mCurFilter != null && mCurFilter.equals(newFilter)) {
             return true;
         }
         mCurFilter = newFilter;
 
-        if(TextUtils.isEmpty(newText)) {
+        if (TextUtils.isEmpty(newText)) {
             selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
-            selectionArguments = new String[]{serverId+""};
+            selectionArguments = new String[]{serverId + ""};
         } else {
             selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
             selectionArguments = new String[]{serverId + "", "%" + mCurFilter + "%"};
@@ -325,7 +330,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             View v = inflater.inflate(R.layout.import_dialog, container, false);
             ImageView image = (ImageView) v.findViewById(R.id.image);
-            image.setPadding(0,0,0,0);
+            image.setPadding(0, 0, 0, 0);
             image.setBackgroundResource(0);
             Picasso.with(v.getContext()).load(R.drawable.hide_dialog).into(image);
             TextView text1 = (TextView) v.findViewById(R.id.text1);

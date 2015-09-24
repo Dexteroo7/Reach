@@ -274,40 +274,25 @@ public enum CloudStorageUtils {
         if (currentHash.equals(serverHash))
             return toReturn; //same music found, but still verify for music visibility
 
-        InputStream download = null;
-        GZIPInputStream compressedData = null;
-
+        final InputStream download;
+        final GZIPInputStream compressedData;
         final MusicList musicList;
-        final String computedHash;
 
         try {
 
             final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
             final HttpHeaders httpHeaders = get.getRequestHeaders();
-            Log.i("Ayush", "Default cache " + httpHeaders.getCacheControl());
             httpHeaders.setCacheControl("no-cache");
-
             get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
             download = get.executeMediaAsInputStream();
 
-            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(1024);
-            int read;
-            byte[] readBytes = new byte[1024];
-            while ((read = download.read(readBytes)) != -1)
-                outputStream.write(readBytes, 0, read);
-            //compute hash of current Music data
-            computedHash = Base64.encodeToString(Hashing.md5().newHasher()
-                    .putBytes(readBytes = outputStream.toByteArray())
-                    .hash().asBytes(), Base64.DEFAULT).trim();
-
-            compressedData = new GZIPInputStream(new ByteArrayInputStream(readBytes));
+            compressedData = new GZIPInputStream(download);
             musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+            MiscUtils.closeQuietly(download, compressedData);
 
         } catch (IOException e) {
             e.printStackTrace();
             return toReturn; //fail but fetch visibility if music already present
-        } finally {
-            MiscUtils.closeQuietly(download, compressedData);
         }
 
         final ContentResolver resolver = context.getContentResolver();
@@ -324,9 +309,6 @@ public enum CloudStorageUtils {
             SharedPrefUtils.removeMusicHash(preferences, fileName);
             return false; //no songs found !
         }
-
-        if (!computedHash.equals(serverHash))
-            Log.i("Ayush", "HASH NOT SAME ERROR");
 
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);

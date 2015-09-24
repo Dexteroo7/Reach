@@ -379,11 +379,13 @@ public class MusicScanner extends IntentService {
 
     private boolean filter(String name) {
 
-        return (name.startsWith("AUD") ||
-                MiscUtils.containsIgnoreCase(name, "AudioRecording") ||
-                MiscUtils.containsIgnoreCase(name, "AudioTrack") ||
-                MiscUtils.containsIgnoreCase(name, "WhatsApp") ||
-                MiscUtils.containsIgnoreCase(name, "Recording"));
+        return !TextUtils.isEmpty(name) ||
+                (name.startsWith("AUD") ||
+                        MiscUtils.containsIgnoreCase(name, "AudioRecording") ||
+                        MiscUtils.containsIgnoreCase(name, "AudioTrack") ||
+                        MiscUtils.containsIgnoreCase(name, "WhatsApp") ||
+                        MiscUtils.containsIgnoreCase(name, "Recording"));
+
     }
 
     private List<Playlist.Builder> getPlayLists(Playlist.Builder defaultPlayList,
@@ -639,7 +641,7 @@ public class MusicScanner extends IntentService {
         final InputStream key;
         try {
             key = getAssets().open("key.p12");
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
             return; // what to do ? this should probably not happen
         }

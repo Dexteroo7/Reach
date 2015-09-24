@@ -161,7 +161,7 @@ public class NumberVerification extends Fragment {
                 super.onPostExecute(pair);
 
                 final FragmentActivity activity = getActivity();
-                if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing())
+                if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing() || mListener == null)
                     return;
 
                 final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);

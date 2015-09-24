@@ -1,6 +1,5 @@
 package reach.project.coreViews;
 
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -42,6 +41,7 @@ import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.viewHelpers.CircleTransform;
@@ -51,6 +51,7 @@ public class EditProfileFragment extends Fragment {
     private final int IMAGE_PICKER_SELECT = 999;
     private final CircleTransform transform = new CircleTransform();
 
+    private SuperInterface mListener;
     private EditText firstName = null;
     private TextView uploadText = null;
     private View editProfileContainer = null;
@@ -78,7 +79,7 @@ public class EditProfileFragment extends Fragment {
         else {
 
             ((InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);
-            editProfileContainer.setVisibility(View.INVISIBLE);
+            editProfileContainer.setVisibility(View.GONE);
             loadingBar.setVisibility(View.VISIBLE);
             uploadText.setText("");
             firstName.setEnabled(false);
@@ -96,7 +97,7 @@ public class EditProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_edit_profile, container, false);
-        final Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.editProfileToolbar);
+        final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.editProfileToolbar);
         final Activity activity = getActivity();
 
         mToolbar.setTitle("Edit Profile");
@@ -158,6 +159,25 @@ public class EditProfileFragment extends Fragment {
         }
 
         new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+
+        super.onDetach();
+        mListener = null;
     }
 
     private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
@@ -222,7 +242,7 @@ public class EditProfileFragment extends Fragment {
                 } else if (fragment.profile != null) {
 
                     toUpload = file;
-                    Picasso.with(context).load(toUpload).fit().centerCrop().into(fragment.profile);
+                    Picasso.with(context).load(toUpload).fit().centerCrop().transform(fragment.transform).into(fragment.profile);
                 }
                 return null;
             });
@@ -262,6 +282,7 @@ public class EditProfileFragment extends Fragment {
                     return false;
             }
 
+            Log.i("Ayush", "Pushing " + userId + " " + name[0] + " " + imageId);
             MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.absent());
             return true;
         }
@@ -274,9 +295,14 @@ public class EditProfileFragment extends Fragment {
                 if (fragment.firstName == null || fragment.uploadText == null || fragment.editProfileContainer == null || fragment.loadingBar == null)
                     return null;
 
-                if (success != null && success)
+                if (success != null && success) {
+
                     Toast.makeText(fragment.getActivity(), "Changes saved successfully!!", Toast.LENGTH_SHORT).show();
-                else {
+                    SharedPrefUtils.storeImageId(fragment.sharedPreferences, imageId);
+                    if (fragment.mListener != null && fragment.firstName != null)
+                        fragment.mListener.updateDetails(toUpload, fragment.firstName.getText().toString());
+                } else {
+
                     Toast.makeText(fragment.getActivity(), "Failed, try again", Toast.LENGTH_SHORT).show();
                     fragment.profile.setImageBitmap(null);
                 }
@@ -285,7 +311,7 @@ public class EditProfileFragment extends Fragment {
                 fragment.firstName.requestFocus();
                 fragment.uploadText.setText("Edit\nPhoto");
                 fragment.editProfileContainer.setVisibility(View.VISIBLE);
-                fragment.loadingBar.setVisibility(View.INVISIBLE);
+                fragment.loadingBar.setVisibility(View.GONE);
 
                 return null;
             });
