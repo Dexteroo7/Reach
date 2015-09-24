@@ -9,8 +9,8 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 60
-        versionName "0.9.20.1-beta"
+        versionCode 61
+        versionName "0.9.20.2-beta"
         //meant for release
         //multiDexEnabled true
     }

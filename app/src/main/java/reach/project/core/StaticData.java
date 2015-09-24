@@ -81,14 +81,19 @@ public final class StaticData {
             ReachSongHelper.COLUMN_ID, //5
             ReachSongHelper.COLUMN_DURATION}; //6
 
-    public static final short ALBUM_LOADER = 0;
-    public static final short ARTIST_LOADER = 1;
-    public static final short FRIENDS_LOADER = 2;
-    public static final short SONGS_LOADER = 3;
-    public static final short PLAY_LIST_LOADER = 4;
-    public static final short DOWNLOAD_LOADER = 5;
-    public static final short UPLOAD_LOADER = 6;
-    public static final short MY_LIBRARY_LOADER = 7;
+    public static final byte ALBUM_LOADER = 0;
+    public static final byte ARTIST_LOADER = 1;
+    public static final byte FRIENDS_LOADER = 2;
+    public static final byte SONGS_LOADER = 3;
+    public static final byte PLAY_LIST_LOADER = 4;
+    public static final byte DOWNLOAD_LOADER = 5;
+    public static final byte UPLOAD_LOADER = 6;
+    public static final byte MY_LIBRARY_LOADER = 7;
+    public static final byte PUSH_MY_LIBRARY_LOADER = 8;
+    public static final byte PUSH_DOWNLOADED_LOADER = 9;
+
+    public static final byte FULL_LIST_LOADER = 10;
+    public static final byte RECENT_LIST_LOADER = 11;
 
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;

@@ -3,6 +3,7 @@ package reach.project.coreViews;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -58,7 +59,6 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.playLists.PlayListListFragment;
 import reach.project.music.songs.MusicListFragment;
 import reach.project.music.songs.ReachSongHelper;
 import reach.project.music.songs.ReachSongProvider;
@@ -73,7 +73,7 @@ import reach.project.utils.viewHelpers.flavienlaurent.notboringactionbar.AlphaFo
 import reach.project.utils.viewHelpers.kmshack.newsstand.ScrollTabHolder;
 import reach.project.utils.viewHelpers.kmshack.newsstand.ScrollTabHolderFragment;
 
-public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPageChangeListener{
+public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPageChangeListener {
 
     private Toolbar toolbar;
 
@@ -88,7 +88,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
     private int mMinHeaderTranslation;
     private SpannableString mSpannableString;
     private AlphaForegroundColorSpan mAlphaForegroundColorSpan;
-
+    private MenuItem searchItem;
 
     private static WeakReference<UserMusicLibrary> reference = null;
 
@@ -112,9 +112,10 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         toolbar.setSubtitle("");
         toolbar = null;
         if (searchView != null) {
+
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
-            searchView.setQuery(null, false);
+            searchView.setQuery(null, true);
             ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
                     .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
         }
@@ -135,28 +136,25 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
             AsyncTask.THREAD_POOL_EXECUTOR.execute(new GetMusic(userId));
 
         final View rootView = inflater.inflate(R.layout.fragment_user_library, container, false);
+        final ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);
+        final TextView uName = (TextView) rootView.findViewById(R.id.userName);
+        final TextView numSongs = (TextView) rootView.findViewById(R.id.numberOfSongs);
+        final View.OnClickListener backListener = v -> activity.onBackPressed();
 
-
-        ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);
-        TextView uName = (TextView) rootView.findViewById(R.id.userName);
-        TextView numSongs = (TextView) rootView.findViewById(R.id.numberOfSongs);
-
-        View.OnClickListener backListener = v -> getActivity().onBackPressed();
-        rootView.findViewById(R.id.goBackBtn).setOnClickListener(backListener);
         toolbar = ((Toolbar) rootView.findViewById(R.id.libraryToolbar));
         toolbar.setNavigationOnClickListener(backListener);
         toolbar.inflateMenu(R.menu.search_menu);
-        MenuItem searchItem = toolbar.getMenu().findItem(R.id.search_button);
+        searchItem = toolbar.getMenu().findItem(R.id.search_button);
+        final int mMinHeaderHeight = getResources().getDimensionPixelSize(R.dimen.min_header_height);
+        final PagerSlidingTabStrip mPagerSlidingTabStrip = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabs);
+        final ContentResolver resolver = activity.getContentResolver();
+
+        rootView.findViewById(R.id.goBackBtn).setOnClickListener(backListener);
         searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
-        int mMinHeaderHeight = getResources().getDimensionPixelSize(R.dimen.min_header_height);
         mHeaderHeight = getResources().getDimensionPixelSize(R.dimen.header_height);
-        mMinHeaderTranslation = -mMinHeaderHeight + toolbar.getHeight();
-
+        mMinHeaderTranslation = toolbar.getHeight() - mMinHeaderHeight;
         mHeader = rootView.findViewById(R.id.header);
-
-        PagerSlidingTabStrip mPagerSlidingTabStrip = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabs);
-
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             FrameLayout myReachFrame = (FrameLayout) rootView.findViewById(R.id.libraryFrame);
@@ -168,7 +166,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         viewPager.setOffscreenPageLimit(2);
 
-        final Cursor cursor = rootView.getContext().getContentResolver().query(
+        final Cursor cursor = resolver.query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                 new String[]{ReachFriendsHelper.COLUMN_PHONE_NUMBER,
                         ReachFriendsHelper.COLUMN_USER_NAME,
@@ -176,7 +174,8 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                         ReachFriendsHelper.COLUMN_IMAGE_ID},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
-        if (cursor == null) return rootView;
+        if (cursor == null)
+            return rootView;
         if (!cursor.moveToFirst()) {
 
             cursor.close();
@@ -185,11 +184,11 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
         final ContentValues values = new ContentValues(1);
         values.put(ReachFriendsHelper.COLUMN_NEW_SONGS, "0");
-        rootView.getContext().getContentResolver().update(
+        resolver.update(
                 ReachFriendsProvider.CONTENT_URI,
                 values,
                 ReachFriendsHelper.COLUMN_ID + " = ?",
-                new String[]{""+userId});
+                new String[]{"" + userId});
 
         final String phoneNumber = cursor.getString(0);
         final String userName = cursor.getString(1);
@@ -200,7 +199,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         numSongs.setText(numberOfSongs + " songs");
 
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
         if (phoneNumber.equals("8860872102") && !SharedPrefUtils.getSecondIntroSeen(sharedPreferences)) {
 
             SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
@@ -213,14 +211,12 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final String path;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             path = StaticData.cloudStorageImageBaseUrl + imageId;
-            Picasso.with(container.getContext()).load(path).fit().centerCrop().into(largeProfilePic);
-        }
-        else
+            Picasso.with(activity).load(path).fit().centerCrop().into(largeProfilePic);
+        } else
             path = "default";
 
         new SetIcon(userName).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, path);
-        mPagerAdapter = new PagerAdapter(getChildFragmentManager(), userId);
-        mPagerAdapter.setTabHolderScrollingContent(this);
+        mPagerAdapter = new PagerAdapter(getChildFragmentManager(), userId, this, searchView);
         viewPager.setAdapter(mPagerAdapter);
         ///////
 
@@ -241,10 +237,10 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 .setValue(1)
                 .build());
 
-
         return rootView;
     }
 
+    //TODO recycle bitmap
     private static final Runnable devikaSendMeSomeLove = () -> {
 
         final Bitmap bmp = MiscUtils.useContextFromFragment(reference, context -> {
@@ -359,6 +355,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         }
     }
 
+    //TODO recycle bitmap
     private static class SetIcon extends AsyncTask<String, Void, Bitmap> {
 
         private final int margin = MiscUtils.dpToPx(44);
@@ -426,19 +423,26 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     @Override
     public void onPageSelected(int position) {
-        ScrollTabHolder [] scrollTabHolders = mPagerAdapter.getScrollTabHolders();
+        if (position == 0)
+            searchItem.setVisible(false);
+        else
+            searchItem.setVisible(true);
+
+        final ScrollTabHolder[] scrollTabHolders = mPagerAdapter.getScrollTabHolders();
         ScrollTabHolder currentHolder = scrollTabHolders[position];
-        if (currentHolder!=null)
+        if (currentHolder != null)
             currentHolder.adjustScroll((int) (mHeader.getHeight() + ViewHelper.getTranslationY(mHeader)));
     }
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount, int pagePosition) {
+
         if (viewPager.getCurrentItem() == pagePosition) {
-            int scrollY = getScrollY(view);
+
+            final int scrollY = getScrollY(view);
             ViewHelper.setTranslationY(mHeader, Math.max(-scrollY, mMinHeaderTranslation));
-            float ratio = clamp(ViewHelper.getTranslationY(mHeader) / mMinHeaderTranslation, 0.0f, 1.0f);
-            setTitleAlpha(clamp(5.0F * ratio - 4.0F, 0.0F, 1.0F));
+            final float ratio = clamp(ViewHelper.getTranslationY(mHeader) / mMinHeaderTranslation, 0.0f, 1.0f);
+            setTitleAlpha(clamp(5.0f * ratio - 4.0f, 0.0f, 1.0f));
         }
     }
 
@@ -448,20 +452,21 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
     }
 
     public int getScrollY(AbsListView view) {
-        View c = view.getChildAt(0);
+
+        final View c = view.getChildAt(0);
         if (c == null) {
             return 0;
         }
 
-        int firstVisiblePosition = view.getFirstVisiblePosition();
-        int top = c.getTop();
+        final int firstVisiblePosition = view.getFirstVisiblePosition();
+        final int top = c.getTop();
 
         int headerHeight = 0;
         if (firstVisiblePosition >= 1) {
             headerHeight = mHeaderHeight;
         }
 
-        return -top + firstVisiblePosition * c.getHeight() + headerHeight;
+        return firstVisiblePosition * c.getHeight() + headerHeight - top;
     }
 
     public static float clamp(float value, float max, float min) {
@@ -469,6 +474,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
     }
 
     private void setTitleAlpha(float alpha) {
+
         mAlphaForegroundColorSpan.setAlpha(alpha);
         ((AppBarLayout) toolbar.getParent()).setAlpha(alpha);
         mSpannableString.setSpan(mAlphaForegroundColorSpan, 0, mSpannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -477,22 +483,24 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     public class PagerAdapter extends FragmentPagerAdapter {
 
-        private ScrollTabHolder[] mScrollTabHolders;
-        private ScrollTabHolderFragment[] mScrollTabHolderFragments;
-        private final String[] TITLES = { "Recent", "Library"};
-        private ScrollTabHolder mListener;
+        private final ScrollTabHolder[] mScrollTabHolders;
+        private final ScrollTabHolderFragment[] mScrollTabHolderFragments;
+        private final String[] TITLES = {"Recent", "Library"};
+        private final ScrollTabHolder mListener;
 
-        public PagerAdapter(FragmentManager fm, long uID) {
+        public PagerAdapter(FragmentManager fm, long uID, ScrollTabHolder listener, SearchView searchView) {
+
             super(fm);
-            mScrollTabHolderFragments = new ScrollTabHolderFragment[] {
-                    PlayListListFragment.newInstance(uID, 0),
-                    MusicListFragment.newPagerInstance(uID, 0, searchView, 1)
-            };
-            mScrollTabHolders = new ScrollTabHolder[TITLES.length];
-        }
 
-        public void setTabHolderScrollingContent(ScrollTabHolder listener) {
-            mListener = listener;
+            final MusicListFragment fullList = MusicListFragment.newFullListInstance(uID, 1);
+            fullList.setSearchView(searchView);
+
+            this.mScrollTabHolderFragments = new ScrollTabHolderFragment[]{
+                    MusicListFragment.newRecentListInstance(uID, 0),
+                    fullList
+            };
+            this.mScrollTabHolders = new ScrollTabHolder[TITLES.length];
+            this.mListener = listener;
         }
 
         @Override
@@ -507,7 +515,8 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
         @Override
         public Fragment getItem(int position) {
-            ScrollTabHolderFragment fragment = mScrollTabHolderFragments[position];
+
+            final ScrollTabHolderFragment fragment = mScrollTabHolderFragments[position];
             mScrollTabHolders[position] = fragment;
             if (mListener != null) {
                 fragment.setScrollTabHolder(mListener);
@@ -518,6 +527,5 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         public ScrollTabHolder[] getScrollTabHolders() {
             return mScrollTabHolders;
         }
-
     }
 }

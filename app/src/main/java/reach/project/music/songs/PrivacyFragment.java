@@ -42,7 +42,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         SearchView.OnQueryTextListener, SearchView.OnCloseListener {
 
     private ReachMusicAdapter reachMusicAdapter;
-    private TextView songsCount;
     private SearchView searchView;
     private ListView privacyList;
     private View rootView;
@@ -110,7 +109,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             int count = cursor.getCount();
             reachMusicAdapter.swapCursor(cursor);
-            songsCount.setText(count + " Songs");
             if (count==0 && privacyList!=null)
             MiscUtils.setEmptyTextForListView(privacyList, "No songs found");
         }
@@ -131,7 +129,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             reachMusicAdapter.getCursor().close();
 
         reachMusicAdapter = null;
-        songsCount = null;
         privacyList = null;
         if(searchView != null) {
             searchView.setOnQueryTextListener(null);
@@ -153,7 +150,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
-        songsCount = (TextView) rootView.findViewById(R.id.songsCount);
         toolbar = (Toolbar)rootView.findViewById(R.id.privacyToolbar);
         toolbar.setTitle("Hide Songs");
         toolbar.setSubtitle("Click to Hide/Unhide Songs");
