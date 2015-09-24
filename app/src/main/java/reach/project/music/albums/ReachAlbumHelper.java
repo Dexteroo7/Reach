@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -18,8 +19,6 @@ public class ReachAlbumHelper extends SQLiteOpenHelper {
     public static final String COLUMN_USER_ID = "userId";
     public static final String COLUMN_SIZE = "size";
 
-    public static final String COLUMN_RELEASE_GROUP_MBID = "releaseGroupMbid";
-
     private static final String DATABASE_NAME = "reach.database.sql.ReachAlbumHelper";
     private static final int DATABASE_VERSION = 2;
 
@@ -29,7 +28,6 @@ public class ReachAlbumHelper extends SQLiteOpenHelper {
             + " integer primary key autoincrement, " +
             COLUMN_ALBUM + " text" + "," +
             COLUMN_ARTIST + " text" + "," +
-            COLUMN_RELEASE_GROUP_MBID + " text" + "," +
             COLUMN_USER_ID + " long" + "," +
             COLUMN_SIZE + " int" + " )";
 
@@ -39,8 +37,7 @@ public class ReachAlbumHelper extends SQLiteOpenHelper {
                     COLUMN_ALBUM,
                     COLUMN_ARTIST,
                     COLUMN_USER_ID,
-                    COLUMN_SIZE,
-                    COLUMN_RELEASE_GROUP_MBID
+                    COLUMN_SIZE
             };
 
     public static Album cursorToProcess(Cursor cursor) {
@@ -78,11 +75,10 @@ public class ReachAlbumHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-//        Log.w(ReachAlbumHelper.class.getName(),
-//                "Upgrading database from version " + oldVersion + " to "
-//                        + newVersion + ", which will destroy all old data");
-//        db.execSQL("DROP TABLE IF EXISTS " + ALBUM_TABLE);
-        database.execSQL("ALTER TABLE " + ALBUM_TABLE + " ADD COLUMN " + COLUMN_RELEASE_GROUP_MBID + " text");
-//        onCreate(database);
+        Log.w(ReachAlbumHelper.class.getName(),
+                "Upgrading database from version " + oldVersion + " to "
+                        + newVersion + ", which will destroy all old data");
+        database.execSQL("DROP TABLE IF EXISTS " + ALBUM_TABLE);
+        onCreate(database);
     }
 }

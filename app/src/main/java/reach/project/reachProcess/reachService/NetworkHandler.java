@@ -822,6 +822,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 handlerInterface.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
         } catch (RemoteException | OperationApplicationException ignored) {
         } finally {
+            
             cursor.close();
             if (needToUpdate)
                 handlerInterface.updateNetworkDetails();
@@ -1155,6 +1156,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 Log.i("Downloader", "Requested song path invalid");
                 return Optional.absent();
             }
+
             final Object[] toSend = new Object[]{
                     cursor.getString(1),  //display name
                     cursor.getString(2), //actual name

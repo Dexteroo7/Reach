@@ -757,7 +757,8 @@ public class ReachActivity extends AppCompatActivity implements
     protected void onNewIntent(Intent intent) {
 
         Log.d("Ayush", "Received new Intent");
-        processIntent(intent);
+        if (intent != null)
+            processIntent(intent);
         super.onNewIntent(intent);
     }
 
@@ -967,68 +968,84 @@ public class ReachActivity extends AppCompatActivity implements
 
     private synchronized void processIntent(Intent intent) {
 
-        if (intent != null) {
+        Log.i("Ayush", "Processing Intent");
 
-            if (intent.getBooleanExtra("openNotificationFragment", false))
-                onOpenNotificationDrawer();
-            else if (intent.getBooleanExtra("openPlayer", false))
-                new Handler().postDelayed(() -> {
-                    if (slidingUpPanelLayout != null)
-                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
-                }, 1500);
-            else if (intent.getBooleanExtra("openFriendRequests", false)) {
-                if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
-                    mDrawerLayout.openDrawer(Gravity.RIGHT);
-                viewPager.setCurrentItem(0);
-            } else if (intent.getBooleanExtra("openNotifications", false)) {
-                if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
-                    mDrawerLayout.openDrawer(Gravity.RIGHT);
-                viewPager.setCurrentItem(1);
-            } else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
+        if (intent.getBooleanExtra("openNotificationFragment", false))
+            onOpenNotificationDrawer();
+        else if (intent.getBooleanExtra("openPlayer", false)) {
 
-                final String compressed = intent.getStringExtra("data");
-                String unCompressed;
-                try {
-                    unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    unCompressed = "";
-                }
+            if (slidingUpPanelLayout != null)
+                slidingUpPanelLayout.postDelayed(() -> slidingUpPanelLayout.setPanelState(PanelState.EXPANDED), 1500);
+        } else if (intent.getBooleanExtra("openFriendRequests", false)) {
 
-                if (!TextUtils.isEmpty(unCompressed)) {
+            if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
+                mDrawerLayout.openDrawer(Gravity.RIGHT);
+            viewPager.setCurrentItem(0);
+        } else if (intent.getBooleanExtra("openNotifications", false)) {
 
-                    final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
+            if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
+                mDrawerLayout.openDrawer(Gravity.RIGHT);
+            viewPager.setCurrentItem(1);
+        } else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
+
+            Log.i("Ayush", "FOUND PUSH DATA");
+
+            final String compressed = intent.getStringExtra("data");
+            String unCompressed;
+            try {
+                unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
+            } catch (IOException e) {
+                e.printStackTrace();
+                unCompressed = "";
+            }
+
+            Log.i("Ayush", "UNCOMPRESSED " + unCompressed);
+
+            if (!TextUtils.isEmpty(unCompressed)) {
+
+                final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
+
+                Log.i("Ayush", "FOUND PUSH CONTAINER");
+
+                if (pushContainer != null && !TextUtils.isEmpty(pushContainer.getSongData())) {
+
                     final HashSet<TransferSong> transferSongs = new Gson().fromJson(
                             pushContainer.getSongData(),
                             new TypeToken<HashSet<TransferSong>>() {
                             }.getType());
 
-                    for (TransferSong transferSong : transferSongs) {
+                    if (transferSongs != null && !transferSongs.isEmpty()) {
 
-                        addSongToQueue(transferSong.getSongId(),
-                                pushContainer.getSenderId(),
-                                transferSong.getSize(),
-                                transferSong.getDisplayName(),
-                                transferSong.getActualName(),
-                                true,
-                                pushContainer.getUserName(),
-                                ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                                pushContainer.getNetworkType(),
-                                transferSong.getArtistName(),
-                                transferSong.getDuration(),
-                                transferSong.getAlbumName(),
-                                transferSong.getGenre(),
-                                transferSong.getAlbumArtData());
+                        for (TransferSong transferSong : transferSongs) {
+
+                            if (transferSong == null)
+                                continue;
+
+                            addSongToQueue(transferSong.getSongId(),
+                                    pushContainer.getSenderId(),
+                                    transferSong.getSize(),
+                                    transferSong.getDisplayName(),
+                                    transferSong.getActualName(),
+                                    true,
+                                    pushContainer.getUserName(),
+                                    ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                    pushContainer.getNetworkType(),
+                                    transferSong.getArtistName(),
+                                    transferSong.getDuration(),
+                                    transferSong.getAlbumName(),
+                                    transferSong.getGenre(),
+                                    transferSong.getAlbumArtData());
+                        }
+                        new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     }
-                    new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             }
-
-            intent.removeExtra("openNotificationFragment");
-            intent.removeExtra("openPlayer");
-            intent.removeExtra("openFriendRequests");
-            intent.removeExtra("openNotifications");
         }
+
+        intent.removeExtra("openNotificationFragment");
+        intent.removeExtra("openPlayer");
+        intent.removeExtra("openFriendRequests");
+        intent.removeExtra("openNotifications");
     }
 
     @Override

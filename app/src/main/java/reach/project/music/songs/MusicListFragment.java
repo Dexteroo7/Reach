@@ -52,8 +52,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             if (mListener != null) {
-
-                final Cursor cursor = (Cursor) reachMusicAdapter.getItem(position-1);
+                final Cursor cursor = (Cursor) reachMusicAdapter.getItem(position - 1);
                 final long senderId = cursor.getLong(2);
 
                 final Cursor senderCursor = getActivity().getContentResolver().query(

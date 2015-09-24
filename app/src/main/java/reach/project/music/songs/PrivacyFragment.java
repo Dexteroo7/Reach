@@ -162,8 +162,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 }
                 return false;
             });
-        }
-        else {
+        } else {
             toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
             toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
             toolbar.inflateMenu(R.menu.search_menu);

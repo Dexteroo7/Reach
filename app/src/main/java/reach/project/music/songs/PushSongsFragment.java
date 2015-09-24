@@ -128,6 +128,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     public void onDestroyView() {
 
         LocalUtils.selectedList.clear();
+        LocalUtils.booleanArray.clear();
 
         toolbar.setSubtitle("");
 
@@ -185,6 +186,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                 mListener.onPushNext(LocalUtils.selectedList);
             return true;
         });
+
         toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
         toolbar.setNavigationOnClickListener(v -> activity.onBackPressed());
         searchView = (SearchView) toolbar.getMenu().findItem(R.id.search_button).getActionView();
@@ -398,7 +400,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                     Toast.makeText(view.getContext(), "Maximum 5 Songs allowed", Toast.LENGTH_SHORT).show();
             } else {
 
-                booleanArray.put(transferSong.hashCode(), false);
+                booleanArray.put(hashCode, false);
                 selectedList.remove(transferSong);
                 toggle.setBackgroundResource(0);
                 toggle.setImageResource(R.drawable.add_grey);

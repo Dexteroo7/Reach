@@ -564,7 +564,7 @@ public class ProcessManager extends Service implements
                 stopForeground(true);
                 break;
             case Music:
-//                notificationMusic();
+                notificationMusic();
                 break;
             case Both:
                 notificationState = NotificationState.Music;
@@ -621,7 +621,7 @@ public class ProcessManager extends Service implements
         switch (notificationState) {
 
             case Network:
-//                notificationNetwork();
+                notificationNetwork();
                 break;
             case Music:
                 notificationState = NotificationState.Dead;
@@ -803,6 +803,7 @@ public class ProcessManager extends Service implements
                 musicStack.clear();
                 musicHandler.close();
                 musicHandler.sanitize();
+                musicPlayerDead();
                 break;
             }
             default:
