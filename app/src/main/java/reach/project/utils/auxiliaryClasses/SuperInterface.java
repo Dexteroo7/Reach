@@ -2,6 +2,7 @@ package reach.project.utils.auxiliaryClasses;
 
 import com.google.common.base.Optional;
 
+import java.io.File;
 import java.util.HashSet;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
@@ -52,4 +53,5 @@ public interface SuperInterface {
 
     void onOpenInvitePage();
 
+    void updateDetails(File image, String userName);
 }

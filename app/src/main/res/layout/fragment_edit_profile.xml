@@ -89,12 +89,12 @@
             android:background="@drawable/shadow_toolbar"
             android:layout_width="match_parent"
             android:layout_height="3dp" />
+        <ProgressBar
+            android:indeterminate="true"
+            android:id="@+id/loadingBar"
+            android:visibility="gone"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </FrameLayout>
-    <ProgressBar
-        android:indeterminate="true"
-        android:id="@+id/loadingBar"
-        android:visibility="invisible"
-        android:layout_gravity="center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
 </LinearLayout>

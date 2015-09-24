@@ -31,6 +31,7 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 /**
@@ -78,7 +79,7 @@ public class PromoCodeDialog extends DialogFragment {
         return rootView;
     }
 
-    private final class VerifyPromoCode extends AsyncTask<String, Void, String> {
+    private static final class VerifyPromoCode extends AsyncTask<String, Void, String> {
 
         private String pCode;
 
@@ -116,43 +117,45 @@ public class PromoCodeDialog extends DialogFragment {
 
             super.onPostExecute(result);
 
-            if (isRemoving() || isDetached() || activity == null || activity.isFinishing())
-                return;
+            MiscUtils.useFragment(reference, fragment -> {
 
-            if (isCancelled() || result == null) {
-                dismiss();
-                return;
-            }
+                if (TextUtils.isEmpty(result)) {
+                    fragment.dismiss();
+                    return;
+                }
 
-            List<String> codesList = Arrays.asList(result.split(" "));
+                final Activity activity1 = fragment.getActivity();
+                final List<String> codesList = Arrays.asList(result.split(" "));
 
-            if (!codesList.contains(pCode)) {
-                Toast.makeText(activity, "Please enter a valid code", Toast.LENGTH_SHORT).show();
-                lowerPart.setVisibility(View.VISIBLE);
-                promoLoading.setVisibility(View.INVISIBLE);
-                return;
-            }
-            SharedPrefUtils.storePromoCode(
-                    activity.getSharedPreferences("Reach", Context.MODE_PRIVATE),
-                    pCode);
+                if (!codesList.contains(pCode)) {
 
-            final Cursor friendCursor = activity.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
-                    ReachFriendsHelper.projection, null, null, null);
-            int friendCount = 0;
-            if (friendCursor != null) {
-                friendCount = friendCursor.getCount();
-                friendCursor.close();
-            }
+                    Toast.makeText(activity1, "Please enter a valid code", Toast.LENGTH_SHORT).show();
+                    fragment.lowerPart.setVisibility(View.VISIBLE);
+                    fragment.promoLoading.setVisibility(View.INVISIBLE);
+                    return;
+                }
+                SharedPrefUtils.storePromoCode(activity1.getSharedPreferences("Reach", Context.MODE_PRIVATE),
+                        pCode);
 
-            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Promo Code")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
-                    .setLabel("Code - " + pCode + ", Friend Count - " + friendCount)
-                    .setValue(1)
-                    .build());
+                final Cursor friendCursor = activity1.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
+                        ReachFriendsHelper.projection, null, null, null);
 
-            Toast.makeText(activity, "Promo code applied", Toast.LENGTH_SHORT).show();
-            dismiss();
+                int friendCount = 0;
+                if (friendCursor != null) {
+                    friendCount = friendCursor.getCount();
+                    friendCursor.close();
+                }
+
+                ((ReachApplication) activity1.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Promo Code")
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(activity1.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                        .setLabel("Code - " + pCode + ", Friend Count - " + friendCount)
+                        .setValue(1)
+                        .build());
+
+                Toast.makeText(activity1, "Promo code applied", Toast.LENGTH_SHORT).show();
+                fragment.dismiss();
+            });
         }
     }
 

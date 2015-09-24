@@ -67,6 +67,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -258,42 +259,49 @@ public class ReachActivity extends AppCompatActivity implements
             mDrawerLayout.closeDrawers();
 
             //Check to see which item was being clicked and perform appropriate action
-            switch (menuItem.getItemId()) {
 
-                case R.id.navigation_item_1:
-                    fragmentManager
-                            .beginTransaction()
-                            .addToBackStack(null)
-                            .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
-                    return true;
-                case R.id.navigation_item_2:
-                    PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
-                    if (promoCodeDialog.isAdded())
-                        promoCodeDialog.dismiss();
-                    promoCodeDialog.show(fragmentManager, "promo_dialog");
-                    return true;
-                case R.id.navigation_item_3:
-                    fragmentManager
-                            .beginTransaction()
-                            .addToBackStack(null)
-                            .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
-                    return true;
-                case R.id.navigation_item_4:
-                    fragmentManager
-                            .beginTransaction()
-                            .addToBackStack(null)
-                            .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
-                    return true;
-                case R.id.navigation_item_5:
-                    fragmentManager
-                            .beginTransaction()
-                            .addToBackStack(null)
-                            .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
-                    return true;
-                default:
-                    return true;
+            try {
+                switch (menuItem.getItemId()) {
 
+                    case R.id.navigation_item_1:
+                        fragmentManager
+                                .beginTransaction()
+                                .addToBackStack(null)
+                                .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
+                        return true;
+                    case R.id.navigation_item_2:
+                        PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
+                        if (promoCodeDialog.isAdded())
+                            promoCodeDialog.dismiss();
+                        promoCodeDialog.show(fragmentManager, "promo_dialog");
+                        return true;
+                    case R.id.navigation_item_3:
+                        fragmentManager
+                                .beginTransaction()
+                                .addToBackStack(null)
+                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
+                        return true;
+                    case R.id.navigation_item_4:
+                        fragmentManager
+                                .beginTransaction()
+                                .addToBackStack(null)
+                                .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
+                        return true;
+                    case R.id.navigation_item_5:
+                        fragmentManager
+                                .beginTransaction()
+                                .addToBackStack(null)
+                                .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
+                        return true;
+                    default:
+                        return true;
+
+                }
+            } catch (IllegalStateException ignored) {
+                finish();
             }
+
+            return false;
         }
     };
 
@@ -379,11 +387,6 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
     public void onOpenProfile() {
         if (isFinishing())
             return;
@@ -423,6 +426,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void onOpenNavigationDrawer() {
+
         if (mDrawerLayout == null)
             return;
         if (!mDrawerLayout.isDrawerOpen(GravityCompat.START))
@@ -489,6 +493,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void onPrivacyDone() {
+
         if (isFinishing())
             return;
         try {
@@ -513,6 +518,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void onPushNext(HashSet<TransferSong> songsList) {
+
         if (isFinishing())
             return;
         try {
@@ -526,6 +532,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void onOpenInvitePage() {
+
         if (isFinishing())
             return;
         try {
@@ -533,11 +540,20 @@ public class ReachActivity extends AppCompatActivity implements
                     .addToBackStack(null)
                     .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
         } catch (IllegalStateException ignored) {
+            finish();
         }
     }
 
     @Override
+    public void updateDetails(File image, String userName) {
+
+        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
+        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+    }
+
+    @Override
     public void onOpenLibrary(long id) {
+
         if (isFinishing())
             return;
         try {
@@ -551,6 +567,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void onOpenPushLibrary() {
+
         if (isFinishing())
             return;
         try {
@@ -620,11 +637,11 @@ public class ReachActivity extends AppCompatActivity implements
                         new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
             }
         });
+
         final String path = SharedPrefUtils.getImageId(preferences);
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
             Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav))
-                .setText(SharedPrefUtils.getUserName(preferences));
+        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
         //TODO update count
         final Cursor countCursor = getContentResolver().query(
@@ -917,6 +934,7 @@ public class ReachActivity extends AppCompatActivity implements
                     AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
 
             } catch (IllegalStateException ignored) {
+                finish();
             }
         }
     }
@@ -980,12 +998,14 @@ public class ReachActivity extends AppCompatActivity implements
 
             if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
                 mDrawerLayout.openDrawer(Gravity.RIGHT);
-            viewPager.setCurrentItem(0);
+            if (viewPager != null)
+                viewPager.setCurrentItem(0);
         } else if (intent.getBooleanExtra("openNotifications", false)) {
 
             if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
                 mDrawerLayout.openDrawer(Gravity.RIGHT);
-            viewPager.setCurrentItem(1);
+            if (viewPager != null)
+                viewPager.setCurrentItem(1);
         } else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
 
             Log.i("Ayush", "FOUND PUSH DATA");
@@ -1368,14 +1388,6 @@ public class ReachActivity extends AppCompatActivity implements
                 playSong(ReachSongHelper.getMusicData(cursor, serverId), context);
         };
 
-        public static void toast(final String message) {
-
-            MiscUtils.useContextFromContext(reference, activity -> {
-                activity.runOnUiThread(() -> Toast.makeText(activity, message, Toast.LENGTH_SHORT).show());
-                return null;
-            });
-        }
-
         /**
          * Check the device to make sure it has the Google Play Services APK. If
          * it doesn't, display a dialog that allows users to download the APK from
@@ -1422,10 +1434,8 @@ public class ReachActivity extends AppCompatActivity implements
                     //network operation
                     if (MiscUtils.updateGCM(serverId, reference))
                         Log.i("Ayush", "GCM updated !");
-                    else {
+                    else
                         Log.i("Ayush", "GCM check failed");
-                        toast("Network error, GCM failed");
-                    }
                 }
 //                else if (gcmId.equals("user_deleted")) {
 //                    //TODO restart app sign-up
@@ -1554,6 +1564,7 @@ public class ReachActivity extends AppCompatActivity implements
                         try {
                             updateFragment.show(activity.fragmentManager, "update");
                         } catch (IllegalStateException | WindowManager.BadTokenException ignored) {
+                            activity.finish();
                         }
                     }
                     return null;
