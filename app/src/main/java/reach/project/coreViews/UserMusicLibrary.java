@@ -115,7 +115,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
-            searchView.setQuery(null, true);
+            searchView.setQuery("", true);
             ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
                     .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
         }
@@ -168,6 +168,9 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
         viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         viewPager.setOffscreenPageLimit(2);
+
+        if (viewPager.getCurrentItem()==0)
+            searchItem.setVisible(false);
 
         final Cursor cursor = resolver.query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
@@ -447,8 +450,11 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     @Override
     public void onPageSelected(int position) {
-        if (position == 0)
+        if (position == 0) {
             searchItem.setVisible(false);
+            if (searchView != null)
+                searchView.setQuery("", true);
+        }
         else
             searchItem.setVisible(true);
 
