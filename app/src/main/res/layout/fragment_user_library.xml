@@ -21,7 +21,7 @@
                 <ImageView
                     android:id="@+id/largeProfilePic"
                     android:src="@drawable/default_profile01"
-                    android:background="@color/reach_grey"
+                    android:background="@color/reach_grey_light"
                     android:scaleType="fitCenter"
                     android:clickable="true"
                     android:layout_width="match_parent"
@@ -32,8 +32,8 @@
                     android:layout_height="245dp" />
                 <LinearLayout
                     android:layout_gravity="bottom"
-                    android:padding="10dp"
                     android:orientation="vertical"
+                    android:padding="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
                     <TextView
@@ -49,8 +49,27 @@
                         android:text="Songs"
                         android:textSize="14sp"
                         android:textColor="#fff"
+                        android:layout_marginBottom="5dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:id="@+id/statusIcon"
+                            android:layout_marginRight="4dp"
+                            android:src="@drawable/ic_file_upload_disabled"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp" />
+                        <TextView
+                            android:id="@+id/statusText"
+                            android:layout_gravity="center_vertical"
+                            android:text="Sharing disabled"
+                            android:textColor="#fff"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
                 </LinearLayout>
                 <android.support.design.widget.AppBarLayout
                     app:elevation="0dp"

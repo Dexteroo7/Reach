@@ -14,9 +14,8 @@
         android:layout_height="match_parent" />
     <TextView
         android:id="@+id/newSongs"
-        android:visibility="invisible"
         android:layout_gravity="right"
-        android:text="+9"
+        android:text="+99"
         android:textColor="#fff"
         android:textStyle="bold"
         android:gravity="right"

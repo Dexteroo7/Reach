@@ -139,6 +139,9 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);
         final TextView uName = (TextView) rootView.findViewById(R.id.userName);
         final TextView numSongs = (TextView) rootView.findViewById(R.id.numberOfSongs);
+        final ImageView statusIcon = (ImageView) rootView.findViewById(R.id.statusIcon);
+        final TextView statusText = (TextView) rootView.findViewById(R.id.statusText);
+
         final View.OnClickListener backListener = v -> activity.onBackPressed();
 
         toolbar = ((Toolbar) rootView.findViewById(R.id.libraryToolbar));
@@ -171,7 +174,9 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 new String[]{ReachFriendsHelper.COLUMN_PHONE_NUMBER,
                         ReachFriendsHelper.COLUMN_USER_NAME,
                         ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS,
-                        ReachFriendsHelper.COLUMN_IMAGE_ID},
+                        ReachFriendsHelper.COLUMN_IMAGE_ID,
+                        ReachFriendsHelper.COLUMN_NETWORK_TYPE,
+                        ReachFriendsHelper.COLUMN_STATUS},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
         if (cursor == null)
@@ -194,6 +199,25 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final String userName = cursor.getString(1);
         final int numberOfSongs = cursor.getInt(2);
         final String imageId = cursor.getString(3);
+        final short networkType = cursor.getShort(4);
+        final short status = cursor.getShort(5);
+
+        statusIcon.setImageBitmap(null);
+        statusText.setText("");
+
+        if (networkType == 5) {
+            statusIcon.setImageResource(R.drawable.ic_file_upload_disabled);
+            statusText.setText("Sharing disabled");
+        }
+        else {
+            if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED) {
+                statusIcon.setImageResource(R.drawable.circular_online);
+                statusText.setText("Online");
+            } else if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) {
+                statusIcon.setImageResource(R.drawable.circular_offline);
+                statusText.setText("Offline");
+            }
+        }
 
         uName.setText(userName);
         numSongs.setText(numberOfSongs + " songs");
