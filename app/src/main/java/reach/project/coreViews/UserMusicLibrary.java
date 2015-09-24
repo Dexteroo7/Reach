@@ -424,7 +424,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
     public void onPageSelected(int position) {
 
         final ScrollTabHolder[] scrollTabHolders = mPagerAdapter.getScrollTabHolders();
-        ScrollTabHolder currentHolder = scrollTabHolders[position];
+        final ScrollTabHolder currentHolder = scrollTabHolders[position];
         if (currentHolder != null)
             currentHolder.adjustScroll((int) (mHeader.getHeight() + ViewHelper.getTranslationY(mHeader)));
     }

@@ -246,10 +246,20 @@ public class ContactsListFragment extends Fragment implements
     }
 
     public void setSearchView(SearchView sView) {
-        searchView = sView;
-        searchView.setOnQueryTextListener(this);
-        searchView.setOnCloseListener(this);
-        searchView.setQuery(null, true);
+
+        if (sView == null && searchView != null) {
+            //invalidate old
+            searchView.setOnQueryTextListener(null);
+            searchView.setOnCloseListener(null);
+            searchView.setQuery(null, true);
+            searchView = null;
+        } else if (sView != null){
+            //set new
+            searchView = sView;
+            searchView.setOnQueryTextListener(this);
+            searchView.setOnCloseListener(this);
+            searchView.setQuery(null, true);
+        }
     }
 
     @Override

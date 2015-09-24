@@ -138,8 +138,8 @@ public class MyReachFragment extends Fragment {
         rootView.findViewById(R.id.invite_friend_fab).setOnClickListener(inviteFriendListener);
 
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
-        ContactsListFragment contactsListFragment = ContactsListFragment.newInstance();
-        AllContactsFragment allContactsFragment = AllContactsFragment.newInstance();
+        final ContactsListFragment contactsListFragment = ContactsListFragment.newInstance();
+        final AllContactsFragment allContactsFragment = AllContactsFragment.newInstance();
 
         viewPager.setAdapter(new ViewPagerReusable(
                 getChildFragmentManager(),
@@ -159,10 +159,16 @@ public class MyReachFragment extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
-                if (position == 0)
+                if (position == 0) {
+
                     contactsListFragment.setSearchView(searchView);
-                else if (position == 1)
+                    allContactsFragment.setSearchView(null);
+                }
+                else if (position == 1) {
+
+                    contactsListFragment.setSearchView(null);
                     allContactsFragment.setSearchView(searchView);
+                }
 
             }
 
@@ -176,7 +182,9 @@ public class MyReachFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+
         if (searchView != null) {
+
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
             searchView.setQuery(null, false);
