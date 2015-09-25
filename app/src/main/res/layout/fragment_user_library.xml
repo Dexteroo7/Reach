@@ -21,7 +21,7 @@
                 <ImageView
                     android:id="@+id/largeProfilePic"
                     android:src="@drawable/default_profile01"
-                    android:background="@color/reach_grey_light"
+                    android:background="#eeeeee"
                     android:scaleType="fitCenter"
                     android:clickable="true"
                     android:layout_width="match_parent"

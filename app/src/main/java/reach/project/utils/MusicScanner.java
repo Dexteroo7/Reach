@@ -379,7 +379,7 @@ public class MusicScanner extends IntentService {
 
     private boolean filter(String name) {
 
-        return !TextUtils.isEmpty(name) ||
+        return TextUtils.isEmpty(name) ||
                 (name.startsWith("AUD") ||
                         MiscUtils.containsIgnoreCase(name, "AudioRecording") ||
                         MiscUtils.containsIgnoreCase(name, "AudioTrack") ||

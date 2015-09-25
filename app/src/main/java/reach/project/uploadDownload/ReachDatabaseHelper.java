@@ -262,6 +262,6 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_GENRE + " text");
         database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_VISIBILITY + " short");
         database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_UNIQUE_ID + " long");
-        onCreate(database);
+        //onCreate(database);
     }
 }

@@ -893,8 +893,8 @@ public class ReachActivity extends AppCompatActivity implements
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
 
         //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        Crittercism.setUsername(userName + " " + phoneNumber);
+        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        //Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
