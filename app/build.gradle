@@ -60,3 +60,7 @@ dependencies {
     compile 'com.sothree.slidinguppanel:library:3.1.1'
     compile 'com.commonsware.cwac:merge:1.1.1'
 }
+
+configurations {
+    compile.exclude group: "org.apache.httpcomponents", module: "httpclient"
+}
