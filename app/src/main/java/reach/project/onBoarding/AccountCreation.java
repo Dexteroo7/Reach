@@ -282,8 +282,7 @@ public class AccountCreation extends Fragment {
 
             super.onPostExecute(user);
 
-            if (toUpload != null && TextUtils.isEmpty(user.getImageId())) { //check only if image was selected
-
+            if ((toUpload == null) || ((toUpload != null) && TextUtils.isEmpty(user.getImageId()))) {
                 MiscUtils.useFragment(reference, fragment -> {
 
                     Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
@@ -332,11 +331,6 @@ public class AccountCreation extends Fragment {
 //                if (progressBar == null)
 //                    return;
                 toUpload = null;
-                MiscUtils.useFragment(reference, fragment -> {
-                    if (fragment.profilePhotoSelector != null)
-                        fragment.profilePhotoSelector.setImageBitmap(null);
-                    return null;
-                });
             }
 
             @Override

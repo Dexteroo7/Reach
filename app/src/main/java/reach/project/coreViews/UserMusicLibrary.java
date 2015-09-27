@@ -421,6 +421,9 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
                 final Toolbar toolbar = fragment.toolbar;
 
+                if (toolbar == null)
+                    return null;
+
                 if (bitmap == null)
 
                     toolbar.setLogo(TextDrawable.builder()
