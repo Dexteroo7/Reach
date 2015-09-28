@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.lang.ref.WeakReference;
@@ -51,7 +50,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (mListener != null) {
+            if (mListener != null && position!=0) {
                 final Cursor cursor = (Cursor) reachMusicAdapter.getItem(position - 1);
                 final long senderId = cursor.getLong(2);
 
