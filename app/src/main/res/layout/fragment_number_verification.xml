@@ -127,7 +127,7 @@
                         android:focusable="true"
                         android:focusableInTouchMode="true"
                         android:textColorHint="#b2b2b2"
-                        android:hint="Mobile Number"
+                        android:hint=" Phone No. "
                         android:inputType="numberSigned" />
                 </RelativeLayout>
                 <TextView
