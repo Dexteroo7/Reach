@@ -121,7 +121,6 @@
                         android:layout_height="40dp"
                         android:textCursorDrawable="@null"
                         android:textColor="@color/white"
-                        android:gravity="center"
                         android:background="@drawable/edittext_white"
                         android:padding="10dp"
                         android:textSize="18sp"
