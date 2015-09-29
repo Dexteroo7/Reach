@@ -167,7 +167,8 @@ public class NumberVerification extends Fragment {
                 final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                 sharedPreferences.edit().clear().apply();
                 SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
-                mListener.startAccountCreation(Optional.fromNullable(pair.first));
+                if (mListener!=null)
+                    mListener.startAccountCreation(Optional.fromNullable(pair.first));
             }
         }
     }

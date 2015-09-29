@@ -409,8 +409,8 @@ public class ReachActivity extends AppCompatActivity implements
                         NotificationFragment.newInstance(serverId)}));
         viewPager.setPagingEnabled(false);
 
-        final TabLayout slidingTabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
-        slidingTabLayout.post(() -> slidingTabLayout.setupWithViewPager(viewPager));
+        final TabLayout slidingTabLayout = (TabLayout) findViewById(R.id.notif_sliding_tabs);
+        slidingTabLayout.setupWithViewPager(viewPager);
     }
 
     @Override

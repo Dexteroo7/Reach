@@ -58,10 +58,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     private String[] selectionArgumentsDownloader;
     private String[] selectionArgumentsMyLibrary;
 
-    private int myLibraryCount = 0;
-    private int downloadedCount = 0;
-
-    private TextView songsCount;
     private SearchView searchView;
     private ListView privacyList;
     private View rootView;
@@ -120,19 +116,15 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         if (cursorLoader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER && cursor != null && !cursor.isClosed()) {
 
-            myLibraryCount = cursor.getCount();
             myLibraryAdapter.swapCursor(cursor);
-            songsCount.setText(myLibraryCount + downloadedCount + " Songs");
-            if (myLibraryCount == 0 && privacyList != null)
+            if (cursor.getCount() == 0 && privacyList != null)
                 combinedAdapter.setActive(emptyMyLibrary, true);
             else
                 combinedAdapter.setActive(emptyMyLibrary, false);
         } else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed()) {
 
-            downloadedCount = cursor.getCount();
             downloadedAdapter.swapCursor(cursor);
-            songsCount.setText(myLibraryCount + downloadedCount + " Songs");
-            if (downloadedCount == 0 && privacyList != null)
+            if (cursor.getCount() == 0 && privacyList != null)
                 combinedAdapter.setActive(emptyDownload, true);
             else
                 combinedAdapter.setActive(emptyDownload, false);
@@ -168,8 +160,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         myLibraryAdapter = null;
         downloadedAdapter = null;
-
-        songsCount = null;
         privacyList = null;
 
         if (searchView != null) {
@@ -197,7 +187,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
         privacyList.setOnItemClickListener(LocalUtils.listener);
 
-        songsCount = (TextView) rootView.findViewById(R.id.songsCount);
         toolbar = (Toolbar) rootView.findViewById(R.id.privacyToolbar);
         toolbar.setTitle("Hide Songs");
         toolbar.setSubtitle("Click to Hide/Unhide Songs");

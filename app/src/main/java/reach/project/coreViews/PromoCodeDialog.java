@@ -118,43 +118,44 @@ public class PromoCodeDialog extends DialogFragment {
             super.onPostExecute(result);
 
             MiscUtils.useFragment(reference, fragment -> {
+                try {
+                    if (TextUtils.isEmpty(result)) {
+                        fragment.dismiss();
+                        return;
+                    }
 
-                if (TextUtils.isEmpty(result)) {
+                    final Activity activity1 = fragment.getActivity();
+                    final List<String> codesList = Arrays.asList(result.split(" "));
+
+                    if (!codesList.contains(pCode)) {
+
+                        Toast.makeText(activity1, "Please enter a valid code", Toast.LENGTH_SHORT).show();
+                        fragment.lowerPart.setVisibility(View.VISIBLE);
+                        fragment.promoLoading.setVisibility(View.INVISIBLE);
+                        return;
+                    }
+                    SharedPrefUtils.storePromoCode(activity1.getSharedPreferences("Reach", Context.MODE_PRIVATE),
+                            pCode);
+
+                    final Cursor friendCursor = activity1.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
+                            ReachFriendsHelper.projection, null, null, null);
+
+                    int friendCount = 0;
+                    if (friendCursor != null) {
+                        friendCount = friendCursor.getCount();
+                        friendCursor.close();
+                    }
+
+                    ((ReachApplication) activity1.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Promo Code")
+                            .setAction("User Name - " + SharedPrefUtils.getUserName(activity1.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                            .setLabel("Code - " + pCode + ", Friend Count - " + friendCount)
+                            .setValue(1)
+                            .build());
+
+                    Toast.makeText(activity1, "Promo code applied", Toast.LENGTH_SHORT).show();
                     fragment.dismiss();
-                    return;
-                }
-
-                final Activity activity1 = fragment.getActivity();
-                final List<String> codesList = Arrays.asList(result.split(" "));
-
-                if (!codesList.contains(pCode)) {
-
-                    Toast.makeText(activity1, "Please enter a valid code", Toast.LENGTH_SHORT).show();
-                    fragment.lowerPart.setVisibility(View.VISIBLE);
-                    fragment.promoLoading.setVisibility(View.INVISIBLE);
-                    return;
-                }
-                SharedPrefUtils.storePromoCode(activity1.getSharedPreferences("Reach", Context.MODE_PRIVATE),
-                        pCode);
-
-                final Cursor friendCursor = activity1.getContentResolver().query(ReachFriendsProvider.CONTENT_URI,
-                        ReachFriendsHelper.projection, null, null, null);
-
-                int friendCount = 0;
-                if (friendCursor != null) {
-                    friendCount = friendCursor.getCount();
-                    friendCursor.close();
-                }
-
-                ((ReachApplication) activity1.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("Promo Code")
-                        .setAction("User Name - " + SharedPrefUtils.getUserName(activity1.getSharedPreferences("Reach", Context.MODE_PRIVATE)))
-                        .setLabel("Code - " + pCode + ", Friend Count - " + friendCount)
-                        .setValue(1)
-                        .build());
-
-                Toast.makeText(activity1, "Promo code applied", Toast.LENGTH_SHORT).show();
-                fragment.dismiss();
+                } catch (IllegalStateException ignored) {}
             });
         }
     }

@@ -53,7 +53,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     private String[] selectionArgumentsMyLibrary;
 
     private ListView pushLibraryList;
-    private TextView songsCount;
     private SearchView searchView;
     private Toolbar toolbar;
 
@@ -101,7 +100,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
             myLibraryAdapter.swapCursor(cursor);
             final int count = cursor.getCount();
-            songsCount.setText(count + " Songs");
             if (count == 0 && pushLibraryList != null)
                 combinedAdapter.setActive(emptyMyLibrary, true);
             else
@@ -110,7 +108,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
             downloadedAdapter.swapCursor(cursor);
             final int count = cursor.getCount();
-            songsCount.setText(count + " Songs");
             if (count == 0 && pushLibraryList != null)
                 combinedAdapter.setActive(emptyDownload, true);
             else
@@ -162,7 +159,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         }
 
         searchView = null;
-        songsCount = null;
         toolbar = null;
 
         super.onDestroyView();
@@ -179,7 +175,6 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         pushLibraryList = (ListView) rootView.findViewById(R.id.privacyList);
         pushLibraryList.setOnItemClickListener(LocalUtils.listener);
 
-        songsCount = (TextView) rootView.findViewById(R.id.songsCount);
         toolbar = ((Toolbar) rootView.findViewById(R.id.privacyToolbar));
         toolbar.setTitle("Share Music");
         toolbar.setSubtitle("Select upto 5 Songs");

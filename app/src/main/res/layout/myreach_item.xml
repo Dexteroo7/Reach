@@ -14,13 +14,12 @@
         android:layout_height="match_parent" />
     <TextView
         android:id="@+id/newSongs"
-        android:visibility="invisible"
         android:layout_gravity="right"
-        android:text="99"
+        android:text="+99"
         android:textColor="#fff"
         android:textStyle="bold"
         android:gravity="right"
-        android:padding="4dp"
+        android:padding="3dp"
         android:background="@drawable/background_triangle"
         android:layout_width="60dp"
         android:layout_height="70dp" />
@@ -36,9 +35,6 @@
             android:id="@+id/userNameList"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_toLeftOf="@id/note"
-            android:layout_centerVertical="true"
             android:ellipsize="marquee"
             android:maxWidth="120dp"
             android:lines="1"
@@ -52,8 +48,6 @@
             android:layout_height="wrap_content"
             android:text="100 Songs"
             android:textStyle="bold"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
             android:textColor="#fff"
             android:textSize="12sp" />
         <LinearLayout

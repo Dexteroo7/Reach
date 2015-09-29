@@ -401,7 +401,9 @@ public class ContactsListFragment extends Fragment implements
             selection = ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
             selectionArguments = new String[]{"%" + mCurFilter + "%"};
         }
-        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+        try {
+            getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+        } catch (IllegalStateException ignored) {}
         return true;
     }
 

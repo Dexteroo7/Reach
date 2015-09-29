@@ -101,11 +101,10 @@
                     android:background="@drawable/edittext_white"
                     android:padding="10dp"
                     android:textSize="18sp"
-                    android:gravity="center"
                     android:lines="1"
                     android:inputType="text"
                     android:textColorHint="#b2b2b2"
-                    android:hint="     Enter your name     " />
+                    android:hint=" Enter Name " />
             </RelativeLayout>
             <LinearLayout
                 android:orientation="vertical"

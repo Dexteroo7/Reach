@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.lang.ref.WeakReference;
@@ -51,8 +50,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (mListener != null) {
-
+            if (mListener != null && position!=0) {
                 final Cursor cursor = (Cursor) reachMusicAdapter.getItem(position - 1);
                 final long senderId = cursor.getLong(2);
 
@@ -173,14 +171,14 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        type = getArguments().getByte("type", (byte) 0);
 
-        final View rootView = inflater.inflate(R.layout.fragment_list, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_simple_list, container, false);
         mPosition = getArguments().getInt("position");
         musicList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         View placeHolderView = inflater.inflate(R.layout.view_header_placeholder, musicList, false);
         musicList.addHeaderView(placeHolderView);
         musicList.setOnScrollListener(this);
-        type = getArguments().getByte("type", (byte) 0);
         userId = getArguments().getLong("id");
 
         if (searchView != null) {
@@ -188,9 +186,6 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
             searchView.setOnQueryTextListener(this);
             searchView.setOnCloseListener(this);
         }
-
-        rootView.findViewById(R.id.musicListShadow).setVisibility(View.INVISIBLE);
-        ((LinearLayout) rootView).removeViewAt(0);
 
         whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                 ReachSongHelper.COLUMN_VISIBILITY + " = ? ";

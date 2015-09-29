@@ -88,6 +88,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
     private int mMinHeaderTranslation;
     private SpannableString mSpannableString;
     private AlphaForegroundColorSpan mAlphaForegroundColorSpan;
+    private MenuItem searchItem;
 
     private static WeakReference<UserMusicLibrary> reference = null;
 
@@ -114,7 +115,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
-            searchView.setQuery(null, false);
+            searchView.setQuery("", true);
             ((InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE))
                     .hideSoftInputFromWindow(searchView.getWindowToken(), 0);
         }
@@ -138,12 +139,15 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);
         final TextView uName = (TextView) rootView.findViewById(R.id.userName);
         final TextView numSongs = (TextView) rootView.findViewById(R.id.numberOfSongs);
+        final ImageView statusIcon = (ImageView) rootView.findViewById(R.id.statusIcon);
+        final TextView statusText = (TextView) rootView.findViewById(R.id.statusText);
+
         final View.OnClickListener backListener = v -> activity.onBackPressed();
 
         toolbar = ((Toolbar) rootView.findViewById(R.id.libraryToolbar));
         toolbar.setNavigationOnClickListener(backListener);
         toolbar.inflateMenu(R.menu.search_menu);
-        final MenuItem searchItem = toolbar.getMenu().findItem(R.id.search_button);
+        searchItem = toolbar.getMenu().findItem(R.id.search_button);
         final int mMinHeaderHeight = getResources().getDimensionPixelSize(R.dimen.min_header_height);
         final PagerSlidingTabStrip mPagerSlidingTabStrip = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabs);
         final ContentResolver resolver = activity.getContentResolver();
@@ -165,12 +169,17 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         viewPager.setOffscreenPageLimit(2);
 
+        if (viewPager.getCurrentItem()==0)
+            searchItem.setVisible(false);
+
         final Cursor cursor = resolver.query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                 new String[]{ReachFriendsHelper.COLUMN_PHONE_NUMBER,
                         ReachFriendsHelper.COLUMN_USER_NAME,
                         ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS,
-                        ReachFriendsHelper.COLUMN_IMAGE_ID},
+                        ReachFriendsHelper.COLUMN_IMAGE_ID,
+                        ReachFriendsHelper.COLUMN_NETWORK_TYPE,
+                        ReachFriendsHelper.COLUMN_STATUS},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
         if (cursor == null)
@@ -193,6 +202,25 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final String userName = cursor.getString(1);
         final int numberOfSongs = cursor.getInt(2);
         final String imageId = cursor.getString(3);
+        final short networkType = cursor.getShort(4);
+        final short status = cursor.getShort(5);
+
+        statusIcon.setImageBitmap(null);
+        statusText.setText("");
+
+        if (networkType == 5) {
+            statusIcon.setImageResource(R.drawable.ic_file_upload_disabled);
+            statusText.setText("Sharing disabled");
+        }
+        else {
+            if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED) {
+                statusIcon.setImageResource(R.drawable.circular_online);
+                statusText.setText("Online");
+            } else if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) {
+                statusIcon.setImageResource(R.drawable.circular_offline);
+                statusText.setText("Offline");
+            }
+        }
 
         uName.setText(userName);
         numSongs.setText(numberOfSongs + " songs");
@@ -393,6 +421,9 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
                 final Toolbar toolbar = fragment.toolbar;
 
+                if (toolbar == null)
+                    return null;
+
                 if (bitmap == null)
 
                     toolbar.setLogo(TextDrawable.builder()
@@ -422,6 +453,13 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     @Override
     public void onPageSelected(int position) {
+        if (position == 0) {
+            searchItem.setVisible(false);
+            if (searchView != null)
+                searchView.setQuery("", true);
+        }
+        else
+            searchItem.setVisible(true);
 
         if (position == 0)
             mPagerAdapter.setSearchView(null);

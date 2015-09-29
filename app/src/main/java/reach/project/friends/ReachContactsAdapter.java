@@ -89,7 +89,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
         viewHolder.telephoneNumberList.setText(numberOfSongs + " songs ");
-        if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) && Integer.parseInt(newSongs)>0) {
+        if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) && !newSongs.equals("hello_world") && Integer.parseInt(newSongs)>0) {
             viewHolder.newSongs.setVisibility(View.VISIBLE);
             viewHolder.newSongs.setText("+"+newSongs);
         }
@@ -107,14 +107,18 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
                     imageId).centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
         } else {
-            viewHolder.profileGradient.setImageBitmap(null);
-            viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
+            viewHolder.profilePhotoList.setBackgroundColor(Color.parseColor("#eeeeee"));
             if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
                 Picasso.with(context).load(R.drawable.default_profile01)
                         .centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
-            else
+            else {
                 Picasso.with(context).load(R.drawable.default_profile02)
                         .centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
+                if (status == ReachFriendsHelper.REQUEST_NOT_SENT || status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+                    viewHolder.profileGradient.setImageBitmap(null);
+                    viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
+                }
+            }
         }
 
 
