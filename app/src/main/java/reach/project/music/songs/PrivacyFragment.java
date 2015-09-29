@@ -1,19 +1,24 @@
 package reach.project.music.songs;
 
+import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,15 +30,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.commonsware.cwac.merge.MergeAdapter;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 
 import reach.backend.music.musicVisibilityApi.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.uploadDownload.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -41,7 +49,18 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
         SearchView.OnQueryTextListener, SearchView.OnCloseListener {
 
-    private ReachMusicAdapter reachMusicAdapter;
+    private MergeAdapter combinedAdapter = null;
+    private ReachMusicAdapter myLibraryAdapter = null;
+    private ReachMusicAdapter downloadedAdapter = null;
+    private TextView emptyDownload = null, emptyMyLibrary = null;
+
+    private String selectionDownloader, selectionMyLibrary, mCurFilter;
+    private String[] selectionArgumentsDownloader;
+    private String[] selectionArgumentsMyLibrary;
+
+    private int myLibraryCount = 0;
+    private int downloadedCount = 0;
+
     private TextView songsCount;
     private SearchView searchView;
     private ListView privacyList;
@@ -49,27 +68,8 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     private Toolbar toolbar;
 
     private SuperInterface mListener;
-    private String mCurFilter, selection;
-    private String[] selectionArguments;
+
     private long serverId;
-
-    private final AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-            privacyList.setEnabled(false);
-            final Cursor reachSongCursor = (Cursor) reachMusicAdapter.getItem(position);
-            /**
-             * params[0] = oldVisibility
-             * params[1] = songId
-             * params[2] = userId
-             */
-            new ToggleVisibility().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
-                    (long) reachSongCursor.getShort(9),
-                    reachSongCursor.getLong(1),
-                    reachSongCursor.getLong(2));
-        }
-    };
 
     private static WeakReference<PrivacyFragment> reference = null;
 
@@ -92,47 +92,86 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+    public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
 
-        if (getActivity() == null) return null;
-        return new CursorLoader(getActivity(),
-                ReachSongProvider.CONTENT_URI,
-                StaticData.DISK_COMPLETE_NO_PATH,
-                selection,
-                selectionArguments,
-                ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+        if (id == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
+
+            return new CursorLoader(getActivity(),
+                    ReachSongProvider.CONTENT_URI,
+                    myLibraryAdapter.getProjectionMyLibrary(),
+                    selectionMyLibrary,
+                    selectionArgumentsMyLibrary,
+                    ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+        } else if (id == StaticData.PRIVACY_DOWNLOADED_LOADER) {
+
+            return new CursorLoader(getActivity(),
+                    ReachDatabaseProvider.CONTENT_URI,
+                    myLibraryAdapter.getProjectionDownloaded(),
+                    selectionDownloader,
+                    selectionArgumentsDownloader,
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC");
+        }
+
+        return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
 
-        if (cursorLoader.getId() == StaticData.SONGS_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER && cursor != null && !cursor.isClosed()) {
 
-            int count = cursor.getCount();
-            reachMusicAdapter.swapCursor(cursor);
-            songsCount.setText(count + " Songs");
-            if (count == 0 && privacyList != null)
-                MiscUtils.setEmptyTextForListView(privacyList, "No songs found");
+            myLibraryCount = cursor.getCount();
+            myLibraryAdapter.swapCursor(cursor);
+            songsCount.setText(myLibraryCount + downloadedCount + " Songs");
+            if (myLibraryCount == 0 && privacyList != null)
+                combinedAdapter.setActive(emptyMyLibrary, true);
+            else
+                combinedAdapter.setActive(emptyMyLibrary, false);
+        } else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed()) {
+
+            downloadedCount = cursor.getCount();
+            downloadedAdapter.swapCursor(cursor);
+            songsCount.setText(myLibraryCount + downloadedCount + " Songs");
+            if (downloadedCount == 0 && privacyList != null)
+                combinedAdapter.setActive(emptyDownload, true);
+            else
+                combinedAdapter.setActive(emptyDownload, false);
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if (cursorLoader.getId() == StaticData.SONGS_LOADER)
-            reachMusicAdapter.swapCursor(null);
+
+        if (cursorLoader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
+            myLibraryAdapter.swapCursor(null);
+        else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
+            downloadedAdapter.swapCursor(null);
     }
 
     @Override
     public void onDestroyView() {
 
         toolbar.setSubtitle("");
-        getLoaderManager().destroyLoader(StaticData.SONGS_LOADER);
-        if (reachMusicAdapter != null && reachMusicAdapter.getCursor() != null && !reachMusicAdapter.getCursor().isClosed())
-            reachMusicAdapter.getCursor().close();
 
-        reachMusicAdapter = null;
+        selectionMyLibrary = null;
+        selectionDownloader = null;
+        selectionArgumentsMyLibrary = null;
+        selectionArgumentsDownloader = null;
+
+        getLoaderManager().destroyLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER);
+        if (myLibraryAdapter != null && myLibraryAdapter.getCursor() != null && !myLibraryAdapter.getCursor().isClosed())
+            myLibraryAdapter.getCursor().close();
+
+        getLoaderManager().destroyLoader(StaticData.PRIVACY_DOWNLOADED_LOADER);
+        if (downloadedAdapter != null && downloadedAdapter.getCursor() != null && !downloadedAdapter.getCursor().isClosed())
+            downloadedAdapter.getCursor().close();
+
+        myLibraryAdapter = null;
+        downloadedAdapter = null;
+
         songsCount = null;
         privacyList = null;
+
         if (searchView != null) {
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
@@ -151,13 +190,19 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        final Activity activity = getActivity();
+        serverId = SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE));
+
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
+        privacyList.setOnItemClickListener(LocalUtils.listener);
+
         songsCount = (TextView) rootView.findViewById(R.id.songsCount);
         toolbar = (Toolbar) rootView.findViewById(R.id.privacyToolbar);
         toolbar.setTitle("Hide Songs");
         toolbar.setSubtitle("Click to Hide/Unhide Songs");
         if (getArguments() != null && getArguments().getBoolean("first")) {
+
             toolbar.inflateMenu(R.menu.privacy_menu);
             toolbar.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == R.id.done_button) {
@@ -167,8 +212,9 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 return false;
             });
         } else {
+
             toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
-            toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+            toolbar.setNavigationOnClickListener(v -> activity.onBackPressed());
             toolbar.inflateMenu(R.menu.search_menu);
         }
 
@@ -177,102 +223,31 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         searchView.setOnCloseListener(this);
 
         if (getArguments().getBoolean("first"))
-            new InfoDialog().show(getChildFragmentManager(), "info_dialog");
-        serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE));
-        reachMusicAdapter = new ReachMusicAdapter(getActivity(), R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST);
-        selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
-        selectionArguments = new String[]{serverId + ""};
-        getLoaderManager().initLoader(StaticData.SONGS_LOADER, null, this);
+            new LocalUtils.InfoDialog().show(getChildFragmentManager(), "info_dialog");
 
-        privacyList.setAdapter(reachMusicAdapter);
-        privacyList.setOnItemClickListener(listener);
+        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+        selectionArgumentsMyLibrary = new String[]{serverId + ""};
+
+        selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                ReachDatabaseHelper.COLUMN_STATUS + " = ?";
+        selectionArgumentsDownloader = new String[]{serverId + "", ReachDatabase.FINISHED + ""};
+
+        loadAdapter();
         return rootView;
-    }
-
-    private class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
-
-        private synchronized void updateDatabase(ContentValues contentValues, long songId, long userId) {
-
-            if (getActivity() == null || contentValues == null || songId == 0 || userId == 0)
-                return;
-            Log.i("Ayush", "Toggle Visibility " + getActivity().getContentResolver().update(
-                    ReachSongProvider.CONTENT_URI,
-                    contentValues,
-                    ReachSongHelper.COLUMN_SONG_ID + " = ? and " + ReachSongHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{songId + "", userId + ""}));
-        }
-
-        /**
-         * params[0] = oldVisibility
-         * params[1] = songId
-         * params[2] = userId
-         */
-
-        @Override
-        protected Boolean doInBackground(Long... params) {
-
-            final ContentValues values = new ContentValues();
-            if (params[0] == 0)
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, 1);
-            else
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, 0);
-
-            updateDatabase(values, params[1], params[2]);
-            publishProgress(); //re-enable listView
-
-            boolean failed = false;
-
-            try {
-                final MyString response = StaticData.musicVisibility.update(
-                        params[2], //serverId
-                        params[1], //songId
-                        params[0] == 0).execute(); //if 0 (false) make it true and vice-versa
-                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
-                    failed = true; //mark failed
-            } catch (IOException e) {
-                e.printStackTrace();
-                failed = true; //mark failed
-            }
-
-            if (failed) {
-                //reset if failed
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, params[0]);
-                updateDatabase(values, params[1], params[2]);
-            }
-
-            return failed;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean failed) {
-            super.onPostExecute(failed);
-
-            if (isCancelled() || getActivity() == null || getActivity().isFinishing())
-                return;
-
-            if (failed)
-                Toast.makeText(getActivity(), "Network error", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-
-            super.onProgressUpdate(values);
-            if (privacyList == null)
-                cancel(true);
-            else
-                privacyList.setEnabled(true);
-        }
     }
 
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
-        selectionArguments = new String[]{serverId + ""};
-        //TODO test if restart is needed here
-        getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
+//        searchView.setQuery(null, true);
+//        selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
+//        selectionArguments = new String[]{serverId + ""};
+//        getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
+        if (searchView != null) {
+            searchView.setQuery(null, true);
+            searchView.clearFocus();
+        }
+        onQueryTextChange(null);
         return false;
     }
 
@@ -302,14 +277,28 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         mCurFilter = newFilter;
 
         if (TextUtils.isEmpty(newText)) {
-            selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
-            selectionArguments = new String[]{serverId + ""};
+
+            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+            selectionArgumentsMyLibrary = new String[]{serverId + ""};
+
+            selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                    ReachDatabaseHelper.COLUMN_STATUS + " = ?";
+            selectionArgumentsDownloader = new String[]{serverId + "", ReachDatabase.FINISHED + ""};
         } else {
-            selection = ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
-            selectionArguments = new String[]{serverId + "", "%" + mCurFilter + "%"};
+
+            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+                    ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
+            selectionArgumentsMyLibrary = new String[]{serverId + "", "%" + mCurFilter + "%"};
+
+            selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " +
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
+            selectionArgumentsDownloader = new String[]{serverId + "", ReachDatabase.FINISHED + "", "%" + mCurFilter + "%"};
         }
-        Log.i("Ayush", "Selection " + selection + " SelectionArguments " + Arrays.toString(selectionArguments));
-        getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
+
+        getLoaderManager().restartLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER, null, this);
+        getLoaderManager().restartLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
+        Log.i("Downloader", "SEARCH SUBMITTED !");
         return true;
     }
 
@@ -324,23 +313,189 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-    public static class InfoDialog extends DialogFragment {
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    private void loadAdapter() {
 
-            View v = inflater.inflate(R.layout.import_dialog, container, false);
-            ImageView image = (ImageView) v.findViewById(R.id.image);
-            image.setPadding(0, 0, 0, 0);
-            image.setBackgroundResource(0);
-            Picasso.with(v.getContext()).load(R.drawable.hide_dialog).into(image);
-            TextView text1 = (TextView) v.findViewById(R.id.text1);
-            text1.setText("Tap to hide your songs. By default your personal audio files are hidden");
-            TextView done = (TextView) v.findViewById(R.id.done);
-            done.setText("Okay, I got it!");
-            done.setVisibility(View.VISIBLE);
-            done.setOnClickListener(v1 -> dismiss());
-            getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-            return v;
+        /**
+         * Set up adapter for Music player
+         */
+        final Context context = reference.get().getContext();
+        combinedAdapter = new MergeAdapter();
+
+        combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
+        combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
+        combinedAdapter.addAdapter(downloadedAdapter = new ReachMusicAdapter(context, R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST));
+
+        combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
+        combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
+        combinedAdapter.addAdapter(myLibraryAdapter = new ReachMusicAdapter(context, R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST));
+
+        privacyList.setAdapter(combinedAdapter);
+        getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER, null, this);
+    }
+
+
+    private enum LocalUtils {
+        ;
+
+        public static TextView getDownloadedTextView(Context context) {
+
+            final TextView textView = new TextView(context);
+            textView.setText("Downloaded");
+            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
+            textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+            return textView;
+        }
+
+        public static TextView getMyLibraryTextView(Context context) {
+
+            final TextView textView = new TextView(context);
+            textView.setText("My Songs");
+            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
+            textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
+            textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+            return textView;
+        }
+
+        public static TextView getEmptyDownload(Context context) {
+
+            final TextView emptyTV1 = new TextView(context);
+            emptyTV1.setText("No downloaded songs");
+            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+            return emptyTV1;
+        }
+
+        public static TextView getEmptyLibrary(Context context) {
+
+            final TextView emptyTV2 = new TextView(context);
+            emptyTV2.setText("No Music on your phone");
+            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+            emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
+            return emptyTV2;
+        }
+
+        public static class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
+
+            /**
+             * params[0] = oldVisibility
+             * params[1] = songId
+             * params[2] = userId
+             */
+
+            @Override
+            protected Boolean doInBackground(Long... params) {
+
+                boolean failed = false;
+                try {
+                    final MyString response = StaticData.musicVisibility.update(
+                            params[2], //serverId
+                            params[1], //songId
+                            params[0] == 0).execute(); //if 0 (false) make it true and vice-versa
+                    if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+                        failed = true; //mark failed
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    failed = true; //mark failed
+                }
+
+                if (failed) {
+                    //reset if failed
+                    final ContentValues values = new ContentValues(1);
+                    values.put(ReachSongHelper.COLUMN_VISIBILITY, params[0]);
+                    MiscUtils.useContextFromFragment(reference, context -> {
+                        updateDatabase(values, params[1], params[2], context);
+                    });
+                }
+
+                return failed;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean failed) {
+
+                super.onPostExecute(failed);
+                if (failed)
+                    MiscUtils.useContextFromFragment(reference, context -> {
+                        Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+                    });
+            }
+        }
+
+        public static synchronized void updateDatabase(ContentValues contentValues, long songId, long userId, Context context) {
+
+            if (context == null || contentValues == null || songId == 0 || userId == 0)
+                return;
+
+            final ContentResolver resolver = context.getContentResolver();
+
+            int updated = resolver.update(
+                    ReachSongProvider.CONTENT_URI,
+                    contentValues,
+                    ReachSongHelper.COLUMN_SONG_ID + " = ? and " + ReachSongHelper.COLUMN_USER_ID + " = ?",
+                    new String[]{songId + "", userId + ""});
+
+            if (updated == 0)
+                updated = resolver.update(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        contentValues,
+                        ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " + ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?",
+                        new String[]{songId + "", userId + ""});
+
+            Log.i("Ayush", "Toggle Visibility " + updated);
+        }
+
+        public static final AdapterView.OnItemClickListener listener = (parent, view, position, id) -> {
+
+            final Cursor reachSongCursor = (Cursor) parent.getAdapter().getItem(position);
+            /**
+             * params[0] = oldVisibility
+             * params[1] = songId
+             * params[2] = userId
+             */
+            final short oldVisibility = reachSongCursor.getShort(9);
+            final long songId = reachSongCursor.getLong(1);
+            final long userId = reachSongCursor.getLong(2);
+
+            final ContentValues values = new ContentValues();
+            if (oldVisibility == 0)
+                values.put(ReachSongHelper.COLUMN_VISIBILITY, 1);
+            else
+                values.put(ReachSongHelper.COLUMN_VISIBILITY, 0);
+
+            updateDatabase(values, songId, userId, view.getContext()
+            );
+            new ToggleVisibility().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+                    (long) reachSongCursor.getShort(9),
+                    reachSongCursor.getLong(1),
+                    reachSongCursor.getLong(2));
+        };
+
+        public static class InfoDialog extends DialogFragment {
+
+            @Override
+            public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+                final View v = inflater.inflate(R.layout.import_dialog, container, false);
+                final ImageView image = (ImageView) v.findViewById(R.id.image);
+                image.setPadding(0, 0, 0, 0);
+                image.setBackgroundResource(0);
+                Picasso.with(v.getContext()).load(R.drawable.hide_dialog).into(image);
+                final TextView text1 = (TextView) v.findViewById(R.id.text1);
+                text1.setText("Tap to hide your songs. By default your personal audio files are hidden");
+                final TextView done = (TextView) v.findViewById(R.id.done);
+
+                done.setText("Okay, I got it!");
+                done.setVisibility(View.VISIBLE);
+                done.setOnClickListener(v1 -> dismiss());
+                getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                return v;
+            }
         }
     }
 }

@@ -163,10 +163,15 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
-        selectionArguments = new String[]{"2"};
-        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+//        searchView.setQuery(null, true);
+//        selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
+//        selectionArguments = new String[]{"2"};
+//        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+        if (searchView != null) {
+            searchView.setQuery(null, true);
+            searchView.clearFocus();
+        }
+        onQueryTextChange(null);
         return false;
     }
 

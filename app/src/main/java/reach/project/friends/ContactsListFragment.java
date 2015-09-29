@@ -247,18 +247,18 @@ public class ContactsListFragment extends Fragment implements
 
     public void setSearchView(SearchView sView) {
 
+        onClose();
+
         if (sView == null && searchView != null) {
             //invalidate old
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
-            searchView.setQuery(null, true);
             searchView = null;
-        } else if (sView != null){
+        } else if (sView != null) {
             //set new
             searchView = sView;
             searchView.setOnQueryTextListener(this);
             searchView.setOnCloseListener(this);
-            searchView.setQuery(null, true);
         }
     }
 
@@ -355,12 +355,19 @@ public class ContactsListFragment extends Fragment implements
 
 //        selection = null;
 //        selectionArguments = null;
-//        searchView.setQuery(null, true);
-//
-//        inviteAdapter.getFilter().filter(null);
-//        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
-//        return false;
-        return onQueryTextChange(null);
+////        searchView.setQuery(null, true);
+////
+////        inviteAdapter.getFilter().filter(null);
+////        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+////        return false;
+        if (searchView != null) {
+
+            searchView.setQuery(null, false);
+            searchView.clearFocus();
+        }
+
+        onQueryTextChange(null);
+        return false;
     }
 
     @Override

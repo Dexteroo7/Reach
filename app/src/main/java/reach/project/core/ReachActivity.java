@@ -705,16 +705,19 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        searchView.clearFocus();
-
-        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionArgumentsDownloader = new String[]{0 + ""};
-        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
-
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
-        selectionArgumentsMyLibrary = new String[]{serverId + ""};
-        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
+        if (searchView != null) {
+            searchView.setQuery(null, true);
+            searchView.clearFocus();
+        }
+//
+//        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
+//        selectionArgumentsDownloader = new String[]{0 + ""};
+//        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
+//
+//        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+//        selectionArgumentsMyLibrary = new String[]{serverId + ""};
+//        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
+        onQueryTextChange(null);
         return false;
     }
 
