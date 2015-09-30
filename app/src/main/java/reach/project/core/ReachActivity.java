@@ -890,6 +890,7 @@ public class ReachActivity extends AppCompatActivity implements
         //fetch username and phoneNumber
         final String userName = SharedPrefUtils.getUserName(preferences);
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
+        final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
         //Crittercism.initialize(this, "552eac3c8172e25e67906922");
@@ -897,6 +898,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
+        if (userID!=0)
+            tracker.set("&uid", String.valueOf(userID));
         tracker.setScreenName("reach.project.core.ReachActivity");
         tracker.send(new HitBuilders.ScreenViewBuilder().build());
 

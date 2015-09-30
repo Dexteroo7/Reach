@@ -25,6 +25,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
@@ -44,6 +45,7 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
 import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
@@ -303,13 +305,14 @@ public class AccountCreation extends Fragment {
 
             //set serverId here
             ReachActivity.serverId = user.getId();
-            MiscUtils.useContextFromFragment(reference, activity -> {
-
-                SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                final Intent intent = new Intent(activity, MusicScanner.class);
+            MiscUtils.useFragment(reference, fragment -> {
+                final Tracker tracker = ((ReachApplication) fragment.getActivity().getApplication()).getTracker();
+                tracker.set("&uid", String.valueOf(user.getId()));
+                SharedPrefUtils.storeReachUser(fragment.getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
+                final Intent intent = new Intent(fragment.getContext(), MusicScanner.class);
                 intent.putExtra("messenger", messenger);
                 intent.putExtra("first", true);
-                activity.startService(intent);
+                fragment.getContext().startService(intent);
                 return null;
             });
         }
