@@ -88,7 +88,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
                 ReachDatabaseProvider.CONTENT_URI,
                 ReachDatabaseHelper.ADAPTER_LIST,
                 ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{1 + ""},
+                new String[]{"1"},
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
     }
 

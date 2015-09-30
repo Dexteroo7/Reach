@@ -295,6 +295,12 @@ public class EditProfileFragment extends Fragment {
                 if (fragment.firstName == null || fragment.uploadText == null || fragment.editProfileContainer == null || fragment.loadingBar == null)
                     return null;
 
+                if (imageId == null) {
+                    if (fragment.profile != null)
+                        fragment.profile.setImageBitmap(null);
+                    return null;
+                }
+
                 if (success != null && success) {
 
                     Toast.makeText(fragment.getActivity(), "Changes saved successfully!!", Toast.LENGTH_SHORT).show();
@@ -333,12 +339,7 @@ public class EditProfileFragment extends Fragment {
 //                final ProgressBar progressBar = dialogWeakReference.get();
 //                if (progressBar == null)
 //                    return;
-                toUpload = null;
-                MiscUtils.useFragment(reference, fragment -> {
-                    if (fragment.profile != null)
-                        fragment.profile.setImageBitmap(null);
-                    return null;
-                });
+                imageId = null;
             }
 
             @Override

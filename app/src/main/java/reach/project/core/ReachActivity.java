@@ -634,7 +634,7 @@ public class ReachActivity extends AppCompatActivity implements
                         ReachDatabaseProvider.CONTENT_URI,
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
                                 ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                        new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
+                        new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
             }
         });
 
@@ -709,7 +709,7 @@ public class ReachActivity extends AppCompatActivity implements
         searchView.clearFocus();
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionArgumentsDownloader = new String[]{0 + ""};
+        selectionArgumentsDownloader = new String[]{"0"};
         getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
 
         selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
@@ -746,7 +746,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
             selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
-            selectionArgumentsDownloader = new String[]{0 + ""};
+            selectionArgumentsDownloader = new String[]{"0"};
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
         } else {
 

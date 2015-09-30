@@ -393,7 +393,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
             whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                     ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
-            whereArgs = new String[]{userId + "", 1 + ""};
+            whereArgs = new String[]{userId + "", "1"};
         } else {
 
             whereClause =

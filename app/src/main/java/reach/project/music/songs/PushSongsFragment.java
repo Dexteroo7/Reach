@@ -195,7 +195,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                 ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-        selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + ""};
+        selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
                 ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " +
@@ -214,7 +214,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                 ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-        selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + ""};
+        selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
         getLoaderManager().restartLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
 
         selectionDownloader = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
@@ -254,7 +254,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
             selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                     ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-            selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + ""};
+            selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
                     ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " +
@@ -265,7 +265,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                     ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
                     ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
-            selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + "", "%" + mCurFilter + "%"};
+            selectionArgumentsMyLibrary = new String[]{serverId + "", "1", "%" + mCurFilter + "%"};
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
                     ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " +
@@ -297,6 +297,9 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         /**
          * Set up adapter for Music player
          */
+        if (reference == null)
+            return;
+
         final Context context = reference.get().getContext();
         combinedAdapter = new MergeAdapter();
 

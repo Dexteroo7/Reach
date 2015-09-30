@@ -846,13 +846,13 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     ReachDatabaseProvider.CONTENT_URI,
                     ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                    new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
+                    new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
             //////////////////////////////////refresh reachDatabase : handle directory invalidation
             final Cursor cursor = handlerInterface.getContentResolver().query
                     (ReachDatabaseProvider.CONTENT_URI,
                             ReachDatabaseHelper.projection,
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?",
-                            new String[]{0 + ""},
+                            new String[]{"0"},
                             null);
             if (cursor == null)
                 return; //this should never happen
