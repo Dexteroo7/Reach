@@ -50,14 +50,12 @@ public class ChatListAdapter extends FirebaseListAdapter<Chat> {
 
         //Log.i("Chat", "Author:" + author);
 
-        if(chat.isDevika) {
-
+        if (chat.getAuthor().toLowerCase().equals("devika")) {
             chatView.setBackgroundResource(R.drawable.chat_bubble_gray);
             chatView.setTextColor(Color.DKGRAY);
             ((LinearLayout) view).setGravity(Gravity.LEFT);
         }
         else {
-
             chatView.setBackgroundResource(R.drawable.chat_bubble);
             chatView.setTextColor(Color.WHITE);
             ((LinearLayout) view).setGravity(Gravity.RIGHT);

@@ -167,7 +167,8 @@ public class ChatActivityFragment extends Fragment {
 
             // Create our 'model', a Chat object
             final Chat chat = new Chat();
-            chat.setIsDevika(false);
+            //TODO set username
+            chat.setAuthor(mFirebaseRef.getAuth().getAuth().get("userName").toString());
             chat.setMessage(message);
             chat.setRead(false);
             chat.setTimestamp(System.currentTimeMillis());

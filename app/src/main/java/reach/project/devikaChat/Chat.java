@@ -1,7 +1,7 @@
 package reach.project.devikaChat;
 
 /**
- * @author greg
+ * @author dexter
  * @since 6/21/13
  */
 public class Chat {
@@ -9,20 +9,12 @@ public class Chat {
     private String message = "hello_world";
     private long timestamp = 0;
     private long userId = 0;
-    boolean read = false; //if true, double tick
-    boolean isDevika = false; //if true, then devika
+    private boolean read = false; //if true, double tick
+    private String author = "";
 
     // Required default constructor for Firebase object mapping
     @SuppressWarnings("unused")
     public Chat() {
-    }
-
-    public boolean isDevika() {
-        return isDevika;
-    }
-
-    public void setIsDevika(boolean isDevika) {
-        this.isDevika = isDevika;
     }
 
     public String getMessage() {
@@ -55,5 +47,14 @@ public class Chat {
 
     public void setRead(boolean read) {
         this.read = read;
+    }
+
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }
