@@ -37,11 +37,12 @@ android {
 }
 
 dependencies {
-
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
-    compile 'com.google.android.gms:play-services-gcm:7.8.0'
-    compile 'com.google.android.gms:play-services-analytics:7.8.0'
+    //noinspection GradleDependency
+    compile 'com.google.android.gms:play-services-gcm:7.0.0'
+    //noinspection GradleDependency
+    compile 'com.google.android.gms:play-services-analytics:7.0.0'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'
@@ -49,9 +50,10 @@ dependencies {
     compile 'com.android.support:design:23.0.1'
 
     // non-google stuff
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.2'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
+    compile 'com.firebase:firebase-client-android:2.4.0'
+
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'
     compile 'com.viewpagerindicator:library:2.4.1'

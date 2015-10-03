@@ -89,9 +89,9 @@ import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UserMusicLibrary;
+import reach.project.devikaChat.ChatActivity;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.music.AlbumArtData;
 import reach.project.music.songs.PrivacyFragment;
 import reach.project.music.songs.PushContainer;
 import reach.project.music.songs.PushSongsFragment;
@@ -249,7 +249,6 @@ public class ReachActivity extends AppCompatActivity implements
         }
     };
 
-
     private final View.OnClickListener navHeaderClickListener = v -> onOpenProfile();
 
     private final NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
@@ -293,6 +292,10 @@ public class ReachActivity extends AppCompatActivity implements
                                 .addToBackStack(null)
                                 .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
                         return true;
+                    case R.id.navigation_item_6:
+                        final Intent intent = new Intent(mDrawerLayout.getContext(), ChatActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        mDrawerLayout.getContext().startActivity(intent);
                     default:
                         return true;
 
@@ -1056,8 +1059,7 @@ public class ReachActivity extends AppCompatActivity implements
                                     transferSong.getArtistName(),
                                     transferSong.getDuration(),
                                     transferSong.getAlbumName(),
-                                    transferSong.getGenre(),
-                                    transferSong.getAlbumArtData());
+                                    transferSong.getGenre());
                         }
                         new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     }
@@ -1129,7 +1131,7 @@ public class ReachActivity extends AppCompatActivity implements
                                String displayName, String actualName,
                                boolean multiple, String userName, String onlineStatus,
                                String networkType, String artistName, long duration,
-                               String albumName, String genre, byte[] albumArtData) {
+                               String albumName, String genre) {
 
         final ContentResolver contentResolver = getContentResolver();
         if (contentResolver == null)
@@ -1239,17 +1241,6 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setAlbumName(albumName);
         reachDatabase.setGenre(genre);
 
-        if (albumArtData == null || albumArtData.length == 0) {
-
-            final AlbumArtData.Builder builder = new AlbumArtData.Builder();
-            builder.duration(duration);
-            builder.artist(artistName);
-            builder.release(albumName);
-            builder.title(displayName);
-            albumArtData = builder.build().toByteArray();
-        }
-
-        reachDatabase.setAlbumArtData(albumArtData);
         reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
@@ -1445,14 +1436,37 @@ public class ReachActivity extends AppCompatActivity implements
 //                }
             }
 
+            private void checkChatToken() {
+
+                final String localToken = MiscUtils.useContextFromContext(reference, activity -> {
+                    return SharedPrefUtils.getChatToken(activity.preferences);
+                }).orNull();
+
+                //if not empty exit
+                if (!TextUtils.isEmpty(localToken))
+                    return;
+
+                //fetch from server
+                final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
+                if (fetchTokenFromServer == null || TextUtils.isDigitsOnly(fetchTokenFromServer.getString()))
+                    Log.i("Ayush", "Chat token check failed !");
+                else
+                    //if found save
+                    MiscUtils.useContextFromContext(reference, activity -> {
+                        SharedPrefUtils.storeChatToken(activity.preferences, fetchTokenFromServer.getString());
+                    });
+            }
+
             @Override
             public void run() {
 
                 ////////////////////////////////////////
                 //refresh gcm
                 checkGCM();
+                //cehck devikaChat token
+                checkChatToken();
                 //refresh download ops
-                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
                 //Music scanner
                 MiscUtils.useContextFromContext(reference, activity -> {
 

@@ -9,13 +9,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
-import reach.backend.entities.userApi.model.FriendCollection;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
@@ -45,13 +43,7 @@ public class ForceSyncFriends implements Runnable {
     public void run() {
 
         //First we fetch the list of 'KNOWN' friends
-        final List<Friend> fullSync = serverId == 0 ? null : MiscUtils.autoRetry(
-                () -> {
-                    final FriendCollection collection = StaticData.userEndpoint.longSync(serverId).execute();
-                    if (collection != null && collection.size() > 0)
-                        return collection.getItems();
-                    return null;
-                }, Optional.absent()).orNull();
+        final List<Friend> fullSync = serverId == 0 ? null : MiscUtils.autoRetry(() -> StaticData.userEndpoint.longSync(serverId).execute().getItems(), Optional.absent()).orNull();
 
         //Now we collect the phoneNumbers on device
         final HashSet<String> numbers = new HashSet<>();
@@ -87,8 +79,8 @@ public class ForceSyncFriends implements Runnable {
         if (size1 + size2 == 0)
             return;
 
-        final List<ContentValues> values;
-        values = new ArrayList<>();
+        final HashSet<ContentValues> values;
+        values = new HashSet<>();
         if (size1 > 0)
             for (Friend friend : fullSync) {
                 Log.i("Ayush", friend.getUserName() + friend.getStatus() + " " + friend.getId());

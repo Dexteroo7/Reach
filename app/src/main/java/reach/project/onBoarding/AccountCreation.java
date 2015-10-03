@@ -39,7 +39,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 
-import reach.backend.entities.userApi.model.MyString;
+import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
@@ -263,17 +263,18 @@ public class AccountCreation extends Fragment {
             user.setImageId(imageId);
 
             //insert User-object and get the userID
-            final long id;
-            final String toParse;
-            final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insert(user).execute(), Optional.absent()).orNull();
-            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()))
-                id = 0;
-            else
-                id = Long.parseLong(toParse);
-            Log.i("Ayush", "Id received = " + id);
+            final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insertNew(user).execute(), Optional.absent()).orNull();
+            if (dataAfterWork == null || dataAfterWork.getUserId() == null || dataAfterWork.getUserId() == 0) {
+                user.setId(0L);
+                user.setChatToken("");
+            }
+            else {
+                user.setId(dataAfterWork.getUserId());
+                user.setChatToken(dataAfterWork.getFireBaseToken());
+            }
+            Log.i("Ayush", "Id received = " + user.getId());
 
             //finally set the userID, probably unnecessary
-            user.setId(id);
             return user;
         }
 
@@ -471,6 +472,7 @@ public class AccountCreation extends Fragment {
 
                 final Context context = fragment.getActivity();
                 if (file == null) { //TODO track
+
                     toUpload = null;
                     Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
                 } else if (fragment.profilePhotoSelector != null) {

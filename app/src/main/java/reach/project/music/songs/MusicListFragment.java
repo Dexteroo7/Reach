@@ -99,8 +99,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
                         cursor.getString(5), //artistName
                         cursor.getLong(7), //duration
                         cursor.getString(6), //album
-                        cursor.getString(11), //genre
-                        cursor.getBlob(10)); //albumArtData
+                        cursor.getString(10)); //genre
                 senderCursor.close();
             }
         }

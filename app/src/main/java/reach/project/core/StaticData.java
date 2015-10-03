@@ -78,6 +78,7 @@ public final class StaticData {
     public static final long LUCKY_DELAY = 4000;
 
     public static final long devika = 5666668701286400L;
+    public static final String devikaPhoneNumber = "8860872102";
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout

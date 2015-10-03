@@ -40,7 +40,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -884,6 +886,32 @@ public enum MiscUtils {
         image.delete();
         Log.i("Ayush", "Returning image");
         return tempFile;
+    }
+
+    private static StringBuffer buffer = new StringBuffer();
+    public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
+
+        buffer.setLength(0);
+        buffer.append("http://ec2-52-88-199-207.us-west-2.compute.amazonaws.com:8080/getImage/small?");
+
+        if (!TextUtils.isEmpty(album)) {
+
+            buffer.append("album=").append(URLEncoder.encode(album, "UTF-8"));
+            if (!TextUtils.isEmpty(artist))
+                buffer.append("&artist=").append(URLEncoder.encode(artist, "UTF-8"));
+            if (!TextUtils.isEmpty(song))
+                buffer.append("&song=").append(URLEncoder.encode(song, "UTF-8"));
+        } else if (!TextUtils.isEmpty(artist)) {
+
+            buffer.append("artist=").append(URLEncoder.encode(artist, "UTF-8"));
+            if (!TextUtils.isEmpty(song))
+                buffer.append("&song=").append(URLEncoder.encode(song, "UTF-8"));
+        } else if (!TextUtils.isEmpty(song))
+            buffer.append("song=").append(URLEncoder.encode(artist, "UTF-8"));
+
+        final String toReturn = buffer.toString();
+        Log.i("Ayush", toReturn);
+        return toReturn;
     }
 
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,

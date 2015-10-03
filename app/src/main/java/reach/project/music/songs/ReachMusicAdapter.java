@@ -9,22 +9,21 @@ import android.widget.ImageView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Optional;
 import com.squareup.picasso.Picasso;
 
+import java.io.UnsupportedEncodingException;
+
 import reach.project.R;
-import reach.project.musicbrainz.CoverArt;
 import reach.project.uploadDownload.ReachDatabaseHelper;
-import reach.project.utils.AsyncCache;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 /**
  * Created by dexter on 7/8/14.
  */
 public class ReachMusicAdapter extends ResourceCursorAdapter {
 
-//    private final CircleTransform circleTransform = new CircleTransform();
+    private final CircleTransform circleTransform = new CircleTransform();
 
     public String[] getProjectionDownloaded() {
         return projectionDownloaded;
@@ -35,26 +34,24 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
     }
 
     private final String[] projectionMyLibrary =
-        {
-                ReachSongHelper.COLUMN_ID, //0
+            {
+                    ReachSongHelper.COLUMN_ID, //0
 
-                ReachSongHelper.COLUMN_SONG_ID, //1
-                ReachSongHelper.COLUMN_USER_ID, //2
+                    ReachSongHelper.COLUMN_SONG_ID, //1
+                    ReachSongHelper.COLUMN_USER_ID, //2
 
-                ReachSongHelper.COLUMN_DISPLAY_NAME, //3
-                ReachSongHelper.COLUMN_ACTUAL_NAME, //4
+                    ReachSongHelper.COLUMN_DISPLAY_NAME, //3
+                    ReachSongHelper.COLUMN_ACTUAL_NAME, //4
 
-                ReachSongHelper.COLUMN_ARTIST, //5
-                ReachSongHelper.COLUMN_ALBUM, //6
+                    ReachSongHelper.COLUMN_ARTIST, //5
+                    ReachSongHelper.COLUMN_ALBUM, //6
 
-                ReachSongHelper.COLUMN_DURATION, //7
-                ReachSongHelper.COLUMN_SIZE, //8
+                    ReachSongHelper.COLUMN_DURATION, //7
+                    ReachSongHelper.COLUMN_SIZE, //8
 
-                ReachSongHelper.COLUMN_VISIBILITY, //9
-
-                ReachSongHelper.COLUMN_ALBUM_ART_DATA, //10
-                ReachSongHelper.COLUMN_GENRE //11
-        };
+                    ReachSongHelper.COLUMN_VISIBILITY, //9
+                    ReachSongHelper.COLUMN_GENRE //10
+            };
 
     private final String[] projectionDownloaded =
             {
@@ -73,55 +70,10 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
                     ReachDatabaseHelper.COLUMN_SIZE, //8
 
                     ReachDatabaseHelper.COLUMN_VISIBILITY, //9
-
-                    ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, //10
-                    ReachDatabaseHelper.COLUMN_GENRE //11
+                    ReachDatabaseHelper.COLUMN_GENRE //10
             };
 
-
-    private static final String EMPTY_STRING = "empty_string";
-    private static final AsyncCache<String, String> urlCache = new AsyncCache<>(releaseGroupMbid -> {
-
-        /**
-         * releaseGroupMbid is the key
-         * smallThumbNail is data
-         */
-        final Optional<JsonNode> nodeOptional = CoverArt.fetchCoverImagesFromMBID(releaseGroupMbid);
-        if (nodeOptional.isPresent()) {
-
-            String imageUrl = null;
-            try {
-                imageUrl = CoverArt.getSmallThumbnailURL(nodeOptional.get());
-            } catch (Exception ignored) {
-                imageUrl = null;
-            }
-
-            if (TextUtils.isEmpty(imageUrl))
-                try {
-                    imageUrl = CoverArt.getLargeThumbnailURL(nodeOptional.get());
-                } catch (Exception ignored) {
-                    imageUrl = null;
-                }
-
-            if (TextUtils.isEmpty(imageUrl))
-                try {
-                    imageUrl = CoverArt.getImageURL(nodeOptional.get());
-                } catch (Exception ignored) {
-                    imageUrl = null;
-                }
-
-            if (TextUtils.isEmpty(imageUrl))
-                return Optional.of(EMPTY_STRING); //no useless re-trials
-            return Optional.of(imageUrl);
-        } else {
-            return Optional.of(EMPTY_STRING); //no useless re-trials
-        }
-
-        /**
-         * In this case no key as such,
-         * Use the string only
-         */
-    }, data -> data, () -> EMPTY_STRING);
+//    private static final String EMPTY_STRING = "empty_string";
 
     public static final byte PLAYER = 0;
     public static final byte LIST = 1;
@@ -157,15 +109,12 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         final long duration;
         final short visibility;
 
-        final byte[] albumArtData;
-
         switch (type) {
             case PLAYER: {
                 displayName = cursor.getString(3);
                 artist = cursor.getString(4);
                 duration = cursor.getLong(5);
                 album = cursor.getString(6);
-                albumArtData = cursor.getBlob(8);
                 visibility = 1;
                 break;
             }
@@ -175,12 +124,25 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
                 album = cursor.getString(6);
                 duration = cursor.getLong(7);
                 visibility = cursor.getShort(9);
-                albumArtData = cursor.getBlob(10);
                 break;
             }
             default:
                 return;
         }
+
+        String url = null;
+        try {
+            url = MiscUtils.getAlbumArt(album, artist, displayName);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        if (TextUtils.isEmpty(url))
+            viewHolder.albumArt.setImageBitmap(null);
+        else
+            Picasso.with(context).load(url)
+                    .fit().centerCrop().transform(circleTransform)
+                    .placeholder(R.drawable.music_note).into(viewHolder.albumArt);
 
         viewHolder.listTitle.setText(displayName); //displayName
         viewHolder.songDuration.setText(MiscUtils.combinationFormatter(duration)); //duration
@@ -200,19 +162,6 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
                 view.setAlpha(1f);
             }
         }
-//        Log.i("Ayush", "ReachMusic Adapter " + releaseGroupMbid + " " + artistMbid);
-//        viewHolder.albumArt.setImageResource(R.drawable.music_note);
-//
-//        if (albumArtData != null && albumArtData.length > 0) {
-//
-//            final AlbumArtData artData;
-//            try {
-//                artData = new Wire(AlbumArtData.class).parseFrom(albumArtData, AlbumArtData.class);
-//                if (artData != null)
-//                    Log.i("Ayush", "Music Adapter " + artData.toString());
-//            } catch (IOException ignored) {
-//            }
-//        }
     }
 
     @Override
