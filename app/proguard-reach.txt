@@ -177,3 +177,4 @@
 -dontwarn com.google.api.client.http.apache.ApacheHttpRequest
 -dontwarn com.google.api.client.http.apache.HttpExtensionMethod
 -dontwarn com.viewpagerindicator.LinePageIndicator
+-dontwarn com.mixpanel.**
