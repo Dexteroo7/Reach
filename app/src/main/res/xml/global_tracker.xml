@@ -24,12 +24,4 @@
     <!-- Enable automatic Activity measurement -->
     <bool name="ga_autoActivityTracking">true</bool>
 
-    <!-- The screen names that will appear in reports -->
-    <screenName name="reach.project.core.ReachActivity">
-        ReachApplication ReachActivity
-    </screenName>
-    <screenName name="reach.project.reachProcess.reachQueue.ReachQueueActivity">
-        ReachApplication ReachQueueActivity
-    </screenName>
-
 </resources>

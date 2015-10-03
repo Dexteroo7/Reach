@@ -547,7 +547,7 @@ public class ContactsListFragment extends Fragment implements
             final int px = MiscUtils.dpToPx(64);
             try {
                 bmp = Picasso.with(activity)
-                        .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
+                        .load(StaticData.dropBoxManager)
                         .centerCrop()
                         .resize(px, px)
                         .get();

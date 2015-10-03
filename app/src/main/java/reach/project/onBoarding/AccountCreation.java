@@ -25,12 +25,17 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -306,8 +311,28 @@ public class AccountCreation extends Fragment {
             //set serverId here
             ReachActivity.serverId = user.getId();
             MiscUtils.useFragment(reference, fragment -> {
+                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getContext(), "7877f44b1ce4a4b2db7790048eb6587a");
+                MixpanelAPI.People ppl = mixpanel.getPeople();
                 final Tracker tracker = ((ReachApplication) fragment.getActivity().getApplication()).getTracker();
-                tracker.set("&uid", String.valueOf(user.getId()));
+                tracker.setScreenName("reach.project.onBoarding.AccountCreation");
+                if (user.getId()!=0) {
+                    tracker.set("&uid", user.getId() + "");
+                    tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
+                    mixpanel.identify(user.getId()+"");
+                    JSONObject props = new JSONObject();
+                    try {
+                        props.put("UserID", user.getId()+"");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    mixpanel.registerSuperPropertiesOnce(props);
+                    ppl.identify(user.getId()+"");
+                    ppl.set("UserID", user.getId() + "");
+                }
+                if (!TextUtils.isEmpty(user.getPhoneNumber()))
+                    ppl.set("$phone", user.getPhoneNumber()+"");
+                if (!TextUtils.isEmpty(user.getUserName()))
+                    ppl.set("$name", user.getUserName() + "");
                 SharedPrefUtils.storeReachUser(fragment.getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
                 final Intent intent = new Intent(fragment.getContext(), MusicScanner.class);
                 intent.putExtra("messenger", messenger);

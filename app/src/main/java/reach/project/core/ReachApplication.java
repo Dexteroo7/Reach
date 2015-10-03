@@ -12,8 +12,14 @@ import reach.project.R;
  */
 public class ReachApplication extends Application {
 
-    public synchronized Tracker getTracker() {
-        return GoogleAnalytics.getInstance(this).newTracker(R.xml.global_tracker);
+    private Tracker mTracker;
+
+    synchronized public Tracker getTracker() {
+        if (mTracker == null) {
+            GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
+            mTracker = analytics.newTracker(R.xml.global_tracker);
+        }
+        return mTracker;
     }
 
     /*@Override

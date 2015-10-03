@@ -63,9 +63,13 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -896,12 +900,33 @@ public class ReachActivity extends AppCompatActivity implements
         //Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //Crittercism.setUsername(userName + " " + phoneNumber);
 
+        //initialize MixPanel
+        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
+        MixpanelAPI.People ppl = mixpanel.getPeople();
+
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
-        if (userID!=0)
-            tracker.set("&uid", String.valueOf(userID));
         tracker.setScreenName("reach.project.core.ReachActivity");
-        tracker.send(new HitBuilders.ScreenViewBuilder().build());
+
+        if (userID!=0) {
+            tracker.set("&uid", userID + "");
+            tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
+            mixpanel.identify(userID+"");
+            JSONObject props = new JSONObject();
+            try {
+                props.put("UserID", userID+"");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            mixpanel.registerSuperPropertiesOnce(props);
+            ppl.identify(userID+"");
+            ppl.set("UserID", userID + "");
+        } else
+            tracker.send(new HitBuilders.ScreenViewBuilder().build());
+        if (!TextUtils.isEmpty(phoneNumber))
+            ppl.set("$phone", phoneNumber+"");
+        if (!TextUtils.isEmpty(userName))
+            ppl.set("$name", userName + "");
 
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
@@ -996,7 +1021,10 @@ public class ReachActivity extends AppCompatActivity implements
         else if (intent.getBooleanExtra("openPlayer", false)) {
 
             if (slidingUpPanelLayout != null)
-                slidingUpPanelLayout.postDelayed(() -> slidingUpPanelLayout.setPanelState(PanelState.EXPANDED), 1500);
+                slidingUpPanelLayout.postDelayed(() -> {
+                    if (slidingUpPanelLayout!=null)
+                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
+                }, 1500);
         } else if (intent.getBooleanExtra("openFriendRequests", false)) {
 
             if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
@@ -1277,6 +1305,17 @@ public class ReachActivity extends AppCompatActivity implements
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
+
+        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
+        JSONObject props = new JSONObject();
+        try {
+            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+            props.put("From", reachDatabase.getDisplayName());
+            props.put("Song", reachDatabase.getSenderId());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        mixpanel.track("Transaction - Add Song", props);
     }
 
     private enum LocalUtils {
