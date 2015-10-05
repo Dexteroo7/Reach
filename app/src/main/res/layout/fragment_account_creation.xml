@@ -103,7 +103,7 @@
                     android:lines="1"
                     android:inputType="text"
                     android:textColorHint="#b2b2b2"
-                    android:hint=" Enter Name " />
+                    android:hint="     Enter your name     " />
             </RelativeLayout>
             <LinearLayout
                 android:orientation="vertical"

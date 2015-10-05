@@ -46,17 +46,17 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     private MergeAdapter combinedAdapter = null;
     private PushSongAdapter myLibraryAdapter = null;
     private PushSongAdapter downloadedAdapter = null;
-    private TextView emptyTV1 = null, emptyTV2 = null;
+    private TextView emptyDownload = null, emptyMyLibrary = null;
+
+    private String selectionDownloader, selectionMyLibrary, mCurFilter;
+    private String[] selectionArgumentsDownloader;
+    private String[] selectionArgumentsMyLibrary;
 
     private ListView pushLibraryList;
     private SearchView searchView;
     private Toolbar toolbar;
 
     private SuperInterface mListener;
-    private String selectionDownloader, selectionMyLibrary, mCurFilter;
-    private String[] selectionArgumentsDownloader;
-    private String[] selectionArgumentsMyLibrary;
-
     private long serverId;
 
     private static WeakReference<PushSongsFragment> reference = null;
@@ -101,17 +101,17 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             myLibraryAdapter.swapCursor(cursor);
             final int count = cursor.getCount();
             if (count == 0 && pushLibraryList != null)
-                combinedAdapter.setActive(emptyTV2, true);
+                combinedAdapter.setActive(emptyMyLibrary, true);
             else
-                combinedAdapter.setActive(emptyTV2, false);
+                combinedAdapter.setActive(emptyMyLibrary, false);
         } else if (cursorLoader.getId() == StaticData.PUSH_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed()) {
 
             downloadedAdapter.swapCursor(cursor);
             final int count = cursor.getCount();
             if (count == 0 && pushLibraryList != null)
-                combinedAdapter.setActive(emptyTV1, true);
+                combinedAdapter.setActive(emptyDownload, true);
             else
-                combinedAdapter.setActive(emptyTV1, false);
+                combinedAdapter.setActive(emptyDownload, false);
         }
     }
 
@@ -120,7 +120,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         if (cursorLoader.getId() == StaticData.PUSH_MY_LIBRARY_LOADER)
             myLibraryAdapter.swapCursor(null);
-        if (cursorLoader.getId() == StaticData.PUSH_DOWNLOADED_LOADER)
+        else if (cursorLoader.getId() == StaticData.PUSH_DOWNLOADED_LOADER)
             downloadedAdapter.swapCursor(null);
     }
 
@@ -209,20 +209,24 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        searchView.clearFocus();
-
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-        selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
-        getLoaderManager().restartLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
-
-        selectionDownloader = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
-                ReachDatabaseHelper.COLUMN_STATUS + " = ?";
-        selectionArgumentsDownloader = new String[]{serverId + "", "1", ReachDatabase.FINISHED + ""};
-        getLoaderManager().restartLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
-
+//        searchView.setQuery(null, true);
+//        searchView.clearFocus();
+//
+//        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+//                ReachSongHelper.COLUMN_VISIBILITY + " = ?";
+//        selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + ""};
+//        getLoaderManager().restartLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
+//
+//        selectionDownloader = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+//                ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
+//                ReachDatabaseHelper.COLUMN_STATUS + " = ?";
+//        selectionArgumentsDownloader = new String[]{serverId + "", "1", ReachDatabase.FINISHED + ""};
+//        getLoaderManager().restartLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
+        if (searchView != null) {
+            searchView.setQuery(null, true);
+            searchView.clearFocus();
+        }
+        onQueryTextChange(null);
         return false;
     }
 
@@ -304,11 +308,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         combinedAdapter = new MergeAdapter();
 
         combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
-        combinedAdapter.addView(emptyTV1 = LocalUtils.getEmptyDownload(context), false);
+        combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
         combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, this));
 
         combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
-        combinedAdapter.addView(emptyTV2 = LocalUtils.getEmptyLibrary(context), false);
+        combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
         combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, this));
 
         pushLibraryList.setAdapter(combinedAdapter);
@@ -349,7 +353,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         public static TextView getEmptyDownload(Context context) {
 
             final TextView emptyTV1 = new TextView(context);
-            emptyTV1.setText("Add songs to download");
+            emptyTV1.setText("No downloaded songs");
             emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);

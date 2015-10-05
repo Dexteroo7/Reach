@@ -84,6 +84,7 @@ public class GcmIntentService extends IntentService {
 
             MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
                 fragment.refresh();
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
             });
             final NotificationCompat.Builder notificationBuilder =
@@ -113,6 +114,7 @@ public class GcmIntentService extends IntentService {
 
             MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
             });
             final NotificationCompat.Builder notificationBuilder =
@@ -145,6 +147,7 @@ public class GcmIntentService extends IntentService {
 
             MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
             });
 
@@ -227,9 +230,18 @@ public class GcmIntentService extends IntentService {
              */
             final String[] splitter = message.split(" ");
             final long hostId = Long.parseLong(splitter[1]);
+
+            if (hostId == StaticData.devika) {
+
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
+                return;
+            }
+
             final ContentValues friend = new ContentValues();
             final ContentValues database = new ContentValues();
             StaticData.networkCache.put(hostId, splitter[2]);
+
+            Log.i("Ayush", hostId + " Got PONG");
 
             friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
             friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
@@ -257,17 +269,23 @@ public class GcmIntentService extends IntentService {
          * Service PING
          */
         else if (message.startsWith("PING")) {
+
             //Handle announce
             final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE));
-            if (id == 0)
+            if (id == 0) {
+
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
+            }
             final short[] networkType = new short[]{getNetworkType(this)};
             if (networkType[0] > 1 && !SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)))
                 networkType[0] = 5;
 
             final long currentTime = System.currentTimeMillis();
             if (currentTime - lastPong < StaticData.MINIMUM_PONG_GAP) {
+
                 Log.i("Ayush", "Ignoring PING " + (currentTime - lastPong));
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
             }
             lastPong = currentTime;

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
@@ -32,6 +33,7 @@ public enum SharedPrefUtils {
                 .putString("userName", reachUserDatabase.getUserName())
                 .putString("deviceId", reachUserDatabase.getDeviceId())
                 .putString("imageId", reachUserDatabase.getImageId())
+                .putString("chatToken", reachUserDatabase.getChatToken())
                 .putLong("serverId", reachUserDatabase.getId())
                 .apply();
     }
@@ -46,6 +48,32 @@ public enum SharedPrefUtils {
 
     public static void storePromoCode(SharedPreferences sharedPreferences, String promoCode) {
         sharedPreferences.edit().putString("promoCode", promoCode).apply();
+    }
+
+    public static String getChatToken(SharedPreferences sharedPreferences) {
+
+        final String chatToken = sharedPreferences.getString("chatToken", "");
+        Log.i("Ayush", "Found chat token " + chatToken);
+        return chatToken;
+    }
+
+    public static void storeChatToken(SharedPreferences sharedPreferences, String chatToken) {
+
+        Log.i("Ayush", "Storing chat token " + chatToken);
+        sharedPreferences.edit().putString("chatToken", chatToken).apply();
+    }
+
+    public static String getChatUUID(SharedPreferences sharedPreferences) {
+
+        final String chatUUID = sharedPreferences.getString("chatUUID", "");
+        Log.i("Ayush", "Found chatUUID token " + chatUUID);
+        return chatUUID;
+    }
+
+    public static void storeChatUUID(SharedPreferences sharedPreferences, String chatUUID) {
+
+        Log.i("Ayush", "Storing chatUUID " + chatUUID);
+        sharedPreferences.edit().putString("chatUUID", chatUUID).apply();
     }
 
     /**

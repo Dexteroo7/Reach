@@ -38,28 +38,6 @@ public final class StaticData {
         musicVisibility = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
     }
 
-    public static final String[] DISK_COMPLETE_NO_PATH =
-            {
-                    ReachSongHelper.COLUMN_ID, //0
-
-                    ReachSongHelper.COLUMN_SONG_ID, //1
-                    ReachSongHelper.COLUMN_USER_ID, //2
-
-                    ReachSongHelper.COLUMN_DISPLAY_NAME, //3
-                    ReachSongHelper.COLUMN_ACTUAL_NAME, //4
-
-                    ReachSongHelper.COLUMN_ARTIST, //5
-                    ReachSongHelper.COLUMN_ALBUM, //6
-
-                    ReachSongHelper.COLUMN_DURATION, //7
-                    ReachSongHelper.COLUMN_SIZE, //8
-
-                    ReachSongHelper.COLUMN_VISIBILITY, //9
-
-                    ReachSongHelper.COLUMN_ALBUM_ART_DATA, //10
-                    ReachSongHelper.COLUMN_GENRE //11
-            };
-
     public static final String[] DOWNLOADED_PARTIAL = new String[]{
             ReachDatabaseHelper.COLUMN_ID, //0
             ReachDatabaseHelper.COLUMN_SIZE, //1
@@ -84,13 +62,14 @@ public final class StaticData {
     public static final byte ALBUM_LOADER = 0;
     public static final byte ARTIST_LOADER = 1;
     public static final byte FRIENDS_LOADER = 2;
-    public static final byte SONGS_LOADER = 3;
-    public static final byte PLAY_LIST_LOADER = 4;
-    public static final byte DOWNLOAD_LOADER = 5;
-    public static final byte UPLOAD_LOADER = 6;
-    public static final byte MY_LIBRARY_LOADER = 7;
-    public static final byte PUSH_MY_LIBRARY_LOADER = 8;
-    public static final byte PUSH_DOWNLOADED_LOADER = 9;
+    public static final byte PRIVACY_MY_LIBRARY_LOADER = 3;
+    public static final byte PRIVACY_DOWNLOADED_LOADER = 4;
+    public static final byte PLAY_LIST_LOADER = 5;
+    public static final byte DOWNLOAD_LOADER = 6;
+    public static final byte UPLOAD_LOADER = 7;
+    public static final byte MY_LIBRARY_LOADER = 8;
+    public static final byte PUSH_MY_LIBRARY_LOADER = 9;
+    public static final byte PUSH_DOWNLOADED_LOADER = 10;
 
     public static final byte FULL_LIST_LOADER = 10;
     public static final byte RECENT_LIST_LOADER = 11;
@@ -99,6 +78,7 @@ public final class StaticData {
     public static final long LUCKY_DELAY = 4000;
 
     public static final long devika = 5666668701286400L;
+    public static final String devikaPhoneNumber = "8860872102";
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout

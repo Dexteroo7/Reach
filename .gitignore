@@ -13,5 +13,3 @@ settings.gradle
 httptest/*
 
 build.gradle
-app/build.gradle
-backend/build.gradle

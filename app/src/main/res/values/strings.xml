@@ -7,11 +7,14 @@
     <string name="title_section3">Invite Friends</string>
     <string name="title_section4">Upload History</string>
     <string name="title_section5">Contact Us</string>
+    <string name="title_section6">Live Help !</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_my_process">MyProcessActivity</string>
     <string name="title_activity_reach_queue">Reach</string>
     <string name="title_activity_notifications">Notifications</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_reach_notification">ReachNotificationActivity</string>
+    <string name="title_activity_chat">ChatActivity</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

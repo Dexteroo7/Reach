@@ -45,10 +45,10 @@ public class MyReachFragment extends Fragment {
 
         MyReachFragment fragment;
         if (reference == null || (fragment = reference.get()) == null) {
-            Log.i("Ayush", "Creating new instance of my reach fragment");
+            Log.i("Ayush", "Creating new instance of my MyReachFragment");
             reference = new WeakReference<>(fragment = new MyReachFragment());
         } else
-            Log.i("Ayush", "Reusing contacts list fragment object :)");
+            Log.i("Ayush", "Reusing MyReachFragment fragment object :)");
 
         return fragment;
     }
@@ -118,11 +118,11 @@ public class MyReachFragment extends Fragment {
             myReachFrame.setLayoutParams(layoutParams);
         }
 
-        Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
+        final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Reach");
         mToolbar.setNavigationOnClickListener(v -> mListener.onOpenNavigationDrawer());
         mToolbar.inflateMenu(R.menu.myreach_menu);
-        Menu menu = mToolbar.getMenu();
+        final Menu menu = mToolbar.getMenu();
         searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.search_button));
 
         final MenuItem notificationButton = menu.findItem(R.id.notif_button);
@@ -160,15 +160,19 @@ public class MyReachFragment extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
+                /**
+                 * Must set null before setting actual !
+                 */
                 if (position == 0) {
-                    contactsListFragment.setSearchView(searchView);
+
                     allContactsFragment.setSearchView(null);
+                    contactsListFragment.setSearchView(searchView);
                 }
                 else if (position == 1) {
+
                     contactsListFragment.setSearchView(null);
                     allContactsFragment.setSearchView(searchView);
                 }
-
             }
 
             @Override

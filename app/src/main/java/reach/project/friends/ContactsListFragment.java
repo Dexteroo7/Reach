@@ -99,52 +99,6 @@ public class ContactsListFragment extends Fragment implements
 
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
 
-        final class SendRequest extends AsyncTask<Long, Void, Long> {
-
-            @Override
-            protected Long doInBackground(final Long... params) {
-
-                /**
-                 * params[0] = other id
-                 * params[1] = my id
-                 * params[2] = status
-                 */
-
-                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
-                        () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
-                        Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
-
-                final String toParse;
-                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
-                    return params[0];
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(final Long response) {
-
-                super.onPostExecute(response);
-
-                if (response != null && response > 0) {
-
-                    //response becomes the id of failed person
-                    MiscUtils.useContextFromFragment(reference, context -> {
-
-                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                        context.getContentResolver().update(
-                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                values,
-                                ReachFriendsHelper.COLUMN_ID + " = ?",
-                                new String[]{response + ""});
-                        return null;
-                    });
-                }
-
-            }
-        }
-
         @Override
         public void onItemClick(final AdapterView<?> adapterView, final View view, int position, long l) {
 
@@ -247,18 +201,18 @@ public class ContactsListFragment extends Fragment implements
 
     public void setSearchView(SearchView sView) {
 
+        onClose();
+
         if (sView == null && searchView != null) {
             //invalidate old
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
-            searchView.setQuery(null, true);
             searchView = null;
-        } else if (sView != null){
+        } else if (sView != null) {
             //set new
             searchView = sView;
             searchView.setOnQueryTextListener(this);
             searchView.setOnCloseListener(this);
-            searchView.setQuery(null, true);
         }
     }
 
@@ -318,7 +272,7 @@ public class ContactsListFragment extends Fragment implements
                     ReachContactsAdapter.requiredProjection,
                     selection,
                     selectionArguments,
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_NEW_SONGS + " DESC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC");
         else
             return null;
     }
@@ -355,12 +309,19 @@ public class ContactsListFragment extends Fragment implements
 
 //        selection = null;
 //        selectionArguments = null;
-//        searchView.setQuery(null, true);
-//
-//        inviteAdapter.getFilter().filter(null);
-//        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
-//        return false;
-        return onQueryTextChange(null);
+////        searchView.setQuery(null, true);
+////
+////        inviteAdapter.getFilter().filter(null);
+////        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+////        return false;
+        if (searchView != null) {
+
+            searchView.setQuery(null, false);
+            searchView.clearFocus();
+        }
+
+        onQueryTextChange(null);
+        return false;
     }
 
     @Override
@@ -396,7 +357,8 @@ public class ContactsListFragment extends Fragment implements
         }
         try {
             getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
         return true;
     }
 
@@ -503,8 +465,9 @@ public class ContactsListFragment extends Fragment implements
                         ReachFriendsProvider.CONTENT_URI,
                         contentValues,
                         ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
-                                ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + ""});
+                                ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
+                                ReachFriendsHelper.COLUMN_ID + " != ?",
+                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + "", StaticData.devika + ""});
                 contentValues.clear();
                 return null;
             }
@@ -578,5 +541,51 @@ public class ContactsListFragment extends Fragment implements
                     .setPriority(NotificationCompat.PRIORITY_MAX);
             managerCompat.notify(99910, builder.build());
         };
+    }
+
+    public static final class SendRequest extends AsyncTask<Long, Void, Long> {
+
+        @Override
+        protected Long doInBackground(final Long... params) {
+
+            /**
+             * params[0] = other id
+             * params[1] = my id
+             * params[2] = status
+             */
+
+            final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
+                    () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
+                    Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
+
+            final String toParse;
+            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
+                return params[0];
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(final Long response) {
+
+            super.onPostExecute(response);
+
+            if (response != null && response > 0) {
+
+                //response becomes the id of failed person
+                MiscUtils.useContextFromFragment(reference, context -> {
+
+                    Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
+                    final ContentValues values = new ContentValues();
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                    context.getContentResolver().update(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
+                            values,
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{response + ""});
+                    return null;
+                });
+            }
+
+        }
     }
 }

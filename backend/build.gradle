@@ -6,7 +6,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.24'
+        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.26'
     }
 }
 
@@ -22,17 +22,19 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 dependencies {
-    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.26'
-    compile 'com.google.appengine:appengine-endpoints:1.9.26'
-    compile 'com.google.appengine:appengine-endpoints-deps:1.9.26'
+
+    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.27'
+    compile 'com.google.appengine:appengine-endpoints:1.9.27'
+    compile 'com.google.appengine:appengine-endpoints-deps:1.9.27'
     compile 'com.googlecode.objectify:objectify:5.1.8'
     compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'com.ganyo:gcm-server:1.0.2'
     compile 'org.reflections:reflections:0.9.10'
+    compile 'com.firebase:firebase-token-generator:2.0.0'
 }
 
-
 appengine {
+
     downloadSdk = true
     appcfg {
         oauth2 = true

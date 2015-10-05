@@ -9,6 +9,9 @@ import com.googlecode.objectify.ObjectifyService;
  */
 public class OfyService {
 
+    public static final long devikaId = 5666668701286400L;
+    public static final String devikaPhoneNumber = "8860872102";
+
 //    static {
 //        ObjectifyService.register(ReachUser.class);
 //        ObjectifyService.register(FeedBack.class);

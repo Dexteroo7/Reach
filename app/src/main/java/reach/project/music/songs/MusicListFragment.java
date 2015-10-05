@@ -99,8 +99,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
                         cursor.getString(5), //artistName
                         cursor.getLong(7), //duration
                         cursor.getString(6), //album
-                        cursor.getString(11), //genre
-                        cursor.getBlob(10)); //albumArtData
+                        cursor.getString(10)); //genre
                 senderCursor.close();
             }
         }
@@ -311,7 +310,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
             return new CursorLoader(getActivity(),
                     ReachSongProvider.CONTENT_URI,
-                    StaticData.DISK_COMPLETE_NO_PATH,
+                    reachMusicAdapter.getProjectionMyLibrary(),
                     whereClause,
                     whereArgs,
                     ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
@@ -319,7 +318,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
             return new CursorLoader(getActivity(),
                     ReachSongProvider.CONTENT_URI,
-                    StaticData.DISK_COMPLETE_NO_PATH,
+                    reachMusicAdapter.getProjectionMyLibrary(),
                     whereClause,
                     whereArgs,
                     ReachSongHelper.COLUMN_DATE_ADDED + " DESC LIMIT 20");
@@ -359,12 +358,18 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
-        whereArgs = new String[]{userId + "", "1"};
+//        searchView.setQuery(null, true);
+//        whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
+//                ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
+//        whereArgs = new String[]{userId + "", "1"};
+//
+//        getLoaderManager().restartLoader(type, null, this);
+        if (searchView != null) {
 
-        getLoaderManager().restartLoader(type, null, this);
+            searchView.setQuery(null, true);
+            searchView.clearFocus();
+        }
+        onQueryTextChange(null);
         return false;
     }
 
@@ -432,7 +437,20 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
         // nothing
     }
 
-    public void setSearchView(SearchView searchView) {
-        this.searchView = searchView;
+    public void setSearchView(SearchView sView) {
+
+        onClose();
+
+        if (sView == null && searchView != null) {
+            //invalidate old
+            searchView.setOnQueryTextListener(null);
+            searchView.setOnCloseListener(null);
+            searchView = null;
+        } else if (sView != null){
+            //set new
+            searchView = sView;
+            searchView.setOnQueryTextListener(this);
+            searchView.setOnCloseListener(this);
+        }
     }
 }

@@ -99,18 +99,19 @@ public class AllContactsFragment extends Fragment implements
 
     public void setSearchView(SearchView sView) {
 
+        onClose();
+
         if (sView == null && searchView != null) {
             //invalidate old
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
-            searchView.setQuery(null, true);
             searchView = null;
         } else if (sView != null){
             //set new
             searchView = sView;
             searchView.setOnQueryTextListener(this);
             searchView.setOnCloseListener(this);
-            searchView.setQuery(null, true);
+            searchView.clearFocus();
         }
     }
 
@@ -147,14 +148,17 @@ public class AllContactsFragment extends Fragment implements
     @Override
     public boolean onClose() {
 
-//        selection = null;
-//        selectionArguments = null;
-//        searchView.setQuery(null, true);
-//
+        if (searchView != null) {
+
+            searchView.setQuery(null, false);
+            searchView.clearFocus();
+        }
+
 //        inviteAdapter.getFilter().filter(null);
 //        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
 //        return false;
-        return onQueryTextChange(null);
+        onQueryTextChange(null);
+        return true;
     }
 
     @Override
@@ -174,8 +178,8 @@ public class AllContactsFragment extends Fragment implements
          * Don't do anything if the filter hasn't actually changed.
          * Prevents restarting the loader when restoring state.
          */
-        if (TextUtils.isEmpty(newText))
-            return true;
+//        if (TextUtils.isEmpty(newText))
+//            return true;
 
         inviteAdapter.getFilter().filter(newText);
         return true;

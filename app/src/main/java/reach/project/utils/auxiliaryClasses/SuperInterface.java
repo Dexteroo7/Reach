@@ -35,7 +35,7 @@ public interface SuperInterface {
                         String displayName, String actualName,
                         boolean multiple, String userName, String onlineStatus,
                         String networkType, String artistName, long duration,
-                        String albumName, String genre, byte[] albumArtData); //MusicListFragment
+                        String albumName, String genre); //MusicListFragment
 
     void startAccountCreation(Optional<OldUserContainerNew> container); //NumberVerificationFragment
 
