@@ -50,15 +50,25 @@ public class ChatListAdapter extends FirebaseListAdapter<Chat> {
 
         //Log.i("Chat", "Author:" + author);
 
-        if (chat.getAuthor().toLowerCase().equals("devika")) {
+        if (chat.getAdmin() == Chat.ADMIN) {
+
             chatView.setBackgroundResource(R.drawable.chat_bubble_gray);
             chatView.setTextColor(Color.DKGRAY);
             ((LinearLayout) view).setGravity(Gravity.LEFT);
         }
         else {
+
             chatView.setBackgroundResource(R.drawable.chat_bubble);
             chatView.setTextColor(Color.WHITE);
             ((LinearLayout) view).setGravity(Gravity.RIGHT);
+        }
+
+        switch (chat.getStatus()) {
+
+            case Chat.PENDING : //no tick
+            case Chat.SENT_TO_SERVER : //add single tick
+            case Chat.UN_READ : //double tick
+            case Chat.READ : //blue tick
         }
 
         chatView.setText(chat.getMessage());
