@@ -63,6 +63,19 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("chatToken", chatToken).apply();
     }
 
+    public static String getChatUUID(SharedPreferences sharedPreferences) {
+
+        final String chatUUID = sharedPreferences.getString("chatUUID", "");
+        Log.i("Ayush", "Found chatUUID token " + chatUUID);
+        return chatUUID;
+    }
+
+    public static void storeChatUUID(SharedPreferences sharedPreferences, String chatUUID) {
+
+        Log.i("Ayush", "Storing chatUUID " + chatUUID);
+        sharedPreferences.edit().putString("chatUUID", chatUUID).apply();
+    }
+
     /**
      *
      * @param sharedPreferences for accessing the prefs

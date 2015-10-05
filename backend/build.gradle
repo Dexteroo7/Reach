@@ -24,7 +24,6 @@ targetCompatibility = 1.7
 dependencies {
 
     appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.27'
-
     compile 'com.google.appengine:appengine-endpoints:1.9.27'
     compile 'com.google.appengine:appengine-endpoints-deps:1.9.27'
     compile 'com.googlecode.objectify:objectify:5.1.8'

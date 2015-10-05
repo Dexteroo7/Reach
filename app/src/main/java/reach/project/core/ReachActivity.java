@@ -103,6 +103,7 @@ import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
 import reach.project.onBoarding.NumberVerification;
+import reach.project.pacemaker.Pacemaker;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
@@ -788,6 +789,8 @@ public class ReachActivity extends AppCompatActivity implements
     @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        Pacemaker.scheduleLinear(this, 5);
 
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         fragmentManager = getSupportFragmentManager();

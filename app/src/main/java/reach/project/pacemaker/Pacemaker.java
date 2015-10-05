@@ -36,7 +36,9 @@ public class Pacemaker {
 
         final PendingIntent alarmIntent = PendingIntent.getBroadcast(context, delay, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
                 System.currentTimeMillis() + timeGap, timeGap,
                 alarmIntent);
         Log.d("Heartbeater", "Scheduled repeating");

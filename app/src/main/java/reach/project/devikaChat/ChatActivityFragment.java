@@ -31,16 +31,15 @@ import reach.project.R;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class ChatActivityFragment extends Fragment {
 
     private static final String FIREBASE_URL = "https://flickering-fire-7874.firebaseio.com/";
     private static final String TAG = "Reach Chat";
 
-    private static String mUUID = "";
+    private static String chatToken;
+    private static String chatUUID = "";
     private static long serverId = 0;
+    private static String userName = "";
     private static boolean connected = false;
 
     private static WeakReference<ChatActivityFragment> reference = null;
@@ -61,21 +60,26 @@ public class ChatActivityFragment extends Fragment {
     private Firebase mFirebaseRef = null;
     private ValueEventListener mConnectedListener = null;
     private ChatListAdapter mChatListAdapter = null;
+    private SharedPreferences sharedPreferences = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         final Activity activity = getActivity();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        final String chatToken = SharedPrefUtils.getChatToken(sharedPreferences);
+
+        sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        chatToken = SharedPrefUtils.getChatToken(sharedPreferences);
+        chatUUID = SharedPrefUtils.getChatUUID(sharedPreferences);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
+        userName = SharedPrefUtils.getUserName(sharedPreferences);
 
         if (TextUtils.isEmpty(chatToken)) {
             Log.i("Ayush", "Chat token not found !");
             activity.finish();
             return;
         }
+
         if (serverId == 0) {
             Log.i("Ayush", "ServerId not found !");
             activity.finish();
@@ -84,50 +88,9 @@ public class ChatActivityFragment extends Fragment {
 
         Log.i("Ayush", "Found chat token " + chatToken + " " + serverId);
 
-        //initialize firebase
-        Firebase.setAndroidContext(activity);
-        Firebase.getDefaultConfig().setPersistenceEnabled(true);
-
         // Setup our Firebase mFirebaseRef
         mFirebaseRef = new Firebase(FIREBASE_URL);
         mFirebaseRef.keepSynced(true);
-        mFirebaseRef.authWithCustomToken(chatToken, new Firebase.AuthResultHandler() {
-
-            @Override
-            public void onAuthenticationError(FirebaseError error) {
-                Log.e(TAG, "Login Failed! " + error.getMessage());
-            }
-
-            @Override
-            public void onAuthenticated(AuthData authData) {
-
-                Log.i(TAG, "Login Succeeded!" + authData);
-                mUUID = authData.getUid();
-                // Finally, a little indication of connection status
-                mConnectedListener = mFirebaseRef.getRoot().child(".info/connected").addValueEventListener(connectionStatus);
-
-                /**
-                 * Setup our view and list adapter. Ensure it scrolls to the bottom as data changes
-                 * Tell our list adapter that we only want 50 messages at a time
-                 **/
-                Log.i("Ayush", "Setting up chat list adapter !");
-                mChatListAdapter = new ChatListAdapter(
-                        mFirebaseRef.child("chat").child(mUUID).limitToLast(50),
-                        getActivity(),
-                        R.layout.chat_message_me,
-                        serverId);
-                chatList.setAdapter(mChatListAdapter);
-
-                mChatListAdapter.registerDataSetObserver(new DataSetObserver() {
-                    @Override
-                    public void onChanged() {
-                        super.onChanged();
-                        chatList.setSelection(mChatListAdapter.getCount() - 1);
-                    }
-                });
-
-            }
-        });
     }
 
     public View onCreateView(LayoutInflater inflater,
@@ -146,6 +109,11 @@ public class ChatActivityFragment extends Fragment {
         messageInput.setTag(mFirebaseRef);
         button.setTag(messageInput);
 
+        if (TextUtils.isEmpty(chatUUID))
+            mFirebaseRef.authWithCustomToken(chatToken, authHandler);
+        else
+            setUpUI();
+
         return rootView;
     }
 
@@ -159,6 +127,14 @@ public class ChatActivityFragment extends Fragment {
 
         if (mChatListAdapter != null)
             mChatListAdapter.cleanup();
+
+        sharedPreferences = null;
+        chatList = null;
+        mFirebaseRef = null;
+        mConnectedListener = null;
+        mChatListAdapter = null;
+
+        Log.i("Ayush", "CHAT ON DESTROY !!");
     }
 
     private static void sendMessage(String message, Firebase mFirebaseRef) {
@@ -167,15 +143,13 @@ public class ChatActivityFragment extends Fragment {
 
             // Create our 'model', a Chat object
             final Chat chat = new Chat();
-            //TODO set username
-            chat.setAuthor(mFirebaseRef.getAuth().getAuth().get("userName").toString());
+            chat.setUserId(serverId);
+            chat.setAuthor(userName);
             chat.setMessage(message);
             chat.setRead(false);
             chat.setTimestamp(System.currentTimeMillis());
-            chat.setUserId(serverId);
-
             // Create a new, auto-generated child of that chat location, and save our chat data there
-            mFirebaseRef.child("chat").child(mUUID).push().setValue(chat);
+            mFirebaseRef.child("chat").child(chatUUID).push().setValue(chat);
         }
     }
 
@@ -233,4 +207,51 @@ public class ChatActivityFragment extends Fragment {
             });
         }
     };
+
+    private static final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
+
+        @Override
+        public void onAuthenticationError(FirebaseError error) {
+            Log.e(TAG, "Login Failed! " + error.getMessage());
+        }
+
+        @Override
+        public void onAuthenticated(AuthData authData) {
+
+            Log.i(TAG, "Login Succeeded!" + authData);
+            chatUUID = authData.getUid();
+
+            MiscUtils.useFragment(reference, fragment -> {
+
+                SharedPrefUtils.storeChatUUID(fragment.sharedPreferences, chatUUID);
+                fragment.setUpUI();
+            });
+        }
+    };
+
+    private void setUpUI() {
+
+        // Finally, a little indication of connection status
+        mConnectedListener = mFirebaseRef.getRoot().child(".info/connected").addValueEventListener(connectionStatus);
+
+        /**
+         * Setup our view and list adapter. Ensure it scrolls to the bottom as data changes
+         * Tell our list adapter that we only want 50 messages at a time
+         **/
+        Log.i("Ayush", "Setting up chat list adapter !");
+        mChatListAdapter = new ChatListAdapter(
+                mFirebaseRef.child("chat").child(chatUUID).limitToLast(50),
+                getActivity(),
+                R.layout.chat_message_me,
+                serverId);
+        chatList.setAdapter(mChatListAdapter);
+
+        mChatListAdapter.registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                chatList.setSelection(mChatListAdapter.getCount() - 1);
+            }
+        });
+    }
 }

@@ -47,6 +47,7 @@ public abstract class FirebaseListAdapter<T> extends BaseAdapter {
      * @param activity    The activity containing the ListView
      */
     public FirebaseListAdapter(Query mRef, Class<T> mModelClass, int mLayout, Activity activity) {
+
         this.mRef = mRef;
         this.mModelClass = mModelClass;
         this.mLayout = mLayout;

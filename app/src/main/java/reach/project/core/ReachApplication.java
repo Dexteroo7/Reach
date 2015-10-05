@@ -7,7 +7,6 @@ import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.Tracker;
 
 import reach.project.R;
-import reach.project.pacemaker.Pacemaker;
 
 /**
  * Created by ashish on 23/3/15.
@@ -22,8 +21,9 @@ public class ReachApplication extends Application {
     public void onCreate() {
 
         super.onCreate();
+        //initialize firebase
         Firebase.setAndroidContext(this);
-        Pacemaker.scheduleLinear(this, 5);
+        Firebase.getDefaultConfig().setPersistenceEnabled(true);
     }
 
     /*@Override

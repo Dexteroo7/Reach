@@ -53,12 +53,24 @@ public class CompletedOperationsEndpoint {
             path = "completedOperations/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
     public CompletedOperations get(@Named("id") Long id) throws NotFoundException {
+
         logger.info("Getting CompletedOperations with ID: " + id);
         CompletedOperations completedOperations = ofy().load().type(CompletedOperations.class).id(id).now();
         if (completedOperations == null) {
             throw new NotFoundException("Could not find CompletedOperations with ID: " + id);
         }
         return completedOperations;
+    }
+
+    @ApiMethod(
+            name = "getTransactionCount",
+            path = "completedOperations/getTransactionCount/{id}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public Pair getTransactionCount(@Named("id") long id) {
+
+        final int uploaded = ofy().load().type(CompletedOperations.class).filter("senderId =", id).count();
+        final int downloaded = ofy().load().type(CompletedOperations.class).filter("receiver =", id).count();
+        return new Pair(uploaded, downloaded);
     }
 
     /**
@@ -136,7 +148,7 @@ public class CompletedOperationsEndpoint {
             query = query.startAt(Cursor.fromWebSafeString(cursor));
         }
         QueryResultIterator<CompletedOperations> queryIterator = query.iterator();
-        List<CompletedOperations> completedOperationsList = new ArrayList<CompletedOperations>(limit);
+        List<CompletedOperations> completedOperationsList = new ArrayList<>(limit);
         while (queryIterator.hasNext()) {
             completedOperationsList.add(queryIterator.next());
         }
