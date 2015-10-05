@@ -37,9 +37,7 @@
             android:layout_height="50dp"
             android:layout_marginLeft="15dp"
             android:layout_centerVertical="true"
-            android:padding="15dp"
-            android:background="@drawable/circular_background_pink"
-            android:src="@drawable/music_note"/>
+            android:src="@drawable/ic_default_music"/>
         <LinearLayout
             android:orientation="vertical"
             android:layout_alignParentRight="true"
