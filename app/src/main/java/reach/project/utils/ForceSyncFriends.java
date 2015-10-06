@@ -1,6 +1,5 @@
 package reach.project.utils;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.util.Log;
@@ -27,7 +26,7 @@ public class ForceSyncFriends implements Runnable {
     private final long serverId;
     private final String myNumber;
 
-    public ForceSyncFriends(Activity activity, long serverId, String myNumber) {
+    public <T extends Context> ForceSyncFriends(T activity, long serverId, String myNumber) {
         this.reference = new WeakReference<>(activity);
         this.serverId = serverId;
         this.myNumber = myNumber;

@@ -37,6 +37,7 @@ public final class StaticData {
             request.setConnectTimeout(request.getConnectTimeout() * 2);
             request.setReadTimeout(request.getReadTimeout() * 2);
         };
+
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
         messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();

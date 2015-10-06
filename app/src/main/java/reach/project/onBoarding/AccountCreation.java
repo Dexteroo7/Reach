@@ -216,6 +216,23 @@ public class AccountCreation extends Fragment {
         new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
     }
 
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (SuperInterface) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
     private static class SaveUserData extends AsyncTask<String, Void, ReachUser> {
 
         final View bottomPart2, bottomPart3, next;
@@ -278,6 +295,7 @@ public class AccountCreation extends Fragment {
 
             //insert User-object and get the userID
             final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insertNew(user).execute(), Optional.absent()).orNull();
+
             if (dataAfterWork == null || dataAfterWork.getUserId() == null) {
 
                 user.setId(0L);
@@ -437,23 +455,6 @@ public class AccountCreation extends Fragment {
                 return true;
             }
         }));
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (SuperInterface) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {

@@ -7,9 +7,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Telephony;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -29,8 +30,8 @@ import android.widget.Toast;
 import com.google.common.base.Optional;
 import com.viewpagerindicator.CirclePageIndicator;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.lang.ref.WeakReference;
+import java.util.Random;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
@@ -42,21 +43,27 @@ import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 
-public class NumberVerification extends Fragment{
+public class NumberVerification extends Fragment {
 
-    private SuperInterface mListener;
-    private String SMS_TEXT = "Your activation code is %s . Enter this in the Reach app to complete phone verification";
-    private EditText verifyCode;
-    private TextView verifyRetry;
-    private BroadcastReceiver SMSReceiver;
+    private static final String SMS_TEXT = "Your activation code is %s . Enter this in the Reach app to complete phone verification";
 
-    public static NumberVerification newInstance () {
-        return new NumberVerification();
+    private SuperInterface mListener = null;
+    private TextView verifyRetry = null;
+    private EditText verifyCode = null;
+
+    private static WeakReference<NumberVerification> reference;
+
+    public static NumberVerification newInstance() {
+
+        final NumberVerification numberVerification = new NumberVerification();
+        reference = new WeakReference<>(numberVerification);
+        return numberVerification;
     }
 
     @Override
-    public View onCreateView (LayoutInflater inflater, ViewGroup container,
-                              Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
         verifyCode = (EditText) rootView.findViewById(R.id.verifyCode);
@@ -86,37 +93,68 @@ public class NumberVerification extends Fragment{
         return rootView;
     }
 
-    private final class TourPagerAdapter extends PagerAdapter {
+    @Override
+    public void onAttach(Activity activity) {
 
-        private final String[] tourTexts = new String[]{"Browse through files on\nthe mobile devices of your friends",
-                                                               "Build a network\nto have more fun",
-                                                               "Connect with your friends\n",
-                                                               "Hide the files\nyou don't wish others to see"};
-        private final int[] tourImages = new int[]{R.drawable.library_view,
-                                                          R.drawable.reach_queue,
-                                                          R.drawable.my_reach,
-                                                          R.drawable.hide};
+        super.onAttach(activity);
+        try {
+            mListener = (SuperInterface) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //Receive SMS and enter the code.
+        getActivity().registerReceiver(SMSReceiver, intentFilter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(SMSReceiver);
+    }
+
+    private static final class TourPagerAdapter extends PagerAdapter {
+
+        private static final String[] tourTexts = new String[]{"Browse through files on\nthe mobile devices of your friends",
+                "Build a network\nto have more fun",
+                "Connect with your friends\n",
+                "Hide the files\nyou don't wish others to see"};
+        private static final int[] tourImages = new int[]{R.drawable.library_view,
+                R.drawable.reach_queue,
+                R.drawable.my_reach,
+                R.drawable.hide};
 
         private final Context mContext;
         private final LayoutInflater mLayoutInflater;
 
-        public TourPagerAdapter (Context context) {
+        public TourPagerAdapter(Context context) {
             mContext = context;
             mLayoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override
-        public int getCount () {
+        public int getCount() {
             return tourTexts.length;
         }
 
         @Override
-        public boolean isViewFromObject (View view, Object object) {
+        public boolean isViewFromObject(View view, Object object) {
             return view == object;
         }
 
         @Override
-        public Object instantiateItem (ViewGroup container, int position) {
+        public Object instantiateItem(ViewGroup container, int position) {
 
             final View itemView = mLayoutInflater.inflate(R.layout.tour_item, container, false);
             ((TextView) itemView.findViewById(R.id.tour_text)).setText(tourTexts[position]);
@@ -127,18 +165,19 @@ public class NumberVerification extends Fragment{
         }
 
         @Override
-        public void destroyItem (ViewGroup container, int position, Object object) {
+        public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView((LinearLayout) object);
         }
     }
 
-    private final class ClickListener implements View.OnClickListener {
+    private static final class ClickListener implements View.OnClickListener {
 
         private final View bottomPart1, bottomPart2, bottomPart3;
         private final LinearLayout verifyNext;
         private final EditText telephoneNumber;
 
-        private ClickListener (View ... views) {
+        private ClickListener(View... views) {
+
             this.bottomPart1 = views[0];
             this.bottomPart2 = views[1];
             this.bottomPart3 = views[2];
@@ -147,67 +186,73 @@ public class NumberVerification extends Fragment{
         }
 
         @Override
-        public void onClick (View view) {
+        public void onClick(View view) {
 
             final String phoneNumber = telephoneNumber.getText().toString();
             final String parsed;
             if (TextUtils.isEmpty(phoneNumber) || (parsed = phoneNumber.replaceAll("[^0-9]", "")).length() < 10) {
+
                 Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             final int length = parsed.length();
             //take last 10 digits
-            new GetOldAccount().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, parsed.substring(length - 10, length));
+            new GetOldAccount(bottomPart2, bottomPart3, verifyNext).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, parsed.substring(length - 10, length));
             bottomPart1.setVisibility(View.INVISIBLE);
             bottomPart3.setVisibility(View.VISIBLE);
         }
 
-        final class GetOldAccount extends AsyncTask<String, Void, Pair<OldUserContainerNew, String>> {
+        private static final class GetOldAccount extends AsyncTask<String, Void, Pair<OldUserContainerNew, String>> {
+
+            private final Random random = new Random();
+
+            private final View bottomPart2, bottomPart3;
+            private final LinearLayout verifyNext;
+            private final Context context;
+
+            private GetOldAccount(View bottomPart2, View bottomPart3, LinearLayout verifyNext) {
+
+                this.bottomPart2 = bottomPart2;
+                this.bottomPart3 = bottomPart3;
+                this.verifyNext = verifyNext;
+                this.context = verifyNext.getContext();
+            }
 
             @Override
-            protected final Pair<OldUserContainerNew, String> doInBackground (final String... params) {
+            protected final Pair<OldUserContainerNew, String> doInBackground(final String... params) {
 
                 final OldUserContainerNew container = MiscUtils.autoRetry(() ->
                         StaticData.userEndpoint.isAccountPresentNew(params[0]).execute(), Optional.absent()).orNull();
 
                 //start sync
                 ContactsListFragment.synchronizeOnce.set(true);
-                AsyncTask.THREAD_POOL_EXECUTOR.execute(new ForceSyncFriends(getActivity(), container == null ? 0 : container.getServerId(), params[0]));
+                AsyncTask.THREAD_POOL_EXECUTOR.execute(new ForceSyncFriends(context, container == null ? 0 : container.getServerId(), params[0]));
                 return new Pair<>(container, params[0]);
             }
 
             @Override
-            protected void onPostExecute (final Pair<OldUserContainerNew, String> pair) {
+            protected void onPostExecute(final Pair<OldUserContainerNew, String> pair) {
 
                 super.onPostExecute(pair);
 
-                final FragmentActivity activity = getActivity();
-                if (isRemoving() || isDetached() || isCancelled() || activity == null || activity.isFinishing() || mListener == null)
-                    return;
-
-                final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                 sharedPreferences.edit().clear().apply();
 
                 // If the number is not present inside DB
                 if (pair.first == null) {
+
                     bottomPart3.setVisibility(View.INVISIBLE);
                     bottomPart2.setVisibility(View.VISIBLE);
                     /*
                      *  Generate Auth Key &
                      *  Send SMS verification
                      */
-                    String authKey = SharedPrefUtils.getAuthKey(sharedPreferences);
-                    if (TextUtils.isEmpty(authKey)) {
-                        authKey = String.valueOf(generateSecureRandom());
-                        SharedPrefUtils.storeAuthKey(sharedPreferences, authKey);
-                    } else {
-                        authKey = SharedPrefUtils.getAuthKey(sharedPreferences);
-                    }
-                    Log.i("Verification", "" + authKey);
-                    final String finalAuthKey = authKey;
+                    final String finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
+                    Log.i("Verification", "" + finalAuthKey);
 
-                    SendVerificationCodeAsync.OnTaskCompleted onTaskCompleted = aBoolean -> {
+                    final SendVerificationCodeAsync.OnTaskCompleted onTaskCompleted = aBoolean -> {
+
                         if (!aBoolean) {
                             /*
                              *  -- TODO --
@@ -215,7 +260,7 @@ public class NumberVerification extends Fragment{
                              *  again three times or else fail.
                              */
                             Log.e("Verification", "Code not sent");
-                            Toast.makeText(getActivity(), "Verification code could not be sent. Please try again!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Verification code could not be sent. Please try again!", Toast.LENGTH_SHORT).show();
                         } else {
                             /*
                              *  -- TODO --
@@ -224,117 +269,145 @@ public class NumberVerification extends Fragment{
                              */
                             Log.i("Verification", "Code sent");
                             verifyNext.setOnClickListener(v -> {
-                                String enteredCode = String.valueOf(verifyCode.getText());
-                                if (enteredCode.equals(finalAuthKey)) {
+
+                                final String enteredCode = MiscUtils.useFragment(reference, fragment -> {
+                                    return fragment.verifyCode.getText().toString().trim();
+                                }).orNull();
+
+                                if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
+
                                     SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
                                     // Start Account Creation
-                                    mListener.startAccountCreation(Optional.fromNullable(null));
+                                    MiscUtils.useFragment(reference, fragment -> {
+                                        fragment.mListener.startAccountCreation(Optional.fromNullable(null));
+                                    });
                                 } else {
-                                    Toast.makeText(getActivity(), "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
                     };
 
-                    verifyRetry.setOnClickListener(v -> {
-                        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
-                                .setMessage("Send verification code again?")
-                                .setPositiveButton("Yes", (dialog, which) -> {
-                                    new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
-                                    dialog.dismiss();
-                                })
-                                .setNegativeButton("No", (dialog, which) -> {
-                                    dialog.dismiss();
-                                })
-                                .setIcon(R.drawable.icon_grey)
-                                .create();
-                        alertDialog.show();
+                    MiscUtils.useFragment(reference, fragment -> {
+
+                        fragment.verifyRetry.setOnClickListener(v -> {
+
+                            final AlertDialog alertDialog = new AlertDialog.Builder(context)
+                                    .setMessage("Send verification code again?")
+                                    .setPositiveButton("Yes", (dialog, which) -> {
+                                        new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
+                                        dialog.dismiss();
+                                    })
+                                    .setNegativeButton("No", (dialog, which) -> {
+                                        dialog.dismiss();
+                                    })
+                                    .setIcon(R.drawable.icon_grey)
+                                    .create();
+                            alertDialog.show();
+                        });
                     });
 
                     new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
                 }
                 // If the number is present inside DB
                 else {
+
                     SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
                     // Start Account Creation
-                    mListener.startAccountCreation(Optional.fromNullable(pair.first));
+                    MiscUtils.useFragment(reference, fragment -> {
+                        fragment.mListener.startAccountCreation(Optional.fromNullable(pair.first));
+                    });
                 }
             }
         }
     }
 
-    private int generateSecureRandom() {
-        try {
+    private static final IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
+    private static final BroadcastReceiver SMSReceiver = new BroadcastReceiver() {
 
-            // Create a secure random number generator using the SHA1PRNG algorithm
-            SecureRandom secureRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
-            return 100000 + secureRandomGenerator.nextInt(900000);
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        @SuppressWarnings("deprecation")
+        private SmsMessage getMessageFromBytes(byte[] toParse) {
+            if (toParse == null || toParse.length == 0)
+                return null;
+            return SmsMessage.createFromPdu(toParse);
         }
 
-        return 0;
-    }
+        @SuppressWarnings("SpellCheckingInspection")
+        @Override
+        public void onReceive(Context context, Intent intent) {
 
-    @Override
-    public void onAttach (Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (SuperInterface) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                                                 + " must implement OnFragmentInteractionListener");
-        }
-    }
+            final SmsMessage[] msgs;
 
-    @Override
-    public void onDetach () {
-        super.onDetach();
-        mListener = null;
-    }
+            if (Build.VERSION.SDK_INT >= 19) //KITKAT
+                msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+            else {
 
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        /*
-          * Receive SMS and enter the code.
-          */
-
-        IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
-        SMSReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
                 final Bundle bundle = intent.getExtras();
-                if (bundle != null) {
-                    final Object[] pdusObj = (Object[]) bundle.get("pdus");
-                    for (Object aPdusObj : pdusObj) {
-                        SmsMessage currentMessage = SmsMessage.createFromPdu((byte[]) aPdusObj);
-                        String message = currentMessage.getDisplayMessageBody();
-                        String receivedCode = message.split(" ")[4];
-                        if (verifyCode!=null) {
-                            verifyCode.setText(receivedCode);
-                            verifyCode.setSelection(receivedCode.length());
-                        }
-                        if (verifyRetry!=null)
-                            verifyRetry.setVisibility(View.GONE);
-                        Log.i("SmsReceiver", " message: " + message);
-                    }
+                if (bundle == null) {
+                    //TODO track
+                    //fail
+                    return;
                 }
+
+                final Object[] pdusObj = (Object[]) bundle.get("pdus");
+
+                if (pdusObj == null || pdusObj.length == 0) {
+                    //TODO track
+                    //fail
+                    return;
+                }
+
+                msgs = new SmsMessage[pdusObj.length];
+                for (int i = 0; i < pdusObj.length; i++)
+                    msgs[i] = getMessageFromBytes((byte[]) pdusObj[i]);
             }
-        };
-        getActivity().registerReceiver(SMSReceiver, intentFilter);
-    }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (SMSReceiver != null)
-            getActivity().unregisterReceiver(SMSReceiver);
-    }
+            if (msgs == null || msgs.length == 0) {
+                //TODO track
+                //fail
+                return;
+            }
 
-    public static class SendVerificationCodeAsync extends AsyncTask<String, Void, Boolean> {
+            //noinspection unused
+            boolean done = false;
+            for (SmsMessage smsMessage : msgs) {
+
+                if (smsMessage == null)
+                    continue;
+
+                if (!smsMessage.getOriginatingAddress().endsWith("REACHA"))
+                    continue;
+
+                final String message = smsMessage.getDisplayMessageBody();
+                final String[] splitter = message.split(" ");
+
+                if (splitter.length < 5)
+                    continue;
+
+                final String receivedCode = splitter[4];
+                Log.i("SmsReceiver", " message: " + message);
+
+                MiscUtils.useFragment(reference, fragment -> {
+
+                    if (fragment.verifyCode != null) {
+
+                        fragment.verifyCode.setText(receivedCode);
+                        fragment.verifyCode.setSelection(receivedCode.length());
+                    }
+                    if (fragment.verifyRetry != null)
+                        fragment.verifyRetry.setVisibility(View.GONE);
+                });
+
+                //noinspection UnusedAssignment
+                done = true;
+                break;
+            }
+
+            //TODO track done, should always be true !
+        }
+    };
+
+    private static final class SendVerificationCodeAsync extends AsyncTask<String, Void, Boolean> {
 
         public interface OnTaskCompleted {
             void onTaskCompleted(Boolean aBoolean);
@@ -348,7 +421,9 @@ public class NumberVerification extends Fragment{
 
         @Override
         protected Boolean doInBackground(String... params) {
+
             final SendSMS smsObj = new SendSMS();
+            //noinspection SpellCheckingInspection
             smsObj.setparams("alerts.sinfini.com", "sms", "A6f5d83ea6aa5984be995761f221c8a9a", "REACHA");
             try {
                 //Toast.makeText(context,params[1],Toast.LENGTH_SHORT).show();
