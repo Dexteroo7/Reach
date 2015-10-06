@@ -6,19 +6,20 @@ package reach.project.devikaChat;
  */
 public class Chat {
 
-    public static final byte ADMIN = 0;
-    public static final byte NOT_ADMIN = 1;
+    public static final int NOT_ADMIN = 0;
+    public static final int ADMIN = 1;
 
-    public static final byte PENDING = 0;
-    public static final byte SENT_TO_SERVER = 1;
-    public static final byte UN_READ = 2;
-    public static final byte READ = 3;
+    public static final int PENDING = 0;
+    public static final int SENT_TO_SERVER = 1;
+    public static final int UN_READ = 2;
+    public static final int READ = 3;
 
+    private String chatId = "hello_world";
     private String message = "hello_world";
     private long timestamp = 0;
 
-    private byte status = PENDING;
-    private byte admin = NOT_ADMIN;
+    private int status = PENDING;
+    private int admin = NOT_ADMIN;
 
     // Required default constructor for Firebase object mapping
     @SuppressWarnings("unused")
@@ -41,19 +42,27 @@ public class Chat {
         this.timestamp = timestamp;
     }
 
-    public byte getAdmin() {
+    public int getAdmin() {
         return admin;
     }
 
-    public void setAdmin(byte admin) {
+    public void setAdmin(int admin) {
         this.admin = admin;
     }
 
-    public byte getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(byte status) {
+    public void setStatus(int status) {
         this.status = status;
+    }
+
+    public String getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(String chatId) {
+        this.chatId = chatId;
     }
 }

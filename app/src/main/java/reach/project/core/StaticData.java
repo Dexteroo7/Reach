@@ -22,6 +22,12 @@ import reach.project.utils.CloudEndPointsUtils;
  */
 public final class StaticData {
 
+    public static final UserApi userEndpoint;
+    public static final FeedBackApi feedBackApi;
+    public static final Messaging.MessagingEndpoint messagingEndpoint;
+    public static final MusicVisibilityApi musicVisibility;
+    public static final NotificationApi notificationApi;
+
     static {
 
         final HttpTransport transport = new NetHttpTransport();
@@ -89,15 +95,9 @@ public final class StaticData {
     public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
-    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
-
-    public static final UserApi userEndpoint;
-    public static final FeedBackApi feedBackApi;
-    public static final Messaging.MessagingEndpoint messagingEndpoint;
-    public static final MusicVisibilityApi musicVisibility;
-    public static final NotificationApi notificationApi;
-
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
+    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
     public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
+
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
 }

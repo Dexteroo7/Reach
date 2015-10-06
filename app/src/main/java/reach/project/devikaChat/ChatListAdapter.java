@@ -2,12 +2,17 @@ package reach.project.devikaChat;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.firebase.client.Firebase;
 import com.firebase.client.Query;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import reach.project.R;
 import reach.project.utils.MiscUtils;
@@ -15,7 +20,7 @@ import reach.project.utils.MiscUtils;
 /**
  * @author greg
  * @since 6/21/13
- *
+ * <p>
  * This class is an example of how to use FirebaseListAdapter. It uses the <code>Chat</code> class to encapsulate the
  * data for each individual chat message
  */
@@ -25,11 +30,20 @@ public class ChatListAdapter extends FirebaseListAdapter<Chat> {
 //    private final long userId;
 //    private final Context context;
 
-    public ChatListAdapter(Query ref, Activity activity, int layout, long userId) {
+    private final Map<String, Object> statusUpdate = new HashMap<>(1);
+
+    {
+        statusUpdate.put("status", Chat.READ);
+    }
+
+    private final Firebase firebase;
+    private final String chatUUID;
+
+    public ChatListAdapter(Query ref, Activity activity, int layout, Firebase firebase, String chatUUID) {
 
         super(ref, Chat.class, layout, activity);
-//        context = activity;
-//        this.userId = userId;
+        this.firebase = firebase;
+        this.chatUUID = chatUUID;
     }
 
     /**
@@ -55,20 +69,27 @@ public class ChatListAdapter extends FirebaseListAdapter<Chat> {
             chatView.setBackgroundResource(R.drawable.chat_bubble_gray);
             chatView.setTextColor(Color.DKGRAY);
             ((LinearLayout) view).setGravity(Gravity.LEFT);
-        }
-        else {
+
+            if (chat.getStatus() != Chat.READ && !TextUtils.isEmpty(chat.getChatId()) && !chat.getChatId().equals("hello_world")) {
+
+                chat.setStatus(Chat.READ);
+                firebase.child("chat").child(chatUUID).child(chat.getChatId()).updateChildren(statusUpdate);
+            }
+
+        } else {
 
             chatView.setBackgroundResource(R.drawable.chat_bubble);
             chatView.setTextColor(Color.WHITE);
             ((LinearLayout) view).setGravity(Gravity.RIGHT);
-        }
 
-        switch (chat.getStatus()) {
+            switch (chat.getStatus()) {
 
-            case Chat.PENDING : //no tick
-            case Chat.SENT_TO_SERVER : //add single tick
-            case Chat.UN_READ : //double tick
-            case Chat.READ : //blue tick
+                case Chat.PENDING: //no tick
+                case Chat.SENT_TO_SERVER: //add single tick
+                case Chat.UN_READ: //double tick
+                case Chat.READ: //blue tick
+            }
+
         }
 
         chatView.setText(chat.getMessage());
