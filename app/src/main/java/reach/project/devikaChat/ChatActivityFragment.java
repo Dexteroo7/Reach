@@ -65,10 +65,10 @@ public class ChatActivityFragment extends Fragment {
     private SharedPreferences sharedPreferences = null;
     private Firebase firebaseReference = null;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
 
-        super.onCreate(savedInstanceState);
         final Activity activity = getActivity();
 
         sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -80,7 +80,7 @@ public class ChatActivityFragment extends Fragment {
             //TODO
             Log.i("Chat", "Chat not initialized yet !");
             activity.finish();
-            return;
+            return null;
         }
 
         if (serverId == 0) {
@@ -91,11 +91,6 @@ public class ChatActivityFragment extends Fragment {
         // Setup our Firebase mFirebaseRef
         firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
         firebaseReference.keepSynced(true);
-    }
-
-    public View onCreateView(LayoutInflater inflater,
-                             ViewGroup container,
-                             Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
         final EditText messageInput = (EditText) rootView.findViewById(R.id.messageInput);
@@ -132,7 +127,7 @@ public class ChatActivityFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
+    public void onDestroyView() {
 
         super.onDestroy();
 
@@ -172,8 +167,8 @@ public class ChatActivityFragment extends Fragment {
                 chat.setChatId(uniqueKey);
                 final Map<String, Object> temp = new HashMap<>(1);
                 temp.put("chatId", uniqueKey);
-                fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
 
+                fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
                 fragment.firebaseReference.child("user").child(chatUUID).updateChildren(userData);
             });
 

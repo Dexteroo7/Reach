@@ -29,18 +29,38 @@ public class DataCall {
     public static class Statistics {
 
         private final long userId;
+
+        private final long timeCreated;
+
         private final int songCount;
         private final int friendsCount;
         private final int sentRequests;
         private final int pendingRequests;
+
+        private final int uploadCount;
+        private final int downloadCount;
 
         private final boolean isAlive;
 
         private final String userName;
         private final String phoneNumber;
 
-        public Statistics(long userId, String userName, String phoneNumber, int songCount, int friendsCount, int sentRequests, int pendingRequests, boolean isAlive) {
+
+        public Statistics(long userId,
+                          long timeCreated,
+                          String userName,
+                          String phoneNumber,
+                          int songCount,
+                          int friendsCount,
+                          int sentRequests,
+                          int pendingRequests,
+                          int uploadCount,
+                          int downloadCount,
+                          boolean isAlive) {
+
             this.userId = userId;
+            this.timeCreated = timeCreated;
+
             this.userName = userName;
             this.phoneNumber = phoneNumber;
             this.songCount = songCount;
@@ -48,6 +68,9 @@ public class DataCall {
             this.sentRequests = sentRequests;
             this.pendingRequests = pendingRequests;
             this.isAlive = isAlive;
+
+            this.uploadCount = uploadCount;
+            this.downloadCount = downloadCount;
         }
 
         public boolean isAlive() {
@@ -80,6 +103,18 @@ public class DataCall {
 
         public int getPendingRequests() {
             return pendingRequests;
+        }
+
+        public int getDownloadCount() {
+            return downloadCount;
+        }
+
+        public int getUploadCount() {
+            return uploadCount;
+        }
+
+        public long getTimeCreated() {
+            return timeCreated;
         }
     }
 }

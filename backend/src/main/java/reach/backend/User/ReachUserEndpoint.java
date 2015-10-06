@@ -135,33 +135,35 @@ public class ReachUserEndpoint {
         final HashSet<Friend> friends = new HashSet<>();
         final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
 
-        if (myReachCheck)
+        if (myReachCheck) {
+
+            keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));
             for (long id : client.getMyReach())
                 keysBuilder.add(Key.create(ReachUser.class, id));
-        if (sentRequestsCheck)
+        }
+        if (sentRequestsCheck) {
+
+            keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));
             for (long id : client.getSentRequests())
                 keysBuilder.add(Key.create(ReachUser.class, id));
+        }
 
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filterKey("in", keysBuilder.build())
                 .filter("gcmId !=", "")
                 .project(Friend.projectNewFriend)) {
 
+            final long lastSeen;
+            if (user.getId() != OfyService.devikaId)
+                lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
+            else
+                lastSeen = 0;
+
             friends.add(new Friend(
                     user,
                     client.getMyReach(),
                     client.getSentRequests(),
-                    computeLastSeen((byte[]) syncCache.get(user.getId()))));
-        }
-
-        if (client.getMyReach().contains(OfyService.devikaId) || client.getSentRequests().contains(OfyService.devikaId)) {
-
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
-            friends.add(new Friend(
-                    devika,
-                    client.getMyReach(),
-                    client.getSentRequests(),
-                    0));
+                    lastSeen));
         }
 
         return friends;
@@ -627,12 +629,15 @@ public class ReachUserEndpoint {
             reachUser = userQueryResultIterator.next();
             builder.add(new DataCall.Statistics(
                     reachUser.getId(),
+                    reachUser.getTimeCreated(),
                     reachUser.getUserName(),
                     reachUser.getPhoneNumber(),
                     reachUser.getNumberOfSongs(),
                     reachUser.getMyReach() == null ? 0 : reachUser.getMyReach().size(),
                     reachUser.getSentRequests() == null ? 0 : reachUser.getSentRequests().size(),
                     reachUser.getReceivedRequests() == null ? 0 : reachUser.getReceivedRequests().size(),
+                    ofy().load().type(CompletedOperations.class).filter("senderId =", reachUser.getId()).count(),
+                    ofy().load().type(CompletedOperations.class).filter("receiver =", reachUser.getId()).count(),
                     reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
             count++;
         }
@@ -722,7 +727,7 @@ public class ReachUserEndpoint {
         if (user.getChatToken() == null || user.getChatToken().equals("hello_world") || user.getChatToken().equals("")) {
 
             final Map<String, Object> authPayload = new HashMap<>(2);
-            authPayload.put("uid", user.getId()+"");
+            authPayload.put("uid", user.getId() + "");
             authPayload.put("phoneNumber", user.getPhoneNumber());
             authPayload.put("userName", user.getUserName());
             authPayload.put("imageId", user.getImageId());
@@ -776,7 +781,7 @@ public class ReachUserEndpoint {
         if (user.getChatToken() == null || user.getChatToken().equals("hello_world") || user.getChatToken().equals("")) {
 
             final Map<String, Object> authPayload = new HashMap<>(2);
-            authPayload.put("uid", user.getId()+"");
+            authPayload.put("uid", user.getId() + "");
             authPayload.put("phoneNumber", user.getPhoneNumber());
             authPayload.put("userName", user.getUserName());
             authPayload.put("imageId", user.getImageId());
@@ -806,7 +811,7 @@ public class ReachUserEndpoint {
         if (chatToken == null || chatToken.equals("hello_world") || chatToken.equals("")) {
 
             final Map<String, Object> authPayload = new HashMap<>(2);
-            authPayload.put("uid", user.getId()+"");
+            authPayload.put("uid", user.getId() + "");
             authPayload.put("phoneNumber", user.getPhoneNumber());
             authPayload.put("userName", user.getUserName());
             authPayload.put("imageId", user.getImageId());

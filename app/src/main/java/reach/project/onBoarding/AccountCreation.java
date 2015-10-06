@@ -529,8 +529,8 @@ public class AccountCreation extends Fragment {
             userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
             userData.put("userName", authData.getAuth().get("userName"));
             userData.put("imageId", authData.getAuth().get("imageId"));
-            userData.put("newMessage", true);
             userData.put("lastActivated", 0);
+            userData.put("newMessage", true);
 
             final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
                 return fragment.mListener.getFireBase().orNull();
