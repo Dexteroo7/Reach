@@ -112,7 +112,9 @@ public class EditProfileFragment extends Fragment {
 
         final String imageId = SharedPrefUtils.getImageId(sharedPreferences);
         userId = SharedPrefUtils.getServerId(sharedPreferences);
-        firstName.setText(SharedPrefUtils.getUserName(sharedPreferences));
+        String uName = SharedPrefUtils.getUserName(sharedPreferences);
+        firstName.setText(uName);
+        firstName.setSelection(uName.length());
 
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             profile.setBackgroundResource(0);
@@ -162,13 +164,13 @@ public class EditProfileFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(Activity activity) {
 
-        super.onAttach(context);
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }

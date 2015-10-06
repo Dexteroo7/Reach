@@ -3,6 +3,6 @@
     <cron>
         <url>/refreshGCM</url>
         <description>Refreshing GCM</description>
-        <schedule>every 6 minutes</schedule>
+        <schedule>every 10 minutes</schedule>
     </cron>
 </cronentries>

@@ -28,7 +28,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -57,6 +56,10 @@ import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
+import com.firebase.client.ChildEventListener;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
@@ -80,6 +83,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -94,9 +98,11 @@ import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UserMusicLibrary;
+import reach.project.devikaChat.Chat;
+import reach.project.devikaChat.ChatActivity;
+import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.music.AlbumArtData;
 import reach.project.music.songs.PrivacyFragment;
 import reach.project.music.songs.PushContainer;
 import reach.project.music.songs.PushSongsFragment;
@@ -108,6 +114,7 @@ import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
 import reach.project.onBoarding.NumberVerification;
+import reach.project.pacemaker.Pacemaker;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
@@ -133,7 +140,6 @@ public class ReachActivity extends AppCompatActivity implements
         SearchView.OnCloseListener {
 
     public static long serverId = 0;
-
     private static WeakReference<ReachActivity> reference = null;
     private static SecureRandom secureRandom = new SecureRandom();
 
@@ -145,6 +151,7 @@ public class ReachActivity extends AppCompatActivity implements
     private FragmentManager fragmentManager;
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
+    private MenuItem liveHelpItem;
 
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
@@ -169,6 +176,7 @@ public class ReachActivity extends AppCompatActivity implements
     private CustomViewPager viewPager;
 
     private MergeAdapter combinedAdapter = null;
+    private Firebase firebaseReference = null;
 
     private ImageButton pausePlayMinimized; //small
     private SwipeRefreshLayout downloadRefresh;
@@ -254,7 +262,6 @@ public class ReachActivity extends AppCompatActivity implements
         }
     };
 
-
     private final View.OnClickListener navHeaderClickListener = v -> onOpenProfile();
 
     private final NavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener = new NavigationView.OnNavigationItemSelectedListener() {
@@ -298,6 +305,10 @@ public class ReachActivity extends AppCompatActivity implements
                                 .addToBackStack(null)
                                 .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
                         return true;
+                    case R.id.navigation_item_6:
+                        final Intent intent = new Intent(mDrawerLayout.getContext(), ChatActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        mDrawerLayout.getContext().startActivity(intent);
                     default:
                         return true;
 
@@ -349,6 +360,7 @@ public class ReachActivity extends AppCompatActivity implements
         shuffleBtn = repeatBtn = pausePlayMaximized = null;
         pausePlayMinimized = null;
         downloadRefresh = null;
+        firebaseReference = null;
     }
 
     @Override
@@ -363,6 +375,9 @@ public class ReachActivity extends AppCompatActivity implements
                 new ComponentName(this, PlayerUpdateListener.class),
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
+
+        if (firebaseReference != null)
+            firebaseReference.child("chat").child(serverId + "").removeEventListener(LocalUtils.listenerForUnReadChats);
     }
 
     @Override
@@ -386,9 +401,12 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onPostResume() {
 
+        super.onPostResume();
         Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
-        super.onPostResume();
+
+        if (firebaseReference != null)
+            firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
     }
 
     @Override
@@ -557,6 +575,11 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
+    public Optional<Firebase> getFireBase() {
+        return Optional.fromNullable(firebaseReference);
+    }
+
+    @Override
     public void onOpenLibrary(long id) {
 
         if (isFinishing())
@@ -710,16 +733,19 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public boolean onClose() {
 
-        searchView.setQuery(null, true);
-        searchView.clearFocus();
-
-        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionArgumentsDownloader = new String[]{"0"};
-        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
-
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
-        selectionArgumentsMyLibrary = new String[]{serverId + ""};
-        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
+        if (searchView != null) {
+            searchView.setQuery(null, true);
+            searchView.clearFocus();
+        }
+//
+//        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
+//        selectionArgumentsDownloader = new String[]{0 + ""};
+//        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
+//
+//        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+//        selectionArgumentsMyLibrary = new String[]{serverId + ""};
+//        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
+        onQueryTextChange(null);
         return false;
     }
 
@@ -788,10 +814,16 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        Pacemaker.scheduleLinear(this, 5);
+
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
         serverId = SharedPrefUtils.getServerId(preferences);
+
+        // Setup our Firebase mFirebaseRef
+        firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
+        firebaseReference.keepSynced(true);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
@@ -837,6 +869,8 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        mNavigationView.setItemIconTintList(null);
+        liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
         final FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
         frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
@@ -855,8 +889,8 @@ public class ReachActivity extends AppCompatActivity implements
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
         queueListView.setOnScrollListener(scrollListener);
         downloadRefresh.setColorSchemeColors(
-                ContextCompat.getColor(this, R.color.reach_color),
-                ContextCompat.getColor(this, R.color.reach_grey));
+                getResources().getColor(R.color.reach_color),
+                getResources().getColor(R.color.reach_grey));
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
@@ -1085,8 +1119,7 @@ public class ReachActivity extends AppCompatActivity implements
                                     transferSong.getArtistName(),
                                     transferSong.getDuration(),
                                     transferSong.getAlbumName(),
-                                    transferSong.getGenre(),
-                                    transferSong.getAlbumArtData());
+                                    transferSong.getGenre());
                         }
                         new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     }
@@ -1158,7 +1191,7 @@ public class ReachActivity extends AppCompatActivity implements
                                String displayName, String actualName,
                                boolean multiple, String userName, String onlineStatus,
                                String networkType, String artistName, long duration,
-                               String albumName, String genre, byte[] albumArtData) {
+                               String albumName, String genre) {
 
         final ContentResolver contentResolver = getContentResolver();
         if (contentResolver == null)
@@ -1268,17 +1301,6 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setAlbumName(albumName);
         reachDatabase.setGenre(genre);
 
-        if (albumArtData == null || albumArtData.length == 0) {
-
-            final AlbumArtData.Builder builder = new AlbumArtData.Builder();
-            builder.duration(duration);
-            builder.artist(artistName);
-            builder.release(albumName);
-            builder.title(displayName);
-            albumArtData = builder.build().toByteArray();
-        }
-
-        reachDatabase.setAlbumArtData(albumArtData);
         reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
@@ -1302,7 +1324,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
@@ -1317,6 +1339,23 @@ public class ReachActivity extends AppCompatActivity implements
             e.printStackTrace();
         }
         mixpanel.track("Transaction - Add Song", props);
+    }
+
+    //TODO
+    public static void toggleIntimation(boolean state) {
+
+        //if toggle is true and chatFragment is not open
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (state && !ChatActivityFragment.connected.get()) {
+                //show intimation
+
+                activity.liveHelpItem.setIcon(R.drawable.ic_live_help_new);
+            } else {
+                //remove initiation
+                activity.liveHelpItem.setIcon(R.drawable.ic_live_help);
+            }
+        });
     }
 
     private enum LocalUtils {
@@ -1480,19 +1519,23 @@ public class ReachActivity extends AppCompatActivity implements
                     else
                         Log.i("Ayush", "GCM check failed");
                 }
-//                else if (gcmId.equals("user_deleted")) {
-//                    //TODO restart app sign-up
-//                }
             }
 
             @Override
             public void run() {
 
                 ////////////////////////////////////////
+                //check devikaChat token
+                final ReachActivity reachActivity;
+                if (reference != null && (reachActivity = reference.get()) != null && !reachActivity.isFinishing())
+                    MiscUtils.checkChatToken(
+                            new WeakReference<>(reachActivity.preferences),
+                            new WeakReference<>(reachActivity.firebaseReference));
+
                 //refresh gcm
                 checkGCM();
                 //refresh download ops
-                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
                 //Music scanner
                 MiscUtils.useContextFromContext(reference, activity -> {
 
@@ -1511,7 +1554,7 @@ public class ReachActivity extends AppCompatActivity implements
         public static TextView getMyLibraryTextView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
-            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1522,7 +1565,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("Add songs to download");
-            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV1;
@@ -1532,7 +1575,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
-            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV2;
@@ -1810,6 +1853,57 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
+        public static ChildEventListener listenerForUnReadChats = new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.getValue() instanceof Map) {
+
+                    final Map value = (Map) dataSnapshot.getValue();
+                    final Object admin = value.get("admin");
+                    final Object status = value.get("status");
+
+                    if (admin == null || status == null) {
+                        toggleIntimation(false);
+                        return;
+                    }
+
+                    final String adminValue = String.valueOf(admin);
+                    final String statusValue = String.valueOf(status);
+
+                    if (TextUtils.isEmpty(adminValue) || TextUtils.isEmpty(statusValue)) {
+
+                        toggleIntimation(false);
+                        return;
+                    }
+
+                    if (adminValue.equals(Chat.ADMIN + "") &&!statusValue.equals(Chat.READ + "")) {
+                        toggleIntimation(true);
+                    }
+                }
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        };
     }
 
     public static class PlayerUpdateListener extends BroadcastReceiver {

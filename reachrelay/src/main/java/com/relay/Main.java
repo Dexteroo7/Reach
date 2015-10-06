@@ -217,6 +217,7 @@ public final class Main {
                 id = bufferedReader.readLine();
                 wantsToConnectTo = bufferedReader.readLine();
                 socketType = bufferedReader.readLine();
+
             } catch (IOException ignored) {
                 closeAndIgnore(socket, temp);
                 return;

@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
+import reach.backend.Notifications.NotificationEndpoint;
 import reach.backend.ObjectWrappers.MyBoolean;
 import reach.backend.ObjectWrappers.MyString;
 
@@ -37,10 +38,10 @@ import static reach.backend.OfyService.ofy;
 
 /**
  * An endpoint to send messages to devices registered with the backend
- * <p/>
+ * <p>
  * For more information, see
  * https://developers.google.com/appengine/docs/java/endpoints/
- * <p/>
+ * <p>
  * NOTE: This endpoint does not use any form of authorization or
  * authentication! If this app is deployed, anyone can access this endpoint! If
  * you'd like to add authentication, take a look at the documentation.
@@ -72,9 +73,15 @@ public class MessagingEndpoint {
         return messagingEndpoint;
     }
 
+    private boolean isDevika(String phoneNumber, long id) {
+
+        return phoneNumber.equals("8860872102") || id == 5666668701286400L;
+    }
+
     public MyBoolean sendMessage(@Named("message") final String message,
                                  @Named("hostId") final long hostId,
                                  @Named("clientId") final long clientId) {
+
         //2 variables self and host
         final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
         final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
@@ -152,6 +159,12 @@ public class MessagingEndpoint {
         if (host.getGcmId() == null || host.getGcmId().equals("")) {
             log.info("Error handling reply " + hostId + " " + clientId);
             return new MyString("false");
+        }
+
+        if (isDevika(host.getPhoneNumber(), hostId)) {
+            //DO NOT SEND GCM, Devika does not have a gcm id !
+            NotificationEndpoint.getInstance().addBecameFriends(hostId, clientId, true);
+            return new MyString("true");
         }
 
         return new MyString(sendMessage("PERMISSION_REQUEST`" + clientId + "`" + client.getUserName(), host) + "");
@@ -243,6 +256,7 @@ public class MessagingEndpoint {
 
         ofy().save().entities(client, sender).now();
         if (sender.getGcmId() == null || sender.getGcmId().equals("")) {
+
             log.info("Error handling reply " + sender.getId() + " " + clientId);
             return new MyString("false");
         }
@@ -256,6 +270,12 @@ public class MessagingEndpoint {
                                            @Named("message") String message,
                                            @Named("heading") String heading) {
         return new MyString(sendMessage("MANUAL`" + type + "`" + heading + "`" + message, ofy().load().type(ReachUser.class).id(hostId).now()) + "");
+    }
+
+    public MyString sendChat(@Named("hostId") long hostId) {
+
+        final ReachUser user = ofy().load().type(ReachUser.class).id(hostId).now();
+        return new MyString(sendMessage("CHAT", user) + "");
     }
 
     protected boolean sendMessage(@Nonnull String message,
@@ -275,6 +295,7 @@ public class MessagingEndpoint {
             return false;
         }
         if (result.getMessageId() != null) {
+
             log.info("Message sent to " + user.getId());
             if (result.getCanonicalRegistrationId() != null && !result.getCanonicalRegistrationId().equals("")) {
                 // if the regId changed, we have to update the data-store
@@ -348,6 +369,7 @@ public class MessagingEndpoint {
             if (totalSize > 999) {
 
                 if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
+
                     result = result && actualSendMultiCastMessage(message, users, regIds);
                     if (result)
                         log.info("refreshed gcm of " + totalSize);

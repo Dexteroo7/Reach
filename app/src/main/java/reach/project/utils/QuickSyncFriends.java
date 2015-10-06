@@ -105,7 +105,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
 
             if (quickSync.getNewFriends() != null)
                 for (Friend friend : quickSync.getNewFriends()) {
-
+                    //new friend found in quick sync
                     numbers.remove(friend.getPhoneNumber());
                     newFriends.add(friend);
                 }
@@ -150,6 +150,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         });
 
         MiscUtils.closeQuietly(numbers, ids, hashes, newFriends, toDelete);
+        oldNumberOfSongs.clear();
         return Status.OK;
     }
 

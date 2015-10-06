@@ -144,4 +144,23 @@ public class Friend {
     public int getHash() {
         return hash;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Friend)) return false;
+
+        Friend friend = (Friend) o;
+
+        if (id != friend.id) return false;
+        return !(phoneNumber != null ? !phoneNumber.equals(friend.phoneNumber) : friend.phoneNumber != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + (phoneNumber != null ? phoneNumber.hashCode() : 0);
+        return result;
+    }
 }

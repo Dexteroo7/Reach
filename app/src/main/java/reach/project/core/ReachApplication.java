@@ -2,6 +2,7 @@ package reach.project.core;
 
 import android.app.Application;
 
+import com.firebase.client.Firebase;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.Tracker;
 
@@ -20,6 +21,15 @@ public class ReachApplication extends Application {
             mTracker = analytics.newTracker(R.xml.global_tracker);
         }
         return mTracker;
+    }
+
+    @Override
+    public void onCreate() {
+
+        super.onCreate();
+        //initialize firebase
+        Firebase.setAndroidContext(this);
+        Firebase.getDefaultConfig().setPersistenceEnabled(true);
     }
 
     /*@Override

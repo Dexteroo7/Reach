@@ -25,6 +25,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -44,8 +47,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 
-import reach.backend.entities.userApi.model.MyString;
+import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
@@ -118,8 +123,10 @@ public class AccountCreation extends Fragment {
              * oldData[0] = name;
              * oldData[1] = imageId;
              */
-            if (!TextUtils.isEmpty(oldData[0]))
+            if (!TextUtils.isEmpty(oldData[0])) {
                 userName.setText(oldData[0]);
+                userName.setSelection(oldData[0].length());
+            }
             if (!TextUtils.isEmpty(oldData[1])) {
 
                 imageId = oldData[1];
@@ -209,6 +216,23 @@ public class AccountCreation extends Fragment {
         new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
     }
 
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (SuperInterface) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
     private static class SaveUserData extends AsyncTask<String, Void, ReachUser> {
 
         final View bottomPart2, bottomPart3, next;
@@ -270,17 +294,26 @@ public class AccountCreation extends Fragment {
             user.setImageId(imageId);
 
             //insert User-object and get the userID
-            final long id;
-            final String toParse;
-            final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insert(user).execute(), Optional.absent()).orNull();
-            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()))
-                id = 0;
-            else
-                id = Long.parseLong(toParse);
-            Log.i("Ayush", "Id received = " + id);
+            final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insertNew(user).execute(), Optional.absent()).orNull();
 
-            //finally set the userID, probably unnecessary
-            user.setId(id);
+            if (dataAfterWork == null || dataAfterWork.getUserId() == null) {
+
+                user.setId(0L);
+                user.setChatToken("");
+            } else {
+
+                user.setId(dataAfterWork.getUserId());
+                if (!TextUtils.isEmpty(dataAfterWork.getFireBaseToken())) {
+
+                    user.setChatToken(dataAfterWork.getFireBaseToken());
+                    final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
+                        return fragment.mListener.getFireBase().orNull();
+                    });
+                    if (firebaseOptional.isPresent())
+                        firebaseOptional.get().authWithCustomToken(dataAfterWork.getFireBaseToken(), authHandler);
+                }
+            }
+            Log.i("Ayush", "Id received = " + user.getId());
             return user;
         }
 
@@ -290,6 +323,7 @@ public class AccountCreation extends Fragment {
             super.onPostExecute(user);
 
             if (toUpload != null && TextUtils.isEmpty(user.getImageId())) {
+
                 MiscUtils.useFragment(reference, fragment -> {
 
                     Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
@@ -311,7 +345,7 @@ public class AccountCreation extends Fragment {
             //set serverId here
             ReachActivity.serverId = user.getId();
             MiscUtils.useFragment(reference, fragment -> {
-                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getContext(), "7877f44b1ce4a4b2db7790048eb6587a");
+                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getActivity(), "7877f44b1ce4a4b2db7790048eb6587a");
                 MixpanelAPI.People ppl = mixpanel.getPeople();
                 final Tracker tracker = ((ReachApplication) fragment.getActivity().getApplication()).getTracker();
                 tracker.setScreenName("reach.project.onBoarding.AccountCreation");
@@ -333,11 +367,11 @@ public class AccountCreation extends Fragment {
                     ppl.set("$phone", user.getPhoneNumber()+"");
                 if (!TextUtils.isEmpty(user.getUserName()))
                     ppl.set("$name", user.getUserName() + "");
-                SharedPrefUtils.storeReachUser(fragment.getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                final Intent intent = new Intent(fragment.getContext(), MusicScanner.class);
+                SharedPrefUtils.storeReachUser(fragment.getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
+                final Intent intent = new Intent(fragment.getActivity(), MusicScanner.class);
                 intent.putExtra("messenger", messenger);
                 intent.putExtra("first", true);
-                fragment.getContext().startService(intent);
+                fragment.getActivity().startService(intent);
                 return null;
             });
         }
@@ -423,23 +457,6 @@ public class AccountCreation extends Fragment {
         }));
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        try {
-            mListener = (SuperInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
     private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
 
         @Override
@@ -499,6 +516,7 @@ public class AccountCreation extends Fragment {
 
                 final Context context = fragment.getActivity();
                 if (file == null) { //TODO track
+
                     toUpload = null;
                     Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
                 } else if (fragment.profilePhotoSelector != null) {
@@ -518,4 +536,39 @@ public class AccountCreation extends Fragment {
                 dialog.dismiss();
         }
     }
+
+    private static final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
+
+        @Override
+        public void onAuthenticationError(FirebaseError error) {
+            Log.e("Ayush", "Login Failed! " + error.getMessage());
+        }
+
+        @Override
+        public void onAuthenticated(AuthData authData) {
+
+            final String chatUUID = authData.getUid();
+            MiscUtils.useContextFromFragment(reference, context -> {
+
+                Log.i("Ayush", "Login Succeeded! storing " + chatUUID);
+                SharedPrefUtils.storeChatUUID(context.getSharedPreferences("Reach", Context.MODE_PRIVATE), chatUUID);
+            });
+
+            Log.i("Ayush", "Chat authenticated " + chatUUID);
+            final Map<String, Object> userData = new HashMap<>();
+            userData.put("uid", authData.getAuth().get("uid"));
+            userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
+            userData.put("userName", authData.getAuth().get("userName"));
+            userData.put("imageId", authData.getAuth().get("imageId"));
+            userData.put("lastActivated", 0);
+            userData.put("newMessage", true);
+
+            final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
+                return fragment.mListener.getFireBase().orNull();
+            });
+
+            if (firebaseOptional.isPresent())
+                firebaseOptional.get().child("user").child(chatUUID).setValue(userData);
+        }
+    };
 }

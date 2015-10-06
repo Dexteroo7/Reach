@@ -33,6 +33,8 @@ public class ReachUser {
     private String gcmId = "hello_world"; //Gcm Cloud Message Id
     private String statusSong = "hello_world"; //Status Song
 
+    private String chatToken = "hello_world"; //firebase token for devikaChat
+
     private String promoCode = "hello_world"; //promo code of User
     private long megaBytesSent;
     private long megaBytesReceived;
@@ -258,5 +260,13 @@ public class ReachUser {
 
     public void setTimeCreated(long timeCreated) {
         this.timeCreated = timeCreated;
+    }
+
+    public String getChatToken() {
+        return chatToken;
+    }
+
+    public void setChatToken(String chatToken) {
+        this.chatToken = chatToken;
     }
 }

@@ -22,6 +22,12 @@ import reach.project.utils.CloudEndPointsUtils;
  */
 public final class StaticData {
 
+    public static final UserApi userEndpoint;
+    public static final FeedBackApi feedBackApi;
+    public static final Messaging.MessagingEndpoint messagingEndpoint;
+    public static final MusicVisibilityApi musicVisibility;
+    public static final NotificationApi notificationApi;
+
     static {
 
         final HttpTransport transport = new NetHttpTransport();
@@ -31,34 +37,13 @@ public final class StaticData {
             request.setConnectTimeout(request.getConnectTimeout() * 2);
             request.setReadTimeout(request.getReadTimeout() * 2);
         };
+
         userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
         messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         notificationApi = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
         musicVisibility = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
     }
-
-    public static final String[] DISK_COMPLETE_NO_PATH =
-            {
-                    ReachSongHelper.COLUMN_ID, //0
-
-                    ReachSongHelper.COLUMN_SONG_ID, //1
-                    ReachSongHelper.COLUMN_USER_ID, //2
-
-                    ReachSongHelper.COLUMN_DISPLAY_NAME, //3
-                    ReachSongHelper.COLUMN_ACTUAL_NAME, //4
-
-                    ReachSongHelper.COLUMN_ARTIST, //5
-                    ReachSongHelper.COLUMN_ALBUM, //6
-
-                    ReachSongHelper.COLUMN_DURATION, //7
-                    ReachSongHelper.COLUMN_SIZE, //8
-
-                    ReachSongHelper.COLUMN_VISIBILITY, //9
-
-                    ReachSongHelper.COLUMN_ALBUM_ART_DATA, //10
-                    ReachSongHelper.COLUMN_GENRE //11
-            };
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{
             ReachDatabaseHelper.COLUMN_ID, //0
@@ -84,13 +69,14 @@ public final class StaticData {
     public static final byte ALBUM_LOADER = 0;
     public static final byte ARTIST_LOADER = 1;
     public static final byte FRIENDS_LOADER = 2;
-    public static final byte SONGS_LOADER = 3;
-    public static final byte PLAY_LIST_LOADER = 4;
-    public static final byte DOWNLOAD_LOADER = 5;
-    public static final byte UPLOAD_LOADER = 6;
-    public static final byte MY_LIBRARY_LOADER = 7;
-    public static final byte PUSH_MY_LIBRARY_LOADER = 8;
-    public static final byte PUSH_DOWNLOADED_LOADER = 9;
+    public static final byte PRIVACY_MY_LIBRARY_LOADER = 3;
+    public static final byte PRIVACY_DOWNLOADED_LOADER = 4;
+    public static final byte PLAY_LIST_LOADER = 5;
+    public static final byte DOWNLOAD_LOADER = 6;
+    public static final byte UPLOAD_LOADER = 7;
+    public static final byte MY_LIBRARY_LOADER = 8;
+    public static final byte PUSH_MY_LIBRARY_LOADER = 9;
+    public static final byte PUSH_DOWNLOADED_LOADER = 10;
 
     public static final byte FULL_LIST_LOADER = 10;
     public static final byte RECENT_LIST_LOADER = 11;
@@ -99,6 +85,7 @@ public final class StaticData {
     public static final long LUCKY_DELAY = 4000;
 
     public static final long devika = 5666668701286400L;
+    public static final String devikaPhoneNumber = "8860872102";
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout
@@ -109,15 +96,8 @@ public final class StaticData {
     public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
-    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
-
-    public static final UserApi userEndpoint;
-    public static final FeedBackApi feedBackApi;
-    public static final Messaging.MessagingEndpoint messagingEndpoint;
-    public static final MusicVisibilityApi musicVisibility;
-    public static final NotificationApi notificationApi;
-
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
+    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
     public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
     public static final String dropBoxManager = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();

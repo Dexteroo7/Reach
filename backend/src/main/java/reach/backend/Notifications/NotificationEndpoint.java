@@ -56,6 +56,15 @@ public class NotificationEndpoint {
     private static final int READ = 1;
     private static final int UN_READ = 2;
 
+    public static NotificationEndpoint notificationEndpoint = null;
+
+    public static NotificationEndpoint getInstance() {
+        if (notificationEndpoint == null)
+            notificationEndpoint = new NotificationEndpoint();
+        return notificationEndpoint;
+    }
+
+
     /**
      * Returns all the {@link Notification} with the corresponding ID.
      *
@@ -220,6 +229,7 @@ public class NotificationEndpoint {
             logger.info("Adding like " + senderId + " " + songName);
             final int count = getNewCount(notification.getNotifications());
             if (count > 0) {
+
                 final String message = "SYNC" + count;
                 MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
             }
@@ -263,6 +273,7 @@ public class NotificationEndpoint {
             logger.info("Adding push " + senderId + " " + firstSongName + " " + size);
             final int count = getNewCount(notification.getNotifications());
             if (count > 0) {
+
                 final String message = "SYNC" + count;
                 MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
             }
@@ -304,6 +315,7 @@ public class NotificationEndpoint {
                 receiverId,
                 "PERMISSION_GRANTED");
         if (string == null) {
+            //if null total failure, "false" is ok
             logger.severe("Permission accept failed");
             return null;
         }

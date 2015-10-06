@@ -89,7 +89,9 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
         viewHolder.telephoneNumberList.setText(numberOfSongs + " songs ");
-        if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) && !newSongs.equals("hello_world") && Integer.parseInt(newSongs)>0) {
+        if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) &&
+                !newSongs.equals("hello_world") && Integer.parseInt(newSongs)>0) {
+
             viewHolder.newSongs.setVisibility(View.VISIBLE);
             viewHolder.newSongs.setText("+"+newSongs);
         }

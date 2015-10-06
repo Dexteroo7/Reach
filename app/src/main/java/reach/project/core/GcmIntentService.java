@@ -21,6 +21,8 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 import reach.project.R;
+import reach.project.devikaChat.ChatActivity;
+import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.uploadDownload.ReachDatabaseProvider;
@@ -44,8 +46,11 @@ public class GcmIntentService extends IntentService {
         super("able-door-616");
     }
 
-    private static long lastPong = 0;
-    private static final int NOTIFICATION_ID = 314134;
+    public static long lastPong = 0;
+    public static final int NOTIFICATION_ID_FRIEND = 498274254;
+    public static final int NOTIFICATION_ID_SYNC = 565128993;
+    public static final int NOTIFICATION_ID_CHAT = 865910077;
+    public static final int NOTIFICATION_ID_MANUAL = 884587848;
 
     /**
      * Handle GCM receipt intent
@@ -67,8 +72,7 @@ public class GcmIntentService extends IntentService {
             return;
         }
 
-        final NotificationManagerCompat notificationManager =
-                NotificationManagerCompat.from(this);
+        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
 
         /**
          * Service a permission request
@@ -80,10 +84,11 @@ public class GcmIntentService extends IntentService {
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
             viewIntent.putExtra("openFriendRequests", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_FRIEND, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
                 fragment.refresh();
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
             });
             final NotificationCompat.Builder notificationBuilder =
@@ -98,33 +103,7 @@ public class GcmIntentService extends IntentService {
                             .setPriority(NotificationCompat.PRIORITY_MAX)
                             .setWhen(System.currentTimeMillis());
 
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
-        }
-
-        /**
-         * Service new notification
-         */
-        if (message.startsWith("SYNC")) {
-
-            final String count = message.substring(4);
-            final Intent viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.putExtra("openNotifications", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
-                fragment.refresh();
-                return null;
-            });
-            final NotificationCompat.Builder notificationBuilder =
-                    new NotificationCompat.Builder(this)
-                            .setAutoCancel(true)
-                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                            .setSmallIcon(R.drawable.ic_icon_notif)
-                            .setContentTitle("You have " + count + " new notification")
-                            .setPriority(NotificationCompat.PRIORITY_HIGH)
-                            .setContentIntent(viewPendingIntent)
-                            .setWhen(System.currentTimeMillis());
-            notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+            notificationManager.notify(NOTIFICATION_ID_FRIEND, notificationBuilder.build());
         }
 
         /**
@@ -137,14 +116,14 @@ public class GcmIntentService extends IntentService {
             final String type = splitter[0];
             final String hostId = splitter[1];
             final String hostName = splitter[2];
-            final int notification_id = message.hashCode();
 
             final Intent viewIntent = new Intent(this, ReachActivity.class);
             viewIntent.putExtra("openNotifications", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_FRIEND, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
             });
 
@@ -177,8 +156,36 @@ public class GcmIntentService extends IntentService {
                     values,
                     ReachFriendsHelper.COLUMN_ID + " = ?",
                     new String[]{hostId + ""});
-            notificationManager.notify(notification_id, notificationBuilder.build());
+            notificationManager.notify(NOTIFICATION_ID_FRIEND, notificationBuilder.build());
         }
+
+        /**
+         * Service new notification
+         */
+        else if (message.startsWith("SYNC")) {
+
+            final String count = message.substring(4);
+            final Intent viewIntent = new Intent(this, ReachActivity.class);
+            viewIntent.putExtra("openNotifications", true);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_SYNC, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+            MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
+                fragment.refresh();
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
+                return null;
+            });
+            final NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setAutoCancel(true)
+                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                            .setSmallIcon(R.drawable.ic_icon_notif)
+                            .setContentTitle("You have " + count + " new notification")
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setContentIntent(viewPendingIntent)
+                            .setWhen(System.currentTimeMillis());
+            notificationManager.notify(NOTIFICATION_ID_SYNC, notificationBuilder.build());
+        }
+
         /**
          * Service manual notification
          */
@@ -200,7 +207,7 @@ public class GcmIntentService extends IntentService {
 
             viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, message.hashCode(), viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_MANUAL, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)
@@ -213,8 +220,28 @@ public class GcmIntentService extends IntentService {
                             .setStyle(new NotificationCompat.BigTextStyle()
                                     .bigText(splitter[3].trim()))
                             .setWhen(System.currentTimeMillis());
-            notificationManager.notify(message.hashCode(), notificationBuilder.build());
+            notificationManager.notify(NOTIFICATION_ID_MANUAL, notificationBuilder.build());
         }
+
+        /**
+         * Service chat notification, IF, chat is not open
+         */
+        else if (message.startsWith("CHAT") && !ChatActivityFragment.connected.get()) {
+
+            final Intent viewIntent = new Intent(this, ChatActivity.class);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            final NotificationCompat.Builder notificationBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setAutoCancel(true)
+                            .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                            .setSmallIcon(R.drawable.ic_icon_notif)
+                            .setContentTitle("Devika sent you a message")
+                            .setContentIntent(viewPendingIntent)
+                            .setPriority(NotificationCompat.PRIORITY_MAX)
+                            .setWhen(System.currentTimeMillis());
+            notificationManager.notify(NOTIFICATION_ID_CHAT, notificationBuilder.build());
+        }
+
         /**
          * Service PONG
          */
@@ -227,9 +254,18 @@ public class GcmIntentService extends IntentService {
              */
             final String[] splitter = message.split(" ");
             final long hostId = Long.parseLong(splitter[1]);
+
+            if (hostId == StaticData.devika) {
+
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
+                return;
+            }
+
             final ContentValues friend = new ContentValues();
             final ContentValues database = new ContentValues();
             StaticData.networkCache.put(hostId, splitter[2]);
+
+            Log.i("Ayush", hostId + " Got PONG");
 
             friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
             friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
@@ -257,17 +293,23 @@ public class GcmIntentService extends IntentService {
          * Service PING
          */
         else if (message.startsWith("PING")) {
+
             //Handle announce
             final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE));
-            if (id == 0)
+            if (id == 0) {
+
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
+            }
             final short[] networkType = new short[]{getNetworkType(this)};
             if (networkType[0] > 1 && !SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)))
                 networkType[0] = 5;
 
             final long currentTime = System.currentTimeMillis();
             if (currentTime - lastPong < StaticData.MINIMUM_PONG_GAP) {
+
                 Log.i("Ayush", "Ignoring PING " + (currentTime - lastPong));
+                GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
             }
             lastPong = currentTime;

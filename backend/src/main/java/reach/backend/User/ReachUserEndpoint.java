@@ -1,5 +1,7 @@
 package reach.backend.User;
 
+import com.firebase.security.token.TokenGenerator;
+import com.firebase.security.token.TokenOptions;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
@@ -32,6 +34,7 @@ import java.util.logging.Logger;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.OfyService;
 import reach.backend.Transactions.CompletedOperation;
 import reach.backend.Transactions.CompletedOperations;
 import reach.backend.User.FriendContainers.Friend;
@@ -60,6 +63,7 @@ import static reach.backend.OfyService.ofy;
 public class ReachUserEndpoint {
 
     private static final Logger logger = Logger.getLogger(ReachUserEndpoint.class.getName());
+    private static final String FIRE_BASE_SECRET = "0bGwoCDidft2U0aDuK2L6UKi92EfGARMtAP9iC0s";
 
     /**
      * Use this to sync up the phoneBook, only send those numbers which are not known / are new
@@ -71,18 +75,25 @@ public class ReachUserEndpoint {
             name = "phoneBookSync",
             path = "user/phoneBookSync/",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public List<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
+    public Set<Friend> phoneBookSync(ContactsWrapper contactsWrapper) {
 
         final HashSet<String> phoneNumbers;
         if (contactsWrapper == null || (phoneNumbers = contactsWrapper.getContacts()) == null || phoneNumbers.isEmpty())
             return null;
 
         logger.info(phoneNumbers.size() + " total");
-        final List<Friend> friends = new ArrayList<>();
+        final HashSet<Friend> friends = new HashSet<>();
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filter("phoneNumber in", phoneNumbers)
                 .filter("gcmId !=", ""))
             friends.add(new Friend(user, false, 0));
+
+        if (phoneNumbers.contains(OfyService.devikaPhoneNumber)) {
+
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+            friends.add(new Friend(devika, false, 0));
+        }
+
         return friends;
     }
 
@@ -96,7 +107,8 @@ public class ReachUserEndpoint {
             name = "longSync",
             path = "user/longSync/{clientId}/",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public List<Friend> longSync(@Named("clientId") final long clientId) {
+    public Set<Friend> longSync(@Named("clientId") final long clientId) {
+
         //sanity checks
         if (clientId == 0)
             return null;
@@ -120,27 +132,40 @@ public class ReachUserEndpoint {
         if (!(myReachCheck || sentRequestsCheck))
             return null;
 
-        final List<Friend> friends = new ArrayList<>();
+        final HashSet<Friend> friends = new HashSet<>();
         final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
 
-        if (myReachCheck)
+        if (myReachCheck) {
+
+            keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));
             for (long id : client.getMyReach())
                 keysBuilder.add(Key.create(ReachUser.class, id));
-        if (sentRequestsCheck)
+        }
+        if (sentRequestsCheck) {
+
+            keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));
             for (long id : client.getSentRequests())
                 keysBuilder.add(Key.create(ReachUser.class, id));
+        }
 
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filterKey("in", keysBuilder.build())
                 .filter("gcmId !=", "")
                 .project(Friend.projectNewFriend)) {
 
+            final long lastSeen;
+            if (user.getId() != OfyService.devikaId)
+                lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
+            else
+                lastSeen = 0;
+
             friends.add(new Friend(
                     user,
                     client.getMyReach(),
                     client.getSentRequests(),
-                    computeLastSeen((byte[]) syncCache.get(user.getId()))));
+                    lastSeen));
         }
+
         return friends;
     }
 
@@ -179,18 +204,24 @@ public class ReachUserEndpoint {
         if (client == null)
             return null;
         logger.info(client.getUserName());
+
         //collections to return
         final Map<Long, Short> newStatus = new HashMap<>();
         final List<Friend> toUpdate = new ArrayList<>();
+        final Set<Friend> newFriends = new HashSet<>();
+
         //helpers
         final List<Long> newIds = new ArrayList<>();
         final HashSet<Long> myReach = client.getMyReach();
         final HashSet<Long> sentRequests = client.getSentRequests();
+
+        //dirty check query
         final QueryResultIterable<ReachUser> dirtyCheckQuery = ofy().load().type(ReachUser.class)
                 .filterKey("in", getKeyBuilder(ids).build())
                 .project("dirtyCheck").iterable(); //will load async
-        final QueryResultIterable<ReachUser> newIdQuery;
 
+        //new friend query
+        final QueryResultIterable<ReachUser> newIdQuery;
         //////////////////////////////////////
         //fill 3 by-default
         for (long id : ids)
@@ -199,17 +230,20 @@ public class ReachUserEndpoint {
         if (myReach != null && myReach.size() > 0)
             for (long id : myReach)
                 if (pair.containsKey(id))
-                    newStatus.put(id,
-                            (short) (computeLastSeen((byte[]) syncCache.get(id)) > ReachUser.ONLINE_LIMIT ? 1 : 0));
-                else
+                    if (id == OfyService.devikaId)
+                        newStatus.put(id, (short) 0); //always online !
+                    else
+                        newStatus.put(id, (short) (computeLastSeen((byte[]) syncCache.get(id)) > ReachUser.ONLINE_LIMIT ? 1 : 0));
+                else //if this id was not originally present !
                     newIds.add(id);
         //sync-up sentRequests
         if (sentRequests != null && sentRequests.size() > 0)
             for (long id : sentRequests)
                 if (pair.containsKey(id))
                     newStatus.put(id, (short) 2);
-                else
+                else //if this id was not originally present !
                     newIds.add(id);
+
         //newStatus built
         if (newIds.size() > 0)
             newIdQuery = ofy().load().type(ReachUser.class)
@@ -226,39 +260,51 @@ public class ReachUserEndpoint {
                 throw new IllegalArgumentException("Parameter pair did not contain the id !");
 
             if (pair.get(user.getId()) == user.getDirtyCheck())
-                continue;
+                continue; //no change happened !
 
             final ReachUser reachUser = ofy().load().type(ReachUser.class).id(user.getId()).now();
-            if (reachUser.getGcmId() == null || reachUser.getGcmId().equals("")) {
+            if ((reachUser.getGcmId() == null || reachUser.getGcmId().equals(""))) {
 
-                logger.info("Marking dead ! " + reachUser.getUserName());
-                toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
-            }
-            else {
+                //DO NOT MARK AS DEAD IF DEVIKA !
+                if (!(reachUser.getPhoneNumber().equals(OfyService.devikaPhoneNumber) || reachUser.getId() == OfyService.devikaId)) {
+                    logger.info("Marking dead ! " + reachUser.getUserName());
+                    toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
+                }
+            } else {
 
                 logger.info("Marking for update ! " + reachUser.getUserName());
                 toUpdate.add(new Friend(reachUser, myReach, sentRequests,
                         (short) (computeLastSeen((byte[]) syncCache.get(reachUser.getId())) > ReachUser.ONLINE_LIMIT ? 1 : 0)));
             }
         }
+
         //toUpdate built
-        if (newIds.size() == 0 || newIdQuery == null) { //TODO handle 0 count
+        if (newIds.size() == 0 || newIdQuery == null) {
             logger.info("No new friends " + client.getUserName());
             return new QuickSync(newStatus, null, toUpdate);
         }
         //////////////////////////////////////
         //sync-up newIds
-        final List<Friend> friends = new ArrayList<>();
         for (ReachUser user : newIdQuery) {
 
-            friends.add(new Friend(
+            newFriends.add(new Friend(
                     user,
                     myReach,
                     sentRequests,
                     computeLastSeen((byte[]) syncCache.get(user.getId()))));
         }
+
+        if (newIds.contains(OfyService.devikaId)) {
+
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+            newFriends.add(new Friend(
+                    devika,
+                    myReach,
+                    sentRequests,
+                    0));
+        }
         logger.info("Slow " + client.getUserName());
-        return new QuickSync(newStatus, friends, toUpdate);
+        return new QuickSync(newStatus, newFriends, toUpdate);
     }
 
     @ApiMethod(
@@ -434,6 +480,7 @@ public class ReachUserEndpoint {
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
         syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
         final ReachUser clientUser = ofy().load().type(ReachUser.class).id(clientId).now();
         if (clientUser == null || clientUser.getMyReach() == null || clientUser.getMyReach().size() == 0)
             return null;
@@ -567,11 +614,11 @@ public class ReachUserEndpoint {
         if (cursor != null && !(cursor = cursor.trim()).equals(""))
             userQueryResultIterator = ofy().load().type(ReachUser.class)
                     .startAt(Cursor.fromWebSafeString(cursor))
-                    .limit(600)
+                    .limit(300)
                     .iterator();
         else
             userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .limit(600)
+                    .limit(300)
                     .iterator();
 
         ReachUser reachUser;
@@ -582,18 +629,21 @@ public class ReachUserEndpoint {
             reachUser = userQueryResultIterator.next();
             builder.add(new DataCall.Statistics(
                     reachUser.getId(),
+                    reachUser.getTimeCreated(),
                     reachUser.getUserName(),
                     reachUser.getPhoneNumber(),
                     reachUser.getNumberOfSongs(),
                     reachUser.getMyReach() == null ? 0 : reachUser.getMyReach().size(),
                     reachUser.getSentRequests() == null ? 0 : reachUser.getSentRequests().size(),
                     reachUser.getReceivedRequests() == null ? 0 : reachUser.getReceivedRequests().size(),
+                    ofy().load().type(CompletedOperations.class).filter("senderId =", reachUser.getId()).count(),
+                    ofy().load().type(CompletedOperations.class).filter("receiver =", reachUser.getId()).count(),
                     reachUser.getGcmId() != null && !reachUser.getGcmId().equals("")));
             count++;
         }
 
-        //count < 600 means this was possibly the last call
-        final String cursorToReturn = (count >= 600) ? userQueryResultIterator.getCursor().toWebSafeString() : "";
+        //count < 300 means this was possibly the last call
+        final String cursorToReturn = (count >= 300) ? userQueryResultIterator.getCursor().toWebSafeString() : "";
         logger.info("Get stats fetched " + count + " " + cursorToReturn);
 
         return new DataCall(builder.build(), cursorToReturn);
@@ -665,14 +715,118 @@ public class ReachUserEndpoint {
             user.setSplitterId(oldUser.getSplitterId());
             user.setTimeCreated(oldUser.getTimeCreated());
             user.setPromoCode(oldUser.getPromoCode());
+            user.setChatToken(oldUser.getChatToken());
             ofy().delete().entity(oldUser).now();
         } else
             user.setTimeCreated(System.currentTimeMillis());
 
-        getSplitter(user, false);
         ofy().save().entity(user).now();
         logger.info("Created ReachUser with ID: " + user.getUserName() + " " + new MessagingEndpoint().sendMessage("hello_world", user));
+
+        //generate devikaChat token
+        if (user.getChatToken() == null || user.getChatToken().equals("hello_world") || user.getChatToken().equals("")) {
+
+            final Map<String, Object> authPayload = new HashMap<>(2);
+            authPayload.put("uid", user.getId() + "");
+            authPayload.put("phoneNumber", user.getPhoneNumber());
+            authPayload.put("userName", user.getUserName());
+            authPayload.put("imageId", user.getImageId());
+
+            final TokenOptions tokenOptions = new TokenOptions();
+            final TokenGenerator tokenGenerator = new TokenGenerator(FIRE_BASE_SECRET);
+            final String token = tokenGenerator.createToken(authPayload, tokenOptions);
+            if (token != null && !token.equals("")) {
+                //save if token was generated
+                user.setChatToken(token);
+                ofy().save().entities(user).now();
+            }
+        }
+
         return new MyString(user.getId() + "");
+    }
+
+    @ApiMethod(
+            name = "insertNew",
+            path = "user/insertNew",
+            httpMethod = ApiMethod.HttpMethod.POST)
+    public InsertContainer insertNew(ReachUser user) {
+
+        final ReachUser oldUser = ofy().load().type(ReachUser.class)
+                .filter("phoneNumber in", Collections.singletonList(user.getPhoneNumber())).first().now();
+
+        if (oldUser != null) {
+
+            /**
+             * We re-use same accounts on the basis of phone numbers,
+             * we don't re-use same accounts on the basis of device ID
+             */
+            user.setId(oldUser.getId());
+            user.setReceivedRequests(oldUser.getReceivedRequests());
+            user.setSentRequests(oldUser.getSentRequests());
+            user.setMyReach(oldUser.getMyReach());
+            user.setMegaBytesReceived(oldUser.getMegaBytesReceived());
+            user.setMegaBytesSent(oldUser.getMegaBytesSent());
+            user.setSplitterId(oldUser.getSplitterId());
+            user.setTimeCreated(oldUser.getTimeCreated());
+            user.setPromoCode(oldUser.getPromoCode());
+            user.setChatToken(oldUser.getChatToken());
+            ofy().delete().entity(oldUser).now();
+        } else
+            user.setTimeCreated(System.currentTimeMillis());
+
+        ofy().save().entity(user).now();
+        logger.info("Created ReachUser with ID: " + user.getUserName() + " " + new MessagingEndpoint().sendMessage("hello_world", user));
+
+        //generate devikaChat token
+        if (user.getChatToken() == null || user.getChatToken().equals("hello_world") || user.getChatToken().equals("")) {
+
+            final Map<String, Object> authPayload = new HashMap<>(2);
+            authPayload.put("uid", user.getId() + "");
+            authPayload.put("phoneNumber", user.getPhoneNumber());
+            authPayload.put("userName", user.getUserName());
+            authPayload.put("imageId", user.getImageId());
+
+            final TokenOptions tokenOptions = new TokenOptions();
+            final TokenGenerator tokenGenerator = new TokenGenerator(FIRE_BASE_SECRET);
+            final String token = tokenGenerator.createToken(authPayload, tokenOptions);
+            if (token != null && !token.equals("")) {
+                //save if token was generated
+                user.setChatToken(token);
+                ofy().save().entities(user).now();
+            }
+        }
+
+        return new InsertContainer(user.getId(), user.getChatToken());
+    }
+
+    @ApiMethod(
+            name = "getChatToken",
+            path = "user/getChatToken/{userId}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public MyString getChatToken(@Named("userId") long userId) {
+
+        final ReachUser user = ofy().load().type(ReachUser.class).id(userId).now();
+
+        String chatToken = user.getChatToken();
+        if (chatToken == null || chatToken.equals("hello_world") || chatToken.equals("")) {
+
+            final Map<String, Object> authPayload = new HashMap<>(2);
+            authPayload.put("uid", user.getId() + "");
+            authPayload.put("phoneNumber", user.getPhoneNumber());
+            authPayload.put("userName", user.getUserName());
+            authPayload.put("imageId", user.getImageId());
+
+            final TokenOptions tokenOptions = new TokenOptions();
+            final TokenGenerator tokenGenerator = new TokenGenerator(FIRE_BASE_SECRET);
+            chatToken = tokenGenerator.createToken(authPayload, tokenOptions);
+            if (chatToken != null && !chatToken.equals("")) {
+                //save if token was generated
+                user.setChatToken(chatToken);
+                ofy().save().entities(user).now();
+            }
+        }
+
+        return new MyString(chatToken);
     }
 
     private Collection<MusicSplitter> getSplitter(ReachUser reachUser, boolean wait) {
@@ -877,8 +1031,7 @@ public class ReachUserEndpoint {
                 .filter("phoneNumber in", Collections.singletonList(phoneNumber))
                 .first().now();
         if (oldUser != null)
-            return new OldUserContainerNew(
-                    oldUser.getUserName(), oldUser.getPromoCode(), oldUser.getImageId(), oldUser.getId());
+            return new OldUserContainerNew(oldUser.getUserName(), oldUser.getPromoCode(), oldUser.getImageId(), oldUser.getId());
         return null;
     }
 

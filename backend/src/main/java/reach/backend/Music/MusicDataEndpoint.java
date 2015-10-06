@@ -96,7 +96,7 @@ public class MusicDataEndpoint {
 
         musicData.getVisibility().put(musicId, visibility);
         ofy().save().entity(musicData).now();
-        logger.info("Updated MusicData: " + musicData);
+        logger.info("Updated MusicData: " + id + " " + visibility);
         return new MyString("true");
     }
 }
