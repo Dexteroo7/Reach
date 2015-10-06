@@ -272,6 +272,12 @@ public class MessagingEndpoint {
         return new MyString(sendMessage("MANUAL`" + type + "`" + heading + "`" + message, ofy().load().type(ReachUser.class).id(hostId).now()) + "");
     }
 
+    public MyString sendChat(@Named("hostId") long hostId) {
+
+        final ReachUser user = ofy().load().type(ReachUser.class).id(hostId).now();
+        return new MyString(sendMessage("CHAT", user) + "");
+    }
+
     protected boolean sendMessage(@Nonnull String message,
                                   @Nonnull ReachUser user) {
 

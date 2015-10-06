@@ -25,6 +25,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -44,6 +47,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 
 import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
@@ -273,13 +278,24 @@ public class AccountCreation extends Fragment {
 
             //insert User-object and get the userID
             final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insertNew(user).execute(), Optional.absent()).orNull();
-            if (dataAfterWork == null || dataAfterWork.getUserId() == null || dataAfterWork.getUserId() == 0) {
+            if (dataAfterWork == null || dataAfterWork.getUserId() == null) {
+
                 user.setId(0L);
                 user.setChatToken("");
-            }
-            else {
+            } else {
+
                 user.setId(dataAfterWork.getUserId());
-                user.setChatToken(dataAfterWork.getFireBaseToken());
+                if (!TextUtils.isEmpty(dataAfterWork.getFireBaseToken())) {
+
+                    user.setChatToken(dataAfterWork.getFireBaseToken());
+                    final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
+                        return fragment.mListener.getFireBase().orNull();
+                    });
+
+                    if (firebaseOptional.isPresent()) {
+                        firebaseOptional.get().authWithCustomToken(dataAfterWork.getFireBaseToken(), authHandler);
+                    }
+                }
             }
             Log.i("Ayush", "Id received = " + user.getId());
 
@@ -293,6 +309,7 @@ public class AccountCreation extends Fragment {
             super.onPostExecute(user);
 
             if (toUpload != null && TextUtils.isEmpty(user.getImageId())) {
+
                 MiscUtils.useFragment(reference, fragment -> {
 
                     Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
@@ -522,4 +539,39 @@ public class AccountCreation extends Fragment {
                 dialog.dismiss();
         }
     }
+
+    private static final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
+
+        @Override
+        public void onAuthenticationError(FirebaseError error) {
+            Log.e("Ayush", "Login Failed! " + error.getMessage());
+        }
+
+        @Override
+        public void onAuthenticated(AuthData authData) {
+
+            final String chatUUID = authData.getUid();
+            MiscUtils.useContextFromFragment(reference, context -> {
+
+                Log.i("Ayush", "Login Succeeded! storing " + chatUUID);
+                SharedPrefUtils.storeChatUUID(context.getSharedPreferences("Reach", Context.MODE_PRIVATE), chatUUID);
+            });
+
+            Log.i("Ayush", "Chat authenticated " + chatUUID);
+            final Map<String, Object> userData = new HashMap<>();
+            userData.put("uid", authData.getAuth().get("uid"));
+            userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
+            userData.put("userName", authData.getAuth().get("userName"));
+            userData.put("imageId", authData.getAuth().get("imageId"));
+            userData.put("newMessage", true);
+            userData.put("lastActivated", 0);
+
+            final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
+                return fragment.mListener.getFireBase().orNull();
+            });
+
+            if (firebaseOptional.isPresent())
+                firebaseOptional.get().child("user").child(chatUUID).setValue(userData);
+        }
+    };
 }

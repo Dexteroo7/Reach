@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -19,7 +20,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -28,20 +28,19 @@ import com.firebase.client.ValueEventListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
+import reach.project.core.GcmIntentService;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 public class ChatActivityFragment extends Fragment {
 
-    private static final String FIREBASE_URL = "https://flickering-fire-7874.firebaseio.com/";
-    private static final String TAG = "Chat";
+    public static final AtomicBoolean connected = new AtomicBoolean(false);
 
-    private static String chatToken;
     private static String chatUUID = "";
     private static long serverId = 0;
-    private static boolean connected = false;
 
     private static WeakReference<ChatActivityFragment> reference = null;
     public static ChatActivityFragment newInstance() {
@@ -61,10 +60,10 @@ public class ChatActivityFragment extends Fragment {
     }
 
     private ListView chatList = null;
-    private Firebase mFirebaseRef = null;
     private ValueEventListener mConnectedListener = null;
     private ChatListAdapter mChatListAdapter = null;
     private SharedPreferences sharedPreferences = null;
+    private Firebase firebaseReference = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,12 +72,13 @@ public class ChatActivityFragment extends Fragment {
         final Activity activity = getActivity();
 
         sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        chatToken = SharedPrefUtils.getChatToken(sharedPreferences);
         chatUUID = SharedPrefUtils.getChatUUID(sharedPreferences);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
-        if (TextUtils.isEmpty(chatToken)) {
-            Log.i("Chat", "Chat token not found !");
+        if (TextUtils.isEmpty(chatUUID) || TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences))) {
+
+            //TODO
+            Log.i("Chat", "Chat not initialized yet !");
             activity.finish();
             return;
         }
@@ -86,14 +86,11 @@ public class ChatActivityFragment extends Fragment {
         if (serverId == 0) {
             Log.i("Chat", "ServerId not found !");
             activity.finish();
-            return;
         }
 
-        Log.i("Chat", "Found chat token " + chatToken + " " + serverId);
-
         // Setup our Firebase mFirebaseRef
-        mFirebaseRef = new Firebase(FIREBASE_URL);
-        mFirebaseRef.keepSynced(true);
+        firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
+        firebaseReference.keepSynced(true);
     }
 
     public View onCreateView(LayoutInflater inflater,
@@ -108,16 +105,30 @@ public class ChatActivityFragment extends Fragment {
         // Setup our input methods. Enter key on the keyboard or pushing the send button
         messageInput.setOnEditorActionListener(editorListener);
         button.setOnClickListener(sendListener);
-
-        messageInput.setTag(mFirebaseRef);
         button.setTag(messageInput);
 
-        if (TextUtils.isEmpty(chatUUID))
-            mFirebaseRef.authWithCustomToken(chatToken, authHandler);
-        else
-            setUpUI();
-
+        setUpUI();
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+
+        super.onResume();
+        // Finally, a little indication of connection status
+        mConnectedListener = firebaseReference.getRoot().child(".info/connected").addValueEventListener(connectionStatus);
+        //remove chat notification
+        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
+        notificationManager.cancel(GcmIntentService.NOTIFICATION_ID_CHAT);
+    }
+
+    @Override
+    public void onPause() {
+
+        super.onPause();
+        connected.set(false);
+        if (firebaseReference != null && mConnectedListener != null)
+            firebaseReference.getRoot().child(".info/connected").removeEventListener(mConnectedListener);
     }
 
     @Override
@@ -125,31 +136,46 @@ public class ChatActivityFragment extends Fragment {
 
         super.onDestroy();
 
-        if (mFirebaseRef != null && mConnectedListener != null)
-            mFirebaseRef.getRoot().child(".info/connected").removeEventListener(mConnectedListener);
-
         if (mChatListAdapter != null)
             mChatListAdapter.cleanup();
 
+        connected.set(false);
         sharedPreferences = null;
         chatList = null;
-        mFirebaseRef = null;
+        firebaseReference = null;
         mConnectedListener = null;
         mChatListAdapter = null;
 
         Log.i("Chat", "CHAT ON DESTROY !!");
     }
 
-    private static void sendMessage(String message, Firebase mFirebaseRef) {
+    private static void sendMessage(String message) {
 
         if (!TextUtils.isEmpty(message)) {
 
-            // Create our 'model', a Chat object
+            // Create a new, auto-generated child of that chat location, and save our chat data there
             final Chat chat = new Chat();
             chat.setMessage(message);
             chat.setTimestamp(System.currentTimeMillis());
-            // Create a new, auto-generated child of that chat location, and save our chat data there
-            mFirebaseRef.child("chat").child(chatUUID).push().setValue(chat);
+
+            //update user object to allow sort by time
+            final Map<String, Object> userData = new HashMap<>();
+            userData.put("uid", serverId);
+            userData.put("lastActivated", System.currentTimeMillis());
+
+            MiscUtils.useFragment(reference, fragment -> {
+
+                final Firebase pushRef = fragment.firebaseReference.child("chat").child(chatUUID).push();
+                pushRef.setValue(chat);
+                final String uniqueKey = pushRef.getKey();
+                chat.setChatId(uniqueKey);
+                final Map<String, Object> temp = new HashMap<>(1);
+                temp.put("chatId", uniqueKey);
+                fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
+
+                fragment.firebaseReference.child("user").child(chatUUID).updateChildren(userData);
+            });
+
         }
     }
 
@@ -158,13 +184,12 @@ public class ChatActivityFragment extends Fragment {
 //        if (!connected)
 //            return;
 
+        if (TextUtils.isEmpty(chatUUID))
+            return;
+
         final EditText editText = ((EditText) v.getTag());
-        final Object object = editText.getTag();
-        if (object != null && object instanceof Firebase) {
-            sendMessage(editText.getText().toString(), (Firebase) object);
-            editText.setText("");
-        } else
-            Log.i("Chat", "Fail of 1st order");
+        sendMessage(editText.getText().toString());
+        editText.setText("");
     };
 
     private static final TextView.OnEditorActionListener editorListener = (v, actionId, event) -> {
@@ -172,15 +197,14 @@ public class ChatActivityFragment extends Fragment {
 //        if (!connected)
 //            return false;
 
+        if (TextUtils.isEmpty(chatUUID))
+            return false;
+
         if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
 
             final EditText editText = (EditText) v;
-            final Object object = editText.getTag();
-            if (object != null && object instanceof Firebase) {
-                sendMessage(editText.getText().toString(), (Firebase) object);
-                editText.setText("");
-            } else
-                Log.i("Chat", "Fail of 1st order");
+            sendMessage(editText.getText().toString());
+            editText.setText("");
         }
         return true;
     };
@@ -190,9 +214,14 @@ public class ChatActivityFragment extends Fragment {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
 
-            /*connected = (Boolean) dataSnapshot.getValue();
-            MiscUtils.useContextFromFragment(reference, context -> {
-                if (connected)
+            if (dataSnapshot.getValue() == null)
+                return;
+
+            connected.set((Boolean) dataSnapshot.getValue());
+
+            /*MiscUtils.useContextFromFragment(reference, context -> {
+
+                if (connected.get())
                     Toast.makeText(context, "Connected to Firebase", Toast.LENGTH_SHORT).show();
                 else
                     Toast.makeText(context, "Disconnected from Firebase", Toast.LENGTH_SHORT).show();
@@ -208,40 +237,7 @@ public class ChatActivityFragment extends Fragment {
         }
     };
 
-    private static final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
-
-        @Override
-        public void onAuthenticationError(FirebaseError error) {
-            Log.e(TAG, "Login Failed! " + error.getMessage());
-        }
-
-        @Override
-        public void onAuthenticated(AuthData authData) {
-
-            chatUUID = authData.getUid();
-            Log.i(TAG, "Chat authenticated " + chatUUID);
-
-            MiscUtils.useFragment(reference, fragment -> {
-
-                Log.i(TAG, "Login Succeeded! storing " + chatUUID);
-                SharedPrefUtils.storeChatUUID(fragment.sharedPreferences, chatUUID);
-
-                final Map<String, Object> userData = new HashMap<>();
-                userData.put("uid", authData.getAuth().get("uid"));
-                userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
-                userData.put("userName", authData.getAuth().get("userName"));
-                userData.put("imageId", authData.getAuth().get("imageId"));
-                fragment.mFirebaseRef.child("user").child(chatUUID).setValue(userData);
-
-                fragment.setUpUI();
-            });
-        }
-    };
-
     private void setUpUI() {
-
-        // Finally, a little indication of connection status
-        mConnectedListener = mFirebaseRef.getRoot().child(".info/connected").addValueEventListener(connectionStatus);
 
         /**
          * Setup our view and list adapter. Ensure it scrolls to the bottom as data changes
@@ -249,10 +245,11 @@ public class ChatActivityFragment extends Fragment {
          **/
         Log.i("Chat", "Setting up chat list adapter !");
         mChatListAdapter = new ChatListAdapter(
-                mFirebaseRef.child("chat").child(chatUUID),
+                firebaseReference.child("chat").child(chatUUID),
                 getActivity(),
                 R.layout.chat_message_me,
-                serverId);
+                firebaseReference,
+                chatUUID);
         chatList.setAdapter(mChatListAdapter);
 
         mChatListAdapter.registerDataSetObserver(new DataSetObserver() {

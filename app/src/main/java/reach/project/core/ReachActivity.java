@@ -56,6 +56,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
+import com.firebase.client.ChildEventListener;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
@@ -79,6 +83,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -93,7 +98,9 @@ import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UserMusicLibrary;
+import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
+import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.songs.PrivacyFragment;
@@ -133,7 +140,6 @@ public class ReachActivity extends AppCompatActivity implements
         SearchView.OnCloseListener {
 
     public static long serverId = 0;
-
     private static WeakReference<ReachActivity> reference = null;
     private static SecureRandom secureRandom = new SecureRandom();
 
@@ -169,6 +175,7 @@ public class ReachActivity extends AppCompatActivity implements
     private CustomViewPager viewPager;
 
     private MergeAdapter combinedAdapter = null;
+    private Firebase firebaseReference = null;
 
     private ImageButton pausePlayMinimized; //small
     private SwipeRefreshLayout downloadRefresh;
@@ -352,6 +359,7 @@ public class ReachActivity extends AppCompatActivity implements
         shuffleBtn = repeatBtn = pausePlayMaximized = null;
         pausePlayMinimized = null;
         downloadRefresh = null;
+        firebaseReference = null;
     }
 
     @Override
@@ -366,6 +374,9 @@ public class ReachActivity extends AppCompatActivity implements
                 new ComponentName(this, PlayerUpdateListener.class),
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
+
+        if (firebaseReference != null)
+            firebaseReference.child("chat").child(serverId + "").removeEventListener(LocalUtils.listenerForUnReadChats);
     }
 
     @Override
@@ -389,9 +400,12 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onPostResume() {
 
+        super.onPostResume();
         Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
-        super.onPostResume();
+
+        if (firebaseReference != null)
+            firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
     }
 
     @Override
@@ -557,6 +571,11 @@ public class ReachActivity extends AppCompatActivity implements
 
         Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+    }
+
+    @Override
+    public Optional<Firebase> getFireBase() {
+        return Optional.fromNullable(firebaseReference);
     }
 
     @Override
@@ -800,6 +819,10 @@ public class ReachActivity extends AppCompatActivity implements
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
         serverId = SharedPrefUtils.getServerId(preferences);
+
+        // Setup our Firebase mFirebaseRef
+        firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
+        firebaseReference.keepSynced(true);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
@@ -1298,7 +1321,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
@@ -1476,40 +1499,21 @@ public class ReachActivity extends AppCompatActivity implements
                     else
                         Log.i("Ayush", "GCM check failed");
                 }
-//                else if (gcmId.equals("user_deleted")) {
-//                    //TODO restart app sign-up
-//                }
-            }
-
-            private void checkChatToken() {
-
-                final String localToken = MiscUtils.useContextFromContext(reference, activity -> {
-                    return SharedPrefUtils.getChatToken(activity.preferences);
-                }).orNull();
-
-                //if not empty exit
-                if (!TextUtils.isEmpty(localToken))
-                    return;
-
-                //fetch from server
-                final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
-                if (fetchTokenFromServer == null || TextUtils.isDigitsOnly(fetchTokenFromServer.getString()))
-                    Log.i("Ayush", "Chat token check failed !");
-                else
-                    //if found save
-                    MiscUtils.useContextFromContext(reference, activity -> {
-                        SharedPrefUtils.storeChatToken(activity.preferences, fetchTokenFromServer.getString());
-                    });
             }
 
             @Override
             public void run() {
 
                 ////////////////////////////////////////
+                //check devikaChat token
+                final ReachActivity reachActivity;
+                if (reference != null && (reachActivity = reference.get()) != null && !reachActivity.isFinishing())
+                    MiscUtils.checkChatToken(
+                            new WeakReference<>(reachActivity.preferences),
+                            new WeakReference<>(reachActivity.firebaseReference));
+
                 //refresh gcm
                 checkGCM();
-                //cehck devikaChat token
-                checkChatToken();
                 //refresh download ops
                 new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
                 //Music scanner
@@ -1829,6 +1833,68 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
+        //TODO
+        private static void toggleIntimation(boolean state) {
+
+            //if toggle is true and chatFragment is not open
+            if (state && !ChatActivityFragment.connected.get()) {
+                //show intimation
+            } else {
+                //remove initiation
+            }
+        }
+
+        public static ChildEventListener listenerForUnReadChats = new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                if (dataSnapshot.getValue() instanceof Map) {
+
+                    final Map value = (Map) dataSnapshot.getValue();
+                    final Object admin = value.get("admin");
+                    final Object status = value.get("status");
+
+                    if (admin == null || status == null) {
+                        toggleIntimation(false);
+                        return;
+                    }
+
+                    final String adminValue = String.valueOf(admin);
+                    final String statusValue = String.valueOf(status);
+
+                    if (TextUtils.isEmpty(adminValue) || TextUtils.isEmpty(statusValue)) {
+
+                        toggleIntimation(false);
+                        return;
+                    }
+
+                    if (!statusValue.equals(Chat.READ + "")) {
+                        toggleIntimation(true);
+                    }
+                }
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        };
     }
 
     public static class PlayerUpdateListener extends BroadcastReceiver {

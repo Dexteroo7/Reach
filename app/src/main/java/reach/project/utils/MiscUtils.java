@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -28,6 +29,9 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
@@ -46,14 +50,17 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
+import reach.backend.entities.userApi.model.MyString;
 import reach.project.core.StaticData;
 import reach.project.music.albums.Album;
 import reach.project.music.albums.ReachAlbumHelper;
@@ -889,6 +896,7 @@ public enum MiscUtils {
 
     private static final StringBuffer buffer = new StringBuffer();
     private static final String baseURL = "http://ec2-52-24-99-153.us-west-2.compute.amazonaws.com:8080/getImage/small?";
+
     public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
 
         buffer.setLength(0);
@@ -1026,5 +1034,65 @@ public enum MiscUtils {
             });
         }
         ////////
+    }
+
+    public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
+                                                   WeakReference<Firebase> firebaseWeakReference) {
+
+        final SharedPreferences preferences = preferencesWeakReference.get();
+        if (preferences == null)
+            return;
+
+        final String localToken = SharedPrefUtils.getChatToken(preferences);
+        final String localUUID = SharedPrefUtils.getChatUUID(preferences);
+        final long serverId = SharedPrefUtils.getServerId(preferences);
+
+        if (serverId == 0)
+            return; //shiz
+
+        //if not empty exit
+        if (!TextUtils.isEmpty(localToken) && !TextUtils.isEmpty(localUUID))
+            return;
+
+        //fetch from server
+        final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
+        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString()))
+            Log.i("Ayush", "Chat token check failed !");
+
+        else {
+
+            final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
+
+                @Override
+                public void onAuthenticationError(FirebaseError error) {
+                    Log.e("Ayush", "Login Failed! " + error.getMessage());
+                }
+
+                @Override
+                public void onAuthenticated(AuthData authData) {
+
+                    final String chatUUID = authData.getUid();
+                    //if found save
+                    SharedPrefUtils.storeChatUUID(preferences, fetchTokenFromServer.getString());
+                    Log.i("Ayush", "Chat authenticated " + chatUUID);
+
+                    final Map<String, Object> userData = new HashMap<>();
+                    userData.put("uid", authData.getAuth().get("uid"));
+                    userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
+                    userData.put("userName", authData.getAuth().get("userName"));
+                    userData.put("imageId", authData.getAuth().get("imageId"));
+                    userData.put("lastActivated", 0);
+                    userData.put("newMessage", true);
+
+                    final Firebase firebase = firebaseWeakReference.get();
+                    if (firebase != null)
+                        firebase.child("user").child(chatUUID).setValue(userData);
+                }
+            };
+
+            final Firebase firebase = firebaseWeakReference.get();
+            if (firebase != null)
+                firebase.authWithCustomToken(fetchTokenFromServer.getString(), authHandler);
+        }
     }
 }

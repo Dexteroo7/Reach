@@ -1,5 +1,6 @@
 package reach.project.utils.auxiliaryClasses;
 
+import com.firebase.client.Firebase;
 import com.google.common.base.Optional;
 
 import java.io.File;
@@ -54,4 +55,6 @@ public interface SuperInterface {
     void onOpenInvitePage();
 
     void updateDetails(File image, String userName);
+
+    Optional<Firebase> getFireBase();
 }

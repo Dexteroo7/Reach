@@ -12,6 +12,11 @@ public class MyString {
         this.string = string;
     }
 
+//    public MyString(Object object) {
+//
+//        this.string = object.toString();
+//    }
+
     public String getString() {
         return string;
     }
