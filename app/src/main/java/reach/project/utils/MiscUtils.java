@@ -112,10 +112,10 @@ public enum MiscUtils {
         return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
-    public static String dateFormatter(final long seconds) {
+    public static String dateFormatter(final long milliSeconds) {
 
         return new SimpleDateFormat("dd-MM-yyyy HH-mm-ss", Locale.getDefault()).format(
-                new Date(seconds));
+                new Date(milliSeconds));
     }
 
     public static void closeQuietly(Collection... collections) {

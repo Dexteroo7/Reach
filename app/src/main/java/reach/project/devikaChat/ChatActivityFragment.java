@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -102,7 +102,7 @@ public class ChatActivityFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
         final EditText messageInput = (EditText) rootView.findViewById(R.id.messageInput);
-        final ImageButton button = (ImageButton) rootView.findViewById(R.id.sendButton);
+        final ImageView button = (ImageView) rootView.findViewById(R.id.sendButton);
         chatList = (ListView) rootView.findViewById(R.id.chatList);
 
         // Setup our input methods. Enter key on the keyboard or pushing the send button
@@ -190,13 +190,13 @@ public class ChatActivityFragment extends Fragment {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
 
-            connected = (Boolean) dataSnapshot.getValue();
+            /*connected = (Boolean) dataSnapshot.getValue();
             MiscUtils.useContextFromFragment(reference, context -> {
                 if (connected)
                     Toast.makeText(context, "Connected to Firebase", Toast.LENGTH_SHORT).show();
                 else
                     Toast.makeText(context, "Disconnected from Firebase", Toast.LENGTH_SHORT).show();
-            });
+            });*/
         }
 
         @Override

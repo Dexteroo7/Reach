@@ -38,6 +38,15 @@ public enum SharedPrefUtils {
                 .apply();
     }
 
+    public static void storeAuthKey(SharedPreferences sharedPreferences, String key) {
+        sharedPreferences.edit().putString("otpAuthKey", key).apply();
+    }
+
+    public static String getAuthKey(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("otpAuthKey", "");
+    }
+
+
     public static String getPhoneNumber(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("phoneNumber", "");
     }

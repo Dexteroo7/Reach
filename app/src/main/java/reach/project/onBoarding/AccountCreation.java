@@ -118,8 +118,10 @@ public class AccountCreation extends Fragment {
              * oldData[0] = name;
              * oldData[1] = imageId;
              */
-            if (!TextUtils.isEmpty(oldData[0]))
+            if (!TextUtils.isEmpty(oldData[0])) {
                 userName.setText(oldData[0]);
+                userName.setSelection(oldData[0].length());
+            }
             if (!TextUtils.isEmpty(oldData[1])) {
 
                 imageId = oldData[1];

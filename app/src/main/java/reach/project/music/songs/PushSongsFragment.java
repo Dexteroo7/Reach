@@ -305,6 +305,10 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             return;
 
         final Context context = reference.get().getContext();
+
+        if (context == null)
+            return;
+
         combinedAdapter = new MergeAdapter();
 
         combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
@@ -330,6 +334,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getDownloadedTextView(Context context) {
 
+            if (context == null)
+                return null;
             final TextView textView = new TextView(context);
             textView.setText("Downloaded");
             textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
@@ -341,6 +347,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getMyLibraryTextView(Context context) {
 
+            if (context == null)
+                return null;
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
             textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
@@ -352,6 +360,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getEmptyDownload(Context context) {
 
+            if (context == null)
+                return null;
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("No downloaded songs");
             emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
@@ -362,6 +372,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getEmptyLibrary(Context context) {
 
+            if (context == null)
+                return null;
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
             emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));

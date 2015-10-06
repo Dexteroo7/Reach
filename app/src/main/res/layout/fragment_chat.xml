@@ -2,45 +2,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="reach.project.devikaChat.ChatActivityFragment"
-    tools:showIn="@layout/activity_chat">
+    android:background="@drawable/background"
+    tools:context="reach.project.devikaChat.ChatActivityFragment">
+    <ImageView
+        android:id="@+id/sendButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="10dp"
+        android:padding="11dp"
+        android:contentDescription="Send"
+        android:background="@drawable/circular_background_pink"
+        android:src="@drawable/ic_push"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"  />
+    <EditText
+        android:id="@+id/messageInput"
+        android:layout_marginLeft="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textShortMessage"
+        android:layout_alignBottom="@id/sendButton"
+        android:layout_toLeftOf="@id/sendButton"
+        android:lines="1"
+        android:singleLine="true" />
 
     <ListView
         android:id="@+id/chatList"
-        android:layout_width="fill_parent"
+        android:layout_above="@id/sendButton"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:divider="@null"
-        android:dividerHeight="0dp"
-        android:transcriptMode="alwaysScroll" />
-
-    <LinearLayout
-        android:id="@+id/listFooter"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/chatList"
-        android:orientation="horizontal">
-
-        <EditText
-            android:id="@+id/messageInput"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:inputType="textShortMessage"
-            android:lines="1"
-            android:singleLine="true" />
-
-        <ImageButton
-            android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="Send"
-            android:src="@android:drawable/ic_menu_send"
-            tools:ignore="HardcodedText" />
-
-    </LinearLayout>
-
+        android:transcriptMode="alwaysScroll"
+        android:dividerHeight="0dp" />
 </RelativeLayout>

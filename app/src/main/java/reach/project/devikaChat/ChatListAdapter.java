@@ -9,8 +9,11 @@ import android.widget.TextView;
 
 import com.firebase.client.Query;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import reach.project.R;
-import reach.project.utils.MiscUtils;
 
 /**
  * @author greg
@@ -72,6 +75,7 @@ public class ChatListAdapter extends FirebaseListAdapter<Chat> {
         }
 
         chatView.setText(chat.getMessage());
-        timeView.setText(MiscUtils.dateFormatter(chat.getTimestamp()));
+        timeView.setText(new SimpleDateFormat("MMM d 'at' h:mm a", Locale.getDefault()).format(
+                new Date(chat.getTimestamp())));
     }
 }

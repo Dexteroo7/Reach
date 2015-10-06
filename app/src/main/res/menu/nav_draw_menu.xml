@@ -21,7 +21,7 @@
             android:title="@string/title_section4" />
         <item
             android:id="@+id/navigation_item_6"
-            android:icon="@drawable/reach_queue"
+            android:icon="@drawable/ic_live_help"
             android:title="@string/title_section6" />
     </group>
     <group

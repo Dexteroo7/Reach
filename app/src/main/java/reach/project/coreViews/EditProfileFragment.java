@@ -112,7 +112,9 @@ public class EditProfileFragment extends Fragment {
 
         final String imageId = SharedPrefUtils.getImageId(sharedPreferences);
         userId = SharedPrefUtils.getServerId(sharedPreferences);
-        firstName.setText(SharedPrefUtils.getUserName(sharedPreferences));
+        String uName = SharedPrefUtils.getUserName(sharedPreferences);
+        firstName.setText(uName);
+        firstName.setSelection(uName.length());
 
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             profile.setBackgroundResource(0);
