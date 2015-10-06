@@ -291,15 +291,11 @@ public class AccountCreation extends Fragment {
                     final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
                         return fragment.mListener.getFireBase().orNull();
                     });
-
-                    if (firebaseOptional.isPresent()) {
+                    if (firebaseOptional.isPresent())
                         firebaseOptional.get().authWithCustomToken(dataAfterWork.getFireBaseToken(), authHandler);
-                    }
                 }
             }
             Log.i("Ayush", "Id received = " + user.getId());
-
-            //finally set the userID, probably unnecessary
             return user;
         }
 

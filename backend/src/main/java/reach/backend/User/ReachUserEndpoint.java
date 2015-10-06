@@ -750,11 +750,11 @@ public class ReachUserEndpoint {
                 .filter("phoneNumber in", Collections.singletonList(user.getPhoneNumber())).first().now();
 
         if (oldUser != null) {
+
             /**
              * We re-use same accounts on the basis of phone numbers,
              * we don't re-use same accounts on the basis of device ID
              */
-
             user.setId(oldUser.getId());
             user.setReceivedRequests(oldUser.getReceivedRequests());
             user.setSentRequests(oldUser.getSentRequests());
