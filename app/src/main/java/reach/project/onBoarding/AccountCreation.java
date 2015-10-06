@@ -327,7 +327,7 @@ public class AccountCreation extends Fragment {
             //set serverId here
             ReachActivity.serverId = user.getId();
             MiscUtils.useFragment(reference, fragment -> {
-                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getContext(), "7877f44b1ce4a4b2db7790048eb6587a");
+                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getActivity(), "7877f44b1ce4a4b2db7790048eb6587a");
                 MixpanelAPI.People ppl = mixpanel.getPeople();
                 final Tracker tracker = ((ReachApplication) fragment.getActivity().getApplication()).getTracker();
                 tracker.setScreenName("reach.project.onBoarding.AccountCreation");
@@ -349,11 +349,11 @@ public class AccountCreation extends Fragment {
                     ppl.set("$phone", user.getPhoneNumber()+"");
                 if (!TextUtils.isEmpty(user.getUserName()))
                     ppl.set("$name", user.getUserName() + "");
-                SharedPrefUtils.storeReachUser(fragment.getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                final Intent intent = new Intent(fragment.getContext(), MusicScanner.class);
+                SharedPrefUtils.storeReachUser(fragment.getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
+                final Intent intent = new Intent(fragment.getActivity(), MusicScanner.class);
                 intent.putExtra("messenger", messenger);
                 intent.putExtra("first", true);
-                fragment.getContext().startService(intent);
+                fragment.getActivity().startService(intent);
                 return null;
             });
         }
@@ -440,12 +440,12 @@ public class AccountCreation extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }

@@ -581,7 +581,7 @@ public enum MiscUtils {
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing() || fragment.getContext() == null)
+        if (activity == null || activity.isFinishing() )
             return Optional.absent();
 
         return Optional.fromNullable(task.work(activity));
@@ -594,7 +594,7 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
-        final Context context = fragment.getContext();
+        final Context context = fragment.getActivity();
         if (context != null)
             task.work(context);
     }
@@ -607,7 +607,7 @@ public enum MiscUtils {
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing() || fragment.getContext() == null)
+        if (activity == null || activity.isFinishing())
             return Optional.absent();
 
         return Optional.fromNullable(task.work(fragment));

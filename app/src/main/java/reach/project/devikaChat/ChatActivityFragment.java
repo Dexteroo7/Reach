@@ -172,8 +172,8 @@ public class ChatActivityFragment extends Fragment {
                 chat.setChatId(uniqueKey);
                 final Map<String, Object> temp = new HashMap<>(1);
                 temp.put("chatId", uniqueKey);
-                fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
 
+                fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
                 fragment.firebaseReference.child("user").child(chatUUID).updateChildren(userData);
             });
 

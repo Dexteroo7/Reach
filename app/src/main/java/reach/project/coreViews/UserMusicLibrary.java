@@ -22,7 +22,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -431,7 +430,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                             .width(margin)
                             .height(margin)
                             .endConfig()
-                            .buildRound(MiscUtils.generateInitials(name), ContextCompat.getColor(fragment.getContext(), R.color.reach_grey)));
+                            .buildRound(MiscUtils.generateInitials(name), fragment.getResources().getColor(R.color.reach_grey)));
                 else
                     toolbar.setLogo(new BitmapDrawable(fragment.getResources(), bitmap));
 

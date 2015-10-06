@@ -1,5 +1,6 @@
 package reach.project.onBoarding;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -214,7 +215,7 @@ public class NumberVerification extends Fragment{
                              *  again three times or else fail.
                              */
                             Log.e("Verification", "Code not sent");
-                            Toast.makeText(getContext(), "Verification code could not be sent. Please try again!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "Verification code could not be sent. Please try again!", Toast.LENGTH_SHORT).show();
                         } else {
                             /*
                              *  -- TODO --
@@ -229,14 +230,14 @@ public class NumberVerification extends Fragment{
                                     // Start Account Creation
                                     mListener.startAccountCreation(Optional.fromNullable(null));
                                 } else {
-                                    Toast.makeText(getContext(), "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getActivity(), "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
                     };
 
                     verifyRetry.setOnClickListener(v -> {
-                        final AlertDialog alertDialog = new AlertDialog.Builder(getContext())
+                        final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                                 .setMessage("Send verification code again?")
                                 .setPositiveButton("Yes", (dialog, which) -> {
                                     new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
@@ -277,12 +278,12 @@ public class NumberVerification extends Fragment{
     }
 
     @Override
-    public void onAttach (Context context) {
-        super.onAttach(context);
+    public void onAttach (Activity activity) {
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                                                  + " must implement OnFragmentInteractionListener");
         }
     }
