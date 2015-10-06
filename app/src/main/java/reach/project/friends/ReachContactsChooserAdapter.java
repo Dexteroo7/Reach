@@ -6,6 +6,7 @@ package reach.project.friends;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -31,8 +32,8 @@ public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
 
     public ReachContactsChooserAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
-        this.grey = context.getResources().getColor(R.color.darkgrey);
-        this.color = context.getResources().getColor(R.color.reach_color);
+        this.grey = ContextCompat.getColor(context, R.color.darkgrey);
+        this.color = ContextCompat.getColor(context, R.color.reach_color);
     }
 
     private final class ViewHolder {
