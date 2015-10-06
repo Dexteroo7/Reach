@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -27,16 +28,19 @@ import com.firebase.client.ValueEventListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
+import reach.project.core.GcmIntentService;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 public class ChatActivityFragment extends Fragment {
 
+    public static final AtomicBoolean connected = new AtomicBoolean(false);
+
     private static String chatUUID = "";
     private static long serverId = 0;
-    private static boolean connected = false;
 
     private static WeakReference<ChatActivityFragment> reference = null;
     public static ChatActivityFragment newInstance() {
@@ -108,19 +112,37 @@ public class ChatActivityFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+
+        super.onResume();
+        // Finally, a little indication of connection status
+        mConnectedListener = firebaseReference.getRoot().child(".info/connected").addValueEventListener(connectionStatus);
+        //remove chat notification
+        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getActivity());
+        notificationManager.cancel(GcmIntentService.NOTIFICATION_ID_CHAT);
+    }
+
+    @Override
+    public void onPause() {
+
+        super.onPause();
+        connected.set(false);
+        if (firebaseReference != null && mConnectedListener != null)
+            firebaseReference.getRoot().child(".info/connected").removeEventListener(mConnectedListener);
+    }
+
+    @Override
     public void onDestroy() {
 
         super.onDestroy();
 
-        if (firebaseReference != null && mConnectedListener != null)
-            firebaseReference.getRoot().child(".info/connected").removeEventListener(mConnectedListener);
-
         if (mChatListAdapter != null)
             mChatListAdapter.cleanup();
 
+        connected.set(false);
         sharedPreferences = null;
         chatList = null;
-//        mFirebaseRef = null;
+        firebaseReference = null;
         mConnectedListener = null;
         mChatListAdapter = null;
 
@@ -192,9 +214,14 @@ public class ChatActivityFragment extends Fragment {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
 
-            connected = (Boolean) dataSnapshot.getValue();
+            if (dataSnapshot.getValue() == null)
+                return;
+
+            connected.set((Boolean) dataSnapshot.getValue());
+
             MiscUtils.useContextFromFragment(reference, context -> {
-                if (connected)
+
+                if (connected.get())
                     Toast.makeText(context, "Connected to Firebase", Toast.LENGTH_SHORT).show();
                 else
                     Toast.makeText(context, "Disconnected from Firebase", Toast.LENGTH_SHORT).show();
@@ -211,9 +238,6 @@ public class ChatActivityFragment extends Fragment {
     };
 
     private void setUpUI() {
-
-        // Finally, a little indication of connection status
-        mConnectedListener = firebaseReference.getRoot().child(".info/connected").addValueEventListener(connectionStatus);
 
         /**
          * Setup our view and list adapter. Ensure it scrolls to the bottom as data changes

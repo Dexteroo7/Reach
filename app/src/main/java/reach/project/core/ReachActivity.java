@@ -96,6 +96,7 @@ import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
+import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.songs.PrivacyFragment;
@@ -1790,6 +1791,17 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
+        //TODO
+        private static void toggleIntimation(boolean state) {
+
+            //if toggle is true and chatFragment is not open
+            if (state && !ChatActivityFragment.connected.get()) {
+                //show intimation
+            } else {
+                //remove initiation
+            }
+        }
+
         public static ChildEventListener listenerForUnReadChats = new ChildEventListener() {
 
             @Override
@@ -1801,19 +1813,23 @@ public class ReachActivity extends AppCompatActivity implements
                     final Object admin = value.get("admin");
                     final Object status = value.get("status");
 
-                    if (admin == null || status == null)
+                    if (admin == null || status == null) {
+                        toggleIntimation(false);
                         return;
+                    }
 
                     final String adminValue = String.valueOf(admin);
                     final String statusValue = String.valueOf(status);
 
-                    if (TextUtils.isEmpty(adminValue) || TextUtils.isEmpty(statusValue))
-                        return;
+                    if (TextUtils.isEmpty(adminValue) || TextUtils.isEmpty(statusValue)) {
 
-                    if (!statusValue.equals(Chat.READ + "")) {
-                        //TODO toggle notification
+                        toggleIntimation(false);
+                        return;
                     }
 
+                    if (!statusValue.equals(Chat.READ + "")) {
+                        toggleIntimation(true);
+                    }
                 }
             }
 
