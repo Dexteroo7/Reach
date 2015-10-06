@@ -150,6 +150,7 @@ public class ReachActivity extends AppCompatActivity implements
     private FragmentManager fragmentManager;
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
+    private MenuItem liveHelpItem;
 
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
@@ -867,6 +868,8 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        mNavigationView.setItemIconTintList(null);
+        liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
         final FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
         frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
@@ -1335,6 +1338,23 @@ public class ReachActivity extends AppCompatActivity implements
             e.printStackTrace();
         }
         mixpanel.track("Transaction - Add Song", props);
+    }
+
+    //TODO
+    public static void toggleIntimation(boolean state) {
+
+        //if toggle is true and chatFragment is not open
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (state && !ChatActivityFragment.connected.get()) {
+                //show intimation
+
+                activity.liveHelpItem.setIcon(R.drawable.ic_live_help_new);
+            } else {
+                //remove initiation
+                activity.liveHelpItem.setIcon(R.drawable.ic_live_help);
+            }
+        });
     }
 
     private enum LocalUtils {
@@ -1832,17 +1852,6 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
-        //TODO
-        private static void toggleIntimation(boolean state) {
-
-            //if toggle is true and chatFragment is not open
-            if (state && !ChatActivityFragment.connected.get()) {
-                //show intimation
-            } else {
-                //remove initiation
-            }
-        }
-
         public static ChildEventListener listenerForUnReadChats = new ChildEventListener() {
 
             @Override
@@ -1868,7 +1877,7 @@ public class ReachActivity extends AppCompatActivity implements
                         return;
                     }
 
-                    if (!statusValue.equals(Chat.READ + "")) {
+                    if (adminValue.equals(Chat.ADMIN + "") &&!statusValue.equals(Chat.READ + "")) {
                         toggleIntimation(true);
                     }
                 }

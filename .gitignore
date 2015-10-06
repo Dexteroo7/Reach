@@ -13,4 +13,3 @@ settings.gradle
 httptest/*
 
 build.gradle
-.gitignore

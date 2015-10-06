@@ -80,6 +80,7 @@ import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.UseActivity;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseFragment;
@@ -623,6 +624,16 @@ public enum MiscUtils {
         final Activity activity = fragment.getActivity();
         if (activity != null && !activity.isFinishing())
             task.work(fragment);
+    }
+
+    public static <T extends Activity> void useActivity(final WeakReference<T> reference,
+                                                        final UseActivity<T> task) {
+
+        final T activity;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return;
+
+        task.work(activity);
     }
 
 //    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,

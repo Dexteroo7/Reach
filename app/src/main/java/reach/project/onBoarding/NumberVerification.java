@@ -238,86 +238,72 @@ public class NumberVerification extends Fragment {
 
                 final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                 sharedPreferences.edit().clear().apply();
+                bottomPart3.setVisibility(View.INVISIBLE);
+                bottomPart2.setVisibility(View.VISIBLE);
+                /*
+                 *  Generate Auth Key &
+                 *  Send SMS verification
+                 */
+                final String finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
+                Log.i("Verification", "" + finalAuthKey);
 
-                // If the number is not present inside DB
-                if (pair.first == null) {
+                final SendVerificationCodeAsync.OnTaskCompleted onTaskCompleted = aBoolean -> {
 
-                    bottomPart3.setVisibility(View.INVISIBLE);
-                    bottomPart2.setVisibility(View.VISIBLE);
-                    /*
-                     *  Generate Auth Key &
-                     *  Send SMS verification
-                     */
-                    final String finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
-                    Log.i("Verification", "" + finalAuthKey);
+                    if (!aBoolean) {
+                        /*
+                         *  -- TODO --
+                         *  SMS sending failed, Give user UI to try
+                         *  again three times or else fail.
+                         */
+                        Log.e("Verification", "Code not sent");
+                        Toast.makeText(context, "Verification code could not be sent. Please try again!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        /*
+                         *  -- TODO --
+                         *  Give UI for entering the code
+                         *  and error handling
+                         */
+                        Log.i("Verification", "Code sent");
+                        verifyNext.setOnClickListener(v -> {
 
-                    final SendVerificationCodeAsync.OnTaskCompleted onTaskCompleted = aBoolean -> {
+                            final String enteredCode = MiscUtils.useFragment(reference, fragment -> {
+                                return fragment.verifyCode.getText().toString().trim();
+                            }).orNull();
 
-                        if (!aBoolean) {
-                            /*
-                             *  -- TODO --
-                             *  SMS sending failed, Give user UI to try
-                             *  again three times or else fail.
-                             */
-                            Log.e("Verification", "Code not sent");
-                            Toast.makeText(context, "Verification code could not be sent. Please try again!", Toast.LENGTH_SHORT).show();
-                        } else {
-                            /*
-                             *  -- TODO --
-                             *  Give UI for entering the code
-                             *  and error handling
-                             */
-                            Log.i("Verification", "Code sent");
-                            verifyNext.setOnClickListener(v -> {
+                            if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
 
-                                final String enteredCode = MiscUtils.useFragment(reference, fragment -> {
-                                    return fragment.verifyCode.getText().toString().trim();
-                                }).orNull();
-
-                                if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
-
-                                    SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
-                                    // Start Account Creation
-                                    MiscUtils.useFragment(reference, fragment -> {
-                                        fragment.mListener.startAccountCreation(Optional.fromNullable(null));
-                                    });
-                                } else {
-                                    Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-                    };
-
-                    MiscUtils.useFragment(reference, fragment -> {
-
-                        fragment.verifyRetry.setOnClickListener(v -> {
-
-                            final AlertDialog alertDialog = new AlertDialog.Builder(context)
-                                    .setMessage("Send verification code again?")
-                                    .setPositiveButton("Yes", (dialog, which) -> {
-                                        new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
-                                        dialog.dismiss();
-                                    })
-                                    .setNegativeButton("No", (dialog, which) -> {
-                                        dialog.dismiss();
-                                    })
-                                    .setIcon(R.drawable.icon_grey)
-                                    .create();
-                            alertDialog.show();
+                                SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
+                                // Start Account Creation
+                                MiscUtils.useFragment(reference, fragment -> {
+                                    fragment.mListener.startAccountCreation(Optional.fromNullable(pair.first));
+                                });
+                            } else {
+                                Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
+                            }
                         });
-                    });
+                    }
+                };
 
-                    new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
-                }
-                // If the number is present inside DB
-                else {
+                MiscUtils.useFragment(reference, fragment -> {
 
-                    SharedPrefUtils.storePhoneNumber(sharedPreferences, pair.second);
-                    // Start Account Creation
-                    MiscUtils.useFragment(reference, fragment -> {
-                        fragment.mListener.startAccountCreation(Optional.fromNullable(pair.first));
+                    fragment.verifyRetry.setOnClickListener(v -> {
+
+                        final AlertDialog alertDialog = new AlertDialog.Builder(context)
+                                .setMessage("Send verification code again?")
+                                .setPositiveButton("Yes", (dialog, which) -> {
+                                    new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
+                                    dialog.dismiss();
+                                })
+                                .setNegativeButton("No", (dialog, which) -> {
+                                    dialog.dismiss();
+                                })
+                                .setIcon(R.drawable.icon_grey)
+                                .create();
+                        alertDialog.show();
                     });
-                }
+                });
+
+                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
             }
         }
     }
