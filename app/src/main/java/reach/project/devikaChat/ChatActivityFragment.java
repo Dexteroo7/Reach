@@ -161,6 +161,7 @@ public class ChatActivityFragment extends Fragment {
             //update user object to allow sort by time
             final Map<String, Object> userData = new HashMap<>();
             userData.put("uid", serverId);
+            userData.put("newMessage", true);
             userData.put("lastActivated", System.currentTimeMillis());
 
             MiscUtils.useFragment(reference, fragment -> {
