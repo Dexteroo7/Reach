@@ -142,7 +142,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         else
             Picasso.with(context).load(url)
                     .fit().centerCrop().transform(circleTransform)
-                    .placeholder(R.drawable.music_note).into(viewHolder.albumArt);
+                    .into(viewHolder.albumArt);
 
         viewHolder.listTitle.setText(displayName); //displayName
         viewHolder.songDuration.setText(MiscUtils.combinationFormatter(duration)); //duration

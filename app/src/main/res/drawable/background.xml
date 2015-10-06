@@ -4,4 +4,4 @@
     android:src="@drawable/groovepaper"
     android:tileMode="repeat"
     android:dither="true"
-    ></bitmap>
+    />

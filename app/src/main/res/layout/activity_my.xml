@@ -70,16 +70,14 @@
                         android:layout_height="match_parent"
                         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                        <LinearLayout
+                        <android.support.percent.PercentRelativeLayout
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical">
+                            android:layout_height="match_parent">
 
                             <android.support.v4.widget.SwipeRefreshLayout
                                 android:id="@+id/downloadRefresh"
                                 android:layout_width="match_parent"
-                                android:layout_height="0dp"
-                                android:layout_weight="0.7"
+                                app:layout_heightPercent="70%"
                                 android:background="@color/white">
 
                                 <FrameLayout
@@ -103,9 +101,9 @@
                             </android.support.v4.widget.SwipeRefreshLayout>
 
                             <RelativeLayout
+                                android:layout_below="@id/downloadRefresh"
                                 android:layout_width="match_parent"
-                                android:layout_height="0dp"
-                                android:layout_weight="0.3"
+                                app:layout_heightPercent="30%"
                                 android:background="@color/reach_grey"
                                 android:clickable="true">
 
@@ -232,7 +230,7 @@
                                         android:visibility="gone" />
                                 </RelativeLayout>
                             </RelativeLayout>
-                        </LinearLayout>
+                        </android.support.percent.PercentRelativeLayout>
 
                         <View
                             android:id="@+id/mainShadow"

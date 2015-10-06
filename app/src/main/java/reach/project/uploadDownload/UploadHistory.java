@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
@@ -88,7 +87,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
                 ReachDatabaseProvider.CONTENT_URI,
                 ReachDatabaseHelper.ADAPTER_LIST,
                 ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{1 + ""},
+                new String[]{"1"},
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
     }
 
@@ -132,7 +131,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         uploadHistoryAdapter = new MergeAdapter();
         final TextView textView = new TextView(rootView.getContext());
         textView.setText("Ongoing");
-        textView.setTextColor(ContextCompat.getColor(getContext(), R.color.reach_color));
+        textView.setTextColor(getResources().getColor(R.color.reach_color));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
         textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
         textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -140,7 +139,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
         emptyTV1 = new TextView(getActivity());
         emptyTV1.setText("No one is streaming currently");
-        emptyTV1.setTextColor(ContextCompat.getColor(getContext(), R.color.darkgrey));
+        emptyTV1.setTextColor(getResources().getColor(R.color.darkgrey));
         emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
         emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
         uploadHistoryAdapter.addView(emptyTV1, false);
@@ -149,7 +148,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
         uploadHistoryAdapter.addAdapter(onGoingUploadsAdapter);
         TextView textView2 = new TextView(rootView.getContext());
         textView2.setText("Completed");
-        textView2.setTextColor(ContextCompat.getColor(getContext(), R.color.reach_color));
+        textView2.setTextColor(getResources().getColor(R.color.reach_color));
         textView2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
         textView2.setTypeface(textView2.getTypeface(), Typeface.BOLD);
         textView2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -162,7 +161,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
         emptyTV2 = new TextView(getActivity());
         emptyTV2.setText("No uploads completed");
-        emptyTV2.setTextColor(ContextCompat.getColor(getContext(), R.color.darkgrey));
+        emptyTV2.setTextColor(getResources().getColor(R.color.darkgrey));
         emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
         emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(15), 0, MiscUtils.dpToPx(15));
         uploadHistoryAdapter.addView(emptyTV2, false);

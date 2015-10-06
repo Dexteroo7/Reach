@@ -28,7 +28,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -67,9 +66,13 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -657,7 +660,7 @@ public class ReachActivity extends AppCompatActivity implements
                         ReachDatabaseProvider.CONTENT_URI,
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
                                 ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                        new String[]{1 + "", ReachDatabase.PAUSED_BY_USER + ""});
+                        new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
             }
         });
 
@@ -772,7 +775,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
             selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
-            selectionArgumentsDownloader = new String[]{0 + ""};
+            selectionArgumentsDownloader = new String[]{"0"};
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
         } else {
 
@@ -882,8 +885,8 @@ public class ReachActivity extends AppCompatActivity implements
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
         queueListView.setOnScrollListener(scrollListener);
         downloadRefresh.setColorSchemeColors(
-                ContextCompat.getColor(this, R.color.reach_color),
-                ContextCompat.getColor(this, R.color.reach_grey));
+                getResources().getColor(R.color.reach_color),
+                getResources().getColor(R.color.reach_grey));
         downloadRefresh.setOnRefreshListener(refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
@@ -922,15 +925,39 @@ public class ReachActivity extends AppCompatActivity implements
         //fetch username and phoneNumber
         final String userName = SharedPrefUtils.getUserName(preferences);
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
+        final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
-//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-//        Crittercism.setUsername(userName + " " + phoneNumber);
+        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        //Crittercism.setUsername(userName + " " + phoneNumber);
+
+        //initialize MixPanel
+        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
+        MixpanelAPI.People ppl = mixpanel.getPeople();
 
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
         tracker.setScreenName("reach.project.core.ReachActivity");
-        tracker.send(new HitBuilders.ScreenViewBuilder().build());
+
+        if (userID!=0) {
+            tracker.set("&uid", userID + "");
+            tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
+            mixpanel.identify(userID+"");
+            JSONObject props = new JSONObject();
+            try {
+                props.put("UserID", userID+"");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            mixpanel.registerSuperPropertiesOnce(props);
+            ppl.identify(userID+"");
+            ppl.set("UserID", userID + "");
+        } else
+            tracker.send(new HitBuilders.ScreenViewBuilder().build());
+        if (!TextUtils.isEmpty(phoneNumber))
+            ppl.set("$phone", phoneNumber+"");
+        if (!TextUtils.isEmpty(userName))
+            ppl.set("$name", userName + "");
 
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
@@ -1025,7 +1052,10 @@ public class ReachActivity extends AppCompatActivity implements
         else if (intent.getBooleanExtra("openPlayer", false)) {
 
             if (slidingUpPanelLayout != null)
-                slidingUpPanelLayout.postDelayed(() -> slidingUpPanelLayout.setPanelState(PanelState.EXPANDED), 1500);
+                slidingUpPanelLayout.postDelayed(() -> {
+                    if (slidingUpPanelLayout!=null)
+                        slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
+                }, 1500);
         } else if (intent.getBooleanExtra("openFriendRequests", false)) {
 
             if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))
@@ -1294,6 +1324,17 @@ public class ReachActivity extends AppCompatActivity implements
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
+
+        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
+        JSONObject props = new JSONObject();
+        try {
+            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+            props.put("From", reachDatabase.getDisplayName());
+            props.put("Song", reachDatabase.getSenderId());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        mixpanel.track("Transaction - Add Song", props);
     }
 
     private enum LocalUtils {
@@ -1492,7 +1533,7 @@ public class ReachActivity extends AppCompatActivity implements
         public static TextView getMyLibraryTextView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
-            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1503,7 +1544,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("Add songs to download");
-            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV1;
@@ -1513,7 +1554,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
-            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV2;

@@ -4,7 +4,7 @@
     <string name="ga_logLevel">verbose</string>
 
     <!-- how often the dispatcher should fire -->
-    <integer name="ga_dispatchPeriod">30</integer>
+    <integer name="ga_dispatchPeriod">5</integer>
 
 
     <string name="ga_trackingId">UA-57725406-1</string>
@@ -19,17 +19,9 @@
     <bool name="ga_reportUncaughtExceptions">true</bool>
 
     <!-- How long a session exists before giving up -->
-    <integer name="ga_sessionTimeout">300</integer>
+    <integer name="ga_sessionTimeout">900</integer>
 
     <!-- Enable automatic Activity measurement -->
     <bool name="ga_autoActivityTracking">true</bool>
-
-    <!-- The screen names that will appear in reports -->
-    <screenName name="reach.project.core.ReachActivity">
-        ReachApplication ReachActivity
-    </screenName>
-    <screenName name="reach.project.reachProcess.reachQueue.ReachQueueActivity">
-        ReachApplication ReachQueueActivity
-    </screenName>
 
 </resources>

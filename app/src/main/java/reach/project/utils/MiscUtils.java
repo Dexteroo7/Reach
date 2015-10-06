@@ -119,10 +119,10 @@ public enum MiscUtils {
         return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
-    public static String dateFormatter(final long seconds) {
+    public static String dateFormatter(final long milliSeconds) {
 
         return new SimpleDateFormat("dd-MM-yyyy HH-mm-ss", Locale.getDefault()).format(
-                new Date(seconds));
+                new Date(milliSeconds));
     }
 
     public static void closeQuietly(Collection... collections) {
@@ -581,7 +581,7 @@ public enum MiscUtils {
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing() || fragment.getContext() == null)
+        if (activity == null || activity.isFinishing() )
             return Optional.absent();
 
         return Optional.fromNullable(task.work(activity));
@@ -594,7 +594,7 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
-        final Context context = fragment.getContext();
+        final Context context = fragment.getActivity();
         if (context != null)
             task.work(context);
     }
@@ -607,7 +607,7 @@ public enum MiscUtils {
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing() || fragment.getContext() == null)
+        if (activity == null || activity.isFinishing())
             return Optional.absent();
 
         return Optional.fromNullable(task.work(fragment));

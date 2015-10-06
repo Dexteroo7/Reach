@@ -7,7 +7,6 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.SearchView;
@@ -195,7 +194,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                 ReachSongHelper.COLUMN_VISIBILITY + " = ?";
-        selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + ""};
+        selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
                 ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " +
@@ -285,13 +284,13 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(Activity activity) {
 
-        super.onAttach(context);
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                     + " must implement OnNextListener");
         }
     }
@@ -301,7 +300,14 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         /**
          * Set up adapter for Music player
          */
-        final Context context = reference.get().getContext();
+        if (reference == null)
+            return;
+
+        final Context context = reference.get().getActivity();
+
+        if (context == null)
+            return;
+
         combinedAdapter = new MergeAdapter();
 
         combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
@@ -327,9 +333,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getDownloadedTextView(Context context) {
 
+            if (context == null)
+                return null;
             final TextView textView = new TextView(context);
             textView.setText("Downloaded");
-            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -338,9 +346,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getMyLibraryTextView(Context context) {
 
+            if (context == null)
+                return null;
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
-            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -349,9 +359,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getEmptyDownload(Context context) {
 
+            if (context == null)
+                return null;
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("No downloaded songs");
-            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV1;
@@ -359,9 +371,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         public static TextView getEmptyLibrary(Context context) {
 
+            if (context == null)
+                return null;
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
-            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV2;

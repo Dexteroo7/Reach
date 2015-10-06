@@ -28,11 +28,17 @@ import android.widget.Toast;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,6 +55,7 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
 import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
@@ -116,8 +123,10 @@ public class AccountCreation extends Fragment {
              * oldData[0] = name;
              * oldData[1] = imageId;
              */
-            if (!TextUtils.isEmpty(oldData[0]))
+            if (!TextUtils.isEmpty(oldData[0])) {
                 userName.setText(oldData[0]);
+                userName.setSelection(oldData[0].length());
+            }
             if (!TextUtils.isEmpty(oldData[1])) {
 
                 imageId = oldData[1];
@@ -317,13 +326,34 @@ public class AccountCreation extends Fragment {
 
             //set serverId here
             ReachActivity.serverId = user.getId();
-            MiscUtils.useContextFromFragment(reference, activity -> {
-
-                SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                final Intent intent = new Intent(activity, MusicScanner.class);
+            MiscUtils.useFragment(reference, fragment -> {
+                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getActivity(), "7877f44b1ce4a4b2db7790048eb6587a");
+                MixpanelAPI.People ppl = mixpanel.getPeople();
+                final Tracker tracker = ((ReachApplication) fragment.getActivity().getApplication()).getTracker();
+                tracker.setScreenName("reach.project.onBoarding.AccountCreation");
+                if (user.getId()!=0) {
+                    tracker.set("&uid", user.getId() + "");
+                    tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
+                    mixpanel.identify(user.getId()+"");
+                    JSONObject props = new JSONObject();
+                    try {
+                        props.put("UserID", user.getId()+"");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    mixpanel.registerSuperPropertiesOnce(props);
+                    ppl.identify(user.getId()+"");
+                    ppl.set("UserID", user.getId() + "");
+                }
+                if (!TextUtils.isEmpty(user.getPhoneNumber()))
+                    ppl.set("$phone", user.getPhoneNumber()+"");
+                if (!TextUtils.isEmpty(user.getUserName()))
+                    ppl.set("$name", user.getUserName() + "");
+                SharedPrefUtils.storeReachUser(fragment.getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
+                final Intent intent = new Intent(fragment.getActivity(), MusicScanner.class);
                 intent.putExtra("messenger", messenger);
                 intent.putExtra("first", true);
-                activity.startService(intent);
+                fragment.getActivity().startService(intent);
                 return null;
             });
         }
@@ -410,12 +440,12 @@ public class AccountCreation extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }

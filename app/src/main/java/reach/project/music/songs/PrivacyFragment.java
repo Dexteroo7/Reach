@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.SearchView;
@@ -190,8 +189,13 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         toolbar = (Toolbar) rootView.findViewById(R.id.privacyToolbar);
         toolbar.setTitle("Hide Songs");
         toolbar.setSubtitle("Click to Hide/Unhide Songs");
-        if (getArguments() != null && getArguments().getBoolean("first")) {
 
+        boolean first = false;
+
+        if (getArguments()!=null)
+            first = getArguments().getBoolean("first");
+
+        if (first) {
             toolbar.inflateMenu(R.menu.privacy_menu);
             toolbar.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == R.id.done_button) {
@@ -211,7 +215,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
-        if (getArguments().getBoolean("first"))
+        if (first)
             new LocalUtils.InfoDialog().show(getChildFragmentManager(), "info_dialog");
 
         selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
@@ -221,7 +225,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 ReachDatabaseHelper.COLUMN_STATUS + " = ?";
         selectionArgumentsDownloader = new String[]{serverId + "", ReachDatabase.FINISHED + ""};
 
-        loadAdapter();
+        loadAdapter(first);
         return rootView;
     }
 
@@ -292,34 +296,37 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                     + " must implement OnDoneClickListener");
         }
     }
 
-    private void loadAdapter() {
+    private void loadAdapter(boolean first) {
 
         /**
          * Set up adapter for Music player
          */
-        final Context context = reference.get().getContext();
+        final Context context = reference.get().getActivity();
         combinedAdapter = new MergeAdapter();
 
-        combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
-        combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
-        combinedAdapter.addAdapter(downloadedAdapter = new ReachMusicAdapter(context, R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST));
+        if (!first) {
+            combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
+            combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
+            combinedAdapter.addAdapter(downloadedAdapter = new ReachMusicAdapter(context, R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST));
+        }
 
         combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
         combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
         combinedAdapter.addAdapter(myLibraryAdapter = new ReachMusicAdapter(context, R.layout.privacylist_item, null, 0, ReachMusicAdapter.LIST));
 
         privacyList.setAdapter(combinedAdapter);
-        getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
+        if (!first)
+            getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER, null, this);
     }
 
@@ -331,7 +338,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             final TextView textView = new TextView(context);
             textView.setText("Downloaded");
-            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -342,7 +349,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
-            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -353,7 +360,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("No downloaded songs");
-            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV1;
@@ -363,7 +370,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
-            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
+            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV2;

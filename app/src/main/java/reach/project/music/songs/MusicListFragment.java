@@ -1,5 +1,6 @@
 package reach.project.music.songs;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -285,13 +286,13 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(Activity activity) {
 
-        super.onAttach(context);
+        super.onAttach(activity);
         try {
-            mListener = (SuperInterface) context;
+            mListener = (SuperInterface) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
+            throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }
@@ -398,7 +399,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
             whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
                     ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
-            whereArgs = new String[]{userId + "", 1 + ""};
+            whereArgs = new String[]{userId + "", "1"};
         } else {
 
             whereClause =

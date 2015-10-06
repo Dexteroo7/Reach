@@ -22,7 +22,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -273,7 +272,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final Bitmap bmp = MiscUtils.useContextFromFragment(reference, context -> {
             try {
                 return Picasso.with(context)
-                        .load("https://scontent-sin1-1.xx.fbcdn.net/hphotos-xap1/v/t1.0-9/1011255_638449632916744_321328860_n.jpg?oh=5c1daa8d7d015f7ce698ee1793d5a929&oe=55EECF36&dl=1")
+                        .load(StaticData.dropBoxManager)
                         .centerCrop()
                         .resize(96, 96)
                         .get();
@@ -431,7 +430,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                             .width(margin)
                             .height(margin)
                             .endConfig()
-                            .buildRound(MiscUtils.generateInitials(name), ContextCompat.getColor(fragment.getContext(), R.color.reach_grey)));
+                            .buildRound(MiscUtils.generateInitials(name), fragment.getResources().getColor(R.color.reach_grey)));
                 else
                     toolbar.setLogo(new BitmapDrawable(fragment.getResources(), bitmap));
 
