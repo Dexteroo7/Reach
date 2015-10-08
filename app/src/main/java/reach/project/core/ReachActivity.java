@@ -1313,8 +1313,16 @@ public class ReachActivity extends AppCompatActivity implements
         //We call bulk starter always
         final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
                 ReachDatabaseHelper.contentValuesCreator(reachDatabase));
-        if (uri == null)
-            return; //TODO track this should never happen
+        if (uri == null) {
+
+            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Add song failed")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setValue(1)
+                    .build());
+            return;
+        }
 
         final String[] splitter = uri.toString().split("/");
         if (splitter.length == 0)
@@ -1534,7 +1542,8 @@ public class ReachActivity extends AppCompatActivity implements
                 //check devikaChat token
                 MiscUtils.useActivity(reference, activity -> MiscUtils.checkChatToken(
                         new WeakReference<>(activity.preferences),
-                        new WeakReference<>(activity.firebaseReference)));
+                        new WeakReference<>(activity.firebaseReference),
+                        reference));
                 //refresh gcm
                 checkGCM();
                 //refresh download ops

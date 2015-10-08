@@ -24,6 +24,7 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.google.android.gms.analytics.HitBuilders;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
 import reach.project.core.GcmIntentService;
+import reach.project.core.ReachApplication;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -79,7 +81,11 @@ public class ChatActivityFragment extends Fragment {
 
         if (TextUtils.isEmpty(chatUUID) || TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences))) {
 
-            //TODO track
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Chat load failed")
+                    .setAction("User Id - " + serverId)
+                    .setValue(1)
+                    .build());
             Toast.makeText(activity, "Try again shortly", Toast.LENGTH_SHORT).show();
             activity.finish();
             return rootView;
@@ -87,7 +93,12 @@ public class ChatActivityFragment extends Fragment {
 
         if (serverId == 0) {
 
-            //TODO track
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Chat load severe fail")
+                    .setAction("User Id - " + serverId)
+                    .setValue(1)
+                    .build());
+
             Log.i("Chat", "ServerId not found !");
             activity.finish();
             return rootView;

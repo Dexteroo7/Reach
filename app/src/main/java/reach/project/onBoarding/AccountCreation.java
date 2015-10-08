@@ -63,6 +63,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.viewHelpers.CircleTransform;
 
@@ -70,6 +71,8 @@ public class AccountCreation extends Fragment {
 
     private static File toUpload = null;
     private static String imageId = "hello_world";
+    private static String phoneNumber = "";
+    private static long serverId = 0;
     private static WeakReference<AccountCreation> reference = null;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
@@ -146,7 +149,7 @@ public class AccountCreation extends Fragment {
                 return;
             }
 
-            final String phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
+            phoneNumber = SharedPrefUtils.getUserNumber(sharedPreferences);
 
             if (TextUtils.isEmpty(phoneNumber)) {
                 Log.i("Downloader", "Account creation could not find number");
@@ -284,7 +287,19 @@ public class AccountCreation extends Fragment {
                 gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.of(TextUtils::isEmpty)).orNull();
 
             if (TextUtils.isEmpty(gcmId)) {
-                //TODO fail, TRACK continue
+
+                MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                    @Override
+                    public void work(Activity activity) {
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("GCM could not be initialized")
+                                .setAction("User Id - " + serverId)
+                                .setLabel("Phone Number - " + phoneNumber)
+                                .setValue(1)
+                                .build());
+                    }
+                });
             }
 
             user.setDeviceId(deviceId);
@@ -303,20 +318,36 @@ public class AccountCreation extends Fragment {
             } else {
 
                 user.setId(dataAfterWork.getUserId());
-                if (!TextUtils.isEmpty(dataAfterWork.getFireBaseToken())) {
+                serverId = dataAfterWork.getUserId();
 
-                    user.setChatToken(dataAfterWork.getFireBaseToken());
-                    final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
-                        return fragment.mListener.getFireBase().orNull();
-                    });
-                    if (firebaseOptional.isPresent())
-                        firebaseOptional.get().authWithCustomToken(dataAfterWork.getFireBaseToken(), authHandler);
-                    else {
-                        //TODO track
+                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, AccountCreation>() {
+                    @Override
+                    public void work(Activity activity, AccountCreation fragment) {
+
+                        if (!TextUtils.isEmpty(dataAfterWork.getFireBaseToken())) {
+
+                            user.setChatToken(dataAfterWork.getFireBaseToken());
+                            final Optional<Firebase> firebaseOptional = fragment.mListener.getFireBase();
+                            if (firebaseOptional.isPresent())
+                                firebaseOptional.get().authWithCustomToken(dataAfterWork.getFireBaseToken(), authHandler);
+                            else {
+
+                                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                        .setCategory("Chat auth failed in account creation")
+                                        .setAction("User Id - " + user.getId())
+                                        .setValue(1)
+                                        .build());
+                            }
+                        } else {
+
+                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                    .setCategory("Chat auth failed in account creation severe")
+                                    .setAction("User Id - " + user.getId())
+                                    .setValue(1)
+                                    .build());
+                        }
                     }
-                } else {
-                    //TODO track
-                }
+                });
             }
             Log.i("Ayush", "Id received = " + user.getId());
             return user;
@@ -327,29 +358,32 @@ public class AccountCreation extends Fragment {
 
             super.onPostExecute(user);
 
-            if (toUpload != null && TextUtils.isEmpty(user.getImageId())) {
-
-                MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
-
-                    Toast.makeText(context, "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
-                    if (fragment.profilePhotoSelector != null)
-                        fragment.profilePhotoSelector.setImageBitmap(null);
-                });
-            }
-
-            if (user.getId() == 0) {
-                //TODO TRACK !
-                MiscUtils.useContextFromFragment(reference, context -> {
-                    if (context instanceof Activity)
-                        ((Activity) context).finish();
-                });
-                return;
-            }
-
             //set serverId here
             MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, AccountCreation>() {
+
                 @Override
                 public void work(Activity activity, AccountCreation fragment) {
+
+                    if (toUpload != null && TextUtils.isEmpty(user.getImageId())) {
+
+                        Toast.makeText(activity, "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
+                        if (fragment.profilePhotoSelector != null)
+                            fragment.profilePhotoSelector.setImageBitmap(null);
+                    }
+
+                    if (user.getId() == 0) {
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("SEVERE ERROR, account creation failed")
+                                .setAction("User Id - " + serverId)
+                                .setLabel("Phone Number - " + phoneNumber)
+                                .setValue(1)
+                                .build());
+
+                        activity.finish();
+                        return;
+                    }
+
 
                     final MixpanelAPI mixpanel = MixpanelAPI.getInstance(activity, StaticData.mixPanelId);
                     final MixpanelAPI.People people = mixpanel.getPeople();
@@ -519,24 +553,33 @@ public class AccountCreation extends Fragment {
         protected void onPostExecute(File file) {
 
             super.onPostExecute(file);
-            MiscUtils.useFragment(reference, fragment -> {
+            MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, AccountCreation>() {
+                @Override
+                public void work(Activity activity, AccountCreation fragment) {
 
-                final Context context = fragment.getActivity();
-                if (file == null) { //TODO track
+                    final Context context = fragment.getActivity();
+                    if (file == null) { //
 
-                    toUpload = null;
-                    Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
-                } else if (fragment.profilePhotoSelector != null) {
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Chat auth failed in account creation")
+                                .setAction("User Id - " + serverId)
+                                .setLabel("Phone Number - " + phoneNumber)
+                                .setValue(1)
+                                .build());
 
-                    toUpload = file;
-                    Picasso.with(context)
-                            .load(toUpload)
-                            .fit()
-                            .centerCrop()
-                            .transform(fragment.transform)
-                            .centerCrop().into(fragment.profilePhotoSelector);
+                        toUpload = null;
+                        Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
+                    } else if (fragment.profilePhotoSelector != null) {
+
+                        toUpload = file;
+                        Picasso.with(context)
+                                .load(toUpload)
+                                .fit()
+                                .centerCrop()
+                                .transform(fragment.transform)
+                                .centerCrop().into(fragment.profilePhotoSelector);
+                    }
                 }
-                return null;
             });
 
             if (dialog != null)

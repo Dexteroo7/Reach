@@ -32,6 +32,7 @@ import android.widget.TextView;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
@@ -61,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.albums.Album;
 import reach.project.music.albums.ReachAlbumHelper;
@@ -1039,7 +1041,8 @@ public enum MiscUtils {
     }
 
     public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
-                                                   WeakReference<Firebase> firebaseWeakReference) {
+                                                   WeakReference<Firebase> firebaseWeakReference,
+                                                   WeakReference<? extends Activity> toHelpTrack) {
 
         final SharedPreferences preferences = preferencesWeakReference.get();
         if (preferences == null)
@@ -1059,7 +1062,15 @@ public enum MiscUtils {
         //fetch from server
         final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
         if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString())) {
-            //TODO track
+
+            MiscUtils.useContextFromContext(toHelpTrack, activity -> {
+
+                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("SEVERE ERROR, account creation failed")
+                        .setAction("User Id - " + serverId)
+                        .setValue(1)
+                        .build());
+            });
             Log.i("Ayush", "Chat token check failed !");
         } else {
 

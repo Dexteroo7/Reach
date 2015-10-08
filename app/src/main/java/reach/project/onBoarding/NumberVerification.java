@@ -1,5 +1,6 @@
 package reach.project.onBoarding;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.viewpagerindicator.CirclePageIndicator;
 
@@ -33,6 +35,7 @@ import java.util.Random;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ContactsListFragment;
 import reach.project.utils.ForceSyncFriends;
@@ -40,6 +43,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.auxiliaryClasses.UseContext2;
 
 public class NumberVerification extends Fragment {
 
@@ -203,7 +207,18 @@ public class NumberVerification extends Fragment {
 
                     final Bundle bundle = intent.getExtras();
                     if (bundle == null) {
-                        //TODO track
+
+                        MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                            @Override
+                            public void work(Activity activity) {
+
+                                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                        .setCategory("SEVERE ERROR, number verification bundle null")
+                                        .setAction("Phone Number - " + phoneNumber)
+                                        .setValue(1)
+                                        .build());
+                            }
+                        });
                         //fail
                         return;
                     }
@@ -211,8 +226,18 @@ public class NumberVerification extends Fragment {
                     final Object[] pdusObj = (Object[]) bundle.get("pdus");
 
                     if (pdusObj == null || pdusObj.length == 0) {
-                        //TODO track
-                        //fail
+
+                        MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                            @Override
+                            public void work(Activity activity) {
+
+                                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                        .setCategory("SEVERE ERROR, number verification pdus error")
+                                        .setAction("Phone Number - " + phoneNumber)
+                                        .setValue(1)
+                                        .build());
+                            }
+                        });                        //fail
                         return;
                     }
 
@@ -222,7 +247,18 @@ public class NumberVerification extends Fragment {
                 }
 
                 if (msgs == null || msgs.length == 0) {
-                    //TODO track
+
+                    MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                        @Override
+                        public void work(Activity activity) {
+
+                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                    .setCategory("SEVERE ERROR, number verification msgs null")
+                                    .setAction("Phone Number - " + phoneNumber)
+                                    .setValue(1)
+                                    .build());
+                        }
+                    });
                     //fail
                     return;
                 }
@@ -260,7 +296,19 @@ public class NumberVerification extends Fragment {
                     break;
                 }
 
-                //TODO track done, should always be true !
+                if (!done) {
+                    MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                        @Override
+                        public void work(Activity activity) {
+
+                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                    .setCategory("Number verification done was false")
+                                    .setAction("Phone Number - " + phoneNumber)
+                                    .setValue(1)
+                                    .build());
+                        }
+                    });
+                }
             }
         };
 

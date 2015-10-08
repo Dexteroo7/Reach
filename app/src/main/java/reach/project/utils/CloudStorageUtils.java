@@ -356,9 +356,7 @@ public enum CloudStorageUtils {
             MiscUtils.closeQuietly(outputStream, gzipOutputStream);
         }
 
-        //TODO track
         Log.i("Ayush", "Compression ratio " + (musicData.length * 100) / music.length);
-
         //prepare storage object
         final Storage storage = getStorage(key).orNull();
         MiscUtils.closeQuietly(key);

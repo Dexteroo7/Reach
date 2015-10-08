@@ -41,6 +41,7 @@ import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.firebase.client.Firebase;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.nineoldandroids.view.ViewHelper;
@@ -54,9 +55,11 @@ import java.util.Map;
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
-import reach.project.core.DialogActivity;
+import reach.project.core.GcmIntentService;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.devikaChat.Chat;
+import reach.project.devikaChat.ChatActivity;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.songs.MusicListFragment;
@@ -65,7 +68,7 @@ import reach.project.music.songs.ReachSongProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CircleTransform;
 import reach.project.utils.viewHelpers.TextDrawable;
 import reach.project.utils.viewHelpers.astuetz.PagerSlidingTabStrip;
@@ -83,6 +86,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     private ViewPager viewPager;
     private PagerAdapter mPagerAdapter;
+    private SuperInterface mListener;
 
     private int mHeaderHeight;
     private int mMinHeaderTranslation;
@@ -169,7 +173,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         viewPager.setOffscreenPageLimit(2);
 
-        if (viewPager.getCurrentItem()==0)
+        if (viewPager.getCurrentItem() == 0)
             searchItem.setVisible(false);
 
         final Cursor cursor = resolver.query(
@@ -211,8 +215,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         if (networkType == 5) {
             statusIcon.setImageResource(R.drawable.ic_file_upload_disabled);
             statusText.setText("Sharing disabled");
-        }
-        else {
+        } else {
             if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED) {
                 statusIcon.setImageResource(R.drawable.circular_online);
                 statusText.setText("Online");
@@ -229,7 +232,31 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         if (phoneNumber.equals("8860872102") && !SharedPrefUtils.getSecondIntroSeen(sharedPreferences)) {
 
             SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
-            AsyncTask.SERIAL_EXECUTOR.execute(devikaSendMeSomeLove);
+
+            final Chat chat = new Chat();
+            chat.setMessage("Click and Grab! You can add multiple songs instantly to your Reach Queue by just clicking on the songs");
+            chat.setTimestamp(System.currentTimeMillis());
+            chat.setAdmin(Chat.ADMIN);
+
+            final Optional<Firebase> firebaseOptional = mListener.getFireBase();
+            if (firebaseOptional.isPresent()) {
+
+                firebaseOptional.get().child("chat").child(
+                        SharedPrefUtils.getChatUUID(sharedPreferences)).push().setValue(chat);
+                final Intent viewIntent = new Intent(activity, ChatActivity.class);
+                final PendingIntent viewPendingIntent = PendingIntent.getActivity(activity, GcmIntentService.NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                final NotificationCompat.Builder notificationBuilder =
+                        new NotificationCompat.Builder(activity)
+                                .setAutoCancel(true)
+                                .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                                .setSmallIcon(R.drawable.ic_icon_notif)
+                                .setContentTitle("Devika sent you a message")
+                                .setContentIntent(viewPendingIntent)
+                                .setPriority(NotificationCompat.PRIORITY_MAX)
+                                .setWhen(System.currentTimeMillis());
+                final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(activity);
+                notificationManager.notify(GcmIntentService.NOTIFICATION_ID_CHAT, notificationBuilder.build());
+            }
         }
 
         toolbar.setTitle(" " + userName);
@@ -267,48 +294,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         return rootView;
     }
 
-    //TODO recycle bitmap
-    private static final Runnable devikaSendMeSomeLove = () -> {
-
-        final Bitmap bmp = MiscUtils.useContextFromFragment(reference, context -> {
-            try {
-                return Picasso.with(context)
-                        .load(StaticData.dropBoxManager)
-                        .centerCrop()
-                        .resize(96, 96)
-                        .get();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }).orNull();
-
-        ////
-        MiscUtils.useContextFromFragment(reference, context -> {
-
-            final NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
-            final Intent intent = new Intent(context, DialogActivity.class);
-            intent.putExtra("type", 2);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-            final NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                    .setAutoCancel(true)
-                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                    .setSmallIcon(R.drawable.ic_icon_notif)
-                    .setLargeIcon(bmp)
-                    .setContentIntent(pendingIntent)
-                            //.addAction(0, "Okay! I got it", pendingIntent)
-                    .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText("You can add multiple songs instantly to your Reach Queue by just clicking on the songs here."))
-                    .setContentTitle("Click and Grab!")
-                    .setTicker("Click and Grab! You can add multiple songs instantly to your Reach Queue by just clicking on the songs here.")
-                    .setContentText("You can add multiple songs instantly to your Reach Queue by just clicking on the songs here.")
-                    .setPriority(NotificationCompat.PRIORITY_MAX);
-            managerCompat.notify(99911, builder.build());
-            return null;
-        });
-    };
-
     private static final class GetMusic implements Runnable {
 
         private final long hostId;
@@ -321,8 +306,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         public void run() {
 
             //fetch Music
-            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Context>)
-                    (Context context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
+            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Context context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
 
             //do we check for visibility ?
             final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit
@@ -431,7 +415,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                             .width(margin)
                             .height(margin)
                             .endConfig()
-                            .buildRound(MiscUtils.generateInitials(name), ContextCompat.getColor(fragment.getContext(),R.color.reach_grey)));
+                            .buildRound(MiscUtils.generateInitials(name), ContextCompat.getColor(fragment.getContext(), R.color.reach_grey)));
                 else
                     toolbar.setLogo(new BitmapDrawable(fragment.getResources(), bitmap));
 
@@ -440,6 +424,24 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         }
     }
 
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+
+        super.onDetach();
+        mListener = null;
+    }
 
     @Override
     public void onPageScrollStateChanged(int arg0) {
@@ -457,8 +459,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
             searchItem.setVisible(false);
             if (searchView != null)
                 searchView.setQuery("", true);
-        }
-        else
+        } else
             searchItem.setVisible(true);
 
         if (position == 0)

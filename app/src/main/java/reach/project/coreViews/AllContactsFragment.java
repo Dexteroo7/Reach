@@ -59,7 +59,6 @@ public class AllContactsFragment extends Fragment implements
 
     private static WeakReference<AllContactsFragment> reference = null;
 
-
     private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
 
         @Override
