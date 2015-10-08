@@ -160,7 +160,7 @@ public class ChatActivityFragment extends Fragment {
             final Map<String, Object> userData = new HashMap<>();
             userData.put("uid", serverId);
             userData.put("newMessage", true);
-            userData.put("lastActivated", System.currentTimeMillis());
+            userData.put("lastActivated", chat.getTimestamp());
 
             MiscUtils.useFragment(reference, fragment -> {
 

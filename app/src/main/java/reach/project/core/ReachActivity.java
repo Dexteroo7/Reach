@@ -1,5 +1,6 @@
 package reach.project.core;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.LoaderManager;
@@ -21,11 +22,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
@@ -152,6 +155,8 @@ public class ReachActivity extends AppCompatActivity implements
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
     private MenuItem liveHelpItem;
+    private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
+    private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
 
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
@@ -381,7 +386,54 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_READ_CONTACTS) {
+            if (!(grantResults.length > 0 && grantResults[0] == 0)) {
+                Toast.makeText(this,
+                        "Permission to access Contacts is required to use the App",
+                        Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+        else if (requestCode == MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE) {
+            if (!(grantResults.length > 0 && grantResults[0] == 0)) {
+                Toast.makeText(this,
+                        "Permission to access Storage is required to use the App",
+                        Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+    }
+
+    @Override
     protected void onResume() {
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.READ_CONTACTS) != 0) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.READ_CONTACTS))
+                    Toast.makeText(this,
+                            "Permission to access Contacts is required to use the App",
+                            Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.READ_CONTACTS
+                        }, MY_PERMISSIONS_READ_CONTACTS);
+            }
+            else if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                    Toast.makeText(this,
+                            "Permission to access Storage is required to use the App",
+                            Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+            }
+        }
 
         //TODO onResume is called twice sometimes
         currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();

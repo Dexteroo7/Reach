@@ -226,7 +226,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 ReachDatabaseHelper.COLUMN_STATUS + " = ?";
         selectionArgumentsDownloader = new String[]{serverId + "", ReachDatabase.FINISHED + ""};
 
-        loadAdapter(first);
+        loadAdapter(first, activity);
         return rootView;
     }
 
@@ -307,13 +307,15 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-    private void loadAdapter(boolean first) {
+    private void loadAdapter(boolean first, Context context) {
 
         /**
          * Set up adapter for Music player
          */
-        final Context context = reference.get().getActivity();
         combinedAdapter = new MergeAdapter();
+
+        if (context == null)
+            return;
 
         if (!first) {
             combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));

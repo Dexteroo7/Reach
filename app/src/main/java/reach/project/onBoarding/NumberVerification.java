@@ -1,6 +1,6 @@
 package reach.project.onBoarding;
 
-import android.app.Activity;
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -46,6 +47,7 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 public class NumberVerification extends Fragment {
 
     private static final String SMS_TEXT = "Your activation code is %s . Enter this in the Reach app to complete phone verification";
+    private static final int MY_PERMISSIONS_RECEIVE_SMS = 33;
 
     private SuperInterface mListener = null;
     private TextView verifyRetry = null;
@@ -112,16 +114,39 @@ public class NumberVerification extends Fragment {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == MY_PERMISSIONS_RECEIVE_SMS)
+            if (grantResults.length > 0 && grantResults[0] == 0)
+                getActivity().registerReceiver(SMSReceiver, intentFilter);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
-        //Receive SMS and enter the code.
-        getActivity().registerReceiver(SMSReceiver, intentFilter);
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.RECEIVE_SMS) != 0)
+                requestPermissions(
+                        new String[]{
+                                Manifest.permission.RECEIVE_SMS
+                        }, MY_PERMISSIONS_RECEIVE_SMS);
+            else
+                getActivity().registerReceiver(SMSReceiver, intentFilter);
+        }
+        else
+            getActivity().registerReceiver(SMSReceiver, intentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        getActivity().unregisterReceiver(SMSReceiver);
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.RECEIVE_SMS) == 0)
+                getActivity().unregisterReceiver(SMSReceiver);
+        }
+        else
+            getActivity().unregisterReceiver(SMSReceiver);
     }
 
     private static final class TourPagerAdapter extends PagerAdapter {
