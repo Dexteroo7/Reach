@@ -82,6 +82,7 @@ import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContext2;
+import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment2;
 
@@ -522,87 +523,77 @@ public enum MiscUtils {
 //        return localIpAddress;
 //    }
 
-//    public static <T extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<T> reference,
-//                                                                          final UseContext<Result, T>... tasks) {
-//
-//        final boolean isActivity = reference.get() instanceof Activity;
-//
-//        Optional<Result> result = Optional.absent();
-//        for (UseContext<Result, T> task : tasks) {
-//
-//            final T context;
-//
-//            final boolean contextLost = (context = reference.get()) == null;
-//            if (contextLost)
-//                return Optional.absent();
-//            final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-//            if (activityIsFinishing)
-//                return Optional.absent();
-//
-//            result = Optional.fromNullable(task.work(context));
-//        }
-//
-//        return result;
-//    }
+    public static <Param extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<Param> reference,
+                                                                                         final UseContext<Result, Param> task) {
 
-    public static <T extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<T> reference,
-                                                                                     final UseContext<Result, T> task) {
-
-        final T context;
+        final Param context;
         if (reference == null || (context = reference.get()) == null)
             return Optional.absent();
 
-        final boolean isActivity = context instanceof Activity;
-        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-        if (activityIsFinishing)
+        if (context instanceof Activity && ((Activity) context).isFinishing())
             return Optional.absent();
 
         return Optional.fromNullable(task.work(context));
     }
 
-    public static <T extends Context> void useContextFromContext(final WeakReference<T> reference,
-                                                                 final UseContext2<T> task) {
+    public static <Param extends Context> void useContextFromContext(final WeakReference<Param> reference,
+                                                                     final UseContext2<Param> task) {
 
-        final T context;
+        final Param context;
         if (reference == null || (context = reference.get()) == null)
             return;
 
-        final boolean isActivity = context instanceof Activity;
-        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-        if (!activityIsFinishing)
-            task.work(context);
+        if (context instanceof Activity && ((Activity) context).isFinishing())
+            return;
+
+        task.work(context);
     }
 
-    public static <T extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<T> reference,
-                                                                                       final UseContext<Result, Context> task) {
+    @SuppressWarnings("unchecked")
+    public static <Param1 extends Context, Param2 extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<Param2> reference,
+                                                                                                                    final UseContext<Result, Param1> task) {
 
-        final T fragment;
+        final Param2 fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing() )
+        if (activity == null || activity.isFinishing())
             return Optional.absent();
 
-        return Optional.fromNullable(task.work(activity));
+        return Optional.fromNullable(task.work((Param1) activity));
     }
 
-    public static <T extends Fragment> void useContextFromFragment(final WeakReference<T> reference,
-                                                                   final UseContext2<Context> task) {
+    @SuppressWarnings("unchecked")
+    public static <Param1 extends Context, Param2 extends Fragment> void useContextFromFragment(final WeakReference<Param2> reference,
+                                                                                                final UseContext2<Param1> task) {
 
-        final T fragment;
+        final Param2 fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
-        final Context context = fragment.getActivity();
-        if (context != null)
-            task.work(context);
+        final Activity activity = fragment.getActivity();
+        if (activity != null)
+            task.work((Param1) activity);
     }
 
-    public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
-                                                                            final UseFragment<Result, T> task) {
+    @SuppressWarnings("unchecked")
+    public static <Param1 extends Context, Param2 extends Fragment> void useContextAndFragment(final WeakReference<Param2> reference,
+                                                                                               final UseContextAndFragment<Param1, Param2> task) {
 
-        final T fragment;
+        final Param2 fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity != null && !activity.isFinishing())
+            task.work((Param1) activity, fragment);
+    }
+
+    public static <Param extends Fragment, Result> Optional<Result> useFragment(final WeakReference<Param> reference,
+                                                                                final UseFragment<Result, Param> task) {
+
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
@@ -613,10 +604,10 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(fragment));
     }
 
-    public static <T extends Fragment> void useFragment(final WeakReference<T> reference,
-                                                        final UseFragment2<T> task) {
+    public static <Param extends Fragment> void useFragment(final WeakReference<Param> reference,
+                                                            final UseFragment2<Param> task) {
 
-        final T fragment;
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
@@ -1056,10 +1047,10 @@ public enum MiscUtils {
 
         //fetch from server
         final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
-        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString()))
+        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString())) {
+            //TODO track
             Log.i("Ayush", "Chat token check failed !");
-
-        else {
+        } else {
 
             final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
 
@@ -1073,6 +1064,10 @@ public enum MiscUtils {
 
                     final String chatUUID = authData.getUid();
                     //if found save
+                    final SharedPreferences preferences = preferencesWeakReference.get();
+                    if (preferences == null)
+                        return;
+
                     SharedPrefUtils.storeChatUUID(preferences, fetchTokenFromServer.getString());
                     Log.i("Ayush", "Chat authenticated " + chatUUID);
 

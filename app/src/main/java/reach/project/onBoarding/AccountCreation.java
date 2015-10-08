@@ -54,7 +54,6 @@ import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
-import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
@@ -64,6 +63,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
@@ -218,6 +218,7 @@ public class AccountCreation extends Fragment {
 
     @Override
     public void onAttach(Activity activity) {
+
         super.onAttach(activity);
         try {
             mListener = (SuperInterface) activity;
@@ -276,7 +277,7 @@ public class AccountCreation extends Fragment {
 
             final String gcmId;
             final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
-                    (reference, (UseContext<GoogleCloudMessaging, Context>) GoogleCloudMessaging::getInstance).orNull();
+                    (reference, GoogleCloudMessaging::getInstance).orNull();
 
             if (messagingInstance == null)
                 gcmId = null;
@@ -311,6 +312,11 @@ public class AccountCreation extends Fragment {
                     });
                     if (firebaseOptional.isPresent())
                         firebaseOptional.get().authWithCustomToken(dataAfterWork.getFireBaseToken(), authHandler);
+                    else {
+                        //TODO track
+                    }
+                } else {
+                    //TODO track
                 }
             }
             Log.i("Ayush", "Id received = " + user.getId());
@@ -324,55 +330,57 @@ public class AccountCreation extends Fragment {
 
             if (toUpload != null && TextUtils.isEmpty(user.getImageId())) {
 
-                MiscUtils.useFragment(reference, fragment -> {
+                MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
 
-                    Toast.makeText(fragment.getActivity(), "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
                     if (fragment.profilePhotoSelector != null)
                         fragment.profilePhotoSelector.setImageBitmap(null);
-                    return null;
                 });
             }
 
             if (user.getId() == 0) {
                 //TODO TRACK !
-                MiscUtils.useFragment(reference, fragment -> {
-                    fragment.getActivity().finish();
-                    return null;
+                MiscUtils.useContextFromFragment(reference, context -> {
+                    if (context instanceof Activity)
+                        ((Activity) context).finish();
                 });
                 return;
             }
 
             //set serverId here
-            ReachActivity.serverId = user.getId();
-            MiscUtils.useFragment(reference, fragment -> {
-                MixpanelAPI mixpanel = MixpanelAPI.getInstance(fragment.getActivity(), "7877f44b1ce4a4b2db7790048eb6587a");
-                MixpanelAPI.People ppl = mixpanel.getPeople();
-                final Tracker tracker = ((ReachApplication) fragment.getActivity().getApplication()).getTracker();
-                tracker.setScreenName("reach.project.onBoarding.AccountCreation");
-                if (user.getId()!=0) {
-                    tracker.set("&uid", user.getId() + "");
-                    tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
-                    mixpanel.identify(user.getId()+"");
-                    JSONObject props = new JSONObject();
-                    try {
-                        props.put("UserID", user.getId()+"");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+            MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, AccountCreation>() {
+                @Override
+                public void work(Activity activity, AccountCreation fragment) {
+
+                    final MixpanelAPI mixpanel = MixpanelAPI.getInstance(activity, StaticData.mixPanelId);
+                    final MixpanelAPI.People people = mixpanel.getPeople();
+                    final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
+                    tracker.setScreenName(AccountCreation.class.getPackage().getName());
+
+                    if (user.getId() != 0) {
+
+                        tracker.set("&uid", user.getId() + "");
+                        tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
+                        mixpanel.identify(user.getId() + "");
+                        JSONObject props = new JSONObject();
+                        try {
+                            props.put("UserID", user.getId() + "");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        mixpanel.registerSuperPropertiesOnce(props);
+                        people.identify(user.getId() + "");
+                        people.set("UserID", user.getId() + "");
                     }
-                    mixpanel.registerSuperPropertiesOnce(props);
-                    ppl.identify(user.getId()+"");
-                    ppl.set("UserID", user.getId() + "");
+                    people.set("$phone", user.getPhoneNumber() + "");
+                    people.set("$name", user.getUserName() + "");
+
+                    SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
+                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    intent.putExtra("messenger", messenger);
+                    intent.putExtra("first", true);
+                    activity.startService(intent);
                 }
-                if (!TextUtils.isEmpty(user.getPhoneNumber()))
-                    ppl.set("$phone", user.getPhoneNumber()+"");
-                if (!TextUtils.isEmpty(user.getUserName()))
-                    ppl.set("$name", user.getUserName() + "");
-                SharedPrefUtils.storeReachUser(fragment.getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                final Intent intent = new Intent(fragment.getActivity(), MusicScanner.class);
-                intent.putExtra("messenger", messenger);
-                intent.putExtra("first", true);
-                fragment.getActivity().startService(intent);
-                return null;
             });
         }
 

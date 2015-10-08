@@ -179,9 +179,6 @@ public class ReachActivity extends AppCompatActivity implements
     private ImageButton pausePlayMinimized; //small
     private SwipeRefreshLayout downloadRefresh;
 
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = () ->
-            new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
 
         @Override
@@ -251,6 +248,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             boolean enable = false;
             if (view.getChildCount() > 0) {
+
                 final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
                 final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
                 enable = firstItemVisible && topOfFirstItemVisible;
@@ -271,6 +269,7 @@ public class ReachActivity extends AppCompatActivity implements
             //Check to see which item was being clicked and perform appropriate action
 
             try {
+
                 switch (menuItem.getItemId()) {
 
                     case R.id.navigation_item_1:
@@ -337,6 +336,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
+
         if (queueAdapter != null &&
                 queueAdapter.getCursor() != null &&
                 !queueAdapter.getCursor().isClosed())
@@ -403,7 +403,7 @@ public class ReachActivity extends AppCompatActivity implements
         Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
 
-        if (firebaseReference != null)
+        if (firebaseReference != null && serverId != 0)
             firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
     }
 
@@ -531,6 +531,9 @@ public class ReachActivity extends AppCompatActivity implements
             addNotificationDrawer();
             //load adapters
             loadAdapter();
+            //add chat listener as it was not added earlier
+            if (firebaseReference != null && serverId != 0)
+                firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
 
         } catch (IllegalStateException ignored) {
             finish();
@@ -681,6 +684,7 @@ public class ReachActivity extends AppCompatActivity implements
             countCursor.close();
             return;
         }
+
         final long count = countCursor.getCount();
         countCursor.close();
         ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
@@ -812,6 +816,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
+
         Pacemaker.scheduleLinear(this, 5);
 
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
@@ -887,7 +893,7 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh.setColorSchemeColors(
                 getResources().getColor(R.color.reach_color),
                 getResources().getColor(R.color.reach_grey));
-        downloadRefresh.setOnRefreshListener(refreshListener);
+        downloadRefresh.setOnRefreshListener(LocalUtils.refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
         searchView.setOnQueryTextListener(this);
@@ -1637,6 +1643,9 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
+        public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () ->
+                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         //TODO optimize database fetch !
         public static class RefreshOperations extends AsyncTask<Void, Void, Void> {
 
@@ -1868,9 +1877,8 @@ public class ReachActivity extends AppCompatActivity implements
                         return;
                     }
 
-                    if (!statusValue.equals(Chat.READ + "")) {
+                    if (adminValue.equals(Chat.ADMIN + "") && !statusValue.equals(Chat.READ + ""))
                         toggleIntimation(true);
-                    }
                 }
             }
 
@@ -1897,7 +1905,6 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     public static class PlayerUpdateListener extends BroadcastReceiver {
-
 
         private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
 

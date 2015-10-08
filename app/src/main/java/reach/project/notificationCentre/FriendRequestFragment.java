@@ -64,6 +64,7 @@ public class FriendRequestFragment extends Fragment {
     }
 
     private final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
+
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 

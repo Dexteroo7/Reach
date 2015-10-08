@@ -43,6 +43,7 @@ public class ChatActivityFragment extends Fragment {
     private static long serverId = 0;
 
     private static WeakReference<ChatActivityFragment> reference = null;
+
     public static ChatActivityFragment newInstance() {
 
         ChatActivityFragment fragment;
@@ -55,7 +56,7 @@ public class ChatActivityFragment extends Fragment {
         return fragment;
     }
 
-    public ChatActivityFragment () {
+    public ChatActivityFragment() {
         reference = new WeakReference<>(this);
     }
 
@@ -70,29 +71,23 @@ public class ChatActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final Activity activity = getActivity();
+        final View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
 
         sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         chatUUID = SharedPrefUtils.getChatUUID(sharedPreferences);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
-        if (TextUtils.isEmpty(chatUUID) || TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences))) {
-
-            //TODO
-            Log.i("Chat", "Chat not initialized yet !");
-            activity.finish();
-            return null;
-        }
-
         if (serverId == 0) {
+            //TODO track
             Log.i("Chat", "ServerId not found !");
             activity.finish();
+            return rootView;
         }
 
         // Setup our Firebase mFirebaseRef
         firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
         firebaseReference.keepSynced(true);
 
-        final View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
         final EditText messageInput = (EditText) rootView.findViewById(R.id.messageInput);
         final ImageView button = (ImageView) rootView.findViewById(R.id.sendButton);
         chatList = (ListView) rootView.findViewById(R.id.chatList);
@@ -102,7 +97,15 @@ public class ChatActivityFragment extends Fragment {
         button.setOnClickListener(sendListener);
         button.setTag(messageInput);
 
-        setUpUI();
+        //if not empty exit
+        if (!TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences)) && !TextUtils.isEmpty(chatUUID)) {
+
+            //TODO track
+            //setup callback and wait/retry
+            activity.finish();
+        } else //everything cool, continue
+            setUpUI();
+
         return rootView;
     }
 
@@ -171,7 +174,6 @@ public class ChatActivityFragment extends Fragment {
                 fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
                 fragment.firebaseReference.child("user").child(chatUUID).updateChildren(userData);
             });
-
         }
     }
 
