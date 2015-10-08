@@ -582,7 +582,7 @@ public enum MiscUtils {
             return Optional.absent();
 
         final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing() )
+        if (activity == null || activity.isFinishing())
             return Optional.absent();
 
         return Optional.fromNullable(task.work(activity));
@@ -1072,38 +1072,38 @@ public enum MiscUtils {
 
         else {
 
-            final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
-
-                @Override
-                public void onAuthenticationError(FirebaseError error) {
-                    Log.e("Ayush", "Login Failed! " + error.getMessage());
-                }
-
-                @Override
-                public void onAuthenticated(AuthData authData) {
-
-                    final String chatUUID = authData.getUid();
-                    //if found save
-                    SharedPrefUtils.storeChatUUID(preferences, fetchTokenFromServer.getString());
-                    Log.i("Ayush", "Chat authenticated " + chatUUID);
-
-                    final Map<String, Object> userData = new HashMap<>();
-                    userData.put("uid", authData.getAuth().get("uid"));
-                    userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
-                    userData.put("userName", authData.getAuth().get("userName"));
-                    userData.put("imageId", authData.getAuth().get("imageId"));
-                    userData.put("lastActivated", 0);
-                    userData.put("newMessage", true);
-
-                    final Firebase firebase = firebaseWeakReference.get();
-                    if (firebase != null)
-                        firebase.child("user").child(chatUUID).setValue(userData);
-                }
-            };
-
             final Firebase firebase = firebaseWeakReference.get();
-            if (firebase != null)
-                firebase.authWithCustomToken(fetchTokenFromServer.getString(), authHandler);
+            if (firebase != null) {
+                firebase.authWithCustomToken(fetchTokenFromServer.getString(), new Firebase.AuthResultHandler() {
+
+                    @Override
+                    public void onAuthenticationError(FirebaseError error) {
+                        Log.e("Ayush", "Login Failed! " + error.getMessage());
+                    }
+
+                    @Override
+                    public void onAuthenticated(AuthData authData) {
+
+                        final String chatUUID = authData.getUid();
+                        //if found save
+                        SharedPrefUtils.storeChatUUID(preferences, chatUUID);
+                        SharedPrefUtils.storeChatToken(preferences, fetchTokenFromServer.getString());
+                        Log.i("Ayush", "Chat authenticated " + chatUUID);
+
+                        final Map<String, Object> userData = new HashMap<>();
+                        userData.put("uid", authData.getAuth().get("uid"));
+                        userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
+                        userData.put("userName", authData.getAuth().get("userName"));
+                        userData.put("imageId", authData.getAuth().get("imageId"));
+                        userData.put("lastActivated", 0);
+                        userData.put("newMessage", true);
+
+                        final Firebase firebase = firebaseWeakReference.get();
+                        if (firebase != null)
+                            firebase.child("user").child(chatUUID).setValue(userData);
+                    }
+                });
+            }
         }
     }
 }

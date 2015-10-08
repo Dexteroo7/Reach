@@ -1527,12 +1527,9 @@ public class ReachActivity extends AppCompatActivity implements
 
                 ////////////////////////////////////////
                 //check devikaChat token
-                final ReachActivity reachActivity;
-                if (reference != null && (reachActivity = reference.get()) != null && !reachActivity.isFinishing())
-                    MiscUtils.checkChatToken(
-                            new WeakReference<>(reachActivity.preferences),
-                            new WeakReference<>(reachActivity.firebaseReference));
-
+                MiscUtils.useActivity(reference, activity -> MiscUtils.checkChatToken(
+                        new WeakReference<>(activity.preferences),
+                        new WeakReference<>(activity.firebaseReference)));
                 //refresh gcm
                 checkGCM();
                 //refresh download ops

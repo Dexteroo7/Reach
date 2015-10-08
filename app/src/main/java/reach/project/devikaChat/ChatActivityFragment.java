@@ -70,6 +70,7 @@ public class ChatActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final Activity activity = getActivity();
+        final View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
 
         sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         chatUUID = SharedPrefUtils.getChatUUID(sharedPreferences);
@@ -77,22 +78,24 @@ public class ChatActivityFragment extends Fragment {
 
         if (TextUtils.isEmpty(chatUUID) || TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences))) {
 
-            //TODO
-            Log.i("Chat", "Chat not initialized yet !");
+            //TODO track
+            Toast.makeText(activity, "Try again shortly", Toast.LENGTH_SHORT).show();
             activity.finish();
-            return null;
+            return rootView;
         }
 
         if (serverId == 0) {
+
+            //TODO track
             Log.i("Chat", "ServerId not found !");
             activity.finish();
+            return rootView;
         }
 
         // Setup our Firebase mFirebaseRef
         firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
         firebaseReference.keepSynced(true);
 
-        final View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
         final EditText messageInput = (EditText) rootView.findViewById(R.id.messageInput);
         final ImageView button = (ImageView) rootView.findViewById(R.id.sendButton);
         chatList = (ListView) rootView.findViewById(R.id.chatList);

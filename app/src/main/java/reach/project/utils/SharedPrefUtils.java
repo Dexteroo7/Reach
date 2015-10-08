@@ -75,7 +75,7 @@ public enum SharedPrefUtils {
     public static String getChatUUID(SharedPreferences sharedPreferences) {
 
         final String chatUUID = sharedPreferences.getString("chatUUID", "");
-        Log.i("Ayush", "Found chatUUID token " + chatUUID);
+        Log.i("Ayush", "Found chatUUID " + chatUUID);
         return chatUUID;
     }
 
