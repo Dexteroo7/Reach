@@ -32,6 +32,7 @@ import android.widget.TextView;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
@@ -61,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.albums.Album;
 import reach.project.music.albums.ReachAlbumHelper;
@@ -83,6 +85,7 @@ import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.UseActivity;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContext2;
+import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment2;
 
@@ -523,61 +526,37 @@ public enum MiscUtils {
 //        return localIpAddress;
 //    }
 
-//    public static <T extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<T> reference,
-//                                                                          final UseContext<Result, T>... tasks) {
-//
-//        final boolean isActivity = reference.get() instanceof Activity;
-//
-//        Optional<Result> result = Optional.absent();
-//        for (UseContext<Result, T> task : tasks) {
-//
-//            final T context;
-//
-//            final boolean contextLost = (context = reference.get()) == null;
-//            if (contextLost)
-//                return Optional.absent();
-//            final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-//            if (activityIsFinishing)
-//                return Optional.absent();
-//
-//            result = Optional.fromNullable(task.work(context));
-//        }
-//
-//        return result;
-//    }
+    public static <Param extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<Param> reference,
+                                                                                         final UseContext<Result, Param> task) {
 
-    public static <T extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<T> reference,
-                                                                                     final UseContext<Result, T> task) {
-
-        final T context;
+        final Param context;
         if (reference == null || (context = reference.get()) == null)
             return Optional.absent();
 
-        final boolean isActivity = context instanceof Activity;
-        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-        if (activityIsFinishing)
+        if (context instanceof Activity && ((Activity) context).isFinishing())
             return Optional.absent();
 
         return Optional.fromNullable(task.work(context));
     }
 
-    public static <T extends Context> void useContextFromContext(final WeakReference<T> reference,
-                                                                 final UseContext2<T> task) {
+    public static <Param extends Context> void useContextFromContext(final WeakReference<Param> reference,
+                                                                     final UseContext2<Param> task) {
 
-        final T context;
+        final Param context;
         if (reference == null || (context = reference.get()) == null)
             return;
 
-        final boolean isActivity = context instanceof Activity;
-        final boolean activityIsFinishing = (isActivity && ((Activity) context).isFinishing());
-        if (!activityIsFinishing)
-            task.work(context);
+        if (context instanceof Activity && ((Activity) context).isFinishing())
+            return;
+
+        task.work(context);
     }
 
-    public static <T extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<T> reference,
-                                                                                       final UseContext<Result, Context> task) {
+    @SuppressWarnings("unchecked")
+    public static <Param1 extends Context, Param2 extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<Param2> reference,
+                                                                                                                    final UseContext<Result, Param1> task) {
 
-        final T fragment;
+        final Param2 fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
@@ -585,25 +564,39 @@ public enum MiscUtils {
         if (activity == null || activity.isFinishing())
             return Optional.absent();
 
-        return Optional.fromNullable(task.work(activity));
+        return Optional.fromNullable(task.work((Param1) activity));
     }
 
-    public static <T extends Fragment> void useContextFromFragment(final WeakReference<T> reference,
-                                                                   final UseContext2<Context> task) {
+    @SuppressWarnings("unchecked")
+    public static <Param1 extends Context, Param2 extends Fragment> void useContextFromFragment(final WeakReference<Param2> reference,
+                                                                                                final UseContext2<Param1> task) {
 
-        final T fragment;
+        final Param2 fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
-        final Context context = fragment.getActivity();
-        if (context != null)
-            task.work(context);
+        final Activity activity = fragment.getActivity();
+        if (activity != null)
+            task.work((Param1) activity);
     }
 
-    public static <T extends Fragment, Result> Optional<Result> useFragment(final WeakReference<T> reference,
-                                                                            final UseFragment<Result, T> task) {
+    @SuppressWarnings("unchecked")
+    public static <Param1 extends Context, Param2 extends Fragment> void useContextAndFragment(final WeakReference<Param2> reference,
+                                                                                               final UseContextAndFragment<Param1, Param2> task) {
 
-        final T fragment;
+        final Param2 fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity != null && !activity.isFinishing())
+            task.work((Param1) activity, fragment);
+    }
+
+    public static <Param extends Fragment, Result> Optional<Result> useFragment(final WeakReference<Param> reference,
+                                                                                final UseFragment<Result, Param> task) {
+
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
@@ -614,10 +607,10 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(fragment));
     }
 
-    public static <T extends Fragment> void useFragment(final WeakReference<T> reference,
-                                                        final UseFragment2<T> task) {
+    public static <Param extends Fragment> void useFragment(final WeakReference<Param> reference,
+                                                            final UseFragment2<Param> task) {
 
-        final T fragment;
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
@@ -1048,7 +1041,8 @@ public enum MiscUtils {
     }
 
     public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
-                                                   WeakReference<Firebase> firebaseWeakReference) {
+                                                   WeakReference<Firebase> firebaseWeakReference,
+                                                   WeakReference<? extends Activity> toHelpTrack) {
 
         final SharedPreferences preferences = preferencesWeakReference.get();
         if (preferences == null)
@@ -1067,43 +1061,51 @@ public enum MiscUtils {
 
         //fetch from server
         final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
-        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString()))
-            Log.i("Ayush", "Chat token check failed !");
+        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString())) {
 
-        else {
+            MiscUtils.useContextFromContext(toHelpTrack, activity -> {
+
+                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("SEVERE ERROR, account creation failed")
+                        .setAction("User Id - " + serverId)
+                        .setValue(1)
+                        .build());
+            });
+            Log.i("Ayush", "Chat token check failed !");
+        } else {
 
             final Firebase firebase = firebaseWeakReference.get();
-            if (firebase != null) {
-                firebase.authWithCustomToken(fetchTokenFromServer.getString(), new Firebase.AuthResultHandler() {
+            if (firebase == null)
+                return;
+            firebase.authWithCustomToken(fetchTokenFromServer.getString(), new Firebase.AuthResultHandler() {
 
-                    @Override
-                    public void onAuthenticationError(FirebaseError error) {
-                        Log.e("Ayush", "Login Failed! " + error.getMessage());
-                    }
+                @Override
+                public void onAuthenticationError(FirebaseError error) {
+                    Log.e("Ayush", "Login Failed! " + error.getMessage());
+                }
 
-                    @Override
-                    public void onAuthenticated(AuthData authData) {
+                @Override
+                public void onAuthenticated(AuthData authData) {
 
-                        final String chatUUID = authData.getUid();
-                        //if found save
-                        SharedPrefUtils.storeChatUUID(preferences, chatUUID);
-                        SharedPrefUtils.storeChatToken(preferences, fetchTokenFromServer.getString());
-                        Log.i("Ayush", "Chat authenticated " + chatUUID);
+                    final String chatUUID = authData.getUid();
+                    //if found save
+                    SharedPrefUtils.storeChatUUID(preferences, chatUUID);
+                    SharedPrefUtils.storeChatToken(preferences, fetchTokenFromServer.getString());
+                    Log.i("Ayush", "Chat authenticated " + chatUUID);
 
-                        final Map<String, Object> userData = new HashMap<>();
-                        userData.put("uid", authData.getAuth().get("uid"));
-                        userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
-                        userData.put("userName", authData.getAuth().get("userName"));
-                        userData.put("imageId", authData.getAuth().get("imageId"));
-                        userData.put("lastActivated", 0);
-                        userData.put("newMessage", true);
+                    final Map<String, Object> userData = new HashMap<>();
+                    userData.put("uid", authData.getAuth().get("uid"));
+                    userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
+                    userData.put("userName", authData.getAuth().get("userName"));
+                    userData.put("imageId", authData.getAuth().get("imageId"));
+                    userData.put("lastActivated", 0);
+                    userData.put("newMessage", true);
 
-                        final Firebase firebase = firebaseWeakReference.get();
-                        if (firebase != null)
-                            firebase.child("user").child(chatUUID).setValue(userData);
-                    }
-                });
-            }
+                    final Firebase firebase = firebaseWeakReference.get();
+                    if (firebase != null)
+                        firebase.child("user").child(chatUUID).setValue(userData);
+                }
+            });
         }
     }
 }

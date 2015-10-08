@@ -34,7 +34,7 @@ import static reach.backend.OfyService.ofy;
  * WARNING: This generated code is intended as a sample or starting point for using a
  * Google Cloud Endpoints RESTful API with an Objectify entity. It provides no data access
  * restrictions and no data validation.
- * <p/>
+ * <p>
  * DO NOT deploy this code unchanged as part of a real application to real users.
  */
 @Api(
@@ -448,6 +448,21 @@ public class NotificationEndpoint {
                 break;
             }
         }
+
+        ofy().save().entity(notification).now();
+    }
+
+    @ApiMethod(
+            name = "markAllRead",
+            path = "notification/markAllRead",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public void markAllNotificationsRead(@Named("receiverId") long receiverId) {
+
+        if (receiverId == 0)
+            return;
+        final Notification notification = getNotification(receiverId);
+        for (NotificationBase base : notification.getNotifications())
+            base.setRead(NotificationBase.READ);
 
         ofy().save().entity(notification).now();
     }

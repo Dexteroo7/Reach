@@ -96,6 +96,7 @@ public final class StaticData {
     public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
+    public static final String mixPanelId = "7877f44b1ce4a4b2db7790048eb6587a";
     public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
     public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
     public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";

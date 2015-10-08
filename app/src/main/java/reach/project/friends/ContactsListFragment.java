@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -33,16 +32,17 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
 import com.google.common.base.Optional;
-import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
-import reach.project.core.DialogActivity;
+import reach.project.core.GcmIntentService;
 import reach.project.core.StaticData;
+import reach.project.devikaChat.Chat;
+import reach.project.devikaChat.ChatActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
@@ -56,7 +56,7 @@ public class ContactsListFragment extends Fragment implements
     private SwipeRefreshLayout swipeRefreshLayout;
     private SearchView searchView;
 
-    private SharedPreferences sharedPrefs;
+    private SharedPreferences sharedPreferences;
     private SuperInterface mListener;
 
     private ReachContactsAdapter reachContactsAdapter;
@@ -187,9 +187,9 @@ public class ContactsListFragment extends Fragment implements
 
         /*if (getArguments().getBoolean("first", false))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-        sharedPrefs = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        serverId = SharedPrefUtils.getServerId(sharedPrefs);
-        phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPrefs);
+        sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        serverId = SharedPrefUtils.getServerId(sharedPreferences);
+        phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
 
         //clean up
         pinging.set(false);
@@ -290,9 +290,35 @@ public class ContactsListFragment extends Fragment implements
             MiscUtils.setEmptyTextforGridView(gridView, "No contacts found");
         else {
 
-            if (!SharedPrefUtils.getFirstIntroSeen(sharedPrefs)) {
-                AsyncTask.THREAD_POOL_EXECUTOR.execute(LocalUtils.devikaSendMeSomeLove);
-                SharedPrefUtils.setFirstIntroSeen(sharedPrefs);
+            if (!SharedPrefUtils.getFirstIntroSeen(sharedPreferences)) {
+
+                SharedPrefUtils.setFirstIntroSeen(sharedPreferences);
+
+                final Activity activity = getActivity();
+                final Chat chat = new Chat();
+                chat.setMessage("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my Music collection. Keep Reaching ;)");
+                chat.setTimestamp(System.currentTimeMillis());
+                chat.setAdmin(Chat.ADMIN);
+
+                final Optional<Firebase> firebaseOptional = mListener.getFireBase();
+                if (firebaseOptional.isPresent()) {
+
+                    firebaseOptional.get().child("chat").child(
+                            SharedPrefUtils.getChatUUID(sharedPreferences)).push().setValue(chat);
+                    final Intent viewIntent = new Intent(activity, ChatActivity.class);
+                    final PendingIntent viewPendingIntent = PendingIntent.getActivity(activity, GcmIntentService.NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                    final NotificationCompat.Builder notificationBuilder =
+                            new NotificationCompat.Builder(activity)
+                                    .setAutoCancel(true)
+                                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                                    .setSmallIcon(R.drawable.ic_icon_notif)
+                                    .setContentTitle("Devika sent you a message")
+                                    .setContentIntent(viewPendingIntent)
+                                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                                    .setWhen(System.currentTimeMillis());
+                    final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(activity);
+                    notificationManager.notify(GcmIntentService.NOTIFICATION_ID_CHAT, notificationBuilder.build());
+                }
             }
         }
     }
@@ -494,52 +520,6 @@ public class ContactsListFragment extends Fragment implements
                 pinging.set(true);
                 new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
-        };
-
-        public static final Runnable devikaSendMeSomeLove = () -> {
-
-            final ContactsListFragment fragment;
-            if (reference == null || (fragment = reference.get()) == null)
-                return;
-            final Activity activity = fragment.getActivity();
-            if (activity == null || activity.isFinishing())
-                return;
-
-            Bitmap bmp = null;
-            final NotificationManagerCompat managerCompat = NotificationManagerCompat.from(activity);
-            final int px = MiscUtils.dpToPx(64);
-            try {
-                bmp = Picasso.with(activity)
-                        .load(StaticData.dropBoxManager)
-                        .centerCrop()
-                        .resize(px, px)
-                        .get();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            final Intent intent = new Intent(activity, DialogActivity.class);
-            intent.putExtra("type", 1);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            final PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-            final NotificationCompat.Builder builder = new NotificationCompat.Builder(activity)
-                    .setAutoCancel(true)
-                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                    .setSmallIcon(R.drawable.ic_icon_notif)
-                    .setLargeIcon(bmp)
-                    .setContentIntent(pendingIntent)
-                            //.addAction(0, "Okay! I got it", pendingIntent)
-                    .setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText("I am Devika from Team Reach! \n" +
-                                    "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
-                                    "Keep Reaching ;)"))
-                    .setContentTitle("Hey!")
-                    .setTicker("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my Music collection. Keep Reaching ;)")
-                    .setContentText("I am Devika from Team Reach! \n" +
-                            "Send me an access request by clicking on the lock icon beside my name to view my Music collection. \n" +
-                            "Keep Reaching ;)")
-                    .setPriority(NotificationCompat.PRIORITY_MAX);
-            managerCompat.notify(99910, builder.build());
         };
     }
 

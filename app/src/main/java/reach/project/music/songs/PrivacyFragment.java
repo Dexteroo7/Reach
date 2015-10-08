@@ -84,9 +84,6 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         return fragment;
     }
 
-    public PrivacyFragment() {
-    }
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
 

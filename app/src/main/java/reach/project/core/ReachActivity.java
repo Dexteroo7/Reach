@@ -186,9 +186,6 @@ public class ReachActivity extends AppCompatActivity implements
     private ImageButton pausePlayMinimized; //small
     private SwipeRefreshLayout downloadRefresh;
 
-    private final SwipeRefreshLayout.OnRefreshListener refreshListener = () ->
-            new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
     private final SlidingUpPanelLayout.PanelSlideListener slideListener = new SlidingUpPanelLayout.PanelSlideListener() {
 
         @Override
@@ -258,6 +255,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             boolean enable = false;
             if (view.getChildCount() > 0) {
+
                 final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
                 final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
                 enable = firstItemVisible && topOfFirstItemVisible;
@@ -278,6 +276,7 @@ public class ReachActivity extends AppCompatActivity implements
             //Check to see which item was being clicked and perform appropriate action
 
             try {
+
                 switch (menuItem.getItemId()) {
 
                     case R.id.navigation_item_1:
@@ -344,6 +343,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
+
         if (queueAdapter != null &&
                 queueAdapter.getCursor() != null &&
                 !queueAdapter.getCursor().isClosed())
@@ -457,7 +457,7 @@ public class ReachActivity extends AppCompatActivity implements
         Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
 
-        if (firebaseReference != null)
+        if (firebaseReference != null && serverId != 0)
             firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
     }
 
@@ -585,6 +585,9 @@ public class ReachActivity extends AppCompatActivity implements
             addNotificationDrawer();
             //load adapters
             loadAdapter();
+            //add chat listener as it was not added earlier
+            if (firebaseReference != null && serverId != 0)
+                firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
 
         } catch (IllegalStateException ignored) {
             finish();
@@ -723,7 +726,7 @@ public class ReachActivity extends AppCompatActivity implements
             Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
-        //TODO update count
+
         final Cursor countCursor = getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
                 ReachSongHelper.projection,
@@ -735,6 +738,7 @@ public class ReachActivity extends AppCompatActivity implements
             countCursor.close();
             return;
         }
+
         final long count = countCursor.getCount();
         countCursor.close();
         ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
@@ -866,6 +870,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
+
         Pacemaker.scheduleLinear(this, 5);
 
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
@@ -943,7 +949,8 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh.setColorSchemeColors(
                 ContextCompat.getColor(this, R.color.reach_color),
                 ContextCompat.getColor(this, R.color.reach_grey));
-        downloadRefresh.setOnRefreshListener(refreshListener);
+
+        downloadRefresh.setOnRefreshListener(LocalUtils.refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
         searchView.setOnQueryTextListener(this);
@@ -995,23 +1002,23 @@ public class ReachActivity extends AppCompatActivity implements
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
         tracker.setScreenName("reach.project.core.ReachActivity");
 
-        if (userID!=0) {
+        if (userID != 0) {
             tracker.set("&uid", userID + "");
             tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
-            mixpanel.identify(userID+"");
+            mixpanel.identify(userID + "");
             JSONObject props = new JSONObject();
             try {
-                props.put("UserID", userID+"");
+                props.put("UserID", userID + "");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             mixpanel.registerSuperPropertiesOnce(props);
-            ppl.identify(userID+"");
+            ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
         if (!TextUtils.isEmpty(phoneNumber))
-            ppl.set("$phone", phoneNumber+"");
+            ppl.set("$phone", phoneNumber + "");
         if (!TextUtils.isEmpty(userName))
             ppl.set("$name", userName + "");
 
@@ -1109,7 +1116,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             if (slidingUpPanelLayout != null)
                 slidingUpPanelLayout.postDelayed(() -> {
-                    if (slidingUpPanelLayout!=null)
+                    if (slidingUpPanelLayout != null)
                         slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }, 1500);
         } else if (intent.getBooleanExtra("openFriendRequests", false)) {
@@ -1358,8 +1365,16 @@ public class ReachActivity extends AppCompatActivity implements
         //We call bulk starter always
         final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
                 ReachDatabaseHelper.contentValuesCreator(reachDatabase));
-        if (uri == null)
-            return; //TODO track this should never happen
+        if (uri == null) {
+
+            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Add song failed")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setValue(1)
+                    .build());
+            return;
+        }
 
         final String[] splitter = uri.toString().split("/");
         if (splitter.length == 0)
@@ -1393,7 +1408,6 @@ public class ReachActivity extends AppCompatActivity implements
         mixpanel.track("Transaction - Add Song", props);
     }
 
-    //TODO
     public static void toggleIntimation(boolean state) {
 
         //if toggle is true and chatFragment is not open
@@ -1580,7 +1594,8 @@ public class ReachActivity extends AppCompatActivity implements
                 //check devikaChat token
                 MiscUtils.useActivity(reference, activity -> MiscUtils.checkChatToken(
                         new WeakReference<>(activity.preferences),
-                        new WeakReference<>(activity.firebaseReference)));
+                        new WeakReference<>(activity.firebaseReference),
+                        reference));
                 //refresh gcm
                 checkGCM();
                 //refresh download ops
@@ -1706,6 +1721,9 @@ public class ReachActivity extends AppCompatActivity implements
                 });
             }
         }
+
+        public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () ->
+                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         //TODO optimize database fetch !
         public static class RefreshOperations extends AsyncTask<Void, Void, Void> {
@@ -1902,7 +1920,7 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
-        public static ChildEventListener listenerForUnReadChats = new ChildEventListener() {
+        public static final ChildEventListener listenerForUnReadChats = new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -1927,9 +1945,8 @@ public class ReachActivity extends AppCompatActivity implements
                         return;
                     }
 
-                    if (adminValue.equals(Chat.ADMIN + "") &&!statusValue.equals(Chat.READ + "")) {
+                    if (adminValue.equals(Chat.ADMIN + "") && !statusValue.equals(Chat.READ + ""))
                         toggleIntimation(true);
-                    }
                 }
             }
 
@@ -1956,7 +1973,6 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     public static class PlayerUpdateListener extends BroadcastReceiver {
-
 
         private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
 

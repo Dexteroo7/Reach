@@ -79,6 +79,7 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
+
         <service
             android:name=".utils.MusicScanner"
             android:exported="false" />
@@ -129,6 +130,8 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
+
+        <activity android:name="com.mixpanel.android.surveys.SurveyActivity" />
 
         <activity
             android:name=".devikaChat.ChatActivity"

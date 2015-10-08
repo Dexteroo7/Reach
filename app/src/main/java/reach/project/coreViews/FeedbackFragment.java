@@ -30,9 +30,6 @@ public class FeedbackFragment extends Fragment {
             reference = new WeakReference<>(fragment = new FeedbackFragment());
         return fragment;
     }
-    public FeedbackFragment() {
-        // Required empty public constructor
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

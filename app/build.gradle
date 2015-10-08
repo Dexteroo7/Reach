@@ -11,8 +11,6 @@ android {
         targetSdkVersion 23
         versionCode 65
         versionName "0.9.21-beta"
-        //meant for release
-        //multiDexEnabled true
     }
     buildTypes {
         release {

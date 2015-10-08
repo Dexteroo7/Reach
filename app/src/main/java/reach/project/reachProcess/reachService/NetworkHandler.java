@@ -1,5 +1,6 @@
 package reach.project.reachProcess.reachService;
 
+import android.app.Application;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -16,6 +17,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -43,6 +45,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.Friend;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
@@ -54,6 +57,7 @@ import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 
 /**
  * Created by Dexter on 18-05-2015.
@@ -138,19 +142,28 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         //getDirectory
         if ((reachDirectory = LocalUtils.getDirectory()) == null &&
                 (reachDirectory = LocalUtils.getDirectory()) == null) {
-            LocalUtils.toast("File system error");
+            LocalUtils.toast(
+                    "File system error",
+                    handlerInterface,
+                    SharedPrefUtils.getServerId(handlerInterface.getSharedPreferences()));
             return;
         }
         //check space
         if (reachDirectory.getUsableSpace() < StaticData.MINIMUM_FREE_SPACE) {
-            LocalUtils.toast("Insufficient space on sdCard");
+            LocalUtils.toast(
+                    "Insufficient space on sdCard",
+                    handlerInterface,
+                    SharedPrefUtils.getServerId(handlerInterface.getSharedPreferences()));
             return;
         }
         //get networkManager
         try {
             networkManager = Selector.open();
         } catch (IOException ignored) {
-            LocalUtils.toast("Could not get networkManager");
+            LocalUtils.toast(
+                    "Could not get networkManager",
+                    handlerInterface,
+                    SharedPrefUtils.getServerId(handlerInterface.getSharedPreferences()));
             return;
         }
 
@@ -183,11 +196,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 currentTime = System.currentTimeMillis();
                 if (sleeping && //no connections to service (sleeping)
-                    !taskAdded && //no work that is getting added (no taskAdded)
-                    threadPool.getQueue().isEmpty() && //no work that is in queue
-                    threadPool.getActiveCount() == 0 &&  //no work that is in running
-                    networkManager.keys().isEmpty() && //no active connections (network-manager has 0 keys)
-                    currentTime - lastActive > 5000) { //finally a sleep allowance of 5 seconds
+                        !taskAdded && //no work that is getting added (no taskAdded)
+                        threadPool.getQueue().isEmpty() && //no work that is in queue
+                        threadPool.getActiveCount() == 0 &&  //no work that is in running
+                        networkManager.keys().isEmpty() && //no active connections (network-manager has 0 keys)
+                        currentTime - lastActive > 5000) { //finally a sleep allowance of 5 seconds
                     Log.i("Downloader", "Service can be killed now");
                     kill = true;
                 } else {
@@ -371,14 +384,15 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         final boolean connectSuccess;
         if (reachDatabase.getSenderId() == StaticData.devika)
             //try cloud if Devika
-            connectSuccess = LocalUtils.connectCloud(reachDatabase, networkManager);
+            connectSuccess = LocalUtils.connectCloud(reachDatabase, networkManager, handlerInterface);
         else
             //else go with p2p
             connectSuccess = LocalUtils.connectReceiver(
                     reachDatabase,
                     networkManager,
                     connection.getUniqueIdReceiver(),
-                    connection.getUniqueIdSender());
+                    connection.getUniqueIdSender(),
+                    handlerInterface);
 
         if (!connectSuccess) { //reset and fail
 
@@ -478,7 +492,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 reachDatabase,
                 networkManager,
                 connection.getUniqueIdReceiver(),
-                connection.getUniqueIdSender());
+                connection.getUniqueIdSender(),
+                handlerInterface);
         if (!tryRelay) { //remove and fail
             LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), false);
             return false;
@@ -822,7 +837,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 handlerInterface.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
         } catch (RemoteException | OperationApplicationException ignored) {
         } finally {
-            
+
             cursor.close();
             if (needToUpdate)
                 handlerInterface.updateNetworkDetails();
@@ -909,7 +924,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          * @return weather successful or not
          */
         public static boolean connectCloud(ReachDatabase reachDatabase,
-                                           Selector networkManager) {
+                                           Selector networkManager,
+                                           NetworkHandlerInterface handlerInterface) {
 
             //create a random reference for socket
             //In NIO, the default behaviour is blocking.
@@ -958,7 +974,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 Log.i("Downloader", status);
                 if (!(status.contains("200") || status.contains("206"))) {
                     //fail
-                    socket.close();reader.close();
+                    socket.close();
+                    reader.close();
                     LocalUtils.closeSocket(reference);
                     return false;
                 }
@@ -999,7 +1016,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 //removal of selectionKey will be done in keyKiller
                 e.printStackTrace();
-                LocalUtils.toast("Firewall issue");
+                LocalUtils.toast("Firewall issue", handlerInterface, reachDatabase.getReceiverId());
                 LocalUtils.closeSocket(reference);
                 return false;
             }
@@ -1019,7 +1036,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         public static boolean connectReceiver(ReachDatabase reachDatabase,
                                               Selector networkManager,
                                               long uniqueReceiverId,
-                                              long uniqueSenderId) {
+                                              long uniqueSenderId,
+                                              NetworkHandlerInterface handlerInterface) {
 
             //create a random reference for socket
             final long reference = UUID.randomUUID().getMostSignificantBits();
@@ -1044,7 +1062,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 //removal of selectionKey will be done in keyKiller
                 e.printStackTrace();
-                LocalUtils.toast("Firewall issue");
+                LocalUtils.toast("Firewall issue", handlerInterface, reachDatabase.getReceiverId());
                 LocalUtils.closeSocket(reference);
                 return false;
             }
@@ -1060,7 +1078,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         public static boolean connectSender(ReachDatabase reachDatabase,
                                             Selector networkManager,
                                             long uniqueReceiverId,
-                                            long uniqueSenderId) {
+                                            long uniqueSenderId,
+                                            NetworkHandlerInterface handlerInterface) {
 
             //create a random reference for socket
             final long reference = UUID.randomUUID().getMostSignificantBits();
@@ -1086,7 +1105,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 //TODO make a central GCM and relay connectivity check
                 //removal of selectionKey will be done in keyKiller
                 e.printStackTrace();
-                LocalUtils.toast("Firewall issue");
+                LocalUtils.toast("Firewall issue", handlerInterface, reachDatabase.getSenderId());
                 LocalUtils.closeSocket(reference);
                 return false;
             }
@@ -1490,10 +1509,14 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
          *
          * @param message that needs to be shown as toast
          */
-        public static void toast(final String message) {
+        public static void toast(String message, NetworkHandlerInterface handlerInterface, long id) {
 
             Log.i("Downloader", message + "TOAST");
-            //TODO, this will be done using a messenger OR no toast, something else
+            ((ReachApplication) handlerInterface.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory(message)
+                    .setAction("ServerId " + id)
+                    .setValue(1)
+                    .build());
         }
 
         /**
@@ -1559,6 +1582,8 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         ContentResolver getContentResolver();
 
         Context getContext();
+
+        Application getApplication();
 
         SharedPreferences getSharedPreferences();
 

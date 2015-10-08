@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +38,7 @@ import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
@@ -44,6 +46,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
@@ -235,18 +238,27 @@ public class EditProfileFragment extends Fragment {
         protected void onPostExecute(File file) {
 
             super.onPostExecute(file);
-            MiscUtils.useFragment(reference, fragment -> {
 
-                final Context context = fragment.getActivity();
-                if (file == null) { //TODO track
-                    toUpload = null;
-                    Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
-                } else if (fragment.profile != null) {
+            MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, EditProfileFragment>() {
+                @Override
+                public void work(Activity activity, EditProfileFragment fragment) {
 
-                    toUpload = file;
-                    Picasso.with(context).load(toUpload).fit().centerCrop().transform(fragment.transform).into(fragment.profile);
+                    if (file == null) {
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Profile photo failed")
+                                .setAction("User Id - " + userId)
+                                .setValue(1)
+                                .build());
+
+                        toUpload = null;
+                        Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
+                    } else if (fragment.profile != null) {
+
+                        toUpload = file;
+                        Picasso.with(activity).load(toUpload).fit().centerCrop().transform(fragment.transform).into(fragment.profile);
+                    }
                 }
-                return null;
             });
 
             if (dialog != null)

@@ -11,5 +11,6 @@ local.properties
 .DS_Store
 settings.gradle
 httptest/*
-
 build.gradle
+app/build.gradle
+.gitignore
