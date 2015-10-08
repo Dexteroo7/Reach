@@ -177,3 +177,12 @@
 -dontwarn com.google.api.client.http.apache.ApacheHttpRequest
 -dontwarn com.google.api.client.http.apache.HttpExtensionMethod
 -dontwarn com.viewpagerindicator.LinePageIndicator
+-dontwarn com.mixpanel.**
+-keep class com.firebase.** { *; }
+-keep class org.apache.** { *; }
+-keepnames class com.fasterxml.jackson.** { *; }
+-keepnames class javax.servlet.** { *; }
+-keepnames class org.ietf.jgss.** { *; }
+-dontwarn org.apache.**
+-dontwarn org.w3c.dom.**
+-keepnames class reach.project.devikaChat.Chat { *; }

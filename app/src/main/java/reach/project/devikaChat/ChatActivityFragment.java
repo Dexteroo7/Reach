@@ -77,7 +77,16 @@ public class ChatActivityFragment extends Fragment {
         chatUUID = SharedPrefUtils.getChatUUID(sharedPreferences);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
+        if (TextUtils.isEmpty(chatUUID) || TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences))) {
+
+            //TODO track
+            Toast.makeText(activity, "Try again shortly", Toast.LENGTH_SHORT).show();
+            activity.finish();
+            return rootView;
+        }
+
         if (serverId == 0) {
+
             //TODO track
             Log.i("Chat", "ServerId not found !");
             activity.finish();
@@ -97,15 +106,7 @@ public class ChatActivityFragment extends Fragment {
         button.setOnClickListener(sendListener);
         button.setTag(messageInput);
 
-        //if not empty exit
-        if (!TextUtils.isEmpty(SharedPrefUtils.getChatToken(sharedPreferences)) && !TextUtils.isEmpty(chatUUID)) {
-
-            //TODO track
-            //setup callback and wait/retry
-            activity.finish();
-        } else //everything cool, continue
-            setUpUI();
-
+        setUpUI();
         return rootView;
     }
 

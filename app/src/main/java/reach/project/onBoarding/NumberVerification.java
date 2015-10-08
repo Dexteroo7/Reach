@@ -1,6 +1,5 @@
 package reach.project.onBoarding;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -48,7 +47,7 @@ public class NumberVerification extends Fragment {
 
     private View bottomPart1, bottomPart2, bottomPart3;
     private SuperInterface mListener = null;
-    private EditText verifyCode = null;
+    private EditText verifyCode = null, telephoneNumber = null;
 
     private static String phoneNumber;
     private static String finalAuthKey;
@@ -87,7 +86,7 @@ public class NumberVerification extends Fragment {
             rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
 
             final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
-            rootView.findViewById(R.id.telephoneNumber).requestFocus();
+            (telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber)).requestFocus();
             viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
             ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
             rootView.findViewById(R.id.verify).setOnClickListener(LocalUtils.clickListener);
@@ -96,13 +95,13 @@ public class NumberVerification extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context context) {
 
-        super.onAttach(activity);
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }
@@ -129,7 +128,7 @@ public class NumberVerification extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        verifyCode = null;
+        verifyCode = telephoneNumber = null;
         bottomPart1 = bottomPart2 = bottomPart3;
     }
 
@@ -179,7 +178,8 @@ public class NumberVerification extends Fragment {
         }
     }
 
-    private enum LocalUtils {;
+    private enum LocalUtils {
+        ;
 
         private static final IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
         private static final BroadcastReceiver SMSReceiver = new BroadcastReceiver() {
@@ -349,8 +349,11 @@ public class NumberVerification extends Fragment {
                                 context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
                                 pair.second);
                         fragment.mListener.startAccountCreation(Optional.fromNullable(pair.first));
+
                     });
                 }
+
+//                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
             }
         }
 
@@ -376,18 +379,18 @@ public class NumberVerification extends Fragment {
         private static final View.OnClickListener verifyCodeListener = v ->
                 MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
 
-            final String enteredCode = fragment.verifyCode.getText().toString().trim();
-            if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
+                    final String enteredCode = fragment.verifyCode.getText().toString().trim();
+                    if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
 
-                SharedPrefUtils.storePhoneNumber(
-                        context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
-                        phoneNumber);
-                // Start Account Creation
-                fragment.mListener.startAccountCreation(Optional.fromNullable(null));
-            } else
-                //FAIL
-                Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
-        });
+                        SharedPrefUtils.storePhoneNumber(
+                                context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
+                                phoneNumber);
+                        // Start Account Creation
+                        fragment.mListener.startAccountCreation(Optional.fromNullable(null));
+                    } else
+                        //FAIL
+                        Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
+                });
 
         private static final View.OnClickListener retryListener = view -> new AlertDialog.Builder(view.getContext())
                 .setMessage("Send verification code again?")
@@ -404,7 +407,7 @@ public class NumberVerification extends Fragment {
         private static final View.OnClickListener clickListener = view -> {
 
             final String phoneNumber1 = MiscUtils.useFragment(reference, fragment -> {
-                return fragment.verifyCode.getText().toString().trim();
+                return fragment.telephoneNumber.getText().toString().trim();
             }).orNull();
 
             Log.i("Ayush", "PhoneNumber = " + phoneNumber1);

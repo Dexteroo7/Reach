@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
@@ -282,7 +283,7 @@ public class AllContactsFragment extends Fragment implements
             final LinearLayout input = new LinearLayout(context);
             final EditText inputText = new EditText(context);
             inputText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-            inputText.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            inputText.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);

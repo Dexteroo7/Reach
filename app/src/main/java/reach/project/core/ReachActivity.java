@@ -28,6 +28,7 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -150,6 +151,7 @@ public class ReachActivity extends AppCompatActivity implements
     private FragmentManager fragmentManager;
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
+    private MenuItem liveHelpItem;
 
     private ReachQueueAdapter queueAdapter = null;
     private ReachMusicAdapter musicAdapter = null;
@@ -672,7 +674,7 @@ public class ReachActivity extends AppCompatActivity implements
             Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
-        //TODO update count
+
         final Cursor countCursor = getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
                 ReachSongHelper.projection,
@@ -873,6 +875,8 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        mNavigationView.setItemIconTintList(null);
+        liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
         final FrameLayout.LayoutParams frameLayoutParams = (FrameLayout.LayoutParams) navListView.getLayoutParams();
         frameLayoutParams.setMargins(0, 0, 0, MiscUtils.dpToPx(50));
@@ -891,8 +895,9 @@ public class ReachActivity extends AppCompatActivity implements
         queueListView.setOnItemClickListener(LocalUtils.myLibraryClickListener);
         queueListView.setOnScrollListener(scrollListener);
         downloadRefresh.setColorSchemeColors(
-                getResources().getColor(R.color.reach_color),
-                getResources().getColor(R.color.reach_grey));
+                ContextCompat.getColor(this, R.color.reach_color),
+                ContextCompat.getColor(this, R.color.reach_grey));
+
         downloadRefresh.setOnRefreshListener(LocalUtils.refreshListener);
         shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
         repeatBtn.setOnClickListener(LocalUtils.repeatClick);
@@ -945,23 +950,23 @@ public class ReachActivity extends AppCompatActivity implements
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
         tracker.setScreenName("reach.project.core.ReachActivity");
 
-        if (userID!=0) {
+        if (userID != 0) {
             tracker.set("&uid", userID + "");
             tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
-            mixpanel.identify(userID+"");
+            mixpanel.identify(userID + "");
             JSONObject props = new JSONObject();
             try {
-                props.put("UserID", userID+"");
+                props.put("UserID", userID + "");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             mixpanel.registerSuperPropertiesOnce(props);
-            ppl.identify(userID+"");
+            ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
         if (!TextUtils.isEmpty(phoneNumber))
-            ppl.set("$phone", phoneNumber+"");
+            ppl.set("$phone", phoneNumber + "");
         if (!TextUtils.isEmpty(userName))
             ppl.set("$name", userName + "");
 
@@ -1059,7 +1064,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             if (slidingUpPanelLayout != null)
                 slidingUpPanelLayout.postDelayed(() -> {
-                    if (slidingUpPanelLayout!=null)
+                    if (slidingUpPanelLayout != null)
                         slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }, 1500);
         } else if (intent.getBooleanExtra("openFriendRequests", false)) {
@@ -1343,6 +1348,22 @@ public class ReachActivity extends AppCompatActivity implements
         mixpanel.track("Transaction - Add Song", props);
     }
 
+    public static void toggleIntimation(boolean state) {
+
+        //if toggle is true and chatFragment is not open
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (state && !ChatActivityFragment.connected.get()) {
+                //show intimation
+
+                activity.liveHelpItem.setIcon(R.drawable.ic_live_help_new);
+            } else {
+                //remove initiation
+                activity.liveHelpItem.setIcon(R.drawable.ic_live_help);
+            }
+        });
+    }
+
     private enum LocalUtils {
         ;
 
@@ -1511,12 +1532,9 @@ public class ReachActivity extends AppCompatActivity implements
 
                 ////////////////////////////////////////
                 //check devikaChat token
-                final ReachActivity reachActivity;
-                if (reference != null && (reachActivity = reference.get()) != null && !reachActivity.isFinishing())
-                    MiscUtils.checkChatToken(
-                            new WeakReference<>(reachActivity.preferences),
-                            new WeakReference<>(reachActivity.firebaseReference));
-
+                MiscUtils.useActivity(reference, activity -> MiscUtils.checkChatToken(
+                        new WeakReference<>(activity.preferences),
+                        new WeakReference<>(activity.firebaseReference)));
                 //refresh gcm
                 checkGCM();
                 //refresh download ops
@@ -1539,7 +1557,7 @@ public class ReachActivity extends AppCompatActivity implements
         public static TextView getMyLibraryTextView(Context context) {
             final TextView textView = new TextView(context);
             textView.setText("My Songs");
-            textView.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            textView.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
             textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
             textView.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
@@ -1550,7 +1568,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV1 = new TextView(context);
             emptyTV1.setText("Add songs to download");
-            emptyTV1.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyTV1.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             emptyTV1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV1.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV1;
@@ -1560,7 +1578,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final TextView emptyTV2 = new TextView(context);
             emptyTV2.setText("No Music on your phone");
-            emptyTV2.setTextColor(context.getResources().getColor(R.color.darkgrey));
+            emptyTV2.setTextColor(ContextCompat.getColor(context, R.color.darkgrey));
             emptyTV2.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
             emptyTV2.setPadding(MiscUtils.dpToPx(15), MiscUtils.dpToPx(10), 0, 0);
             return emptyTV2;
@@ -1841,18 +1859,7 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
-        //TODO
-        private static void toggleIntimation(boolean state) {
-
-            //if toggle is true and chatFragment is not open
-            if (state && !ChatActivityFragment.connected.get()) {
-                //show intimation
-            } else {
-                //remove initiation
-            }
-        }
-
-        public static ChildEventListener listenerForUnReadChats = new ChildEventListener() {
+        public static final ChildEventListener listenerForUnReadChats = new ChildEventListener() {
 
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {

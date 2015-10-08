@@ -80,6 +80,7 @@ import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.auxiliaryClasses.DoWork;
+import reach.project.utils.auxiliaryClasses.UseActivity;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
@@ -616,6 +617,16 @@ public enum MiscUtils {
             task.work(fragment);
     }
 
+    public static <T extends Activity> void useActivity(final WeakReference<T> reference,
+                                                        final UseActivity<T> task) {
+
+        final T activity;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return;
+
+        task.work(activity);
+    }
+
 //    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
 //                                                          final UseContext<Void, T> task) {
 //
@@ -1052,7 +1063,10 @@ public enum MiscUtils {
             Log.i("Ayush", "Chat token check failed !");
         } else {
 
-            final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
+            final Firebase firebase = firebaseWeakReference.get();
+            if (firebase == null)
+                return;
+            firebase.authWithCustomToken(fetchTokenFromServer.getString(), new Firebase.AuthResultHandler() {
 
                 @Override
                 public void onAuthenticationError(FirebaseError error) {
@@ -1064,11 +1078,8 @@ public enum MiscUtils {
 
                     final String chatUUID = authData.getUid();
                     //if found save
-                    final SharedPreferences preferences = preferencesWeakReference.get();
-                    if (preferences == null)
-                        return;
-
-                    SharedPrefUtils.storeChatUUID(preferences, fetchTokenFromServer.getString());
+                    SharedPrefUtils.storeChatUUID(preferences, chatUUID);
+                    SharedPrefUtils.storeChatToken(preferences, fetchTokenFromServer.getString());
                     Log.i("Ayush", "Chat authenticated " + chatUUID);
 
                     final Map<String, Object> userData = new HashMap<>();
@@ -1083,11 +1094,7 @@ public enum MiscUtils {
                     if (firebase != null)
                         firebase.child("user").child(chatUUID).setValue(userData);
                 }
-            };
-
-            final Firebase firebase = firebaseWeakReference.get();
-            if (firebase != null)
-                firebase.authWithCustomToken(fetchTokenFromServer.getString(), authHandler);
+            });
         }
     }
 }

@@ -6,11 +6,12 @@ android {
     compileSdkVersion 23
     buildToolsVersion '23.0.1'
     defaultConfig {
+
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 64
-        versionName "0.9.20.5-beta"
+        versionCode 65
+        versionName "0.9.21-beta"
     }
     buildTypes {
         release {
@@ -46,7 +47,7 @@ dependencies {
 
     // non-google stuff
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
-    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.facebook.fresco:fresco:0.7.0'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
     compile 'com.firebase:firebase-client-android:2.4.0'
 

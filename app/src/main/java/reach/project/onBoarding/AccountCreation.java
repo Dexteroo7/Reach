@@ -108,7 +108,6 @@ public class AccountCreation extends Fragment {
 
         //give reference to uploadProgress
         progressBar.setIndeterminate(false);
-        SaveUserData.uploadProgress.dialogWeakReference = new WeakReference<>(progressBar);
 
         profilePhotoSelector = (ImageView) rootView.findViewById(R.id.displayPic);
         profilePhotoSelector.setOnClickListener(imagePicker);
@@ -217,13 +216,13 @@ public class AccountCreation extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context context) {
 
-        super.onAttach(activity);
+        super.onAttach(context);
         try {
-            mListener = (SuperInterface) activity;
+            mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }

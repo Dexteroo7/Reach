@@ -235,7 +235,7 @@ public class GcmIntentService extends IntentService {
                             .setAutoCancel(true)
                             .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
                             .setSmallIcon(R.drawable.ic_icon_notif)
-                            .setContentTitle("Bitch you got a chat")
+                            .setContentTitle("Devika sent you a message")
                             .setContentIntent(viewPendingIntent)
                             .setPriority(NotificationCompat.PRIORITY_MAX)
                             .setWhen(System.currentTimeMillis());
