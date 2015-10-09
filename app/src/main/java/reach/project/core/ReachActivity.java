@@ -1609,6 +1609,8 @@ public class ReachActivity extends AppCompatActivity implements
                 return false;
             }
 
+
+
             ProcessManager.submitMusicRequest(context,
                     Optional.of(musicData),
                     MusicHandler.ACTION_NEW_SONG);
