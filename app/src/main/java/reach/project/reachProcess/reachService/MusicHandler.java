@@ -116,7 +116,9 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         kill.set(false);
         Log.i("Downloader", "Starting Music handler");
         player = new Player(this);
+
         audioFocusHelper = new AudioFocusHelper(handlerInterface.getContext(), this);
+
         Optional<MusicData> latestMusic = Optional.absent();
 
         while (!kill.get()) {
