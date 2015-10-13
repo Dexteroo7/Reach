@@ -1,6 +1,5 @@
 package reach.project.music.songs;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -411,8 +410,12 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
                             ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
             whereArgs = new String[]{userId + "", "1", filter, filter, filter, filter};
         }
-
-        getLoaderManager().restartLoader(type, null, this);
+        try {
+            getLoaderManager().restartLoader(type, null, this);
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            return false;
+        }
         return true;
     }
 

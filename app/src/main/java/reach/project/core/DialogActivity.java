@@ -1,6 +1,7 @@
 package reach.project.core;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -39,7 +40,12 @@ public class DialogActivity extends Activity {
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);
         exit.setVisibility(View.VISIBLE);
-        exit.setOnClickListener(v -> finish());
+        exit.setOnClickListener(v -> {
+            Intent viewIntent = new Intent(v.getContext(), ReachActivity.class);
+            viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(viewIntent);
+            DialogActivity.this.finish();
+        });
         if (type == 1) {
             userName.setText("Hey!");
             textView1.setText("I am Devika from Team Reach! \n" +

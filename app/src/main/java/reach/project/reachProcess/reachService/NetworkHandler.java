@@ -58,7 +58,6 @@ import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.Tracker;
 
 /**
  * Created by Dexter on 18-05-2015.
@@ -1513,13 +1512,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         public static void toast(String message, NetworkHandlerInterface handlerInterface, long id) {
 
             Log.i("Downloader", message + "TOAST");
-
-            Tracker.track(
-                    (ReachApplication) handlerInterface.getApplication(),
-                    Optional.of(message),
-                    Optional.of("ServerId " + id),
-                    Optional.absent(),
-                    1);
 
             ((ReachApplication) handlerInterface.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(message)

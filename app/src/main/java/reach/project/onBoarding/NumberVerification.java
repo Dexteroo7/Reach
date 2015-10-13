@@ -95,7 +95,29 @@ public class NumberVerification extends Fragment {
 
             final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
             (telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber)).requestFocus();
-            viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
+            TourPagerAdapter tourPagerAdapter = new TourPagerAdapter(rootView.getContext());
+            viewPager.setAdapter(tourPagerAdapter);
+            viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    if (position == tourPagerAdapter.getCount())
+                        ((ReachApplication)getActivity().getApplication())
+                                .trackGA(Optional.of("OnBoarding"),
+                                        Optional.of("Completed App Tour"),
+                                        Optional.of(""),
+                                        1);
+                }
+
+                @Override
+                public void onPageScrollStateChanged(int state) {
+
+                }
+            });
             ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
             rootView.findViewById(R.id.verify).setOnClickListener(LocalUtils.clickListener);
         }, 2000);

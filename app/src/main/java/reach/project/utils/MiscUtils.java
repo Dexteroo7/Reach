@@ -871,6 +871,7 @@ public enum MiscUtils {
         mBitmapOptions.inDither = true;
         mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
         mBitmapOptions.inJustDecodeBounds = false;
+        mBitmapOptions.inScaled = true;
         mBitmapOptions.inDensity = inDensity;
         mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
 
