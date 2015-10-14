@@ -58,6 +58,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.appvirality.AppviralityUI;
+import com.appvirality.android.AppviralityAPI;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
@@ -292,10 +294,11 @@ public class ReachActivity extends AppCompatActivity implements
                         promoCodeDialog.show(fragmentManager, "promo_dialog");
                         return true;
                     case R.id.navigation_item_3:
-                        fragmentManager
+                        AppviralityUI.showGrowthHack(ReachActivity.this, AppviralityUI.GH.Word_of_Mouth);
+                        /*fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
+                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();*/
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
@@ -373,6 +376,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onPause();
 
+        AppviralityUI.onStop();
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
             return;
@@ -886,6 +890,8 @@ public class ReachActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
+        AppviralityUI.showWelcomeScreen(this);
+
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
@@ -1015,6 +1021,10 @@ public class ReachActivity extends AppCompatActivity implements
             mixpanel.registerSuperPropertiesOnce(props);
             ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
+            AppviralityAPI.UserDetails.setInstance(getApplicationContext())
+                    .setUseridInStore("storeId")
+                    .isExistingUser(false)
+                    .Update();
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
         if (!TextUtils.isEmpty(phoneNumber))
@@ -1388,6 +1398,8 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getReceiverId(), //myID
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
+
+        AppviralityAPI.saveConversionEvent("TransferFile", null, null);
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")

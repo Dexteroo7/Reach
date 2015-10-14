@@ -60,6 +60,7 @@ public class NumberVerification extends Fragment {
     private static String finalAuthKey;
     private static WeakReference<NumberVerification> reference;
     private static OldUserContainerNew containerNew = null;
+    public static boolean newUser = false;
 
     public static NumberVerification newInstance() {
 
@@ -105,12 +106,12 @@ public class NumberVerification extends Fragment {
 
                 @Override
                 public void onPageSelected(int position) {
-                    if (position == tourPagerAdapter.getCount())
+                    /*if (position == tourPagerAdapter.getCount())
                         ((ReachApplication)getActivity().getApplication())
                                 .trackGA(Optional.of("OnBoarding"),
                                         Optional.of("Completed App Tour"),
                                         Optional.of(""),
-                                        1);
+                                        1);*/
                 }
 
                 @Override
@@ -401,6 +402,7 @@ public class NumberVerification extends Fragment {
                 });
 
                 containerNew = pair.first;
+                newUser = containerNew == null;
 
                 MiscUtils.useFragment(reference, fragment -> {
                     fragment.bottomPart3.setVisibility(View.INVISIBLE);

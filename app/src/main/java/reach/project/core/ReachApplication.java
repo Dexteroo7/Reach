@@ -1,6 +1,8 @@
 package reach.project.core;
 
 import android.app.Application;
+import android.content.Context;
+import android.support.multidex.MultiDex;
 
 import com.firebase.client.Firebase;
 import com.google.android.gms.analytics.GoogleAnalytics;
@@ -56,5 +58,12 @@ public class ReachApplication extends Application {
         //initialize firebase
         Firebase.setAndroidContext(this);
         Firebase.getDefaultConfig().setPersistenceEnabled(true);
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        ////meant for release
+        MultiDex.install(this);
     }
 }
