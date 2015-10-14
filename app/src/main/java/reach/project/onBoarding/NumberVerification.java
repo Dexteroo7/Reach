@@ -154,10 +154,11 @@ public class NumberVerification extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 
-        if (Build.VERSION.SDK_INT >= 23)
+        if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(getContext(),
                     Manifest.permission.RECEIVE_SMS) == 0)
                 getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+        }
         else
             getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
 
