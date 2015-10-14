@@ -186,3 +186,5 @@
 -dontwarn org.apache.**
 -dontwarn org.w3c.dom.**
 -keepnames class reach.project.devikaChat.Chat { *; }
+-keep class com.appvirality.** { *; }
+-dontwarn com.appvirality.**
