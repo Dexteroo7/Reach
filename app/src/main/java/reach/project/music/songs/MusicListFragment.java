@@ -1,6 +1,5 @@
 package reach.project.music.songs;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -175,7 +174,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_list, container, false);
         mPosition = getArguments().getInt("position");
-        musicList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        musicList = MiscUtils.addLoadingToMusicListView((ListView) rootView.findViewById(R.id.listView));
         View placeHolderView = inflater.inflate(R.layout.view_header_placeholder, musicList, false);
         musicList.addHeaderView(placeHolderView);
         musicList.setOnScrollListener(this);
@@ -411,8 +410,12 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
                             ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
             whereArgs = new String[]{userId + "", "1", filter, filter, filter, filter};
         }
-
-        getLoaderManager().restartLoader(type, null, this);
+        try {
+            getLoaderManager().restartLoader(type, null, this);
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            return false;
+        }
         return true;
     }
 

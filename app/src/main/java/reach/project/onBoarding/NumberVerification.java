@@ -60,6 +60,7 @@ public class NumberVerification extends Fragment {
     private static String finalAuthKey;
     private static WeakReference<NumberVerification> reference;
     private static OldUserContainerNew containerNew = null;
+    public static boolean newUser = false;
 
     public static NumberVerification newInstance() {
 
@@ -95,7 +96,29 @@ public class NumberVerification extends Fragment {
 
             final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
             (telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber)).requestFocus();
-            viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
+            TourPagerAdapter tourPagerAdapter = new TourPagerAdapter(rootView.getContext());
+            viewPager.setAdapter(tourPagerAdapter);
+            viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    /*if (position == tourPagerAdapter.getCount())
+                        ((ReachApplication)getActivity().getApplication())
+                                .trackGA(Optional.of("OnBoarding"),
+                                        Optional.of("Completed App Tour"),
+                                        Optional.of(""),
+                                        1);*/
+                }
+
+                @Override
+                public void onPageScrollStateChanged(int state) {
+
+                }
+            });
             ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
             rootView.findViewById(R.id.verify).setOnClickListener(LocalUtils.clickListener);
         }, 2000);
@@ -131,14 +154,13 @@ public class NumberVerification extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 
-        try {
-            if (Build.VERSION.SDK_INT >= 23)
-                if (ContextCompat.checkSelfPermission(getContext(),
-                        Manifest.permission.RECEIVE_SMS) == 0)
-                    getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
-                else
-                    getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
-        } catch (Exception ignore) {}
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.RECEIVE_SMS) == 0)
+                getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+        }
+        else
+            getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
 
         verifyCode = telephoneNumber = null;
         bottomPart1 = bottomPart2 = bottomPart3;
@@ -381,6 +403,7 @@ public class NumberVerification extends Fragment {
                 });
 
                 containerNew = pair.first;
+                newUser = containerNew == null;
 
                 MiscUtils.useFragment(reference, fragment -> {
                     fragment.bottomPart3.setVisibility(View.INVISIBLE);

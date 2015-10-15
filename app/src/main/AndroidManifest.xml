@@ -41,16 +41,16 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="process_multiple" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
-            android:name="com.mixpanel.android.mpmetrics.InstallReferrerReceiver"
+            android:name=".core.InstallTrackersReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
+                <action
+                    android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
 
@@ -83,6 +83,9 @@
         <service
             android:name=".utils.MusicScanner"
             android:exported="false" />
+
+        <service
+            android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
             android:name=".friends.ReachFriendsProvider"

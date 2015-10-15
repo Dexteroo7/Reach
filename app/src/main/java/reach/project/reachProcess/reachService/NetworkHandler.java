@@ -1512,6 +1512,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         public static void toast(String message, NetworkHandlerInterface handlerInterface, long id) {
 
             Log.i("Downloader", message + "TOAST");
+
             ((ReachApplication) handlerInterface.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory(message)
                     .setAction("ServerId " + id)

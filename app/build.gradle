@@ -9,8 +9,8 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 66
-        versionName "0.9.21.1-beta"
+        versionCode 67
+        versionName "0.9.21.2-beta"
     }
     buildTypes {
         release {
@@ -49,6 +49,7 @@ dependencies {
     compile 'com.squareup.wire:wire-runtime:1.8.0'
     compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
+    compile 'com.appvirality:AppviralityUI:1.1.15'
 
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'

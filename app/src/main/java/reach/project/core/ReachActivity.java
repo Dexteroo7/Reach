@@ -58,6 +58,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.appvirality.AppviralityUI;
+import com.appvirality.android.AppviralityAPI;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
 import com.firebase.client.ChildEventListener;
@@ -85,6 +87,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -293,10 +296,11 @@ public class ReachActivity extends AppCompatActivity implements
                         promoCodeDialog.show(fragmentManager, "promo_dialog");
                         return true;
                     case R.id.navigation_item_3:
-                        fragmentManager
+                        AppviralityUI.showGrowthHack(ReachActivity.this, AppviralityUI.GH.Word_of_Mouth);
+                        /*fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
+                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();*/
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
@@ -374,6 +378,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onPause();
 
+        AppviralityUI.onStop();
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
             return;
@@ -587,8 +592,15 @@ public class ReachActivity extends AppCompatActivity implements
             //load adapters
             loadAdapter();
             //add chat listener as it was not added earlier
-            if (firebaseReference != null && serverId != 0)
+            if (firebaseReference != null && serverId != 0) {
                 firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
+                //update time stamp
+                final Map<String, Object> userData = new HashMap<>();
+                userData.put("uid", serverId);
+                userData.put("newMessage", true);
+                userData.put("lastActivated", System.currentTimeMillis());
+                firebaseReference.child("user").child(serverId + "").updateChildren(userData);
+            }
 
         } catch (IllegalStateException ignored) {
             finish();
@@ -887,6 +899,8 @@ public class ReachActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
+        AppviralityUI.showWelcomeScreen(this);
+
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
@@ -1016,6 +1030,10 @@ public class ReachActivity extends AppCompatActivity implements
             mixpanel.registerSuperPropertiesOnce(props);
             ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
+            AppviralityAPI.UserDetails.setInstance(getApplicationContext())
+                    .setUseridInStore("storeId")
+                    .isExistingUser(false)
+                    .Update();
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
         if (!TextUtils.isEmpty(phoneNumber))
@@ -1390,6 +1408,8 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
 
+        AppviralityAPI.saveConversionEvent("TransferFile", null, null);
+
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
@@ -1661,6 +1681,8 @@ public class ReachActivity extends AppCompatActivity implements
                 Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
                 return false;
             }
+
+
 
             ProcessManager.submitMusicRequest(context,
                     Optional.of(musicData),
