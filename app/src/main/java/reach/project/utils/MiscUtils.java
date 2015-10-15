@@ -307,6 +307,26 @@ public enum MiscUtils {
         }
     }
 
+    public static ListView addLoadingToMusicListView(ListView listView) {
+
+        if (listView.getContext() == null)
+            return listView;
+        final ProgressBar loading = new ProgressBar(listView.getContext());
+        loading.setIndeterminate(true);
+        loading.setPadding(0, 0, 0, dpToPx(60));
+
+        final ViewParent parent = listView.getParent();
+
+        final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+        loading.setLayoutParams(layoutParams);
+        listView.setEmptyView(loading);
+        final RelativeLayout relativeLayout = (RelativeLayout) parent;
+        relativeLayout.addView(loading);
+        return listView;
+    }
+
     public static ListView addLoadingToListView(ListView listView) {
 
         if (listView.getContext() == null)

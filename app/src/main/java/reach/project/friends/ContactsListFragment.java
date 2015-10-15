@@ -117,7 +117,7 @@ public class ContactsListFragment extends Fragment implements
                             .show();
                 mListener.onOpenLibrary(id);
 
-            } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
+            } else if (status >= 2) {
 
                 final long clientId = cursor.getLong(0);
 
