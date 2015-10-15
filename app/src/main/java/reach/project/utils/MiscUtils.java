@@ -899,7 +899,7 @@ public enum MiscUtils {
     }
 
     private static final StringBuffer buffer = new StringBuffer();
-    private static final String baseURL = "http://ec2-52-24-99-153.us-west-2.compute.amazonaws.com:8080/getImage/small?";
+    private static final String baseURL = "http://52.74.53.245:8080/getImage/small?";
 
     public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
 

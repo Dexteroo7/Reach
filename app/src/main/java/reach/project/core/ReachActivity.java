@@ -86,6 +86,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -590,8 +591,15 @@ public class ReachActivity extends AppCompatActivity implements
             //load adapters
             loadAdapter();
             //add chat listener as it was not added earlier
-            if (firebaseReference != null && serverId != 0)
+            if (firebaseReference != null && serverId != 0) {
                 firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
+                //update time stamp
+                final Map<String, Object> userData = new HashMap<>();
+                userData.put("uid", serverId);
+                userData.put("newMessage", true);
+                userData.put("lastActivated", System.currentTimeMillis());
+                firebaseReference.child("user").child(serverId + "").updateChildren(userData);
+            }
 
         } catch (IllegalStateException ignored) {
             finish();
