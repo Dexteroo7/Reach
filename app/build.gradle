@@ -9,8 +9,8 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 67
-        versionName "0.9.21.2-beta"
+        versionCode 68
+        versionName "0.9.21.3-beta"
     }
     buildTypes {
         release {

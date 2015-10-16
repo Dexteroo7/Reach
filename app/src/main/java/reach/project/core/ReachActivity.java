@@ -883,6 +883,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        AppviralityAPI.init(this);
+        AppviralityUI.showWelcomeScreen(this);
         Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
 
         Pacemaker.scheduleLinear(this, 5);
@@ -898,8 +900,6 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-
-        AppviralityUI.showWelcomeScreen(this);
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
 
