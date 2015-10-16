@@ -1031,7 +1031,7 @@ public class ReachActivity extends AppCompatActivity implements
             ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
             AppviralityAPI.UserDetails.setInstance(getApplicationContext())
-                    .setUseridInStore("storeId")
+                    .setUseridInStore(userID + "")
                     .isExistingUser(false)
                     .Update();
         } else
