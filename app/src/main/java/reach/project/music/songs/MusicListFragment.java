@@ -174,7 +174,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_list, container, false);
         mPosition = getArguments().getInt("position");
-        musicList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
+        musicList = MiscUtils.addLoadingToMusicListView((ListView) rootView.findViewById(R.id.listView));
         View placeHolderView = inflater.inflate(R.layout.view_header_placeholder, musicList, false);
         musicList.addHeaderView(placeHolderView);
         musicList.setOnScrollListener(this);

@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.appvirality.android.AppviralityAPI;
 
 /**
- * Created by ashish on 13/10/15.
+ * Created by ashish on 19/10/15.
  */
 public class SplashActivity extends AppCompatActivity {
 

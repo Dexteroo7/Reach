@@ -38,15 +38,6 @@ public enum SharedPrefUtils {
                 .apply();
     }
 
-    public static void storeAuthKey(SharedPreferences sharedPreferences, String key) {
-        sharedPreferences.edit().putString("otpAuthKey", key).apply();
-    }
-
-    public static String getAuthKey(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getString("otpAuthKey", "");
-    }
-
-
     public static String getPhoneNumber(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("phoneNumber", "");
     }
@@ -85,23 +76,6 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("chatUUID", chatUUID).apply();
     }
 
-    /**
-     *
-     * @param sharedPreferences for accessing the prefs
-     * @return 0 : start numberVerification, 1 : start account creation, 2 : OK normal
-     */
-    public static short isUserAbsent(SharedPreferences sharedPreferences) {
-
-        if(TextUtils.isEmpty(sharedPreferences.getString("phoneNumber", "")))
-            return 0;
-
-        if(TextUtils.isEmpty(sharedPreferences.getString("userName", "")) ||
-                sharedPreferences.getLong("serverId", 0) == 0)
-            return 1;
-
-        return 2;
-    }
-
     public static String getMusicHash(SharedPreferences sharedPreferences, String fileName) {
         return sharedPreferences.getString(fileName, "");
     }
@@ -138,10 +112,6 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putBoolean("firstIntroSeen", true).apply();
     }
 
-    public static void setSecondIntroSeen(SharedPreferences sharedPreferences) {
-        sharedPreferences.edit().putBoolean("secondIntroSeen", true).apply();
-    }
-
     public static void setDataOn(SharedPreferences sharedPreferences) {
         sharedPreferences.edit().putBoolean("mobileDataOn", true).apply();
     }
@@ -160,10 +130,6 @@ public enum SharedPrefUtils {
 
     public static boolean getFirstIntroSeen(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("firstIntroSeen", false);
-    }
-
-    public static boolean getSecondIntroSeen(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getBoolean("secondIntroSeen", false);
     }
 
     public static boolean getReachQueueSeen(SharedPreferences sharedPreferences) {
@@ -188,10 +154,6 @@ public enum SharedPrefUtils {
         return sharedPreferences.getLong("serverId", 0);
     }
 
-//    public static String getPhoneNumber (SharedPreferences sharedPreferences) {
-//        return sharedPreferences.getString("phoneNumber", "");
-//    }
-
     public static String getUserNumber(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("phoneNumber", "");
     }
@@ -202,22 +164,6 @@ public enum SharedPrefUtils {
 
     public static String getImageId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("imageId", "");
-    }
-
-    public static int getSongCodeForUser(long userId, SharedPreferences sharedPreferences) {
-        return sharedPreferences.getInt("song_hash" + userId, 0);
-    }
-
-    public static int getPlayListCodeForUser(long userId, SharedPreferences sharedPreferences) {
-        return sharedPreferences.getInt("play_list_hash" + userId, 0);
-    }
-
-    public static void storeSongCodeForUser(long userId, int songId, SharedPreferences sharedPreferences) {
-        sharedPreferences.edit().putInt("song_hash" + userId, songId).apply();
-    }
-
-    public static void storePlayListCodeForUser(long userId, int playListId, SharedPreferences sharedPreferences) {
-        sharedPreferences.edit().putInt("play_list_hash" + userId, playListId).apply();
     }
 
     public static boolean toggleShuffle(SharedPreferences sharedPreferences) {

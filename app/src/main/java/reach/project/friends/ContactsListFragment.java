@@ -117,7 +117,7 @@ public class ContactsListFragment extends Fragment implements
                             .show();
                 mListener.onOpenLibrary(id);
 
-            } else if (status == ReachFriendsHelper.REQUEST_NOT_SENT) {
+            } else if (status >= 2) {
 
                 final long clientId = cursor.getLong(0);
 
@@ -296,7 +296,7 @@ public class ContactsListFragment extends Fragment implements
 
                 final Activity activity = getActivity();
                 final Chat chat = new Chat();
-                chat.setMessage("Hey! I am Devika from Team Reach! Send me an access request by clicking on the lock icon beside my name to view my Music collection. Keep Reaching ;)");
+                chat.setMessage("Hey! I am Devika. I handle customer relations at Reach. I will help you with any problems you face inside the app. So ping me here if you face any difficulties :)");
                 chat.setTimestamp(System.currentTimeMillis());
                 chat.setAdmin(Chat.ADMIN);
 

@@ -405,10 +405,15 @@ public class AccountCreation extends Fragment {
                         mixpanel.registerSuperPropertiesOnce(props);
                         people.identify(user.getId() + "");
                         people.set("UserID", user.getId() + "");
+                        AppviralityAPI.UserDetails.setInstance(activity)
+                                .setUseridInStore(user.getId() + "")
+                                .Update();
                         if (NumberVerification.newUser) {
                             //AppVirality Signup
                             AppviralityAPI.saveConversionEvent("Signup", null, null);
                         }
+
+                        MiscUtils.sendReferLog(user.getId() + "", "Signup");
                     }
                     people.set("$phone", user.getPhoneNumber() + "");
                     people.set("$name", user.getUserName() + "");
