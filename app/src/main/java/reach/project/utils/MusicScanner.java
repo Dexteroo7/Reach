@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
@@ -129,7 +130,8 @@ public class MusicScanner extends IntentService {
                 new String[]{serverId + ""},
                 null);
 
-        final LongSparseArray<SongPersist> songPersist;
+        LongSparseArray<SongPersist> songPersist;
+        //try local first
         if (reachSongInitialCursor != null) {
 
             songPersist = new LongSparseArray<>(reachSongInitialCursor.getCount());
@@ -158,6 +160,49 @@ public class MusicScanner extends IntentService {
             reachSongInitialCursor.close();
         } else
             songPersist = null;
+
+        //if no visibility found in table look in cloud
+        if (songPersist == null || songPersist.size() == 0) {
+
+            Log.i("Ayush", "Fetching visibility data");
+            //fetch visibility data
+            final MusicData visibility = MiscUtils.autoRetry(() -> StaticData.musicVisibility.get(serverId).execute(), Optional.absent()).orNull();
+            final JsonMap visibilityMap;
+            if (visibility == null || (visibilityMap = visibility.getVisibility()) == null || visibilityMap.isEmpty())
+                Log.i("Ayush", "no visibility data found on cloud");
+            else {
+
+                songPersist = new LongSparseArray<>(visibilityMap.size());
+                //cloud visibility found
+                for (Map.Entry<String, Object> objectEntry : visibilityMap.entrySet()) {
+
+                    if (objectEntry == null) {
+                        //TODO track
+                        Log.i("Ayush", "objectEntry was null");
+                        continue;
+                    }
+
+                    final String key = objectEntry.getKey();
+                    final Object value = objectEntry.getValue();
+
+                    if (TextUtils.isEmpty(key) || !TextUtils.isDigitsOnly(key) || value == null || !(value instanceof Boolean)) {
+                        //TODO track
+                        Log.i("Ayush", "Found shit data inside visibilityMap " + key + " " + value);
+                        continue;
+                    }
+
+                    //persist data found
+                    final SongPersist persist = new SongPersist();
+                    persist.visibility = (Boolean) value;
+                    persist.liked = false; //TODO track later
+
+                    songPersist.append(
+                            Long.parseLong(key),  //songId
+                            persist); //visibility
+                }
+                visibilityMap.clear();
+            }
+        }
 
         ////////////////////Loading new songs
         final Cursor musicCursor = resolver.query(uri, projection, null, null, null);
