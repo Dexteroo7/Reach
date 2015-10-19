@@ -9,8 +9,8 @@ android {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 69
-        versionName "0.9.21.4-beta"
+        versionCode 70
+        versionName "0.9.21.5-beta"
     }
     buildTypes {
         release {
@@ -34,8 +34,8 @@ dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
     compile 'com.google.android.gms:play-services:6.1.11'
-    //compile 'com.google.android.gms:play-services-gcm:7.8.0'
-    //compile 'com.google.android.gms:play-services-analytics:7.8.0'
+    //compile 'com.google.android.gms:play-services-gcm:8.1.0'
+    //compile 'com.google.android.gms:play-services-analytics:8.1.0'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'

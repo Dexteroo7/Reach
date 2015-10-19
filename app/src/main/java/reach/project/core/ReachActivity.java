@@ -409,6 +409,8 @@ public class ReachActivity extends AppCompatActivity implements
                 finish();
             }
         }
+        else
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -885,6 +887,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         AppviralityAPI.init(this);
         AppviralityUI.showWelcomeScreen(this);
+
         Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
 
         Pacemaker.scheduleLinear(this, 5);
@@ -1409,6 +1412,8 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getId()));
 
         AppviralityAPI.saveConversionEvent("TransferFile", null, null);
+
+        MiscUtils.sendReferLog(SharedPrefUtils.getServerId(preferences) + "", "TransferFile");
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")

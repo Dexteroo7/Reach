@@ -29,6 +29,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.appvirality.android.AppviralityAPI;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -39,14 +40,19 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.gson.Gson;
 
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -152,6 +158,33 @@ public enum MiscUtils {
                 closeable.close();
             } catch (IOException ignored) {
             }
+    }
+
+    public static void sendReferLog(String userID, String event){
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+            try {
+                URL url = new URL("http://52.74.175.56:8080/refer/log");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setDoInput(true);
+                con.setDoOutput(true);
+                Uri.Builder builder = new Uri.Builder()
+                        .appendQueryParameter("userId", userID)
+                        .appendQueryParameter("refCode", AppviralityAPI.getFriendReferralCode())
+                        .appendQueryParameter("eventName", event);
+                String query = builder.build().getEncodedQuery();
+                OutputStream os = con.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(query);
+                writer.flush();
+                writer.close();
+                os.close();
+                con.getInputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
