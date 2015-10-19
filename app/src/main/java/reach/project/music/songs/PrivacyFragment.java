@@ -118,7 +118,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 combinedAdapter.setActive(emptyMyLibrary, true);
             else
                 combinedAdapter.setActive(emptyMyLibrary, false);
-        } else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed()) {
+        } else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed() && downloadedAdapter != null) {
 
             downloadedAdapter.swapCursor(cursor);
             if (cursor.getCount() == 0 && privacyList != null)

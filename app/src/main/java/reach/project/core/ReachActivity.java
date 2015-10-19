@@ -408,6 +408,8 @@ public class ReachActivity extends AppCompatActivity implements
                 finish();
             }
         }
+        else
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override

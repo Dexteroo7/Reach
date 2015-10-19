@@ -484,10 +484,6 @@ public class NumberVerification extends Fragment {
                 return;
             }
 
-            final int length = parsed.length();
-            //take last 10 digits
-            new GetOldAccount().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, parsed.substring(length - 10, length));
-
             MiscUtils.useFragment(reference, fragment -> {
                 Activity activity = fragment.getActivity();
                 if (Build.VERSION.SDK_INT >= 23) {
@@ -505,6 +501,10 @@ public class NumberVerification extends Fragment {
                 fragment.bottomPart1.setVisibility(View.INVISIBLE);
                 fragment.bottomPart3.setVisibility(View.VISIBLE);
             });
+
+            final int length = parsed.length();
+            //take last 10 digits
+            new GetOldAccount().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, parsed.substring(length - 10, length));
         };
     }
 }
