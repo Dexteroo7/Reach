@@ -1412,6 +1412,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         AppviralityAPI.saveConversionEvent("TransferFile", null, null);
 
+        MiscUtils.sendReferLog(SharedPrefUtils.getServerId(preferences) + "", "TransferFile");
+
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))

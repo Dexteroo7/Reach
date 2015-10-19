@@ -412,6 +412,8 @@ public class AccountCreation extends Fragment {
                             //AppVirality Signup
                             AppviralityAPI.saveConversionEvent("Signup", null, null);
                         }
+
+                        MiscUtils.sendReferLog(user.getId() + "", "Signup");
                     }
                     people.set("$phone", user.getPhoneNumber() + "");
                     people.set("$name", user.getUserName() + "");
