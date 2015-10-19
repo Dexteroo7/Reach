@@ -96,8 +96,6 @@ public class ReachSongHelper extends SQLiteOpenHelper {
         values.put(COLUMN_ARTIST, song.artist);
         values.put(COLUMN_DURATION, song.duration);
         values.put(COLUMN_ALBUM, song.album);
-        if (song.albumArtData != null)
-            values.put(COLUMN_ALBUM_ART_DATA, song.albumArtData.toByteArray());
 
         values.put(COLUMN_USER_ID, serverId);
         values.put(COLUMN_SIZE, song.size);

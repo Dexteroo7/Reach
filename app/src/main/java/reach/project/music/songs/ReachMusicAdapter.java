@@ -2,6 +2,7 @@ package reach.project.music.songs;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,21 +10,23 @@ import android.widget.ImageView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
-
-import java.io.UnsupportedEncodingException;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.interfaces.DraweeController;
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.google.common.base.Optional;
 
 import reach.project.R;
 import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 /**
  * Created by dexter on 7/8/14.
  */
 public class ReachMusicAdapter extends ResourceCursorAdapter {
-
-    private final CircleTransform circleTransform = new CircleTransform();
 
     public String[] getProjectionDownloaded() {
         return projectionDownloaded;
@@ -77,7 +80,9 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
 
     public static final byte PLAYER = 0;
     public static final byte LIST = 1;
+
     private final byte type;
+    private final int width = 50, height = 50; //fixed dimensions
 
     public ReachMusicAdapter(Context context, int layout, Cursor c, int flags, byte type) {
         super(context, layout, c, flags);
@@ -85,10 +90,12 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
     }
 
     private final class ViewHolder {
-        private final ImageView listToggle, albumArt;
+
+        private final SimpleDraweeView albumArt;
+        private final ImageView listToggle;
         private final TextView listTitle, listSubTitle, songDuration;
 
-        private ViewHolder(ImageView listToggle, ImageView albumArt, TextView listTitle, TextView listSubTitle, TextView songDuration) {
+        private ViewHolder(ImageView listToggle, SimpleDraweeView albumArt, TextView listTitle, TextView listSubTitle, TextView songDuration) {
 
             this.listToggle = listToggle;
             this.albumArt = albumArt;
@@ -130,19 +137,22 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
                 return;
         }
 
-        String url = null;
-        try {
-            url = MiscUtils.getAlbumArt(album, artist, displayName);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName);
 
-        if (TextUtils.isEmpty(url))
+        if (uriOptional.isPresent()) {
+
+            final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
+                    .setResizeOptions(new ResizeOptions(width, height))
+                    .build();
+
+            final DraweeController controller = Fresco.newDraweeControllerBuilder()
+                    .setOldController(viewHolder.albumArt.getController())
+                    .setImageRequest(request)
+                    .build();
+
+            viewHolder.albumArt.setController(controller);
+        } else
             viewHolder.albumArt.setImageBitmap(null);
-        else
-            Picasso.with(context).load(url)
-                    .fit().centerCrop().transform(circleTransform)
-                    .into(viewHolder.albumArt);
 
         viewHolder.listTitle.setText(displayName); //displayName
         viewHolder.songDuration.setText(MiscUtils.combinationFormatter(duration)); //duration
@@ -151,14 +161,15 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         if (TextUtils.isEmpty(viewHolder.listSubTitle.getText()))
             viewHolder.listSubTitle.setText(album); //album
         if (viewHolder.listToggle != null) {
+
             //Privacy Fragment stuff
             if (visibility == 0) { //visibility
                 viewHolder.songDuration.setText("Invisible");
-                Picasso.with(context).load(R.drawable.ic_action_visibility_off).noFade().into(viewHolder.listToggle);
+                viewHolder.listToggle.setImageResource(R.drawable.ic_action_visibility_off);
                 view.setAlpha(0.4f);
             } else {
                 viewHolder.songDuration.setText(" Visible ");
-                Picasso.with(context).load(R.drawable.ic_action_visibility_on).noFade().into(viewHolder.listToggle);
+                viewHolder.listToggle.setImageResource(R.drawable.ic_action_visibility_on);
                 view.setAlpha(1f);
             }
         }
@@ -170,7 +181,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         final View view = super.newView(context, cursor, parent);
         final ViewHolder viewHolder = new ViewHolder(
                 (ImageView) view.findViewById(R.id.listToggle),
-                (ImageView) view.findViewById(R.id.albumArt),
+                (SimpleDraweeView) view.findViewById(R.id.albumArt),
                 (TextView) view.findViewById(R.id.listTitle),
                 (TextView) view.findViewById(R.id.listSubTitle),
                 (TextView) view.findViewById(R.id.songDuration));
@@ -178,42 +189,4 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         view.setTag(viewHolder);
         return view;
     }
-
-//    private final class ShowImage implements AsyncCache.ResultCallback<String> {
-//
-//        final ImageView imageView;
-//        final Picasso picasso;
-//
-//        private ShowImage(ImageView imageView, Picasso picasso) {
-//            this.imageView = imageView;
-//            this.picasso = picasso;
-//        }
-//
-//        @Override
-//        public void result(Optional<String> data) {
-//
-//            if (!data.isPresent() || data.get().equals(EMPTY_STRING))
-//                return;
-//
-//            Log.i("Ayush", "Picasso plz work " + data.get());
-//            picasso.load(data.get()).fit().transform(circleTransform).into(imageView, new Callback() {
-//                @Override
-//                public void onSuccess() {
-//                    Log.i("Ayush", "Picasso worked probably");
-//                }
-//
-//                @Override
-//                public void onError() {
-//                    Log.i("Ayush", "Possible problem in picasso it self");
-//                }
-//            });
-//
-//
-//            try {
-//                Thread.sleep(10000L);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 }

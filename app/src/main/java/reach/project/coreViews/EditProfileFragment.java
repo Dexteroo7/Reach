@@ -27,7 +27,6 @@ import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -47,12 +46,11 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 public class EditProfileFragment extends Fragment {
 
     private final int IMAGE_PICKER_SELECT = 999;
-    private final CircleTransform transform = new CircleTransform();
+//    private final CircleTransform transform = new CircleTransform();
 
     private SuperInterface mListener;
     private EditText firstName = null;
@@ -121,7 +119,7 @@ public class EditProfileFragment extends Fragment {
 
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             profile.setBackgroundResource(0);
-            Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + imageId).fit().centerCrop().transform(transform).into(profile);
+//            Picasso.with(container.getContext()).load(StaticData.cloudStorageImageBaseUrl + imageId).fit().centerCrop().transform(transform).into(profile);
         }
 
         profile.setOnClickListener(imagePicker);
@@ -256,7 +254,7 @@ public class EditProfileFragment extends Fragment {
                     } else if (fragment.profile != null) {
 
                         toUpload = file;
-                        Picasso.with(activity).load(toUpload).fit().centerCrop().transform(fragment.transform).into(fragment.profile);
+//                        Picasso.with(activity).load(toUpload).fit().centerCrop().transform(fragment.transform).into(fragment.profile);
                     }
                 }
             });

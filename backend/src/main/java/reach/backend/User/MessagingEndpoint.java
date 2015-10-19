@@ -156,15 +156,15 @@ public class MessagingEndpoint {
             ofy().save().entities(host).now();
         }
 
-        if (host.getGcmId() == null || host.getGcmId().equals("")) {
-            log.info("Error handling reply " + hostId + " " + clientId);
-            return new MyString("false");
-        }
-
         if (isDevika(host.getPhoneNumber(), hostId)) {
             //DO NOT SEND GCM, Devika does not have a gcm id !
             NotificationEndpoint.getInstance().addBecameFriends(hostId, clientId, true);
             return new MyString("true");
+        }
+
+        if (host.getGcmId() == null || host.getGcmId().equals("")) {
+            log.info("Error handling reply " + hostId + " " + clientId);
+            return new MyString("false");
         }
 
         return new MyString(sendMessage("PERMISSION_REQUEST`" + clientId + "`" + client.getUserName(), host) + "");
@@ -418,7 +418,6 @@ public class MessagingEndpoint {
         try {
             multicastResult = new Sender(API_KEY).send(new Message.Builder().addData("message", message).build(), regIds, 5);
         } catch (IOException | IllegalArgumentException e) {
-
             e.printStackTrace();
             log.log(Level.SEVERE, e.getLocalizedMessage() + " error");
             return false;

@@ -94,6 +94,8 @@ public class ReachUserEndpoint {
             friends.add(new Friend(devika, false, 0));
         }
 
+        //send all contacts to AWS
+
         return friends;
     }
 
@@ -141,6 +143,7 @@ public class ReachUserEndpoint {
             for (long id : client.getMyReach())
                 keysBuilder.add(Key.create(ReachUser.class, id));
         }
+
         if (sentRequestsCheck) {
 
             keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));

@@ -3,6 +3,8 @@ package reach.project.utils;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 
+import java.util.Map;
+
 import reach.project.core.ReachApplication;
 
 /**
@@ -19,12 +21,14 @@ public enum Tracker {
                                           Optional<String> label,
                                           int value) {
 
-        application.getTracker().send(builder
+        final Map<String, String> toSend = builder
                 .setCategory(category.isPresent() ? category.get() : null)
                 .setAction(action.isPresent() ? action.get() : null)
                 .setLabel(label.isPresent() ? label.get() : null)
                 .setValue(value)
-                .build());
+                .build();
+
+        application.getTracker().send(toSend);
 
         //reset
         builder.setCategory(null);

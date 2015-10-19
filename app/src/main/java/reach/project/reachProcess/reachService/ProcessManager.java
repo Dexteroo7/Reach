@@ -829,6 +829,7 @@ public class ProcessManager extends Service implements
 
     //////////////////////////////////
     private Cursor getReachDatabaseCursor() {
+
         return getContentResolver().query(
                 ReachDatabaseProvider.CONTENT_URI,
                 StaticData.DOWNLOADED_PARTIAL,
@@ -839,6 +840,7 @@ public class ProcessManager extends Service implements
     }
 
     private Cursor getMyLibraryCursor() {
+
         return getContentResolver().query(
                 ReachSongProvider.CONTENT_URI,
                 StaticData.DISK_PARTIAL,

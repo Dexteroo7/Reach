@@ -18,7 +18,7 @@ import java.util.HashSet;
 @Index
 public class ReachUser {
 
-    public static final int ONLINE_LIMIT = 60 * 1000; //30 seconds timeout
+    public static final int ONLINE_LIMIT = 60 * 1000; //60 seconds timeout
 
     @Id
     private Long id;

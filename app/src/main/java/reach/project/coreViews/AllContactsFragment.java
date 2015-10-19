@@ -30,7 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
-import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -323,7 +322,7 @@ public class AllContactsFragment extends Fragment implements
                                     //fail
                                     contact.setInviteSent(false);
                                     LocalUtils.inviteSentTo.remove(String.valueOf(contact.hashCode()));
-                                    Picasso.with(context).load(R.drawable.icon_invite).into(listToggle);
+//                                    Picasso.with(context).load(R.drawable.icon_invite).into(listToggle);
 
                                     final ArrayAdapter adapter = arrayAdapterReference.get();
                                     if (adapter == null)
@@ -350,7 +349,7 @@ public class AllContactsFragment extends Fragment implements
                                 Log.i("Ayush", "Marking true " + contact.getUserName());
                                 LocalUtils.inviteSentTo.add(String.valueOf(contact.hashCode()));
                                 contact.setInviteSent(true);
-                                Picasso.with(context).load(R.drawable.add_tick).into(listToggle);
+//                                Picasso.with(context).load(R.drawable.add_tick).into(listToggle);
                                 adapter.notifyDataSetChanged();
                                 new SendInvite().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, contact.getPhoneNumber(), txt);
                             } else

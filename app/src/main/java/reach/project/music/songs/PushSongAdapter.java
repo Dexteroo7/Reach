@@ -9,8 +9,6 @@ import android.widget.ImageView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
-
 import reach.project.R;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.utils.MiscUtils;
@@ -107,12 +105,12 @@ public class PushSongAdapter extends ResourceCursorAdapter {
 
             viewHolder.listToggle.setPadding(pad, pad, pad, pad);
             viewHolder.listToggle.setBackgroundResource(R.drawable.circular_background_dark);
-            Picasso.with(context).load(R.drawable.check_white).noFade().into(viewHolder.listToggle);
+//            Picasso.with(context).load(R.drawable.check_white).noFade().into(viewHolder.listToggle);
         } else {
 
             viewHolder.listToggle.setPadding(0, 0, 0, 0);
             viewHolder.listToggle.setBackgroundResource(0);
-            Picasso.with(context).load(R.drawable.add_grey).noFade().into(viewHolder.listToggle);
+//            Picasso.with(context).load(R.drawable.add_grey).noFade().into(viewHolder.listToggle);
         }
     }
 

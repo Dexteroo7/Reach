@@ -45,7 +45,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -897,33 +896,6 @@ public enum MiscUtils {
         return tempFile;
     }
 
-    private static final StringBuffer buffer = new StringBuffer();
-    private static final String baseURL = "http://ec2-52-24-99-153.us-west-2.compute.amazonaws.com:8080/getImage/small?";
-
-    public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
-
-        buffer.setLength(0);
-        buffer.append(baseURL);
-        if (!TextUtils.isEmpty(album)) {
-
-            buffer.append("album=").append(Uri.encode(album));
-            if (!TextUtils.isEmpty(artist))
-                buffer.append("&artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(Uri.encode(song));
-        } else if (!TextUtils.isEmpty(artist)) {
-
-            buffer.append("artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(Uri.encode(song));
-        } else if (!TextUtils.isEmpty(song))
-            buffer.append("song=").append(Uri.encode(song));
-
-        final String toReturn = buffer.toString();
-//        Log.i("Ayush", toReturn);
-        return toReturn;
-    }
-
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,
                                                                              ReachDatabase reachDatabase,
                                                                              long receiverId,
@@ -1065,7 +1037,7 @@ public enum MiscUtils {
             MiscUtils.useContextFromContext(toHelpTrack, activity -> {
 
                 ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("SEVERE ERROR, account creation failed")
+                        .setCategory("SEVERE ERROR, chat token failed")
                         .setAction("User Id - " + serverId)
                         .setValue(1)
                         .build());
@@ -1080,6 +1052,15 @@ public enum MiscUtils {
 
                 @Override
                 public void onAuthenticationError(FirebaseError error) {
+
+                    MiscUtils.useContextFromContext(toHelpTrack, activity -> {
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("SEVERE ERROR " + error.getDetails())
+                                .setAction("User Id - " + serverId)
+                                .setValue(1)
+                                .build());
+                    });
                     Log.e("Ayush", "Login Failed! " + error.getMessage());
                 }
 

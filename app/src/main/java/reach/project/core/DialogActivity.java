@@ -1,17 +1,15 @@
 package reach.project.core;
 
 import android.app.Activity;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import com.facebook.drawee.view.SimpleDraweeView;
 
 import reach.project.R;
-import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 public class DialogActivity extends Activity {
 
@@ -26,20 +24,17 @@ public class DialogActivity extends Activity {
         final TextView exit = (TextView) findViewById(R.id.exit);
         final LinearLayout accept = (LinearLayout) findViewById(R.id.accept);
         final LinearLayout reject = (LinearLayout) findViewById(R.id.reject);
-        final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
-        final int type = getIntent().getIntExtra("type",0);
+        final int type = getIntent().getIntExtra("type", 0);
 
-        final int px = MiscUtils.dpToPx(50);
-        Picasso.with(DialogActivity.this)
-                .load(StaticData.dropBoxManager)
-                .centerCrop()
-                .resize(px, px)
-                .transform(new CircleTransform())
-                .into(userImageView);
+        final SimpleDraweeView userImageView = (SimpleDraweeView) findViewById(R.id.userImage);
+        userImageView.setImageURI(Uri.parse(StaticData.dropBoxManager));
+
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);
         exit.setVisibility(View.VISIBLE);
+
         exit.setOnClickListener(v -> finish());
+
         if (type == 1) {
             userName.setText("Hey!");
             textView1.setText("I am Devika from Team Reach! \n" +

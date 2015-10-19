@@ -1,98 +1,117 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+
     android:layout_width="match_parent"
-    android:padding="20dp"
     android:layout_height="match_parent"
+    android:padding="20dp"
     tools:context="reach.project.core.ReachNotificationActivity">
+
     <RelativeLayout
         android:id="@+id/userContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-        <ImageView
+
+        <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/userImage"
-            android:src="@drawable/profile_pic_blue"
-            android:scaleType="fitCenter"
             android:layout_width="50dp"
-            android:layout_height="50dp" />
+            android:layout_height="50dp"
+            fresco:actualImageScaleType="centerCrop"
+            fresco:failureImage="@drawable/profile_pic_blue"
+            fresco:failureImageScaleType="centerCrop"
+            fresco:placeholderImage="@drawable/profile_pic_blue"
+            fresco:placeholderImageScaleType="centerCrop"
+            fresco:roundAsCircle="true" />
+
         <TextView
             android:id="@+id/userName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:layout_toRightOf="@id/userImage"
             android:text="Name"
             android:textColor="@color/reach_color"
-            android:textSize="20sp"
-            android:layout_marginLeft="10dp"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/userImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:textSize="20sp" />
+
     </RelativeLayout>
+
     <TextView
         android:id="@+id/textView1"
-        android:layout_below="@id/userContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignLeft="@id/userContainer"
+        android:layout_below="@id/userContainer"
+        android:layout_marginBottom="10dp"
         android:layout_marginRight="20dp"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
         android:text="wants you to listen to"
-        android:textSize="15sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:textSize="15sp" />
+
     <LinearLayout
         android:id="@+id/btnContainer"
-        android:layout_below="@id/textView1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView1">
+
         <LinearLayout
             android:id="@+id/accept"
-            android:clickable="false"
-            android:layout_marginRight="20dp"
             android:layout_width="110dp"
             android:layout_height="30dp"
-            android:gravity="center"
-            android:background="@drawable/tour_button_selector">
+            android:layout_marginRight="20dp"
+            android:background="@drawable/tour_button_selector"
+            android:clickable="false"
+            android:gravity="center">
+
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:src="@drawable/accept"/>
+                android:src="@drawable/accept" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="15sp"
                 android:layout_marginLeft="10dp"
-                android:text="Accept"/>
+                android:text="Accept"
+                android:textColor="@color/white"
+                android:textSize="15sp" />
         </LinearLayout>
+
         <LinearLayout
             android:id="@+id/reject"
-            android:clickable="false"
             android:layout_width="110dp"
             android:layout_height="30dp"
             android:background="@drawable/reject_button_selector"
+            android:clickable="false"
             android:gravity="center">
+
             <ImageView
                 android:layout_width="15dp"
                 android:layout_height="15dp"
-                android:src="@drawable/reject_white"/>
+                android:src="@drawable/reject_white" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="15sp"
                 android:layout_marginLeft="10dp"
-                android:text="Reject"/>
+                android:text="Reject"
+                android:textColor="@color/white"
+                android:textSize="15sp" />
         </LinearLayout>
     </LinearLayout>
+
     <TextView
         android:id="@+id/exit"
-        android:visibility="gone"
-        android:text="Ok! I got it"
-        android:background="@drawable/number_text_selector"
-        android:textColor="@color/reach_grey"
-        android:paddingRight="5dp"
-        android:paddingLeft="5dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:layout_below="@id/textView1"
-        android:layout_alignRight="@id/textView1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@id/textView1"
+        android:layout_below="@id/textView1"
+        android:background="@drawable/number_text_selector"
+        android:paddingBottom="10dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingTop="10dp"
+        android:text="Ok! I got it"
+        android:textColor="@color/reach_grey"
+        android:visibility="gone" />
 </RelativeLayout>

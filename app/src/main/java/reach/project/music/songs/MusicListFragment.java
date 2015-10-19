@@ -1,6 +1,5 @@
 package reach.project.music.songs;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -51,7 +50,9 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            if (mListener != null && position!=0) {
+
+            if (mListener != null && position != 0) {
+
                 final Cursor cursor = (Cursor) reachMusicAdapter.getItem(position - 1);
                 final long senderId = cursor.getLong(2);
 
@@ -370,6 +371,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
             searchView.setQuery(null, true);
             searchView.clearFocus();
         }
+
         onQueryTextChange(null);
         return false;
     }
@@ -412,7 +414,10 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
             whereArgs = new String[]{userId + "", "1", filter, filter, filter, filter};
         }
 
-        getLoaderManager().restartLoader(type, null, this);
+        try {
+            getLoaderManager().restartLoader(type, null, this);
+        } catch (IllegalStateException ignored) {
+        }
         return true;
     }
 
@@ -440,14 +445,15 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
     public void setSearchView(SearchView sView) {
 
-        onClose();
+        if (isAdded())
+            onClose();
 
         if (sView == null && searchView != null) {
             //invalidate old
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
             searchView = null;
-        } else if (sView != null){
+        } else if (sView != null) {
             //set new
             searchView = sView;
             searchView.setOnQueryTextListener(this);

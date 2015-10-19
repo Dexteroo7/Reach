@@ -2,20 +2,18 @@ package reach.project.coreViews;
 
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -45,11 +43,8 @@ import com.firebase.client.Firebase;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.nineoldandroids.view.ViewHelper;
-import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Map;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
@@ -69,7 +64,6 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
-import reach.project.utils.viewHelpers.CircleTransform;
 import reach.project.utils.viewHelpers.TextDrawable;
 import reach.project.utils.viewHelpers.astuetz.PagerSlidingTabStrip;
 import reach.project.utils.viewHelpers.flavienlaurent.notboringactionbar.AlphaForegroundColorSpan;
@@ -265,7 +259,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final String path;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             path = StaticData.cloudStorageImageBaseUrl + imageId;
-            Picasso.with(activity).load(path).fit().centerCrop().into(largeProfilePic);
+//            Picasso.with(activity).load(path).fit().centerCrop().into(largeProfilePic);
         } else
             path = "default";
 
@@ -324,11 +318,25 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 return; //no visibility data found
             }
 
-            //parse visibility data
-            final ArrayList<ContentProviderOperation> operations = new ArrayList<>(visibilityMap.size());
+            //handle visibility data
+            MiscUtils.useContextFromFragment(reference, (Context context) -> handleVisibility(context, visibilityMap, hostId));
+        }
+    }
+
+    private static synchronized void handleVisibility(Context context,
+                                                      JsonMap visibilityMap,
+                                                      long serverId) {
+
+        final ReachSongHelper reachSongHelper = new ReachSongHelper(context);
+        final SQLiteDatabase sqlDB = reachSongHelper.getWritableDatabase();
+        sqlDB.beginTransaction();
+
+        try {
+
             for (Map.Entry<String, Object> objectEntry : visibilityMap.entrySet()) {
 
                 if (objectEntry == null) {
+                    //TODO track
                     Log.i("Ayush", "objectEntry was null");
                     continue;
                 }
@@ -337,6 +345,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 final Object value = objectEntry.getValue();
 
                 if (TextUtils.isEmpty(key) || !TextUtils.isDigitsOnly(key) || value == null || !(value instanceof Boolean)) {
+                    //TODO track
                     Log.i("Ayush", "Found shit data inside visibilityMap " + key + " " + value);
                     continue;
                 }
@@ -344,26 +353,20 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 final ContentValues values = new ContentValues();
                 values.put(ReachSongHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
 
-                operations.add(ContentProviderOperation
-                        .newUpdate(ReachSongProvider.CONTENT_URI)
-                        .withValues(values)
-                        .withSelection(ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_SONG_ID + " = ?",
-                                new String[]{hostId + "", key}).build());
+                sqlDB.update(ReachSongHelper.SONG_TABLE,
+                        values,
+                        ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_SONG_ID + " = ?", new String[]{serverId + "", key});
             }
 
-            //update visibility into database
-            if (operations.size() > 0) {
-                MiscUtils.useContextFromFragment(reference, context -> {
-                    try {
-                        context.getContentResolver().applyBatch(ReachSongProvider.AUTHORITY, operations);
-                        Log.i("Ayush", "Visibility updated !");
-                    } catch (RemoteException | OperationApplicationException e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                });
-            }
+            visibilityMap.clear();
+            sqlDB.setTransactionSuccessful();
+
+        } finally {
+
+            sqlDB.endTransaction();
+            reachSongHelper.close();
         }
+        context.getContentResolver().notifyChange(ReachSongProvider.CONTENT_URI, null);
     }
 
     //TODO recycle bitmap
@@ -382,18 +385,19 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
             if (params[0].equals("default"))
                 return null;
 
-            return MiscUtils.useContextFromFragment(reference, context -> {
-
-                try {
-                    return Picasso.with(context).load(params[0])
-                            .resize(margin, margin)
-                            .centerCrop()
-                            .transform(new CircleTransform()).get();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }).orNull();
+//            return MiscUtils.useContextFromFragment(reference, context -> {
+//
+//                try {
+//                    return Picasso.with(context).load(params[0])
+//                            .resize(margin, margin)
+//                            .centerCrop()
+//                            .transform(new CircleTransform()).get();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    return null;
+//                }
+//            }).orNull();
+            return null;
         }
 
         @Override

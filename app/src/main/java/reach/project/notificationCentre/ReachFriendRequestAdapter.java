@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.common.base.Optional;
-import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -26,7 +25,6 @@ import reach.project.coreViews.MyReachFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 /**
  * Created by ashish on 14/07/15.
@@ -73,7 +71,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         final View reject = convertView.findViewById(R.id.rejectBlock);
         final ReceivedRequest receivedRequest = getItem(position);
 
-        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).fit().centerCrop().transform(new CircleTransform()).into(profilePhoto);
+//        Picasso.with(convertView.getContext()).load(StaticData.cloudStorageImageBaseUrl + receivedRequest.getImageId()).fit().centerCrop().transform(new CircleTransform()).into(profilePhoto);
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 

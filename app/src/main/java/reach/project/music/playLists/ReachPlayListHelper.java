@@ -6,13 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
-
-import reach.project.utils.MiscUtils;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -154,31 +149,6 @@ public class ReachPlayListHelper extends SQLiteOpenHelper {
         values.put(COLUMN_USER_ID, serverId);
         values.put(COLUMN_SIZE, playlist.reachSongs.size());
         values.put(COLUMN_ARRAY_OF_SONG_IDS, toBytes(playlist.reachSongs));
-
-        if (playlist.listOfAlbumArtData == null ||
-                playlist.listOfAlbumArtData.albumArtData == null ||
-                playlist.listOfAlbumArtData.albumArtData.isEmpty())
-            return values;
-
-        final byte[] unCompressedData = playlist.listOfAlbumArtData.toByteArray();
-        final byte[] compressedAlbumArts;
-
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(unCompressedData.length);
-        GZIPOutputStream gzipOutputStream = null;
-
-        try {
-            gzipOutputStream = new GZIPOutputStream(outputStream);
-            gzipOutputStream.write(unCompressedData);
-            gzipOutputStream.close();
-            compressedAlbumArts = outputStream.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return values;
-        } finally {
-            MiscUtils.closeQuietly(outputStream, gzipOutputStream);
-        }
-
-        values.put(COLUMN_ALBUM_ART, compressedAlbumArts);
         return values;
     }
 

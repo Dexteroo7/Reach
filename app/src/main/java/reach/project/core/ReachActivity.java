@@ -56,6 +56,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -70,7 +71,6 @@ import com.google.gson.reflect.TypeToken;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,6 +101,8 @@ import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
+import reach.project.explore.ExploreFragment;
+import reach.project.explore.ExploreFragment.OnFragmentInteractionListener;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.songs.PrivacyFragment;
@@ -137,7 +139,8 @@ public class ReachActivity extends AppCompatActivity implements
         FragmentManager.OnBackStackChangedListener,
         LoaderManager.LoaderCallbacks<Cursor>,
         SearchView.OnQueryTextListener,
-        SearchView.OnCloseListener {
+        SearchView.OnCloseListener,
+        OnFragmentInteractionListener {
 
     public static long serverId = 0;
     private static WeakReference<ReachActivity> reference = null;
@@ -573,7 +576,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void updateDetails(File image, String userName) {
 
-        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
+        ((SimpleDraweeView) findViewById(R.id.userImageNav)).setImageURI(Uri.fromFile(image));
         ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
     }
 
@@ -670,8 +673,10 @@ public class ReachActivity extends AppCompatActivity implements
         });
 
         final String path = SharedPrefUtils.getImageId(preferences);
+
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
+            ((SimpleDraweeView) findViewById(R.id.userImageNav)).setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + path));
+
         ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
 
@@ -992,7 +997,7 @@ public class ReachActivity extends AppCompatActivity implements
                 slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
                 fragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                        .replace(R.id.container, MyReachFragment.newInstance(), "my_reach").commit();
+                        .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
                 //load notification drawer
                 addNotificationDrawer();
                 //load adapters
@@ -1372,6 +1377,11 @@ public class ReachActivity extends AppCompatActivity implements
         });
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
     private enum LocalUtils {
         ;
 
@@ -1608,7 +1618,6 @@ public class ReachActivity extends AppCompatActivity implements
                 Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
                 return false;
             }
-
 
 
             ProcessManager.submitMusicRequest(context,

@@ -31,7 +31,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
-import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -478,7 +477,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 final ImageView image = (ImageView) v.findViewById(R.id.image);
                 image.setPadding(0, 0, 0, 0);
                 image.setBackgroundResource(0);
-                Picasso.with(v.getContext()).load(R.drawable.hide_dialog).into(image);
+//                Picasso.with(v.getContext()).load(R.drawable.hide_dialog).into(image);
                 final TextView text1 = (TextView) v.findViewById(R.id.text1);
                 text1.setText("Tap to hide your songs. By default your personal audio files are hidden");
                 final TextView done = (TextView) v.findViewById(R.id.done);

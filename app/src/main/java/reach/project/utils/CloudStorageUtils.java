@@ -438,13 +438,6 @@ public enum CloudStorageUtils {
 
     private static Optional<Storage> getStorage(InputStream stream) {
 
-//        final HttpResponseCache cache = HttpResponseCache.();
-//        if (cache != null)
-//            try {
-//                cache.delete();
-//            } catch (IOException ignored) {
-//            }
-
         if (storage != null)
             return Optional.of(storage);
 

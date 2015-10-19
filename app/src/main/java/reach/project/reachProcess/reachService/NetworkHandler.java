@@ -17,7 +17,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
-import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -58,7 +57,6 @@ import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.Tracker;
 
 /**
  * Created by Dexter on 18-05-2015.
@@ -1514,18 +1512,17 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
             Log.i("Downloader", message + "TOAST");
 
-            Tracker.track(
-                    (ReachApplication) handlerInterface.getApplication(),
+            ((ReachApplication) handlerInterface.getApplication()).track(
                     Optional.of(message),
                     Optional.of("ServerId " + id),
                     Optional.absent(),
                     1);
 
-            ((ReachApplication) handlerInterface.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory(message)
-                    .setAction("ServerId " + id)
-                    .setValue(1)
-                    .build());
+//            ((ReachApplication) handlerInterface.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+//                    .setCategory(message)
+//                    .setAction("ServerId " + id)
+//                    .setValue(1)
+//                    .build());
         }
 
         /**
