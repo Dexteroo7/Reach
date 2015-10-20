@@ -432,6 +432,8 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                 .build());
 
         MiscUtils.useFragment(reference, fragment -> {
+            if (activity.isFinishing())
+                return;
             try {
                 PushDialog.newInstance(pushContainer).show(fragment.getChildFragmentManager(), "push_dialog");
             } catch (IllegalStateException ignored) {

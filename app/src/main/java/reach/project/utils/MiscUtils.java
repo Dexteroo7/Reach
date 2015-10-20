@@ -939,6 +939,8 @@ public enum MiscUtils {
         // will load & resize the image to be 1/inSampleSize dimensions
         Log.i("Ayush", "Starting compression");
         final Bitmap bitmap = BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions);
+        if (bitmap == null)
+            return image;
         bitmap.compress(Bitmap.CompressFormat.WEBP, 80, fileOutputStream);
         fileOutputStream.flush();
         closeQuietly(fInputStream, fileOutputStream);
