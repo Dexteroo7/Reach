@@ -27,7 +27,7 @@ public class ViewPagerReusable extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return Integer.MAX_VALUE;
+        return fragments.length;
     }
 
     @Override
