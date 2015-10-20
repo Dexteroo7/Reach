@@ -145,13 +145,18 @@ public class NumberVerification extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(getContext(),
-                    Manifest.permission.RECEIVE_SMS) == 0)
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (ContextCompat.checkSelfPermission(getContext(),
+                        Manifest.permission.RECEIVE_SMS) == 0)
+                    getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+            }
+            else
                 getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
         }
-        else
-            getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+        catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
 
         verifyCode = telephoneNumber = null;
         bottomPart1 = bottomPart2 = bottomPart3;
