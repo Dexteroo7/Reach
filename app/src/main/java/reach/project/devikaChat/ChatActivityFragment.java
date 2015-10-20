@@ -266,7 +266,8 @@ public class ChatActivityFragment extends Fragment {
             @Override
             public void onChanged() {
                 super.onChanged();
-                chatList.setSelection(mChatListAdapter.getCount() - 1);
+                if (mChatListAdapter != null)
+                    chatList.setSelection(mChatListAdapter.getCount() - 1);
             }
         });
     }

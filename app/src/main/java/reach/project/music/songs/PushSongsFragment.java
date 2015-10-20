@@ -304,22 +304,19 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         if (reference == null)
             return;
 
-        final Context context = reference.get().getActivity();
+        MiscUtils.useContextFromFragment(reference, context -> {
+            combinedAdapter = new MergeAdapter();
 
-        if (context == null)
-            return;
+            combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
+            combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
+            combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
 
-        combinedAdapter = new MergeAdapter();
+            combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
+            combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
+            combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
 
-        combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
-        combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
-        combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, this));
-
-        combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
-        combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
-        combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, this));
-
-        pushLibraryList.setAdapter(combinedAdapter);
+            pushLibraryList.setAdapter(combinedAdapter);
+        });
         getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
     }

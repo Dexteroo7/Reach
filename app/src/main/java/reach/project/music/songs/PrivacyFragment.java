@@ -133,7 +133,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         if (cursorLoader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             myLibraryAdapter.swapCursor(null);
-        else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
+        else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && downloadedAdapter!=null)
             downloadedAdapter.swapCursor(null);
     }
 

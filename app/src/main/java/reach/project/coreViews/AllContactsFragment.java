@@ -168,7 +168,7 @@ public class AllContactsFragment extends Fragment implements
     @Override
     public boolean onQueryTextChange(String newText) {
 
-        if (searchView == null)
+        if (searchView == null || inviteAdapter == null)
             return false;
         /**
          * Called when the action bar search text has changed.
@@ -179,7 +179,6 @@ public class AllContactsFragment extends Fragment implements
          */
 //        if (TextUtils.isEmpty(newText))
 //            return true;
-
         inviteAdapter.getFilter().filter(newText);
         return true;
     }

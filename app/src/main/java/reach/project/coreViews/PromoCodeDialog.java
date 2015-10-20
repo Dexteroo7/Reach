@@ -160,5 +160,11 @@ public class PromoCodeDialog extends DialogFragment {
         }
     }
 
-    private final View.OnClickListener exitListener = v -> dismiss();
+    private final View.OnClickListener exitListener = v -> {
+        try {
+            dismiss();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    };
 }

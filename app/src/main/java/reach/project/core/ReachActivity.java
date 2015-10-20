@@ -292,7 +292,8 @@ public class ReachActivity extends AppCompatActivity implements
                         PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
                         if (promoCodeDialog.isAdded())
                             promoCodeDialog.dismiss();
-                        promoCodeDialog.show(fragmentManager, "promo_dialog");
+                        if (!promoCodeDialog.isAdded())
+                            promoCodeDialog.show(fragmentManager, "promo_dialog");
                         return true;
                     case R.id.navigation_item_3:
                         AppviralityUI.showGrowthHack(ReachActivity.this, AppviralityUI.GH.Word_of_Mouth);
