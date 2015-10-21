@@ -890,7 +890,7 @@ public class ReachActivity extends AppCompatActivity implements
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
 
-        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
+//        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
         findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);

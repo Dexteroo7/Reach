@@ -12,6 +12,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.widget.Toolbar;
+import android.util.ArraySet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,9 +27,7 @@ import com.google.common.base.Optional;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import reach.backend.entities.userApi.model.CompletedOperation;
 import reach.backend.entities.userApi.model.CompletedOperationCollection;
@@ -188,7 +187,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
             if (dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty())
                 return null;
 
-            final Set<Long> ids = new HashSet<>();
+            final ArraySet<Long> ids = new ArraySet<>(list.size());
             for (CompletedOperation completedOperation : list)
                 ids.addAll(completedOperation.getReceiver());
             final String[] whereArgument = new String[ids.size()];

@@ -18,6 +18,8 @@ import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.repackaged.com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.cmd.LoadType;
+import com.googlecode.objectify.cmd.Query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import java.util.logging.Logger;
 
 import javax.inject.Named;
 
+import reach.backend.ObjectWrappers.HotStats;
 import reach.backend.ObjectWrappers.MyString;
 import reach.backend.OfyService;
 import reach.backend.Transactions.CompletedOperation;
@@ -469,6 +472,28 @@ public class ReachUserEndpoint {
         return requests;
     }
 
+    @ApiMethod(
+            name = "getHotStats",
+            path = "user/getHotStats/",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public HotStats getHotStats() {
+
+        final LoadType<ReachUser> totalCount = ofy().load().type(ReachUser.class);
+        final Query<ReachUser> totalActiveCount = ofy().load().type(ReachUser.class)
+                .filter("gcmId !=", "");
+
+        final Query<ReachUser> totalUniqueCount = ofy().load().type(ReachUser.class)
+                .project("deviceId").distinct(true);
+//        final Query<ReachUser> totalUniqueActiveCount = ofy().load().type(ReachUser.class)
+//                .project("deviceId", "gcmId").distinct(true)
+//                .filter("gcmId !=", "");
+
+        return new HotStats(
+                totalCount.count(), //total accounts
+                totalActiveCount.count(), //total active accounts
+                totalUniqueCount.count(), //total unique accounts
+                0); //total unique active accounts
+    }
 
     @ApiMethod(
             name = "pingMyReach",

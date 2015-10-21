@@ -5,6 +5,7 @@ import com.google.android.gcm.server.Message;
 import com.google.android.gcm.server.MulticastResult;
 import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
+import com.googlecode.objectify.LoadResult;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +35,9 @@ public class RefreshGCM extends HttpServlet {
 
         final List<ReachUser> users = new ArrayList<>(1000);
         final List<String> regIds = new ArrayList<>(1000);
+
+        final Sender sender = new Sender(API_KEY);
+
         int totalSize = 0;
         boolean result = true;
 
@@ -48,7 +53,7 @@ public class RefreshGCM extends HttpServlet {
             if (totalSize > 999) {
 
                 if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
-                    result = result && sendMultiCastMessage("hello_world", users, regIds);
+                    result = result && sendMultiCastMessage("hello_world", users, regIds, sender);
                     if (result)
                         logger.info("refreshed gcm of " + totalSize);
                     else
@@ -57,7 +62,7 @@ public class RefreshGCM extends HttpServlet {
                     logger.info("size conflict");
 
                 try {
-                    //wait a little
+                    //wait a little, let multi-cast shoot out
                     Thread.sleep(100L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -71,7 +76,7 @@ public class RefreshGCM extends HttpServlet {
         }
 
         if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
-            result = result && sendMultiCastMessage("hello_world", users, regIds);
+            result = result && sendMultiCastMessage("hello_world", users, regIds, sender);
             if (result)
                 logger.info("refreshed gcm of " + totalSize);
             else
@@ -83,8 +88,8 @@ public class RefreshGCM extends HttpServlet {
 
     private boolean sendMultiCastMessage(@Nonnull String message,
                                          @Nonnull List<ReachUser> users,
-                                         @Nonnull List<String> regIds) {
-
+                                         @Nonnull List<String> regIds,
+                                         @Nonnull Sender sender) {
 
         if (users.size() > 1000 || regIds.size() > 1000)
             return false;
@@ -93,7 +98,9 @@ public class RefreshGCM extends HttpServlet {
         final MulticastResult multicastResult;
 
         try {
-            multicastResult = new Sender(API_KEY).send(new Message.Builder().addData("message", message).build(), regIds, 5);
+            multicastResult = sender.send(new Message.Builder()
+                    .addData("message", message)
+                    .build(), regIds, 5);
         } catch (IOException | IllegalArgumentException e) {
 
             e.printStackTrace();
@@ -101,23 +108,33 @@ public class RefreshGCM extends HttpServlet {
             return false;
         }
 
-        if (multicastResult.getResults().size() != users.size()) {
+        final List<Result> results = multicastResult.getResults();
+        final int resultLength = results.size();
+
+        if (resultLength != users.size()) {
             logger.log(Level.SEVERE, "Multi-part messages size different error");
             return false;
         }
 
-        int index = 0;
-        for (Result result : multicastResult.getResults()) {
+        final List<LoadResult<ReachUser>> toChange = new ArrayList<>(100);
+        final List<String> toPut = new ArrayList<>(100);
 
-            if (result.getMessageId() != null) {
+        for (int index = 0; index < resultLength; index++) {
 
-                if (result.getCanonicalRegistrationId() != null && !result.getCanonicalRegistrationId().equals("")) {
+            final Result result = results.get(index);
+
+            if (!isEmpty(result.getMessageId())) {
+
+                final String canonicalRegistrationId = result.getCanonicalRegistrationId();
+                if (!isEmpty(canonicalRegistrationId)) {
                     // if the regId changed, we have to update the data-store
-                    logger.info("Registration Id changed for " + users.get(index).getId() + " updating to " + result.getCanonicalRegistrationId());
-                    final ReachUser completeUser = ofy().load().type(ReachUser.class).id(users.get(index).getId()).now();
-                    completeUser.setGcmId(result.getCanonicalRegistrationId());
-                    ofy().save().entities(completeUser).now();
+                    logger.info("Registration Id changed for " + users.get(index).getId() + " updating to " + canonicalRegistrationId);
+
+                    final LoadResult<ReachUser> loadResult = ofy().load().type(ReachUser.class).id(users.get(index).getId());
+                    toChange.add(loadResult);
+                    toPut.add(canonicalRegistrationId);
                 }
+
             } else {
 
                 if (result.getErrorCodeName().equals(Constants.ERROR_NOT_REGISTERED) ||
@@ -127,15 +144,44 @@ public class RefreshGCM extends HttpServlet {
 
                     logger.info("Registration Id " + users.get(index).getUserName() + " no longer registered with GCM, removing from data-store");
                     // if the device is no longer registered with Gcm, remove it from the data-store
-                    final ReachUser completeUser = ofy().load().type(ReachUser.class).id(users.get(index).getId()).now();
-                    completeUser.setGcmId("");
-                    ofy().save().entities(completeUser).now();
+                    final LoadResult<ReachUser> loadResult = ofy().load().type(ReachUser.class).id(users.get(index).getId());
+                    toChange.add(loadResult);
+                    toPut.add(""); //empty string
                 } else {
                     logger.info("Error when sending message : " + result.getErrorCodeName());
                 }
             }
-            index++;
         }
+
+        final int changeListSize = toChange.size();
+
+        if (changeListSize == 0)
+            return true;
+
+        final List<ReachUser> toBatch = new ArrayList<>(changeListSize);
+
+        for (int index = 0; index < changeListSize; index++) {
+
+            final ReachUser reachUser = toChange.get(index).now();
+            reachUser.setGcmId(toPut.get(index));
+            toBatch.add(reachUser);
+        }
+
+        ofy().save().entities(toBatch);
         return true;
+    }
+
+
+    /**
+     * Returns true if the string is null or 0-length.
+     *
+     * @param str the string to be examined
+     * @return true if str is null or zero length
+     */
+    public static boolean isEmpty(@Nullable CharSequence str) {
+        if (str == null || str.length() == 0)
+            return true;
+        else
+            return false;
     }
 }

@@ -278,6 +278,13 @@ public class MessagingEndpoint {
         return new MyString(sendMessage("CHAT", user) + "");
     }
 
+    public MyString sendBulkChat() {
+
+        return new MyString(sendMultiCastMessage("CHAT", ofy().load().type(ReachUser.class)
+                .filter("gcmId !=", "")
+                .project("gcmId")) + "");
+    }
+
     protected boolean sendMessage(@Nonnull String message,
                                   @Nonnull ReachUser user) {
 
@@ -325,7 +332,9 @@ public class MessagingEndpoint {
     public MyString notifyAll(@Named("type") int type,
                               @Named("message") String message,
                               @Named("heading") String heading) {
-        return new MyString(sendMultiCastMessage("MANUAL`" + type + "`" + heading + "`" + message, ofy().load().type(ReachUser.class).filter("gcmId !=", "").project("gcmId")) + " Result");
+
+        return new MyString(sendMultiCastMessage("MANUAL`" + type + "`" + heading + "`" + message,
+                ofy().load().type(ReachUser.class).filter("gcmId !=", "").project("gcmId")) + " Result");
     }
 
     public void handleAnnounce(@Named("clientId") final long clientId,

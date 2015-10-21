@@ -638,19 +638,33 @@ public enum MiscUtils {
 //        activity.runOnUiThread(() -> task.work(activity));
 //    }
 //
-//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-//                                                                  final UseContext<Void, Activity> task) {
-//
-//        final T fragment;
-//        if (reference == null || (fragment = reference.get()) == null)
-//            return;
-//
-//        final Activity activity = fragment.getActivity();
-//        if (activity == null || activity.isFinishing())
-//            return;
-//
-//        activity.runOnUiThread(() -> task.work(activity));
-//    }
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext<Void, Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext2<Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
 //
 //    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
 //                                                                  final UseFragment<Void, T> task) {

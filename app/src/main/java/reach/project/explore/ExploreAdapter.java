@@ -1,72 +1,100 @@
 package reach.project.explore;
 
 import android.content.Context;
+import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import reach.project.R;
-import reach.project.explore.internal.InfinitePagerAdapter;
 
 /**
  * Created by dexter on 16/10/15.
  */
-public class ExploreAdapter extends InfinitePagerAdapter<Integer> {
+public class ExploreAdapter extends PagerAdapter {
 
-    /**
-     * Standard constructor.
-     *
-     * @param initValue the initial indicator value the ViewPager should start with.
-     */
     private final Context context;
-    private final Explorer explorer;
+    private final Explore explore;
 
-    public ExploreAdapter(Integer initValue, Context context, Explorer explorer) {
-        super(initValue);
+    public ExploreAdapter(Context context, Explore explore) {
         this.context = context;
-        this.explorer = explorer;
+        this.explore = explore;
     }
 
     @Override
-    public Integer getNextIndicator() {
-        return getCurrentIndicator() + 1;
-    }
+    public Object instantiateItem(ViewGroup collection, int position) {
 
-    @Override
-    public Integer getPreviousIndicator() {
-        return getCurrentIndicator() - 1;
-    }
+        final ExploreContainer container = explore.getContainerForIndex(position);
+        final LayoutInflater inflater = LayoutInflater.from(context);
 
-    @Override
-    public ViewGroup instantiateItem(Integer indicator) {
+        final View layout = inflater.inflate(container.getTypes().getLayoutResId(), collection, false);
 
-        //TODO use indicator to instantiate item
+        if (container.getTypes().equals(ExploreTypes.LOADING) || container.getTypes().equals(ExploreTypes.DONE_FOR_TODAY))
+            layout.setTag(POSITION_NONE);
+        else
+            layout.setTag(POSITION_UNCHANGED);
 
-        Log.d("InfiniteViewPager", "instantiating page " + indicator);
-        final LinearLayout layout = (LinearLayout) ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.chat_message_me, null);
-        final TextView text = (TextView) layout.findViewById(R.id.message);
-        text.setText(String.format("Page %s", indicator));
-//        Log.i("InfiniteViewPager", String.format("textView.text() == %s", text.getText()));
-        layout.setTag(indicator);
+        final TextView sampleText = (TextView) layout.findViewById(android.R.id.text1);
 
-        final ExploreContainer container = explorer.getContainer(indicator);
-        Log.i("Ayush", container.toString());
+//        container.getToShow(); //data to show
+//        container.getTypes().getTitle(); //title string
+//        container.getTypes().getLayoutResId(); //specific layout resource id !
+
+        sampleText.setText(container.getToShow()); //stuff to display
+
+        collection.addView(layout);
+
         return layout;
     }
 
     @Override
-    public String getStringRepresentation(final Integer currentIndicator) {
-        return String.valueOf(currentIndicator);
+    public void destroyItem(ViewGroup collection, int position, Object view) {
+        collection.removeView((View) view);
     }
 
     @Override
-    public Integer convertToIndicator(final String representation) {
-        return Integer.valueOf(representation);
+    public int getCount() {
+        return explore.getCount();
     }
 
-    public interface Explorer {
-        ExploreContainer getContainer(int indicator);
+    @Override
+    public boolean isViewFromObject(View view, Object object) {
+        return view == object;
+    }
+
+    @Override
+    public int getItemPosition(Object object) {
+
+        if (object instanceof View) {
+
+            final View view = (View) object;
+            final Object tag = view.getTag();
+
+            if (tag == null)
+                return POSITION_UNCHANGED; //default, should not happen
+
+            if (tag instanceof Integer)
+                return (int) tag; //can be POSITION_NONE or POSITION_UNCHANGED
+            else
+                Log.i("Ayush", "Fail of second order");
+
+        } else
+            Log.i("Ayush", "Fail of first order");
+
+        return POSITION_UNCHANGED; //default, should not happen
+    }
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+
+        final ExploreContainer container = explore.getContainerForIndex(position);
+        return container.getTypes().getTitle();
+    }
+
+    public interface Explore {
+
+        ExploreContainer getContainerForIndex(int index);
+
+        int getCount();
     }
 }

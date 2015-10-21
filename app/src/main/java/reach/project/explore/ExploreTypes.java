@@ -1,17 +1,15 @@
 package reach.project.explore;
 
-import reach.project.R;
-
 /**
  * Created by dexter on 15/10/15.
  */
 public enum ExploreTypes {
 
-    MUSIC("Music", R.layout.musiclist_item),
-    APP("App", R.layout.musiclist_item),
-    PHOTO("Photo", R.layout.musiclist_item),
-    LOADING("Loading", R.layout.musiclist_item),
-    DONE_FOR_TODAY("Done for today", R.layout.musiclist_item);
+    MUSIC("Music", android.R.layout.simple_list_item_1),
+    APP("App", android.R.layout.simple_list_item_1),
+    PHOTO("Photo", android.R.layout.simple_list_item_1),
+    LOADING("Loading", android.R.layout.simple_list_item_1),
+    DONE_FOR_TODAY("Done for today", android.R.layout.simple_list_item_1);
 
     private String title;
     private int layoutResId;
