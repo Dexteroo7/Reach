@@ -6,9 +6,11 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
@@ -33,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -53,6 +56,10 @@ import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.SongMetadata;
+import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 /**
@@ -547,6 +554,31 @@ public class ProcessManager extends Service implements
             e.printStackTrace();
         }
         mixpanel.track("Play song", props);
+
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, serverId + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        complexParams.put(SongMetadata.SONG_ID, musicData.getId() + "");
+        complexParams.put(SongMetadata.ARTIST, musicData.getArtistName());
+        complexParams.put(SongMetadata.TITLE, musicData.getDisplayName());
+        complexParams.put(SongMetadata.DURATION, musicData.getDuration() + "");
+        complexParams.put(SongMetadata.SIZE, musicData.getLength() + "");
+
+        try {
+            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
+        } catch (JSONException ignored) {
+        }
 
         switch (notificationState) {
 

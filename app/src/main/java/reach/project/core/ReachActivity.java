@@ -131,6 +131,9 @@ import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.uploadDownload.ReachQueueAdapter;
 import reach.project.uploadDownload.UploadHistory;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.SongMetadata;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
@@ -401,16 +404,14 @@ public class ReachActivity extends AppCompatActivity implements
                         Toast.LENGTH_LONG).show();
                 finish();
             }
-        }
-        else if (requestCode == MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE) {
+        } else if (requestCode == MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE) {
             if (!(grantResults.length > 0 && grantResults[0] == 0)) {
                 Toast.makeText(this,
                         "Permission to access Storage is required to use the App",
                         Toast.LENGTH_LONG).show();
                 finish();
             }
-        }
-        else
+        } else
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -429,8 +430,7 @@ public class ReachActivity extends AppCompatActivity implements
                         new String[]{
                                 Manifest.permission.READ_CONTACTS
                         }, MY_PERMISSIONS_READ_CONTACTS);
-            }
-            else if (ContextCompat.checkSelfPermission(this,
+            } else if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE))
@@ -1433,6 +1433,32 @@ public class ReachActivity extends AppCompatActivity implements
             e.printStackTrace();
         }
         mixpanel.track("Transaction - Add Song", props);
+
+        //usage tracking
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, serverId + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
+        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
+        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
+        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
+        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+
+        try {
+            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
+        } catch (JSONException ignored) {
+        }
     }
 
     public static void toggleIntimation(boolean state) {
@@ -1512,11 +1538,38 @@ public class ReachActivity extends AppCompatActivity implements
 
                 if (toggleLiked(context)) {
 
+                    //usage tracking
+                    final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+                    simpleParams.put(PostParams.USER_ID, serverId + "");
+                    simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(context));
+                    simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+                    simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+                    try {
+                        simpleParams.put(PostParams.APP_VERSION,
+                                context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+                    final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+                    complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
+                    complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
+                    complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
+                    complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
+                    complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
+
+                    try {
+                        UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
+                    } catch (JSONException ignored) {
+                    }
+
                     MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.addLike(
                             currentPlaying.getSenderId(),
                             serverId,
                             currentPlaying.getDisplayName()).execute(), Optional.absent());
                     currentPlaying.setIsLiked(true);
+
                     ((ImageView) view).setImageResource(R.drawable.like_pink);
                 } else {
 
@@ -1687,7 +1740,6 @@ public class ReachActivity extends AppCompatActivity implements
                 Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
                 return false;
             }
-
 
 
             ProcessManager.submitMusicRequest(context,
@@ -2115,7 +2167,7 @@ public class ReachActivity extends AppCompatActivity implements
                 case ProcessManager.REPLY_ERROR: {
                     Log.i("Downloader", "REPLY_ERROR received");
                     updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0), true, activity);
-                    activity.runOnUiThread(() -> Toast.makeText(activity, "Error", Toast.LENGTH_SHORT).show());
+                    activity.runOnUiThread(() -> Toast.makeText(activity, "Play When Download Completes", Toast.LENGTH_SHORT).show());
                     break;
                 }
                 case ProcessManager.REPLY_PAUSED: {

@@ -7,6 +7,17 @@ import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
+import com.squareup.okhttp.OkHttpClient;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import reach.project.R;
 
@@ -14,6 +25,58 @@ import reach.project.R;
  * Created by ashish on 23/3/15.
  */
 public class ReachApplication extends Application {
+
+    public static final OkHttpClient okHttpClient;
+
+    static {
+
+        // Create a trust manager that does not validate certificate chains
+        final TrustManager[] trustAllCerts = new TrustManager[]{
+
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                }
+        };
+
+        okHttpClient = new OkHttpClient();
+
+        /////////////////ignore ssl errors
+        try {
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+            okHttpClient.setSslSocketFactory(sslSocketFactory);
+        } catch (NoSuchAlgorithmException | KeyManagementException ignored) {
+            //ignore !!
+        }
+        okHttpClient.setHostnameVerifier((hostname, session) -> true);
+        /////////////////no http response cache
+        okHttpClient.setCache(null);
+        /////////////////redirects and retries
+        okHttpClient.setFollowRedirects(true);
+        okHttpClient.setRetryOnConnectionFailure(true);
+        okHttpClient.setFollowSslRedirects(true);
+        /////////////////double the timeouts
+        final long connectionTimeOut = okHttpClient.getConnectTimeout();
+        final long readTimeOut = okHttpClient.getReadTimeout();
+        final long writeTimeOut = okHttpClient.getWriteTimeout();
+        okHttpClient.setConnectTimeout(connectionTimeOut * 2, TimeUnit.MILLISECONDS);
+        okHttpClient.setReadTimeout(readTimeOut * 2, TimeUnit.MILLISECONDS);
+        okHttpClient.setWriteTimeout(writeTimeOut * 2, TimeUnit.MILLISECONDS);
+    }
 
     private Tracker mTracker;
     private static final HitBuilders.EventBuilder builder = new HitBuilders.EventBuilder();

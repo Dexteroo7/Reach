@@ -11,7 +11,23 @@ android {
         targetSdkVersion 23
         versionCode 71
         versionName "0.9.21.6-beta"
+        multiDexEnabled true
     }
+    
+    productFlavors {
+        // Define separate dev and prod product flavors.
+        dev {
+            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+            // to pre-dex each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming dex merging processes.
+            minSdkVersion 21
+        }
+        prod {
+            // The actual minSdkVersion for the application.
+            minSdkVersion 14
+        }
+    }
+
     buildTypes {
         release {
             shrinkResources true
@@ -50,6 +66,7 @@ dependencies {
     compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
     compile 'com.appvirality:AppviralityUI:1.1.17'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
 
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'
