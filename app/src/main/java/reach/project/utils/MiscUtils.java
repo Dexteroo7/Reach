@@ -12,7 +12,6 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -164,7 +163,7 @@ public enum MiscUtils {
     }
 
     public static void sendReferLog(String userID, String event){
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+        StaticData.temporaryFix.execute(() -> {
             try {
                 URL url = new URL("http://52.74.175.56:8080/refer/log");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -840,7 +839,7 @@ public enum MiscUtils {
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
 
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+        StaticData.temporaryFix.execute(() -> {
 
             for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
 

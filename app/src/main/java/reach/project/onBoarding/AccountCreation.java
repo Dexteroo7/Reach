@@ -179,7 +179,7 @@ public class AccountCreation extends Fragment {
                     (TextView) rootView.findViewById(R.id.telephoneNumber),
                     progress,
                     SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"))
-                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, name, phoneNumber);
+                    .executeOnExecutor(StaticData.temporaryFix, name, phoneNumber);
         });
         return rootView;
     }
@@ -223,7 +223,7 @@ public class AccountCreation extends Fragment {
             imageStream = null;
         }
 
-        new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
+        new ProcessImage().executeOnExecutor(StaticData.temporaryFix, imageStream);
     }
 
     @Override

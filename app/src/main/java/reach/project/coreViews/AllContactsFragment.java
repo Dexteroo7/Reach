@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import reach.project.R;
+import reach.project.core.StaticData;
 import reach.project.friends.Contact;
 import reach.project.friends.ReachAllContactsAdapter;
 import reach.project.utils.MiscUtils;
@@ -140,7 +141,7 @@ public class AllContactsFragment extends Fragment implements
         //mark those who we have already invited !
         LocalUtils.inviteSentTo.addAll(sharedPrefs.getStringSet(inviteKey, new HashSet<>()));
         listView.setAdapter(inviteAdapter);
-        new LocalUtils.InitializeData(listView).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        new LocalUtils.InitializeData(listView).executeOnExecutor(StaticData.temporaryFix);
 
         return rootView;
     }
@@ -351,7 +352,7 @@ public class AllContactsFragment extends Fragment implements
                                 contact.setInviteSent(true);
                                 Picasso.with(context).load(R.drawable.add_tick).into(listToggle);
                                 adapter.notifyDataSetChanged();
-                                new SendInvite().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, contact.getPhoneNumber(), txt);
+                                new SendInvite().executeOnExecutor(StaticData.temporaryFix, contact.getPhoneNumber(), txt);
                             } else
                                 Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();

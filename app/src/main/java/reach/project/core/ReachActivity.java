@@ -897,6 +897,24 @@ public class ReachActivity extends AppCompatActivity implements
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
         serverId = SharedPrefUtils.getServerId(preferences);
+        //track app open event
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, serverId + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        simpleParams.put(PostParams.SCREEN_NAME, "my_reach");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            UsageTracker.trackEvent(simpleParams, UsageTracker.APP_OPEN);
+        } catch (JSONException ignored) {
+        }
 
         // Setup our Firebase mFirebaseRef
         firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
@@ -1002,7 +1020,7 @@ public class ReachActivity extends AppCompatActivity implements
             networkPresent = true;
 
         if (networkPresent) //check for update
-            new LocalUtils.CheckUpdate().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.temporaryFix);
 
         //fetch username and phoneNumber
         final String userName = SharedPrefUtils.getUserName(preferences);
@@ -1203,7 +1221,7 @@ public class ReachActivity extends AppCompatActivity implements
                                     transferSong.getAlbumName(),
                                     transferSong.getGenre());
                         }
-                        new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
                     }
                 }
             }
@@ -1405,7 +1423,7 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
         //start this operation
         if (!multiple)
-            AsyncTask.THREAD_POOL_EXECUTOR.execute(MiscUtils.startDownloadOperation(
+            StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
                     this,
                     reachDatabase,
                     reachDatabase.getReceiverId(), //myID
@@ -1804,7 +1822,7 @@ public class ReachActivity extends AppCompatActivity implements
         }
 
         public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () ->
-                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
 
         //TODO optimize database fetch !
         public static class RefreshOperations extends AsyncTask<Void, Void, Void> {

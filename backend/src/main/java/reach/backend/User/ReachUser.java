@@ -18,7 +18,7 @@ import java.util.HashSet;
 @Index
 public class ReachUser {
 
-    public static final int ONLINE_LIMIT = 60 * 1000; //30 seconds timeout
+    public static final int ONLINE_LIMIT = 90 * 1000; //60 seconds timeout
 
     @Id
     private Long id;
@@ -46,14 +46,6 @@ public class ReachUser {
     private HashSet<Long> sentRequests;
     @Unindex
     private HashSet<Long> receivedRequests;
-
-    //shit to remove
-    private long splitterId = 0;
-    private String genres = "hello_world"; //Genres
-    @Unindex
-    private HashSet<ReachSong> mySongs; //switch to compressed blob
-    @Unindex
-    private HashSet<ReachPlayList> myPlayLists; //switch to compressed blob
 
     //////////////////////////////////
     public int computeDirtyHash() {
@@ -84,14 +76,6 @@ public class ReachUser {
 
     public void setDirtyCheck() {
         this.dirtyCheck = computeDirtyHash();
-    }
-
-    public long getSplitterId() {
-        return splitterId;
-    }
-
-    public void setSplitterId(long splitterId) {
-        this.splitterId = splitterId;
     }
 
     public int getNumberOfSongs() {
@@ -134,22 +118,6 @@ public class ReachUser {
         this.myReach = myReach;
     }
 
-    public HashSet<ReachPlayList> getMyPlayLists() {
-        return myPlayLists;
-    }
-
-    public void setMyPlayLists(HashSet<ReachPlayList> myPlayLists) {
-        this.myPlayLists = myPlayLists;
-    }
-
-    public HashSet<ReachSong> getMySongs() {
-        return mySongs;
-    }
-
-    public void setMySongs(HashSet<ReachSong> mySongs) {
-        this.mySongs = mySongs;
-    }
-
     public long getMegaBytesReceived() {
         return megaBytesReceived;
     }
@@ -180,14 +148,6 @@ public class ReachUser {
 
     public void setImageId(String imageId) {
         this.imageId = imageId;
-    }
-
-    public String getGenres() {
-        return genres;
-    }
-
-    public void setGenres(String genres) {
-        this.genres = genres;
     }
 
     public String getDeviceId() {
@@ -234,7 +194,6 @@ public class ReachUser {
     void onSave() {
         setDirtyCheck();
     }
-
 
     @Override
     public boolean equals(Object o) {

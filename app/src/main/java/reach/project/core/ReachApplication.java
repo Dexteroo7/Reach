@@ -3,6 +3,7 @@ package reach.project.core;
 import android.app.Application;
 
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseException;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
@@ -83,9 +84,9 @@ public class ReachApplication extends Application {
     private static final HitBuilders.ScreenViewBuilder screenViewBuilder = new HitBuilders.ScreenViewBuilder();
 
     synchronized public void trackGA(Optional<String> category,
-                                   Optional<String> action,
-                                   Optional<String> label,
-                                   int value) {
+                                     Optional<String> action,
+                                     Optional<String> label,
+                                     int value) {
         getTracker().send(builder
                 .setCategory(category.isPresent() ? category.get() : "")
                 .setAction(action.isPresent() ? action.get() : "")
@@ -115,9 +116,13 @@ public class ReachApplication extends Application {
 
     @Override
     public void onCreate() {
+
         super.onCreate();
         //initialize firebase
         Firebase.setAndroidContext(this);
-        Firebase.getDefaultConfig().setPersistenceEnabled(true);
+        try {
+            Firebase.getDefaultConfig().setPersistenceEnabled(true);
+        } catch (FirebaseException ignored) {
+        }
     }
 }

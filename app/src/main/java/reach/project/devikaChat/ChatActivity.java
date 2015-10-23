@@ -38,7 +38,7 @@ public class ChatActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle("Devika");
             actionBar.setSubtitle("Reach Manager");
-            new SetManagerIcon().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new SetManagerIcon().executeOnExecutor(StaticData.temporaryFix);
         }
     }
 

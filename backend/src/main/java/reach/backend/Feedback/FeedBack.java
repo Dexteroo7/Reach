@@ -16,8 +16,7 @@ public class FeedBack {
     @Unindex private String reply1;
     @Unindex private String reply2;
     @Unindex private String reply3;
-    @Unindex
-    private long clientId;
+    @Unindex private long clientId;
 
     public long getId() {
         return id;

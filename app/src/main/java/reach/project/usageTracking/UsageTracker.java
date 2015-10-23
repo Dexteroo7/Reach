@@ -122,7 +122,7 @@ public enum UsageTracker {
 
     //TODO
     public static void trackEvent(@NonNull Map<PostParams, String> simpleParams,
-                                  @NonNull UsageTracker eventName) throws JSONException{
+                                  @NonNull UsageTracker eventName) throws JSONException {
 
         final JSONObject jsonObject = new JSONObject();
 
