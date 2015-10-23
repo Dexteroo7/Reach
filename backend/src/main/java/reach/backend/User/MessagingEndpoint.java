@@ -170,50 +170,6 @@ public class MessagingEndpoint {
         return new MyString(sendMessage("PERMISSION_REQUEST`" + clientId + "`" + client.getUserName(), host) + "");
     }
 
-    public MyString handleReply(@Named("clientId") final long clientId,
-                                @Named("hostId") final long hostId,
-                                @Named("type") final String type) {
-
-        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-
-        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-        final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
-        if (client == null || host == null)
-            return null;
-
-        if (client.getReceivedRequests() != null)
-            client.getReceivedRequests().remove(hostId);
-        if (host.getSentRequests() != null)
-            host.getSentRequests().remove(clientId);
-
-        if (type.equals("PERMISSION_GRANTED")) {
-
-            //adding both parties to each others reach :)
-            if (client.getSentRequests() != null)
-                client.getSentRequests().remove(hostId);
-            if (host.getReceivedRequests() != null)
-                host.getReceivedRequests().remove(clientId);
-
-            if (client.getMyReach() == null)
-                client.setMyReach(new HashSet<Long>());
-            log.info("Adding MyReach To " + client.getUserName() + " " + client.getMyReach().add(hostId));
-            if (host.getMyReach() == null)
-                host.setMyReach(new HashSet<Long>());
-            log.info("Adding MyReach To " + host.getUserName() + " " + host.getMyReach().add(clientId));
-        }
-
-        ofy().save().entities(client, host).now();
-        if (host.getGcmId() == null || host.getGcmId().equals("")) {
-            log.info("Error handling reply " + hostId + " " + clientId);
-            return null;
-        }
-
-        return new MyString(sendMessage(type + "`" + clientId + "`" + client.getUserName(), host) + "");
-    }
-
     public MyString handleReplyNew(ReachUser sender,
                                    final @Named("clientId") long clientId,
                                    @Named("type") String type) {

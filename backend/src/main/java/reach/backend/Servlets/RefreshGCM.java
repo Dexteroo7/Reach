@@ -5,11 +5,17 @@ import com.google.android.gcm.server.Message;
 import com.google.android.gcm.server.MulticastResult;
 import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
+import com.google.appengine.api.ThreadManager;
 import com.googlecode.objectify.LoadResult;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +26,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import reach.backend.ActiveCountLog.ActiveCountLog;
 import reach.backend.User.ReachUser;
 
 import static reach.backend.OfyService.ofy;
@@ -29,33 +36,54 @@ public class RefreshGCM extends HttpServlet {
     private static final Logger logger = Logger.getLogger(RefreshGCM.class.getName());
     private static final String API_KEY = System.getProperty("gcm.api.key");
 
+
+    private static final Callable<Integer> totalCounter = new Callable<Integer>() {
+        @Override
+        public Integer call() throws Exception {
+            return ofy().load().type(ReachUser.class).count();
+        }
+    };
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        /**
+         * Get current total user count asynchronously
+         */
+        final ExecutorService executor = Executors.newSingleThreadExecutor(ThreadManager.currentRequestThreadFactory());
+        final Future<Integer> getTotalCount = executor.submit(totalCounter);
 
         final List<ReachUser> users = new ArrayList<>(1000);
         final List<String> regIds = new ArrayList<>(1000);
 
         final Sender sender = new Sender(API_KEY);
+        final Message message = new Message.Builder()
+                .addData("message", "hello_world")
+                .build();
 
-        int totalSize = 0;
+        int activeCount = 0; //total active counter
+        int counter = 0; //temp counter
         boolean result = true;
 
+        /**
+         * Send out broadcast refresh gcm
+         */
         for (ReachUser reachUser : ofy().load().type(ReachUser.class)
                 .filter("gcmId !=", "")
                 .project("gcmId")) {
 
             users.add(reachUser);
             regIds.add(reachUser.getGcmId());
-            totalSize++;
+            counter++;
 
             //sendMultiCast doesn't take more than 1000 at a time
-            if (totalSize > 999) {
+            if (counter > 999) {
 
                 if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
-                    result = result && sendMultiCastMessage("hello_world", users, regIds, sender);
+                    result = result && sendMultiCastMessage(message, users, regIds, sender);
                     if (result)
-                        logger.info("refreshed gcm of " + totalSize);
+                        logger.info("refreshed gcm of " + counter);
                     else
                         logger.log(Level.SEVERE, "multi-cast failed");
                 } else
@@ -68,25 +96,48 @@ public class RefreshGCM extends HttpServlet {
                     e.printStackTrace();
                     return;
                 } finally {
-                    totalSize = 0;
+                    activeCount += counter; //add to total counter
+                    counter = 0; //reset
                     users.clear();
                     regIds.clear();
                 }
             }
         }
 
+        /**
+         * Process the last few id's
+         */
         if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
-            result = result && sendMultiCastMessage("hello_world", users, regIds, sender);
+
+            result = result && sendMultiCastMessage(message, users, regIds, sender);
             if (result)
-                logger.info("refreshed gcm of " + totalSize);
+                logger.info("refreshed gcm of " + counter);
             else
                 logger.log(Level.SEVERE, "multi-cast failed");
+            activeCount += counter; //add to total counter
         }
 
-        logger.info("finished");
+        /**
+         * Get Total count
+         */
+        int totalCount = -1; //-1 signals failure
+        try {
+            totalCount = getTotalCount.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        /**
+         * Log current event
+         */
+        final ActiveCountLog log = new ActiveCountLog();
+        log.setCurrentActive(activeCount);
+        log.setCurrentTotal(totalCount);
+
+        ofy().save().entity(log);
     }
 
-    private boolean sendMultiCastMessage(@Nonnull String message,
+    private boolean sendMultiCastMessage(@Nonnull Message message,
                                          @Nonnull List<ReachUser> users,
                                          @Nonnull List<String> regIds,
                                          @Nonnull Sender sender) {
@@ -98,9 +149,7 @@ public class RefreshGCM extends HttpServlet {
         final MulticastResult multicastResult;
 
         try {
-            multicastResult = sender.send(new Message.Builder()
-                    .addData("message", message)
-                    .build(), regIds, 5);
+            multicastResult = sender.send(message, regIds, 5);
         } catch (IOException | IllegalArgumentException e) {
 
             e.printStackTrace();
@@ -167,10 +216,10 @@ public class RefreshGCM extends HttpServlet {
             toBatch.add(reachUser);
         }
 
+        logger.info("Changing gcmIds of " + toBatch.size() + " users");
         ofy().save().entities(toBatch);
         return true;
     }
-
 
     /**
      * Returns true if the string is null or 0-length.
@@ -179,9 +228,6 @@ public class RefreshGCM extends HttpServlet {
      * @return true if str is null or zero length
      */
     public static boolean isEmpty(@Nullable CharSequence str) {
-        if (str == null || str.length() == 0)
-            return true;
-        else
-            return false;
+        return str == null || str.length() == 0;
     }
 }

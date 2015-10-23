@@ -1,8 +1,6 @@
 package reach.project.utils;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -22,10 +20,6 @@ public enum SharedPrefUtils {
     ;
 
     //TODO centralize all keys,
-
-    public static String getDeviceId(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-    }
 
     public static void storeReachUser(SharedPreferences sharedPreferences, ReachUser reachUserDatabase) {
 

@@ -173,7 +173,7 @@ public class AccountCreation extends Fragment {
                     rootView.findViewById(R.id.nextBtn),
                     (TextView) rootView.findViewById(R.id.telephoneNumber),
                     progress,
-                    SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"))
+                    MiscUtils.getDeviceId(activity).trim().replace(" ", "-"))
                     .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, name, phoneNumber);
         });
         return rootView;

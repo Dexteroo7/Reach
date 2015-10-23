@@ -70,6 +70,7 @@ dependencies {
     compile "com.facebook.fresco:imagepipeline-okhttp:0.7.0"
     compile 'com.squareup.wire:wire-runtime:1.8.0'
     compile 'com.firebase:firebase-client-android:2.4.0'
+    compile 'com.squareup:tape:1.2.3'
 
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'

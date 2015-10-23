@@ -20,11 +20,10 @@
                 reach.backend.Feedback.FeedBackEndpoint,
                 reach.backend.User.MessagingEndpoint,
                 reach.backend.User.ReachUserEndpoint,
-                reach.backend.User.SplitMusicContainerEndpoint,
-                reach.backend.User.MusicSplitterEndpoint,
                 reach.backend.Transactions.CompletedOperationsEndpoint,
                 reach.backend.Music.MusicDataEndpoint,
-                reach.backend.Notifications.NotificationEndpoint
+                reach.backend.Notifications.NotificationEndpoint,
+                reach.backend.ActiveCountLog.ActiveCountLogEndpoint
             </param-value>
         </init-param>
     </servlet>

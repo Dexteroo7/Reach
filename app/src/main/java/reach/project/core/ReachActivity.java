@@ -101,9 +101,9 @@ import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
-import reach.project.explore.ExploreFragment;
 import reach.project.explore.ExploreFragment.OnFragmentInteractionListener;
 import reach.project.friends.ContactsChooserFragment;
+import reach.project.friends.ContactsListFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.songs.PrivacyFragment;
 import reach.project.music.songs.PushContainer;
@@ -240,7 +240,6 @@ public class ReachActivity extends AppCompatActivity implements
         public void onPanelHidden(View view) {
         }
     };
-
 
     private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
 
@@ -997,7 +996,7 @@ public class ReachActivity extends AppCompatActivity implements
                 slidingUpPanelLayout.getChildAt(0).setPadding(0, 0, 0, MiscUtils.dpToPx(60));
                 fragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                        .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
+                        .replace(R.id.container, ContactsListFragment.newInstance(), "contact_list").commit();
                 //load notification drawer
                 addNotificationDrawer();
                 //load adapters

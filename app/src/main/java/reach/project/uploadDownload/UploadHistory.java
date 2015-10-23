@@ -12,7 +12,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.widget.Toolbar;
-import android.util.ArraySet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +26,9 @@ import com.google.common.base.Optional;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import reach.backend.entities.userApi.model.CompletedOperation;
 import reach.backend.entities.userApi.model.CompletedOperationCollection;
@@ -116,7 +117,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
         View rootView = inflater.inflate(R.layout.fragment_list, container, false);
 
-        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.listToolbar);
+        Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.listToolbar);
         mToolbar.setTitle("Upload History");
         mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
@@ -187,7 +188,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
             if (dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty())
                 return null;
 
-            final ArraySet<Long> ids = new ArraySet<>(list.size());
+            final Set<Long> ids = new HashSet<>(list.size());
             for (CompletedOperation completedOperation : list)
                 ids.addAll(completedOperation.getReceiver());
             final String[] whereArgument = new String[ids.size()];
@@ -202,8 +203,8 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
                     inList.append(",");
                 inList.append("?");
             }
-            final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN (" + inList.toString() + ")";
 
+            final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN (" + inList.toString() + ")";
             final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
 
                 return context.getContentResolver().query(

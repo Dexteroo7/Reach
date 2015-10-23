@@ -17,7 +17,17 @@ public class MusicData implements Parcelable {
     private final long senderId;
     private final byte type;
 
-    public MusicData(long id, long length, long senderId, long processed, String path, String displayName, String artistName, boolean isLiked, long duration, byte type) {
+    public MusicData(long id,
+                     long length,
+                     long senderId,
+                     long processed,
+                     String path,
+                     String displayName,
+                     String artistName,
+                     boolean isLiked,
+                     long duration,
+                     byte type) {
+
         this.displayName = displayName;
         this.path = path;
         this.id = id;

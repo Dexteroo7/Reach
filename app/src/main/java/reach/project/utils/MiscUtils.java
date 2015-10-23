@@ -13,7 +13,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
@@ -46,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -628,7 +631,7 @@ public enum MiscUtils {
         task.work(activity);
     }
 
-//    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+    //    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
 //                                                          final UseContext<Void, T> task) {
 //
 //        final T activity;
@@ -769,6 +772,32 @@ public enum MiscUtils {
             }
         }
         return Optional.absent();
+    }
+
+    public static String getDeviceId(Context context) {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+    public static String getOsName() {
+
+        final Field[] fields = Build.VERSION_CODES.class.getFields();
+        for (Field field : fields) {
+
+            final String fieldName = field.getName();
+            int fieldValue = -1;
+
+            try {
+                fieldValue = field.getInt(new Object());
+            } catch (IllegalArgumentException |
+                    IllegalAccessException |
+                    NullPointerException ignored) {
+            }
+
+            if (fieldValue == Build.VERSION.SDK_INT)
+                return fieldName;
+        }
+
+        return "hello_world";
     }
 
     public static String getMusicStorageKey(long serverId) {

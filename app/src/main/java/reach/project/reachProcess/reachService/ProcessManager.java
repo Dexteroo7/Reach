@@ -6,14 +6,17 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -53,6 +56,10 @@ import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.SongMetadata;
+import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 /**
@@ -523,6 +530,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public void updateSongDetails(MusicData musicData) {
+
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
@@ -538,8 +546,8 @@ public class ProcessManager extends Service implements
                 .setValue(1)
                 .build());
 
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        JSONObject props = new JSONObject();
+        final MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
+        final JSONObject props = new JSONObject();
         try {
             props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
             props.put("Song", musicData.getDisplayName());
@@ -547,6 +555,28 @@ public class ProcessManager extends Service implements
             e.printStackTrace();
         }
         mixpanel.track("Play song", props);
+
+        final ArrayMap<PostParams, String> simpleParams = new ArrayMap<>(6);
+        simpleParams.put(PostParams.USER_ID, serverId + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+        final ArrayMap<SongMetadata, String> complexParams = new ArrayMap<>(5);
+        complexParams.put(SongMetadata.SONG_ID, musicData.getId() + "");
+        complexParams.put(SongMetadata.ARTIST, musicData.getArtistName());
+        complexParams.put(SongMetadata.TITLE, musicData.getDisplayName());
+        complexParams.put(SongMetadata.DURATION, musicData.getDuration() + "");
+        complexParams.put(SongMetadata.SIZE, musicData.getLength() + "");
+
+        UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
 
         switch (notificationState) {
 
