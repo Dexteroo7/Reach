@@ -26,7 +26,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.appvirality.android.AppviralityAPI;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -412,15 +411,6 @@ public class AccountCreation extends Fragment {
                         mixpanel.registerSuperPropertiesOnce(props);
                         people.identify(user.getId() + "");
                         people.set("UserID", user.getId() + "");
-                        AppviralityAPI.UserDetails.setInstance(activity)
-                                .setUseridInStore(user.getId() + "")
-                                .Update();
-                        if (NumberVerification.newUser) {
-                            //AppVirality Signup
-                            AppviralityAPI.saveConversionEvent("Signup", null, null);
-                        }
-
-                        MiscUtils.sendReferLog(user.getId() + "", "Signup");
                     }
                     people.set("$phone", user.getPhoneNumber() + "");
                     people.set("$name", user.getUserName() + "");

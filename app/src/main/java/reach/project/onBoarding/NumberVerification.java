@@ -61,7 +61,6 @@ public class NumberVerification extends Fragment {
     private static String finalAuthKey;
     private static WeakReference<NumberVerification> reference;
     private static OldUserContainerNew containerNew = null;
-    public static boolean newUser = false;
 
     public static NumberVerification newInstance() {
 
@@ -412,7 +411,6 @@ public class NumberVerification extends Fragment {
                 });
 
                 containerNew = pair.first;
-                newUser = containerNew == null;
 
                 MiscUtils.useFragment(reference, fragment -> {
                     fragment.bottomPart3.setVisibility(View.INVISIBLE);

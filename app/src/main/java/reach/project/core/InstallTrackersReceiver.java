@@ -26,7 +26,6 @@ public class InstallTrackersReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        new com.appvirality.android.AppviralityInstallReferrerReceiver().onReceive(context, intent);
         new com.mixpanel.android.mpmetrics.InstallReferrerReceiver().onReceive(context, intent);
         new com.google.android.gms.analytics.CampaignTrackingReceiver().onReceive(context, intent);
 

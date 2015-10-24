@@ -58,8 +58,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.appvirality.AppviralityUI;
-import com.appvirality.android.AppviralityAPI;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.crittercism.app.Crittercism;
 import com.firebase.client.ChildEventListener;
@@ -300,11 +298,10 @@ public class ReachActivity extends AppCompatActivity implements
                             promoCodeDialog.show(fragmentManager, "promo_dialog");
                         return true;
                     case R.id.navigation_item_3:
-                        AppviralityUI.showGrowthHack(ReachActivity.this, AppviralityUI.GH.Word_of_Mouth);
-                        /*fragmentManager
+                        fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();*/
+                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
@@ -382,7 +379,6 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onPause();
 
-        AppviralityUI.onStop();
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
             return;
@@ -886,9 +882,6 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        AppviralityAPI.init(this);
-        AppviralityUI.showWelcomeScreen(this);
-
         Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
 
         Pacemaker.scheduleLinear(this, 5);
@@ -1052,10 +1045,6 @@ public class ReachActivity extends AppCompatActivity implements
             mixpanel.registerSuperPropertiesOnce(props);
             ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
-            AppviralityAPI.UserDetails.setInstance(getApplicationContext())
-                    .setUseridInStore(userID + "")
-                    .isExistingUser(false)
-                    .Update();
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
         if (!TextUtils.isEmpty(phoneNumber))
@@ -1429,10 +1418,6 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getReceiverId(), //myID
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
-
-        AppviralityAPI.saveConversionEvent("TransferFile", null, null);
-
-        MiscUtils.sendReferLog(SharedPrefUtils.getServerId(preferences) + "", "TransferFile");
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
