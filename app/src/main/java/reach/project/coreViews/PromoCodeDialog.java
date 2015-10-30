@@ -74,7 +74,7 @@ public class PromoCodeDialog extends DialogFragment {
             lowerPart.setVisibility(View.INVISIBLE);
             promoLoading.setVisibility(View.VISIBLE);
             new VerifyPromoCode().executeOnExecutor
-                    (AsyncTask.THREAD_POOL_EXECUTOR, promoCode.getText().toString().toUpperCase());
+                    (StaticData.temporaryFix, promoCode.getText().toString().toUpperCase());
         });
         return rootView;
     }
@@ -160,5 +160,11 @@ public class PromoCodeDialog extends DialogFragment {
         }
     }
 
-    private final View.OnClickListener exitListener = v -> dismiss();
+    private final View.OnClickListener exitListener = v -> {
+        try {
+            dismiss();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    };
 }

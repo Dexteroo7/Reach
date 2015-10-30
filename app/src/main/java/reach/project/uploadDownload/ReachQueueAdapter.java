@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
@@ -26,6 +25,7 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 
 /**
@@ -243,15 +243,15 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
              * in connection manager
              **/
 
-            final AlertDialog alertDialog = ((AlertDialog) dialog);
-            final Context context = alertDialog.getContext();
+            final AlertDialog alertDialog = (AlertDialog) dialog;
+            final ContentResolver resolver = alertDialog.getContext().getContentResolver();
 
             final Object[] tag = (Object[]) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
             final long id = (long) tag[0];
             final int position = (int) tag[1];
 
             //find path and delete the file
-            final Cursor pathCursor = context.getContentResolver().query(
+            final Cursor pathCursor = resolver.query(
                     ReachDatabaseProvider.CONTENT_URI,
                     new String[]{ReachDatabaseHelper.COLUMN_PATH},
                     ReachDatabaseHelper.COLUMN_ID + " = ?",
@@ -274,7 +274,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
             //delete the database entry
             Log.i("Downloader", "Deleting " +
                     id + " " +
-                    context.getContentResolver().delete(
+                    resolver.delete(
                             Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id),
                             ReachDatabaseHelper.COLUMN_ID + " = ?",
                             new String[]{id + ""}));
@@ -349,7 +349,7 @@ public class ReachQueueAdapter extends CursorSwipeAdapter {
                 //un-paused download operation
                 final Optional<Runnable> optional = reset(database, resolver, context, uri);
                 if (optional.isPresent())
-                    AsyncTask.THREAD_POOL_EXECUTOR.execute(optional.get());
+                    StaticData.temporaryFix.execute(optional.get());
                 else //should never happen
                     Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
                 Log.i("Ayush", "Un-pausing");

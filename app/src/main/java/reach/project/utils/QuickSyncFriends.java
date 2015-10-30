@@ -129,6 +129,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         //removed all present phoneNumbers, now sync phoneBook
         numbers.remove(myNumber);
         if (!numbers.isEmpty()) {
+
             Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
             newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncNew(ImmutableList.copyOf(numbers), serverId).execute().getItems(), Optional.absent()).or(new ArrayList<>()));
         }

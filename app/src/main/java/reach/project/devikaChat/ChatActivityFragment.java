@@ -27,7 +27,6 @@ import com.firebase.client.ValueEventListener;
 import com.google.android.gms.analytics.HitBuilders;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -169,10 +168,10 @@ public class ChatActivityFragment extends Fragment {
             chat.setTimestamp(System.currentTimeMillis());
 
             //update user object to allow sort by time
-            final Map<String, Object> userData = new HashMap<>();
+            final Map<String, Object> userData = MiscUtils.getMap(3);
             userData.put("uid", serverId);
             userData.put("newMessage", true);
-            userData.put("lastActivated", System.currentTimeMillis());
+            userData.put("lastActivated", chat.getTimestamp());
 
             MiscUtils.useFragment(reference, fragment -> {
 
@@ -180,7 +179,7 @@ public class ChatActivityFragment extends Fragment {
                 pushRef.setValue(chat);
                 final String uniqueKey = pushRef.getKey();
                 chat.setChatId(uniqueKey);
-                final Map<String, Object> temp = new HashMap<>(1);
+                final Map<String, Object> temp = MiscUtils.getMap(1);
                 temp.put("chatId", uniqueKey);
 
                 fragment.firebaseReference.child("chat").child(chatUUID).child(uniqueKey).updateChildren(temp);
@@ -266,7 +265,8 @@ public class ChatActivityFragment extends Fragment {
             @Override
             public void onChanged() {
                 super.onChanged();
-                chatList.setSelection(mChatListAdapter.getCount() - 1);
+                if (mChatListAdapter != null)
+                    chatList.setSelection(mChatListAdapter.getCount() - 1);
             }
         });
     }

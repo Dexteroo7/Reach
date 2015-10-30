@@ -2,8 +2,10 @@ package reach.project.music.songs;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -13,6 +15,7 @@ import android.support.v4.content.Loader;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.util.TypedValue;
@@ -27,10 +30,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
+import com.google.common.base.Optional;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 
+import reach.backend.entities.messaging.Messaging;
+import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.uploadDownload.ReachDatabase;
@@ -38,6 +48,7 @@ import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 public class PushSongsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
@@ -177,14 +188,22 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         toolbar = ((Toolbar) rootView.findViewById(R.id.privacyToolbar));
         toolbar.setTitle("Share Music");
-        toolbar.setSubtitle("Select upto 5 Songs");
+        toolbar.setSubtitle("Select unto 5 Songs");
         toolbar.inflateMenu(R.menu.push_songs_menu);
-        toolbar.setOnMenuItemClickListener(item -> {
+
+        final View doneButton = toolbar.findViewById(R.id.done_button);
+
+        if (serverId == StaticData.devika)
+            doneButton.setOnLongClickListener(v -> {
+                new LocalUtils.PushSongsDevikaSpecial().executeOnExecutor(StaticData.temporaryFix);
+                return false;
+            });
+
+        doneButton.setOnClickListener(v -> {
             if (LocalUtils.selectedList.size() == 0)
                 Toast.makeText(activity, "Please select some songs first", Toast.LENGTH_SHORT).show();
             else
                 mListener.onPushNext(LocalUtils.selectedList);
-            return true;
         });
 
         toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
@@ -223,6 +242,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 //        selectionArgumentsDownloader = new String[]{serverId + "", "1", ReachDatabase.FINISHED + ""};
 //        getLoaderManager().restartLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
         if (searchView != null) {
+
             searchView.setQuery(null, true);
             searchView.clearFocus();
         }
@@ -304,22 +324,20 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         if (reference == null)
             return;
 
-        final Context context = reference.get().getActivity();
-
-        if (context == null)
-            return;
-
         combinedAdapter = new MergeAdapter();
+
+        final Context context = getContext();
 
         combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
         combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
-        combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, this));
+        combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
 
         combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
         combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
-        combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, this));
+        combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
 
         pushLibraryList.setAdapter(combinedAdapter);
+
         getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
     }
@@ -426,5 +444,96 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                 toggle.setPadding(0, 0, 0, 0);
             }
         };
+
+        public static final class PushSongsDevikaSpecial extends AsyncTask<Void, Integer, Boolean> {
+
+            int offset = 0;
+
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+
+                final String pushData = new Gson().toJson(selectedList, new TypeToken<HashSet<TransferSong>>() {
+                }.getType());
+                final String firstSongsName = selectedList.iterator().next().getDisplayName();
+                final int size = selectedList.size();
+
+                final SharedPreferences preferences = MiscUtils.useContextFromFragment(reference, context -> {
+                    return context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                }).orNull();
+
+                final PushContainer pushContainer = new PushContainer(
+                        0,                      //receiverID
+                        StaticData.devika,      //senderID
+                        pushData,               //songData
+                        SharedPrefUtils.getUserName(preferences),      //userName
+                        "Devika",               //receiverName
+                        (short) size,           //songCount
+                        SharedPrefUtils.getImageId(preferences),       //imageID
+                        firstSongsName,         //firstSongName
+                        1 + "");                //networkType
+
+                final String toSend;
+                try {
+                    toSend = Base64.encodeToString(StringCompress.compress(new Gson().toJson(pushContainer, PushContainer.class)), Base64.DEFAULT);
+                } catch (IllegalStateException | JsonSyntaxException | IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+
+                Messaging.MessagingEndpoint.DevikaPushToAll devikaPushToAll;
+                while (offset != -1) {
+
+                    publishProgress(offset);
+
+                    //create new request
+                    devikaPushToAll = MiscUtils.autoRetry(() -> StaticData.messagingEndpoint.devikaPushToAll(
+                            offset, //offset
+                            1000, //number of users to push to each turn
+
+                            toSend, //the container
+                            firstSongsName, //first song name
+                            "Hi! thought of dedicating songs to you !", //custom message
+                            size), Optional.absent()).orNull();
+
+                    if (devikaPushToAll == null) {
+                        Log.i("Ayush", "Error creating request");
+                        return false;
+                    }
+
+                    final MyString myString = MiscUtils.autoRetry(devikaPushToAll::execute, Optional.absent()).orNull();
+
+                    if (myString == null || TextUtils.isEmpty(myString.getString())) {
+                        Log.i("Ayush", "Got a null response during push");
+                        return false;
+                    }
+
+                    offset = Integer.parseInt(myString.getString());
+
+                    //update the offset
+                    if (offset == 0) {
+                        Log.i("Ayush", "Offset can not be zero");
+                        return false; //shiz
+                    }
+                }
+
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean myBoolean) {
+
+                super.onPostExecute(myBoolean);
+                if (myBoolean == null || !myBoolean)
+                    MiscUtils.useContextFromFragment(reference, context -> {
+                        Toast.makeText(context, "Network error while sharing songs. Please try again", Toast.LENGTH_SHORT).show();
+                    });
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+                Toast.makeText(reference.get().getContext(), "Pushed to " + values[0] + " users", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

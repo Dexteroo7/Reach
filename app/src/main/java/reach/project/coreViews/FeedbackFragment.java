@@ -49,7 +49,7 @@ public class FeedbackFragment extends Fragment {
             feedBack.setReply1("");
             feedBack.setReply2("");
             feedBack.setReply3(fb.getText().toString());
-            AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+            StaticData.temporaryFix.execute(() -> {
                 try {
                     StaticData.feedBackApi.insert(feedBack).execute();
                 } catch (IOException e) {

@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -556,7 +557,7 @@ public class ProcessManager extends Service implements
         }
         mixpanel.track("Play song", props);
 
-        final ArrayMap<PostParams, String> simpleParams = new ArrayMap<>(6);
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
         simpleParams.put(PostParams.USER_ID, serverId + "");
         simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
         simpleParams.put(PostParams.OS, MiscUtils.getOsName());
@@ -569,14 +570,17 @@ public class ProcessManager extends Service implements
         }
         simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-        final ArrayMap<SongMetadata, String> complexParams = new ArrayMap<>(5);
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
         complexParams.put(SongMetadata.SONG_ID, musicData.getId() + "");
         complexParams.put(SongMetadata.ARTIST, musicData.getArtistName());
         complexParams.put(SongMetadata.TITLE, musicData.getDisplayName());
         complexParams.put(SongMetadata.DURATION, musicData.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, musicData.getLength() + "");
 
-        UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
+        try {
+            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
+        } catch (JSONException ignored) {
+        }
 
         switch (notificationState) {
 

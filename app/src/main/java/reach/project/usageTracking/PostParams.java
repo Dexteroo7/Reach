@@ -7,6 +7,7 @@ public enum PostParams {
 
     EVENT_NAME("eventName"),
     META_INFO("metaInfo"),
+    TIME_STAMP("timeStamp"),
 
     SCREEN_NAME("screenName"),
     USER_ID("userId"),

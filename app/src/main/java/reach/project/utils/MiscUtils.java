@@ -12,16 +12,18 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
+import android.support.v4.util.SparseArrayCompat;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.util.Pair;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
@@ -47,8 +49,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -224,12 +228,23 @@ public enum MiscUtils {
         }
     }
 
+    public static <T, E> Map<T, E> getMap(int capacity) {
+
+        if (capacity < 1000) //use lighter collection
+            if (Build.VERSION.SDK_INT >= 19)
+                return new android.util.ArrayMap<>();
+            else
+                return new ArrayMap<>(capacity); //else use the support one
+        else
+            return new HashMap<>(capacity);
+    }
+
     public static boolean containsIgnoreCase(CharSequence str, CharSequence searchStr) {
 
         if (TextUtils.isEmpty(str) || TextUtils.isEmpty(searchStr))
             return false;
-        int len = searchStr.length();
-        int max = str.length() - len;
+        final int len = searchStr.length();
+        final int max = str.length() - len;
         for (int i = 0; i <= max; i++)
             if (regionMatches(str, true, i, searchStr, 0, len))
                 return true;
@@ -307,6 +322,26 @@ public enum MiscUtils {
             relativeLayout.removeViewAt(1);
             relativeLayout.addView(emptyTextView);
         }
+    }
+
+    public static ListView addLoadingToMusicListView(ListView listView) {
+
+        if (listView.getContext() == null)
+            return listView;
+        final ProgressBar loading = new ProgressBar(listView.getContext());
+        loading.setIndeterminate(true);
+        loading.setPadding(0, 0, 0, dpToPx(60));
+
+        final ViewParent parent = listView.getParent();
+
+        final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+        loading.setLayoutParams(layoutParams);
+        listView.setEmptyView(loading);
+        final RelativeLayout relativeLayout = (RelativeLayout) parent;
+        relativeLayout.addView(loading);
+        return listView;
     }
 
     public static ListView addLoadingToListView(ListView listView) {
@@ -390,23 +425,23 @@ public enum MiscUtils {
                 new String[]{userId + ""});
     }
 
-    public static void bulkInsertSongs(List<Song> songList,
-                                       ArrayMap<String, Album> reachAlbums,
-                                       ArrayMap<String, Artist> reachArtists,
+    public static void bulkInsertSongs(Collection<Song> reachSongs,
+                                       Collection<Album> reachAlbums,
+                                       Collection<Artist> reachArtists,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
         //Add all songs
-        final ContentValues[] songs = new ContentValues[songList.size()];
+        final ContentValues[] songs = new ContentValues[reachSongs.size()];
         final ContentValues[] albums = new ContentValues[reachAlbums.size()];
         final ContentValues[] artists = new ContentValues[reachArtists.size()];
 
         int i = 0;
-        if (songList.size() > 0) {
+        if (reachSongs.size() > 0) {
 
-            for (Song song : songList)
+            for (Song song : reachSongs)
                 songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
-            i = 0;
+            i = 0; //reset counter
             Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
         } else
             contentResolver.delete(ReachSongProvider.CONTENT_URI,
@@ -415,14 +450,10 @@ public enum MiscUtils {
 
         if (reachAlbums.size() > 0) {
 
-            for (int j = 0; j < reachAlbums.size(); j++) {
-
-                final Album album = reachAlbums.valueAt(j);
-                if (album != null)
-                    albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
-            }
+            for (Album album : reachAlbums)
+                albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
             Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
-            i = 0;
+            i = 0; //reset counter
         } else
             contentResolver.delete(ReachAlbumProvider.CONTENT_URI,
                     ReachAlbumHelper.COLUMN_USER_ID + " = ?",
@@ -430,12 +461,8 @@ public enum MiscUtils {
 
         if (reachArtists.size() > 0) {
 
-            for (int j = 0; i < reachArtists.size(); j++) {
-
-                final Artist artist = reachArtists.valueAt(j);
-                if (artist != null)
-                    artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
-            }
+            for (Artist artist : reachArtists)
+                artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
             Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
         } else
             contentResolver.delete(ReachArtistProvider.CONTENT_URI,
@@ -461,10 +488,11 @@ public enum MiscUtils {
                     new String[]{serverId + ""});
     }
 
-    public static Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
+    public static Pair<Collection<Album>, Collection<Artist>> getAlbumsAndArtists(Collection<Song> songs,
+                                                                                  long serverId) {
 
-        final ArrayMap<String, Album> albumMap = new ArrayMap<>();
-        final ArrayMap<String, Artist> artistMap = new ArrayMap<>();
+        final Map<String, Album> albumMap = getMap(songs.size());
+        final Map<String, Artist> artistMap = getMap(songs.size());
 
         for (Song song : songs) {
 
@@ -497,7 +525,7 @@ public enum MiscUtils {
 
         Log.i("Ayush", "Found " + albumMap.size() + " " + artistMap.size());
         ///////////////////////
-        return new Pair<>(albumMap, artistMap);
+        return new Pair<>(albumMap.values(), artistMap.values());
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
@@ -761,43 +789,23 @@ public enum MiscUtils {
                  * Else we return
                  */
                 return Optional.fromNullable(resultAfterWork);
-            } catch (InterruptedException | UnknownHostException | NullPointerException e) {
+            } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
+
+                Log.i("Ayush", e.getLocalizedMessage());
                 e.printStackTrace();
                 return Optional.absent();
             } catch (GoogleJsonResponseException e) {
+
+                Log.i("Ayush", e.getLocalizedMessage());
                 if (e.getLocalizedMessage().contains("404"))
                     return Optional.absent();
             } catch (IOException e) {
+
+                Log.i("Ayush", e.getLocalizedMessage());
                 e.printStackTrace();
             }
         }
         return Optional.absent();
-    }
-
-    public static String getDeviceId(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-    }
-
-    public static String getOsName() {
-
-        final Field[] fields = Build.VERSION_CODES.class.getFields();
-        for (Field field : fields) {
-
-            final String fieldName = field.getName();
-            int fieldValue = -1;
-
-            try {
-                fieldValue = field.getInt(new Object());
-            } catch (IllegalArgumentException |
-                    IllegalAccessException |
-                    NullPointerException ignored) {
-            }
-
-            if (fieldValue == Build.VERSION.SDK_INT)
-                return fieldName;
-        }
-
-        return "hello_world";
     }
 
     public static String getMusicStorageKey(long serverId) {
@@ -817,7 +825,7 @@ public enum MiscUtils {
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
 
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+        StaticData.temporaryFix.execute(() -> {
 
             for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
 
@@ -913,6 +921,7 @@ public enum MiscUtils {
         mBitmapOptions.inDither = true;
         mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
         mBitmapOptions.inJustDecodeBounds = false;
+        mBitmapOptions.inScaled = true;
         mBitmapOptions.inDensity = inDensity;
         mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
 
@@ -927,6 +936,8 @@ public enum MiscUtils {
         // will load & resize the image to be 1/inSampleSize dimensions
         Log.i("Ayush", "Starting compression");
         final Bitmap bitmap = BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions);
+        if (bitmap == null)
+            return image;
         bitmap.compress(Bitmap.CompressFormat.WEBP, 80, fileOutputStream);
         fileOutputStream.flush();
         closeQuietly(fInputStream, fileOutputStream);
@@ -937,6 +948,59 @@ public enum MiscUtils {
         image.delete();
         Log.i("Ayush", "Returning image");
         return tempFile;
+    }
+
+    private static final StringBuffer buffer = new StringBuffer();
+    private static final String baseURL = "http://52.74.53.245:8080/getImage/small?";
+
+    public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
+
+        buffer.setLength(0);
+        buffer.append(baseURL);
+        if (!TextUtils.isEmpty(album)) {
+
+            buffer.append("album=").append(Uri.encode(album));
+            if (!TextUtils.isEmpty(artist))
+                buffer.append("&artist=").append(Uri.encode(artist));
+            if (!TextUtils.isEmpty(song))
+                buffer.append("&song=").append(Uri.encode(song));
+        } else if (!TextUtils.isEmpty(artist)) {
+
+            buffer.append("artist=").append(Uri.encode(artist));
+            if (!TextUtils.isEmpty(song))
+                buffer.append("&song=").append(Uri.encode(song));
+        } else if (!TextUtils.isEmpty(song))
+            buffer.append("song=").append(Uri.encode(song));
+
+        final String toReturn = buffer.toString();
+//        Log.i("Ayush", toReturn);
+        return toReturn;
+    }
+
+    public static String getDeviceId(Context context) {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+    public static String getOsName() {
+
+        final Field[] fields = Build.VERSION_CODES.class.getFields();
+        for (Field field : fields) {
+
+            final String fieldName = field.getName();
+            int fieldValue = -1;
+
+            try {
+                fieldValue = field.getInt(new Object());
+            } catch (IllegalArgumentException |
+                    IllegalAccessException |
+                    NullPointerException ignored) {
+            }
+
+            if (fieldValue == Build.VERSION.SDK_INT)
+                return fieldName;
+        }
+
+        return "hello_world";
     }
 
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,

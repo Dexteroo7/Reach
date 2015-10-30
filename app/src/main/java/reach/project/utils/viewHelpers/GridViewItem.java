@@ -1,4 +1,4 @@
-package reach.project.viewHelpers;
+package reach.project.utils.viewHelpers;
 
 import android.content.Context;
 import android.util.AttributeSet;

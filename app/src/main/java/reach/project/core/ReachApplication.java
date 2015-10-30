@@ -3,16 +3,18 @@ package reach.project.core;
 import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.multidex.MultiDex;
+//import android.support.multidex.MultiDex;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseException;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
+import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.OkHttpClient;
 
 import java.security.KeyManagementException;
@@ -68,6 +70,7 @@ public class ReachApplication extends Application {
         } catch (NoSuchAlgorithmException | KeyManagementException ignored) {
             //ignore !!
         }
+
         okHttpClient.setHostnameVerifier((hostname, session) -> true);
         /////////////////no http response cache
         okHttpClient.setCache(null);
@@ -84,9 +87,31 @@ public class ReachApplication extends Application {
         okHttpClient.setWriteTimeout(writeTimeOut * 2, TimeUnit.MILLISECONDS);
     }
 
-    private static final HitBuilders.EventBuilder builder = new HitBuilders.EventBuilder();
-
     private Tracker mTracker;
+    private static final HitBuilders.EventBuilder builder = new HitBuilders.EventBuilder();
+    private static final HitBuilders.ScreenViewBuilder screenViewBuilder = new HitBuilders.ScreenViewBuilder();
+
+    synchronized public void trackGA(Optional<String> category,
+                                     Optional<String> action,
+                                     Optional<String> label,
+                                     int value) {
+        getTracker().send(builder
+                .setCategory(category.isPresent() ? category.get() : "")
+                .setAction(action.isPresent() ? action.get() : "")
+                .setLabel(label.isPresent() ? label.get() : "")
+                .setValue(value)
+                .build());
+        //reset
+        builder.setCategory("");
+        builder.setAction("");
+        builder.setLabel("");
+    }
+
+    synchronized public void sendScreenView(Optional<String> screenName) {
+        Tracker tracker = getTracker();
+        tracker.setScreenName(screenName.isPresent() ? screenName.get() : "");
+        tracker.send(screenViewBuilder.build());
+    }
 
     public synchronized void track(@NonNull Optional<String> category,
                                    @NonNull Optional<String> action,
@@ -118,7 +143,8 @@ public class ReachApplication extends Application {
     synchronized public Tracker getTracker() {
 
         if (mTracker == null) {
-            GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
+
+            final GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
             mTracker = analytics.newTracker(R.xml.global_tracker);
         }
         return mTracker;
@@ -130,19 +156,23 @@ public class ReachApplication extends Application {
         super.onCreate();
         //initialize firebase
         Firebase.setAndroidContext(this);
-        Firebase.getDefaultConfig().setPersistenceEnabled(true);
+        try {
+            Firebase.getDefaultConfig().setPersistenceEnabled(true);
+        } catch (FirebaseException ignored) {
+        }
         //initialize fresco
         final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, okHttpClient)
                 .setDownsampleEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
                 .build();
+
         Fresco.initialize(this, config);
     }
 
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        ////meant for release
-        MultiDex.install(this);
-    }
+//    @Override
+//    protected void attachBaseContext(Context base) {
+//        super.attachBaseContext(base);
+//        ////meant for release
+//        MultiDex.install(this);
+//    }
 }

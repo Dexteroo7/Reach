@@ -91,7 +91,7 @@ public class ExploreBuffer<T> implements Closeable {
                 exploration.notifyDataAvailable();
             }
 
-            new FetchNextBatch<>().executeOnExecutor(executorService, exploration.fetchNextBatch());
+            new FetchNextBatch<>(exploration.fetchNextBatch()).executeOnExecutor(executorService);
         }
 
         return storyBuffer.get(position);
@@ -114,18 +114,21 @@ public class ExploreBuffer<T> implements Closeable {
     }
 
     //runnable to fetch stories
-    private static class FetchNextBatch<T> extends AsyncTask<Callable, Void, Collection<T>> {
+    private static class FetchNextBatch<T> extends AsyncTask<Void, Void, Collection<T>> {
+
+        final Callable<Collection<T>> callable;
+
+        private FetchNextBatch(Callable<Collection<T>> callable) {
+            this.callable = callable;
+        }
 
         @Override
-        protected final Collection<T> doInBackground(Callable... params) {
+        protected final Collection<T> doInBackground(Void... params) {
 
             Log.i("Ayush", "Fetching next batch of stories");
 
-            if (params == null || params.length == 0)
-                return null;
-
             try {
-                return (Collection<T>) params[0].call();
+                return callable.call();
             } catch (Exception e) {
                 e.printStackTrace();
                 //TODO track

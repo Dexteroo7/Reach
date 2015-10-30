@@ -1,5 +1,6 @@
 package reach.project.onBoarding;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,7 +10,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -48,6 +51,7 @@ import reach.project.utils.auxiliaryClasses.UseContext2;
 public class NumberVerification extends Fragment {
 
     private static final String SMS_TEXT = "Your activation code is %s . Enter this in the Reach app to complete phone verification";
+    private static final int MY_PERMISSIONS_RECEIVE_SMS = 33;
 
     private View bottomPart1, bottomPart2, bottomPart3;
     private SuperInterface mListener = null;
@@ -56,6 +60,7 @@ public class NumberVerification extends Fragment {
     private static String phoneNumber;
     private static String finalAuthKey;
     private static WeakReference<NumberVerification> reference;
+    private static OldUserContainerNew containerNew = null;
 
     public static NumberVerification newInstance() {
 
@@ -91,7 +96,9 @@ public class NumberVerification extends Fragment {
 
             final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
             (telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber)).requestFocus();
-            viewPager.setAdapter(new TourPagerAdapter(rootView.getContext()));
+            TourPagerAdapter tourPagerAdapter = new TourPagerAdapter(rootView.getContext());
+            viewPager.setAdapter(tourPagerAdapter);
+
             ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
             rootView.findViewById(R.id.verify).setOnClickListener(LocalUtils.clickListener);
         }, 2000);
@@ -117,21 +124,31 @@ public class NumberVerification extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        //Receive SMS and enter the code.
-        getActivity().registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
-    }
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+        if (requestCode == MY_PERMISSIONS_RECEIVE_SMS)
+            if (grantResults.length > 0 && grantResults[0] == 0)
+                getActivity().registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
     }
 
     @Override
     public void onDestroyView() {
+
         super.onDestroyView();
+
+        try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (ContextCompat.checkSelfPermission(getContext(),
+                        Manifest.permission.RECEIVE_SMS) == 0)
+                    getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+            } else
+                getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+
         verifyCode = telephoneNumber = null;
         bottomPart1 = bottomPart2 = bottomPart3;
     }
@@ -201,10 +218,30 @@ public class NumberVerification extends Fragment {
 
                 final SmsMessage[] msgs;
 
-                if (Build.VERSION.SDK_INT >= 19) //KITKAT
-                    msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
-                else {
+                if (Build.VERSION.SDK_INT >= 19) { //KITKAT
 
+                    try {
+                        msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+                    } catch (NullPointerException ignored) {
+
+                        //weird null pointer
+                        MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                            @Override
+                            public void work(Activity activity) {
+
+                                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                        .setCategory("SEVERE ERROR, number verification intent null")
+                                        .setAction("Phone Number - " + phoneNumber)
+                                        .setValue(1)
+                                        .build());
+                            }
+                        });
+                        //fail
+                        return;
+                    }
+                } else {
+
+                    //below KITKAT
                     final Bundle bundle = intent.getExtras();
                     if (bundle == null) {
 
@@ -297,6 +334,7 @@ public class NumberVerification extends Fragment {
                 }
 
                 if (!done) {
+
                     MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
                         @Override
                         public void work(Activity activity) {
@@ -371,36 +409,21 @@ public class NumberVerification extends Fragment {
                 MiscUtils.useContextFromFragment(reference, context -> {
                     context.getSharedPreferences("Reach", Context.MODE_PRIVATE).edit().clear().apply();
                 });
-                // If the number is not present inside DB
-                if (pair.first == null) {
 
-                    MiscUtils.useFragment(reference, fragment -> {
-                        fragment.bottomPart3.setVisibility(View.INVISIBLE);
-                        fragment.bottomPart2.setVisibility(View.VISIBLE);
-                    });
+                containerNew = pair.first;
+
+                MiscUtils.useFragment(reference, fragment -> {
+                    fragment.bottomPart3.setVisibility(View.INVISIBLE);
+                    fragment.bottomPart2.setVisibility(View.VISIBLE);
+                });
                 /*
                  *  Generate Auth Key &
                  *  Send SMS verification
                  */
-                    final Random random = new Random();
-                    phoneNumber = pair.second;
-                    finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
-                    Log.i("Verification", "" + finalAuthKey);
-                    new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
-                }
-                // If the number is present inside DB
-                else {
-
-                    MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
-                        // Start Account Creation
-                        SharedPrefUtils.storePhoneNumber(
-                                context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
-                                pair.second);
-                        fragment.mListener.startAccountCreation(Optional.fromNullable(pair.first));
-
-                    });
-                }
-
+                final Random random = new Random();
+                phoneNumber = pair.second;
+                finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
+                Log.i("Verification", "" + finalAuthKey);
 //                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
             }
         }
@@ -427,6 +450,11 @@ public class NumberVerification extends Fragment {
         private static final View.OnClickListener verifyCodeListener = v ->
                 MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
 
+                    if (fragment.verifyCode == null) {
+                        //TODO track
+                        return;
+                    }
+
                     final String enteredCode = fragment.verifyCode.getText().toString().trim();
                     if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
 
@@ -434,7 +462,7 @@ public class NumberVerification extends Fragment {
                                 context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
                                 phoneNumber);
                         // Start Account Creation
-                        fragment.mListener.startAccountCreation(Optional.fromNullable(null));
+                        fragment.mListener.startAccountCreation(Optional.fromNullable(containerNew));
                     } else
                         //FAIL
                         Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
@@ -467,14 +495,27 @@ public class NumberVerification extends Fragment {
                 return;
             }
 
-            final int length = parsed.length();
-            //take last 10 digits
-            new GetOldAccount().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, parsed.substring(length - 10, length));
-
             MiscUtils.useFragment(reference, fragment -> {
+
+                final Activity activity = fragment.getActivity();
+                if (Build.VERSION.SDK_INT >= 23) {
+                    if (ContextCompat.checkSelfPermission(activity,
+                            Manifest.permission.RECEIVE_SMS) != 0)
+                        fragment.requestPermissions(
+                                new String[]{
+                                        Manifest.permission.RECEIVE_SMS
+                                }, MY_PERMISSIONS_RECEIVE_SMS);
+                    else
+                        activity.registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
+                } else
+                    activity.registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
                 fragment.bottomPart1.setVisibility(View.INVISIBLE);
                 fragment.bottomPart3.setVisibility(View.VISIBLE);
             });
+
+            final int length = parsed.length();
+            //take last 10 digits
+            new GetOldAccount().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, parsed.substring(length - 10, length));
         };
     }
 }

@@ -3,7 +3,6 @@ package reach.project.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -313,8 +313,8 @@ public enum CloudStorageUtils {
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
-        final Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> pair =
-                MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
+        //get list of albums and artists
+        final Pair<Collection<Album>, Collection<Artist>> pair = MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
         MiscUtils.bulkInsertSongs(
                 musicList.song,
                 pair.first,
@@ -457,6 +457,7 @@ public enum CloudStorageUtils {
                     stream,
                     "notasecret", "privatekey", "notasecret");
         } catch (GeneralSecurityException | IOException e) {
+
             e.printStackTrace();
             try {
                 transport.shutdown();

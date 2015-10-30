@@ -87,7 +87,7 @@ public class EditProfileFragment extends Fragment {
 
             final String name = firstName.getText().toString();
 
-            new UpdateProfile().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, name);
+            new UpdateProfile().executeOnExecutor(StaticData.temporaryFix, name);
             //save to cache
             SharedPrefUtils.storeUserName(sharedPreferences, name);
             SharedPrefUtils.storeImageId(sharedPreferences, imageId);
@@ -161,7 +161,7 @@ public class EditProfileFragment extends Fragment {
             imageStream = null;
         }
 
-        new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
+        new ProcessImage().executeOnExecutor(StaticData.temporaryFix, imageStream);
     }
 
     @Override

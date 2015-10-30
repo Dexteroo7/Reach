@@ -7,9 +7,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.RemoteException;
 import android.support.v4.util.LongSparseArray;
@@ -20,6 +22,8 @@ import android.util.Pair;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+
+import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +40,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -55,6 +60,9 @@ import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.SongMetadata;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -706,6 +714,35 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                         database.getSenderId(),
                         database.getDisplayName(),
                         database.getLength()).execute(), Optional.absent());
+
+                //usage tracking
+                final Context context = handlerInterface.getContext();
+                final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+                simpleParams.put(PostParams.USER_ID, database.getSenderId() + "");
+                simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(context));
+                simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+                simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+                try {
+                    simpleParams.put(PostParams.APP_VERSION,
+                            context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+                simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+                complexParams.put(SongMetadata.SONG_ID, database.getSongId() + "");
+                complexParams.put(SongMetadata.ARTIST, database.getArtistName());
+                complexParams.put(SongMetadata.TITLE, database.getDisplayName());
+                complexParams.put(SongMetadata.DURATION, database.getDuration() + "");
+                complexParams.put(SongMetadata.SIZE, database.getLength() + "");
+
+                //obviously network available !
+
+                try {
+                    UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_COMPLETE);
+                } catch (JSONException ignored) {
+                }
 
                 return; //download complete
             }
@@ -1517,12 +1554,6 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     Optional.of("ServerId " + id),
                     Optional.absent(),
                     1);
-
-//            ((ReachApplication) handlerInterface.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-//                    .setCategory(message)
-//                    .setAction("ServerId " + id)
-//                    .setValue(1)
-//                    .build());
         }
 
         /**

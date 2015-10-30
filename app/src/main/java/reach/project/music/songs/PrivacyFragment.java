@@ -117,7 +117,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 combinedAdapter.setActive(emptyMyLibrary, true);
             else
                 combinedAdapter.setActive(emptyMyLibrary, false);
-        } else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed()) {
+        } else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && cursor != null && !cursor.isClosed() && downloadedAdapter != null) {
 
             downloadedAdapter.swapCursor(cursor);
             if (cursor.getCount() == 0 && privacyList != null)
@@ -132,7 +132,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         if (cursorLoader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             myLibraryAdapter.swapCursor(null);
-        else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
+        else if (cursorLoader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && downloadedAdapter!=null)
             downloadedAdapter.swapCursor(null);
     }
 
@@ -310,6 +310,9 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
          */
         combinedAdapter = new MergeAdapter();
 
+        if (context == null)
+            return;
+
         if (!first) {
             combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
             combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
@@ -462,7 +465,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             updateDatabase(values, songId, userId, view.getContext()
             );
-            new ToggleVisibility().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+            new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix,
                     (long) reachSongCursor.getShort(9),
                     reachSongCursor.getLong(1),
                     reachSongCursor.getLong(2));

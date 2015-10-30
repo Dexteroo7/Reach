@@ -88,6 +88,8 @@ public abstract class FirebaseListAdapter<T> extends BaseAdapter {
                 T newModel = dataSnapshot.getValue(FirebaseListAdapter.this.mModelClass);
                 int index = mKeys.indexOf(key);
 
+                if (index<0)
+                    return;
                 mModels.set(index, newModel);
 
                 notifyDataSetChanged();

@@ -1,16 +1,21 @@
 package reach.project.usageTracking;
 
 import android.support.annotation.NonNull;
-import android.util.ArrayMap;
 import android.util.Log;
 
 import com.google.common.base.Optional;
-import com.squareup.okhttp.FormEncodingBuilder;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Calendar;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -25,17 +30,29 @@ public enum UsageTracker {
     PLAY_SONG, //most + last played
     LIKE_SONG, //liked by user (client)
     DOWNLOAD_SONG, //downloaded by friends
+    DOWNLOAD_COMPLETE, //download completed by friends
 
     ////////////
 
     LIKE_APP, //user likes an app (his own or someone else's)
     REDIRECT_PLAY_STORE, //user redirected to play store
-    ;
+
     ////////////
+
+    APP_OPEN //user opened the app
+
+    ////////////
+    ;
 
     private static final Stack<Request> requests = new Stack<>(); //singleton request object
 
     private static final Executor asyncTracker = Executors.newSingleThreadExecutor();
+
+    private static final Calendar calendar = Calendar.getInstance();
+
+    static {
+        calendar.setTimeZone(TimeZone.getTimeZone("IST"));
+    }
 
     private static final Runnable track = () -> {
 
@@ -64,16 +81,16 @@ public enum UsageTracker {
             Log.i("Ayush", "USAGE TRACKED !");
     };
 
-    public static void trackSong(@NonNull ArrayMap<PostParams, String> simpleParams,
-                                 @NonNull ArrayMap<SongMetadata, String> complexParams,
-                                 @NonNull UsageTracker eventName) {
+    public static void trackSong(@NonNull Map<PostParams, String> simpleParams,
+                                 @NonNull Map<SongMetadata, String> complexParams,
+                                 @NonNull UsageTracker eventName) throws JSONException {
 
-        final FormEncodingBuilder formBody = new FormEncodingBuilder();
+        final JSONObject jsonObject = new JSONObject();
 
         ///////////////
         final Set<Map.Entry<PostParams, String>> simpleEntries = simpleParams.entrySet();
         for (Map.Entry<PostParams, String> entry : simpleEntries)
-            formBody.add(entry.getKey().getValue(), entry.getValue());
+            jsonObject.put(entry.getKey().getValue(), entry.getValue());
         ///////////////
         final Set<Map.Entry<SongMetadata, String>> complexEntries = complexParams.entrySet();
         final StringBuilder builder = new StringBuilder(50);
@@ -86,13 +103,46 @@ public enum UsageTracker {
             builder.append(entry.getKey().name()).append(":").append(entry.getValue());
         }
         ///////////////
-        formBody.add(PostParams.META_INFO.getValue(), builder.toString());
-        formBody.add(PostParams.EVENT_NAME.getValue(), eventName.name());
+
+        jsonObject.put(PostParams.META_INFO.getValue(), builder.toString());
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
+        jsonObject.put(PostParams.TIME_STAMP.getValue(), calendar.getTimeInMillis());
+
+        final String toPost = jsonObject.toString();
+        Log.i("Ayush", "Posting " + toPost);
 
         synchronized (requests) {
+
             requests.push(new Request.Builder()
                     .url("http://52.74.175.56:8080/analytics/events")
-                    .post(formBody.build())
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))
+                    .build());
+        }
+
+        asyncTracker.execute(track);
+    }
+
+    //TODO
+    public static void trackEvent(@NonNull Map<PostParams, String> simpleParams,
+                                  @NonNull UsageTracker eventName) throws JSONException {
+
+        final JSONObject jsonObject = new JSONObject();
+
+        ///////////////
+        final Set<Map.Entry<PostParams, String>> simpleEntries = simpleParams.entrySet();
+        for (Map.Entry<PostParams, String> entry : simpleEntries)
+            jsonObject.put(entry.getKey().getValue(), entry.getValue());
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
+        ///////////////
+
+        final String toPost = jsonObject.toString();
+        Log.i("Ayush", "Posting " + toPost);
+
+        synchronized (requests) {
+
+            requests.push(new Request.Builder()
+                    .url("http://52.74.175.56:8080/analytics/events")
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))
                     .build());
         }
 

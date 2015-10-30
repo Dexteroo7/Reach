@@ -1,4 +1,4 @@
-<reach.project.viewHelpers.GridViewItem xmlns:android="http://schemas.android.com/apk/res/android"
+<reach.project.utils.viewHelpers.GridViewItem xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -91,4 +91,4 @@
         android:alpha="0.8"
         android:src="@drawable/ic_locked_friends"
         android:visibility="gone" />
-</reach.project.viewHelpers.GridViewItem>
+</reach.project.utils.viewHelpers.GridViewItem>

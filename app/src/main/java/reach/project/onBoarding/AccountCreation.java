@@ -2,6 +2,7 @@ package reach.project.onBoarding;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -184,7 +185,13 @@ public class AccountCreation extends Fragment {
         final Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_PICKER_SELECT);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_PICKER_SELECT);
+        }
+        catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(),"Sorry! Your device does not support this feature",Toast.LENGTH_SHORT).show();
+        }
     };
 
     @Override
@@ -212,7 +219,7 @@ public class AccountCreation extends Fragment {
             imageStream = null;
         }
 
-        new ProcessImage().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, imageStream);
+        new ProcessImage().executeOnExecutor(StaticData.temporaryFix, imageStream);
     }
 
     @Override
@@ -615,7 +622,7 @@ public class AccountCreation extends Fragment {
             });
 
             Log.i("Ayush", "Chat authenticated " + chatUUID);
-            final Map<String, Object> userData = new HashMap<>();
+            final Map<String, Object> userData = MiscUtils.getMap(6);
             userData.put("uid", authData.getAuth().get("uid"));
             userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
             userData.put("userName", authData.getAuth().get("userName"));

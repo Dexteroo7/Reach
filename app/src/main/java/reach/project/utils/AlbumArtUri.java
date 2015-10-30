@@ -3,12 +3,13 @@ package reach.project.utils;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.SparseArray;
 
 import com.google.common.base.Optional;
 
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by dexter on 13/10/15.
@@ -17,10 +18,10 @@ public enum AlbumArtUri {
     ;
 
     private static final String baseURL = "http://52.74.53.245:8080/getImage/small?";
-    private static final SparseArray<Uri> simpleCache = new SparseArray<>(500);
+    private static final Map<Integer, Uri> simpleCache = new HashMap<>(1000);
     private static final StringBuffer buffer = new StringBuffer(50);
 
-    public synchronized static Optional<Uri> getUri(String album, String artist, String song) {
+    public static Optional<Uri> getUri(String album, String artist, String song) {
 
         final int key = Arrays.hashCode(new String[]{
                 TextUtils.isEmpty(album) ? "" : album,
@@ -28,7 +29,7 @@ public enum AlbumArtUri {
                 TextUtils.isEmpty(song) ? "" : song
         });
 
-        Uri value = simpleCache.get(key, null);
+        Uri value = simpleCache.get(key);
         if (value != null)
             return Optional.of(value);
 
@@ -61,7 +62,9 @@ public enum AlbumArtUri {
             return Optional.absent();
 
         value = Uri.parse(toParse);
-        simpleCache.append(key, value);
+        synchronized (simpleCache) {
+            simpleCache.put(key, value);
+        }
         return Optional.of(value);
     }
 }

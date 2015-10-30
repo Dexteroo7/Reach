@@ -8,6 +8,9 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
@@ -93,7 +96,7 @@ public final class StaticData {
     public static final short NETWORK_RETRY = 5;
     public static final int MINIMUM_FREE_SPACE = 100 * 1024 * 1024; //100mb
 
-    public static final long MINIMUM_PONG_GAP = 15 * 1000; //15 seconds
+    public static final long MINIMUM_PONG_GAP = 18 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
     public static final String mixPanelId = "7877f44b1ce4a4b2db7790048eb6587a";
@@ -102,4 +105,6 @@ public final class StaticData {
     public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
     public static final String dropBoxManager = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
+
+    public static final ExecutorService temporaryFix = Executors.unconfigurableExecutorService(Executors.newCachedThreadPool());
 }

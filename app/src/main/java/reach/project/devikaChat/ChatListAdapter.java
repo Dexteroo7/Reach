@@ -13,11 +13,11 @@ import com.firebase.client.Query;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 
 /**
  * @author greg
@@ -32,7 +32,7 @@ public class ChatListAdapter extends FirebaseListAdapter<Chat> {
 //    private final long userId;
 //    private final Context context;
 
-    private final Map<String, Object> statusUpdate = new HashMap<>(1);
+    private final Map<String, Object> statusUpdate = MiscUtils.getMap(1);
 
     {
         statusUpdate.put("status", Chat.READ);

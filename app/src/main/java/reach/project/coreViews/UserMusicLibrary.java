@@ -18,8 +18,6 @@ import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -39,7 +37,6 @@ import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.firebase.client.Firebase;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.nineoldandroids.view.ViewHelper;
@@ -50,11 +47,8 @@ import java.util.Map;
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
-import reach.project.core.GcmIntentService;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.devikaChat.Chat;
-import reach.project.devikaChat.ChatActivity;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.songs.MusicListFragment;
@@ -131,7 +125,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final Activity activity = getActivity();
 
         if (MiscUtils.isOnline(activity))
-            AsyncTask.THREAD_POOL_EXECUTOR.execute(new GetMusic(userId));
+            StaticData.temporaryFix.execute(new GetMusic(userId));
 
         final View rootView = inflater.inflate(R.layout.fragment_user_library, container, false);
         final ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);
@@ -223,35 +217,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         numSongs.setText(numberOfSongs + " songs");
 
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        if (phoneNumber.equals("8860872102") && !SharedPrefUtils.getSecondIntroSeen(sharedPreferences)) {
-
-            SharedPrefUtils.setSecondIntroSeen(sharedPreferences);
-
-            final Chat chat = new Chat();
-            chat.setMessage("Click and Grab! You can add multiple songs instantly to your Reach Queue by just clicking on the songs");
-            chat.setTimestamp(System.currentTimeMillis());
-            chat.setAdmin(Chat.ADMIN);
-
-            final Optional<Firebase> firebaseOptional = mListener.getFireBase();
-            if (firebaseOptional.isPresent()) {
-
-                firebaseOptional.get().child("chat").child(
-                        SharedPrefUtils.getChatUUID(sharedPreferences)).push().setValue(chat);
-                final Intent viewIntent = new Intent(activity, ChatActivity.class);
-                final PendingIntent viewPendingIntent = PendingIntent.getActivity(activity, GcmIntentService.NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-                final NotificationCompat.Builder notificationBuilder =
-                        new NotificationCompat.Builder(activity)
-                                .setAutoCancel(true)
-                                .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                                .setSmallIcon(R.drawable.ic_icon_notif)
-                                .setContentTitle("Devika sent you a message")
-                                .setContentIntent(viewPendingIntent)
-                                .setPriority(NotificationCompat.PRIORITY_MAX)
-                                .setWhen(System.currentTimeMillis());
-                final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(activity);
-                notificationManager.notify(GcmIntentService.NOTIFICATION_ID_CHAT, notificationBuilder.build());
-            }
-        }
 
         toolbar.setTitle(" " + userName);
         toolbar.setSubtitle(" " + numberOfSongs + " Songs");

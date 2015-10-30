@@ -11,7 +11,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.provider.MediaStore;
-import android.support.v4.util.ArrayMap;
 import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
 import android.util.Log;
@@ -27,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -373,13 +373,21 @@ public class MusicScanner extends IntentService {
 
         final HashSet<String> files = new HashSet<>();
 
+        if (file == null)
+            return files;
+
         if (file.isDirectory()) {
 
-            for (File song : file.listFiles())
-                if (song.exists()) //recurse
+            final File[] toIterate;
+
+            if ((toIterate = file.listFiles()) == null || toIterate.length == 0)
+                return files;
+
+            for (File song : toIterate)
+                if (song != null && song.exists()) //recurse
                     files.addAll(recurseDirectory(song));
 
-        } else if (file.isFile() && file.getName().toLowerCase().contains(".mp3"))
+        } else if (file.isFile())
             files.add(file.getPath().trim());
         return files;
     }
@@ -478,6 +486,9 @@ public class MusicScanner extends IntentService {
                     MediaStore.Audio.Playlists.Members.getContentUri("external", playLists.getLong(play_list_id)), //specify the URI
                     new String[]{MediaStore.Audio.Playlists.Members.AUDIO_ID}, //specify the projection
                     null, null, null);
+
+            if (musicCursor == null)
+                return toSend;
 
             final ImmutableList.Builder<AlbumArtData> dataBuilder = new ImmutableList.Builder<>();
             final ImmutableList.Builder<Long> songIds = new ImmutableList.Builder<>();
@@ -699,7 +710,7 @@ public class MusicScanner extends IntentService {
          * Commit to local DB now !
          */
         final List<Song> myLibrarySongs = myLibraryBuilder.build();
-        final Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> albums_artists = MiscUtils.getAlbumsAndArtists(myLibrarySongs, serverId);
+        final Pair<Collection<Album>, Collection<Artist>> albums_artists = MiscUtils.getAlbumsAndArtists(myLibrarySongs, serverId);
         //save songs, albums & artists to database
         MiscUtils.bulkInsertSongs(
                 myLibrarySongs,

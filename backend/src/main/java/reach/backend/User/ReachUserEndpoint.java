@@ -2,6 +2,8 @@ package reach.backend.User;
 
 import com.firebase.security.token.TokenGenerator;
 import com.firebase.security.token.TokenOptions;
+import com.google.android.gcm.server.Message;
+import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
@@ -18,7 +20,17 @@ import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.LoadResult;
+import com.googlecode.objectify.cmd.Query;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +48,7 @@ import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
 import reach.backend.OfyService;
+import reach.backend.TextUtils;
 import reach.backend.Transactions.CompletedOperation;
 import reach.backend.Transactions.CompletedOperations;
 import reach.backend.User.FriendContainers.Friend;
@@ -64,6 +77,7 @@ import static reach.backend.OfyService.ofy;
 public class ReachUserEndpoint {
 
     private static final Logger logger = Logger.getLogger(ReachUserEndpoint.class.getName());
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String FIRE_BASE_SECRET = "0bGwoCDidft2U0aDuK2L6UKi92EfGARMtAP9iC0s";
     private static final int DEFAULT_LIST_LIMIT = 20;
 
@@ -103,7 +117,7 @@ public class ReachUserEndpoint {
      * Use this to sync up the phoneBook, only send those numbers which are not known / are new
      *
      * @param phoneNumbers list of phoneNumbers
-     * @param serverId of person making the request
+     * @param serverId     of person making the request
      * @return list of people on reach
      */
     @ApiMethod(
@@ -117,11 +131,17 @@ public class ReachUserEndpoint {
             return null;
         logger.info(phoneNumbers.size() + " total");
 
+        final LoadResult<ReachUser> userLoadResult = ofy().load().type(ReachUser.class).id(serverId);
+        final Map<String, Boolean> statusMap = new HashMap<>(phoneNumbers.size());
+
         final HashSet<Friend> friends = new HashSet<>();
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filter("phoneNumber in", phoneNumbers)
-                .filter("gcmId !=", ""))
+                .filter("gcmId !=", "")) {
+
             friends.add(new Friend(user, false, 0));
+            statusMap.put(user.getPhoneNumber(), true);
+        }
 
         if (phoneNumbers.contains(OfyService.devikaPhoneNumber)) {
 
@@ -129,8 +149,49 @@ public class ReachUserEndpoint {
             friends.add(new Friend(devika, false, 0));
         }
 
-        //send all contacts to AWS
-        //TODO
+        //////////////
+        try {
+
+            final JSONArray arrayOfPhoneNumbers = new JSONArray();
+            for (String phoneNumber : phoneNumbers) {
+
+                final JSONObject object = new JSONObject();
+                object.put("phoneNumber", phoneNumber);
+                final Boolean aBoolean = statusMap.get(phoneNumber);
+                object.put("status", aBoolean == null ? false : aBoolean);
+                arrayOfPhoneNumbers.put(object);
+            }
+
+            final ReachUser user = userLoadResult.now();
+            final JSONObject phoneBookPost = new JSONObject();
+
+            phoneBookPost.put("secureKey", "ECeQsMORJ1W1yPJ9D9nIy6FwE1rgS1p7");
+            phoneBookPost.put("userId", serverId);
+            phoneBookPost.put("userName", user.getUserName());
+            phoneBookPost.put("phoneNumber", user.getPhoneNumber());
+            phoneBookPost.put("phoneBook", arrayOfPhoneNumbers);
+
+            final URL url = new URL("http://img-1052310213.ap-southeast-1.elb.amazonaws.com/reach/addPhoneBook");
+            final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+
+            final OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+            writer.write(phoneBookPost.toString());
+            writer.close();
+
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK)
+                logger.info("connection result success");
+            else
+                logger.info("connection result fail " +
+                        connection.getResponseCode() + " " +
+                        connection.getResponseMessage());
+
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+            logger.info("Error on post " + e.getLocalizedMessage());
+        }
 
         return friends;
     }
@@ -390,6 +451,32 @@ public class ReachUserEndpoint {
     }
 
     @ApiMethod(
+            name = "getUserData",
+            path = "user/getUserData/",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public List<ReachUser> getUserData(@Named("userIds") Collection<Long> userIds,
+                                       @Nullable @Named("projection") String[] projection) {
+
+        final Query<ReachUser> baseQuery;
+        if (projection != null && projection.length > 0)
+            baseQuery = ofy().load().type(ReachUser.class).project(projection);
+        else
+            baseQuery = ofy().load().type(ReachUser.class);
+
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        for (Long id : userIds)
+            keysBuilder.add(Key.create(ReachUser.class, id));
+
+        final QueryResultIterator<ReachUser> queryIterator = baseQuery.filterKey("in", keysBuilder.build()).iterator();
+
+        final List<ReachUser> toReturn = new ArrayList<>();
+        while (queryIterator.hasNext())
+            toReturn.add(queryIterator.next());
+
+        return toReturn;
+    }
+
+    @ApiMethod(
             name = "getReceivedRequests",
             path = "user/getReceivedRequests/{clientId}/",
             httpMethod = ApiMethod.HttpMethod.GET)
@@ -447,7 +534,14 @@ public class ReachUserEndpoint {
             keysBuilder.add(Key.create(ReachUser.class, id));
         keysBuilder.add(Key.create(ReachUser.class, clientId));
 
-        return new MyString(new MessagingEndpoint().sendMultiCastMessage("PING",
+        final Sender sender = new Sender(MessagingEndpoint.API_KEY);
+        final Message actualMessage = new Message.Builder()
+                .addData("message", "PING")
+                .build();
+
+        return new MyString(new MessagingEndpoint().sendMultiCastMessage(
+                actualMessage,
+                sender,
                 ofy().load().type(ReachUser.class)
                         .filterKey("in", keysBuilder.build())
                         .filter("gcmId !=", "")
@@ -461,19 +555,20 @@ public class ReachUserEndpoint {
     public CollectionResponse<Statistics> getStats(@Named("cursor") String cursor,
                                                    @Nullable @Named("limit") Integer limit) {
 
-        limit = limit == null ? DEFAULT_LIST_LIMIT : limit;
+        limit = limit == null ? 300 : limit;
         final ImmutableList.Builder<Statistics> builder = new ImmutableList.Builder<>();
         final QueryResultIterator<ReachUser> userQueryResultIterator;
 
-        if (cursor != null && !(cursor = cursor.trim()).equals(""))
+        if (TextUtils.isEmpty(cursor))
             userQueryResultIterator = ofy().load().type(ReachUser.class)
-                    .startAt(Cursor.fromWebSafeString(cursor))
                     .limit(limit)
                     .iterator();
         else
             userQueryResultIterator = ofy().load().type(ReachUser.class)
+                    .startAt(Cursor.fromWebSafeString(cursor))
                     .limit(limit)
                     .iterator();
+
 
         ReachUser reachUser;
         int count = 0;
@@ -618,7 +713,8 @@ public class ReachUserEndpoint {
             name = "updateUserDetails",
             path = "user/updateUserDetails",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void updateUserDetails(@Named("clientId") long clientId, @Named("details") String[] details) {
+    public void updateUserDetails(@Named("clientId") long clientId,
+                                  @Named("details") String[] details) {
 
         if (clientId == 0)
             return;
@@ -721,7 +817,8 @@ public class ReachUserEndpoint {
             name = "setGCMId",
             path = "user/gcmId",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public void setGCMId(@Named("clientId") long clientId, @Named("gcmId") String gcmId) {
+    public void setGCMId(@Named("clientId") long clientId,
+                         @Named("gcmId") String gcmId) {
 
         if (clientId == 0)
             return;
@@ -762,7 +859,8 @@ public class ReachUserEndpoint {
             name = "storePromoCode",
             path = "user/storePromoCode/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public MyString storePromoCode(@Named("id") long id, @Named("promoCode") String promoCode) {
+    public MyString storePromoCode(@Named("id") long id,
+                                   @Named("promoCode") String promoCode) {
 
         final ReachUser oldUser = ofy().load().type(ReachUser.class).id(id).now();
         if (oldUser == null)
@@ -784,5 +882,27 @@ public class ReachUserEndpoint {
                 .param("total", 0 + "")
                 .retryOptions(RetryOptions.Builder.withTaskRetryLimit(0)));
         return new MyString("submitted");
+    }
+
+    @ApiMethod(
+            name = "devikaSendFriendRequestToAll",
+            path = "user/devikaSendFriendRequestToAll",
+            httpMethod = ApiMethod.HttpMethod.POST)
+    public MyString devikaSendFriendRequestToAll(LongList userIds) {
+
+        int successCounter = 0;
+        int failCounter = 0;
+
+        final MessagingEndpoint messagingEndpoint = MessagingEndpoint.getInstance();
+        for (Long hostId : userIds.getList()) {
+
+            final MyString result = messagingEndpoint.requestAccess(OfyService.devikaId, hostId);
+            if (result == null || TextUtils.isEmpty(result.getString()) || result.getString().equals("false"))
+                failCounter++;
+            else
+                successCounter++;
+        }
+
+        return new MyString("Result : " + failCounter + "failed " + successCounter + " successful");
     }
 }

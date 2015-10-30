@@ -10,6 +10,7 @@ import android.support.v7.widget.Toolbar;
 
 import reach.project.R;
 import reach.project.core.ReachActivity;
+import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 
 public class ChatActivity extends AppCompatActivity {
@@ -32,7 +33,7 @@ public class ChatActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle("Devika");
             actionBar.setSubtitle("Reach Manager");
-            new SetManagerIcon().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new SetManagerIcon().executeOnExecutor(StaticData.temporaryFix);
         }
     }
 
