@@ -47,15 +47,6 @@
         </activity>
 
         <receiver
-            android:name=".core.InstallTrackersReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action
-                    android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name=".core.GcmBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>

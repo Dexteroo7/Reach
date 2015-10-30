@@ -1,9 +1,7 @@
 package reach.project.core;
 
 import android.app.Application;
-import android.content.Context;
 import android.support.annotation.NonNull;
-//import android.support.multidex.MultiDex;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
@@ -14,7 +12,6 @@ import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
-import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.OkHttpClient;
 
 import java.security.KeyManagementException;
@@ -28,6 +25,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import reach.project.R;
+
+//import android.support.multidex.MultiDex;
 
 /**
  * Created by ashish on 23/3/15.
