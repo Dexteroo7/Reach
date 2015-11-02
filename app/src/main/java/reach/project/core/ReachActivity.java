@@ -58,8 +58,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.appvirality.AppviralityUI;
-import com.appvirality.android.AppviralityAPI;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
@@ -107,6 +105,7 @@ import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
+import reach.project.explore.ExploreFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.songs.PrivacyFragment;
@@ -165,23 +164,20 @@ public class ReachActivity extends AppCompatActivity implements
     private ReachMusicAdapter musicAdapter = null;
 
     private String selectionDownloader, selectionMyLibrary, mCurFilter;
-    private String[] selectionArgumentsDownloader;
-    private String[] selectionArgumentsMyLibrary;
+    private String[] selectionArgumentsDownloader, selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     //private int topPadding;
     //private FrameLayout containerFrame;
-    private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private static MusicData currentPlaying;
 
     ////////////////////////////////////////
-    private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
-    private TextView playerPos;
-    private SeekBar progressBarMaximized;
-    private SeekBar progressBarMinimized;
+    private TextView songNameMinimized, songNameMaximized, artistName, songDuration, playerPos, userNameNav, emptyTV1, emptyTV2;
+    private SeekBar progressBarMaximized, progressBarMinimized;
     private ListView queueListView;
-    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton, userImageNav; //fullscreen
     private CustomViewPager viewPager;
+    private View headerView;
 
     private MergeAdapter combinedAdapter = null;
     private Firebase firebaseReference = null;
@@ -296,11 +292,10 @@ public class ReachActivity extends AppCompatActivity implements
                             promoCodeDialog.show(fragmentManager, "promo_dialog");
                         return true;
                     case R.id.navigation_item_3:
-                        AppviralityUI.showGrowthHack(ReachActivity.this, AppviralityUI.GH.Word_of_Mouth);
-                        /*fragmentManager
+                        fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();*/
+                                .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
@@ -378,7 +373,6 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onPause();
 
-        AppviralityUI.onStop();
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
             return;
@@ -640,8 +634,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void updateDetails(File image, String userName) {
 
-        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into(userImageNav);
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
     }
 
     @Override
@@ -714,7 +708,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void setUpNavigationViews() {
 
-        final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
+        final SwitchCompat netToggle = (SwitchCompat) headerView.findViewById(R.id.netToggle);
         if (SharedPrefUtils.getMobileData(preferences))
             netToggle.setChecked(true);
         else
@@ -738,8 +732,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         final String path = SharedPrefUtils.getImageId(preferences);
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into(userImageNav);
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
 
         final Cursor countCursor = getContentResolver().query(
@@ -756,7 +750,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         final long count = countCursor.getCount();
         countCursor.close();
-        ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
+        ((TextView) headerView.findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
     }
 
     @Override
@@ -885,8 +879,6 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        AppviralityUI.showWelcomeScreen(this);
-
         Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
 
         Pacemaker.scheduleLinear(this, 5);
@@ -944,6 +936,7 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        headerView = mNavigationView.inflateHeaderView(R.layout.nav_drawer_header);
         mNavigationView.setItemIconTintList(null);
         liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
@@ -953,8 +946,9 @@ public class ReachActivity extends AppCompatActivity implements
 
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
-
-        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
+        userImageNav = (ImageView) headerView.findViewById(R.id.userImageNav);
+        userNameNav = (TextView) headerView.findViewById(R.id.userNameNav);
+        userImageNav.setOnClickListener(navHeaderClickListener);
         findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
@@ -1032,10 +1026,6 @@ public class ReachActivity extends AppCompatActivity implements
             mixpanel.registerSuperPropertiesOnce(props);
             ppl.identify(userID + "");
             ppl.set("UserID", userID + "");
-            AppviralityAPI.UserDetails.setInstance(getApplicationContext())
-                    .setUseridInStore(userID + "")
-                    .isExistingUser(false)
-                    .Update();
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
         if (!TextUtils.isEmpty(phoneNumber))
@@ -1410,9 +1400,6 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
 
-        AppviralityAPI.saveConversionEvent("TransferFile", null, null);
-
-        MiscUtils.sendReferLog(SharedPrefUtils.getServerId(preferences) + "", "TransferFile");
 
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
