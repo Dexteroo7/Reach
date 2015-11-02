@@ -1,4 +1,4 @@
-package reach.project.utils;
+package reach.project.reachScanner;
 
 import android.app.IntentService;
 import android.content.ContentResolver;
@@ -48,6 +48,9 @@ import reach.project.music.songs.Song;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 
 public class MusicScanner extends IntentService {
 

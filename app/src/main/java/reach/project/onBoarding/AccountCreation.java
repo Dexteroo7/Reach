@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
 
 import reach.backend.entities.userApi.model.InsertContainer;
@@ -58,7 +57,7 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.MusicScanner;
+import reach.project.reachScanner.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;

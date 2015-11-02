@@ -59,7 +59,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
-import com.crittercism.app.Crittercism;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
@@ -69,7 +68,6 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.api.client.googleapis.services.AbstractGoogleClient;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -86,18 +84,13 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import reach.backend.entities.messaging.model.MyBoolean;
-import reach.backend.entities.userApi.UserApi;
-import reach.backend.entities.userApi.model.LongList;
 import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
@@ -130,6 +123,7 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
+import reach.project.reachScanner.MusicScanner;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
@@ -139,7 +133,6 @@ import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -1035,8 +1028,8 @@ public class ReachActivity extends AppCompatActivity implements
         final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        Crittercism.setUsername(userName + " " + phoneNumber);
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+//        Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize MixPanel
         MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
