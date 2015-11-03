@@ -18,12 +18,9 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
-import android.support.v4.util.SparseArrayCompat;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.LongSparseArray;
 import android.util.Pair;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
@@ -791,17 +788,26 @@ public enum MiscUtils {
                 return Optional.fromNullable(resultAfterWork);
             } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
 
-                Log.i("Ayush", e.getLocalizedMessage());
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
                 e.printStackTrace();
                 return Optional.absent();
             } catch (GoogleJsonResponseException e) {
 
-                Log.i("Ayush", e.getLocalizedMessage());
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
                 if (e.getLocalizedMessage().contains("404"))
                     return Optional.absent();
             } catch (IOException e) {
 
-                Log.i("Ayush", e.getLocalizedMessage());
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
                 e.printStackTrace();
             }
         }

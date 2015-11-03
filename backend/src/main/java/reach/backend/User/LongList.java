@@ -9,6 +9,9 @@ public class LongList {
 
     private List<Long> list;
 
+    public LongList() {
+    }
+
     public List<Long> getList() {
         return list;
     }

@@ -92,22 +92,6 @@ public class ReachApplication extends Application {
     private static final HitBuilders.EventBuilder builder = new HitBuilders.EventBuilder();
     private static final HitBuilders.ScreenViewBuilder screenViewBuilder = new HitBuilders.ScreenViewBuilder();
 
-    synchronized public void trackGA(Optional<String> category,
-                                     Optional<String> action,
-                                     Optional<String> label,
-                                     int value) {
-        getTracker().send(builder
-                .setCategory(category.isPresent() ? category.get() : "")
-                .setAction(action.isPresent() ? action.get() : "")
-                .setLabel(label.isPresent() ? label.get() : "")
-                .setValue(value)
-                .build());
-        //reset
-        builder.setCategory("");
-        builder.setAction("");
-        builder.setLabel("");
-    }
-
     synchronized public void sendScreenView(Optional<String> screenName) {
         Tracker tracker = getTracker();
         tracker.setScreenName(screenName.isPresent() ? screenName.get() : "");

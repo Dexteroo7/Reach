@@ -8,6 +8,7 @@ android {
     buildToolsVersion '23.0.1'
 
     defaultConfig {
+
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
@@ -16,19 +17,19 @@ android {
         multiDexEnabled true
     }
 
-    productFlavors {
-        // Define separate dev and prod product flavors.
-        dev {
-            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
-            // to pre-dex each module and produce an APK that can be tested on
-            // Android Lollipop without time consuming dex merging processes.
-            minSdkVersion 21
-        }
-        prod {
-            // The actual minSdkVersion for the application.
-            minSdkVersion 14
-        }
-    }
+//    productFlavors {
+//        // Define separate dev and prod product flavors.
+//        dev {
+//            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+//            // to pre-dex each module and produce an APK that can be tested on
+//            // Android Lollipop without time consuming dex merging processes.
+//            minSdkVersion 21
+//        }
+//        prod {
+//            // The actual minSdkVersion for the application.
+//            minSdkVersion 14
+//        }
+//    }
 
 //    buildTypes {
 //
@@ -54,10 +55,15 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
+
+    dexOptions {
+        incremental true
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {
-    
+
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'

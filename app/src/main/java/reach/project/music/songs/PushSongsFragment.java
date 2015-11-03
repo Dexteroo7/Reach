@@ -500,7 +500,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                         return false;
                     }
 
-                    final MyString myString = MiscUtils.autoRetry(devikaPushToAll::execute, Optional.absent()).orNull();
+                    final MyString myString = MiscUtils.autoRetry(devikaPushToAll::execute, Optional.of(input -> input == null || TextUtils.isEmpty(input.getString()))).orNull();
 
                     if (myString == null || TextUtils.isEmpty(myString.getString())) {
                         Log.i("Ayush", "Got a null response during push");

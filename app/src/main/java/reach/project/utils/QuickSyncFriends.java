@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.JsonMap;
 import reach.backend.entities.userApi.model.QuickSync;
+import reach.backend.entities.userApi.model.StringList;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
@@ -131,7 +132,10 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         if (!numbers.isEmpty()) {
 
             Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
-            newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncNew(ImmutableList.copyOf(numbers), serverId).execute().getItems(), Optional.absent()).or(new ArrayList<>()));
+            final StringList stringList = new StringList();
+            stringList.setStringList(ImmutableList.copyOf(numbers));
+            stringList.setUserId(serverId);
+            newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).or(new ArrayList<>()));
         }
 
         //START DB COMMITS
