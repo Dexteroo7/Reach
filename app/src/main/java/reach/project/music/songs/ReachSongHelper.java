@@ -34,7 +34,6 @@ public class ReachSongHelper extends SQLiteOpenHelper {
     public static final String COLUMN_VISIBILITY = "visibility";
     public static final String COLUMN_IS_LIKED = "isLiked";
 
-
     private static final String DATABASE_NAME = "reach.database.sql.ReachSongHelper";
     private static final int DATABASE_VERSION = 3;
 

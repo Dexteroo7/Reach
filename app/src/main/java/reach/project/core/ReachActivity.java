@@ -90,7 +90,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
-import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
@@ -1757,7 +1756,6 @@ public class ReachActivity extends AppCompatActivity implements
                 Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
                 return false;
             }
-
 
             ProcessManager.submitMusicRequest(context,
                     Optional.of(musicData),

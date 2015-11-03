@@ -502,80 +502,72 @@ public class ReachUserEndpoint {
 
     //////////////////////////Optimized friend sync operations
 
-//    private Set<Friend> syncMyReach(long[] myReach,
-//                                    int[] dirtyHash,
-//                                    long clientId) {
-//
-//        if (clientId == 0)
-//            return null; //illegal
-//
-//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-//        if (client == null || client.getMyReach() == null || client.getMyReach().isEmpty())
-//            return null; //no friends :(
-//
-//        //mark as online
-//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-//
-//        //create map
-//        final int oldReachSize = myReach == null ? 0 : myReach.length;
-//        final Map<Long, Integer> pair = new HashMap<>(oldReachSize);
-//        if (oldReachSize > 0)
-//            for (int index = 0; index < oldReachSize; index++)
-//                pair.put(myReach[index], dirtyHash[index]);
-//
-//        //process myReach
-//        final List<Long> toLoad = new ArrayList<>();
-//        for (ReachUser user : ofy().load().type(ReachUser.class)
-//                .filterKey("in", getKeyBuilder(client.getMyReach()).build())
-//                .project("dirtyCheck")) {
-//
-//            final long userId = user.getId();
-//            //add if new friend or data was changed
-//            if (!pair.containsKey(userId) || pair.get(userId) != user.getDirtyCheck())
-//                toLoad.add(userId);
-//        }
-//
-//        if (toLoad.isEmpty())
-//            return null; //nothing to do
-//
-//        final Set<Friend> newFriends = new HashSet<>();
-//        for (ReachUser user : ofy().load().type(ReachUser.class)
-//                .filterKey("in", getKeyBuilder(toLoad).build())
-//                .filter("gcmId !=", "")
-//                .project(Friend.projectNewFriend)) {
-//
-//            final long lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
-//            newFriends.add(new Friend(client, true, lastSeen)); //parse into friend
-//        }
-//
-//        return newFriends;
-//    }
-//
-//    private Set<Friend> syncSentRequests(Collection<Long> sentRequests,
-//                                         long clientId) {
-//
-//        if (clientId == 0)
-//            return null; //illegal
-//
-//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-//        if (client == null || client.getSentRequests() == null || client.getSentRequests().isEmpty())
-//            return null; //no requests sent :(
-//
-//        //mark as online
-//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-//    }
-//
-//    private Set<Friend> syncReceivedRequests(Collection<Long> receivedRequests,
-//                                             long clientId) {
-//
-//
-//    }
+    private Set<Friend> syncMyReach(Map<Long, Integer> pair,
+                                    long clientId) {
+
+        if (clientId == 0)
+            return null; //illegal
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (client == null || client.getMyReach() == null || client.getMyReach().isEmpty())
+            return null; //no friends :(
+
+        //mark as online
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        //process myReach
+        final List<Long> toLoad = new ArrayList<>();
+        for (ReachUser user : ofy().load().type(ReachUser.class)
+                .filterKey("in", getKeyBuilder(client.getMyReach()).build())
+                .project("dirtyCheck")) {
+
+            final long userId = user.getId();
+            //add if new friend or data was changed
+            if (!pair.containsKey(userId) || pair.get(userId) != user.getDirtyCheck())
+                toLoad.add(userId);
+        }
+
+        if (toLoad.isEmpty())
+            return null; //nothing to do
+
+        final Set<Friend> newFriends = new HashSet<>();
+        for (ReachUser user : ofy().load().type(ReachUser.class)
+                .filterKey("in", getKeyBuilder(toLoad).build())
+                .filter("gcmId !=", "")
+                .project(Friend.projectNewFriend)) {
+
+            final long lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
+            newFriends.add(new Friend(client, true, lastSeen)); //parse into friend
+        }
+
+        return newFriends;
+    }
+
+    private Set<Friend> syncSentRequests(Collection<Long> sentRequests,
+                                         long clientId) {
+
+        if (clientId == 0)
+            return null; //illegal
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (client == null || client.getSentRequests() == null || client.getSentRequests().isEmpty())
+            return null; //no requests sent :(
+
+        //mark as online
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+    }
+
+    private Set<Friend> syncReceivedRequests(Collection<Long> receivedRequests,
+                                             long clientId) {
+
+
+    }
 
     //////////////////////////
 
