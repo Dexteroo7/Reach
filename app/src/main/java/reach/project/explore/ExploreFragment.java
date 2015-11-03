@@ -1,5 +1,6 @@
 package reach.project.explore;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -15,6 +16,8 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,6 +31,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     private ExploreAdapter exploreAdapter;
 
+    private SuperInterface mListener;
+
     private static WeakReference<ExploreFragment> reference;
 
     public static ExploreFragment newInstance() {
@@ -40,18 +45,41 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mListener = (SuperInterface) context;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+        mListener.toggleSliding(false);
 
         final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         exploreAdapter = new ExploreAdapter(getActivity(), this);
 
         explorePager.setAdapter(exploreAdapter);
-        explorePager.setOffscreenPageLimit(3);
-        explorePager.setPageMargin(20);
+        explorePager.setOffscreenPageLimit(2);
+        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(50)));
+        explorePager.setPageTransformer(true, (view, position) -> {
+            if (position <= 1) {
+                // Modify the default slide transition to shrink the page as well
+                float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
+                float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
+                float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
+                if (position < 0)
+                    view.setTranslationX(horzMargin - vertMargin / 2);
+                else
+                    view.setTranslationX(-horzMargin + vertMargin / 2);
+
+                // Scale the page down (between MIN_SCALE and 1)
+                view.setScaleX(scaleFactor);
+                view.setScaleY(scaleFactor);
+            }
+        });
 
         return rootView;
     }

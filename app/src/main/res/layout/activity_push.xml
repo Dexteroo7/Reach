@@ -15,7 +15,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp" />
         <TextView
-            android:id="@+id/userHandle"
+            android:id="@+id/userName"
             android:text="Name"
             android:textColor="@color/reach_color"
             android:textSize="20sp"
