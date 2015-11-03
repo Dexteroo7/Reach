@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import reach.backend.entities.userApi.model.Friend;
+import reach.backend.entities.userApi.model.StringList;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
@@ -65,7 +66,10 @@ public class ForceSyncFriends implements Runnable {
         else {
 
             Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
-            phoneBookSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncNew(ImmutableList.copyOf(numbers), serverId).execute().getItems(), Optional.absent()).orNull();
+            final StringList stringList = new StringList();
+            stringList.setStringList(ImmutableList.copyOf(numbers));
+            stringList.setUserId(serverId);
+            phoneBookSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).orNull();
         }
 
         //Finally we insert the received contacts
