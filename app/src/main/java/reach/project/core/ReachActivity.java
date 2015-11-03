@@ -59,7 +59,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
-import com.crittercism.app.Crittercism;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -167,23 +166,20 @@ public class ReachActivity extends AppCompatActivity implements
     private ReachMusicAdapter musicAdapter = null;
 
     private String selectionDownloader, selectionMyLibrary, mCurFilter;
-    private String[] selectionArgumentsDownloader;
-    private String[] selectionArgumentsMyLibrary;
+    private String[] selectionArgumentsDownloader, selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     //private int topPadding;
     //private FrameLayout containerFrame;
-    private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private static MusicData currentPlaying;
 
     ////////////////////////////////////////
-    private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
-    private TextView playerPos;
-    private SeekBar progressBarMaximized;
-    private SeekBar progressBarMinimized;
+    private TextView songNameMinimized, songNameMaximized, artistName, songDuration, playerPos, userNameNav, emptyTV1, emptyTV2;
+    private SeekBar progressBarMaximized, progressBarMinimized;
     private ListView queueListView;
-    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton, userImageNav; //fullscreen
     private CustomViewPager viewPager;
+    private View headerView;
 
     private MergeAdapter combinedAdapter = null;
     private Firebase firebaseReference = null;
@@ -637,8 +633,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void updateDetails(File image, String userName) {
 
-        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into(userImageNav);
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
     }
 
     @Override
@@ -711,7 +707,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void setUpNavigationViews() {
 
-        final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
+        final SwitchCompat netToggle = (SwitchCompat) headerView.findViewById(R.id.netToggle);
         if (SharedPrefUtils.getMobileData(preferences))
             netToggle.setChecked(true);
         else
@@ -735,8 +731,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         final String path = SharedPrefUtils.getImageId(preferences);
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into(userImageNav);
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
         ////////////////////
 
         final Cursor countCursor = getContentResolver().query(
@@ -753,7 +749,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         final long count = countCursor.getCount();
         countCursor.close();
-        ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
+        ((TextView) headerView.findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
     }
 
     @Override
@@ -886,6 +882,22 @@ public class ReachActivity extends AppCompatActivity implements
 
         Pacemaker.scheduleLinear(this, 5);
 
+        /*ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT < 21) {
+            List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(100);
+            for (ActivityManager.RunningTaskInfo info : tasks)
+                Log.d("Ashish", info.topActivity.getPackageName() + "");
+        }
+        else {
+            List<ActivityManager.RunningAppProcessInfo> processes = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo info : processes)
+                Log.d("Ashish", info.processName + "");
+        }
+        PackageManager packageManager = getPackageManager();
+        List<PackageInfo> list = packageManager.getInstalledPackages(PackageManager.GET_META_DATA);
+        for (PackageInfo info : list)
+            Log.d("Ashish", info.packageName + " - " + MiscUtils.dateFormatter(info.firstInstallTime));*/
+
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
@@ -957,6 +969,7 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        headerView = mNavigationView.inflateHeaderView(R.layout.nav_drawer_header);
         mNavigationView.setItemIconTintList(null);
         liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
@@ -967,7 +980,9 @@ public class ReachActivity extends AppCompatActivity implements
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
 
-        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
+        userImageNav = (ImageView) headerView.findViewById(R.id.userImageNav);
+        userNameNav = (TextView) headerView.findViewById(R.id.userNameNav);
+        userImageNav.setOnClickListener(navHeaderClickListener);
         findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
@@ -1021,8 +1036,8 @@ public class ReachActivity extends AppCompatActivity implements
         final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        Crittercism.setUsername(userName + " " + phoneNumber);
+        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        //Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize MixPanel
         MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
