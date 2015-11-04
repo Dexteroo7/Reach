@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
-import reach.project.uploadDownload.ReachDatabaseProvider;
-import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.fileManager.ReachDatabaseProvider;
+import reach.project.fileManager.ReachDatabaseHelper;
 import reach.project.reachProcess.auxiliaryClasses.AudioFocusHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.MusicFocusable;

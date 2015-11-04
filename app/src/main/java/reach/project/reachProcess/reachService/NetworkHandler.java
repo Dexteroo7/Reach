@@ -51,15 +51,15 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.Friend;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.fileManager.ReachDatabase;
+import reach.project.fileManager.ReachDatabaseHelper;
+import reach.project.fileManager.ReachDatabaseProvider;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
-import reach.project.uploadDownload.ReachDatabase;
-import reach.project.uploadDownload.ReachDatabaseHelper;
-import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
@@ -1170,18 +1170,18 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
              */
 
             Cursor cursor = handlerInterface.getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     new String[]{
-                            ReachSongHelper.COLUMN_ID, //0
-                            ReachSongHelper.COLUMN_DISPLAY_NAME, //1
-                            ReachSongHelper.COLUMN_ACTUAL_NAME, //2
-                            ReachSongHelper.COLUMN_PATH, //3
-                            ReachSongHelper.COLUMN_VISIBILITY, //4
-                            ReachSongHelper.COLUMN_ALBUM_ART_DATA}, //5
+                            MySongsHelper.COLUMN_ID, //0
+                            MySongsHelper.COLUMN_DISPLAY_NAME, //1
+                            MySongsHelper.COLUMN_ACTUAL_NAME, //2
+                            MySongsHelper.COLUMN_PATH, //3
+                            MySongsHelper.COLUMN_VISIBILITY, //4
+                            MySongsHelper.COLUMN_ALBUM_ART_DATA}, //5
 
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SIZE + " = ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SIZE + " = ?",
                     new String[]{myId + "", songId + "", length + ""}, null);
 
             if (cursor == null || !cursor.moveToFirst()) {

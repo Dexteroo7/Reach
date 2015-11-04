@@ -20,7 +20,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Gravity;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
@@ -56,7 +55,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -67,23 +65,14 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.music.albums.Album;
-import reach.project.music.albums.ReachAlbumHelper;
-import reach.project.music.albums.ReachAlbumProvider;
-import reach.project.music.artists.Artist;
-import reach.project.music.artists.ReachArtistHelper;
-import reach.project.music.artists.ReachArtistProvider;
-import reach.project.music.playLists.Playlist;
-import reach.project.music.playLists.ReachPlayListHelper;
-import reach.project.music.playLists.ReachPlayListProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.music.songs.Song;
+import reach.project.fileManager.ReachDatabase;
+import reach.project.fileManager.ReachDatabaseHelper;
+import reach.project.fileManager.ReachDatabaseProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
+import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.uploadDownload.ReachDatabase;
-import reach.project.uploadDownload.ReachDatabaseHelper;
-import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.UseActivity;
 import reach.project.utils.auxiliaryClasses.UseContext;
@@ -399,130 +388,29 @@ public enum MiscUtils {
     public static void deleteSongs(long userId, ContentResolver contentResolver) {
 
         contentResolver.delete(
-                ReachSongProvider.CONTENT_URI,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-
-        contentResolver.delete(
-                ReachAlbumProvider.CONTENT_URI,
-                ReachAlbumHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-
-        contentResolver.delete(
-                ReachArtistProvider.CONTENT_URI,
-                ReachArtistHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-    }
-
-    public static void deletePlayLists(long userId, ContentResolver contentResolver) {
-
-        contentResolver.delete(
-                ReachPlayListProvider.CONTENT_URI,
-                ReachPlayListHelper.COLUMN_USER_ID + " = ?",
+                MySongsProvider.CONTENT_URI,
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{userId + ""});
     }
 
     public static void bulkInsertSongs(Collection<Song> reachSongs,
-                                       Collection<Album> reachAlbums,
-                                       Collection<Artist> reachArtists,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
         //Add all songs
         final ContentValues[] songs = new ContentValues[reachSongs.size()];
-        final ContentValues[] albums = new ContentValues[reachAlbums.size()];
-        final ContentValues[] artists = new ContentValues[reachArtists.size()];
 
         int i = 0;
         if (reachSongs.size() > 0) {
 
             for (Song song : reachSongs)
-                songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
+                songs[i++] = MySongsHelper.contentValuesCreator(song, serverId);
             i = 0; //reset counter
-            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
+            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
         } else
-            contentResolver.delete(ReachSongProvider.CONTENT_URI,
-                    ReachSongHelper.COLUMN_USER_ID + " = ?",
+            contentResolver.delete(MySongsProvider.CONTENT_URI,
+                    MySongsHelper.COLUMN_USER_ID + " = ?",
                     new String[]{serverId + ""});
-
-        if (reachAlbums.size() > 0) {
-
-            for (Album album : reachAlbums)
-                albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
-            Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
-            i = 0; //reset counter
-        } else
-            contentResolver.delete(ReachAlbumProvider.CONTENT_URI,
-                    ReachAlbumHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-
-        if (reachArtists.size() > 0) {
-
-            for (Artist artist : reachArtists)
-                artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
-            Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
-        } else
-            contentResolver.delete(ReachArtistProvider.CONTENT_URI,
-                    ReachArtistHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-    }
-
-    public static void bulkInsertPlayLists(List<Playlist> playlistList,
-                                           ContentResolver contentResolver,
-                                           long serverId) {
-
-        if (playlistList != null && !playlistList.isEmpty()) {
-
-            final ContentValues[] playLists = new ContentValues[playlistList.size()];
-            int i = 0;
-            for (Playlist playlist : playlistList) {
-                playLists[i++] = ReachPlayListHelper.contentValuesCreator(playlist, serverId);
-            }
-            Log.i("Ayush", "PlayLists Inserted " + contentResolver.bulkInsert(ReachPlayListProvider.CONTENT_URI, playLists));
-        } else
-            contentResolver.delete(ReachPlayListProvider.CONTENT_URI,
-                    ReachPlayListHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-    }
-
-    public static Pair<Collection<Album>, Collection<Artist>> getAlbumsAndArtists(Collection<Song> songs,
-                                                                                  long serverId) {
-
-        final Map<String, Album> albumMap = getMap(songs.size());
-        final Map<String, Artist> artistMap = getMap(songs.size());
-
-        for (Song song : songs) {
-
-            //don't consider invisible files
-            if (!song.visibility)
-                continue;
-
-            if (!TextUtils.isEmpty(song.album)) {
-
-                Album album = albumMap.get(song.album);
-                if (album == null)
-                    albumMap.put(song.album, album = new Album());
-                album.setAlbumName(song.album);
-                album.setUserId(serverId);
-                album.setArtist(song.artist);
-                album.incrementSize();
-            }
-
-            if (!TextUtils.isEmpty(song.artist)) {
-
-                Artist artist = artistMap.get(song.artist);
-                if (artist == null)
-                    artistMap.put(song.artist, artist = new Artist());
-                artist.setArtistName(song.artist);
-                artist.setUserID(serverId);
-                artist.setAlbum(song.album);
-                artist.incrementSize();
-            }
-        }
-
-        Log.i("Ayush", "Found " + albumMap.size() + " " + artistMap.size());
-        ///////////////////////
-        return new Pair<>(albumMap.values(), artistMap.values());
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {

@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
@@ -32,14 +31,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import reach.project.music.MusicList;
-import reach.project.music.albums.Album;
-import reach.project.music.artists.Artist;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 
 /**
@@ -295,6 +291,9 @@ public enum CloudStorageUtils {
             return toReturn; //fail but fetch visibility if music already present
         }
 
+        /////overwrite onto disk cache
+
+
         final ContentResolver resolver = context.getContentResolver();
         if (resolver == null)
             return false; //application died probably,
@@ -304,7 +303,6 @@ public enum CloudStorageUtils {
 
             //All the music got deleted
             MiscUtils.deleteSongs(hostId, resolver);
-            MiscUtils.deletePlayLists(hostId, resolver);
             //Get rid of the hash
             SharedPrefUtils.removeMusicHash(preferences, fileName);
             return false; //no songs found !
@@ -313,20 +311,10 @@ public enum CloudStorageUtils {
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
-        //get list of albums and artists
-        final Pair<Collection<Album>, Collection<Artist>> pair = MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
         MiscUtils.bulkInsertSongs(
                 musicList.song,
-                pair.first,
-                pair.second,
                 resolver,
                 hostId);
-
-        if (musicList.playlist == null || musicList.playlist.isEmpty())
-            //All playLists got deleted
-            MiscUtils.deletePlayLists(hostId, resolver);
-        else
-            MiscUtils.bulkInsertPlayLists(musicList.playlist, resolver, hostId);
 
         return true; //all good, check for visibility as well
     }

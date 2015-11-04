@@ -57,7 +57,7 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
-import reach.project.reachScanner.MusicScanner;
+import reach.project.music.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
@@ -489,10 +489,6 @@ public class AccountCreation extends Fragment {
                 } else if (message.what == MusicScanner.SONGS) {
                     progress.setText("Found " + message.arg1 + " songs");
                     songs = message.arg1 + 1;
-                } else if (message.what == MusicScanner.PLAY_LISTS) {
-
-                    progress.setText("Found " + message.arg1 + " playLists");
-                    playLists = message.arg1 + 1;
                 } else if (message.what == MusicScanner.ALBUM_ARTIST)
                     progress.setText("Creating account");
 

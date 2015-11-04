@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import reach.project.R;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
 
 /**
@@ -113,8 +113,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         }
 
         final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
-            return context.getContentResolver().query(ReachSongProvider.CONTENT_URI,
-                    new String[]{ReachSongHelper.COLUMN_DISPLAY_NAME},
+            return context.getContentResolver().query(MySongsProvider.CONTENT_URI,
+                    new String[]{MySongsHelper.COLUMN_DISPLAY_NAME},
                     null, null, null);
         }).orNull();
 

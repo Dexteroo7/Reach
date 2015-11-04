@@ -70,7 +70,7 @@
             android:name=".core.GcmIntentService"
             android:exported="false" />
         <service
-            android:name=".reachScanner.MusicScanner"
+            android:name=".music.MusicScanner"
             android:exported="false" />
         <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
@@ -137,8 +137,8 @@
         <!-- Things on process :remote -->
 
         <provider
-            android:name=".uploadDownload.ReachDatabaseProvider"
-            android:authorities="reach.project.uploadDownload.ReachDatabaseProvider"
+            android:name=".fileManager.ReachDatabaseProvider"
+            android:authorities="reach.project.fileManager.ReachDatabaseProvider"
             android:exported="false"
             android:process=":remote" />
 
@@ -147,7 +147,7 @@
             android:exported="false"
             android:process=":remote" />
         <service
-            android:name=".reachScanner.ApplicationScanner"
+            android:name=".apps.ApplicationScanner"
             android:exported="false" >
         </service>
     </application>
