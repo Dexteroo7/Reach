@@ -342,7 +342,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
                 Log.i("Ayush", "Sending push data " + pushData);
 
-                new PushSongs().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, addPush);
+                new PushSongs().executeOnExecutor(StaticData.temporaryFix, addPush);
                 exit.setOnClickListener(v1 -> {
 
                     getActivity().onBackPressed();

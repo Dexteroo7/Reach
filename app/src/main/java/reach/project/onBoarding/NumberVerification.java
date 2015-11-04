@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
@@ -134,7 +135,10 @@ public class NumberVerification extends Fragment {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
         if (requestCode == MY_PERMISSIONS_RECEIVE_SMS)
             if (grantResults.length > 0 && grantResults[0] == 0)
                 getActivity().registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
@@ -142,6 +146,7 @@ public class NumberVerification extends Fragment {
 
     @Override
     public void onDestroyView() {
+
         super.onDestroyView();
 
         try {
@@ -149,11 +154,9 @@ public class NumberVerification extends Fragment {
                 if (ContextCompat.checkSelfPermission(getContext(),
                         Manifest.permission.RECEIVE_SMS) == 0)
                     getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
-            }
-            else
+            } else
                 getActivity().unregisterReceiver(LocalUtils.SMSReceiver);
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
 
@@ -226,10 +229,30 @@ public class NumberVerification extends Fragment {
 
                 final SmsMessage[] msgs;
 
-                if (Build.VERSION.SDK_INT >= 19) //KITKAT
-                    msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
-                else {
+                if (Build.VERSION.SDK_INT >= 19) { //KITKAT
 
+                    try {
+                        msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+                    } catch (NullPointerException ignored) {
+
+                        //weird null pointer
+                        MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                            @Override
+                            public void work(Activity activity) {
+
+                                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                        .setCategory("SEVERE ERROR, number verification intent null")
+                                        .setAction("Phone Number - " + phoneNumber)
+                                        .setValue(1)
+                                        .build());
+                            }
+                        });
+                        //fail
+                        return;
+                    }
+                } else {
+
+                    //below KITKAT
                     final Bundle bundle = intent.getExtras();
                     if (bundle == null) {
 
@@ -322,6 +345,7 @@ public class NumberVerification extends Fragment {
                 }
 
                 if (!done) {
+
                     MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
                         @Override
                         public void work(Activity activity) {
@@ -438,6 +462,11 @@ public class NumberVerification extends Fragment {
         private static final View.OnClickListener verifyCodeListener = v ->
                 MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
 
+                    if (fragment.verifyCode == null) {
+                        //TODO track
+                        return;
+                    }
+
                     final String enteredCode = fragment.verifyCode.getText().toString().trim();
                     if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
 
@@ -479,7 +508,8 @@ public class NumberVerification extends Fragment {
             }
 
             MiscUtils.useFragment(reference, fragment -> {
-                Activity activity = fragment.getActivity();
+
+                final Activity activity = fragment.getActivity();
                 if (Build.VERSION.SDK_INT >= 23) {
                     if (ContextCompat.checkSelfPermission(activity,
                             Manifest.permission.RECEIVE_SMS) != 0)
@@ -489,8 +519,7 @@ public class NumberVerification extends Fragment {
                                 }, MY_PERMISSIONS_RECEIVE_SMS);
                     else
                         activity.registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
-                }
-                else
+                } else
                     activity.registerReceiver(LocalUtils.SMSReceiver, LocalUtils.intentFilter);
                 fragment.bottomPart1.setVisibility(View.INVISIBLE);
                 fragment.bottomPart3.setVisibility(View.VISIBLE);

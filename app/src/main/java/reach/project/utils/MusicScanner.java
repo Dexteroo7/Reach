@@ -388,13 +388,21 @@ public class MusicScanner extends IntentService {
 
         final HashSet<String> files = new HashSet<>();
 
+        if (file == null)
+            return files;
+
         if (file.isDirectory()) {
 
-            for (File song : file.listFiles())
-                if (song.exists()) //recurse
+            final File[] toIterate;
+
+            if ((toIterate = file.listFiles()) == null || toIterate.length == 0)
+                return files;
+
+            for (File song : toIterate)
+                if (song != null && song.exists()) //recurse
                     files.addAll(recurseDirectory(song));
 
-        } else if (file.isFile() && file.getName().toLowerCase().contains(".mp3"))
+        } else if (file.isFile())
             files.add(file.getPath().trim());
         return files;
     }
@@ -493,6 +501,9 @@ public class MusicScanner extends IntentService {
                     MediaStore.Audio.Playlists.Members.getContentUri("external", playLists.getLong(play_list_id)), //specify the URI
                     new String[]{MediaStore.Audio.Playlists.Members.AUDIO_ID}, //specify the projection
                     null, null, null);
+
+            if (musicCursor == null)
+                return toSend;
 
             final ImmutableList.Builder<AlbumArtData> dataBuilder = new ImmutableList.Builder<>();
             final ImmutableList.Builder<Long> songIds = new ImmutableList.Builder<>();

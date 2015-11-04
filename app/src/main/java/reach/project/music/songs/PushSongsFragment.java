@@ -223,6 +223,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 //        selectionArgumentsDownloader = new String[]{serverId + "", "1", ReachDatabase.FINISHED + ""};
 //        getLoaderManager().restartLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
         if (searchView != null) {
+
             searchView.setQuery(null, true);
             searchView.clearFocus();
         }
@@ -304,19 +305,20 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         if (reference == null)
             return;
 
-        MiscUtils.useContextFromFragment(reference, context -> {
-            combinedAdapter = new MergeAdapter();
+        combinedAdapter = new MergeAdapter();
 
-            combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
-            combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
-            combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
+        final Context context = getContext();
 
-            combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
-            combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
-            combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
+        combinedAdapter.addView(LocalUtils.getDownloadedTextView(context));
+        combinedAdapter.addView(emptyDownload = LocalUtils.getEmptyDownload(context), false);
+        combinedAdapter.addAdapter(downloadedAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
 
-            pushLibraryList.setAdapter(combinedAdapter);
-        });
+        combinedAdapter.addView(LocalUtils.getMyLibraryTextView(context));
+        combinedAdapter.addView(emptyMyLibrary = LocalUtils.getEmptyLibrary(context), false);
+        combinedAdapter.addAdapter(myLibraryAdapter = new PushSongAdapter(context, R.layout.pushlibrary_item, null, 0, PushSongsFragment.this));
+
+        pushLibraryList.setAdapter(combinedAdapter);
+
         getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
     }

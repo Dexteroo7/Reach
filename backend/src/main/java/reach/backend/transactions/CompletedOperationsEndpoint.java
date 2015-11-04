@@ -7,14 +7,24 @@ import com.google.api.server.spi.response.CollectionResponse;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterator;
+import com.google.appengine.api.memcache.ErrorHandlers;
+import com.google.appengine.api.memcache.Expiration;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.googlecode.objectify.cmd.Query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
+
+import reach.backend.User.ReachUser;
 
 import static reach.backend.OfyService.ofy;
 
@@ -141,7 +151,9 @@ public class CompletedOperationsEndpoint {
             name = "list",
             path = "completedOperations",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public CollectionResponse<CompletedOperations> list(@Nullable @Named("cursor") String cursor, @Nullable @Named("limit") Integer limit) {
+    public CollectionResponse<CompletedOperations> list(@Nullable @Named("cursor") String cursor,
+                                                        @Nullable @Named("limit") Integer limit) {
+
         limit = limit == null ? DEFAULT_LIST_LIMIT : limit;
         Query<CompletedOperations> query = ofy().load().type(CompletedOperations.class).limit(limit);
         if (cursor != null) {
@@ -149,9 +161,9 @@ public class CompletedOperationsEndpoint {
         }
         QueryResultIterator<CompletedOperations> queryIterator = query.iterator();
         List<CompletedOperations> completedOperationsList = new ArrayList<>(limit);
-        while (queryIterator.hasNext()) {
+        while (queryIterator.hasNext())
             completedOperationsList.add(queryIterator.next());
-        }
+
         return CollectionResponse.<CompletedOperations>builder().setItems(completedOperationsList).setNextPageToken(queryIterator.getCursor().toWebSafeString()).build();
     }
 
@@ -161,5 +173,53 @@ public class CompletedOperationsEndpoint {
         } catch (com.googlecode.objectify.NotFoundException e) {
             throw new NotFoundException("Could not find CompletedOperations with ID: " + id);
         }
+    }
+
+    @ApiMethod(
+            name = "getHistory",
+            path = "completedOperations/getHistory/{clientId}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public HashSet<CompletedOperation> getHistory(@Named("clientId") long clientId) {
+
+        if (clientId == 0)
+            return null;
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final ReachUser reachUser = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (reachUser == null)
+            return null;
+
+        final Map<Integer, CompletedOperation> operationHashMap = new HashMap<>();
+
+        ////////////////////////////////////
+        for (CompletedOperations event : ofy().load().type(CompletedOperations.class)
+                .filter("senderId =", reachUser.getId())) {
+
+            CompletedOperation history = operationHashMap.get(event.hashCode());
+            if (history == null) {
+
+                history = new CompletedOperation(
+                        event.getSongName(),
+                        event.getSongSize(),
+                        event.getSenderId());
+                history.setReceiver(new HashSet<Long>());
+                history.setHits(event.getHits());
+                history.setTime(event.getTime());
+                history.getReceiver().add(event.getReceiver());
+                operationHashMap.put(history.hashCode(), history);
+            } else {
+
+                history.setHits(history.getHits() + 1);
+                //update the time only if newer
+                if (event.getTime() > history.getTime())
+                    history.setTime(event.getTime());
+                history.getReceiver().add(event.getReceiver());
+            }
+        }
+        return new HashSet<>(operationHashMap.values());
     }
 }

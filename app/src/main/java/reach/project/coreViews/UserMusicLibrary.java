@@ -129,7 +129,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final Activity activity = getActivity();
 
         if (MiscUtils.isOnline(activity))
-            AsyncTask.THREAD_POOL_EXECUTOR.execute(new GetMusic(userId));
+            StaticData.temporaryFix.execute(new GetMusic(userId));
 
         final View rootView = inflater.inflate(R.layout.fragment_user_library, container, false);
         final ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);

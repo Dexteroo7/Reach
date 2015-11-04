@@ -1,6 +1,7 @@
 package reach.project.friends;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -97,55 +98,6 @@ public class ContactsListFragment extends Fragment implements
 //        });
 //    }
 
-    private final AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
-
-        @Override
-        public void onItemClick(final AdapterView<?> adapterView, final View view, int position, long l) {
-
-            if (mListener == null)
-                return;
-
-            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-            final long id = cursor.getLong(0);
-            final short status = cursor.getShort(5);
-            final short networkType = cursor.getShort(4);
-
-            if (status < 2) {
-
-                if (networkType == 5)
-                    Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG)
-                            .show();
-                mListener.onOpenLibrary(id);
-
-            } else if (status >= 2) {
-
-                final long clientId = cursor.getLong(0);
-
-                new AlertDialog.Builder(getActivity())
-                        .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
-                        .setPositiveButton("Yes", (dialog, which) -> {
-                            new SendRequest().executeOnExecutor(
-                                    AsyncTask.THREAD_POOL_EXECUTOR,
-                                    clientId, serverId, (long) status);
-
-                            Snackbar.make(adapterView, "Access Request sent", Snackbar.LENGTH_SHORT).show();
-                            //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
-                            final ContentValues values = new ContentValues();
-                            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-                            getActivity().getContentResolver().update(
-                                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
-                                    values,
-                                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                                    new String[]{clientId + ""});
-                            dialog.dismiss();
-                        })
-                        .setNegativeButton("No", (dialog, which) -> {
-                            dialog.dismiss();
-                        }).create().show();
-            }
-        }
-    };
-
     public static ContactsListFragment newInstance() {
 
         ContactsListFragment fragment;
@@ -234,7 +186,7 @@ public class ContactsListFragment extends Fragment implements
         swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
 
         gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
-        gridView.setOnItemClickListener(clickListener);
+        gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
         gridView.setAdapter(reachContactsAdapter);
 
@@ -249,14 +201,14 @@ public class ContactsListFragment extends Fragment implements
                 synchronizing.set(true);
                 pinging.set(true);
                 swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
-                new LocalUtils.ContactsSync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.temporaryFix);
             }
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
             swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
-            new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
         }
 
         getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
@@ -461,7 +413,7 @@ public class ContactsListFragment extends Fragment implements
                 synchronizeOnce.set(true);
                 //we are still refreshing !
                 pinging.set(true);
-                new SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new SendPing().executeOnExecutor(StaticData.temporaryFix);
             }
         }
 
@@ -493,7 +445,7 @@ public class ContactsListFragment extends Fragment implements
                         ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                                 ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
                                 ReachFriendsHelper.COLUMN_ID + " != ?",
-                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 30 * 1000) + "", StaticData.devika + ""});
+                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 60 * 1000) + "", StaticData.devika + ""});
                 contentValues.clear();
                 return null;
             }
@@ -518,54 +470,122 @@ public class ContactsListFragment extends Fragment implements
 
                 Log.i("Ayush", "Starting refresh !");
                 pinging.set(true);
-                new LocalUtils.SendPing().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
             }
         };
-    }
 
-    public static final class SendRequest extends AsyncTask<Long, Void, Long> {
+        private static final Dialog.OnClickListener positiveButton = (dialog, which) -> {
 
-        @Override
-        protected Long doInBackground(final Long... params) {
+            final AlertDialog alertDialog = (AlertDialog) dialog;
 
-            /**
-             * params[0] = other id
-             * params[1] = my id
-             * params[2] = status
-             */
+            final Object[] tag = (Object[]) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
 
-            final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
-                    () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
-                    Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
+            if (tag == null || tag.length != 3)
+                return;
 
-            final String toParse;
-            if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
-                return params[0];
-            return null;
-        }
+            final long clientId = (long) tag[0];
+            final short status = (short) tag[1];
+            if (tag[2] != null && tag[2] instanceof WeakReference) {
 
-        @Override
-        protected void onPostExecute(final Long response) {
-
-            super.onPostExecute(response);
-
-            if (response != null && response > 0) {
-
-                //response becomes the id of failed person
-                MiscUtils.useContextFromFragment(reference, context -> {
-
-                    Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                    final ContentValues values = new ContentValues();
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                    context.getContentResolver().update(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                            values,
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{response + ""});
-                    return null;
-                });
+                final Object object = ((WeakReference) tag[2]).get();
+                if (object != null && object instanceof View)
+                    Snackbar.make((View) object, "Access Request sent", Snackbar.LENGTH_SHORT).show();
             }
 
+            new SendRequest().executeOnExecutor(
+                    StaticData.temporaryFix,
+                    clientId, serverId, (long) status);
+
+            //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
+            final ContentValues values = new ContentValues();
+            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+            alertDialog.getContext().getContentResolver().update(
+                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
+                    values,
+                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                    new String[]{clientId + ""});
+            dialog.dismiss();
+        };
+
+        public static final AdapterView.OnItemClickListener clickListener = (adapterView, view, position, l) -> {
+
+            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
+            final long id = cursor.getLong(0);
+            final short status = cursor.getShort(5);
+            final short networkType = cursor.getShort(4);
+
+            if (status < 2) {
+
+                if (networkType == 5)
+                    Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
+                MiscUtils.useFragment(reference, fragment -> {
+                    fragment.mListener.onOpenLibrary(id);
+                });
+
+            } else if (status >= 2) {
+
+                final long clientId = cursor.getLong(0);
+
+                final AlertDialog alertDialog = new AlertDialog.Builder(adapterView.getContext())
+                        .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
+                        .setPositiveButton("Yes", positiveButton)
+                        .setNegativeButton("No", (dialog, which) -> {
+                            dialog.dismiss();
+                        }).create();
+
+                alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
+                        //set tag to use when positive button click
+                        new Object[]{clientId, status, new WeakReference<>(adapterView)}
+                ));
+                alertDialog.show();
+            }
+        };
+
+        private static final class SendRequest extends AsyncTask<Long, Void, Long> {
+
+            @Override
+            protected Long doInBackground(final Long... params) {
+
+                /**
+                 * params[0] = other id
+                 * params[1] = my id
+                 * params[2] = status
+                 */
+
+                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
+                        () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
+                        Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
+
+                final String toParse;
+                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
+                    return params[0];
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(final Long response) {
+
+                super.onPostExecute(response);
+
+                if (response != null && response > 0) {
+
+                    //response becomes the id of failed person
+                    MiscUtils.useContextFromFragment(reference, context -> {
+
+                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
+                        final ContentValues values = new ContentValues();
+                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                        context.getContentResolver().update(
+                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
+                                values,
+                                ReachFriendsHelper.COLUMN_ID + " = ?",
+                                new String[]{response + ""});
+                        return null;
+                    });
+                }
+
+            }
         }
+        ///////
     }
 }

@@ -16,8 +16,6 @@ public class OfyService {
 //        ObjectifyService.register(ReachUser.class);
 //        ObjectifyService.register(FeedBack.class);
 //        ObjectifyService.register(CompletedOperations.class);
-//        ObjectifyService.register(SplitMusicContainer.class);
-//        ObjectifyService.register(MusicSplitter.class);
 //        ObjectifyService.register(MusicData.class);
 //        ObjectifyService.register(Notification.class);
 //

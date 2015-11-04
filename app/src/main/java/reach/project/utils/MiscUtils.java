@@ -12,8 +12,9 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
@@ -47,6 +48,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -222,12 +224,21 @@ public enum MiscUtils {
         }
     }
 
+    public static <T, E> Map<T, E> getMap(int capacity) {
+
+        if (Build.VERSION.SDK_INT >= 19)
+            return new ArrayMap<>(capacity);
+        else
+            return new HashMap<>(capacity);
+    }
+
+
     public static boolean containsIgnoreCase(CharSequence str, CharSequence searchStr) {
 
         if (TextUtils.isEmpty(str) || TextUtils.isEmpty(searchStr))
             return false;
-        int len = searchStr.length();
-        int max = str.length() - len;
+        final int len = searchStr.length();
+        final int max = str.length() - len;
         for (int i = 0; i <= max; i++)
             if (regionMatches(str, true, i, searchStr, 0, len))
                 return true;
@@ -795,7 +806,7 @@ public enum MiscUtils {
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
 
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
+        StaticData.temporaryFix.execute(() -> {
 
             for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
 
@@ -945,6 +956,32 @@ public enum MiscUtils {
         final String toReturn = buffer.toString();
 //        Log.i("Ayush", toReturn);
         return toReturn;
+    }
+
+    public static String getDeviceId(Context context) {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+    public static String getOsName() {
+
+        final Field[] fields = Build.VERSION_CODES.class.getFields();
+        for (Field field : fields) {
+
+            final String fieldName = field.getName();
+            int fieldValue = -1;
+
+            try {
+                fieldValue = field.getInt(new Object());
+            } catch (IllegalArgumentException |
+                    IllegalAccessException |
+                    NullPointerException ignored) {
+            }
+
+            if (fieldValue == Build.VERSION.SDK_INT)
+                return fieldName;
+        }
+
+        return "hello_world";
     }
 
     public synchronized static StartDownloadOperation startDownloadOperation(Context context,

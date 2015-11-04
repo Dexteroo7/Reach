@@ -466,7 +466,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             updateDatabase(values, songId, userId, view.getContext()
             );
-            new ToggleVisibility().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+            new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix,
                     (long) reachSongCursor.getShort(9),
                     reachSongCursor.getLong(1),
                     reachSongCursor.getLong(2));

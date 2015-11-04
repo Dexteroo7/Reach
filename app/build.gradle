@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
 
 android {
+
     compileSdkVersion 23
     buildToolsVersion '23.0.1'
     defaultConfig {
@@ -14,6 +15,7 @@ android {
         //meant for release
         multiDexEnabled true
     }
+
     buildTypes {
         release {
             shrinkResources true
@@ -38,6 +40,7 @@ android {
 }
 
 dependencies {
+
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
     //compile 'com.google.android.gms:play-services:6.1.11'
@@ -56,7 +59,9 @@ dependencies {
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
+    //compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
 
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'

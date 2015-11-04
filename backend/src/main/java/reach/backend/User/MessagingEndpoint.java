@@ -156,62 +156,18 @@ public class MessagingEndpoint {
             ofy().save().entities(host).now();
         }
 
-        if (host.getGcmId() == null || host.getGcmId().equals("")) {
-            log.info("Error handling reply " + hostId + " " + clientId);
-            return new MyString("false");
-        }
-
         if (isDevika(host.getPhoneNumber(), hostId)) {
             //DO NOT SEND GCM, Devika does not have a gcm id !
             NotificationEndpoint.getInstance().addBecameFriends(hostId, clientId, true);
             return new MyString("true");
         }
 
-        return new MyString(sendMessage("PERMISSION_REQUEST`" + clientId + "`" + client.getUserName(), host) + "");
-    }
-
-    public MyString handleReply(@Named("clientId") final long clientId,
-                                @Named("hostId") final long hostId,
-                                @Named("type") final String type) {
-
-        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-
-        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-        final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
-        if (client == null || host == null)
-            return null;
-
-        if (client.getReceivedRequests() != null)
-            client.getReceivedRequests().remove(hostId);
-        if (host.getSentRequests() != null)
-            host.getSentRequests().remove(clientId);
-
-        if (type.equals("PERMISSION_GRANTED")) {
-
-            //adding both parties to each others reach :)
-            if (client.getSentRequests() != null)
-                client.getSentRequests().remove(hostId);
-            if (host.getReceivedRequests() != null)
-                host.getReceivedRequests().remove(clientId);
-
-            if (client.getMyReach() == null)
-                client.setMyReach(new HashSet<Long>());
-            log.info("Adding MyReach To " + client.getUserName() + " " + client.getMyReach().add(hostId));
-            if (host.getMyReach() == null)
-                host.setMyReach(new HashSet<Long>());
-            log.info("Adding MyReach To " + host.getUserName() + " " + host.getMyReach().add(clientId));
-        }
-
-        ofy().save().entities(client, host).now();
         if (host.getGcmId() == null || host.getGcmId().equals("")) {
             log.info("Error handling reply " + hostId + " " + clientId);
-            return null;
+            return new MyString("false");
         }
 
-        return new MyString(sendMessage(type + "`" + clientId + "`" + client.getUserName(), host) + "");
+        return new MyString(sendMessage("PERMISSION_REQUEST`" + clientId + "`" + client.getUserName(), host) + "");
     }
 
     public MyString handleReplyNew(ReachUser sender,
@@ -278,6 +234,13 @@ public class MessagingEndpoint {
         return new MyString(sendMessage("CHAT", user) + "");
     }
 
+    public MyString sendBulkChat() {
+
+        return new MyString(sendMultiCastMessage("CHAT", ofy().load().type(ReachUser.class)
+                .filter("gcmId !=", "")
+                .project("gcmId")) + "");
+    }
+
     protected boolean sendMessage(@Nonnull String message,
                                   @Nonnull ReachUser user) {
 
@@ -325,7 +288,9 @@ public class MessagingEndpoint {
     public MyString notifyAll(@Named("type") int type,
                               @Named("message") String message,
                               @Named("heading") String heading) {
-        return new MyString(sendMultiCastMessage("MANUAL`" + type + "`" + heading + "`" + message, ofy().load().type(ReachUser.class).filter("gcmId !=", "").project("gcmId")) + " Result");
+
+        return new MyString(sendMultiCastMessage("MANUAL`" + type + "`" + heading + "`" + message,
+                ofy().load().type(ReachUser.class).filter("gcmId !=", "").project("gcmId")) + " Result");
     }
 
     public void handleAnnounce(@Named("clientId") final long clientId,
@@ -404,10 +369,10 @@ public class MessagingEndpoint {
         return result;
     }
 
-    private boolean actualSendMultiCastMessage(@Nonnull String message,
-                                               @Nonnull List<ReachUser> users,
-                                               @Nonnull List<String> regIds) {
-
+    private boolean actualSendMultiCastMessage(@Nonnull Message message,
+                                         @Nonnull List<ReachUser> users,
+                                         @Nonnull List<String> regIds,
+                                         @Nonnull Sender sender) {
 
         if (users.size() > 1000 || regIds.size() > 1000)
             return false;
@@ -416,32 +381,41 @@ public class MessagingEndpoint {
         final MulticastResult multicastResult;
 
         try {
-            multicastResult = new Sender(API_KEY).send(new Message.Builder().addData("message", message).build(), regIds, 5);
+            multicastResult = sender.send(message, regIds, 5);
         } catch (IOException | IllegalArgumentException e) {
 
             e.printStackTrace();
-            log.log(Level.SEVERE, e.getLocalizedMessage() + " error");
+            logger.log(Level.SEVERE, e.getLocalizedMessage() + " error");
             return false;
         }
 
-        if (multicastResult.getResults().size() != users.size()) {
-            log.log(Level.SEVERE, "Multi-part messages size different error");
+        final List<Result> results = multicastResult.getResults();
+        final int resultLength = results.size();
+
+        if (resultLength != users.size()) {
+            logger.log(Level.SEVERE, "Multi-part messages size different error");
             return false;
         }
 
-        int index = 0;
-        for (Result result : multicastResult.getResults()) {
+        final List<LoadResult<ReachUser>> toChange = new ArrayList<>(100);
+        final List<String> toPut = new ArrayList<>(100);
 
-            if (result.getMessageId() != null) {
+        for (int index = 0; index < resultLength; index++) {
 
-                log.info("Message sent to " + users.get(index).getId());
-                if (result.getCanonicalRegistrationId() != null && !result.getCanonicalRegistrationId().equals("")) {
+            final Result result = results.get(index);
+
+            if (!isEmpty(result.getMessageId())) {
+
+                final String canonicalRegistrationId = result.getCanonicalRegistrationId();
+                if (!isEmpty(canonicalRegistrationId)) {
                     // if the regId changed, we have to update the data-store
-                    log.info("Registration Id changed for " + users.get(index).getId() + " updating to " + result.getCanonicalRegistrationId());
-                    final ReachUser completeUser = ofy().load().type(ReachUser.class).id(users.get(index).getId()).now();
-                    completeUser.setGcmId(result.getCanonicalRegistrationId());
-                    ofy().save().entities(completeUser).now();
+                    logger.info("Registration Id changed for " + users.get(index).getId() + " updating to " + canonicalRegistrationId);
+
+                    final LoadResult<ReachUser> loadResult = ofy().load().type(ReachUser.class).id(users.get(index).getId());
+                    toChange.add(loadResult);
+                    toPut.add(canonicalRegistrationId);
                 }
+
             } else {
 
                 if (result.getErrorCodeName().equals(Constants.ERROR_NOT_REGISTERED) ||
@@ -449,17 +423,33 @@ public class MessagingEndpoint {
                         result.getErrorCodeName().equals(Constants.ERROR_MISMATCH_SENDER_ID) ||
                         result.getErrorCodeName().equals(Constants.ERROR_MISSING_REGISTRATION)) {
 
-                    log.info("Registration Id " + users.get(index).getUserName() + " no longer registered with GCM, removing from data-store");
+                    logger.info("Registration Id " + users.get(index).getUserName() + " no longer registered with GCM, removing from data-store");
                     // if the device is no longer registered with Gcm, remove it from the data-store
-                    final ReachUser completeUser = ofy().load().type(ReachUser.class).id(users.get(index).getId()).now();
-                    completeUser.setGcmId("");
-                    ofy().save().entities(completeUser).now();
+                    final LoadResult<ReachUser> loadResult = ofy().load().type(ReachUser.class).id(users.get(index).getId());
+                    toChange.add(loadResult);
+                    toPut.add(""); //empty string
                 } else {
-                    log.info("Error when sending message : " + result.getErrorCodeName());
+                    logger.info("Error when sending message : " + result.getErrorCodeName());
                 }
             }
-            index++;
         }
+
+        final int changeListSize = toChange.size();
+
+        if (changeListSize == 0)
+            return true;
+
+        final List<ReachUser> toBatch = new ArrayList<>(changeListSize);
+
+        for (int index = 0; index < changeListSize; index++) {
+
+            final ReachUser reachUser = toChange.get(index).now();
+            reachUser.setGcmId(toPut.get(index));
+            toBatch.add(reachUser);
+        }
+
+        logger.info("Changing gcmIds of " + toBatch.size() + " users");
+        ofy().save().entities(toBatch);
         return true;
     }
 }

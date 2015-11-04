@@ -11,8 +11,8 @@ import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.List;
 
-import reach.backend.entities.userApi.model.ContactsWrapper;
 import reach.backend.entities.userApi.model.Friend;
+import reach.backend.entities.userApi.model.StringList;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
@@ -65,10 +65,11 @@ public class ForceSyncFriends implements Runnable {
             phoneBookSync = null;
         else {
 
-            final ContactsWrapper wrapper = new ContactsWrapper();
             Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
-            wrapper.setContacts(ImmutableList.copyOf(numbers));
-            phoneBookSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSync(wrapper).execute().getItems(), Optional.absent()).orNull();
+            final StringList stringList = new StringList();
+            stringList.setStringList(ImmutableList.copyOf(numbers));
+            stringList.setUserId(serverId);
+            phoneBookSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).orNull();
         }
 
         //Finally we insert the received contacts
