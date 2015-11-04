@@ -492,7 +492,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
                             toSend, //the container
                             firstSongsName, //first song name
-                            "Hi! thought of dedicating songs to you !", //custom message
+                            "Party on!", //custom message
                             size), Optional.absent()).orNull();
 
                     if (devikaPushToAll == null) {

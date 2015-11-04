@@ -13,7 +13,7 @@ android {
         targetSdkVersion 23
         versionCode 72
         versionName "0.9.21.7-beta"
-        multiDexEnabled true
+//        multiDexEnabled true
     }
 
     productFlavors {
@@ -30,20 +30,20 @@ android {
         }
     }
 
-//    buildTypes {
-//
-//        release {
-//            shrinkResources true
-//            minifyEnabled true
-//            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-//        }
-//
-//        debug {
-//            shrinkResources true
-//            minifyEnabled true
-//            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-//        }
-//    }
+    buildTypes {
+
+        release {
+            shrinkResources true
+            minifyEnabled true
+            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+        }
+
+        debug {
+            shrinkResources true
+            minifyEnabled true
+            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -77,8 +77,8 @@ dependencies {
 
     // non-google stuff
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
-    compile 'com.facebook.fresco:fresco:0.8.0'
-    compile 'com.facebook.fresco:imagepipeline-okhttp:0.8.0'
+    compile 'com.facebook.fresco:fresco:0.7.0'
+    compile 'com.facebook.fresco:imagepipeline-okhttp:0.7.0'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
 //    compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
