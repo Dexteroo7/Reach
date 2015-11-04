@@ -63,7 +63,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         explorePager.setAdapter(exploreAdapter);
         explorePager.setOffscreenPageLimit(2);
-        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(50)));
+        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, (view, position) -> {
             if (position <= 1) {
                 // Modify the default slide transition to shrink the page as well
