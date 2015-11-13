@@ -1,11 +1,13 @@
 package reach.project.explore;
 
+import reach.project.R;
+
 /**
  * Created by dexter on 15/10/15.
  */
 public enum ExploreTypes {
 
-    MUSIC("Music", android.R.layout.simple_list_item_1),
+    MUSIC("Music", R.layout.explore_music),
     APP("App", android.R.layout.simple_list_item_1),
     PHOTO("Photo", android.R.layout.simple_list_item_1),
     LOADING("Loading", android.R.layout.simple_list_item_1),

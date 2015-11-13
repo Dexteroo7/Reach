@@ -23,7 +23,7 @@
         <property name="imageId" direction="asc"/>
         <property name="numberOfSongs" direction="asc"/>
         <property name="phoneNumber" direction="asc"/>
-        <property name="userName" direction="asc"/>
+        <property name="userHandle" direction="asc"/>
     </datastore-index>
 
 </datastore-indexes>

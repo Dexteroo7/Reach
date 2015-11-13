@@ -1,36 +1,64 @@
 package reach.project.explore;
 
-import java.util.Random;
-
-/**
- * Created by dexter on 16/10/15.
- */
 public class ExploreContainer {
 
-    private final Random random = new Random();
-
-    private final String toShow;
+    private final String title;
+    private final String subTitle;
+    private final String imageId;
+    private final String userImageId;
+    private final String userHandle;
+    private final float rating;
     private final ExploreTypes types;
     private final long id;
 
-    public ExploreContainer(String toShow, long id, ExploreTypes types) {
-        this.toShow = toShow;
+    public ExploreContainer(String title, String subTitle, String imageId, String userImageId, String userHandle, float rating, ExploreTypes types, long id) {
+        this.title = title;
+        this.subTitle = subTitle;
+        this.imageId = imageId;
+        this.userImageId = userImageId;
+        this.userHandle = userHandle;
+        this.rating = rating;
         this.types = types;
         this.id = id;
     }
 
-    public ExploreContainer(String toShow, ExploreTypes types) {
-        this.toShow = toShow;
+    public ExploreContainer(ExploreTypes types, long id) {
+        this.title = "";
+        this.subTitle = "";
+        this.imageId = "";
+        this.userImageId = "";
+        this.userHandle = "";
+        this.rating = 0;
         this.types = types;
-        this.id = random.nextInt(1000);
+        this.id = id;
     }
 
-    public String getToShow() {
-        return toShow;
+    public String getTitle() {
+        return title;
+    }
+
+    public String getSubTitle() {
+        return subTitle;
+    }
+
+    public String getImageId() {
+        return imageId;
+    }
+
+    public String getUserHandle() {
+        return userHandle;
+    }
+
+    public float getRating() {
+        return rating;
     }
 
     public ExploreTypes getTypes() {
         return types;
+    }
+
+    public String getUserImageId() {
+        return userImageId;
     }
 
     public long getId() {
@@ -40,29 +68,27 @@ public class ExploreContainer {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ExploreContainer)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        ExploreContainer container = (ExploreContainer) o;
+        ExploreContainer that = (ExploreContainer) o;
 
-        if (id != container.id) return false;
-        if (toShow != null ? !toShow.equals(container.toShow) : container.toShow != null)
-            return false;
-        return types == container.types;
+        return id == that.id;
 
     }
 
     @Override
     public int hashCode() {
-        int result = toShow != null ? toShow.hashCode() : 0;
-        result = 31 * result + (types != null ? types.hashCode() : 0);
-        result = 31 * result + (int) (id ^ (id >>> 32));
-        return result;
+        return (int) (id ^ (id >>> 32));
     }
 
     @Override
     public String toString() {
         return "ExploreContainer{" +
-                "toShow='" + toShow + '\'' +
+                "title='" + title + '\'' +
+                ", subTitle='" + subTitle + '\'' +
+                ", imageId='" + imageId + '\'' +
+                ", userHandle='" + userHandle + '\'' +
+                ", rating=" + rating +
                 ", types=" + types +
                 ", id=" + id +
                 '}';

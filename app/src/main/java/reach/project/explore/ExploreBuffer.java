@@ -82,16 +82,16 @@ public class ExploreBuffer<T> implements Closeable {
         //if reaching end of story and are not done yet
         if (position > currentSize - 3 && !isDoneForToday.get()) {
 
-            final T lastItem = storyBuffer.get(currentSize - 1);
-            if (!exploration.isDoneForDay(lastItem) && !exploration.isLoading(lastItem)) {
+//            final T lastItem = storyBuffer.get(currentSize - 1);
+//            if (!exploration.isDoneForDay(lastItem) && !exploration.isLoading(lastItem)) {
+//
+//                //if indication is absent
+//                Log.i("Ayush", "Adding a loading response");
+//                storyBuffer.add(exploration.getLoadingResponse());
+//                exploration.notifyDataAvailable();
+//            }
 
-                //if indication is absent
-                Log.i("Ayush", "Adding a loading response");
-                storyBuffer.add(exploration.getLoadingResponse());
-                exploration.notifyDataAvailable();
-            }
-
-            new FetchNextBatch<>(exploration.fetchNextBatch()).executeOnExecutor(executorService);
+            new FetchNextBatch<>().executeOnExecutor(executorService, exploration.fetchNextBatch());
         }
 
         return storyBuffer.get(position);
@@ -114,21 +114,18 @@ public class ExploreBuffer<T> implements Closeable {
     }
 
     //runnable to fetch stories
-    private static class FetchNextBatch<T> extends AsyncTask<Void, Void, Collection<T>> {
-
-        final Callable<Collection<T>> callable;
-
-        private FetchNextBatch(Callable<Collection<T>> callable) {
-            this.callable = callable;
-        }
+    private static class FetchNextBatch<T> extends AsyncTask<Callable, Void, Collection<T>> {
 
         @Override
-        protected final Collection<T> doInBackground(Void... params) {
+        protected final Collection<T> doInBackground(Callable... params) {
 
             Log.i("Ayush", "Fetching next batch of stories");
 
+            if (params == null || params.length == 0)
+                return null;
+
             try {
-                return callable.call();
+                return (Collection<T>) params[0].call();
             } catch (Exception e) {
                 e.printStackTrace();
                 //TODO track
@@ -160,12 +157,20 @@ public class ExploreBuffer<T> implements Closeable {
             //we need to overwrite any prior indication so we remove it
             final int currentSize = buffer.storyBuffer.size();
             final T lastItem = buffer.storyBuffer.get(currentSize - 1);
+            final int insertFrom;
             if (buffer.exploration.isDoneForDay(lastItem) || buffer.exploration.isLoading(lastItem)) {
-                buffer.storyBuffer.remove(currentSize - 1);
+//                buffer.storyBuffer.remove(currentSize - 1);
+                if (isDoneForToday.get()) {
+                    insertFrom = currentSize - 1;
+                    buffer.storyBuffer.remove(currentSize-1);
+                }
+                else
+                    insertFrom = currentSize - 1;
                 Log.i("Ayush", "Removing loading response");
-            }
+            } else
+                insertFrom = currentSize;
 
-            buffer.storyBuffer.addAll(batch); //make the insertion
+            buffer.storyBuffer.addAll(insertFrom, batch); //make the insertion
             buffer.exploration.notifyDataAvailable();
         }
     }
