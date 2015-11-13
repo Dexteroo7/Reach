@@ -90,35 +90,6 @@ public class ProcessManager extends Service implements
     public static final String REPLY_MUSIC_DEAD = "reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD";
     public static final String REPLY_ERROR = "reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR";
 
-    private void sendMessage(Context context, Optional<?> message, String action) {
-
-        final Intent intent = new Intent(context, ReachActivity.PlayerUpdateListener.class);
-        intent.setAction(action);
-        if (message.isPresent()) {
-            if (message.get() instanceof String)
-                intent.putExtra("message", (String) message.get());
-            else if (message.get() instanceof MusicData)
-                intent.putExtra("message", (MusicData) message.get());
-        }
-        context.sendBroadcast(intent);
-    }
-
-    private void updatePrimaryProgress(Context context, short progress, int position, String action) {
-
-        final Intent intent = new Intent(context, ReachActivity.PlayerUpdateListener.class);
-        intent.setAction(action);
-        intent.putExtra("progress", progress);
-        intent.putExtra("position", position);
-        context.sendBroadcast(intent);
-    }
-
-    private void updateSecondaryProgress(Context context, short progress, String action) {
-
-        final Intent intent = new Intent(context, ReachActivity.PlayerUpdateListener.class);
-        intent.setAction(action);
-        intent.putExtra("progress", progress);
-        context.sendBroadcast(intent);
-    }
 
     public static void submitNetworkRequest(@NonNull Context context, @NonNull String message) {
         helper(context, Optional.of(message), NetworkHandler.ACTION_NETWORK_MESSAGE);
@@ -532,7 +503,6 @@ public class ProcessManager extends Service implements
     public void updateSongDetails(MusicData musicData) {
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
-        sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
         final String toSend = new Gson().toJson(musicData, MusicData.class);
         SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE), toSend);
         /**
@@ -600,6 +570,11 @@ public class ProcessManager extends Service implements
     }
 
     @Override
+    public void updateDuration(String formattedDuration) {
+
+    }
+
+    @Override
     public void removeNetwork() {
 
         networkHandler.close();
@@ -636,17 +611,11 @@ public class ProcessManager extends Service implements
     }
 
     @Override
-    public void updateDuration(String formattedDuration) {
-        sendMessage(this, Optional.of(formattedDuration), REPLY_DURATION);
-    }
-
-    @Override
     public void paused() {
         if (notificationState == NotificationState.Music)
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
-        sendMessage(this, Optional.absent(), REPLY_PAUSED);
     }
 
     @Override
@@ -655,14 +624,12 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
-        sendMessage(this, Optional.absent(), REPLY_UN_PAUSED);
     }
 
     @Override
     public void musicPlayerDead() {
 
         musicHandler.close();
-        sendMessage(this, Optional.absent(), REPLY_MUSIC_DEAD);
         Log.i("Downloader", "Sent Music player dead");
         switch (notificationState) {
 
@@ -1051,7 +1018,6 @@ public class ProcessManager extends Service implements
     public void errorReport(String songName, String missType) {
 
 //        pushNextSong(nextSong(Optional.absent(), false));
-        sendMessage(this, Optional.absent(), REPLY_ERROR);
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory(missType)
                 .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
@@ -1060,20 +1026,20 @@ public class ProcessManager extends Service implements
                 .build());
     }
 
-    @Override
-    public void updateSecondaryProgress(short percent) {
-//        Log.i("Downloader", "Progress " + percent);
-        updateSecondaryProgress(this, percent, REPLY_SECONDARY_PROGRESS);
-    }
-
-    @Override
-    public void updatePrimaryProgress(short percent, int progress) {
-        updatePrimaryProgress(this, percent, progress, REPLY_PRIMARY_PROGRESS);
-    }
 
     @Override
     public Context getContext() {
         return this;
+    }
+
+    @Override
+    public void updateSecondaryProgress(short percent) {
+
+    }
+
+    @Override
+    public void updatePrimaryProgress(short percent, int position) {
+
     }
 
     @Override

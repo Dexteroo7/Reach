@@ -84,12 +84,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return rootView;
     }
 
-    @Override
+    /*@Override
     public void onDestroyView() {
         super.onDestroyView();
         buffer.close();
         exploreAdapter = null;
-    }
+    }*/
 
     @Override
     public synchronized Callable<Collection<ExploreContainer>> fetchNextBatch() {

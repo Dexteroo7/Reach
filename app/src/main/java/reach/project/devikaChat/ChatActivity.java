@@ -13,7 +13,6 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 
 import reach.project.R;
-import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CircleTransform;
@@ -26,8 +25,6 @@ public class ChatActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-
-        ReachActivity.toggleIntimation(false);
 
         //toolbar stuff
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

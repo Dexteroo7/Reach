@@ -28,6 +28,11 @@ public class CustomViewPager extends ViewPager {
 
     }
 
+    @Override
+    public void setCurrentItem(int item) {
+        super.setCurrentItem(item, false);
+    }
+
     public void setPagingEnabled(boolean enabled) {
         this.enabled = enabled;
     }
