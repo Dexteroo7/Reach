@@ -101,7 +101,6 @@ import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.PromoCodeDialog;
 import reach.project.coreViews.UpdateFragment;
-import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
@@ -139,6 +138,7 @@ import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
+import reach.project.yourprofile.YourProfileFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
@@ -651,7 +651,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library " + id).commit();
+                    .addToBackStack(null).replace(R.id.container, new YourProfileFragment(), "user_library " + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
