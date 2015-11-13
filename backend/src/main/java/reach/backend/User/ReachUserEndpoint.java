@@ -58,6 +58,7 @@ import reach.backend.User.FriendContainers.Friend;
 import reach.backend.User.FriendContainers.QuickSync;
 import reach.backend.User.FriendContainers.ReceivedRequest;
 
+import static reach.backend.OfyService.devikaId;
 import static reach.backend.OfyService.ofy;
 
 /**
@@ -109,7 +110,7 @@ public class ReachUserEndpoint {
 
         if (phoneNumbers.contains(OfyService.devikaPhoneNumber)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
             friends.add(new Friend(devika, false, 0));
         }
 
@@ -147,7 +148,7 @@ public class ReachUserEndpoint {
 
         if (phoneNumbers.contains(OfyService.devikaPhoneNumber)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
             friends.add(new Friend(devika, false, 0));
         }
 
@@ -234,7 +235,7 @@ public class ReachUserEndpoint {
 
         if (phoneNumbers.getStringList().contains(OfyService.devikaPhoneNumber)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
             friends.add(new Friend(devika, false, 0));
         }
 
@@ -331,14 +332,14 @@ public class ReachUserEndpoint {
 
         if (myReachCheck) {
 
-            keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));
+            keysBuilder.add(Key.create(ReachUser.class, devikaId));
             for (long id : client.getMyReach())
                 keysBuilder.add(Key.create(ReachUser.class, id));
         }
 
         if (sentRequestsCheck) {
 
-            keysBuilder.add(Key.create(ReachUser.class, OfyService.devikaId));
+            keysBuilder.add(Key.create(ReachUser.class, devikaId));
             for (long id : client.getSentRequests())
                 keysBuilder.add(Key.create(ReachUser.class, id));
         }
@@ -349,7 +350,7 @@ public class ReachUserEndpoint {
                 .project(Friend.projectNewFriend)) {
 
             final long lastSeen;
-            if (user.getId() != OfyService.devikaId)
+            if (user.getId() != devikaId)
                 lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
             else
                 lastSeen = 0;
@@ -425,7 +426,7 @@ public class ReachUserEndpoint {
         if (myReach != null && myReach.size() > 0)
             for (long id : myReach)
                 if (pair.containsKey(id))
-                    if (id == OfyService.devikaId)
+                    if (id == devikaId)
                         newStatus.put(id, (short) 0); //always online !
                     else
                         newStatus.put(id, (short) (computeLastSeen((byte[]) syncCache.get(id)) > ReachUser.ONLINE_LIMIT ? 1 : 0));
@@ -461,7 +462,7 @@ public class ReachUserEndpoint {
             if ((reachUser.getGcmId() == null || reachUser.getGcmId().equals(""))) {
 
                 //DO NOT MARK AS DEAD IF DEVIKA !
-                if (!(reachUser.getPhoneNumber().equals(OfyService.devikaPhoneNumber) || reachUser.getId() == OfyService.devikaId)) {
+                if (!(reachUser.getPhoneNumber().equals(OfyService.devikaPhoneNumber) || reachUser.getId() == devikaId)) {
                     logger.info("Marking dead ! " + reachUser.getUserName());
                     toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
                 }
@@ -489,9 +490,9 @@ public class ReachUserEndpoint {
                     computeLastSeen((byte[]) syncCache.get(user.getId()))));
         }
 
-        if (newIds.contains(OfyService.devikaId)) {
+        if (newIds.contains(devikaId)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
             newFriends.add(new Friend(
                     devika,
                     myReach,
@@ -600,7 +601,7 @@ public class ReachUserEndpoint {
         return dirtyCheck;
     }
 
-    private ImmutableList.Builder<Key> getKeyBuilder(long... ids) {
+    private ImmutableList.Builder<Key> getKeyBuilder(Long... ids) {
 
         final ImmutableList.Builder<Key> dirtyCheck = new ImmutableList.Builder<>();
         for (Long id : ids)
@@ -1048,36 +1049,25 @@ public class ReachUserEndpoint {
             name = "updateDatabase",
             path = "user/updateDatabase",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public MyString port() {
+    public MyString port(@Named("keys") String[] keys,
+                         @Named("values") String[] values,
+                         @Named("taskName") String taskName) {
 
-        QueueFactory.getDefaultQueue().add(TaskOptions.Builder
-                .withUrl("/worker")
-                .param("cursor", "")
-                .param("total", 0 + "")
-                .retryOptions(RetryOptions.Builder.withTaskRetryLimit(0)));
-        return new MyString("submitted");
-    }
+        final TaskOptions builder = TaskOptions.Builder.withUrl("/worker");
 
-    @ApiMethod(
-            name = "devikaSendFriendRequestToAll",
-            path = "user/devikaSendFriendRequestToAll",
-            httpMethod = ApiMethod.HttpMethod.POST)
-    public MyString devikaSendFriendRequestToAll(LongArray userIds) {
+        if (keys != null && values != null) {
 
-        int successCounter = 0;
-        int failCounter = 0;
+            if (keys.length != values.length)
+                throw new IllegalArgumentException("Keys and values do not have same length");
 
-        final MessagingEndpoint messagingEndpoint = MessagingEndpoint.getInstance();
-        for (Long hostId : userIds.getList()) {
-
-            final MyString result = messagingEndpoint.requestAccess(OfyService.devikaId, hostId);
-            if (result == null || TextUtils.isEmpty(result.getString()) || result.getString().equals("false"))
-                failCounter++;
-            else
-                successCounter++;
+            for (int index = 0; index < keys.length; index++)
+                builder.param(keys[index], values[index]);
         }
 
-        return new MyString("Result : " + failCounter + "failed " + successCounter + " successful");
+        QueueFactory.getDefaultQueue().add(builder
+                .taskName(taskName)
+                .retryOptions(RetryOptions.Builder.withTaskRetryLimit(0).taskAgeLimitSeconds(0)));
+        return new MyString("submitted");
     }
 
     @ApiMethod(
@@ -1086,7 +1076,7 @@ public class ReachUserEndpoint {
             httpMethod = ApiMethod.HttpMethod.POST)
     public AliveCheck bulkAliveCheck(LongArray userIds) {
 
-        final long[] ids;
+        final Long[] ids;
         if (userIds == null || (ids = userIds.getList()) == null || ids.length == 0)
             throw new IllegalArgumentException("U noob don't send empty data");
 
@@ -1094,16 +1084,106 @@ public class ReachUserEndpoint {
 
         int index = 0;
         for (ReachUser user : ofy().load().type(ReachUser.class)
-                .filterKey("in", getKeyBuilder(userIds.getList()).build())
+                .filterKey("in", getKeyBuilder(ids).build())
                 .project("gcmId")) {
 
             ids[index] = user.getId();
             isAlive[index] = !TextUtils.isEmpty(user.getGcmId());
+            ++index;
         }
 
         final AliveCheck aliveCheck = new AliveCheck();
         aliveCheck.setAlive(isAlive);
         aliveCheck.setId(ids);
         return aliveCheck;
+    }
+
+    @ApiMethod(
+            name = "devikaSendFriendRequestToAll",
+            path = "user/devikaSendFriendRequestToAll",
+            httpMethod = ApiMethod.HttpMethod.POST)
+    public MyString devikaSendFriendRequestToAll(LongArray userIds) {
+
+        final Long[] ids;
+        if (userIds == null || (ids = userIds.getList()) == null || ids.length == 0)
+            throw new IllegalArgumentException("U noob don't send empty data");
+
+        final Map<Long, ReachUser> hostMap = ofy().load().type(ReachUser.class).ids(ids);
+        final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
+        final List<ReachUser> hostsToSave = new ArrayList<>();
+
+        final HashSet<Long> devikaSent = devika.getSentRequests() == null ? new HashSet<Long>() : devika.getSentRequests();
+        final HashSet<Long> devikaReach = devika.getMyReach() == null ? new HashSet<Long>() : devika.getMyReach();
+
+        int processCount = 0;
+
+        for (Map.Entry<Long, ReachUser> userEntry : hostMap.entrySet()) {
+
+            final ReachUser host = userEntry.getValue();
+            final long hostId = userEntry.getKey();
+
+            if (host == null)
+                continue;
+
+            if ((!devikaReach.contains(hostId)) && !devikaSent.contains(hostId))
+                logger.info("Saving Sent Request on " + devika.getUserName() + " " + devikaSent.add(hostId));
+
+            if ((host.getMyReach() == null || !host.getMyReach().contains(devikaId)) &&
+                    (host.getReceivedRequests() == null || !host.getReceivedRequests().contains(devikaId))) {
+
+                if (host.getReceivedRequests() == null)
+                    host.setReceivedRequests(new HashSet<Long>());
+                logger.info("Saving Received Request on " + host.getUserName() + " " + host.getReceivedRequests().add(devikaId));
+                hostsToSave.add(host);
+            }
+
+            if (TextUtils.isEmpty(host.getGcmId()))
+                logger.info("Error handling reply " + hostId + " " + host.getUserName());
+            else
+                processCount++;
+        }
+
+        if (hostsToSave.isEmpty())
+            return new MyString("Result : " + processCount);
+
+        logger.info("Batch save of " + hostsToSave.size() + " users");
+
+        //save "new" user collections asynchronously
+        ofy().save().entities(hostsToSave);
+        ofy().save().entities(devika);
+
+        logger.info("Send notification to reach user");
+
+        //send bulk to required users !
+        final MessagingEndpoint messagingEndpoint = MessagingEndpoint.getInstance();
+        final Message message = new Message.Builder()
+                .addData("message", "PERMISSION_REQUEST`" + devikaId + "`" + devika.getUserName())
+                .build();
+        final Sender sender = new Sender(MessagingEndpoint.API_KEY);
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        for (ReachUser reachUser : hostsToSave)
+            keysBuilder.add(Key.create(ReachUser.class, reachUser.getId()));
+
+        messagingEndpoint.sendMultiCastMessage(message, //the message that needs to be sent
+                sender, //the sender id
+                ofy().load().type(ReachUser.class)
+                        .filterKey("in", keysBuilder.build()) //required users
+                        .filter("gcmId !=", "") //not if gcm id is dead
+                        .project("gcmId")); //project only the gcmId
+
+        return new MyString("Result : " + processCount);
+    }
+
+    @ApiMethod(
+            name = "cleanUpDevika",
+            path = "user/cleanUpDevika",
+            httpMethod = ApiMethod.HttpMethod.POST)
+    public void cleanUpDevika() {
+
+        final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+
+        devika.getMyReach().clear();
+        devika.getSentRequests().clear();
+        ofy().save().entities(devika).now();
     }
 }

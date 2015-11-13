@@ -35,6 +35,11 @@ public class ExploreBuffer<T> implements Closeable {
 
     ///////////////
 
+    //can not call private constructor !
+    private ExploreBuffer() {
+        this.exploration = null;
+    }
+
     private ExploreBuffer(Exploration<T> exploration) {
         this.exploration = exploration;
         storyBuffer.add(exploration.getLoadingResponse());

@@ -66,9 +66,9 @@ dependencies {
 
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
-    compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
-    compile 'com.google.android.gms:play-services-gcm:8.1.0'
-    compile 'com.google.android.gms:play-services-analytics:8.1.0'
+    compile 'com.google.apis:google-api-services-storage:v1-rev51-1.20.0'
+    compile 'com.google.android.gms:play-services-gcm:8.3.0'
+    compile 'com.google.android.gms:play-services-analytics:8.3.0'
     compile 'com.google.code.gson:gson:2.4'
 
     //stupid shit
@@ -83,8 +83,8 @@ dependencies {
 
     // non-google stuff
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
-    compile 'com.facebook.fresco:fresco:0.8.0'
-    compile 'com.facebook.fresco:imagepipeline-okhttp:0.8.0'
+    compile 'com.facebook.fresco:fresco:0.8.1'
+    compile 'com.facebook.fresco:imagepipeline-okhttp:0.8.1'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
 //    compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
@@ -96,6 +96,9 @@ dependencies {
     compile 'com.getbase:floatingactionbutton:1.10.0'
     compile 'com.sothree.slidinguppanel:library:3.1.1'
     compile 'com.commonsware.cwac:merge:1.1.1'
+    compile('com.github.florent37:materialviewpager:1.1.2@aar') {
+        transitive = true
+    }
 }
 
 configurations {

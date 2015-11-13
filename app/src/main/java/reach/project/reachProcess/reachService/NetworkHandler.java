@@ -1281,7 +1281,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 Log.i("Downloader", "Creating new File for " + reachDatabase.getDisplayName());
                 try {
                     randomAccessFile = new RandomAccessFile(reachDirectory + "/" + reachDatabase.getId(), "rw");
-                    randomAccessFile.setLength(reachDatabase.getLength());
+                    randomAccessFile.setLength(reachDatabase.getLength()); //resize to current
                 } catch (IOException e) {
                     e.printStackTrace();
                     return 2;

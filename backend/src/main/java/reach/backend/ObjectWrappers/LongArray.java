@@ -5,16 +5,16 @@ package reach.backend.ObjectWrappers;
  */
 public class LongArray {
 
-    private long [] list;
+    private Long [] list;
 
     public LongArray() {
     }
 
-    public long[] getList() {
+    public Long[] getList() {
         return list;
     }
 
-    public void setList(long[] list) {
+    public void setList(Long[] list) {
         this.list = list;
     }
 }

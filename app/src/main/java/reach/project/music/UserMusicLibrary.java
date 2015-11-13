@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -36,20 +35,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.common.base.Optional;
 import com.nineoldandroids.view.ViewHelper;
 
 import java.lang.ref.WeakReference;
-import java.util.Map;
 
-import reach.backend.music.musicVisibilityApi.model.JsonMap;
-import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.TextDrawable;
@@ -116,9 +110,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
         final long userId = getArguments().getLong("id");
         final Activity activity = getActivity();
-
-        if (MiscUtils.isOnline(activity))
-            StaticData.temporaryFix.execute(new GetMusic(userId));
 
         final View rootView = inflater.inflate(R.layout.fragment_user_library, container, false);
         final ImageView largeProfilePic = (ImageView) rootView.findViewById(R.id.largeProfilePic);
@@ -244,87 +235,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 .build());
 
         return rootView;
-    }
-
-    private static final class GetMusic implements Runnable {
-
-        private final long hostId;
-
-        private GetMusic(long hostId) {
-            this.hostId = hostId;
-        }
-
-        @Override
-        public void run() {
-
-            //fetch Music
-            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Context context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
-
-            //do we check for visibility ?
-            final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit
-            if (exit) {
-                Log.i("Ayush", "do not check for visibility");
-                return;
-            }
-
-            Log.i("Ayush", "Fetching visibility data");
-            //fetch visibility data
-            final MusicData visibility = MiscUtils.autoRetry(() -> StaticData.musicVisibility.get(hostId).execute(), Optional.absent()).orNull();
-            final JsonMap visibilityMap;
-            if (visibility == null || (visibilityMap = visibility.getVisibility()) == null || visibilityMap.isEmpty()) {
-                Log.i("Ayush", "no visibility data found");
-                return; //no visibility data found
-            }
-
-            //handle visibility data
-            MiscUtils.useContextFromFragment(reference, (Context context) -> handleVisibility(context, visibilityMap, hostId));
-        }
-    }
-
-    private static synchronized void handleVisibility(Context context,
-                                                      JsonMap visibilityMap,
-                                                      long serverId) {
-
-        final MySongsHelper mySongsHelper = new MySongsHelper(context);
-        final SQLiteDatabase sqlDB = mySongsHelper.getWritableDatabase();
-        sqlDB.beginTransaction();
-
-        try {
-
-            for (Map.Entry<String, Object> objectEntry : visibilityMap.entrySet()) {
-
-                if (objectEntry == null) {
-                    //TODO track
-                    Log.i("Ayush", "objectEntry was null");
-                    continue;
-                }
-
-                final String key = objectEntry.getKey();
-                final Object value = objectEntry.getValue();
-
-                if (TextUtils.isEmpty(key) || !TextUtils.isDigitsOnly(key) || value == null || !(value instanceof Boolean)) {
-                    //TODO track
-                    Log.i("Ayush", "Found shit data inside visibilityMap " + key + " " + value);
-                    continue;
-                }
-
-                final ContentValues values = new ContentValues();
-                values.put(MySongsHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
-
-                sqlDB.update(MySongsHelper.SONG_TABLE,
-                        values,
-                        MySongsHelper.COLUMN_USER_ID + " = ? and " + MySongsHelper.COLUMN_SONG_ID + " = ?", new String[]{serverId + "", key});
-            }
-
-            visibilityMap.clear();
-            sqlDB.setTransactionSuccessful();
-
-        } finally {
-
-            sqlDB.endTransaction();
-            mySongsHelper.close();
-        }
-        context.getContentResolver().notifyChange(MySongsProvider.CONTENT_URI, null);
     }
 
     //TODO recycle bitmap
