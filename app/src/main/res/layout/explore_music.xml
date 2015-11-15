@@ -21,7 +21,8 @@
             android:layout_height="match_parent">
             <ImageView
                 android:id="@+id/image"
-                android:src="@drawable/sample_music_album_02"
+                android:src="@drawable/playstore_2"
+                android:scaleType="centerCrop"
                 android:layout_width="match_parent"
                 app:layout_heightPercent="60%" />
             <View
