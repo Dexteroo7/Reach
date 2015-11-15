@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -30,13 +31,14 @@ import reach.project.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.yourProfile.blobCache.CacheType;
 
 /**
+ * Full list loads from cache, and checks network for update, if update is found, whole data is reloaded.
+ * Recent depends on full list. Loads from cache and follows full list update, just that 0 index is reloaded only.
+ * Smart list, loads same as full list, independent.
+ * <p>
  * A placeholder fragment containing a simple view.
  */
 public class YourProfileMusicFragment extends Fragment implements CacheInjectorCallbacks<Message>,
         MusicAdapter.CacheAdapterInterface<Message> {
-
-    //default loading indicator
-    private static final Song DEFAULT_LOADING_INDICATOR = new Song.Builder().build();
 
     private static WeakReference<YourProfileMusicFragment> reference = null;
 
@@ -59,6 +61,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private RecyclerView.Adapter mainAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
+    private Cache recentMusicCache = null;
+
     private long userId = 0;
 
     @Override
@@ -67,8 +71,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         mainAdapter = null;
         userId = 0;
 
-        MiscUtils.closeQuietly(fullListCache, smartListCache);
-        fullListCache = smartListCache = null;
+        MiscUtils.closeQuietly(fullListCache, smartListCache, recentMusicCache);
+        fullListCache = smartListCache = recentMusicCache = null;
 
         if (musicData != null)
             musicData.clear();
@@ -81,7 +85,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                              Bundle savedInstanceState) {
 
         userId = getArguments().getLong("userId", 0L);
-        musicData.add(DEFAULT_LOADING_INDICATOR);
 
         fullListCache = new Cache(this, CacheType.MUSIC_FULL_LIST, userId) {
             @Override
@@ -104,6 +107,24 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
             @Override
             protected Message getItem(byte[] source, int offset, int count) {
+                return null;
+            }
+        };
+
+        recentMusicCache = new Cache(this, CacheType.MUSIC_RECENT_LIST, userId) {
+            @Override
+            protected Callable<Collection<? extends Message>> fetchFromNetwork() {
+
+                /**
+                 * It is safe to assume that at this point, the music list is fully loaded.
+                 * Hence we simple sort the list and return top 20 elements.
+                 */
+
+                return null;
+            }
+
+            @Override
+            protected Message getItem(byte[] source, int offset, int count) throws IOException {
                 return null;
             }
         };
@@ -159,56 +180,80 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
-    public void injectElements(Collection<Message> elements, boolean overWrite, boolean removeLoading) {
+    public void injectElements(Collection<Message> elements, boolean overWrite, boolean loadingDone) {
 
         if (elements == null || elements.isEmpty())
             return;
 
         Log.i("Ayush", "Inserting " + elements.size() + " new items");
+        final Message typeCheckerInstance = elements.iterator().next();
+        final Class typeChecker;
+        if (typeCheckerInstance instanceof Song)
+            typeChecker = Song.class;
+        else
+            typeChecker = Song.class; //TODO handle other cases
 
-        synchronized (musicData) {
+        ///////////
 
-            if (overWrite) {
-
-                musicData.clear(); //remove all
-                musicData.addAll(elements); //add all
-            } else {
-
-                final int size = musicData.size();
-
-                //no loading indicator present
-                if (size == 0)
-                    musicData.addAll(elements);
-
-                //indicator must be present, removal requested
-                else if (removeLoading) {
-
-                    Log.i("Ayush", "Loading finished");
-                    musicData.remove(size - 1);
-                    musicData.addAll(elements);
-                }
-
-                //indicator must be present, insert before it
-                else {
-
-                    Log.i("Ayush", "Partial loading done");
-                    musicData.addAll(size - 1, elements);
-                }
+        if (overWrite)
+            intelligentOverwrite(elements, typeChecker);
+        else
+            synchronized (musicData) {
+                musicData.addAll(elements);
             }
-        }
+
+        //notify
+        notifyDataSetChanged();
+
+        if (typeChecker != Song.class)
+            return;
 
         /**
          * If loading has finished request a full injection of smart lists
          * Else request partial injection
          */
-        if (removeLoading || overWrite) {
-            //full injection
-        } else {
-            //else partial injection
-        }
+//        smartListCache.loadMoreElements(loadingDone || overWrite);
 
-        //notify
-        notifyDataSetChanged();
+        /**
+         * Fresh batch has been fetched from network.
+         * Invalidate recent cache and recreate
+         */
+        if (overWrite) {
+            recentMusicCache.invalidateCache();
+            recentMusicCache.loadMoreElements(true);
+        }
+    }
+
+    private void intelligentOverwrite(Collection<? extends Message> elements, Class typeChecker) {
+
+        final Iterator<? extends Message> messageIterator = elements.iterator();
+
+        int index;
+
+        synchronized (musicData) {
+
+            int updatedSize = musicData.size();
+            for (index = 0; index < updatedSize; index++) {
+
+                //ignore if element is not of same class type
+                if (!musicData.get(index).getClass().equals(typeChecker))
+                    continue;
+
+                //get the next message to overwrite if present
+                if (messageIterator.hasNext()) {
+
+                    //we have a message to overwrite, do it
+                    musicData.set(index, messageIterator.next());
+                    messageIterator.remove(); //must remove
+                } else {
+                    musicData.remove(index); //remove as this item is no longer valid
+                    updatedSize--;
+                }
+            }
+
+            //insert any remaining elements
+            musicData.addAll(elements);
+        }
     }
 
     private void notifyDataSetChanged() {

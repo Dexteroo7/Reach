@@ -60,7 +60,7 @@ public class ContactsListFragment extends Fragment implements
     private SharedPreferences sharedPreferences;
     private SuperInterface mListener;
 
-    private ReachContactsAdapter reachContactsAdapter;
+    private CustomAdapter customAdapter;
 
     private GridView gridView;
 
@@ -118,8 +118,8 @@ public class ContactsListFragment extends Fragment implements
         synchronizing.set(false);
 
         getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
-        if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
-            reachContactsAdapter.getCursor().close();
+        if (customAdapter != null)
+            customAdapter.setCursor(null);
 
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();
@@ -148,7 +148,7 @@ public class ContactsListFragment extends Fragment implements
         synchronizing.set(false);
         synchronizeOnce.set(false);
 
-        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0);
+        customAdapter = new CustomAdapter();
     }
 
     public void setSearchView(SearchView sView) {
@@ -188,7 +188,7 @@ public class ContactsListFragment extends Fragment implements
         gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
-        gridView.setAdapter(reachContactsAdapter);
+        gridView.setAdapter(customAdapter);
 
         selection = null;
         selectionArguments = null;
@@ -235,7 +235,7 @@ public class ContactsListFragment extends Fragment implements
         if (loader.getId() != StaticData.FRIENDS_LOADER || data == null || data.isClosed())
             return;
 
-        reachContactsAdapter.swapCursor(data);
+        customAdapter.setCursor(data);
         final int count = data.getCount();
 
         if (count == 0)
@@ -279,7 +279,7 @@ public class ContactsListFragment extends Fragment implements
     public void onLoaderReset(Loader<Cursor> loader) {
 
         if (loader.getId() == StaticData.FRIENDS_LOADER)
-            reachContactsAdapter.swapCursor(null);
+            customAdapter.setCursor(null);
     }
 
     @Override

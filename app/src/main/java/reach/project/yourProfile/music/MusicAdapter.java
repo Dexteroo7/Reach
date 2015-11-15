@@ -89,7 +89,7 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
         }
 
         private void bindTest(int mPos) {
-            position = mPos;
+            this.position = mPos;
         }
 
         @Override

@@ -262,7 +262,7 @@ public abstract class Cache implements Closeable {
                  */
 
                 Log.i("Ayush", "Streaming from cache");
-                itemsToReturn = new ArrayList<>(BATCH_SIZE);
+                itemsToReturn = new ArrayList<>(500);
                 fullLoad = false;
 
                 for (int index = 0; index < BATCH_SIZE || loadFully; index++) {
@@ -313,11 +313,8 @@ public abstract class Cache implements Closeable {
                 return null; //buffer destroyed
             }
 
-            synchronized (cache.cacheInjectorCallbacks) {
-
-                cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad, cache.loadingDone.get()); //make the insertion
-            }
-
+            //make the insertion
+            cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad, cache.loadingDone.get());
             return null;
         }
 
