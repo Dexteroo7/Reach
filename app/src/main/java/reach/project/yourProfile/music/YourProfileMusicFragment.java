@@ -1,4 +1,4 @@
-package reach.project.yourProfile.music;
+package reach.project.yourprofile.music;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
+import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 
@@ -25,9 +26,9 @@ import reach.project.music.Song;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.yourProfile.blobCache.Cache;
-import reach.project.yourProfile.blobCache.CacheInjectorCallbacks;
-import reach.project.yourProfile.blobCache.CacheType;
+import reach.project.yourprofile.blobCache.Cache;
+import reach.project.yourprofile.blobCache.CacheInjectorCallbacks;
+import reach.project.yourprofile.blobCache.CacheType;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -48,7 +49,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             reference = new WeakReference<>(fragment = new YourProfileMusicFragment());
             fragment.setArguments(args = new Bundle());
         } else {
-            Log.i("Ayush", "Reusing UserMusicLibrary object :)");
+            Log.i("Ayush", "Reusing YourProfileMusicFragment object :)");
             args = fragment.getArguments();
         }
         args.putLong("userId", userId);
@@ -56,7 +57,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
-    private RecyclerView.Adapter mainAdapter = null;
+    private RecyclerViewMaterialAdapter materialAdapter = null;
+    //private RecyclerView.Adapter mainAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
     private long userId = 0;
@@ -64,7 +66,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void onDestroyView() {
 
-        mainAdapter = null;
+        materialAdapter = null;
         userId = 0;
 
         MiscUtils.closeQuietly(fullListCache, smartListCache);
@@ -113,7 +115,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         //mRecyclerView.setHasFixedSize(true);
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(mainAdapter = new MusicAdapter<>(this));
+        mRecyclerView.setAdapter(materialAdapter = new RecyclerViewMaterialAdapter(new MusicAdapter<>(this)));
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
         return rootView;
     }
@@ -213,12 +215,12 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
     private void notifyDataSetChanged() {
 
-        if (mainAdapter != null)
+        if (materialAdapter != null)
             MiscUtils.runOnUiThreadFragment(reference, context -> {
 
-                if (mainAdapter != null) {
+                if (materialAdapter != null) {
                     Log.i("Ayush", "Reloading list " + musicData.size());
-                    mainAdapter.notifyDataSetChanged();
+                    materialAdapter.notifyDataSetChanged();
                 }
             });
     }

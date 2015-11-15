@@ -1,4 +1,4 @@
-package reach.project.yourProfile.apps;
+package reach.project.yourprofile.apps;
 
 /**
  * Created by dexter on 15/11/15.

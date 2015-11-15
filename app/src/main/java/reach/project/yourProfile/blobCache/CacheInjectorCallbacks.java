@@ -1,4 +1,4 @@
-package reach.project.yourProfile.blobCache;
+package reach.project.yourprofile.blobCache;
 
 import com.squareup.wire.Message;
 

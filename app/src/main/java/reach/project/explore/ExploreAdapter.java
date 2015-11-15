@@ -6,6 +6,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import reach.project.R;
 
 /**
  * Created by dexter on 16/10/15.
@@ -26,8 +30,21 @@ public class ExploreAdapter extends PagerAdapter {
         final ExploreContainer container = explore.getContainerForIndex(position);
         final View layout = LayoutInflater.from(context).inflate(container.getTypes().getLayoutResId(), collection, false);
 
+        final TextView title = (TextView) layout.findViewById(R.id.title);
+        final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
+        final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
+        final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+        final ImageView image = (ImageView) layout.findViewById(R.id.image);
+        final ImageView userImage = (ImageView) layout.findViewById(R.id.userImage);
+
         switch (container.getTypes()) {
             case MUSIC:
+                title.setText(container.getTitle());
+                subTitle.setText(container.getSubTitle());
+                userHandle.setText(container.getUserHandle());
+                typeText.setText(container.getTypes().getTitle());
+                container.getImageId();
+                container.getUserImageId();
                 layout.setTag(POSITION_UNCHANGED);
                 break;
             case APP:

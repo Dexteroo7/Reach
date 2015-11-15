@@ -1,19 +1,30 @@
-package reach.project.yourProfile;
+package reach.project.yourprofile;
 
+import android.database.Cursor;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
+import com.squareup.picasso.Picasso;
 
 import reach.project.R;
+import reach.project.core.StaticData;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
-import reach.project.yourProfile.music.YourProfileMusicFragment;
+import reach.project.yourprofile.music.YourProfileMusicFragment;
 
 public class YourProfileFragment extends Fragment {
 
@@ -33,20 +44,58 @@ public class YourProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_yourprofile, container, false);
-
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        setTitle("");*/
-
         MaterialViewPager mViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
 
+        Toolbar toolbar = mViewPager.getToolbar();
+        toolbar.setTitle("Profile");
+        toolbar.setTitleTextColor(Color.WHITE);
+
+        long userId = getArguments().getLong("userId", 0L);
+
+        final Cursor cursor = getActivity().getContentResolver().query(
+                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                new String[]{ReachFriendsHelper.COLUMN_PHONE_NUMBER,
+                        ReachFriendsHelper.COLUMN_USER_NAME,
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS,
+                        ReachFriendsHelper.COLUMN_IMAGE_ID,
+                        ReachFriendsHelper.COLUMN_NETWORK_TYPE,
+                        ReachFriendsHelper.COLUMN_STATUS},
+                ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{userId + ""}, null);
+        int numberOfSongs = 0;
+
+        if (cursor != null) {
+            cursor.moveToFirst();
+            final String uName = cursor.getString(1);
+            numberOfSongs = cursor.getInt(2);
+            final String imageId = cursor.getString(3);
+
+            RelativeLayout headerRoot = (RelativeLayout) mViewPager.findViewById(R.id.headerRoot);
+            TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
+            TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
+            TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
+            ImageView profilePic = (ImageView) headerRoot.findViewById(R.id.profilePic);
+
+            userName.setText(uName);
+            musicCount.setText(numberOfSongs+"");
+            userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
+            Picasso.with(getActivity())
+                    .load(StaticData.cloudStorageImageBaseUrl + imageId)
+                    .fit()
+                    .centerCrop()
+                    .into(profilePic);
+
+            cursor.close();
+        }
+
+        final int finalNumberOfSongs = numberOfSongs;
         mViewPager.getViewPager().setAdapter(new FragmentStatePagerAdapter(getChildFragmentManager()) {
 
             @Override
             public Fragment getItem(int position) {
                 switch (position) {
                     default:
-                        return YourProfileMusicFragment.newInstance(getArguments().getLong("userId", 0L));
+                        return YourProfileMusicFragment.newInstance(userId);
                 }
             }
 
@@ -59,11 +108,7 @@ public class YourProfileFragment extends Fragment {
             public CharSequence getPageTitle(int position) {
                 switch (position) {
                     case 0:
-                        return "Music";
-                    case 1:
-                        return "Music";
-                    case 2:
-                        return "Music";
+                        return "Songs (" + finalNumberOfSongs + ")";
                 }
                 return "";
             }
@@ -73,16 +118,8 @@ public class YourProfileFragment extends Fragment {
             switch (page) {
                 case 0:
                     return HeaderDesign.fromColorResAndUrl(
-                            R.color.green,
-                            "https://fs01.androidpit.info/a/63/0e/android-l-wallpapers-630ea6-h900.jpg");
-                case 1:
-                    return HeaderDesign.fromColorResAndUrl(
-                            R.color.blue,
-                            "http://cdn1.tnwcdn.com/wp-content/blogs.dir/1/files/2014/06/wallpaper_51.jpg");
-                case 2:
-                    return HeaderDesign.fromColorResAndUrl(
-                            R.color.cyan,
-                            "http://www.droid-life.com/wp-content/uploads/2014/10/lollipop-wallpapers10.jpg");
+                            R.color.reach_grey,
+                            "");
             }
             return null;
         });

@@ -144,6 +144,9 @@ public class ExploreBuffer<T> implements Closeable {
 
             super.onPostExecute(batch);
 
+            if (batch == null || batch.isEmpty())
+                return;
+
             final ExploreBuffer<T> buffer;
             //noinspection unchecked
             if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)

@@ -19,9 +19,9 @@
         <android.support.percent.PercentRelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <View
+            <ImageView
                 android:id="@+id/image"
-                android:background="@drawable/sample_music_album_02"
+                android:src="@drawable/sample_music_album_02"
                 android:layout_width="match_parent"
                 app:layout_heightPercent="60%" />
             <View
@@ -60,6 +60,9 @@
             </LinearLayout>
             <TextView
                 android:id="@+id/title"
+                android:gravity="center"
+                android:lines="1"
+                android:ellipsize="marquee"
                 android:text="Title Title"
                 android:layout_below="@id/type"
                 app:layout_marginTopPercent="1%"
@@ -70,6 +73,9 @@
                 android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/subtitle"
+                android:gravity="center"
+                android:lines="1"
+                android:ellipsize="marquee"
                 android:layout_below="@id/title"
                 android:text="Subtitle"
                 android:layout_centerHorizontal="true"

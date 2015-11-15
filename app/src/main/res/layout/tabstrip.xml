@@ -4,10 +4,9 @@
     android:id="@id/materialviewpager_pagerTitleStrip"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:pstsTabTextColor="@android:color/white"
-    app:pstsPaddingMiddle="true"
+    app:pstsTabTextColor="@color/white"
+    app:pstsTabTextAllCaps="false"
     app:pstsIndicatorHeight="0dp"
+    app:pstsPaddingMiddle="true"
     app:pstsShouldExpand="true"
-    app:pstsTabPaddingLeftRight="120dp"
-    app:pstsTabTextAllCaps="true"
     />

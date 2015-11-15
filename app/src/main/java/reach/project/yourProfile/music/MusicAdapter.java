@@ -1,4 +1,4 @@
-package reach.project.yourProfile.music;
+package reach.project.yourprofile.music;
 
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.wire.Message;
@@ -26,10 +27,21 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
     }
 
     @Override
+    public int getItemViewType(int position) {
+        if (position == 0)
+            return -1;
+        else if (position > 0)
+            return 0;
+        else return super.getItemViewType(position);
+    }
+
+    @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
         switch (viewType) {
 
+            case -1:
+                return new TestHolder<>(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_0_first, parent, false), cacheAdapterInterface);
             case 0:
                 return new TestHolder<>(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_0, parent, false), cacheAdapterInterface);
 //            case 1:
@@ -45,16 +57,18 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-        if (position == 0)
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
+        final Song song = (Song) cacheAdapterInterface.getItem(position);
+        final TestHolder testHolder = (TestHolder) holder;
         switch (holder.getItemViewType()) {
-
-            case 0:
-                final Song song = (Song) cacheAdapterInterface.getItem(position);
-                final TestHolder testHolder = (TestHolder) holder;
+            case -1:
                 testHolder.bindTest(position);
                 testHolder.mTextView.setText(song.displayName);
+                testHolder.mTextView2.setText(song.artist);
+                break;
+            case 0:
+                testHolder.bindTest(position);
+                testHolder.mTextView.setText(song.displayName);
+                testHolder.mTextView2.setText(song.artist);
                 break;
 //            case 1:
 //                TestHolder1 testHolder1 = (TestHolder1) holder;
@@ -75,6 +89,8 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
             implements View.OnClickListener {
 
         private final TextView mTextView;
+        private final TextView mTextView2;
+        private final ImageView mAlbumArt;
         private final CacheAdapterInterface<T> cacheAdapterInterface;
 
         private int position;
@@ -85,6 +101,8 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
             itemView.setOnClickListener(this);
 
             this.mTextView = (TextView) itemView.findViewById(R.id.textView);
+            this.mTextView2 = (TextView) itemView.findViewById(R.id.textView2);
+            this.mAlbumArt = (ImageView) itemView.findViewById(R.id.albumArt);
             this.cacheAdapterInterface = cacheAdapterInterface;
         }
 

@@ -137,7 +137,7 @@ import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
-import reach.project.yourProfile.YourProfileFragment;
+import reach.project.yourprofile.YourProfileFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
@@ -296,7 +296,7 @@ public class ReachActivity extends AppCompatActivity implements
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
+                                .replace(R.id.container, ExploreFragment.newInstance(serverId), "explore_fragment").commit();
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager

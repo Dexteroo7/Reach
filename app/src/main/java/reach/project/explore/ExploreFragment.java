@@ -1,6 +1,7 @@
 package reach.project.explore;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -10,12 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
@@ -26,6 +27,9 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 
@@ -37,20 +41,21 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.Exploration<ExploreContainer> {
 
-    private final ExploreBuffer<ExploreContainer> buffer = ExploreBuffer.getInstance(this);
-
-    private ExploreAdapter exploreAdapter;
-
-    private SuperInterface mListener;
-
     private static WeakReference<ExploreFragment> reference;
+    private static long userId = 0;
 
-    public static ExploreFragment newInstance() {
+    public static ExploreFragment newInstance(long userId) {
 
+        final Bundle args;
         ExploreFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null) {
             reference = new WeakReference<>(fragment = new ExploreFragment());
-
+            fragment.setArguments(args = new Bundle());
+        } else {
+            Log.i("Ayush", "Reusing ExploreFragment object :)");
+            args = fragment.getArguments();
+        }
+        args.putLong("userId", userId);
         return fragment;
     }
 
@@ -60,10 +65,15 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         mListener = (SuperInterface) context;
     }
 
+    private final ExploreBuffer<ExploreContainer> buffer = ExploreBuffer.getInstance(this);
+    private ExploreAdapter exploreAdapter;
+    private SuperInterface mListener;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        userId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         mListener.toggleSliding(false);
@@ -106,100 +116,74 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 //        Toast.makeText(getContext(), "Server Fetching next batch of 10", Toast.LENGTH_SHORT).show();
         return fetchNextBatch;
     }
-
-    private static int counter = 0;
-
     private static final Callable<Collection<ExploreContainer>> fetchNextBatch = () -> {
 
-        /*try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return null;
-        }
-        final List<ExploreContainer> containers = new ArrayList<>(10);
-        for (int i=0; i<20; i++)
-            containers.add(new ExploreContainer("Page " + i, "Subtitle", "imageId", "userImageId",
-                    "handle", 3.0f, ExploreTypes.MUSIC, new Random().nextLong()));
-        counter += containers.size();
-        if (counter > 50) {
-            containers.clear();
-            containers.add(new ExploreContainer(ExploreTypes.DONE_FOR_TODAY, new Random().nextLong()));
-        }*/
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", userId);
+        final JSONArray jsonArray = new JSONArray();
 
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("userId", "6571391281266688");
-        JSONArray jsonArray = new JSONArray();
-        for (int i=0; i<10; i++) {
-            JSONObject jsonObject1 = new JSONObject();
-            jsonObject1.put("friendId", "4503618472378368");
-            jsonArray.put(jsonObject1);
-        }
-        /*JSONObject jsonObject1 = new JSONObject();
-        jsonObject1.put("friendId", "4503618472378368");
-        jsonArray.put(jsonObject1);
-        JSONObject jsonObject2 = new JSONObject();
-        jsonObject2.put("friendId", "4505211267710976");
-        jsonArray.put(jsonObject2);
-        JSONObject jsonObject3 = new JSONObject();
-        jsonObject3.put("friendId", "4503788425576448");
-        jsonArray.put(jsonObject3);
-        JSONObject jsonObject4 = new JSONObject();
-        jsonObject4.put("friendId", "4504653291061248");
-        jsonArray.put(jsonObject4);
-        JSONObject jsonObject5 = new JSONObject();
-        jsonObject5.put("friendId", "4504219130265600");
-        jsonArray.put(jsonObject5);*/
+        //retrieve list of online friends
+        MiscUtils.useContextFromFragment(reference, context -> {
+
+            final Cursor cursor = context.getContentResolver().query(
+                    ReachFriendsProvider.CONTENT_URI,
+                    new String[]{
+                            ReachFriendsHelper.COLUMN_ID
+                    },
+                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                    new String[]{
+                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""
+                    }, null);
+
+            if (cursor == null)
+                return;
+
+            while (cursor.moveToNext()) {
+
+                final JSONObject onlineFriendId = new JSONObject();
+                final String onlineId = cursor.getString(0);
+                Log.i("Ayush", "Adding online friend id " + onlineId);
+                try {
+                    onlineFriendId.put("friendId", onlineId);
+                } catch (JSONException ignored) {
+                }
+                jsonArray.put(onlineFriendId);
+            }
+        });
 
         jsonObject.put("friends", jsonArray);
-        Log.d("Ashish", jsonObject.toString());
 
-        /*HttpURLConnection con = (HttpURLConnection) new URL("http://52.74.175.56:8080/explore/getObjects").openConnection();
-        con.setRequestMethod("POST");
-        //con.setDoInput(true);
-        con.setDoOutput(true);
-        con.connect();
-
-        OutputStream os = con.getOutputStream();
-        BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(os));
-        writer.write(jsonObject.toString());
-        writer.close();
-        os.close();
-
-        BufferedReader br = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String line;
-        StringBuilder sb = new StringBuilder();
-        while ((line = br.readLine()) != null)
-            sb.append(line);
-        br.close();*/
-
-        OkHttpClient client = new OkHttpClient();
-        RequestBody body = RequestBody
+        final RequestBody body = RequestBody
                 .create(MediaType.parse("application/json; charset=utf-8"), jsonObject.toString());
-        Request request = new Request.Builder()
+        final Request request = new Request.Builder()
                 .url("http://52.74.175.56:8080/explore/getObjects")
                 .post(body)
                 .build();
-        Response response = client.newCall(request).execute();
-
-        Log.d("Ashish", response.body().string());
-        JSONArray receivedData = new JSONArray(response.body().string());
+        final Response response = ReachApplication.okHttpClient.newCall(request).execute();
+        final JSONArray receivedData = new JSONArray(response.body().string());
         final List<ExploreContainer> containers = new ArrayList<>();
-        for (int i=0; i<receivedData.length(); i++) {
-            JSONObject object = receivedData.getJSONObject(i);
-            String title = object.getString("displayName");
-            String subTitle = object.getString("artistName");
-            String imageId = object.getString("largeImageUrl");
-            long contentId = object.getLong("contentId");
-            int contentType = object.getInt("contentType");
-            long userId = object.getLong("userId");
 
-            containers.add(new ExploreContainer(title, subTitle, imageId, "userImageId",
-                    "handle", 3.0f, ExploreTypes.MUSIC, contentId));
+        JSONObject exploreJson;
+        for (int i = 0; i < receivedData.length(); i++) {
+
+            exploreJson = receivedData.getJSONObject(i);
+//            final int contentType = exploreJson.getInt("contentType");
+//            exploreJson.getLong("userId")
+
+            Log.i("Ayush", "Got Explore response " + exploreJson.getString("displayName"));
+
+            containers.add(new ExploreContainer(
+                    exploreJson.getString("displayName"),
+                    exploreJson.getString("artistName"),
+                    exploreJson.getString("largeImageUrl"),
+                    "userImageId",
+                    "handle",
+                    3.0f,
+                    ExploreTypes.MUSIC,
+                    exploreJson.getLong("contentId")));
         }
 
+        Log.i("Ayush", "Explore has " + containers.size() + " stories");
         return containers;
     };
 
