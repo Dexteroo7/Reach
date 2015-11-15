@@ -8,15 +8,10 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import com.squareup.picasso.Picasso;
-
-import java.io.IOException;
-
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -48,15 +43,16 @@ public class ChatActivity extends AppCompatActivity {
 
         @Override
         protected Bitmap doInBackground(Void... params) {
-            try {
-                return Picasso.with(ChatActivity.this).load(StaticData.dropBoxManager)
-                        .resize(margin, margin)
-                        .centerCrop()
-                        .transform(new CircleTransform()).get();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
+//            try {
+//                return Picasso.with(ChatActivity.this).load(StaticData.dropBoxManager)
+//                        .resize(margin, margin)
+//                        .centerCrop()
+//                        .transform(new CircleTransform()).get();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                return null;
+//            }
+            return null;
         }
 
         @Override

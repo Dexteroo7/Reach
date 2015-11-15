@@ -47,15 +47,15 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.fileManager.ReachDatabase;
+import reach.project.fileManager.ReachDatabaseHelper;
+import reach.project.fileManager.ReachDatabaseProvider;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
-import reach.project.uploadDownload.ReachDatabase;
-import reach.project.uploadDownload.ReachDatabaseHelper;
-import reach.project.uploadDownload.ReachDatabaseProvider;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
@@ -248,10 +248,10 @@ public class ProcessManager extends Service implements
                     new String[]{lastSong.id + "", "0"}, null);
         else
             cursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " = ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " = ?",
                     new String[]{serverId + "", lastSong.id + ""}, null);
         if (cursor != null)
             cursor.moveToFirst();
@@ -272,10 +272,10 @@ public class ProcessManager extends Service implements
         } else {
             reachSongCursor = getReachDatabaseCursor();
             myLibraryCursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " != ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " != ?",
                     new String[]{serverId + "", id + ""}, null);
         }
 
@@ -530,6 +530,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public void updateSongDetails(MusicData musicData) {
+
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
@@ -545,8 +546,8 @@ public class ProcessManager extends Service implements
                 .setValue(1)
                 .build());
 
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        JSONObject props = new JSONObject();
+        final MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
+        final JSONObject props = new JSONObject();
         try {
             props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
             props.put("Song", musicData.getDisplayName());
@@ -861,6 +862,7 @@ public class ProcessManager extends Service implements
 
     //////////////////////////////////
     private Cursor getReachDatabaseCursor() {
+
         return getContentResolver().query(
                 ReachDatabaseProvider.CONTENT_URI,
                 StaticData.DOWNLOADED_PARTIAL,
@@ -871,12 +873,13 @@ public class ProcessManager extends Service implements
     }
 
     private Cursor getMyLibraryCursor() {
+
         return getContentResolver().query(
-                ReachSongProvider.CONTENT_URI,
+                MySongsProvider.CONTENT_URI,
                 StaticData.DISK_PARTIAL,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{serverId + ""},
-                ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
     }
 
     private Optional<MusicData> playFromCursor(Optional<Cursor> optional, byte type) {

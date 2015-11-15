@@ -7,22 +7,45 @@ android {
     compileSdkVersion 23
     buildToolsVersion '23.0.2'
     defaultConfig {
+
         applicationId "reach.project"
         minSdkVersion 19
         targetSdkVersion 23
         versionCode 72
         versionName "0.9.21.7-beta"
-        //meant for release
         multiDexEnabled true
     }
 
-    buildTypes {
-        release {
-            shrinkResources true
-            minifyEnabled true
-            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+    productFlavors {
+
+        // Define separate dev and prod product flavors.
+        dev {
+            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+            // to pre-dex each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming dex merging processes.
+            minSdkVersion 21
+        }
+        prod {
+            // The actual minSdkVersion for the application.
+            minSdkVersion 14
         }
     }
+
+//    buildTypes {
+//
+//        release {
+//            shrinkResources true
+//            minifyEnabled true
+//            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+//        }
+//
+//        debug {
+//            shrinkResources true
+//            minifyEnabled true
+//            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+//        }
+//    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -42,26 +65,28 @@ android {
 dependencies {
 
     compile fileTree(includes: ['*.jar'], dir: 'libs')
-    compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
-    //compile 'com.google.android.gms:play-services:6.1.11'
+    //android core
+    compile 'com.google.apis:google-api-services-storage:v1-rev51-1.20.0'
     compile 'com.google.android.gms:play-services-gcm:8.3.0'
     compile 'com.google.android.gms:play-services-analytics:8.3.0'
-    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'com.google.code.gson:gson:2.4'
+
+    //stupid shit
+//    compile 'com.android.support:multidex:1.0.1'
+
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.android.support:support-v4:23.1.0'
     compile 'com.android.support:cardview-v7:23.1.0'
     compile 'com.android.support:design:23.1.0'
     compile 'com.android.support:percent:23.1.0'
-    //meant for release
-    compile 'com.android.support:multidex:1.0.1'
 
     // non-google stuff
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
-    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.facebook.fresco:fresco:0.8.1'
+    compile 'com.facebook.fresco:imagepipeline-okhttp:0.8.1'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
-    //compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
-    compile 'com.squareup.okhttp:okhttp:2.5.0'
+    compile 'com.squareup:tape:1.2.3'
 
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'

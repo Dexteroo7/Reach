@@ -25,15 +25,15 @@ import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
-import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.fileManager.ReachDatabaseProvider;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.fileManager.ReachDatabaseHelper;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.uploadDownload.ReachDatabase;
+import reach.project.fileManager.ReachDatabase;
 
 /**
  * Created by dexter on 21/6/14.

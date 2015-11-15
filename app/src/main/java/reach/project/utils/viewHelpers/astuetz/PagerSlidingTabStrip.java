@@ -43,7 +43,6 @@ import java.util.Locale;
 
 import reach.project.R;
 
-
 public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	public interface IconTabProvider {
@@ -246,12 +245,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	private void addTab(final int position, View tab) {
 		tab.setFocusable(true);
-		tab.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				pager.setCurrentItem(position);
-			}
-		});
+		tab.setOnClickListener(v -> pager.setCurrentItem(position));
 
 		tab.setPadding(tabPadding, 0, tabPadding, 0);
 		tabsContainer.addView(tab, position, shouldExpand ? expandedTabLayoutParams : defaultTabLayoutParams);

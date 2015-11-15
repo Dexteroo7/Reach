@@ -1,13 +1,10 @@
 package reach.project.utils;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
@@ -31,16 +28,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import reach.project.music.MusicList;
-import reach.project.music.albums.Album;
-import reach.project.music.artists.Artist;
+import reach.project.music.Song;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
+import reach.project.utils.auxiliaryClasses.UseContext;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -217,119 +216,103 @@ public enum CloudStorageUtils {
 //        return list;
 //    }
 
-    /**
-     * Fetches music data from server and also inserts into database
-     *
-     * @param hostId  id of person to fetch from
-     * @param context context to use
-     * @return false : do not fetch music visibility
-     * true : fetch music visibility
-     */
-    public static boolean getMusicData(long hostId, Context context) {
-
-        if (!MiscUtils.isOnline(context))
-            return false; //not online no use
-
-        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        final String fileName = MiscUtils.getMusicStorageKey(hostId);
-        final String currentHash = SharedPrefUtils.getMusicHash(preferences, fileName);
-        final boolean toReturn = !TextUtils.isEmpty(currentHash); //if current hash present, return true !
-
-        //get cloud key
-        final InputStream stream;
-        try {
-            stream = context.getAssets().open("key.p12");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return toReturn; //fail but fetch visibility if music already present
-        }
-
-        //prepare storage object
-        final Storage storage = getStorage(stream).orNull();
-        MiscUtils.closeQuietly(stream);
-        if (storage == null)
-            return toReturn; //fail but fetch visibility if music already present
-
-        //getMd5Hash of Music data on storage
-        String serverHash = "";
-        try {
-            serverHash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (TextUtils.isEmpty(serverHash)) {
-
-            //TODO remove from local ?
-//            final ContentResolver resolver = context.getContentResolver();
-//            if (resolver == null)
-//                return false; //application died probably,
+//    /**
+//     * Fetches music data from server and also inserts into database
+//     *
+//     * @param hostId  id of person to fetch from
+//     * @param context context to use
+//     * @return file : the music data
+//     */
+//    public static File getMusicData(long hostId, Context context) {
+//
+//        if (!MiscUtils.isOnline(context))
+//            return false; //not online no use
+//
+//        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+//        final String fileName = MiscUtils.getMusicStorageKey(hostId);
+//        final String currentHash = SharedPrefUtils.getMusicHash(preferences, fileName);
+//        final boolean toReturn = !TextUtils.isEmpty(currentHash); //if current hash present, return true !
+//
+//        //get cloud key
+//        final InputStream stream;
+//        try {
+//            stream = context.getAssets().open("key.p12");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return toReturn; //fail but fetch visibility if music already present
+//        }
+//
+//        //prepare storage object
+//        final Storage storage = getStorage(stream).orNull();
+//        MiscUtils.closeQuietly(stream);
+//        if (storage == null)
+//            return toReturn; //fail but fetch visibility if music already present
+//
+//        //getMd5Hash of Music data on storage
+//        String serverHash = "";
+//        try {
+//            serverHash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        if (TextUtils.isEmpty(serverHash)) {
+//
+//            //TODO remove from local ?
+////            final ContentResolver resolver = context.getContentResolver();
+////            if (resolver == null)
+////                return false; //application died probably,
+////            MiscUtils.deleteSongs(hostId, resolver);
+////            MiscUtils.deletePlayLists(hostId, resolver);
+////            SharedPrefUtils.removeMusicHash(preferences, fileName);
+////            return false; //no music found !
+//            return toReturn;
+//        }
+//
+//        if (currentHash.equals(serverHash))
+//            return toReturn; //same music found, but still verify for music visibility
+//
+//        final InputStream download;
+//        final GZIPInputStream compressedData;
+//        final MusicList musicList;
+//
+//        try {
+//
+//            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
+//            final HttpHeaders httpHeaders = get.getRequestHeaders();
+//            httpHeaders.setCacheControl("no-cache");
+//            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+//            download = get.executeMediaAsInputStream();
+//
+//            compressedData = new GZIPInputStream(download);
+//            musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+//            MiscUtils.closeQuietly(download, compressedData);
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return toReturn; //fail but fetch visibility if music already present
+//        }
+//
+//        //proceed if alive
+//        if (musicList.song == null || musicList.song.isEmpty()) {
+//
+//            //All the music got deleted
 //            MiscUtils.deleteSongs(hostId, resolver);
-//            MiscUtils.deletePlayLists(hostId, resolver);
+//            //Get rid of the hash
 //            SharedPrefUtils.removeMusicHash(preferences, fileName);
-//            return false; //no music found !
-            return toReturn;
-        }
-
-        if (currentHash.equals(serverHash))
-            return toReturn; //same music found, but still verify for music visibility
-
-        final InputStream download;
-        final GZIPInputStream compressedData;
-        final MusicList musicList;
-
-        try {
-
-            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
-            final HttpHeaders httpHeaders = get.getRequestHeaders();
-            httpHeaders.setCacheControl("no-cache");
-            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
-            download = get.executeMediaAsInputStream();
-
-            compressedData = new GZIPInputStream(download);
-            musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
-            MiscUtils.closeQuietly(download, compressedData);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return toReturn; //fail but fetch visibility if music already present
-        }
-
-        final ContentResolver resolver = context.getContentResolver();
-        if (resolver == null)
-            return false; //application died probably,
-
-        //proceed if alive
-        if (musicList.song == null || musicList.song.isEmpty()) {
-
-            //All the music got deleted
-            MiscUtils.deleteSongs(hostId, resolver);
-            MiscUtils.deletePlayLists(hostId, resolver);
-            //Get rid of the hash
-            SharedPrefUtils.removeMusicHash(preferences, fileName);
-            return false; //no songs found !
-        }
-
-        //first update the hash
-        SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
-
-        final Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> pair =
-                MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
-        MiscUtils.bulkInsertSongs(
-                musicList.song,
-                pair.first,
-                pair.second,
-                resolver,
-                hostId);
-
-        if (musicList.playlist == null || musicList.playlist.isEmpty())
-            //All playLists got deleted
-            MiscUtils.deletePlayLists(hostId, resolver);
-        else
-            MiscUtils.bulkInsertPlayLists(musicList.playlist, resolver, hostId);
-
-        return true; //all good, check for visibility as well
-    }
+//            return false; //no songs found !
+//        }
+//
+//        //first update the hash
+//        SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
+//
+//        MiscUtils.bulkInsertSongs(
+//                musicList.song,
+//                resolver,
+//                hostId);
+//
+//        return true; //all good, check for visibility as well
+//    }
 
     /**
      * Uploads the Music data to google cloud storage
@@ -434,16 +417,64 @@ public enum CloudStorageUtils {
         return true; //success, sync with local
     }
 
+    public static Collection<Song> fetchSongs (long userId, WeakReference<Context> reference) {
+
+        final String fileName = MiscUtils.getMusicStorageKey(userId);
+        Log.i("Ayush", "Fetching songs for " + fileName);
+
+        final InputStream download;
+        final GZIPInputStream compressedData;
+        final MusicList musicList;
+
+        //getMd5Hash of Music data on storage
+        final String serverHash;
+        try {
+            serverHash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList(); //fail
+        }
+
+        try {
+
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
+            final HttpHeaders httpHeaders = get.getRequestHeaders();
+            httpHeaders.setCacheControl("no-cache");
+            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+            download = get.executeMediaAsInputStream();
+
+            compressedData = new GZIPInputStream(download);
+            musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+            MiscUtils.closeQuietly(download, compressedData);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList(); //fail
+        }
+
+        //proceed if alive
+        return MiscUtils.useContextFromContext(reference, (UseContext<Collection<Song>, Context>) context -> {
+
+            final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            if (musicList.song == null || musicList.song.isEmpty()) {
+                //All the music got deleted
+                //Get rid of the hash
+                SharedPrefUtils.removeMusicHash(preferences, fileName);
+                return Collections.emptyList(); //no songs found !
+            }
+
+            //first update the hash
+            SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
+
+            Log.i("Ayush", "Successfully fetched from network " + musicList.song.size());
+            return musicList.song;
+
+        }).or(Collections.emptyList());
+    }
+
     private static Storage storage = null;
 
     private static Optional<Storage> getStorage(InputStream stream) {
-
-//        final HttpResponseCache cache = HttpResponseCache.();
-//        if (cache != null)
-//            try {
-//                cache.delete();
-//            } catch (IOException ignored) {
-//            }
 
         if (storage != null)
             return Optional.of(storage);
@@ -464,6 +495,7 @@ public enum CloudStorageUtils {
                     stream,
                     "notasecret", "privatekey", "notasecret");
         } catch (GeneralSecurityException | IOException e) {
+
             e.printStackTrace();
             try {
                 transport.shutdown();

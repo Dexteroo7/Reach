@@ -50,17 +50,9 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="process_multiple" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <receiver
-            android:name=".core.InstallTrackersReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action
-                    android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
 
         <receiver
             android:name=".core.GcmBroadcastReceiver"
@@ -72,9 +64,7 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
-
         <receiver android:name=".pacemaker.HeartbeatReceiver" />
-
         <receiver android:name=".core.UpdateReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
@@ -87,13 +77,10 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
-
         <service
-            android:name=".utils.MusicScanner"
+            android:name=".music.MusicScanner"
             android:exported="false" />
-
-        <service
-            android:name="com.google.android.gms.analytics.CampaignTrackingService" />
+        <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
             android:name=".friends.ReachFriendsProvider"
@@ -101,22 +88,10 @@
             android:exported="false"
             android:multiprocess="true" />
         <provider
-            android:name=".music.songs.ReachSongProvider"
-            android:authorities="reach.project.music.songs.ReachSongProvider"
+            android:name=".music.MySongsProvider"
+            android:authorities="reach.project.music.MySongsProvider"
             android:exported="false"
             android:multiprocess="true" />
-        <provider
-            android:name=".music.albums.ReachAlbumProvider"
-            android:authorities="reach.project.music.albums.ReachAlbumProvider"
-            android:exported="false" />
-        <provider
-            android:name=".music.artists.ReachArtistProvider"
-            android:authorities="reach.project.music.artists.ReachArtistProvider"
-            android:exported="false" />
-        <provider
-            android:name=".music.playLists.ReachPlayListProvider"
-            android:authorities="reach.project.music.playLists.ReachPlayListProvider"
-            android:exported="false" />
 
         <activity
             android:name=".core.DialogActivity"
@@ -143,7 +118,6 @@
         </receiver>
 
         <activity android:name="com.mixpanel.android.surveys.SurveyActivity" />
-
         <activity
             android:name=".devikaChat.ChatActivity"
             android:label="@string/title_activity_chat"
@@ -159,8 +133,8 @@
         <!-- Things on process :remote -->
 
         <provider
-            android:name=".uploadDownload.ReachDatabaseProvider"
-            android:authorities="reach.project.uploadDownload.ReachDatabaseProvider"
+            android:name=".fileManager.ReachDatabaseProvider"
+            android:authorities="reach.project.fileManager.ReachDatabaseProvider"
             android:exported="false"
             android:process=":remote" />
 
@@ -168,6 +142,10 @@
             android:name=".reachProcess.reachService.ProcessManager"
             android:exported="false"
             android:process=":remote" />
+
+        <service
+            android:name=".apps.ApplicationScanner"
+            android:exported="false" />
 
     </application>
 

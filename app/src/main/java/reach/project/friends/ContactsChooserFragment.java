@@ -46,8 +46,8 @@ import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.music.songs.PushContainer;
-import reach.project.music.songs.TransferSong;
+import reach.project.music.PushContainer;
+import reach.project.music.TransferSong;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
@@ -167,6 +167,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 //        selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
 //        selectionArguments = new String[]{"2"};
 //        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+
         if (searchView != null) {
             searchView.setQuery(null, true);
             searchView.clearFocus();
@@ -343,6 +344,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                 Log.i("Ayush", "Sending push data " + pushData);
 
                 new PushSongs().executeOnExecutor(StaticData.temporaryFix, addPush);
+
                 exit.setOnClickListener(v1 -> {
 
                     getActivity().onBackPressed();
@@ -411,22 +413,22 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
             return;
 
         final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-        final SharedPreferences preferences1 = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         final PushContainer pushContainer = new PushContainer(
                 cursor.getLong(0),                             //receiverID
-                SharedPrefUtils.getServerId(preferences1),      //senderID
+                SharedPrefUtils.getServerId(preferences),      //senderID
                 arguments.getString("songs"),             //songData
-                SharedPrefUtils.getUserName(preferences1),      //userName
+                SharedPrefUtils.getUserName(preferences),      //userName
                 cursor.getString(2),                           //receiverName
                 arguments.getShort("song_count"),         //songCount
-                SharedPrefUtils.getImageId(preferences1),       //imageID
+                SharedPrefUtils.getImageId(preferences),       //imageID
                 arguments.getString("song_name"),         //firstSongName
                 getNetworkType(activity) + "");           //networkType
 
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Push song")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences1))
+                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                 .setLabel("Receiver - " + pushContainer.getReceiverName() + ", Songs - " + pushContainer.getSongCount())
                 .setValue(pushContainer.getSongCount())
                 .build());

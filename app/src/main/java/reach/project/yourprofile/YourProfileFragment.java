@@ -1,4 +1,4 @@
-package reach.project.yourprofile;
+package reach.project.yourProfile;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,12 +13,25 @@ import com.github.florent37.materialviewpager.header.HeaderDesign;
 
 import reach.project.R;
 import reach.project.utils.MiscUtils;
+import reach.project.yourProfile.music.YourProfileMusicFragment;
 
 public class YourProfileFragment extends Fragment {
+
+    public static YourProfileFragment newInstance(long userId) {
+
+        final Bundle args = new Bundle();
+        args.putLong("userId", userId);
+
+        final YourProfileFragment fragment = new YourProfileFragment();
+        fragment.setArguments(args);
+
+        return fragment;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         final View rootView = inflater.inflate(R.layout.fragment_yourprofile, container, false);
 
         /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -33,24 +46,24 @@ public class YourProfileFragment extends Fragment {
             public Fragment getItem(int position) {
                 switch (position) {
                     default:
-                        return new YourProfilePageFragment();
+                        return YourProfileMusicFragment.newInstance(getArguments().getLong("userId", 0L));
                 }
             }
 
             @Override
             public int getCount() {
-                return 3;
+                return 1;
             }
 
             @Override
             public CharSequence getPageTitle(int position) {
                 switch (position) {
                     case 0:
-                        return "Apps";
+                        return "Music";
                     case 1:
                         return "Music";
                     case 2:
-                        return "Photos";
+                        return "Music";
                 }
                 return "";
             }

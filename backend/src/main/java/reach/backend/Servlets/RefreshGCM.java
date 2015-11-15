@@ -7,6 +7,8 @@ import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
 import com.google.appengine.api.ThreadManager;
 import com.googlecode.objectify.LoadResult;
+import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.Work;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,13 +22,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import reach.backend.ActiveCountLog.ActiveCountLog;
+import reach.backend.TextUtils;
 import reach.backend.User.ReachUser;
 
 import static reach.backend.OfyService.ofy;
@@ -36,11 +38,18 @@ public class RefreshGCM extends HttpServlet {
     private static final Logger logger = Logger.getLogger(RefreshGCM.class.getName());
     private static final String API_KEY = System.getProperty("gcm.api.key");
 
+    private final Callable<Integer> totalCounter = new Callable<Integer>() {
 
-    private static final Callable<Integer> totalCounter = new Callable<Integer>() {
         @Override
         public Integer call() throws Exception {
-            return ofy().load().type(ReachUser.class).count();
+
+            logger.info("Starting get total call");
+            return ObjectifyService.run(new Work<Integer>() {
+                @Override
+                public Integer run() {
+                    return ofy().load().type(ReachUser.class).count();
+                }
+            });
         }
     };
 
@@ -81,6 +90,7 @@ public class RefreshGCM extends HttpServlet {
             if (counter > 999) {
 
                 if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
+
                     result = result && sendMultiCastMessage(message, users, regIds, sender);
                     if (result)
                         logger.info("refreshed gcm of " + counter);
@@ -94,6 +104,7 @@ public class RefreshGCM extends HttpServlet {
                     Thread.sleep(100L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    logger.info(e.getLocalizedMessage());
                     return;
                 } finally {
                     activeCount += counter; //add to total counter
@@ -125,6 +136,7 @@ public class RefreshGCM extends HttpServlet {
             totalCount = getTotalCount.get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
+            logger.info(e.getLocalizedMessage());
         }
 
         /**
@@ -135,6 +147,7 @@ public class RefreshGCM extends HttpServlet {
         log.setCurrentTotal(totalCount);
 
         ofy().save().entity(log);
+        executor.shutdownNow();
     }
 
     private boolean sendMultiCastMessage(@Nonnull Message message,
@@ -172,10 +185,10 @@ public class RefreshGCM extends HttpServlet {
 
             final Result result = results.get(index);
 
-            if (!isEmpty(result.getMessageId())) {
+            if (!TextUtils.isEmpty(result.getMessageId())) {
 
                 final String canonicalRegistrationId = result.getCanonicalRegistrationId();
-                if (!isEmpty(canonicalRegistrationId)) {
+                if (!TextUtils.isEmpty(canonicalRegistrationId)) {
                     // if the regId changed, we have to update the data-store
                     logger.info("Registration Id changed for " + users.get(index).getId() + " updating to " + canonicalRegistrationId);
 
@@ -219,15 +232,5 @@ public class RefreshGCM extends HttpServlet {
         logger.info("Changing gcmIds of " + toBatch.size() + " users");
         ofy().save().entities(toBatch);
         return true;
-    }
-
-    /**
-     * Returns true if the string is null or 0-length.
-     *
-     * @param str the string to be examined
-     * @return true if str is null or zero length
-     */
-    public static boolean isEmpty(@Nullable CharSequence str) {
-        return str == null || str.length() == 0;
     }
 }
