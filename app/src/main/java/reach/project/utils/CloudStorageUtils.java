@@ -420,6 +420,7 @@ public enum CloudStorageUtils {
     public static Collection<Song> fetchSongs (long userId, WeakReference<Context> reference) {
 
         final String fileName = MiscUtils.getMusicStorageKey(userId);
+        Log.i("Ayush", "Fetching songs for " + fileName);
 
         final InputStream download;
         final GZIPInputStream compressedData;
@@ -465,6 +466,7 @@ public enum CloudStorageUtils {
             //first update the hash
             SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
+            Log.i("Ayush", "Successfully fetched from network " + musicList.song.size());
             return musicList.song;
 
         }).or(Collections.emptyList());

@@ -1,8 +1,6 @@
 package reach.project.explore;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -14,18 +12,17 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 import reach.project.R;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 
 /**
  * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ExploreFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
  * Use the {@link ExploreFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
@@ -34,8 +31,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     private final ExploreBuffer<ExploreContainer> buffer = ExploreBuffer.getInstance(this);
 
-    private OnFragmentInteractionListener mListener;
     private ExploreAdapter exploreAdapter;
+
+    private SuperInterface mListener;
 
     private static WeakReference<ExploreFragment> reference;
 
@@ -49,18 +47,41 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mListener = (SuperInterface) context;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+        mListener.toggleSliding(false);
 
         final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         exploreAdapter = new ExploreAdapter(getActivity(), this);
 
         explorePager.setAdapter(exploreAdapter);
-        explorePager.setOffscreenPageLimit(3);
-        explorePager.setPageMargin(20);
+        explorePager.setOffscreenPageLimit(2);
+        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
+        explorePager.setPageTransformer(true, (view, position) -> {
+            if (position <= 1) {
+                // Modify the default slide transition to shrink the page as well
+                float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
+                float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
+                float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
+                if (position < 0)
+                    view.setTranslationX(horzMargin - vertMargin / 2);
+                else
+                    view.setTranslationX(-horzMargin + vertMargin / 2);
+
+                // Scale the page down (between MIN_SCALE and 1)
+                view.setScaleX(scaleFactor);
+                view.setScaleY(scaleFactor);
+            }
+        });
 
         return rootView;
     }
@@ -70,30 +91,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         super.onDestroyView();
         buffer.close();
         exploreAdapter = null;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        try {
-            mListener = (OnFragmentInteractionListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     @Override
@@ -106,36 +103,38 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private static final Callable<Collection<ExploreContainer>> fetchNextBatch = () -> {
 
         try {
-            Thread.sleep(5000L);
+            Thread.sleep(2000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
             return null;
         }
 
-        final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
-            return context.getContentResolver().query(MySongsProvider.CONTENT_URI,
-                    new String[]{MySongsHelper.COLUMN_DISPLAY_NAME},
+        /*final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
+            return context.getContentResolver().query(ReachSongProvider.CONTENT_URI,
+                    new String[]{ReachSongHelper.COLUMN_DISPLAY_NAME},
+>>>>>>> ayush_master
                     null, null, null);
         }).orNull();
 
         if (cursor == null)
-            return null;
+            return null;*/
 
         final List<ExploreContainer> containers = new ArrayList<>(10);
-        while (cursor.moveToNext())
-            containers.add(new ExploreContainer(cursor.getString(0), ExploreTypes.MUSIC));
+        for (int i=0; i<20; i++)
+            containers.add(new ExploreContainer("Page " + i, "Subtitle", "imageId", "userImageId",
+                    "handle", 3.0f, ExploreTypes.MUSIC, new Random().nextLong()));
+        /*while (cursor.moveToNext())
+            containers.add(new ExploreContainer(cursor.getString(0), ExploreTypes.MUSIC));*/
 
         counter += containers.size();
-        if (counter > 20) {
+        if (counter > 50) {
 
 //            MiscUtils.runOnUiThreadFragment(reference, context -> {
 //                Toast.makeText(context, "Server sending done for today", Toast.LENGTH_SHORT).show();
 //            });
 
             containers.clear();
-            containers.add(new ExploreContainer(
-                    ExploreTypes.DONE_FOR_TODAY.getTitle(),
-                    ExploreTypes.DONE_FOR_TODAY));
+            containers.add(new ExploreContainer(ExploreTypes.DONE_FOR_TODAY, new Random().nextLong()));
         }
 
         return containers;
@@ -160,9 +159,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public ExploreContainer getLoadingResponse() {
-        return new ExploreContainer(
-                ExploreTypes.LOADING.getTitle(),
-                ExploreTypes.LOADING);
+        return new ExploreContainer(ExploreTypes.LOADING, new Random().nextLong());
     }
 
     @Override
@@ -175,10 +172,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         //This is UI thread !
         exploreAdapter.notifyDataSetChanged();
-    }
-
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri uri);
     }
 
 }

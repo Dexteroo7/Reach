@@ -8,17 +8,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.squareup.wire.Message;
 
 import java.io.Closeable;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -28,8 +24,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -40,12 +34,6 @@ import reach.project.utils.MiscUtils;
  * Created by dexter on 05/11/15.
  */
 
-/**
- * TODO
- * 1) delete the file instead of just setting length to 0
- * 2) confirm object cleanup (streams)
- */
-
 public abstract class Cache implements Closeable {
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -53,7 +41,7 @@ public abstract class Cache implements Closeable {
 
     ///////////////
     @Nullable
-    private DataInputStream streamFromCache = null;
+    private RandomAccessFile cacheAccess = null;
     @Nullable
     private Map<Long, Boolean> visibilityMap = null;
     @Nullable
@@ -72,18 +60,14 @@ public abstract class Cache implements Closeable {
                  long userId) {
 
         this.cacheInjectorCallbacks = cacheInjectorCallbacks;
-        this.fileName = Objects.hash(cacheType, userId) + "";
+        Log.i("Ayush", "Hashing " + cacheType.name() + " " + userId);
+        this.fileName = Objects.hash(cacheType.name(), userId) + "";
 
         //custom thread pool
         final ThreadFactory threadFactory = new ThreadFactoryBuilder() //specify the name
                 .setNameFormat("cache_thread " + fileName)
                 .setPriority(Thread.MAX_PRIORITY)
                 .setDaemon(false)
-                .setUncaughtExceptionHandler((thread, ex) -> {
-                    //TODO track and ?restart
-                    ex.getLocalizedMessage();
-//                new FetchNextBatch<>().executeOnExecutor(executorService);
-                })
                 .build();
 
         this.executorService = new ThreadPoolExecutor(
@@ -94,6 +78,7 @@ public abstract class Cache implements Closeable {
                 threadFactory,
                 (r, executor) -> {
                     //TODO track and ignore
+                    Log.i("Ayush", "Rejected execution");
                 });
 
         cacheWeakReference = new WeakReference<>(this);
@@ -123,23 +108,28 @@ public abstract class Cache implements Closeable {
     }
 
     /**
+     * TODO
      * Hook for loading next batch
      */
-    public void loadMoreElements() {
+    public void loadMoreElements(boolean complete) {
 
         //cache invalidator MUST BE OPEN
+
+        Log.i("Ayush", "Calling load more elements");
 
         if (loadingDone.get())
             return; //do not load if done
 
-        CacheLoader.getInstance().executeOnExecutor(executorService,
+        new CacheLoader().executeOnExecutor(executorService,
                 fetchFromNetwork(), //network fetcher object
-                streamFromCache, //local cache stream
+                cacheAccess, //local cache file
                 cacheInvalidator.cacheInvalidated.get() && cacheInvalidator.invalidatorOpen.get(), //flag for cache invalidation
+                complete, //should load fully or partially
                 cacheWeakReference); //cache reference
     }
 
     /**
+     * TODO
      * Hook for cache updater
      */
     public void invalidateCache() {
@@ -152,9 +142,20 @@ public abstract class Cache implements Closeable {
     ///////////////
 
     @Override
-    public void close() throws IOException {
-        if (streamFromCache != null)
-            streamFromCache.close();
+    public void close() {
+
+        MiscUtils.closeQuietly(cacheAccess);
+        cacheAccess = null;
+
+        if (visibilityMap != null)
+            visibilityMap.clear();
+        visibilityMap = null;
+
+        if (cacheWeakReference != null)
+            cacheWeakReference.clear();
+        cacheWeakReference = null;
+
+        executorService.shutdownNow();
     }
 
     /**
@@ -167,17 +168,7 @@ public abstract class Cache implements Closeable {
     //parse from byte array
     protected abstract Message getItem(byte[] source, int offset, int count) throws IOException;
 
-    protected abstract void signalExternalInjection(boolean complete);
-
-    protected abstract void loadingDone();
-
     private static final class CacheLoader extends AsyncTask<Object, Void, Void> implements CacheLoaderController<Message> {
-
-        private static final CacheLoader cacheLoader = new CacheLoader();
-
-        public static CacheLoader getInstance() {
-            return cacheLoader;
-        }
 
         @Nonnull
         private byte[] byteBuffer = new byte[1000]; //reusable readable byte buffer
@@ -186,35 +177,45 @@ public abstract class Cache implements Closeable {
         @Override
         protected Void doInBackground(Object... params) {
 
-            if (params == null || params.length != 4)
+            Log.i("Ayush", "Thread started");
+
+            if (params == null || params.length != 5)
                 throw new IllegalArgumentException("Failed to give reference to required objects");
+
             if (!(params[0] instanceof Callable &&
-                    params[1] instanceof DataInputStream &&
+                    (params[1] == null || params[1] instanceof RandomAccessFile) && //if null ignore check
                     params[2] instanceof Boolean &&
-                    params[3] instanceof WeakReference))
+                    params[3] instanceof Boolean &&
+                    params[4] instanceof WeakReference))
                 throw new IllegalArgumentException("Required objects not of expected type");
 
             @SuppressWarnings("unchecked")
             final Callable<Collection<Message>> networkFetcher = (Callable<Collection<Message>>) params[0];
-            @Nullable DataInputStream dataInputStream = (DataInputStream) params[1];
+            @Nullable RandomAccessFile randomAccessFile = (RandomAccessFile) params[1];
             final boolean cacheInvalidated = (boolean) params[2];
+            final boolean loadFully = (boolean) params[3];
             @SuppressWarnings("unchecked")
-            final WeakReference<Cache> cacheWeakReference = (WeakReference<Cache>) params[3];
+            final WeakReference<Cache> cacheWeakReference = (WeakReference<Cache>) params[4];
+
+            Log.i("Ayush", "Starting new load operation");
 
             /**
              * If cache stream is dead, try to open new one
              */
-            if (isCacheStreamDead(dataInputStream) && !cacheInvalidated) {
+            if (isCacheStreamDead(randomAccessFile) && !cacheInvalidated) {
 
                 final Cache cache;
                 //noinspection unchecked
-                if ((cache = cacheWeakReference.get()) == null)
+                if ((cache = cacheWeakReference.get()) == null) {
+                    MiscUtils.closeQuietly(randomAccessFile);
                     return null; //buffer destroyed
+                }
 
-                final Optional<DataInputStream> streamOptional = getCacheStream(cache.cacheInjectorCallbacks.getCacheDirectory(), cache.fileName);
+                final Optional<RandomAccessFile> streamOptional = getCacheFile(cache.cacheInjectorCallbacks.getCacheDirectory(), cache.fileName);
                 if (streamOptional.isPresent())
-                    dataInputStream = streamOptional.get();
-                cache.streamFromCache = dataInputStream; // set this stream as cache stream
+                    randomAccessFile = streamOptional.get();
+                cache.cacheAccess = randomAccessFile; // set this stream as cache stream
+                Log.i("Ayush", "Loading cache stream");
             }
 
             /**
@@ -228,15 +229,20 @@ public abstract class Cache implements Closeable {
              * Right now cache won't be utilized as we already fetched everything from network.
              * Items will be overwritten to cache file.
              */
-            if (isCacheStreamDead(dataInputStream) || cacheInvalidated) {
+            if (isCacheStreamDead(randomAccessFile) || cacheInvalidated) {
+
+                Log.i("Ayush", "Fetching from network");
 
                 itemsToReturn = fetchFromNetwork(networkFetcher);
+                Log.i("Ayush", "Fetched " + itemsToReturn.size());
                 fullLoad = true;
 
                 final Cache cache;
                 //noinspection unchecked
-                if ((cache = cacheWeakReference.get()) == null)
+                if ((cache = cacheWeakReference.get()) == null) {
+                    MiscUtils.closeQuietly(randomAccessFile);
                     return null; //buffer destroyed
+                }
 
                 //display as is, set true for this turn irrespective of failure
                 cache.loadingDone.set(true);
@@ -244,7 +250,8 @@ public abstract class Cache implements Closeable {
                 cache.cacheInvalidator.cacheInvalidated.set(false); //not invalidated
                 cache.cacheInvalidator.invalidatorOpen.set(false);  //freeze invalidator
                 //store in cache
-                storeInCache(cache.cacheInjectorCallbacks.getCacheDirectory(), cache.fileName, itemsToReturn);
+                final boolean result = storeInCache(cache.cacheInjectorCallbacks.getCacheDirectory(), cache.fileName, itemsToReturn);
+                Log.i("Ayush", "Storing in cache " + result);
                 //no need to check for visibilityMap here
 
             } else {
@@ -254,18 +261,21 @@ public abstract class Cache implements Closeable {
                  * EOF / Exception will signal end of loading.
                  */
 
+                Log.i("Ayush", "Streaming from cache");
                 itemsToReturn = new ArrayList<>(BATCH_SIZE);
                 fullLoad = false;
 
-                for (int index = 0; index < BATCH_SIZE; index++) {
+                for (int index = 0; index < BATCH_SIZE || loadFully; index++) {
 
                     //get instance here to make sure not dead
                     final Cache cache;
                     //noinspection unchecked
-                    if ((cache = cacheWeakReference.get()) == null)
+                    if ((cache = cacheWeakReference.get()) == null) {
+                        MiscUtils.closeQuietly(randomAccessFile);
                         return null; //buffer destroyed
+                    }
 
-                    if (readItemIntoList(dataInputStream)) {
+                    if (readItemFromCache(randomAccessFile)) {
 
                         //byte buffer and current size singleton instance
                         final Message item;
@@ -298,37 +308,27 @@ public abstract class Cache implements Closeable {
 
             final Cache cache;
             //noinspection unchecked
-            if ((cache = cacheWeakReference.get()) == null)
+            if ((cache = cacheWeakReference.get()) == null) {
+                MiscUtils.closeQuietly(randomAccessFile);
                 return null; //buffer destroyed
+            }
 
             synchronized (cache.cacheInjectorCallbacks) {
 
-                if (cache.loadingDone.get()) {
-
-                    if (itemsToReturn != null && !itemsToReturn.isEmpty())
-                        cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad); //make the insertion
-
-                    cache.loadingDone(); //remove last item (loading)
-
-                } else if (itemsToReturn != null && !itemsToReturn.isEmpty()) //insert before loading
-                    cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad); //make the insertion
-
-                /**
-                 * If loading has finished request a full injection of smart lists
-                 * Else request partial injection
-                 */
-                cache.signalExternalInjection(cache.loadingDone.get());
+                cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad, cache.loadingDone.get()); //make the insertion
             }
 
             return null;
         }
 
         @Override
-        public Optional<DataInputStream> getCacheStream(File cacheDirectory, String fileName) {
+        public Optional<RandomAccessFile> getCacheFile(File cacheDirectory, String fileName) {
 
             //sanity check
             if (cacheDirectory == null || !cacheDirectory.exists() || !cacheDirectory.isDirectory())
                 return Optional.absent();
+
+            Log.i("Ayush", "Opening cache stream " + cacheDirectory + " " + fileName);
 
             //get file
             final RandomAccessFile randomAccessFile;
@@ -343,28 +343,16 @@ public abstract class Cache implements Closeable {
             try {
                 if (randomAccessFile.length() == 0)
                     return Optional.absent();
+                else
+                    Log.i("Ayush", "Found cache file " + randomAccessFile.length() + " bytes");
             } catch (IOException e) {
                 e.printStackTrace();
-                return Optional.absent();
-            }
-
-            //get unCompressor stream
-            final GZIPInputStream unCompressor;
-            try {
-                unCompressor = new GZIPInputStream(new FileInputStream(randomAccessFile.getFD()));
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                try {
-                    randomAccessFile.setLength(0); //reset whole file
-                    randomAccessFile.close();
-                } catch (IOException ignored) {
-                }
+                MiscUtils.closeQuietly(randomAccessFile);
                 return Optional.absent();
             }
 
             //return cache stream
-            return Optional.of(new DataInputStream(unCompressor));
+            return Optional.of(randomAccessFile);
         }
 
         @Override
@@ -374,33 +362,24 @@ public abstract class Cache implements Closeable {
             if (cacheDirectory == null || !cacheDirectory.exists() || !cacheDirectory.isDirectory() || items == null || items.isEmpty())
                 return false;
 
+            Log.i("Ayush", "Storing into " + cacheDirectory + " " + fileName + " " + items.size());
+
             final RandomAccessFile randomAccessFile;
             try {
                 randomAccessFile = new RandomAccessFile(cacheDirectory + "/" + fileName, "rw");
-                randomAccessFile.setLength(0); //reset the size
             } catch (IOException e) {
                 e.printStackTrace();
                 return false; //nothing to do here, bad shit happened
             }
 
-            //get the out put stream
-            final GZIPOutputStream compressor;
             try {
-                compressor = new GZIPOutputStream(new FileOutputStream(randomAccessFile.getFD()));
+                randomAccessFile.setLength(0); //reset the size
             } catch (IOException e) {
-
                 e.printStackTrace();
-                try {
-                    randomAccessFile.setLength(0); //reset whole file
-                    randomAccessFile.close();
-                } catch (IOException ignored) {
-                }
-                return false;
+                MiscUtils.closeQuietly(randomAccessFile);
             }
 
-            final DataOutputStream dataOutputStream = new DataOutputStream(compressor);
-            //default
-            int currentSize;
+            //write to file
             for (Message item : items) {
 
                 currentSize = item.getSerializedSize();
@@ -409,6 +388,7 @@ public abstract class Cache implements Closeable {
                     byteBuffer = new byte[currentSize + 1];
                     Log.i("Ayush", "Allocating new byte array " + currentSize + 1);
                 }
+
                 //get bytes
                 item.writeTo(byteBuffer);
 
@@ -417,8 +397,10 @@ public abstract class Cache implements Closeable {
                  * first write the size, then write the object
                  */
                 try {
-                    dataOutputStream.writeInt(currentSize);
-                    dataOutputStream.write(byteBuffer, 0, currentSize);
+
+                    Log.i("Ayush", "Writing size " + currentSize);
+                    randomAccessFile.writeInt(currentSize);
+                    randomAccessFile.write(byteBuffer, 0, currentSize);
                 } catch (IOException e) {
 
                     e.printStackTrace();
@@ -431,34 +413,25 @@ public abstract class Cache implements Closeable {
                 }
             }
 
-            try {
-                randomAccessFile.close();
-            } catch (IOException ignored) {
-            }
+            MiscUtils.closeQuietly(randomAccessFile);
             return true;
         }
 
         @Override
-        public boolean isCacheStreamDead(InputStream stream) {
+        public boolean isCacheStreamDead(RandomAccessFile randomAccessFile) {
 
             //basic check
-            if (stream == null)
+            if (randomAccessFile == null)
                 return true;
 
             //strict check
             try {
-                //noinspection ResultOfMethodCallIgnored just checking
-                stream.available();
-                return false; //all checks passed
+                return randomAccessFile.length() == 0; //all checks passed
             } catch (IOException e) {
 
                 e.printStackTrace();
                 Log.e("Ayush", e.getLocalizedMessage());
-
-                try {
-                    stream.close(); //just in case
-                } catch (IOException ignored) {
-                }
+                MiscUtils.closeQuietly(randomAccessFile);
                 return true; //stream seems to be dead
             }
         }
@@ -469,7 +442,10 @@ public abstract class Cache implements Closeable {
             return MiscUtils.autoRetry(() -> {
 
                 try {
-                    return networkFetcher.call();
+
+                    final Collection<Message> messages = networkFetcher.call();
+                    Log.i("Ayush", "Passing " + messages.size() + " elements");
+                    return messages;
                 } catch (Exception e) {
 
                     if (e instanceof IOException)
@@ -477,16 +453,17 @@ public abstract class Cache implements Closeable {
                     else
                         return null;
                 }
-            }, Optional.absent()).orNull();
+            }, Optional.absent()).or(Collections.emptyList());
         }
 
         @Override
-        public boolean readItemIntoList(@Nonnull DataInputStream dataInputStream) {
+        public boolean readItemFromCache(@Nonnull RandomAccessFile randomAccessFile) {
 
             try {
-                currentSize = dataInputStream.readInt();
+                currentSize = randomAccessFile.readInt();
             } catch (IOException e) {
 
+                MiscUtils.closeQuietly(randomAccessFile);
                 e.printStackTrace();
                 return false; //exit loader, do not retry
             }
@@ -499,8 +476,10 @@ public abstract class Cache implements Closeable {
 
             //read the object
             try {
-                dataInputStream.readFully(byteBuffer, 0, currentSize);
+                randomAccessFile.readFully(byteBuffer, 0, currentSize);
             } catch (IOException e) {
+
+                MiscUtils.closeQuietly(randomAccessFile);
                 e.printStackTrace();
                 return false; //exit loader, do not retry
             }

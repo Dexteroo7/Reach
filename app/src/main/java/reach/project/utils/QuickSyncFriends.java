@@ -130,7 +130,6 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         //removed all present phoneNumbers, now sync phoneBook
         numbers.remove(myNumber);
         if (!numbers.isEmpty()) {
-
             Log.i("Ayush", "Prepared callData phoneBookSync" + numbers.size());
             final StringList stringList = new StringList();
             stringList.setStringList(ImmutableList.copyOf(numbers));

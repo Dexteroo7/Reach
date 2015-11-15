@@ -6,7 +6,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 /**
  * Created by dexter on 16/10/15.
@@ -25,25 +24,28 @@ public class ExploreAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup collection, int position) {
 
         final ExploreContainer container = explore.getContainerForIndex(position);
-        final LayoutInflater inflater = LayoutInflater.from(context);
+        final View layout = LayoutInflater.from(context).inflate(container.getTypes().getLayoutResId(), collection, false);
 
-        final View layout = inflater.inflate(container.getTypes().getLayoutResId(), collection, false);
-
-        if (container.getTypes().equals(ExploreTypes.LOADING) || container.getTypes().equals(ExploreTypes.DONE_FOR_TODAY))
-            layout.setTag(POSITION_NONE);
-        else
-            layout.setTag(POSITION_UNCHANGED);
-
-        final TextView sampleText = (TextView) layout.findViewById(android.R.id.text1);
-
-//        container.getToShow(); //data to show
-//        container.getTypes().getTitle(); //title string
-//        container.getTypes().getLayoutResId(); //specific layout resource id !
-
-        sampleText.setText(container.getToShow()); //stuff to display
+        switch (container.getTypes()) {
+            case MUSIC:
+                layout.setTag(POSITION_UNCHANGED);
+                break;
+            case APP:
+                container.getRating();
+                layout.setTag(POSITION_UNCHANGED);
+                break;
+            case PHOTO:
+                layout.setTag(POSITION_UNCHANGED);
+                break;
+            case LOADING:
+                layout.setTag(POSITION_NONE);
+                break;
+            case DONE_FOR_TODAY:
+                layout.setTag(POSITION_NONE);
+                break;
+        }
 
         collection.addView(layout);
-
         return layout;
     }
 
@@ -82,13 +84,6 @@ public class ExploreAdapter extends PagerAdapter {
             Log.i("Ayush", "Fail of first order");
 
         return POSITION_UNCHANGED; //default, should not happen
-    }
-
-    @Override
-    public CharSequence getPageTitle(int position) {
-
-        final ExploreContainer container = explore.getContainerForIndex(position);
-        return container.getTypes().getTitle();
     }
 
     public interface Explore {

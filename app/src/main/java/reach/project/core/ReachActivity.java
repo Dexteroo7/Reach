@@ -103,7 +103,7 @@ import reach.project.coreViews.UpdateFragment;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
-import reach.project.explore.ExploreFragment.OnFragmentInteractionListener;
+import reach.project.explore.ExploreFragment;
 import reach.project.fileManager.ReachDatabase;
 import reach.project.fileManager.ReachDatabaseHelper;
 import reach.project.fileManager.ReachDatabaseProvider;
@@ -119,7 +119,6 @@ import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
 import reach.project.music.ReachMusicAdapter;
 import reach.project.music.TransferSong;
-import reach.project.music.UserMusicLibrary;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
@@ -138,14 +137,14 @@ import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
+import reach.project.yourProfile.YourProfileFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
         FragmentManager.OnBackStackChangedListener,
         LoaderManager.LoaderCallbacks<Cursor>,
         SearchView.OnQueryTextListener,
-        SearchView.OnCloseListener,
-        OnFragmentInteractionListener {
+        SearchView.OnCloseListener {
 
     public static long serverId = 0;
     private static WeakReference<ReachActivity> reference = null;
@@ -167,23 +166,20 @@ public class ReachActivity extends AppCompatActivity implements
     private ReachMusicAdapter musicAdapter = null;
 
     private String selectionDownloader, selectionMyLibrary, mCurFilter;
-    private String[] selectionArgumentsDownloader;
-    private String[] selectionArgumentsMyLibrary;
+    private String[] selectionArgumentsDownloader, selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     //private int topPadding;
     //private FrameLayout containerFrame;
-    private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private static MusicData currentPlaying;
 
     ////////////////////////////////////////
-    private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
-    private TextView playerPos;
-    private SeekBar progressBarMaximized;
-    private SeekBar progressBarMinimized;
+    private TextView songNameMinimized, songNameMaximized, artistName, songDuration, playerPos, userNameNav, emptyTV1, emptyTV2;
+    private SeekBar progressBarMaximized, progressBarMinimized;
     private ListView queueListView;
-    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton, userImageNav; //fullscreen
     private CustomViewPager viewPager;
+    private View headerView;
 
     private MergeAdapter combinedAdapter = null;
     private Firebase firebaseReference = null;
@@ -300,7 +296,7 @@ public class ReachActivity extends AppCompatActivity implements
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
+                                .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
@@ -659,7 +655,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library " + id).commit();
+                    .addToBackStack(null).replace(R.id.container, YourProfileFragment.newInstance(id), "user_library " + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
@@ -715,7 +711,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void setUpNavigationViews() {
-
         //TODO
 //        final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
 //        if (SharedPrefUtils.getMobileData(preferences))
@@ -893,6 +888,22 @@ public class ReachActivity extends AppCompatActivity implements
 
         Pacemaker.scheduleLinear(this, 5);
 
+        /*ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT < 21) {
+            List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(100);
+            for (ActivityManager.RunningTaskInfo info : tasks)
+                Log.d("Ashish", info.topActivity.getPackageName() + "");
+        }
+        else {
+            List<ActivityManager.RunningAppProcessInfo> processes = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo info : processes)
+                Log.d("Ashish", info.processName + "");
+        }
+        PackageManager packageManager = getPackageManager();
+        List<PackageInfo> list = packageManager.getInstalledPackages(PackageManager.GET_META_DATA);
+        for (PackageInfo info : list)
+            Log.d("Ashish", info.packageName + " - " + MiscUtils.dateFormatter(info.firstInstallTime));*/
+
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         fragmentManager = getSupportFragmentManager();
         reference = new WeakReference<>(this);
@@ -964,6 +975,7 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        headerView = mNavigationView.inflateHeaderView(R.layout.nav_drawer_header);
         mNavigationView.setItemIconTintList(null);
         liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
@@ -974,7 +986,10 @@ public class ReachActivity extends AppCompatActivity implements
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
 
-//        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
+        userImageNav = (ImageView) headerView.findViewById(R.id.userImageNav);
+        userNameNav = (TextView) headerView.findViewById(R.id.userNameNav);
+        userImageNav.setOnClickListener(navHeaderClickListener);
+
         findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
@@ -1028,8 +1043,8 @@ public class ReachActivity extends AppCompatActivity implements
         final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
-//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-//        Crittercism.setUsername(userName + " " + phoneNumber);
+        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        //Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize MixPanel
         MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
@@ -1487,11 +1502,6 @@ public class ReachActivity extends AppCompatActivity implements
                 activity.liveHelpItem.setIcon(R.drawable.ic_live_help);
             }
         });
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
     }
 
     private enum LocalUtils {

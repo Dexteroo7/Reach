@@ -2,26 +2,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/splash_bg"
     android:theme="@style/AppTheme">
-    <ImageView
-        android:id="@+id/reach_logo"
-        android:background="@drawable/circular_background"
-        android:src="@drawable/icon_plain"
-        android:padding="15dp"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_gravity="center"/>
     <ImageView
         android:id="@+id/numberVerificationPoster"
         android:src="@drawable/playstore_2"
         android:scaleType="centerCrop"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/>
+        android:layout_height="match_parent" />
     <LinearLayout
         android:id="@+id/otherStuff"
-        android:visibility="gone"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

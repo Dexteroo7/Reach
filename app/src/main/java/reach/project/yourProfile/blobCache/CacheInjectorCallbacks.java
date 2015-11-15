@@ -14,7 +14,7 @@ public interface CacheInjectorCallbacks<T extends Message> {
     File getCacheDirectory();
 
     //get ItemId for item
-    Long getItemId(T item);
+    long getItemId(T item);
 
     /**
      * hook for returning cache loading result, THIS IS NOT UI THREAD
@@ -22,5 +22,5 @@ public interface CacheInjectorCallbacks<T extends Message> {
      * @param elements  the elements to inject
      * @param overWrite mark true if overwrite is needed
      */
-    void injectElements(Collection<T> elements, boolean overWrite);
+    void injectElements(Collection<T> elements, boolean overWrite, boolean removeLoading);
 }

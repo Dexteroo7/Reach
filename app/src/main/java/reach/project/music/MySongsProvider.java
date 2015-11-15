@@ -21,7 +21,7 @@ public class MySongsProvider extends ContentProvider {
     public static final int SONG = 16;
     private static final int SONG_ID = 26; //+10
     private static final String BASE_PATH = "database/contentProvider/MySongsProvider";
-    public static final String AUTHORITY = "reach.project.music.songs.MySongsProvider";
+    public static final String AUTHORITY = "reach.project.music.MySongsProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
     static {

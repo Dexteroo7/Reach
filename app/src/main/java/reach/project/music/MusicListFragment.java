@@ -22,18 +22,14 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.google.common.base.Optional;
-
 import java.lang.ref.WeakReference;
 import java.util.Map;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
-import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -472,40 +468,40 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
         }
     }
 
-    private static final class GetMusic implements Runnable {
-
-        private final long hostId;
-
-        private GetMusic(long hostId) {
-            this.hostId = hostId;
-        }
-
-        @Override
-        public void run() {
-
-            //fetch Music
-            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Context context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
-
-            //do we check for visibility ?
-            final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit
-            if (exit) {
-                Log.i("Ayush", "do not check for visibility");
-                return;
-            }
-
-            Log.i("Ayush", "Fetching visibility data");
-            //fetch visibility data
-            final MusicData visibility = MiscUtils.autoRetry(() -> StaticData.musicVisibility.get(hostId).execute(), Optional.absent()).orNull();
-            final JsonMap visibilityMap;
-            if (visibility == null || (visibilityMap = visibility.getVisibility()) == null || visibilityMap.isEmpty()) {
-                Log.i("Ayush", "no visibility data found");
-                return; //no visibility data found
-            }
-
-            //handle visibility data
-            MiscUtils.useContextFromFragment(reference, (Context context) -> handleVisibility(context, visibilityMap, hostId));
-        }
-    }
+//    private static final class GetMusic implements Runnable {
+//
+//        private final long hostId;
+//
+//        private GetMusic(long hostId) {
+//            this.hostId = hostId;
+//        }
+//
+//        @Override
+//        public void run() {
+//
+//            //fetch Music
+//            final Boolean aBoolean = MiscUtils.useContextFromFragment(reference, (Context context) -> CloudStorageUtils.getMusicData(hostId, context)).orNull();
+//
+//            //do we check for visibility ?
+//            final boolean exit = aBoolean == null || !aBoolean; //reverse because false means exit
+//            if (exit) {
+//                Log.i("Ayush", "do not check for visibility");
+//                return;
+//            }
+//
+//            Log.i("Ayush", "Fetching visibility data");
+//            //fetch visibility data
+//            final MusicData visibility = MiscUtils.autoRetry(() -> StaticData.musicVisibility.get(hostId).execute(), Optional.absent()).orNull();
+//            final JsonMap visibilityMap;
+//            if (visibility == null || (visibilityMap = visibility.getVisibility()) == null || visibilityMap.isEmpty()) {
+//                Log.i("Ayush", "no visibility data found");
+//                return; //no visibility data found
+//            }
+//
+//            //handle visibility data
+//            MiscUtils.useContextFromFragment(reference, (Context context) -> handleVisibility(context, visibilityMap, hostId));
+//        }
+//    }
 
     private static synchronized void handleVisibility(Context context,
                                                       JsonMap visibilityMap,

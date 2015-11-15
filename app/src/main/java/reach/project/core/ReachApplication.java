@@ -26,8 +26,6 @@ import javax.net.ssl.X509TrustManager;
 
 import reach.project.R;
 
-//import android.support.multidex.MultiDex;
-
 /**
  * Created by ashish on 23/3/15.
  */
@@ -151,11 +149,4 @@ public class ReachApplication extends Application {
 
         Fresco.initialize(this, config);
     }
-
-//    @Override
-//    protected void attachBaseContext(Context base) {
-//        super.attachBaseContext(base);
-//        ////meant for release
-//        MultiDex.install(this);
-//    }
 }

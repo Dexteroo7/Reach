@@ -3,9 +3,8 @@ package reach.project.yourProfile.blobCache;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
@@ -21,9 +20,9 @@ public interface CacheLoaderController<T extends Message> {
      *
      * @param cacheDirectory the directory to where create the cache file in
      * @param fileName       the name of the cache file if present
-     * @return cache stream
+     * @return cache file
      */
-    Optional<DataInputStream> getCacheStream(File cacheDirectory, String fileName);
+    Optional<RandomAccessFile> getCacheFile(File cacheDirectory, String fileName);
 
     /**
      * Overwrite new entities on-to cache
@@ -39,10 +38,10 @@ public interface CacheLoaderController<T extends Message> {
      * Check if data source from cache is alive.
      * Once active cache stream is established, cache will not be updated
      *
-     * @param stream the stream to check
+     * @param randomAccessFile the file to check
      * @return true if dead
      */
-    boolean isCacheStreamDead(InputStream stream);
+    boolean isCacheStreamDead(RandomAccessFile randomAccessFile);
 
     /**
      * Fetch complete batch of entities from server
@@ -52,8 +51,8 @@ public interface CacheLoaderController<T extends Message> {
     Collection<T> fetchFromNetwork(Callable<Collection<T>> networkFetcher);
 
     /**
-     * @param inputStream to read item from
-     * @return absent signals stream death, end loading
+     * @param randomAccessFile to read item from
+     * @return false signals stream death, end loading
      */
-    boolean readItemIntoList(@Nonnull DataInputStream inputStream);
+    boolean readItemFromCache(@Nonnull RandomAccessFile randomAccessFile);
 }
