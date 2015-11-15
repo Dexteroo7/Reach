@@ -48,7 +48,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             reference = new WeakReference<>(fragment = new YourProfileMusicFragment());
             fragment.setArguments(args = new Bundle());
         } else {
-            Log.i("Ayush", "Reusing UserMusicLibrary object :)");
+            Log.i("Ayush", "Reusing YourProfileMusicFragment object :)");
             args = fragment.getArguments();
         }
         args.putLong("userId", userId);

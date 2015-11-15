@@ -1,12 +1,23 @@
 package reach.project.explore;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -16,8 +27,9 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 import reach.project.R;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
+import reach.project.core.ReachApplication;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 
@@ -29,20 +41,21 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.Exploration<ExploreContainer> {
 
-    private final ExploreBuffer<ExploreContainer> buffer = ExploreBuffer.getInstance(this);
-
-    private ExploreAdapter exploreAdapter;
-
-    private SuperInterface mListener;
-
     private static WeakReference<ExploreFragment> reference;
+    private static long userId = 0;
 
-    public static ExploreFragment newInstance() {
+    public static ExploreFragment newInstance(long userId) {
 
+        final Bundle args;
         ExploreFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null) {
             reference = new WeakReference<>(fragment = new ExploreFragment());
-
+            fragment.setArguments(args = new Bundle());
+        } else {
+            Log.i("Ayush", "Reusing ExploreFragment object :)");
+            args = fragment.getArguments();
+        }
+        args.putLong("userId", userId);
         return fragment;
     }
 
@@ -52,10 +65,15 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         mListener = (SuperInterface) context;
     }
 
+    private final ExploreBuffer<ExploreContainer> buffer = ExploreBuffer.getInstance(this);
+    private ExploreAdapter exploreAdapter;
+    private SuperInterface mListener;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        userId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         mListener.toggleSliding(false);
@@ -99,44 +117,74 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return fetchNextBatch;
     }
 
-    private static int counter = 0;
     private static final Callable<Collection<ExploreContainer>> fetchNextBatch = () -> {
 
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return null;
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("userId", userId);
+        final JSONArray jsonArray = new JSONArray();
+
+        //retrieve list of online friends
+        MiscUtils.useContextFromFragment(reference, context -> {
+
+            final Cursor cursor = context.getContentResolver().query(
+                    ReachFriendsProvider.CONTENT_URI,
+                    new String[]{
+                            ReachFriendsHelper.COLUMN_ID
+                    },
+                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                    new String[]{
+                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""
+                    }, null);
+
+            if (cursor == null)
+                return;
+
+            while (cursor.moveToNext()) {
+
+                final JSONObject onlineFriendId = new JSONObject();
+                final String onlineId = cursor.getString(0);
+                Log.i("Ayush", "Adding online friend id " + onlineId);
+                try {
+                    onlineFriendId.put("friendId", onlineId);
+                } catch (JSONException ignored) {
+                }
+                jsonArray.put(onlineFriendId);
+            }
+        });
+
+        jsonObject.put("friends", jsonArray);
+
+        final RequestBody body = RequestBody
+                .create(MediaType.parse("application/json; charset=utf-8"), jsonObject.toString());
+        final Request request = new Request.Builder()
+                .url("http://52.74.175.56:8080/explore/getObjects")
+                .post(body)
+                .build();
+        final Response response = ReachApplication.okHttpClient.newCall(request).execute();
+        final JSONArray receivedData = new JSONArray(response.body().string());
+        final List<ExploreContainer> containers = new ArrayList<>();
+
+        JSONObject exploreJson;
+        for (int i = 0; i < receivedData.length(); i++) {
+
+            exploreJson = receivedData.getJSONObject(i);
+//            final int contentType = exploreJson.getInt("contentType");
+//            exploreJson.getLong("userId")
+
+            Log.i("Ayush", "Got Explore response " + exploreJson.getString("displayName"));
+
+            containers.add(new ExploreContainer(
+                    exploreJson.getString("displayName"),
+                    exploreJson.getString("artistName"),
+                    exploreJson.getString("largeImageUrl"),
+                    "userImageId",
+                    "handle",
+                    3.0f,
+                    ExploreTypes.MUSIC,
+                    exploreJson.getLong("contentId")));
         }
 
-        /*final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
-            return context.getContentResolver().query(ReachSongProvider.CONTENT_URI,
-                    new String[]{ReachSongHelper.COLUMN_DISPLAY_NAME},
->>>>>>> ayush_master
-                    null, null, null);
-        }).orNull();
-
-        if (cursor == null)
-            return null;*/
-
-        final List<ExploreContainer> containers = new ArrayList<>(10);
-        for (int i=0; i<20; i++)
-            containers.add(new ExploreContainer("Page " + i, "Subtitle", "imageId", "userImageId",
-                    "handle", 3.0f, ExploreTypes.MUSIC, new Random().nextLong()));
-        /*while (cursor.moveToNext())
-            containers.add(new ExploreContainer(cursor.getString(0), ExploreTypes.MUSIC));*/
-
-        counter += containers.size();
-        if (counter > 50) {
-
-//            MiscUtils.runOnUiThreadFragment(reference, context -> {
-//                Toast.makeText(context, "Server sending done for today", Toast.LENGTH_SHORT).show();
-//            });
-
-            containers.clear();
-            containers.add(new ExploreContainer(ExploreTypes.DONE_FOR_TODAY, new Random().nextLong()));
-        }
-
+        Log.i("Ayush", "Explore has " + containers.size() + " stories");
         return containers;
     };
 

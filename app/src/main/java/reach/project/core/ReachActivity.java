@@ -296,7 +296,7 @@ public class ReachActivity extends AppCompatActivity implements
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
+                                .replace(R.id.container, ExploreFragment.newInstance(serverId), "explore_fragment").commit();
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
