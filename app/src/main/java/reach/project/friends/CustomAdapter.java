@@ -28,6 +28,20 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Nullable
     private Cursor cursor = null;
     private int oldCount = 0;
+    private ItemClickListener mListener = null;
+
+    @Override
+    public void setHasStableIds(boolean hasStableIds) {
+        super.setHasStableIds(true);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        if (cursor == null)
+            return super.getItemId(position);
+        cursor.moveToPosition(position);
+        return cursor.getLong(0);
+    }
 
     public void setCursor(@Nullable Cursor cursor) {
 
@@ -40,6 +54,19 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         else
             notifyItemRangeRemoved(0, oldCount);
 
+    }
+
+    @Nullable
+    public Cursor getCursor() {
+        return this.cursor;
+    }
+
+    public void setOnItemClickListener(ItemClickListener listener) {
+        this.mListener = listener;
+    }
+
+    public interface ItemClickListener {
+        void onItemClick(int pos);
     }
 
     @Override
@@ -187,7 +214,7 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         return oldCount = cursor != null ? cursor.getCount() : 0;
     }
 
-    private final class ViewHolder extends RecyclerView.ViewHolder {
+    private final class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         private final TextView userNameList, telephoneNumberList, onlineText, newSongs;
         private final ImageView onlineIcon, lockIcon, profileGradient;
@@ -210,6 +237,13 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             this.profilePhotoList = (SimpleDraweeView) view.findViewById(R.id.profilePhotoList);
             this.lockIcon = (ImageView) view.findViewById(R.id.lockIcon);
             this.profileGradient = (ImageView) view.findViewById(R.id.profileGradient);
+            view.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (mListener!=null)
+                mListener.onItemClick(position);
         }
     }
 }

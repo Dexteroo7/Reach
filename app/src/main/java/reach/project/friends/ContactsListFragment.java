@@ -23,6 +23,8 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -30,7 +32,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
@@ -62,7 +63,8 @@ public class ContactsListFragment extends Fragment implements
 
     private CustomAdapter customAdapter;
 
-    private GridView gridView;
+    //private GridView gridView;
+    private RecyclerView recyclerView;
 
     public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false); ////have we already synchronized ?
     private static final AtomicBoolean
@@ -185,10 +187,57 @@ public class ContactsListFragment extends Fragment implements
         swipeRefreshLayout.setBackgroundResource(R.color.white);
         swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
 
-        gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
-        gridView.setOnItemClickListener(LocalUtils.clickListener);
+        //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
+        //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
-        gridView.setAdapter(customAdapter);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
+        GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+        manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if (position == 0)
+                    return 2;
+                else
+                    return 1;
+            }
+        });
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(customAdapter);
+        customAdapter.setOnItemClickListener(pos -> {
+            final Cursor cursor = customAdapter.getCursor();
+            if (cursor == null)
+                return;
+            cursor.moveToPosition(pos);
+            final long id = cursor.getLong(0);
+            final short status = cursor.getShort(5);
+            final short networkType = cursor.getShort(4);
+
+            if (status < 2) {
+
+                if (networkType == 5)
+                    Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
+                MiscUtils.useFragment(reference, fragment -> {
+                    fragment.mListener.onOpenLibrary(id);
+                });
+
+            } else if (status >= 2) {
+
+                final long clientId = cursor.getLong(0);
+
+                final AlertDialog alertDialog = new AlertDialog.Builder(ContactsListFragment.this.getActivity())
+                        .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
+                        //.setPositiveButton("Yes", positiveButton)
+                        .setNegativeButton("No", (dialog, which) -> {
+                            dialog.dismiss();
+                        }).create();
+
+                /*alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
+                        //set tag to use when positive button click
+                        new Object[]{clientId, status, new WeakReference<>(adapterView)}
+                ));*/
+                alertDialog.show();
+            }
+        });
 
         selection = null;
         selectionArguments = null;
@@ -238,9 +287,9 @@ public class ContactsListFragment extends Fragment implements
         customAdapter.setCursor(data);
         final int count = data.getCount();
 
-        if (count == 0)
-            MiscUtils.setEmptyTextforGridView(gridView, "No contacts found");
-        else {
+//        if (count == 0)
+//            MiscUtils.setEmptyTextforGridView(gridView, "No contacts found");
+        if (count!=0){
 
             if (!SharedPrefUtils.getFirstIntroSeen(sharedPreferences)) {
 
