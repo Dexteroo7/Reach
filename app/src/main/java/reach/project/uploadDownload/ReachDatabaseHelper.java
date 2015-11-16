@@ -86,7 +86,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_VISIBILITY + " short" + "," +
             COLUMN_STATUS + " short" + " )";
 
-        public static final String[] projection =
+    public static final String[] projection =
             {
                     COLUMN_ID, //0
 
@@ -219,7 +219,11 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
             ReachDatabaseHelper.COLUMN_RECEIVER_ID, //12
             ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, //13
-            ReachDatabaseHelper.COLUMN_SONG_ID //14
+            ReachDatabaseHelper.COLUMN_SONG_ID, //14
+
+            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //15
+            ReachDatabaseHelper.COLUMN_ALBUM, //16
+            ReachDatabaseHelper.COLUMN_GENRE  //17
     };
 
     public static MusicData getMusicData(final Cursor cursor) {
@@ -238,7 +242,12 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                 cursor.getString(6), //artistName
                 liked, //liked
                 cursor.getLong(8), //duration
-                (byte) 0); //type
+                (byte) 0, //type
+
+                cursor.getString(15), //actualName
+                cursor.getString(11), //senderName
+                cursor.getString(16), //album
+                cursor.getString(17)); //genre
     }
 
     public ReachDatabaseHelper(Context context) {

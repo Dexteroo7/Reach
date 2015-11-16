@@ -180,6 +180,7 @@ public class ProcessManager extends Service implements
     private Future<?> musicFuture, networkFuture;
     private PowerManager.WakeLock wakeLock = null;
     private static long serverId;
+    private static String userName;
 
     private void close() {
 
@@ -576,6 +577,11 @@ public class ProcessManager extends Service implements
         complexParams.put(SongMetadata.DURATION, musicData.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, musicData.getLength() + "");
 
+        complexParams.put(SongMetadata.ACTUAL_NAME, musicData.getActualName() + "");
+        complexParams.put(SongMetadata.USER_NAME, musicData.getUserName() + "");
+        complexParams.put(SongMetadata.ALBUM, musicData.getAlbumName() + "");
+        complexParams.put(SongMetadata.GENRE, musicData.getGenre() + "");
+
         try {
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
         } catch (JSONException ignored) {
@@ -689,6 +695,7 @@ public class ProcessManager extends Service implements
     public void onCreate() {
         super.onCreate();
         serverId = SharedPrefUtils.getServerId(getSharedPreferences());
+        userName = SharedPrefUtils.getUserName(getSharedPreferences());
         (wakeLock = ((PowerManager) getSystemService(POWER_SERVICE))
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag")).acquire();
         // Make sure the media player will acquire a wake-lock while playing. If we don't do
@@ -908,8 +915,13 @@ public class ProcessManager extends Service implements
                     cursor.getString(5), //displayName
                     cursor.getString(6), //artistName
                     liked,
-                    cursor.getLong(9),
-                    (byte) 0);
+                    cursor.getLong(9), //duration
+                    (byte) 0,
+
+                    cursor.getString(10), //actualName
+                    cursor.getString(11), //senderName
+                    cursor.getString(12), //album
+                    cursor.getString(13));//genre
 
         } else {
 
@@ -923,7 +935,12 @@ public class ProcessManager extends Service implements
                     cursor.getString(0), //artistName
                     false, //liked
                     cursor.getLong(6), //duration
-                    (byte) 1); //type
+                    (byte) 1, //type
+
+                    cursor.getString(7), //actualName
+                    userName, //userName
+                    cursor.getString(8), //album
+                    cursor.getString(9)); //genre
         }
         cursor.close();
         return Optional.of(musicData);

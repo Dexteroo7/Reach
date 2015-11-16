@@ -9,5 +9,10 @@ public enum SongMetadata {
     ARTIST,
     TITLE,
     DURATION,
-    SIZE
+    SIZE,
+
+    ACTUAL_NAME,
+    USER_NAME,
+    ALBUM,
+    GENRE
 }

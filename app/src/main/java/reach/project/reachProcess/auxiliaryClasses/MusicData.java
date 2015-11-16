@@ -17,7 +17,32 @@ public class MusicData implements Parcelable {
     private final long senderId;
     private final byte type;
 
-    public MusicData(long id, long length, long senderId, long processed, String path, String displayName, String artistName, boolean isLiked, long duration, byte type) {
+    private final String actualName;
+    private final String userName;
+
+    public String getActualName() {
+        return actualName;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    private final String albumName;
+    private final String genre;
+
+    public MusicData(long id, long length, long senderId, long processed, String path, String displayName,
+                     String artistName, boolean isLiked, long duration, byte type,
+                     String actualName, String userName, String albumName, String genre) {
+
         this.displayName = displayName;
         this.path = path;
         this.id = id;
@@ -28,6 +53,11 @@ public class MusicData implements Parcelable {
         this.type = type;
         this.isLiked = isLiked;
         this.duration = duration; //for MyLibrary case
+
+        this.actualName = actualName;
+        this.userName = userName;
+        this.albumName = albumName;
+        this.genre = genre;
     }
 
     private long duration; //found out by the musicHandler
@@ -159,6 +189,11 @@ public class MusicData implements Parcelable {
         currentPosition = in.readInt();
         primaryProgress = in.readInt();
         secondaryProgress = in.readInt();
+
+        actualName = in.readString();
+        userName = in.readString();
+        albumName = in.readString();
+        genre = in.readString();
     }
 
     @Override
@@ -181,6 +216,11 @@ public class MusicData implements Parcelable {
         dest.writeInt(currentPosition);
         dest.writeInt(primaryProgress);
         dest.writeInt(secondaryProgress);
+
+        dest.writeString(actualName);
+        dest.writeString(userName);
+        dest.writeString(albumName);
+        dest.writeString(genre);
     }
 
     public static final Parcelable.Creator<MusicData> CREATOR = new Parcelable.Creator<MusicData>() {

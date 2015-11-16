@@ -1348,7 +1348,11 @@ public class ReachActivity extends AppCompatActivity implements
                             artistName,
                             liked,
                             duration,
-                            (byte) 0);
+                            (byte) 0,
+                            actualName,
+                            userName,
+                            albumName,
+                            genre);
                     LocalUtils.playSong(musicData, this);
                 }
                 //in both cases close and continue
@@ -1459,6 +1463,11 @@ public class ReachActivity extends AppCompatActivity implements
         complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
 
+        complexParams.put(SongMetadata.ACTUAL_NAME, reachDatabase.getActualName() + "");
+        complexParams.put(SongMetadata.USER_NAME, reachDatabase.getSenderName() + "");
+        complexParams.put(SongMetadata.ALBUM, reachDatabase.getAlbumName() + "");
+        complexParams.put(SongMetadata.GENRE, reachDatabase.getGenre() + "");
+
         try {
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
         } catch (JSONException ignored) {
@@ -1563,6 +1572,11 @@ public class ReachActivity extends AppCompatActivity implements
                     complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
                     complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
 
+                    complexParams.put(SongMetadata.ACTUAL_NAME, currentPlaying.getActualName() + "");
+                    complexParams.put(SongMetadata.USER_NAME, currentPlaying.getUserName() + "");
+                    complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbumName() + "");
+                    complexParams.put(SongMetadata.GENRE, currentPlaying.getGenre() + "");
+
                     try {
                         UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
                     } catch (JSONException ignored) {
@@ -1614,10 +1628,13 @@ public class ReachActivity extends AppCompatActivity implements
             final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
             final Context context = view.getContext();
 
+            final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", MODE_PRIVATE);
+
             if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
                 playSong(ReachDatabaseHelper.getMusicData(cursor), context);
             else
-                playSong(ReachSongHelper.getMusicData(cursor, serverId), context);
+                playSong(ReachSongHelper.getMusicData(cursor, serverId,
+                        SharedPrefUtils.getUserName(sharedPreferences)), context);
         };
 
         /**
@@ -2170,7 +2187,7 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 case ProcessManager.REPLY_ERROR: {
                     Log.i("Downloader", "REPLY_ERROR received");
-                    updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0), true, activity);
+                    updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0, "", "", "", ""), true, activity);
                     activity.runOnUiThread(() -> Toast.makeText(activity, "Play When Download Completes", Toast.LENGTH_SHORT).show());
                     break;
                 }

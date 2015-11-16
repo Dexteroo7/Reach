@@ -738,6 +738,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                 complexParams.put(SongMetadata.DURATION, database.getDuration() + "");
                 complexParams.put(SongMetadata.SIZE, database.getLength() + "");
 
+                complexParams.put(SongMetadata.ACTUAL_NAME, database.getActualName() + "");
+                complexParams.put(SongMetadata.USER_NAME, database.getSenderName() + "");
+                complexParams.put(SongMetadata.ALBUM, database.getAlbumName() + "");
+                complexParams.put(SongMetadata.GENRE, database.getGenre() + "");
+
                 //obviously network available !
 
                 try {
