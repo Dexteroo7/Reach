@@ -530,6 +530,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public void updateSongDetails(MusicData musicData) {
+
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);

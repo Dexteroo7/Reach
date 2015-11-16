@@ -5,13 +5,30 @@ apply plugin: 'me.tatarka.retrolambda'
 android {
 
     compileSdkVersion 23
-    buildToolsVersion '23.0.1'
+    buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId "reach.project"
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 73
         versionName "0.9.21.8-beta"
+
+        multiDexEnabled true
+    }
+
+    productFlavors {
+
+        // Define separate dev and prod product flavors.
+        dev {
+            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+            // to pre-dex each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming dex merging processes.
+            minSdkVersion 21
+        }
+        prod {
+            // The actual minSdkVersion for the application.
+            minSdkVersion 14
+        }
     }
 
     buildTypes {
@@ -21,6 +38,7 @@ android {
             proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -33,6 +51,7 @@ android {
 }
 
 dependencies {
+
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
     compile 'com.google.android.gms:play-services:6.1.11'
