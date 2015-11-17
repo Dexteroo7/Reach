@@ -62,7 +62,7 @@ public class SendSMS {
             start = st;
             api_url = check.substring(7);
         } else {
-            start = t;
+            start = st;
             api_url = ap;
         }
     }
