@@ -31,8 +31,8 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -417,7 +417,7 @@ public enum CloudStorageUtils {
         return true; //success, sync with local
     }
 
-    public static Collection<Song> fetchSongs (long userId, WeakReference<Context> reference) {
+    public static List<Song> fetchSongs (long userId, WeakReference<Context> reference) {
 
         final String fileName = MiscUtils.getMusicStorageKey(userId);
         Log.i("Ayush", "Fetching songs for " + fileName);
@@ -453,7 +453,7 @@ public enum CloudStorageUtils {
         }
 
         //proceed if alive
-        return MiscUtils.useContextFromContext(reference, (UseContext<Collection<Song>, Context>) context -> {
+        return MiscUtils.useContextFromContext(reference, (UseContext<List<Song>, Context>) context -> {
 
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             if (musicList.song == null || musicList.song.isEmpty()) {

@@ -168,16 +168,14 @@ public abstract class Cache implements Closeable {
     //parse from byte array
     protected abstract Message getItem(byte[] source, int offset, int count) throws IOException;
 
-    private static final class CacheLoader extends AsyncTask<Object, Void, Void> implements CacheLoaderController<Message> {
+    private static final class CacheLoader extends AsyncTask<Object, Void, Object[]> implements CacheLoaderController<Message> {
 
         @Nonnull
         private byte[] byteBuffer = new byte[1000]; //reusable readable byte buffer
         private int currentSize = 0;
 
         @Override
-        protected Void doInBackground(Object... params) {
-
-            Log.i("Ayush", "Thread started");
+        protected Object[] doInBackground(Object... params) {
 
             if (params == null || params.length != 5)
                 throw new IllegalArgumentException("Failed to give reference to required objects");
@@ -196,8 +194,6 @@ public abstract class Cache implements Closeable {
             final boolean loadFully = (boolean) params[3];
             @SuppressWarnings("unchecked")
             final WeakReference<Cache> cacheWeakReference = (WeakReference<Cache>) params[4];
-
-            Log.i("Ayush", "Starting new load operation");
 
             /**
              * If cache stream is dead, try to open new one
@@ -306,16 +302,34 @@ public abstract class Cache implements Closeable {
                 }
             }
 
+            return new Object[]{itemsToReturn, fullLoad, cacheWeakReference};
+        }
+
+        @Override
+        protected void onPostExecute(Object[] params) {
+            super.onPostExecute(params);
+
+            if (params == null)
+                return;
+
+            if (params.length != 3)
+                throw new IllegalArgumentException("Failed to give reference to required objects");
+
+            if (!(params[0] instanceof Collection &&
+                    params[1] instanceof Boolean &&
+                    params[2] instanceof WeakReference))
+                throw new IllegalArgumentException("Required objects not of expected type");
+
+            @SuppressWarnings("unchecked") final Collection<Message> itemsToReturn = (Collection<Message>) params[0];
+            @SuppressWarnings("unchecked") final WeakReference<Cache> cacheWeakReference = (WeakReference<Cache>) params[2];
+            final boolean fullLoad = (boolean) params[1];
+
             final Cache cache;
             //noinspection unchecked
-            if ((cache = cacheWeakReference.get()) == null) {
-                MiscUtils.closeQuietly(randomAccessFile);
-                return null; //buffer destroyed
-            }
+            if ((cache = cacheWeakReference.get()) != null)
+                //make the insertion
+                cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad, cache.loadingDone.get());
 
-            //make the insertion
-            cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad, cache.loadingDone.get());
-            return null;
         }
 
         @Override
