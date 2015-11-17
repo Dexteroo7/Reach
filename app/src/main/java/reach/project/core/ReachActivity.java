@@ -137,7 +137,7 @@ import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
-import reach.project.yourprofile.YourProfileFragment;
+import reach.project.yourProfile.YourProfileFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,

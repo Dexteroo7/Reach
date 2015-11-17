@@ -1,4 +1,4 @@
-package reach.project.yourprofile.music;
+package reach.project.yourProfile.music;
 
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;

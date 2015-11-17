@@ -1,4 +1,4 @@
-package reach.project.yourprofile.music;
+package reach.project.yourProfile.music;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -26,9 +26,9 @@ import reach.project.music.Song;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.yourprofile.blobCache.Cache;
-import reach.project.yourprofile.blobCache.CacheInjectorCallbacks;
-import reach.project.yourprofile.blobCache.CacheType;
+import reach.project.yourProfile.blobCache.Cache;
+import reach.project.yourProfile.blobCache.CacheInjectorCallbacks;
+import reach.project.yourProfile.blobCache.CacheType;
 
 /**
  * A placeholder fragment containing a simple view.

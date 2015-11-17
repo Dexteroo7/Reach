@@ -1,4 +1,4 @@
-package reach.project.yourprofile;
+package reach.project.yourProfile;
 
 import android.database.Cursor;
 import android.graphics.Color;
@@ -24,7 +24,7 @@ import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
-import reach.project.yourprofile.music.YourProfileMusicFragment;
+import reach.project.yourProfile.music.YourProfileMusicFragment;
 
 public class YourProfileFragment extends Fragment {
 

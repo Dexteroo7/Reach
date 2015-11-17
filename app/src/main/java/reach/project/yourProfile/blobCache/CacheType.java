@@ -1,4 +1,4 @@
-package reach.project.yourprofile.blobCache;
+package reach.project.yourProfile.blobCache;
 
 /**
  * Created by dexter on 07/11/15.
