@@ -119,6 +119,7 @@ import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
 import reach.project.music.ReachMusicAdapter;
 import reach.project.music.TransferSong;
+import reach.project.music.UserMusicLibrary;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
@@ -137,7 +138,6 @@ import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
-import reach.project.yourProfile.YourProfileFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
@@ -655,7 +655,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, YourProfileFragment.newInstance(id), "user_library " + id).commit();
+                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library " + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
