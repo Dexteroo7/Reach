@@ -104,8 +104,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             case VIEW_TYPE_LOCKED: {
                 //TODO
-//                return new HorizontalViewHolder(some shit);
-                break;
+                return new HorizontalViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.myreach_item, parent, false));
             }
         }
 
