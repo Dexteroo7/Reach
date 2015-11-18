@@ -64,10 +64,10 @@ public class ContactsListFragment extends Fragment implements
     private SharedPreferences sharedPreferences;
     private SuperInterface mListener;
 
+    public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false);//have we already synchronized ?
     private static final AtomicBoolean
             pinging = new AtomicBoolean(false),        //are we pinging ?
             synchronizing = new AtomicBoolean(false),  //are we synchronizing ?
-            synchronizeOnce = new AtomicBoolean(false),//have we already synchronized ?
             firstTimeLoad = new AtomicBoolean(true);   //is this first time load ?
 
     private static String phoneNumber = "";
