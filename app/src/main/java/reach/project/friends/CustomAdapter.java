@@ -13,56 +13,30 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.common.base.Optional;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.ReachCursorAdapter;
 
 /**
+ * TODO useless now
  * Created by dexter on 16/11/15.
  */
-public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class CustomAdapter extends ReachCursorAdapter {
 
-    @Nullable
-    private Cursor cursor = null;
-    private int oldCount = 0;
     private ItemClickListener mListener = null;
-
-    @Override
-    public void setHasStableIds(boolean hasStableIds) {
-        super.setHasStableIds(true);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        if (cursor == null)
-            return super.getItemId(position);
-        cursor.moveToPosition(position);
-        return cursor.getLong(0);
-    }
-
-    public void setCursor(@Nullable Cursor cursor) {
-
-        if (this.cursor != null)
-            this.cursor.close();
-        this.cursor = cursor;
-
-        if (cursor != null)
-            notifyDataSetChanged();
-        else
-            notifyItemRangeRemoved(0, oldCount);
-
-    }
-
-    @Nullable
-    public Cursor getCursor() {
-        return this.cursor;
-    }
 
     public void setOnItemClickListener(ItemClickListener listener) {
         this.mListener = listener;
+    }
+
+    @Override
+    public int getItemId(@Nonnull Cursor cursor) {
+        return cursor.getInt(0);
     }
 
     public interface ItemClickListener {
@@ -77,12 +51,16 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
-        if (cursor == null)
+        final Optional<Cursor> cursorOptional = getItem(position);
+        if (!cursorOptional.isPresent())
             return;
 
+        final Cursor cursor = cursorOptional.get();
         final ViewHolder viewHolder = (ViewHolder) holder;
         ((ViewHolder) holder).bindTest(position);
-        cursor.moveToPosition(position);
+
+        if (!cursor.moveToPosition(position))
+            return;
 
 //        final long serverId = cursor.getLong(0);
 //        final String phoneNumber = cursor.getString(1);
@@ -209,12 +187,7 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     }
 
-    @Override
-    public int getItemCount() {
-        return oldCount = cursor != null ? cursor.getCount() : 0;
-    }
-
-    private final class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    private final class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private final TextView userNameList, telephoneNumberList, onlineText, newSongs;
         private final ImageView onlineIcon, lockIcon, profileGradient;
@@ -242,7 +215,7 @@ public class CustomAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
         @Override
         public void onClick(View v) {
-            if (mListener!=null)
+            if (mListener != null)
                 mListener.onItemClick(position);
         }
     }
