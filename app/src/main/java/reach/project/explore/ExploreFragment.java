@@ -2,13 +2,18 @@ package reach.project.explore;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.PopupMenu;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
@@ -76,6 +81,29 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         userId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+        final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
+        LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
+        PopupMenu popupMenu = new PopupMenu(container.getContext(), exploreToolbarText);
+        popupMenu.inflate(R.menu.explore_menu);
+        exploreToolbarText.setOnClickListener(v -> popupMenu.show());
+        popupMenu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.explore_menu_1:
+                    if (item.isChecked())
+                        item.setChecked(false);
+                    else
+                        item.setChecked(true);
+                    return true;
+                case R.id.explore_menu_2:
+                    if (item.isChecked())
+                        item.setChecked(false);
+                    else
+                        item.setChecked(true);
+                    return true;
+                default:
+                    return true;
+            }
+        });
         mListener.toggleSliding(false);
 
         final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
@@ -173,12 +201,29 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             Log.i("Ayush", "Got Explore response " + exploreJson.getString("displayName"));
 
+            long userId = Long.parseLong(exploreJson.getString("userId"));
+            Pair <String, String> pair = MiscUtils.useContextFromFragment(reference, context -> {
+                final Cursor cursor = context.getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                        new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
+                                ReachFriendsHelper.COLUMN_IMAGE_ID},
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                        new String[]{userId + ""}, null);
+                if (cursor == null)
+                    return null;
+                if (!cursor.moveToFirst())
+                    cursor.close();
+                String userName = cursor.getString(0);
+                String userImageId = cursor.getString(1);
+                return new Pair<>(userName, userImageId);
+            }).get();
+
             containers.add(new ExploreContainer(
                     exploreJson.getString("displayName"),
                     exploreJson.getString("artistName"),
                     exploreJson.getString("largeImageUrl"),
-                    "userImageId",
-                    "handle",
+                    pair.second,
+                    "@" + pair.first.toLowerCase().split(" ")[0],
                     3.0f,
                     ExploreTypes.MUSIC,
                     exploreJson.getLong("contentId")));

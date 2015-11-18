@@ -7,7 +7,7 @@ import reach.project.R;
  */
 public enum ExploreTypes {
 
-    MUSIC("Music", R.layout.explore_music),
+    MUSIC("Song", R.layout.explore_music),
     APP("App", android.R.layout.simple_list_item_1),
     PHOTO("Photo", android.R.layout.simple_list_item_1),
     LOADING("Loading", android.R.layout.simple_list_item_1),

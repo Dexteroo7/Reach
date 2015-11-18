@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
+import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.wire.Message;
@@ -68,8 +69,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
-
-    private RecyclerView.Adapter mainAdapter = null;
+    private RecyclerViewMaterialAdapter materialAdapter = null;
+    //private RecyclerView.Adapter mainAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
     private Cache recentMusicCache = null;
@@ -79,7 +80,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void onDestroyView() {
 
-        mainAdapter = null;
+        materialAdapter = null;
         userId = 0;
 
         MiscUtils.closeQuietly(fullListCache, smartListCache, recentMusicCache);
@@ -95,7 +96,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                              Bundle savedInstanceState) {
 
         userId = getArguments().getLong("userId", 0L);
-        musicData.add(new Song.Builder().build());
+        //musicData.add(new Song.Builder().build());
 
         fullListCache = new Cache(this, CacheType.MUSIC_FULL_LIST, userId) {
             @Override
@@ -139,7 +140,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         //mRecyclerView.setHasFixedSize(true);
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(mainAdapter = new MusicAdapter<>(this));
+        mRecyclerView.setAdapter(materialAdapter = new RecyclerViewMaterialAdapter(new MusicAdapter<>(this)));
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
         return rootView;
     }
@@ -155,8 +156,9 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     public int getCount() {
 
         final int size = musicData.size();
-        if (size == 0 || size == 1)
+        if (size == 0)
             recentMusicCache.loadMoreElements(true);
+
         return size;
     }
 
@@ -241,9 +243,9 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             painter(elements, typeChecker);
 
         //notify
-        if (mainAdapter != null) {
+        if (materialAdapter != null) {
             Log.i("Ayush", "Reloading list " + musicData.size());
-            mainAdapter.notifyDataSetChanged();
+            materialAdapter.notifyDataSetChanged();
         }
 
         /**

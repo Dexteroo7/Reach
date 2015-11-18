@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:background="@drawable/border_shadow1"
+    android:background="@drawable/border_shadow2"
     android:layout_width="match_parent"
     android:padding="20dp"
     android:layout_height="match_parent">
-    <com.facebook.drawee.view.SimpleDraweeView
-        android:id="@+id/albumArt"
-        fresco:placeholderImage="@color/reach_color"
+    <FrameLayout
+        android:layout_centerVertical="true"
+        android:id="@+id/albumArtContainer"
         android:layout_width="50dp"
-        android:layout_height="50dp" />
+        android:layout_height="50dp">
+        <ImageView
+            android:id="@+id/albumArt"
+            android:src="@color/reach_grey"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <View
+            android:background="@drawable/icon_heart_outline_gray"
+            android:layout_width="25dp"
+            android:layout_gravity="center"
+            android:layout_height="25dp" />
+    </FrameLayout>
     <ImageView
         android:id="@+id/downButton"
         android:src="@drawable/icon_download_gray"
@@ -19,7 +29,7 @@
         android:layout_height="wrap_content" />
     <TextView
         android:id="@+id/textView"
-        android:layout_toRightOf="@id/albumArt"
+        android:layout_toRightOf="@id/albumArtContainer"
         android:layout_toLeftOf="@id/downButton"
         android:layout_marginLeft="10dp"
         android:text="Test"

@@ -149,7 +149,6 @@ public class MyReachFragment extends Fragment {
                         allContactsFragment})); // Invite
         final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
         slidingTabLayout.setupWithViewPager(viewPager);
-
         return rootView;
     }
 
