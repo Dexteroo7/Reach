@@ -30,7 +30,8 @@ import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 /**
  * Created by dexter on 13/11/15.
  */
-public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+        implements View.OnClickListener{
 
     private final CacheAdapterInterface<T> cacheAdapterInterface;
 
@@ -104,6 +105,8 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
 
             final RecentSong recentSong = (RecentSong) message;
             final TestHolder1 testHolder1 = (TestHolder1) holder;
+            testHolder1.mMoreBtn1.setTag(position);
+            testHolder1.mMoreBtn1.setOnClickListener(this);
             testHolder1.mTextView1.setText(recentSong.title);
             testHolder1.mRecyclerView1.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
             if (recentSong.songList.size() < 4)
@@ -115,12 +118,30 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
 
             final SmartSong smartSong = (SmartSong) message;
             final TestHolder2 testHolder2 = (TestHolder2) holder;
+            testHolder2.mMoreBtn2.setTag(position);
+            testHolder2.mMoreBtn2.setOnClickListener(this);
             testHolder2.mTextView2.setText(smartSong.title);
             testHolder2.mRecyclerView2.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             if (smartSong.songList.size() < 4)
                 testHolder2.mRecyclerView2.setAdapter(new TestAdapter2(smartSong.songList));
             else
                 testHolder2.mRecyclerView2.setAdapter(new TestAdapter2(smartSong.songList.subList(0,4)));
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        Object object = v.getTag();
+        if (!(object instanceof Integer))
+            return;
+        int pos = (int) object;
+        final Message message = cacheAdapterInterface.getItem(pos);
+        if (message instanceof RecentSong) {
+            RecentSong recentSong = (RecentSong) object;
+            //open MoreMusicFragment
+        }
+        else if (message instanceof SmartSong) {
+            SmartSong smartSong = (SmartSong) object;
         }
     }
 
@@ -178,11 +199,13 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
     public class TestHolder1 extends RecyclerView.ViewHolder {
 
         private TextView mTextView1;
+        private TextView mMoreBtn1;
         private RecyclerView mRecyclerView1;
 
         private TestHolder1(View itemView) {
             super(itemView);
             mTextView1 = (TextView) itemView.findViewById(R.id.textView1);
+            mMoreBtn1 = (TextView) itemView.findViewById(R.id.moreBtn1);
             mRecyclerView1 = (RecyclerView) itemView.findViewById(R.id.recyclerView1);
         }
     }
@@ -190,11 +213,13 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
     public class TestHolder2 extends RecyclerView.ViewHolder {
 
         private TextView mTextView2;
+        private TextView mMoreBtn2;
         private RecyclerView mRecyclerView2;
 
         private TestHolder2(View itemView) {
             super(itemView);
             mTextView2 = (TextView) itemView.findViewById(R.id.textView2);
+            mMoreBtn2 = (TextView) itemView.findViewById(R.id.moreBtn2);
             mRecyclerView2 = (RecyclerView) itemView.findViewById(R.id.recyclerView2);
         }
     }
