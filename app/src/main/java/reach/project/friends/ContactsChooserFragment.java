@@ -89,7 +89,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public void onDestroyView() {
 
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
         if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
 
@@ -128,7 +128,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         listView.setOnItemClickListener(clickListener);
         listView.setAdapter(reachContactsAdapter);
 
-        getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         return rootView;
     }
 
@@ -146,7 +146,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         Log.i("Ayush", "Resetting Contacts adapter, AUTO");
-        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.FRIENDS_VERTICAL_LOADER && cursor != null && !cursor.isClosed()) {
             reachContactsAdapter.swapCursor(cursor);
             if (cursor.getCount() == 0)
                 MiscUtils.setEmptyTextForListView(listView, "No friends found");
@@ -155,7 +155,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER)
+        if (cursorLoader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
             reachContactsAdapter.swapCursor(null);
     }
 
@@ -209,7 +209,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
             selectionArguments = new String[]{"2", "%" + mCurFilter + "%"};
         }
-        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+        getLoaderManager().restartLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         return true;
     }
 

@@ -147,39 +147,9 @@ public class MyReachFragment extends Fragment {
                 new Fragment[]{
                         contactsListFragment, // Friends
                         allContactsFragment})); // Invite
-        contactsListFragment.setSearchView(searchView);
         final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
         slidingTabLayout.setupWithViewPager(viewPager);
 
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                /**
-                 * Must set null before setting actual !
-                 */
-                if (position == 0) {
-
-                    allContactsFragment.setSearchView(null);
-                    contactsListFragment.setSearchView(searchView);
-                }
-                else if (position == 1) {
-
-                    contactsListFragment.setSearchView(null);
-                    allContactsFragment.setSearchView(searchView);
-                }
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
-        });
         return rootView;
     }
 
