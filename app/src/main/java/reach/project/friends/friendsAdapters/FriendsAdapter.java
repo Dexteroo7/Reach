@@ -1,0 +1,268 @@
+package reach.project.friends.friendsAdapters;
+
+import android.annotation.SuppressLint;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.net.Uri;
+import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import reach.project.R;
+import reach.project.core.StaticData;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.utils.MiscUtils;
+
+/**
+ * Can not use ReachCursor adapter as item type is Object not cursor
+ * Created by dexter on 18/11/15.
+ */
+@SuppressLint("SetTextI18n")
+public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements FriendsViewHolder.FriendsHolderCallback {
+
+    private final ClickHandOver clickHandOver;
+
+    public FriendsAdapter(ClickHandOver clickHandOver) {
+        this.clickHandOver = clickHandOver;
+    }
+
+    ///////////Vertical Cursor (parent)
+    private static final byte VIEW_TYPE_FRIEND = 0;
+    private static final byte VIEW_TYPE_LOCKED = 1;
+
+    @Nullable
+    private Cursor verticalCursor = null;
+    private int oldParentCount = 0;
+
+    public void setVerticalCursor(@Nullable Cursor cursor) {
+
+        if (this.verticalCursor != null)
+            this.verticalCursor.close();
+        this.verticalCursor = cursor;
+
+        if (cursor != null)
+            notifyDataSetChanged();
+        else
+            notifyItemRangeRemoved(0, oldParentCount);
+    }
+    ///////////Vertical Cursor (parent)
+
+    ///////////Horizontal Cursor
+    private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter();
+
+    public void setHorizontalCursor(@Nullable Cursor cursor) {
+        lockedFriendsAdapter.setCursor(cursor);
+    }
+    ///////////Horizontal Cursor
+
+    /**
+     * Will either return Cursor object OR flag for horizontal list
+     *
+     * @param position position to load
+     * @return object
+     */
+    @Nonnull
+    private Object getItem(int position) {
+
+        if (position == 10 || verticalCursor == null)
+            return false;
+
+        else if (position < 10) {
+
+            if (position == oldParentCount)
+                return false;
+
+            if (verticalCursor.moveToPosition(position))
+                return verticalCursor;
+            else
+                return false;
+        } else {
+
+            final int relativePosition = position - 1;
+
+            if (verticalCursor.moveToPosition(relativePosition))
+                return verticalCursor;
+            else
+                return false;
+        }
+    }
+
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+        switch (viewType) {
+
+            case VIEW_TYPE_FRIEND: {
+                return new FriendsViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.myreach_item, parent, false), this);
+            }
+
+            case VIEW_TYPE_LOCKED: {
+                //TODO
+//                return new HorizontalViewHolder(some shit);
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+        final Object friend = getItem(position);
+        if (friend instanceof Cursor) {
+
+            final Cursor cursorExactType = (Cursor) friend;
+            final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
+            viewHolder.bindPosition(position);
+
+//        final long serverId = cursor.getLong(0);
+//        final String phoneNumber = cursor.getString(1);
+            final String userName = cursorExactType.getString(2);
+            final String imageId = cursorExactType.getString(3);
+//        final short networkType = cursor.getShort(4);
+            final short status = cursorExactType.getShort(5);
+            final int numberOfSongs = cursorExactType.getShort(6);
+            final String newSongs = cursorExactType.getString(7);
+
+            viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
+            viewHolder.telephoneNumberList.setText(numberOfSongs + " songs ");
+            if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) &&
+                    !newSongs.equals("hello_world") && Integer.parseInt(newSongs) > 0) {
+
+                viewHolder.newSongs.setVisibility(View.VISIBLE);
+                viewHolder.newSongs.setText("+" + newSongs);
+            } else {
+                viewHolder.newSongs.setVisibility(View.INVISIBLE);
+                viewHolder.newSongs.setText("");
+            }
+
+            //first invalidate
+            viewHolder.profilePhotoList.setImageURI(null);
+            viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
+            viewHolder.profileGradient.setBackgroundResource(0);
+
+            final Uri uriToDisplay;
+
+            if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
+                uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
+            else {
+
+                viewHolder.profilePhotoList.setBackgroundColor(Color.parseColor("#eeeeee"));
+                if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
+                    uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile01);
+                else {
+
+                    uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
+                    if (status == ReachFriendsHelper.REQUEST_NOT_SENT || status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+
+                        viewHolder.profileGradient.setImageBitmap(null);
+                        viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
+                    }
+                }
+            }
+
+            viewHolder.profilePhotoList.setImageURI(uriToDisplay);
+            viewHolder.onlineText.setText("");
+            viewHolder.onlineIcon.setImageBitmap(null);
+            viewHolder.lockIcon.setVisibility(View.GONE);
+
+            ((LinearLayout) viewHolder.onlineIcon.getParent()).setVisibility(View.VISIBLE);
+
+            switch (status) {
+
+                case ReachFriendsHelper.OFFLINE_REQUEST_GRANTED:
+                    viewHolder.onlineText.setText("Offline");
+                    viewHolder.onlineIcon.setImageResource(R.drawable.circular_offline);
+                    //viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
+                    //viewHolder.listStatus.setText("Offline");
+                    break;
+                case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
+                    viewHolder.onlineText.setText("Online");
+                    viewHolder.onlineIcon.setImageResource(R.drawable.circular_online);
+                    //viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
+                    //viewHolder.listStatus.setText("Online");
+                    //viewHolder.note.setImageResource(R.drawable.ic_music_count);
+                    //viewHolder.userNameList.setTextColor(color);
+                    //viewHolder.telephoneNumberList.setTextColor(color);
+                    //viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
+                    break;
+                case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
+                    viewHolder.onlineText.setText("Pending");
+                    viewHolder.onlineIcon.setImageResource(R.drawable.ic_pending_pink);
+                    //viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
+                    //viewHolder.listStatus.setText("Pending");
+                    break;
+                case ReachFriendsHelper.REQUEST_NOT_SENT:
+                    viewHolder.lockIcon.setVisibility(View.VISIBLE);
+                    ((LinearLayout) viewHolder.onlineIcon.getParent()).setVisibility(View.GONE);
+                    viewHolder.profileGradient.setImageBitmap(null);
+                    viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
+                    //viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
+                    //viewHolder.listStatus.setText("");
+                    break;
+            }
+
+            //use
+        } else {
+
+            //TODO
+            final HorizontalViewHolder horizontalViewHolder = (HorizontalViewHolder) holder;
+            //use horizontal adapter
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof Cursor)
+            return VIEW_TYPE_FRIEND;
+        else
+            return VIEW_TYPE_LOCKED;
+    }
+
+    @Override
+    public long getItemId(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof Cursor)
+            return ((Cursor) item).getInt(0); //TODO shift to dirtyHash
+        else
+            return 0;
+    }
+
+    @Override
+    public int getItemCount() {
+
+        if (verticalCursor != null)
+            oldParentCount = verticalCursor.getCount();
+        return oldParentCount + 1;
+    }
+
+    @Nonnull
+    @Override
+    public Cursor getFriendForPosition(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof Cursor)
+            return (Cursor) item;
+        else
+            throw new IllegalStateException("Position must be associated with valid cursor object");
+    }
+
+    @Override
+    public void handOverClickDetails(long friendId, short status, short networkType, String userName) {
+        clickHandOver.handOverClickDetails(friendId, status, networkType, userName);
+    }
+
+    public interface ClickHandOver {
+        void handOverClickDetails(long friendId, short status, short networkType, String userName);
+    }
+}

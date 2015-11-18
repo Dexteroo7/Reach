@@ -69,17 +69,33 @@ public final class StaticData {
             MySongsHelper.COLUMN_ID, //5
             MySongsHelper.COLUMN_DURATION}; //6
 
-    public static final byte FRIENDS_LOADER = 0;
-    public static final byte PRIVACY_MY_LIBRARY_LOADER = 1;
-    public static final byte PRIVACY_DOWNLOADED_LOADER = 2;
-    public static final byte DOWNLOAD_LOADER = 3;
-    public static final byte UPLOAD_LOADER = 4;
-    public static final byte MY_LIBRARY_LOADER = 5;
-    public static final byte PUSH_MY_LIBRARY_LOADER = 6;
-    public static final byte PUSH_DOWNLOADED_LOADER = 7;
+    public static byte i = 0;
+    public static final byte FRIENDS_VERTICAL_LOADER;
+    public static final byte FRIENDS_HORIZONTAL_LOADER;
+    public static final byte PRIVACY_MY_LIBRARY_LOADER;
+    public static final byte PRIVACY_DOWNLOADED_LOADER;
+    public static final byte DOWNLOAD_LOADER;
+    public static final byte UPLOAD_LOADER;
+    public static final byte MY_LIBRARY_LOADER;
+    public static final byte PUSH_MY_LIBRARY_LOADER;
+    public static final byte PUSH_DOWNLOADED_LOADER;
 
-    public static final byte FULL_LIST_LOADER = 8;
-    public static final byte RECENT_LIST_LOADER = 9;
+    public static final byte FULL_LIST_LOADER;
+    public static final byte RECENT_LIST_LOADER;
+
+    static {
+        FRIENDS_VERTICAL_LOADER = i++;
+        FRIENDS_HORIZONTAL_LOADER = i++;
+        PRIVACY_MY_LIBRARY_LOADER = i++;
+        PRIVACY_DOWNLOADED_LOADER = i++;
+        DOWNLOAD_LOADER = i++;
+        UPLOAD_LOADER = i++;
+        MY_LIBRARY_LOADER = i++;
+        PUSH_MY_LIBRARY_LOADER = i++;
+        PUSH_DOWNLOADED_LOADER = i++;
+        FULL_LIST_LOADER = i++;
+        RECENT_LIST_LOADER = i++;
+    }
 
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
