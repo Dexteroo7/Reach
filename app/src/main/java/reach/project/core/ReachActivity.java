@@ -655,7 +655,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, YourProfileFragment.newInstance(id), "user_library " + id).commit();
+                    .addToBackStack(null).replace(R.id.container, YourProfileFragment.newInstance(id), "your_profile " + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }

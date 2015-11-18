@@ -217,7 +217,6 @@ public class ReachUserEndpoint {
 
         logger.info("Starting phoneBookSyncEvenNew");
 
-
         if (phoneNumbers.getStringList().isEmpty())
             return null;
         logger.info(phoneNumbers.getStringList().size() + " total");
