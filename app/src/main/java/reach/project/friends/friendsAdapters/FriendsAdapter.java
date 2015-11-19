@@ -4,12 +4,12 @@ import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,6 +18,7 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 
 /**
  * Can not use ReachCursor adapter as item type is Object not cursor
@@ -33,8 +34,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     ///////////Vertical Cursor (parent)
-    private static final byte VIEW_TYPE_FRIEND = 0;
-    private static final byte VIEW_TYPE_LOCKED = 1;
+    public static final byte VIEW_TYPE_FRIEND = 0;
+    public static final byte VIEW_TYPE_LOCKED = 1;
 
     @Nullable
     private Cursor verticalCursor = null;
@@ -99,13 +100,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
-                return new FriendsViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.myreach_item, parent, false), this);
+                return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.myreach_item, parent, false), this);
             }
 
             case VIEW_TYPE_LOCKED: {
-                //TODO
-//                return new HorizontalViewHolder(some shit);
-                break;
+                return new HorizontalViewHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.list_item_3, parent, false));
             }
         }
 
@@ -132,7 +133,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             final String newSongs = cursorExactType.getString(7);
 
             viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
-            viewHolder.telephoneNumberList.setText(numberOfSongs + " songs ");
+            viewHolder.telephoneNumberList.setText(numberOfSongs+"");
             if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) &&
                     !newSongs.equals("hello_world") && Integer.parseInt(newSongs) > 0) {
 
@@ -145,8 +146,6 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             //first invalidate
             viewHolder.profilePhotoList.setImageURI(null);
-            viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
-            viewHolder.profileGradient.setBackgroundResource(0);
 
             final Uri uriToDisplay;
 
@@ -160,32 +159,19 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 else {
 
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
-                    if (status == ReachFriendsHelper.REQUEST_NOT_SENT || status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
-
-                        viewHolder.profileGradient.setImageBitmap(null);
-                        viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
-                    }
                 }
             }
 
             viewHolder.profilePhotoList.setImageURI(uriToDisplay);
-            viewHolder.onlineText.setText("");
-            viewHolder.onlineIcon.setImageBitmap(null);
             viewHolder.lockIcon.setVisibility(View.GONE);
-
-            ((LinearLayout) viewHolder.onlineIcon.getParent()).setVisibility(View.VISIBLE);
 
             switch (status) {
 
                 case ReachFriendsHelper.OFFLINE_REQUEST_GRANTED:
-                    viewHolder.onlineText.setText("Offline");
-                    viewHolder.onlineIcon.setImageResource(R.drawable.circular_offline);
                     //viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
                     //viewHolder.listStatus.setText("Offline");
                     break;
                 case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
-                    viewHolder.onlineText.setText("Online");
-                    viewHolder.onlineIcon.setImageResource(R.drawable.circular_online);
                     //viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
                     //viewHolder.listStatus.setText("Online");
                     //viewHolder.note.setImageResource(R.drawable.ic_music_count);
@@ -194,16 +180,11 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     //viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
                     break;
                 case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
-                    viewHolder.onlineText.setText("Pending");
-                    viewHolder.onlineIcon.setImageResource(R.drawable.ic_pending_pink);
                     //viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
                     //viewHolder.listStatus.setText("Pending");
                     break;
                 case ReachFriendsHelper.REQUEST_NOT_SENT:
                     viewHolder.lockIcon.setVisibility(View.VISIBLE);
-                    ((LinearLayout) viewHolder.onlineIcon.getParent()).setVisibility(View.GONE);
-                    viewHolder.profileGradient.setImageBitmap(null);
-                    viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
                     //viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
                     //viewHolder.listStatus.setText("");
                     break;
@@ -214,7 +195,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             //TODO
             final HorizontalViewHolder horizontalViewHolder = (HorizontalViewHolder) holder;
-            //use horizontal adapter
+            horizontalViewHolder.bindTest(position);
+            horizontalViewHolder.mTextView2.setText("Newly added");
+            horizontalViewHolder.mRecyclerView2.setLayoutManager(
+                    new CustomLinearLayoutManager(holder.itemView.getContext(),
+                            LinearLayoutManager.HORIZONTAL, false));
+            horizontalViewHolder.mRecyclerView2.setAdapter(lockedFriendsAdapter);
         }
     }
 

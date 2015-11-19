@@ -51,6 +51,6 @@ public abstract class ReachCursorAdapter extends RecyclerView.Adapter<RecyclerVi
 
     @Override
     public int getItemCount() {
-        return oldCount = cursor != null ? cursor.getCount() : 0;
+        return oldCount = cursor != null ? cursor.getCount() : 1;
     }
 }

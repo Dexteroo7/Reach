@@ -18,14 +18,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -57,8 +55,6 @@ public class ContactsListFragment extends Fragment implements
 
     private final FriendsAdapter friendsAdapter = new FriendsAdapter(this);
 
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private SearchView searchView;
     private View rootView;
 
     private SharedPreferences sharedPreferences;
@@ -192,13 +188,6 @@ public class ContactsListFragment extends Fragment implements
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
 
-        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getContext(), R.color.reach_color),
-                ContextCompat.getColor(getContext(), R.color.reach_grey));
-        swipeRefreshLayout.setBackgroundResource(R.color.white);
-        swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
-
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
@@ -207,7 +196,8 @@ public class ContactsListFragment extends Fragment implements
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                if (position == 0)
+
+                if (position == 0 || friendsAdapter.getItemViewType(position) == FriendsAdapter.VIEW_TYPE_LOCKED)
                     return 2;
                 else
                     return 1;
@@ -224,14 +214,12 @@ public class ContactsListFragment extends Fragment implements
             if (isOnline) {
                 synchronizing.set(true);
                 pinging.set(true);
-                swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
                 new LocalUtils.ContactsSync().executeOnExecutor(StaticData.temporaryFix);
             }
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
-            swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
             new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
         }
 
@@ -438,10 +426,6 @@ public class ContactsListFragment extends Fragment implements
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                MiscUtils.useFragment(reference, fragment ->
-                {
-                    fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false));
-                });
             }
         }
 

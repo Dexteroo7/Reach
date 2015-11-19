@@ -17,8 +17,8 @@ import reach.project.R;
  */
 public final class FriendsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    public final TextView userNameList, telephoneNumberList, onlineText, newSongs;
-    public final ImageView onlineIcon, lockIcon, profileGradient;
+    public final TextView userNameList, telephoneNumberList, newSongs;
+    public final ImageView lockIcon;
     public final SimpleDraweeView profilePhotoList;
 
     private final FriendsHolderCallback friendsHolderCallback;
@@ -35,12 +35,9 @@ public final class FriendsViewHolder extends RecyclerView.ViewHolder implements 
 
         this.userNameList = (TextView) view.findViewById(R.id.userNameList);
         this.telephoneNumberList = (TextView) view.findViewById(R.id.telephoneNumberList);
-        this.onlineText = (TextView) view.findViewById(R.id.onlineText);
-        this.onlineIcon = (ImageView) view.findViewById(R.id.onlineIcon);
         this.newSongs = (TextView) view.findViewById(R.id.newSongs);
         this.profilePhotoList = (SimpleDraweeView) view.findViewById(R.id.profilePhotoList);
         this.lockIcon = (ImageView) view.findViewById(R.id.lockIcon);
-        this.profileGradient = (ImageView) view.findViewById(R.id.profileGradient);
 
         this.friendsHolderCallback = friendsHolderCallback;
 

@@ -30,8 +30,7 @@ import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 /**
  * Created by dexter on 13/11/15.
  */
-public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.ViewHolder>
-        implements View.OnClickListener{
+public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final CacheAdapterInterface<T> cacheAdapterInterface;
 
@@ -46,10 +45,8 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
         final Message message = cacheAdapterInterface.getItem(position);
         if (message instanceof Song)
             return 0;
-        else if (message instanceof RecentSong)
+        else if ((message instanceof RecentSong)||(message instanceof SmartSong))
             return 1;
-        else if (message instanceof SmartSong)
-            return 2;
         else
             return super.getItemViewType(position);
     }
@@ -62,9 +59,6 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
                 return new TestHolder<>(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.list_item_0, parent, false), cacheAdapterInterface);
             case 1:
-                return new TestHolder1(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.list_item_1, parent, false));
-            case 2:
                 return new TestHolder2(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.list_item_2, parent, false));
             default:
@@ -104,44 +98,26 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
         } else if (message instanceof RecentSong) {
 
             final RecentSong recentSong = (RecentSong) message;
-            final TestHolder1 testHolder1 = (TestHolder1) holder;
-            testHolder1.mMoreBtn1.setTag(position);
-            testHolder1.mMoreBtn1.setOnClickListener(this);
-            testHolder1.mTextView1.setText(recentSong.title);
-            testHolder1.mRecyclerView1.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            final TestHolder2 testHolder1 = (TestHolder2) holder;
+            testHolder1.bindTest(position);
+            testHolder1.mTextView2.setText(recentSong.title);
+            testHolder1.mRecyclerView2.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
             if (recentSong.songList.size() < 4)
-                testHolder1.mRecyclerView1.setAdapter(new TestAdapter1(recentSong.songList));
+                testHolder1.mRecyclerView2.setAdapter(new TestAdapter1(recentSong.songList));
             else
-                testHolder1.mRecyclerView1.setAdapter(new TestAdapter1(recentSong.songList.subList(0,4)));
+                testHolder1.mRecyclerView2.setAdapter(new TestAdapter1(recentSong.songList.subList(0,4)));
 
         } else if (message instanceof SmartSong) {
 
             final SmartSong smartSong = (SmartSong) message;
             final TestHolder2 testHolder2 = (TestHolder2) holder;
-            testHolder2.mMoreBtn2.setTag(position);
-            testHolder2.mMoreBtn2.setOnClickListener(this);
+            testHolder2.bindTest(position);
             testHolder2.mTextView2.setText(smartSong.title);
             testHolder2.mRecyclerView2.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             if (smartSong.songList.size() < 4)
                 testHolder2.mRecyclerView2.setAdapter(new TestAdapter2(smartSong.songList));
             else
                 testHolder2.mRecyclerView2.setAdapter(new TestAdapter2(smartSong.songList.subList(0,4)));
-        }
-    }
-
-    @Override
-    public void onClick(View v) {
-        Object object = v.getTag();
-        if (!(object instanceof Integer))
-            return;
-        int pos = (int) object;
-        final Message message = cacheAdapterInterface.getItem(pos);
-        if (message instanceof RecentSong) {
-            RecentSong recentSong = (RecentSong) object;
-            //open MoreMusicFragment
-        }
-        else if (message instanceof SmartSong) {
-            SmartSong smartSong = (SmartSong) object;
         }
     }
 
@@ -196,31 +172,34 @@ public class MusicAdapter<T extends Message> extends RecyclerView.Adapter<Recycl
         T getItem(int position);
     }
 
-    public class TestHolder1 extends RecyclerView.ViewHolder {
-
-        private TextView mTextView1;
-        private TextView mMoreBtn1;
-        private RecyclerView mRecyclerView1;
-
-        private TestHolder1(View itemView) {
-            super(itemView);
-            mTextView1 = (TextView) itemView.findViewById(R.id.textView1);
-            mMoreBtn1 = (TextView) itemView.findViewById(R.id.moreBtn1);
-            mRecyclerView1 = (RecyclerView) itemView.findViewById(R.id.recyclerView1);
-        }
-    }
-
-    public class TestHolder2 extends RecyclerView.ViewHolder {
+    public class TestHolder2 extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         private TextView mTextView2;
         private TextView mMoreBtn2;
         private RecyclerView mRecyclerView2;
+        private int pos;
 
         private TestHolder2(View itemView) {
             super(itemView);
             mTextView2 = (TextView) itemView.findViewById(R.id.textView2);
             mMoreBtn2 = (TextView) itemView.findViewById(R.id.moreBtn2);
             mRecyclerView2 = (RecyclerView) itemView.findViewById(R.id.recyclerView2);
+            mMoreBtn2.setOnClickListener(this);
+        }
+
+        private void bindTest(int position) {
+            this.pos = position;
+        }
+
+        @Override
+        public void onClick(View v) {
+            final Message message = cacheAdapterInterface.getItem(pos);
+            if (message instanceof RecentSong) {
+                //open More
+            }
+            else if (message instanceof SmartSong) {
+                //open More
+            }
         }
     }
 
