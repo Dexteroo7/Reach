@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
+import com.google.common.base.Optional;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.wire.Message;
@@ -34,8 +35,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
 import reach.project.core.ReachApplication;
+import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.Song;
@@ -123,7 +126,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         super.onDetach();
         mListener = null;
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -447,36 +449,39 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
-        final Fragment fragment = reference.get();
-        final List<Song> musicData = CloudStorageUtils.fetchSongs(userId, new WeakReference<>(fragment.getContext()));
+        final List<SimpleSong> simpleSongs = MiscUtils.autoRetry(
+                () -> StaticData.userEndpoint.fetchRecentSongs(userId).execute().getItems(), Optional.absent()
+        ).or(Collections.emptyList());
 
-        if (musicData.isEmpty())
+        if (simpleSongs == null || simpleSongs.isEmpty())
             return Collections.emptyList();
 
-        //get only songs
-        final List<Song> temp = new ArrayList<>(musicData.size());
-        for (Message message : musicData)
-            if (message instanceof Song)
-                temp.add((Song) message);
+        final List<Song> toReturn = new ArrayList<>(simpleSongs.size());
+        for (SimpleSong simpleSong : simpleSongs) {
 
-        if (temp.isEmpty())
-            return Collections.emptyList();
+            final Song.Builder songBuilder = new Song.Builder();
 
-        //sort
-        Collections.sort(temp, (lhs, rhs) -> {
+            songBuilder.actualName = simpleSong.getActualName();
+            songBuilder.album = simpleSong.getAlbum();
+            songBuilder.artist = simpleSong.getArtist();
+            songBuilder.dateAdded = simpleSong.getDateAdded();
+            songBuilder.displayName = simpleSong.getDisplayName();
+            songBuilder.duration = simpleSong.getDuration();
+            songBuilder.fileHash = simpleSong.getFileHash();
+            songBuilder.genre = simpleSong.getGenre();
+            songBuilder.path = simpleSong.getPath();
+            songBuilder.isLiked = simpleSong.getIsLiked();
+            songBuilder.size = simpleSong.getSize();
+            songBuilder.songId = simpleSong.getSongId();
+            songBuilder.visibility = simpleSong.getVisibility();
+            songBuilder.year = simpleSong.getYear();
 
-            final Long a = lhs.dateAdded == null ? 0 : lhs.dateAdded;
-            final Long b = rhs.dateAdded == null ? 0 : rhs.dateAdded;
-            return a.compareTo(b);
-        });
+        }
 
-        final RecentSong.Builder builder = new RecentSong.Builder();
-        builder.title("Recent Songs");
-        if (temp.size() < 20)
-            builder.songList(temp);
-        else
-            builder.songList(temp.subList(0, 20));
+        final RecentSong.Builder recentBuilder = new RecentSong.Builder();
+        recentBuilder.title("Recent Songs");
+        recentBuilder.songList(toReturn);
 
-        return Collections.singletonList(builder.build());
+        return Collections.singletonList(recentBuilder.build());
     };
 }

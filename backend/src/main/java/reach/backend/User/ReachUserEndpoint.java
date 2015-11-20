@@ -18,23 +18,32 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.appengine.tools.cloudstorage.GcsInputChannel;
+import com.google.appengine.tools.cloudstorage.GcsService;
+import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.cmd.Query;
+import com.squareup.wire.Wire;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,13 +51,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.LongArray;
+import reach.backend.ObjectWrappers.MusicList;
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.ObjectWrappers.SimpleSong;
+import reach.backend.ObjectWrappers.Song;
 import reach.backend.ObjectWrappers.StringList;
 import reach.backend.OfyService;
 import reach.backend.TextUtils;
@@ -1185,4 +1198,113 @@ public class ReachUserEndpoint {
         devika.getSentRequests().clear();
         ofy().save().entities(devika).now();
     }
+
+    @ApiMethod(
+            name = "fetchRecentSongs",
+            path = "user/fetchRecentSongs/{serverId}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public List<SimpleSong> fetchRecentSongs(@Named("serverId") long serverId) {
+
+        final String FILE_NAME = serverId + "MUSIC";
+        final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
+
+        final GcsFilename gcsFilename = new GcsFilename(BUCKET_NAME_MUSIC_DATA, FILE_NAME);
+        final GcsService gcsService = GcsServiceFactory.createGcsService();
+
+        //to close
+        final GcsInputChannel inputChannel;
+        final ByteArrayInputStream byteArrayInputStream;
+        final GZIPInputStream compressedData;
+
+        final MusicList musicList;
+
+        logger.info("Receiving the object");
+        try {
+
+            inputChannel = gcsService.openReadChannel(gcsFilename, 0);
+            final int fileSize = (int) gcsService.getMetadata(gcsFilename).getLength();
+            final ByteBuffer result = ByteBuffer.allocate(fileSize);
+            inputChannel.read(result);
+
+            byteArrayInputStream = new ByteArrayInputStream(result.array());
+            compressedData = new GZIPInputStream(byteArrayInputStream);
+            musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+            closeQuietly(byteArrayInputStream, inputChannel, compressedData);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList(); //fail
+        }
+
+        final List<Song> songs;
+        //sanity checks
+        if (musicList == null || (songs = musicList.song) == null || songs.isEmpty())
+            return Collections.emptyList();
+
+        logger.info("Copying to array before sort");
+
+        final int totalSongs = songs.size();
+        final Song[] songArray = new Song[totalSongs];
+
+        int index = 0;
+        for (Song song : songs)
+            songArray[index++] = song;
+
+        logger.info("Sorting");
+        //sort the song array
+        Arrays.sort(songArray, new Comparator<Song>() {
+            @Override
+            public int compare(Song lhs, Song rhs) {
+
+                final Long a = lhs.dateAdded == null ? 0 : lhs.dateAdded;
+                final Long b = rhs.dateAdded == null ? 0 : rhs.dateAdded;
+                return a.compareTo(b);
+            }
+        });
+
+        final List<SimpleSong> toReturn = new ArrayList<>();
+        //generate return list of max 20 songs
+        for (index = 0; index < 20 && index < totalSongs; index++) {
+
+            final SimpleSong simpleSong = new SimpleSong();
+            final Song song = songArray[index];
+
+            simpleSong.actualName = song.actualName;
+            simpleSong.album = song.album;
+            simpleSong.artist = song.artist;
+            simpleSong.dateAdded = song.dateAdded;
+            simpleSong.displayName = song.displayName;
+            simpleSong.duration = song.duration;
+            simpleSong.fileHash = song.fileHash;
+            simpleSong.genre = song.genre;
+            simpleSong.path = song.path;
+            simpleSong.isLiked = song.isLiked;
+            simpleSong.size = song.size;
+            simpleSong.songId = song.songId;
+            simpleSong.visibility = song.visibility;
+            simpleSong.year = song.year;
+
+            toReturn.add(simpleSong);
+        }
+
+        return toReturn;
+    }
+
+    public static void closeQuietly(Closeable... closeables) {
+        for (Closeable closeable : closeables)
+            if (closeable != null)
+                try {
+                    closeable.close();
+                } catch (IOException ignored) {
+                }
+    }
+
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable != null)
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
+    }
+
 }

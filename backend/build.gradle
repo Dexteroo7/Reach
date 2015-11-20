@@ -31,6 +31,9 @@ dependencies {
     compile 'com.ganyo:gcm-server:1.0.2'
     compile 'org.reflections:reflections:0.9.10'
     compile 'com.firebase:firebase-token-generator:2.0.0'
+
+    compile 'com.google.appengine.tools:appengine-gcs-client:0.5'
+    compile 'com.squareup.wire:wire-runtime:1.8.0'
 }
 
 appengine {
