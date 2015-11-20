@@ -343,7 +343,7 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
                 && cursor != null && !cursor.isClosed()) {
 
             reachMusicAdapter.swapCursor(cursor);
-//            int count = cursor.getCount();
+//            int count = cursor.getItemCount();
 //            final Future<?> isMusicFetching = ContactsListFragment.isMusicFetching.get(userId);
 //            if((isMusicFetching == null || isMusicFetching.isCancelled() || isMusicFetching.isDone()) && count==0 && musicList!=null)
 //                MiscUtils.setEmptyTextForListView(musicList,"No visible songs found");

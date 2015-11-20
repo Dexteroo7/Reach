@@ -12,6 +12,7 @@ public class ExploreContainer {
     private final long id;
 
     public ExploreContainer(String title, String subTitle, String imageId, String userImageId, String userHandle, float rating, ExploreTypes types, long id) {
+
         this.title = title;
         this.subTitle = subTitle;
         this.imageId = imageId;

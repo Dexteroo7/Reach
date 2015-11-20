@@ -11,6 +11,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
+import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
@@ -31,6 +33,9 @@ public final class StaticData {
     public static final MusicVisibilityApi musicVisibility;
     public static final NotificationApi notificationApi;
 
+    public static final AppVisibilityApi appVisibilityApi;
+    public static final ClassifiedAppsApi classifiedAppsApi;
+
     static {
 
         final HttpTransport transport = new NetHttpTransport();
@@ -46,6 +51,9 @@ public final class StaticData {
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         notificationApi = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
         musicVisibility = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
+
+        appVisibilityApi = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
+        classifiedAppsApi = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
     }
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{

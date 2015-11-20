@@ -13,10 +13,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -61,7 +61,7 @@ public abstract class Cache implements Closeable {
 
         this.cacheInjectorCallbacks = cacheInjectorCallbacks;
         Log.i("Ayush", "Hashing " + cacheType.name() + " " + userId);
-        this.fileName = Objects.hash(cacheType.name(), userId) + "";
+        this.fileName = Arrays.hashCode(new Object[]{cacheType.name(), userId}) + "";
 
         //custom thread pool
         final ThreadFactory threadFactory = new ThreadFactoryBuilder() //specify the name
@@ -163,7 +163,7 @@ public abstract class Cache implements Closeable {
      *
      * @return a callable that returns collection from network
      */
-    protected abstract Callable<Collection<? extends Message>> fetchFromNetwork();
+    protected abstract Callable<List<? extends Message>> fetchFromNetwork();
 
     //parse from byte array
     protected abstract Message getItem(byte[] source, int offset, int count) throws IOException;
@@ -171,7 +171,7 @@ public abstract class Cache implements Closeable {
     private static final class CacheLoader extends AsyncTask<Object, Void, Object[]> implements CacheLoaderController<Message> {
 
         @Nonnull
-        private byte[] byteBuffer = new byte[1000]; //reusable readable byte buffer
+        private byte[] byteBuffer = new byte[300]; //reusable readable byte buffer
         private int currentSize = 0;
 
         @Override
@@ -188,17 +188,20 @@ public abstract class Cache implements Closeable {
                 throw new IllegalArgumentException("Required objects not of expected type");
 
             @SuppressWarnings("unchecked")
-            final Callable<Collection<Message>> networkFetcher = (Callable<Collection<Message>>) params[0];
+            final Callable<List<Message>> networkFetcher = (Callable<List<Message>>) params[0];
             @Nullable RandomAccessFile randomAccessFile = (RandomAccessFile) params[1];
+
             final boolean cacheInvalidated = (boolean) params[2];
             final boolean loadFully = (boolean) params[3];
+            final boolean networkLoad;
+
             @SuppressWarnings("unchecked")
             final WeakReference<Cache> cacheWeakReference = (WeakReference<Cache>) params[4];
 
             /**
              * If cache stream is dead, try to open new one
              */
-            if (isCacheStreamDead(randomAccessFile) && !cacheInvalidated) {
+            if (!cacheInvalidated && isCacheStreamDead(randomAccessFile)) {
 
                 final Cache cache;
                 //noinspection unchecked
@@ -217,21 +220,20 @@ public abstract class Cache implements Closeable {
             /**
              * The batch of items to return
              */
-            final Collection<Message> itemsToReturn;
-            final boolean fullLoad;
+            final List<Message> itemsToReturn;
             /**
              * If cache stream is still dead or external input says cache is invalidated, fetch from network.
              * This should guarantee a cache stream next time loader is started.
              * Right now cache won't be utilized as we already fetched everything from network.
              * Items will be overwritten to cache file.
              */
-            if (isCacheStreamDead(randomAccessFile) || cacheInvalidated) {
+            if (cacheInvalidated || isCacheStreamDead(randomAccessFile)) {
 
                 Log.i("Ayush", "Fetching from network");
 
                 itemsToReturn = fetchFromNetwork(networkFetcher);
                 Log.i("Ayush", "Fetched " + itemsToReturn.size());
-                fullLoad = true;
+                networkLoad = true;
 
                 final Cache cache;
                 //noinspection unchecked
@@ -243,7 +245,7 @@ public abstract class Cache implements Closeable {
                 //display as is, set true for this turn irrespective of failure
                 cache.loadingDone.set(true);
                 //cache can not be invalidated as fetched from network
-                cache.cacheInvalidator.cacheInvalidated.set(false); //not invalidated
+                cache.cacheInvalidator.cacheInvalidated.set(false);
                 cache.cacheInvalidator.invalidatorOpen.set(false);  //freeze invalidator
                 //store in cache
                 final boolean result = storeInCache(cache.cacheInjectorCallbacks.getCacheDirectory(), cache.fileName, itemsToReturn);
@@ -259,7 +261,7 @@ public abstract class Cache implements Closeable {
 
                 Log.i("Ayush", "Streaming from cache");
                 itemsToReturn = new ArrayList<>(500);
-                fullLoad = false;
+                networkLoad = false;
 
                 for (int index = 0; index < BATCH_SIZE || loadFully; index++) {
 
@@ -302,6 +304,8 @@ public abstract class Cache implements Closeable {
                 }
             }
 
+            //either loaded from network or fetched in 1 go from cache
+            final boolean fullLoad = networkLoad || loadFully || cacheInvalidated;
             return new Object[]{itemsToReturn, fullLoad, cacheWeakReference};
         }
 
@@ -315,12 +319,12 @@ public abstract class Cache implements Closeable {
             if (params.length != 3)
                 throw new IllegalArgumentException("Failed to give reference to required objects");
 
-            if (!(params[0] instanceof Collection &&
+            if (!(params[0] instanceof List &&
                     params[1] instanceof Boolean &&
                     params[2] instanceof WeakReference))
                 throw new IllegalArgumentException("Required objects not of expected type");
 
-            @SuppressWarnings("unchecked") final Collection<Message> itemsToReturn = (Collection<Message>) params[0];
+            @SuppressWarnings("unchecked") final List<Message> itemsToReturn = (List<Message>) params[0];
             @SuppressWarnings("unchecked") final WeakReference<Cache> cacheWeakReference = (WeakReference<Cache>) params[2];
             final boolean fullLoad = (boolean) params[1];
 
@@ -367,7 +371,7 @@ public abstract class Cache implements Closeable {
         }
 
         @Override
-        public boolean storeInCache(File cacheDirectory, String fileName, Collection<Message> items) {
+        public boolean storeInCache(File cacheDirectory, String fileName, List<Message> items) {
 
             //sanity check
             if (cacheDirectory == null || !cacheDirectory.exists() || !cacheDirectory.isDirectory() || items == null || items.isEmpty())
@@ -408,8 +412,6 @@ public abstract class Cache implements Closeable {
                  * first write the size, then write the object
                  */
                 try {
-
-                    Log.i("Ayush", "Writing size " + currentSize);
                     randomAccessFile.writeInt(currentSize);
                     randomAccessFile.write(byteBuffer, 0, currentSize);
                 } catch (IOException e) {
@@ -448,15 +450,12 @@ public abstract class Cache implements Closeable {
         }
 
         @Override
-        public Collection<Message> fetchFromNetwork(Callable<Collection<Message>> networkFetcher) {
+        public List<Message> fetchFromNetwork(Callable<List<Message>> networkFetcher) {
 
             return MiscUtils.autoRetry(() -> {
 
                 try {
-
-                    final Collection<Message> messages = networkFetcher.call();
-                    Log.i("Ayush", "Passing " + messages.size() + " elements");
-                    return messages;
+                    return networkFetcher.call();
                 } catch (Exception e) {
 
                     if (e instanceof IOException)

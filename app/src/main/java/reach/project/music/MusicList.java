@@ -40,6 +40,7 @@ public final class MusicList extends Message {
 
   @Override
   public boolean equals(Object other) {
+
     if (other == this) return true;
     if (!(other instanceof MusicList)) return false;
     MusicList o = (MusicList) other;

@@ -1,6 +1,11 @@
 package reach.project.yourProfile.music;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -24,7 +29,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -32,13 +36,19 @@ import java.util.concurrent.Callable;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.Song;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.yourProfile.blobCache.Cache;
 import reach.project.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.yourProfile.blobCache.CacheType;
+import reach.project.yourProfile.music.musicAdapters.CacheAdapterInterface;
+import reach.project.yourProfile.music.musicAdapters.MusicAdapter;
 
 /**
  * Full list loads from cache, and checks network for update, if update is found, whole data is reloaded.
@@ -48,7 +58,7 @@ import reach.project.yourProfile.blobCache.CacheType;
  * A placeholder fragment containing a simple view.
  */
 public class YourProfileMusicFragment extends Fragment implements CacheInjectorCallbacks<Message>,
-        MusicAdapter.CacheAdapterInterface<Message> {
+        CacheAdapterInterface<Message> {
 
     private static WeakReference<YourProfileMusicFragment> reference = null;
     private static long userId = 0;
@@ -69,11 +79,15 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
+
+    private View rootView = null;
     private RecyclerViewMaterialAdapter materialAdapter = null;
     //private RecyclerView.Adapter mainAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
     private Cache recentMusicCache = null;
+
+    private SuperInterface mListener;
 
     private int lastPosition = 0;
 
@@ -92,15 +106,34 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+
+        super.onDetach();
+        mListener = null;
+    }
+
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         userId = getArguments().getLong("userId", 0L);
-        //musicData.add(new Song.Builder().build());
 
         fullListCache = new Cache(this, CacheType.MUSIC_FULL_LIST, userId) {
             @Override
-            protected Callable<Collection<? extends Message>> fetchFromNetwork() {
+            protected Callable<List<? extends Message>> fetchFromNetwork() {
 
                 return () -> CloudStorageUtils.fetchSongs(userId, new WeakReference<>(getContext()));
             }
@@ -113,7 +146,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         smartListCache = new Cache(this, CacheType.MUSIC_SMART_LIST, userId) {
             @Override
-            protected Callable<Collection<? extends Message>> fetchFromNetwork() {
+            protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getSmartList;
             }
 
@@ -125,7 +158,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         recentMusicCache = new Cache(this, CacheType.MUSIC_RECENT_LIST, userId) {
             @Override
-            protected Callable<Collection<? extends Message>> fetchFromNetwork() {
+            protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getRecent;
             }
 
@@ -135,7 +168,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             }
         };
 
-        final View rootView = inflater.inflate(R.layout.fragment_yourprofile_page, container, false);
+        rootView = inflater.inflate(R.layout.fragment_yourprofile_page, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         //mRecyclerView.setHasFixedSize(true);
 
@@ -153,7 +186,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
 
         final int size = musicData.size();
         if (size == 0)
@@ -217,12 +250,60 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
-    public void injectElements(Collection<Message> elements, boolean overWrite, boolean loadingDone) {
+    public void handOverSongClick(Song song) {
+
+        final Cursor senderCursor = getActivity().getContentResolver().query(
+                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
+                        ReachFriendsHelper.COLUMN_STATUS,
+                        ReachFriendsHelper.COLUMN_NETWORK_TYPE},
+                ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{userId + ""}, null);
+
+        if (senderCursor == null)
+            return;
+        if (!senderCursor.moveToFirst()) {
+            senderCursor.close();
+            return;
+        }
+
+        final SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        if (SharedPrefUtils.getReachQueueSeen(sharedPreferences)) {
+
+            Snackbar.make(rootView, song.displayName + " added to your Queue", Snackbar.LENGTH_LONG)
+                    .setAction("VIEW", v -> {
+                        mListener.anchorFooter();
+                    })
+                    .show();
+        } else {
+            SharedPrefUtils.setReachQueueSeen(sharedPreferences);
+            mListener.anchorFooter();
+        }
+
+        mListener.addSongToQueue(
+                song.songId, //songId
+                userId, //senderId
+                song.size, //size
+                song.displayName, //displayName
+                song.actualName, //actualName
+                false, //multiple
+                senderCursor.getString(0), //userName
+                senderCursor.getShort(1) + "", //onlineStatus
+                senderCursor.getShort(2) + "", //networkType
+                song.artist, //artistName
+                song.duration, //duration
+                song.album, //album
+                song.genre); //genre
+        senderCursor.close();
+    }
+
+    @Override
+    public void injectElements(List<Message> elements, boolean overWrite, boolean loadingDone) {
 
         if (elements == null || elements.isEmpty())
             return;
 
-        final Message typeCheckerInstance = elements.iterator().next();
+        final Message typeCheckerInstance = elements.get(0);
         final Class typeChecker;
         if (typeCheckerInstance instanceof Song)
             typeChecker = Song.class;
@@ -254,10 +335,9 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
          */
         if (typeChecker == Song.class)
             smartListCache.loadMoreElements(true);
-//            smartListCache.loadMoreElements(loadingDone || overWrite);
     }
 
-    private void intelligentOverwrite(Collection<? extends Message> elements, Class typeChecker) {
+    private void intelligentOverwrite(List<? extends Message> elements, Class typeChecker) {
 
         //nothing to overwrite
         if (musicData.isEmpty())
@@ -280,10 +360,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
                     //we have a message to overwrite, do it
                     musicData.set(index, messageIterator.next());
-                    try {
-                        messageIterator.remove(); //must remove
-                    } catch (UnsupportedOperationException ignored) {
-                    }
+                    messageIterator.remove(); //must remove
+
                 } else {
                     musicData.remove(index);  //remove as this item is no longer valid
                     updatedSize--;
@@ -292,20 +370,20 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         }
     }
 
-    private void painter(Collection<? extends Message> elements, Class typeChecker) {
+    private void painter(List<? extends Message> elements, Class typeChecker) {
 
         if (musicData.isEmpty())
             synchronized (musicData) {
                 musicData.addAll(elements);
             }
 
-        if (typeChecker == RecentSong.class) {
+        else if (typeChecker == RecentSong.class)
 
             synchronized (musicData) {
                 musicData.addAll(0, elements);
             }
 
-        } else if (typeChecker == SmartSong.class) {
+        else if (typeChecker == SmartSong.class) {
 
             final int size = musicData.size();
             if (lastPosition > size)
@@ -314,15 +392,14 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 musicData.addAll(lastPosition, elements);
             }
 
-        } else if (typeChecker == Song.class) {
+        } else if (typeChecker == Song.class)
 
             synchronized (musicData) {
                 musicData.addAll(elements);
             }
-        }
     }
 
-    private static final Callable<Collection<? extends Message>> getSmartList = () -> {
+    private static final Callable<List<? extends Message>> getSmartList = () -> {
 
         final Request request = new Request.Builder()
                 .url("http://52.74.175.56:8080/explore/getRecentlyPlayed?userId=" + userId)
@@ -360,7 +437,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
             songBuilder.visibility(true);
             songs.add(songBuilder.build());
-            Log.i("Ayush", "Found smart list " + songBuilder.displayName);
         }
 
         if (songs.isEmpty())
@@ -369,7 +445,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         return Collections.singletonList(new SmartSong.Builder().songList(songs).title("Recently Played").build());
     };
 
-    private static final Callable<Collection<? extends Message>> getRecent = () -> {
+    private static final Callable<List<? extends Message>> getRecent = () -> {
 
         final Fragment fragment = reference.get();
         final List<Song> musicData = CloudStorageUtils.fetchSongs(userId, new WeakReference<>(fragment.getContext()));

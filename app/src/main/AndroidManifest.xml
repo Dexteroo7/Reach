@@ -15,7 +15,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <!--<uses-permission android:name="android.permission.GET_TASKS" />-->
+    <!--suppress DeprecatedClassUsageInspection -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission
         android:name="android.permission.RECEIVE_SMS"
         android:required="false" />
@@ -29,6 +30,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -38,6 +40,7 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -50,12 +53,15 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="process_multiple" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
             android:name=".core.GcmBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
@@ -64,12 +70,33 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".pacemaker.HeartbeatReceiver" />
-        <receiver android:name=".core.UpdateReceiver">
+
+        <receiver
+            android:name=".pacemaker.HeartbeatReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
+            android:name=".core.UpdateReceiver"
+            android:enabled="true"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
 
+                <category android:name="reach.project" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".apps.InterceptAppInstall"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_INSTALL" />
+
+                <data android:scheme="package" />
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
@@ -142,10 +169,6 @@
             android:name=".reachProcess.reachService.ProcessManager"
             android:exported="false"
             android:process=":remote" />
-
-        <service
-            android:name=".apps.ApplicationScanner"
-            android:exported="false" />
 
     </application>
 

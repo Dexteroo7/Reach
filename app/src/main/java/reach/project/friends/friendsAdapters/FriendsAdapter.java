@@ -33,8 +33,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     ///////////Vertical Cursor (parent)
-    private static final byte VIEW_TYPE_FRIEND = 0;
-    private static final byte VIEW_TYPE_LOCKED = 1;
+    private static final byte VIEW_TYPE_FRIEND = 5;
+    private static final byte VIEW_TYPE_LOCKED = 6;
 
     @Nullable
     private Cursor verticalCursor = null;

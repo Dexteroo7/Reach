@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -142,7 +141,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
 
         if (uriOptional.isPresent()) {
 
-            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
+//            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
 
             final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
                     .setResizeOptions(new ResizeOptions(width, height))

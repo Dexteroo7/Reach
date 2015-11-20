@@ -98,7 +98,7 @@ public class NumberVerification extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
-            /*if (position == tourPagerAdapter.getCount())
+            /*if (position == tourPagerAdapter.getItemCount())
                 ((ReachApplication)getActivity().getApplication())
                         .trackGA(Optional.of("OnBoarding"),
                                 Optional.of("Completed App Tour"),

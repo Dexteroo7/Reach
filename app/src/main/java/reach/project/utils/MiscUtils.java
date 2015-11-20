@@ -627,21 +627,32 @@ public enum MiscUtils {
         return !(result == null || !result);
     }
 
-    public static <T> boolean isOnline(T stuff) {
+    public static <T extends Context> boolean isOnline(T stuff) {
 
         if (stuff == null)
             return false;
 
-        final Context context;
-        if (stuff instanceof Context)
-            context = (Context) stuff;
-        else if (stuff instanceof Fragment)
-            context = ((Fragment) stuff).getActivity();
-        else
+        //return false if this context is being destroyed
+        if (stuff instanceof Activity && ((Activity) stuff).isFinishing())
             return false;
 
         final NetworkInfo networkInfo =
-                ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+                ((ConnectivityManager) stuff.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
+
+    }
+
+    public static <T extends Fragment> boolean isOnline(T stuff) {
+
+        if (stuff == null)
+            return false;
+
+        final Activity activity = stuff.getActivity();
+        if (activity.isFinishing())
+            return false;
+
+        final NetworkInfo networkInfo =
+                ((ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
 
     }

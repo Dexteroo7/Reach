@@ -11,7 +11,7 @@ import reach.project.utils.ReachCursorAdapter;
 /**
  * Created by dexter on 18/11/15.
  */
-public final class LockedFriendsAdapter extends ReachCursorAdapter {
+final class LockedFriendsAdapter extends ReachCursorAdapter {
 
     @Override
     public int getItemId(@Nonnull Cursor cursor) {

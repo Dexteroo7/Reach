@@ -15,7 +15,7 @@ import reach.project.R;
 /**
  * Created by dexter on 18/11/15.
  */
-public final class FriendsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+final class FriendsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     public final TextView userNameList, telephoneNumberList, onlineText, newSongs;
     public final ImageView onlineIcon, lockIcon, profileGradient;
@@ -29,7 +29,7 @@ public final class FriendsViewHolder extends RecyclerView.ViewHolder implements 
         this.position = mPos;
     }
 
-    public FriendsViewHolder(View view, FriendsHolderCallback friendsHolderCallback) {
+    protected FriendsViewHolder(View view, FriendsHolderCallback friendsHolderCallback) {
 
         super(view);
 

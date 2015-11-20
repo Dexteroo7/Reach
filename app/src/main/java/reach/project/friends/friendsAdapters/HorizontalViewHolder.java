@@ -8,9 +8,9 @@ package reach.project.friends.friendsAdapters;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-public final class HorizontalViewHolder extends RecyclerView.ViewHolder {
+final class HorizontalViewHolder extends RecyclerView.ViewHolder {
 
-    public HorizontalViewHolder(View itemView) {
+    protected HorizontalViewHolder(View itemView) {
         super(itemView);
     }
 }

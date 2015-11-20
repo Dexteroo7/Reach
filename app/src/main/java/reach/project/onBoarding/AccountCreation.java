@@ -479,18 +479,22 @@ public class AccountCreation extends Fragment {
 
                 if (message == null)
                     return false;
-
+                    //TODO
                 if (message.what == MusicScanner.FINISHED) {
 
                     bottomPart2.setVisibility(View.INVISIBLE);
                     bottomPart3.setVisibility(View.VISIBLE);
                     phoneNumber.setText(songs + " songs");
                     next.setOnClickListener(proceed);
-                } else if (message.what == MusicScanner.SONGS) {
-                    progress.setText("Found " + message.arg1 + " songs");
-                    songs = message.arg1 + 1;
-                } else if (message.what == MusicScanner.ALBUM_ARTIST)
-                    progress.setText("Creating account");
+                }
+
+//                else if (message.what == MusicScanner.SONGS) {
+//                    progress.setText("Found " + message.arg1 + " songs");
+//                    songs = message.arg1 + 1;
+//                }
+//
+//                else if (message.what == MusicScanner.ALBUM_ARTIST)
+//                    progress.setText("Creating account");
 
                 return true;
             }

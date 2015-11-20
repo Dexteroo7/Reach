@@ -5,7 +5,7 @@ import com.squareup.wire.Message;
 
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nonnull;
@@ -32,7 +32,7 @@ public interface CacheLoaderController<T extends Message> {
      * @param items          the items to cache
      * @return true if successful
      */
-    boolean storeInCache(File cacheDirectory, String fileName, Collection<T> items);
+    boolean storeInCache(File cacheDirectory, String fileName, List<T> items);
 
     /**
      * Check if data source from cache is alive.
@@ -48,7 +48,7 @@ public interface CacheLoaderController<T extends Message> {
      *
      * @return an iterable of entities
      */
-    Collection<T> fetchFromNetwork(Callable<Collection<T>> networkFetcher);
+    List<T> fetchFromNetwork(Callable<List<T>> networkFetcher);
 
     /**
      * @param randomAccessFile to read item from

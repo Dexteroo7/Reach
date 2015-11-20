@@ -114,7 +114,7 @@ public class MoreMusicFragment extends Fragment {
         @Override
         public MoreMusicHolder onCreateViewHolder(ViewGroup parent, int mType) {
             return new MoreMusicHolder(LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_1, parent, false));
+                    .inflate(R.layout.song_list_item, parent, false));
         }
 
         @Override
@@ -127,7 +127,7 @@ public class MoreMusicFragment extends Fragment {
 
             if (uriOptional.isPresent()) {
 
-                Log.i("Ayush", "Url found = " + uriOptional.get().toString());
+//                Log.i("Ayush", "Url found = " + uriOptional.get().toString());
 
                 final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
                         .setResizeOptions(new ResizeOptions(200, 200))

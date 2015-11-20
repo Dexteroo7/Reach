@@ -203,6 +203,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             long userId = Long.parseLong(exploreJson.getString("userId"));
             Pair <String, String> pair = MiscUtils.useContextFromFragment(reference, context -> {
+
                 final Cursor cursor = context.getContentResolver().query(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                         new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
@@ -266,5 +267,4 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         //This is UI thread !
         exploreAdapter.notifyDataSetChanged();
     }
-
 }

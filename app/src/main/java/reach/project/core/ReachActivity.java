@@ -146,6 +146,11 @@ public class ReachActivity extends AppCompatActivity implements
         SearchView.OnQueryTextListener,
         SearchView.OnCloseListener {
 
+    public static String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
+    public static String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
+    public static String OPEN_MY_PROFILE_MUSIC = "OPEN_MY_PROFILE_MUSIC";
+    public static String OPEN_PUSH = "OPEN_PUSH";
+
     public static long serverId = 0;
     private static WeakReference<ReachActivity> reference = null;
     private static SecureRandom secureRandom = new SecureRandom();
@@ -753,7 +758,7 @@ public class ReachActivity extends AppCompatActivity implements
 //            return;
 //        }
 //
-//        final long count = countCursor.getCount();
+//        final long count = countCursor.getItemCount();
 //        countCursor.close();
 //        ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
     }
