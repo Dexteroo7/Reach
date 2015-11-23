@@ -18,6 +18,7 @@ import com.google.api.client.util.SecurityUtils;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
 import com.google.common.base.Optional;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.squareup.wire.Wire;
@@ -32,6 +33,7 @@ import java.lang.ref.WeakReference;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -417,14 +419,10 @@ public enum CloudStorageUtils {
         return true; //success, sync with local
     }
 
-    public static List<Song> fetchSongs (long userId, WeakReference<Context> reference) {
+    public static List<Song> fetchSongs(long userId, WeakReference<Context> reference) {
 
         final String fileName = MiscUtils.getMusicStorageKey(userId);
         Log.i("Ayush", "Fetching songs for " + fileName);
-
-        final InputStream download;
-        final GZIPInputStream compressedData;
-        final MusicList musicList;
 
         //getMd5Hash of Music data on storage
         final String serverHash;
@@ -434,6 +432,10 @@ public enum CloudStorageUtils {
             e.printStackTrace();
             return Collections.emptyList(); //fail
         }
+
+        final InputStream download;
+        final GZIPInputStream compressedData;
+        final MusicList musicList;
 
         try {
 
@@ -453,7 +455,7 @@ public enum CloudStorageUtils {
         }
 
         //proceed if alive
-        return MiscUtils.useContextFromContext(reference, (UseContext<List<Song>, Context>) context -> {
+        final List<Song> songList = MiscUtils.useContextFromContext(reference, (UseContext<List<Song>, Context>) context -> {
 
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             if (musicList.song == null || musicList.song.isEmpty()) {
@@ -465,11 +467,16 @@ public enum CloudStorageUtils {
 
             //first update the hash
             SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
-
-            Log.i("Ayush", "Successfully fetched from network " + musicList.song.size());
             return musicList.song;
 
         }).or(Collections.emptyList());
+
+        return Ordering.from(new Comparator<Song>() {
+            @Override
+            public int compare(Song lhs, Song rhs) {
+                return lhs.displayName.compareTo(rhs.displayName);
+            }
+        }).immutableSortedCopy(musicList.song);
     }
 
     private static Storage storage = null;

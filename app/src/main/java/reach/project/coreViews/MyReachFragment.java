@@ -6,7 +6,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -145,10 +144,7 @@ public class MyReachFragment extends Fragment {
                 getChildFragmentManager(),
                 new String[]{"FRIENDS", "INVITE"},
                 new Fragment[]{
-                        contactsListFragment, // Friends
-                        allContactsFragment})); // Invite
-        final TabLayout slidingTabLayout = (TabLayout) rootView.findViewById(R.id.sliding_tabs);
-        slidingTabLayout.setupWithViewPager(viewPager);
+                        contactsListFragment}));
         return rootView;
     }
 

@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -94,7 +93,7 @@ public abstract class Cache implements Closeable {
     private final CacheInvalidator cacheInvalidator = new CacheInvalidator();
 
     //an executor for getting stories from server
-    private final ExecutorService executorService;
+    private final ThreadPoolExecutor executorService;
 
     ///////////////Public interaction
 
@@ -117,7 +116,7 @@ public abstract class Cache implements Closeable {
 
         Log.i("Ayush", "Calling load more elements");
 
-        if (loadingDone.get())
+        if (loadingDone.get() || executorService.getActiveCount() > 0)
             return; //do not load if done
 
         new CacheLoader().executeOnExecutor(executorService,
@@ -214,7 +213,7 @@ public abstract class Cache implements Closeable {
                 if (streamOptional.isPresent())
                     randomAccessFile = streamOptional.get();
                 cache.cacheAccess = randomAccessFile; // set this stream as cache stream
-                Log.i("Ayush", "Loading cache stream");
+                Log.i("Ayush", "Loading cache stream " + cache.fileName + " " + (cache.cacheAccess != null));
             }
 
             /**
@@ -230,7 +229,6 @@ public abstract class Cache implements Closeable {
             if (cacheInvalidated || isCacheStreamDead(randomAccessFile)) {
 
                 Log.i("Ayush", "Fetching from network");
-
                 itemsToReturn = fetchFromNetwork(networkFetcher);
                 Log.i("Ayush", "Fetched " + itemsToReturn.size());
                 networkLoad = true;
@@ -311,6 +309,7 @@ public abstract class Cache implements Closeable {
 
         @Override
         protected void onPostExecute(Object[] params) {
+
             super.onPostExecute(params);
 
             if (params == null)
@@ -458,6 +457,7 @@ public abstract class Cache implements Closeable {
                     return networkFetcher.call();
                 } catch (Exception e) {
 
+                    e.printStackTrace();
                     if (e instanceof IOException)
                         throw (IOException) e;
                     else

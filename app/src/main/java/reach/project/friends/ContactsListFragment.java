@@ -18,14 +18,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -49,16 +47,14 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 
 public class ContactsListFragment extends Fragment implements
-        LoaderManager.LoaderCallbacks<Cursor>,
-        FriendsAdapter.ClickHandOver {
+        LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
 
     private final FriendsAdapter friendsAdapter = new FriendsAdapter(this);
 
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private SearchView searchView;
     private View rootView;
 
     private SharedPreferences sharedPreferences;
@@ -152,37 +148,6 @@ public class ContactsListFragment extends Fragment implements
     }
 
     @Override
-    public void handOverClickDetails(long friendId, short status, short networkType, String userName) {
-
-        if (rootView == null)
-            return;
-
-        if (status < 2) {
-
-            if (networkType == 5)
-                Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
-            MiscUtils.useFragment(reference, fragment -> {
-                fragment.mListener.onOpenLibrary(friendId);
-            });
-
-        } else if (status >= 2) {
-
-            final AlertDialog alertDialog = new AlertDialog.Builder(rootView.getContext())
-                    .setMessage("Send a friend request to " + userName + " ?")
-                    .setPositiveButton("Yes", LocalUtils.positiveButton)
-                    .setNegativeButton("No", (dialog, which) -> {
-                        dialog.dismiss();
-                    }).create();
-
-            alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
-                    //set tag to use when positive button click
-                    new Object[]{friendId, status, new WeakReference<>(rootView)}
-            ));
-            alertDialog.show();
-        }
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -192,13 +157,6 @@ public class ContactsListFragment extends Fragment implements
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
 
-        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getContext(), R.color.reach_color),
-                ContextCompat.getColor(getContext(), R.color.reach_grey));
-        swipeRefreshLayout.setBackgroundResource(R.color.white);
-        swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
-
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
@@ -207,7 +165,8 @@ public class ContactsListFragment extends Fragment implements
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                if (position == 0)
+
+                if (position == 0 || friendsAdapter.getItemViewType(position) == FriendsAdapter.VIEW_TYPE_LOCKED)
                     return 2;
                 else
                     return 1;
@@ -224,14 +183,12 @@ public class ContactsListFragment extends Fragment implements
             if (isOnline) {
                 synchronizing.set(true);
                 pinging.set(true);
-                swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
                 new LocalUtils.ContactsSync().executeOnExecutor(StaticData.temporaryFix);
             }
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
-            swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
             new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
         }
 
@@ -339,6 +296,37 @@ public class ContactsListFragment extends Fragment implements
         mListener = null;
     }
 
+    @Override
+    public void handOverMessage(FriendsAdapter.ClickData clickData) {
+
+        if (rootView == null)
+            return;
+
+        if (clickData.status < 2) {
+
+            if (clickData.networkType == 5)
+                Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
+            MiscUtils.useFragment(reference, fragment -> {
+                fragment.mListener.onOpenLibrary(clickData.friendId);
+            });
+
+        } else if (clickData.status >= 2) {
+
+            final AlertDialog alertDialog = new AlertDialog.Builder(rootView.getContext())
+                    .setMessage("Send a friend request to " + clickData.userName + " ?")
+                    .setPositiveButton("Yes", LocalUtils.positiveButton)
+                    .setNegativeButton("No", (dialog, which) -> {
+                        dialog.dismiss();
+                    }).create();
+
+            alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
+                    //set tag to use when positive button click
+                    new Object[]{clickData.friendId, clickData.status, new WeakReference<>(rootView)}
+            ));
+            alertDialog.show();
+        }
+    }
+
     private enum LocalUtils {
         ;
 
@@ -438,10 +426,6 @@ public class ContactsListFragment extends Fragment implements
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                MiscUtils.useFragment(reference, fragment ->
-                {
-                    fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false));
-                });
             }
         }
 

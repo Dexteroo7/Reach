@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
@@ -50,8 +51,7 @@ import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.yourProfile.blobCache.Cache;
 import reach.project.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.yourProfile.blobCache.CacheType;
-import reach.project.yourProfile.music.musicAdapters.CacheAdapterInterface;
-import reach.project.yourProfile.music.musicAdapters.MusicAdapter;
+import reach.project.yourProfile.CacheAdapterInterface;
 
 /**
  * Full list loads from cache, and checks network for update, if update is found, whole data is reloaded.
@@ -61,7 +61,7 @@ import reach.project.yourProfile.music.musicAdapters.MusicAdapter;
  * A placeholder fragment containing a simple view.
  */
 public class YourProfileMusicFragment extends Fragment implements CacheInjectorCallbacks<Message>,
-        CacheAdapterInterface<Message> {
+        CacheAdapterInterface<Message, Song> {
 
     private static WeakReference<YourProfileMusicFragment> reference = null;
     private static long userId = 0;
@@ -85,7 +85,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
     private View rootView = null;
     private RecyclerViewMaterialAdapter materialAdapter = null;
-    //private RecyclerView.Adapter mainAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
     private Cache recentMusicCache = null;
@@ -191,8 +190,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     public int getItemCount() {
 
         final int size = musicData.size();
-        if (size == 0)
+        if (size == 0) {
             recentMusicCache.loadMoreElements(true);
+            fullListCache.loadMoreElements(false);
+        }
 
         return size;
     }
@@ -244,7 +245,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         final int currentSize = musicData.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 3)
+        if (position > currentSize - 5)
             //request a partial load
             fullListCache.loadMoreElements(false);
 
@@ -252,7 +253,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
-    public void handOverSongClick(Song song) {
+    public void handOverMessage(@NonNull Song song) {
 
         final Cursor senderCursor = getActivity().getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
@@ -475,7 +476,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             songBuilder.songId = simpleSong.getSongId();
             songBuilder.visibility = simpleSong.getVisibility();
             songBuilder.year = simpleSong.getYear();
-
+            toReturn.add(songBuilder.build());
         }
 
         final RecentSong.Builder recentBuilder = new RecentSong.Builder();

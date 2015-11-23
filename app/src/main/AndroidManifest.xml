@@ -171,5 +171,4 @@
             android:process=":remote" />
 
     </application>
-
 </manifest>

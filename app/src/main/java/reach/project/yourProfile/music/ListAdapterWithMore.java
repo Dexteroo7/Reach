@@ -1,9 +1,7 @@
-package reach.project.yourProfile.music.musicAdapters;
+package reach.project.yourProfile.music;
 
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.interfaces.DraweeController;
@@ -14,33 +12,29 @@ import com.google.common.base.Optional;
 
 import java.util.List;
 
-import reach.project.R;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
+import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.yourProfile.MoreButtonAdapter;
 
 /**
  * Created by dexter on 18/11/15.
  */
-class ListAdapterWithMore extends RecyclerView.Adapter<SongItemHolder> implements CacheAdapterInterface<Song> {
+class ListAdapterWithMore extends MoreButtonAdapter<Song, SongItemHolder> {
 
-    private final List<Song> songList;
-    private final HandOverSongClick handOverSongClick;
-
-    protected ListAdapterWithMore(List<Song> songsList, HandOverSongClick handOverSongClick) {
-        this.songList = songsList;
-        this.handOverSongClick = handOverSongClick;
-        setHasStableIds(true);
+    public ListAdapterWithMore(List<Song> messageList, HandOverMessage<Song> handOverMessage, int resourceId) {
+        super(messageList, handOverMessage, resourceId);
     }
 
     @Override
-    public SongItemHolder onCreateViewHolder(ViewGroup parent, int mType) {
-        return new SongItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.song_list_item, parent, false), this);
+    public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+        return new SongItemHolder(itemView, handOverMessage);
     }
 
     @Override
     public void onBindViewHolder(SongItemHolder holder, int position) {
 
-        final Song song = songList.get(position);
+        final Song song = getItem(position);
 
         holder.bindPosition(position);
         holder.songName.setText(song.displayName);
@@ -63,34 +57,5 @@ class ListAdapterWithMore extends RecyclerView.Adapter<SongItemHolder> implement
             holder.albumArt.setController(controller);
         } else
             holder.albumArt.setImageBitmap(null);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return getItem(position).hashCode();
-    }
-
-    @Override
-    public int getItemCount() {
-        return songList.size();
-    }
-
-    @Override
-    public long getItemId(Song item) {
-        return item.hashCode();
-    }
-
-    @Override
-    public Song getItem(int position) {
-        return songList.get(position);
-    }
-
-    @Override
-    public void handOverSongClick(Song song) {
-        handOverSongClick.handOverSongClick(song);
-    }
-
-    public interface HandOverSongClick {
-        void handOverSongClick(Song song);
     }
 }

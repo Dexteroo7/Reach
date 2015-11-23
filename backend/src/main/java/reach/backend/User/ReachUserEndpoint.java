@@ -32,13 +32,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1213,8 +1214,9 @@ public class ReachUserEndpoint {
 
         //to close
         final GcsInputChannel inputChannel;
-        final ByteArrayInputStream byteArrayInputStream;
+        final BufferedInputStream bufferedInputStream;
         final GZIPInputStream compressedData;
+        final InputStream inputStream;
 
         final MusicList musicList;
 
@@ -1222,19 +1224,16 @@ public class ReachUserEndpoint {
         try {
 
             inputChannel = gcsService.openReadChannel(gcsFilename, 0);
-            final int fileSize = (int) gcsService.getMetadata(gcsFilename).getLength();
-            final ByteBuffer result = ByteBuffer.allocate(fileSize);
-            inputChannel.read(result);
-
-            byteArrayInputStream = new ByteArrayInputStream(result.array());
-            compressedData = new GZIPInputStream(byteArrayInputStream);
+            bufferedInputStream = new BufferedInputStream(inputStream = Channels.newInputStream(inputChannel));
+            compressedData = new GZIPInputStream(bufferedInputStream);
             musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
-            closeQuietly(byteArrayInputStream, inputChannel, compressedData);
 
         } catch (IOException e) {
             e.printStackTrace();
             return Collections.emptyList(); //fail
         }
+
+        closeQuietly(bufferedInputStream, inputChannel, compressedData, inputStream);
 
         final List<Song> songs;
         //sanity checks
