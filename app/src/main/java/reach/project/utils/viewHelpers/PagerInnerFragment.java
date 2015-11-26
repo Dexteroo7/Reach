@@ -73,7 +73,7 @@ public class PagerInnerFragment extends Fragment {
             try {
                 final Class fragmentClass = Class.forName(page.classes[index]);
                 final Method invoker = fragmentClass.getMethod("getInstance", String.class);
-                fragments[index] = (Fragment) invoker.invoke(null);
+                fragments[index] = (Fragment) invoker.invoke(null, "Bitch");
             } catch (ClassNotFoundException | NoSuchMethodException |
                     IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();

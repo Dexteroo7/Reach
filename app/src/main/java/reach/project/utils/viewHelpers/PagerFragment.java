@@ -26,6 +26,10 @@ public class PagerFragment extends Fragment {
 
     public static class Pages implements Parcelable {
 
+        public Pages() {
+
+        }
+
         public static final Parcelable.Creator<Pages> CREATOR = new Parcelable.Creator<Pages>() {
             @Override
             public Pages createFromParcel(Parcel in) {
@@ -38,11 +42,11 @@ public class PagerFragment extends Fragment {
             }
         };
 
-        public void setClasses(@NonNull Class<Fragment>[] classes) {
+        public void setClasses(@NonNull Class<Fragment>[] realClasses) {
 
-            this.classes = new String[classes.length];
-            for (int index = 0; index < classes.length; index++)
-                this.classes[index] = classes[index].getName();
+            classes = new String[realClasses.length];
+            for (int index = 0; index < realClasses.length; index++)
+                classes[index] = realClasses[index].getName();
         }
 
         public String[] classes;

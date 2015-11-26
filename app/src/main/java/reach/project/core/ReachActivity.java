@@ -82,6 +82,7 @@ import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.MusicScanner;
 import reach.project.music.MySongsHelper;
+import reach.project.music.PrivacyFragment;
 import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
 import reach.project.music.TransferSong;
@@ -98,6 +99,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
+import reach.project.utils.viewHelpers.PagerFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface {
@@ -645,12 +647,27 @@ public class ReachActivity extends AppCompatActivity implements
             viewPager.setPagingEnabled(false);
             viewPager.setOffscreenPageLimit(5);
 
+            final Class [] classes = new Class[]{
+                    MyLibraryFragment.class,
+                    ApplicationFragment.class
+            };
+            final String [] titles = new String[]{
+                    "My Library",
+                    "My Application"
+            };
+            final String headerText = "File Manager";
+
+            final PagerFragment.Pages pages = new PagerFragment.Pages();
+            pages.setClasses(classes);
+            pages.header = headerText;
+            pages.titles = titles;
+
             final Fragment[] fragments = new Fragment[]{
                     MyReachFragment.newInstance(),
                     PushSongsFragment.newInstance(),
                     ExploreFragment.newInstance(serverId),
-                    MyLibraryFragment.getInstance("Bitch"),
-                    ApplicationFragment.getInstance("Bitch"),
+                    PagerFragment.getNewInstance(new PagerFragment.Pages[]{pages}),
+                    PrivacyFragment.newInstance(false),
             };
             viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
                 @Override
