@@ -59,6 +59,7 @@ public class ExploreAdapter extends PagerAdapter {
         final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
 
         switch (container.getTypes()) {
+
             case MUSIC:
                 title.setText(container.getTitle());
                 subTitle.setText(container.getSubTitle());

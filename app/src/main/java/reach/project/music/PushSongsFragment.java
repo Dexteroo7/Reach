@@ -200,10 +200,13 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             });
 
         doneButton.setOnClickListener(v -> {
-            if (LocalUtils.selectedList.size() == 0)
-                Toast.makeText(activity, "Please select some songs first", Toast.LENGTH_SHORT).show();
-            else
-                mListener.onPushNext(LocalUtils.selectedList);
+
+            new LocalUtils.PushSongsDevikaSpecial().executeOnExecutor(StaticData.temporaryFix);
+
+//            if (LocalUtils.selectedList.size() == 0)
+//                Toast.makeText(activity, "Please select some songs first", Toast.LENGTH_SHORT).show();
+//            else
+//                mListener.onPushNext(LocalUtils.selectedList);
         });
 
         toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);

@@ -647,28 +647,23 @@ public class ReachActivity extends AppCompatActivity implements
             viewPager.setPagingEnabled(false);
             viewPager.setOffscreenPageLimit(5);
 
-            final Class [] classes = new Class[]{
-                    MyLibraryFragment.class,
-                    ApplicationFragment.class
-            };
-            final String [] titles = new String[]{
-                    "My Library",
-                    "My Application"
-            };
-            final String headerText = "File Manager";
-
-            final PagerFragment.Pages pages = new PagerFragment.Pages();
-            pages.setClasses(classes);
-            pages.header = headerText;
-            pages.titles = titles;
-
             final Fragment[] fragments = new Fragment[]{
+
                     MyReachFragment.newInstance(),
                     PushSongsFragment.newInstance(),
                     ExploreFragment.newInstance(serverId),
-                    PagerFragment.getNewInstance(new PagerFragment.Pages[]{pages}),
+                    PagerFragment.getNewInstance(
+                            new PagerFragment.Pages(
+                                    new Class[]{ApplicationFragment.class},
+                                    new String[]{"My Application"},
+                                    "Bitch"),
+                            new PagerFragment.Pages(
+                                    new Class[]{MyLibraryFragment.class},
+                                    new String[]{"My Library"},
+                                    "Bitch")),
                     PrivacyFragment.newInstance(false),
             };
+
             viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
                 @Override
                 public Fragment getItem(int position) {

@@ -26,8 +26,11 @@ public class PagerFragment extends Fragment {
 
     public static class Pages implements Parcelable {
 
-        public Pages() {
+        public Pages(Class<Fragment>[] classes, String[] titles, String headerText) {
 
+            setClasses(classes);
+            this.titles = titles;
+            this.header = headerText;
         }
 
         public static final Parcelable.Creator<Pages> CREATOR = new Parcelable.Creator<Pages>() {
@@ -73,7 +76,7 @@ public class PagerFragment extends Fragment {
         }
     }
 
-    public static PagerFragment getNewInstance(@NonNull Pages[] pages) {
+    public static PagerFragment getNewInstance(@NonNull Pages... pages) {
 
         //sanity check
         for (Pages page : pages) {
@@ -112,12 +115,12 @@ public class PagerFragment extends Fragment {
 
             if (pages[index].classes.length > 1)
                 fragments[index] = PagerInnerFragment.getNewInstance(pages[index]);
-            else if (pages[index].classes.length == 0) {
+            else if (pages[index].classes.length == 1) {
 
                 try {
                     final Class fragmentClass = Class.forName(pages[index].classes[0]);
                     final Method invoker = fragmentClass.getMethod("getInstance", String.class);
-                    fragments[index] = (Fragment) invoker.invoke(null, pages[index].header);
+                    fragments[index] = (Fragment) invoker.invoke(null, "Bitch");
                 } catch (ClassNotFoundException | NoSuchMethodException |
                         IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();

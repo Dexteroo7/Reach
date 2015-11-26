@@ -82,8 +82,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
-        LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
-        PopupMenu popupMenu = new PopupMenu(container.getContext(), exploreToolbarText);
+        final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
+        final PopupMenu popupMenu = new PopupMenu(container.getContext(), exploreToolbarText);
+
         popupMenu.inflate(R.menu.explore_menu);
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
         popupMenu.setOnMenuItemClickListener(item -> {
@@ -113,11 +114,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, (view, position) -> {
+
             if (position <= 1) {
                 // Modify the default slide transition to shrink the page as well
-                float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
-                float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
-                float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
+                final float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
+                final float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
+                final float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
                 if (position < 0)
                     view.setTranslationX(horzMargin - vertMargin / 2);
                 else
