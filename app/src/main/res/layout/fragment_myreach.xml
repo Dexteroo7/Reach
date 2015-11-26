@@ -1,51 +1,44 @@
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-     >
+    android:layout_height="match_parent">
+
     <android.support.design.widget.AppBarLayout
-        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-         >
+        android:layout_height="wrap_content">
+
         <android.support.v7.widget.Toolbar
             android:id="@+id/myReachToolbar"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:navigationIcon="@drawable/ic_drawer"
-            android:layout_width="match_parent"
-            app:layout_scrollFlags="scroll|enterAlways"
-            android:minHeight="?attr/actionBarSize"
-            android:background="?attr/colorPrimary" />
-        <android.support.design.widget.TabLayout
-            android:id="@+id/sliding_tabs"
-            app:tabMode="fixed"
             android:background="?attr/colorPrimary"
-            app:tabTextColor="#c3c3c3"
-            app:tabSelectedTextColor="@color/white"
-            app:tabIndicatorColor="@color/white"
-            style="@style/MyCustomTabLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:minHeight="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:navigationIcon="@drawable/ic_drawer"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
     </android.support.design.widget.AppBarLayout>
+
     <FrameLayout
         android:id="@+id/myReachFrame"
-        android:layout_marginBottom="52dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="52dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <android.support.v4.view.ViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
         <View
             android:id="@+id/mainShadow"
-            android:layout_gravity="top"
-            android:background="@drawable/shadow_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="3dp" />
+            android:layout_height="3dp"
+            android:layout_gravity="top"
+            android:background="@drawable/shadow_toolbar" />
     </FrameLayout>
+
     <com.getbase.floatingactionbutton.FloatingActionsMenu
         android:id="@+id/right_labels"
         android:layout_width="wrap_content"
@@ -56,6 +49,7 @@
         app:fab_addButtonColorPressed="@color/reach_color"
         app:fab_addButtonPlusIconColor="@color/white"
         app:fab_labelStyle="@style/menu_labels_style">
+
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/share_music_fab"
             android:layout_width="wrap_content"
@@ -64,6 +58,7 @@
             app:fab_colorPressed="@color/reach_color"
             app:fab_icon="@drawable/ic_share_white"
             app:fab_title="Share Music" />
+
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/invite_friend_fab"
             android:layout_width="wrap_content"

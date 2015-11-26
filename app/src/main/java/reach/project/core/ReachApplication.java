@@ -1,9 +1,11 @@
 package reach.project.core;
 
 import android.app.Application;
-import android.content.Context;
-import android.support.multidex.MultiDex;
+import android.support.annotation.NonNull;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseException;
 import com.google.android.gms.analytics.GoogleAnalytics;
@@ -65,6 +67,7 @@ public class ReachApplication extends Application {
         } catch (NoSuchAlgorithmException | KeyManagementException ignored) {
             //ignore !!
         }
+
         okHttpClient.setHostnameVerifier((hostname, session) -> true);
         /////////////////no http response cache
         okHttpClient.setCache(null);
@@ -85,29 +88,41 @@ public class ReachApplication extends Application {
     private static final HitBuilders.EventBuilder builder = new HitBuilders.EventBuilder();
     private static final HitBuilders.ScreenViewBuilder screenViewBuilder = new HitBuilders.ScreenViewBuilder();
 
-    synchronized public void trackGA(Optional<String> category,
-                                     Optional<String> action,
-                                     Optional<String> label,
-                                     int value) {
-        getTracker().send(builder
-                .setCategory(category.isPresent() ? category.get() : "")
-                .setAction(action.isPresent() ? action.get() : "")
-                .setLabel(label.isPresent() ? label.get() : "")
-                .setValue(value)
-                .build());
-        //reset
-        builder.setCategory("");
-        builder.setAction("");
-        builder.setLabel("");
-    }
-
     synchronized public void sendScreenView(Optional<String> screenName) {
         Tracker tracker = getTracker();
         tracker.setScreenName(screenName.isPresent() ? screenName.get() : "");
         tracker.send(screenViewBuilder.build());
     }
 
+    public synchronized void track(@NonNull Optional<String> category,
+                                   @NonNull Optional<String> action,
+                                   @NonNull Optional<String> label,
+                                   int value) {
+
+        //set values
+        if (category.isPresent())
+            builder.setCategory(category.get());
+
+        if (action.isPresent())
+            builder.setAction(action.get());
+
+        if (label.isPresent())
+            builder.setLabel(label.get());
+
+        if (value > 0)
+            builder.setValue(value);
+
+        //send track
+        getTracker().send(builder.build());
+
+        //reset
+        builder.setCategory(null);
+        builder.setAction(null);
+        builder.setLabel(null);
+    }
+
     synchronized public Tracker getTracker() {
+
         if (mTracker == null) {
 
             final GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
@@ -126,11 +141,18 @@ public class ReachApplication extends Application {
             Firebase.getDefaultConfig().setPersistenceEnabled(true);
         } catch (FirebaseException ignored) {
         }
+        //initialize fresco
+        final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, okHttpClient)
+                .setDownsampleEnabled(true)
+                .setResizeAndRotateEnabledForNetwork(true)
+                .build();
+
+        Fresco.initialize(this, config);
     }
 
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
-    }
+//    @Override
+//    protected void attachBaseContext(Context base) {
+//        super.attachBaseContext(base);
+//        MultiDex.install(base);
+//    }
 }

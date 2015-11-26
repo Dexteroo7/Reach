@@ -16,19 +16,14 @@ import android.widget.ImageView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
-
 import reach.project.R;
-import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
 
     private final int grey;
     private final int color;
 //    private final int layoutParameter = MiscUtils.dpToPx(20);
-    private final CircleTransform transform = new CircleTransform();
 
     public ReachContactsChooserAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
@@ -85,8 +80,8 @@ public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
         viewHolder.profilePhotoList.setVisibility(View.INVISIBLE);
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
 
-            Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + imageId)
-                    .fit().centerCrop().transform(transform).into(viewHolder.profilePhotoList);
+//            Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl + imageId)
+//                    .fit().centerCrop().transform(transform).into(viewHolder.profilePhotoList);
             viewHolder.profilePhotoList.setVisibility(View.VISIBLE);
         }
 

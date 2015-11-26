@@ -55,6 +55,7 @@ public final class AlbumArtData extends Message {
 
   @Override
   public boolean equals(Object other) {
+
     if (other == this) return true;
     if (!(other instanceof AlbumArtData)) return false;
     AlbumArtData o = (AlbumArtData) other;

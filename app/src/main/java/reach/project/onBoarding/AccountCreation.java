@@ -36,7 +36,6 @@ import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
 
 import reach.backend.entities.userApi.model.InsertContainer;
@@ -59,14 +57,13 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.MusicScanner;
+import reach.project.music.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
-import reach.project.utils.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
 
@@ -94,7 +91,6 @@ public class AccountCreation extends Fragment {
         return fragment;
     }
 
-    private final CircleTransform transform = new CircleTransform();
     private final int IMAGE_PICKER_SELECT = 999;
     private SuperInterface mListener = null;
     private ImageView profilePhotoSelector = null;
@@ -133,12 +129,12 @@ public class AccountCreation extends Fragment {
             if (!TextUtils.isEmpty(oldData[1])) {
 
                 imageId = oldData[1];
-                Picasso.with(activity)
-                        .load(StaticData.cloudStorageImageBaseUrl + imageId)
-                        .transform(transform)
-                        .fit()
-                        .centerCrop()
-                        .into(profilePhotoSelector);
+//                Picasso.with(activity)
+//                        .load(StaticData.cloudStorageImageBaseUrl + imageId)
+//                        .transform(transform)
+//                        .fit()
+//                        .centerCrop()
+//                        .into(profilePhotoSelector);
             }
         }
 
@@ -177,8 +173,8 @@ public class AccountCreation extends Fragment {
                     rootView.findViewById(R.id.nextBtn),
                     (TextView) rootView.findViewById(R.id.telephoneNumber),
                     progress,
-                    SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"))
-                    .executeOnExecutor(StaticData.temporaryFix, name, phoneNumber);
+                    MiscUtils.getDeviceId(activity).trim().replace(" ", "-"))
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, name, phoneNumber);
         });
         return rootView;
     }
@@ -483,22 +479,22 @@ public class AccountCreation extends Fragment {
 
                 if (message == null)
                     return false;
-
+                    //TODO
                 if (message.what == MusicScanner.FINISHED) {
 
                     bottomPart2.setVisibility(View.INVISIBLE);
                     bottomPart3.setVisibility(View.VISIBLE);
                     phoneNumber.setText(songs + " songs");
                     next.setOnClickListener(proceed);
-                } else if (message.what == MusicScanner.SONGS) {
-                    progress.setText("Found " + message.arg1 + " songs");
-                    songs = message.arg1 + 1;
-                } else if (message.what == MusicScanner.PLAY_LISTS) {
+                }
 
-                    progress.setText("Found " + message.arg1 + " playLists");
-                    playLists = message.arg1 + 1;
-                } else if (message.what == MusicScanner.ALBUM_ARTIST)
-                    progress.setText("Creating account");
+//                else if (message.what == MusicScanner.SONGS) {
+//                    progress.setText("Found " + message.arg1 + " songs");
+//                    songs = message.arg1 + 1;
+//                }
+//
+//                else if (message.what == MusicScanner.ALBUM_ARTIST)
+//                    progress.setText("Creating account");
 
                 return true;
             }
@@ -579,12 +575,12 @@ public class AccountCreation extends Fragment {
                     } else if (fragment.profilePhotoSelector != null) {
 
                         toUpload = file;
-                        Picasso.with(context)
-                                .load(toUpload)
-                                .fit()
-                                .centerCrop()
-                                .transform(fragment.transform)
-                                .centerCrop().into(fragment.profilePhotoSelector);
+//                        Picasso.with(context)
+//                                .load(toUpload)
+//                                .fit()
+//                                .centerCrop()
+//                                .transform(fragment.transform)
+//                                .centerCrop().into(fragment.profilePhotoSelector);
                     }
                 }
             });
@@ -598,6 +594,19 @@ public class AccountCreation extends Fragment {
 
         @Override
         public void onAuthenticationError(FirebaseError error) {
+
+            MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                @Override
+                public void work(Activity activity) {
+
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR " + error.getDetails())
+                            .setAction("User Id - " + serverId)
+                            .setAction("Label - " + phoneNumber)
+                            .setValue(1)
+                            .build());
+                }
+            });
             Log.e("Ayush", "Login Failed! " + error.getMessage());
         }
 
@@ -612,7 +621,7 @@ public class AccountCreation extends Fragment {
             });
 
             Log.i("Ayush", "Chat authenticated " + chatUUID);
-            final Map<String, Object> userData = new HashMap<>();
+            final Map<String, Object> userData = MiscUtils.getMap(6);
             userData.put("uid", authData.getAuth().get("uid"));
             userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
             userData.put("userName", authData.getAuth().get("userName"));

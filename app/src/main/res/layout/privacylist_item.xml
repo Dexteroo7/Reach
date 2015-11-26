@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="90dp">
-    <ImageView
+
+    <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="20dp"
         android:layout_marginLeft="15dp"
-        android:background="@drawable/ic_default_music"/>
+        android:layout_marginTop="20dp"
+        fresco:failureImage="@drawable/ic_default_music"
+        fresco:placeholderImage="@drawable/ic_default_music" />
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_alignParentRight="true"
@@ -18,6 +22,7 @@
         android:id="@+id/progressContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+
         <ImageView
             android:id="@+id/listToggle"
             android:layout_gravity="center_horizontal"

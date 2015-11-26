@@ -164,6 +164,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final ReachFriendsHelper reachFriendsHelper = new ReachFriendsHelper(context);
         final SQLiteDatabase sqlDB = reachFriendsHelper.getWritableDatabase();
         sqlDB.beginTransaction();
+
         try {
 
             if (statusChange != null && statusChange.size() > 0) {

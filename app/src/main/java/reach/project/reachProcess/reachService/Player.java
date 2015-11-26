@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -29,7 +30,6 @@ import reach.project.reachProcess.decoder.Decoder;
 import reach.project.reachProcess.decoder.DecoderException;
 import reach.project.reachProcess.decoder.Header;
 import reach.project.reachProcess.decoder.SampleBuffer;
-import reach.project.utils.CustomThreadFactoryBuilder;
 
 /**
  * Created by Dexter on 22-06-2015.
@@ -45,10 +45,15 @@ public class Player {
 
     //Single threaded executor to avoid fuck ups
     private final ExecutorService decoderService = Executors.unconfigurableExecutorService(
-            Executors.newFixedThreadPool(2, new CustomThreadFactoryBuilder()
+            Executors.newFixedThreadPool(2, new ThreadFactoryBuilder()
                     .setDaemon(false)
-                    .setNamePrefix("reach_decoder")
+                    .setNameFormat("reach_decoder")
                     .setPriority(Thread.MAX_PRIORITY)
+                    .setUncaughtExceptionHandler((thread, ex) -> {
+
+                        //ex.getLocalizedMessage()
+                        //TODO track
+                    })
                     .build()));
 
     private final AtomicBoolean stopDecoding = new AtomicBoolean(true), pauseDecoding = new AtomicBoolean(false);

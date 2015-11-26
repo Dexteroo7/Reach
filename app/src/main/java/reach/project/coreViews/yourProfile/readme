@@ -1,0 +1,3 @@
+Full list loader is to be used when content arrives in 1 shot.
+Cache updating will take place before a cache stream is established and used.
+Updates are overwrites

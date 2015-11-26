@@ -1,5 +1,7 @@
 package reach.project.utils;
 
+import android.text.TextUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -45,22 +47,22 @@ public class SendSMS {
 
     // function to set Api url
     public static void setapi_url(String ap) {
+
         //checking for valid url format
-        String check = ap;
-        String str = check.substring(0, 7);
+        String str = ap.substring(0, 7);
 //			    System.out.println(""+str );
         String t = "http://";
         String s = "https:/";
         String st = "https://";
         if (str.equals(t)) {
             start = t;
-            api_url = check.substring(7);
-        } else if (check.substring(0, 8).equals(st)) {
+            api_url = ap.substring(7);
+        } else if (ap.substring(0, 8).equals(st)) {
             start = st;
-            api_url = check.substring(8);
+            api_url = ap.substring(8);
         } else if (str.equals(s)) {
             start = st;
-            api_url = check.substring(7);
+            api_url = ap.substring(7);
         } else {
             start = t;
             api_url = ap;
@@ -69,6 +71,7 @@ public class SendSMS {
 
     //function to set parameter import java.net.URLEncoder;
     public void setparams(String ap, String mt, String apk, String sd) {
+
         setapi_key(apk);
         //System.out.println(wk);
         setsender_id(sd);
@@ -85,30 +88,33 @@ public class SendSMS {
 
 //        addSslCertificate();
         message = URLEncoder.encode(message, "UTF-8");
-        if (unicode == null)
-            unicode = "0";
-        unicode = "&unicode=" + unicode;
-        if (time == null)
-            time = "";
-        else time = "&time=" + URLEncoder.encode(time, "UTF-8");
-        URL url = new URL("" + start + api_url + "/api/v3/?method=" + method + "&api_key=" + api_key + "&sender=" + sender_id + "&to=" + mob_no + "&message=" + message + unicode + time + "&format=json");
+
+        final URL url = new URL("" + start + api_url + "/api/v3/?method=" + method +
+                "&api_key=" + api_key +
+                "&sender=" + sender_id +
+                "&to=" + mob_no +
+                "&message=" + message +
+                "&unicode=" + (TextUtils.isEmpty(unicode) ? "0" : unicode) +
+                "&time=" + (TextUtils.isEmpty(time) ? "" : URLEncoder.encode(time, "UTF-8")) +
+                "&format=json");
 
 //		        System.out.println("url look like " + url );
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        final HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setDoOutput(true);
         con.getOutputStream();
         con.getInputStream();
-        BufferedReader rd;
+
+        final StringBuilder result = new StringBuilder();
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
         String line;
-        String result = "";
-        rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        while ((line = rd.readLine()) != null) {
-            result += line;
-        }
-        rd.close();
+        while ((line = reader.readLine()) != null)
+            result.append(line);
+
+        reader.close();
 //		        System.out.println("Result is" + result);
-        return result;
+        return result.toString();
 
 
     }
@@ -147,6 +153,7 @@ public class SendSMS {
         con.getInputStream();
         BufferedReader rd;
         String line;
+
         String result = "";
         rd = new BufferedReader(new InputStreamReader(con.getInputStream()));
         while ((line = rd.readLine()) != null) {

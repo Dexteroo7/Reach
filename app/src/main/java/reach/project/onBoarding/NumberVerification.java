@@ -98,7 +98,7 @@ public class NumberVerification extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
-            /*if (position == tourPagerAdapter.getCount())
+            /*if (position == tourPagerAdapter.getItemCount())
                 ((ReachApplication)getActivity().getApplication())
                         .trackGA(Optional.of("OnBoarding"),
                                 Optional.of("Completed App Tour"),
@@ -435,7 +435,6 @@ public class NumberVerification extends Fragment {
                 phoneNumber = pair.second;
                 finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
                 Log.i("Verification", "" + finalAuthKey);
-                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
 //                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
             }
         }

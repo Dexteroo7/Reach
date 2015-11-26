@@ -12,25 +12,24 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.SearchView;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
@@ -44,33 +43,29 @@ import reach.project.core.GcmIntentService;
 import reach.project.core.StaticData;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
+import reach.project.friends.friendsAdapters.FriendsAdapter;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.viewHelpers.HandOverMessage;
+
 
 public class ContactsListFragment extends Fragment implements
-        SearchView.OnQueryTextListener,
-        SearchView.OnCloseListener,
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
 
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private SearchView searchView;
+    private final FriendsAdapter friendsAdapter = new FriendsAdapter(this);
+
+    private View rootView;
 
     private SharedPreferences sharedPreferences;
     private SuperInterface mListener;
 
-    private ReachContactsAdapter reachContactsAdapter;
-
-    private GridView gridView;
-
-    public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false); ////have we already synchronized ?
+    public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false);//have we already synchronized ?
     private static final AtomicBoolean
-            pinging = new AtomicBoolean(false), //are we pinging ?
-            synchronizing = new AtomicBoolean(false); //are we synchronizing ?
-
-    private String mCurFilter, selection;
-    private String[] selectionArguments;
+            pinging = new AtomicBoolean(false),        //are we pinging ?
+            synchronizing = new AtomicBoolean(false),  //are we synchronizing ?
+            firstTimeLoad = new AtomicBoolean(true);   //is this first time load ?
 
     private static String phoneNumber = "";
 
@@ -117,9 +112,12 @@ public class ContactsListFragment extends Fragment implements
         pinging.set(false);
         synchronizing.set(false);
 
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
-        if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
-            reachContactsAdapter.getCursor().close();
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
+        if (friendsAdapter != null) {
+            friendsAdapter.setHorizontalCursor(null);
+            friendsAdapter.setVerticalCursor(null);
+        }
 
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();
@@ -147,25 +145,7 @@ public class ContactsListFragment extends Fragment implements
         pinging.set(false);
         synchronizing.set(false);
         synchronizeOnce.set(false);
-
-        reachContactsAdapter = new ReachContactsAdapter(activity, R.layout.myreach_item, null, 0);
-    }
-
-    public void setSearchView(SearchView sView) {
-
-        onClose();
-
-        if (sView == null && searchView != null) {
-            //invalidate old
-            searchView.setOnQueryTextListener(null);
-            searchView.setOnCloseListener(null);
-            searchView = null;
-        } else if (sView != null) {
-            //set new
-            searchView = sView;
-            searchView.setOnQueryTextListener(this);
-            searchView.setOnCloseListener(this);
-        }
+        firstTimeLoad.set(SharedPrefUtils.getFirstIntroSeen(sharedPreferences));
     }
 
     @Override
@@ -173,25 +153,29 @@ public class ContactsListFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
 
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
 
-        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainerContacts);
-        swipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getContext(), R.color.reach_color),
-                ContextCompat.getColor(getContext(), R.color.reach_grey));
-        swipeRefreshLayout.setBackgroundResource(R.color.white);
-        swipeRefreshLayout.setOnRefreshListener(LocalUtils.refreshListener);
-
-        gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
-        gridView.setOnItemClickListener(LocalUtils.clickListener);
+        //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
+        //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
-        gridView.setAdapter(reachContactsAdapter);
+        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
+        GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+        manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
 
-        selection = null;
-        selectionArguments = null;
+                if (position == 0 || friendsAdapter.getItemViewType(position) == FriendsAdapter.VIEW_TYPE_LOCKED)
+                    return 2;
+                else
+                    return 1;
+            }
+        });
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(friendsAdapter);
+
         final boolean isOnline = MiscUtils.isOnline(getActivity());
         //we have not already synchronized !
         if (!synchronizeOnce.get() && !synchronizing.get()) {
@@ -200,30 +184,36 @@ public class ContactsListFragment extends Fragment implements
             if (isOnline) {
                 synchronizing.set(true);
                 pinging.set(true);
-                swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
                 new LocalUtils.ContactsSync().executeOnExecutor(StaticData.temporaryFix);
             }
 
         } else if (!pinging.get() && isOnline) {
             //if not pinging send a ping !
             pinging.set(true);
-            swipeRefreshLayout.post(() -> swipeRefreshLayout.setRefreshing(true));
             new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
         }
 
-        getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, null, this);
         return rootView;
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        if (id == StaticData.FRIENDS_LOADER)
+        if (id == StaticData.FRIENDS_VERTICAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     ReachContactsAdapter.requiredProjection,
-                    selection,
-                    selectionArguments,
+                    ReachFriendsHelper.COLUMN_STATUS + " != ?",
+                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
+                    ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+        else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
+            return new CursorLoader(getActivity(),
+                    ReachFriendsProvider.CONTENT_URI,
+                    ReachContactsAdapter.requiredProjection,
+                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
                     ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
         else
             return null;
@@ -232,24 +222,29 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (loader.getId() != StaticData.FRIENDS_LOADER || data == null || data.isClosed())
+        if (data == null || data.isClosed())
             return;
 
-        reachContactsAdapter.swapCursor(data);
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
+            friendsAdapter.setVerticalCursor(data);
+
+        else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
+            friendsAdapter.setHorizontalCursor(data);
+
         final int count = data.getCount();
+        //TODO handle empty view
 
-        if (count == 0)
-            MiscUtils.setEmptyTextforGridView(gridView, "No contacts found");
-        else {
+        if (count != 0) {
 
-            if (!SharedPrefUtils.getFirstIntroSeen(sharedPreferences)) {
+            if (firstTimeLoad.get()) {
 
                 SharedPrefUtils.setFirstIntroSeen(sharedPreferences);
+                firstTimeLoad.set(false);
 
                 final Activity activity = getActivity();
                 final Chat chat = new Chat();
                 chat.setMessage("Hey! I am Devika. I handle customer relations at Reach. I will help you with any problems you face inside the app. So ping me here if you face any difficulties :)");
-                chat.setTimestamp(System.currentTimeMillis());
+                chat.setTimestamp(0);
                 chat.setAdmin(Chat.ADMIN);
 
                 final Optional<Firebase> firebaseOptional = mListener.getFireBase();
@@ -278,66 +273,10 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.FRIENDS_LOADER)
-            reachContactsAdapter.swapCursor(null);
-    }
-
-    @Override
-    public boolean onClose() {
-
-//        selection = null;
-//        selectionArguments = null;
-////        searchView.setQuery(null, true);
-////
-////        inviteAdapter.getFilter().filter(null);
-////        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
-////        return false;
-        if (searchView != null) {
-
-            searchView.setQuery(null, false);
-            searchView.clearFocus();
-        }
-
-        onQueryTextChange(null);
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-
-        if (searchView == null)
-            return false;
-        /**
-         * Called when the action bar search text has changed.
-         * Update the search filter.
-         * Restart the loader to do a new query with this filter.
-         * Don't do anything if the filter hasn't actually changed.
-         * Prevents restarting the loader when restoring state.
-         */
-        if (TextUtils.isEmpty(mCurFilter) && TextUtils.isEmpty(newText))
-            return true;
-        if (!TextUtils.isEmpty(mCurFilter) && mCurFilter.equals(newText))
-            return true;
-        mCurFilter = newText;
-
-        if (TextUtils.isEmpty(mCurFilter)) {
-            selection = null;
-            selectionArguments = null;
-            searchView.setQuery(null, true);
-        } else {
-            selection = ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
-            selectionArguments = new String[]{"%" + mCurFilter + "%"};
-        }
-        try {
-            getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
-        } catch (IllegalStateException ignored) {
-        }
-        return true;
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
+            friendsAdapter.setVerticalCursor(null);
+        else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
+            friendsAdapter.setHorizontalCursor(null);
     }
 
     @Override
@@ -356,6 +295,37 @@ public class ContactsListFragment extends Fragment implements
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void handOverMessage(@NonNull FriendsAdapter.ClickData clickData) {
+
+        if (rootView == null)
+            return;
+
+        if (clickData.status < 2) {
+
+            if (clickData.networkType == 5)
+                Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
+            MiscUtils.useFragment(reference, fragment -> {
+                fragment.mListener.onOpenLibrary(clickData.friendId);
+            });
+
+        } else if (clickData.status >= 2) {
+
+            final AlertDialog alertDialog = new AlertDialog.Builder(rootView.getContext())
+                    .setMessage("Send a friend request to " + clickData.userName + " ?")
+                    .setPositiveButton("Yes", LocalUtils.positiveButton)
+                    .setNegativeButton("No", (dialog, which) -> {
+                        dialog.dismiss();
+                    }).create();
+
+            alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
+                    //set tag to use when positive button click
+                    new Object[]{clickData.friendId, clickData.status, new WeakReference<>(rootView)}
+            ));
+            alertDialog.show();
+        }
     }
 
     private enum LocalUtils {
@@ -457,10 +427,6 @@ public class ContactsListFragment extends Fragment implements
                 //finally relax !
                 synchronizing.set(false);
                 pinging.set(false);
-                MiscUtils.useFragment(reference, fragment ->
-                {
-                    fragment.swipeRefreshLayout.post(() -> fragment.swipeRefreshLayout.setRefreshing(false));
-                });
             }
         }
 
@@ -505,40 +471,6 @@ public class ContactsListFragment extends Fragment implements
                     ReachFriendsHelper.COLUMN_ID + " = ?",
                     new String[]{clientId + ""});
             dialog.dismiss();
-        };
-
-        public static final AdapterView.OnItemClickListener clickListener = (adapterView, view, position, l) -> {
-
-            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-            final long id = cursor.getLong(0);
-            final short status = cursor.getShort(5);
-            final short networkType = cursor.getShort(4);
-
-            if (status < 2) {
-
-                if (networkType == 5)
-                    Snackbar.make(adapterView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
-                MiscUtils.useFragment(reference, fragment -> {
-                    fragment.mListener.onOpenLibrary(id);
-                });
-
-            } else if (status >= 2) {
-
-                final long clientId = cursor.getLong(0);
-
-                final AlertDialog alertDialog = new AlertDialog.Builder(adapterView.getContext())
-                        .setMessage("Send a friend request to " + cursor.getString(2) + " ?")
-                        .setPositiveButton("Yes", positiveButton)
-                        .setNegativeButton("No", (dialog, which) -> {
-                            dialog.dismiss();
-                        }).create();
-
-                alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
-                        //set tag to use when positive button click
-                        new Object[]{clientId, status, new WeakReference<>(adapterView)}
-                ));
-                alertDialog.show();
-            }
         };
 
         private static final class SendRequest extends AsyncTask<Long, Void, Long> {

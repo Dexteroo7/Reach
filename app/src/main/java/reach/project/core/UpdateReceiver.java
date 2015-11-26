@@ -63,12 +63,12 @@ public class UpdateReceiver extends BroadcastReceiver {
 //            Log.i("Ayush", "Found " + database.getDisplayName());
 //
 //            final Cursor songCursor = context.getContentResolver().query(
-//                    ReachSongProvider.CONTENT_URI,
+//                    MySongsProvider.CONTENT_URI,
 //                    new String[]{
-//                            ReachSongHelper.COLUMN_ARTIST,
-//                            ReachSongHelper.COLUMN_DURATION},
-//                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-//                            ReachSongHelper.COLUMN_SONG_ID + " = ?",
+//                            MySongsHelper.COLUMN_ARTIST,
+//                            MySongsHelper.COLUMN_DURATION},
+//                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+//                            MySongsHelper.COLUMN_SONG_ID + " = ?",
 //                    new String[]{database.getSenderId() + "", database.getSongId() + ""}, null);
 //
 //            if (songCursor == null)

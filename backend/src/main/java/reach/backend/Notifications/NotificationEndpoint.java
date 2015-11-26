@@ -11,6 +11,9 @@ import com.google.appengine.repackaged.com.google.common.cache.CacheBuilder;
 import com.google.appengine.repackaged.com.google.common.cache.CacheLoader;
 import com.google.appengine.repackaged.com.google.common.cache.LoadingCache;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,9 +27,11 @@ import javax.annotation.Nonnull;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.OfyService;
 import reach.backend.User.FriendContainers.Friend;
 import reach.backend.User.MessagingEndpoint;
 import reach.backend.User.ReachUser;
+import reach.backend.campaign.BackLog;
 
 import static reach.backend.OfyService.ofy;
 
@@ -63,7 +68,6 @@ public class NotificationEndpoint {
             notificationEndpoint = new NotificationEndpoint();
         return notificationEndpoint;
     }
-
 
     /**
      * Returns all the {@link Notification} with the corresponding ID.
@@ -236,11 +240,6 @@ public class NotificationEndpoint {
         }
     }
 
-    /**
-     * @param receiverId the person who will receive the push
-     * @param senderId   the person who sent the push
-     * @param container  blob of required data
-     */
     @ApiMethod(
             name = "addPush",
             path = "notification/addPush",
@@ -357,6 +356,46 @@ public class NotificationEndpoint {
                 lastSeen = currentTime;
             else
                 lastSeen = currentTime - Long.parseLong(val);
+        }
+
+        //noinspection StringBufferReplaceableByString
+        final StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append(OfyService.BASE_LOG_NEW_FRIEND)
+                .append(OfyService.USER_ID).append("=")
+                .append(senderId).append("&")
+                .append(OfyService.FRIEND_ID).append("=")
+                .append(receiverId);
+
+        final String log = urlBuilder.toString();
+
+        logger.info(log);
+
+        boolean success;
+
+        try {
+            final URL url = new URL(log);
+            final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(false);
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            final int statusCode = connection.getResponseCode();
+            success = statusCode == HttpURLConnection.HTTP_OK;
+            logger.info("status code " + statusCode);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            success = false;
+        }
+
+        logger.info("logging " + success);
+
+        if (!success) {
+
+            final BackLog backLog = new BackLog();
+            backLog.setFailedUrl(log);
+            backLog.setId(OfyService.longHash(log));
+            ofy().save().entities(backLog);
         }
 
         return new Friend(sender, true, lastSeen);

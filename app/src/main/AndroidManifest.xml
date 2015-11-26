@@ -15,7 +15,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <!--<uses-permission android:name="android.permission.GET_TASKS" />-->
+    <!-- suppress DeprecatedClassUsageInspection -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission
         android:name="android.permission.RECEIVE_SMS"
         android:required="false" />
@@ -38,10 +39,10 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".core.ReachActivity"
             android:label="@string/app_name"
@@ -50,20 +51,15 @@
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="process_multiple" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
-            android:name=".core.InstallTrackersReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action
-                    android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name=".core.GcmBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
@@ -72,13 +68,31 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
-
-        <receiver android:name=".pacemaker.HeartbeatReceiver" />
-
-        <receiver android:name=".core.UpdateReceiver">
+        <receiver
+            android:name=".pacemaker.HeartbeatReceiver"
+            android:enabled="true"
+            android:exported="false" />
+        <receiver
+            android:name=".core.UpdateReceiver"
+            android:enabled="true"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+
+                <category android:name="reach.project" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".apps.InterceptAppInstall"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_INSTALL" />
+
+                <data android:scheme="package" />
 
                 <category android:name="reach.project" />
             </intent-filter>
@@ -89,11 +103,9 @@
             android:exported="false" />
 
         <service
-            android:name=".utils.MusicScanner"
+            android:name=".music.MusicScanner"
             android:exported="false" />
-
-        <service
-            android:name="com.google.android.gms.analytics.CampaignTrackingService" />
+        <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
             android:name=".friends.ReachFriendsProvider"
@@ -101,22 +113,10 @@
             android:exported="false"
             android:multiprocess="true" />
         <provider
-            android:name=".music.songs.ReachSongProvider"
-            android:authorities="reach.project.music.songs.ReachSongProvider"
+            android:name=".music.MySongsProvider"
+            android:authorities="reach.project.music.MySongsProvider"
             android:exported="false"
             android:multiprocess="true" />
-        <provider
-            android:name=".music.albums.ReachAlbumProvider"
-            android:authorities="reach.project.music.albums.ReachAlbumProvider"
-            android:exported="false" />
-        <provider
-            android:name=".music.artists.ReachArtistProvider"
-            android:authorities="reach.project.music.artists.ReachArtistProvider"
-            android:exported="false" />
-        <provider
-            android:name=".music.playLists.ReachPlayListProvider"
-            android:authorities="reach.project.music.playLists.ReachPlayListProvider"
-            android:exported="false" />
 
         <activity
             android:name=".core.DialogActivity"
@@ -125,25 +125,26 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Light.Dialog" />
 
-        <receiver
-            android:name=".core.ReachActivity$PlayerUpdateListener"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" />
-                <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" />
+        <activity android:name=".coreViews.yourProfile.YourProfileActivity" />
 
-                <category android:name="reach.project" />
-            </intent-filter>
-        </receiver>
+        <!--<receiver-->
+        <!--android:name=".core.ReachActivity$PlayerUpdateListener"-->
+        <!--android:exported="false">-->
+        <!--<intent-filter>-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" />-->
+        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" />-->
+
+        <!--<category android:name="reach.project" />-->
+        <!--</intent-filter>-->
+        <!--</receiver>-->
 
         <activity android:name="com.mixpanel.android.surveys.SurveyActivity" />
-
         <activity
             android:name=".devikaChat.ChatActivity"
             android:label="@string/title_activity_chat"
@@ -159,8 +160,8 @@
         <!-- Things on process :remote -->
 
         <provider
-            android:name=".uploadDownload.ReachDatabaseProvider"
-            android:authorities="reach.project.uploadDownload.ReachDatabaseProvider"
+            android:name=".coreViews.fileManager.ReachDatabaseProvider"
+            android:authorities="reach.project.coreViews.fileManager.ReachDatabaseProvider"
             android:exported="false"
             android:process=":remote" />
 

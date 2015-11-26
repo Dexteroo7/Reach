@@ -11,13 +11,15 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
+import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
 import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.music.MySongsHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -30,6 +32,9 @@ public final class StaticData {
     public static final Messaging.MessagingEndpoint messagingEndpoint;
     public static final MusicVisibilityApi musicVisibility;
     public static final NotificationApi notificationApi;
+
+    public static final AppVisibilityApi appVisibilityApi;
+    public static final ClassifiedAppsApi classifiedAppsApi;
 
     static {
 
@@ -46,6 +51,9 @@ public final class StaticData {
         feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         notificationApi = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
         musicVisibility = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
+
+        appVisibilityApi = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
+        classifiedAppsApi = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
     }
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{
@@ -61,28 +69,41 @@ public final class StaticData {
             ReachDatabaseHelper.COLUMN_DURATION}; //9
 
     public static final String[] DISK_PARTIAL = new String[]{
-            ReachSongHelper.COLUMN_ARTIST, //0
-            ReachSongHelper.COLUMN_SONG_ID, //1
-            ReachSongHelper.COLUMN_SIZE, //2
-            ReachSongHelper.COLUMN_PATH, //3
-            ReachSongHelper.COLUMN_DISPLAY_NAME, //4
-            ReachSongHelper.COLUMN_ID, //5
-            ReachSongHelper.COLUMN_DURATION}; //6
+            MySongsHelper.COLUMN_ARTIST, //0
+            MySongsHelper.COLUMN_SONG_ID, //1
+            MySongsHelper.COLUMN_SIZE, //2
+            MySongsHelper.COLUMN_PATH, //3
+            MySongsHelper.COLUMN_DISPLAY_NAME, //4
+            MySongsHelper.COLUMN_ID, //5
+            MySongsHelper.COLUMN_DURATION}; //6
 
-    public static final byte ALBUM_LOADER = 0;
-    public static final byte ARTIST_LOADER = 1;
-    public static final byte FRIENDS_LOADER = 2;
-    public static final byte PRIVACY_MY_LIBRARY_LOADER = 3;
-    public static final byte PRIVACY_DOWNLOADED_LOADER = 4;
-    public static final byte PLAY_LIST_LOADER = 5;
-    public static final byte DOWNLOAD_LOADER = 6;
-    public static final byte UPLOAD_LOADER = 7;
-    public static final byte MY_LIBRARY_LOADER = 8;
-    public static final byte PUSH_MY_LIBRARY_LOADER = 9;
-    public static final byte PUSH_DOWNLOADED_LOADER = 10;
+    public static byte i = 0;
+    public static final byte FRIENDS_VERTICAL_LOADER;
+    public static final byte FRIENDS_HORIZONTAL_LOADER;
+    public static final byte PRIVACY_MY_LIBRARY_LOADER;
+    public static final byte PRIVACY_DOWNLOADED_LOADER;
+    public static final byte DOWNLOAD_LOADER;
+    public static final byte UPLOAD_LOADER;
+    public static final byte MY_LIBRARY_LOADER;
+    public static final byte PUSH_MY_LIBRARY_LOADER;
+    public static final byte PUSH_DOWNLOADED_LOADER;
 
-    public static final byte FULL_LIST_LOADER = 10;
-    public static final byte RECENT_LIST_LOADER = 11;
+    public static final byte FULL_LIST_LOADER;
+    public static final byte RECENT_LIST_LOADER;
+
+    static {
+        FRIENDS_VERTICAL_LOADER = i++;
+        FRIENDS_HORIZONTAL_LOADER = i++;
+        PRIVACY_MY_LIBRARY_LOADER = i++;
+        PRIVACY_DOWNLOADED_LOADER = i++;
+        DOWNLOAD_LOADER = i++;
+        UPLOAD_LOADER = i++;
+        MY_LIBRARY_LOADER = i++;
+        PUSH_MY_LIBRARY_LOADER = i++;
+        PUSH_DOWNLOADED_LOADER = i++;
+        FULL_LIST_LOADER = i++;
+        RECENT_LIST_LOADER = i++;
+    }
 
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
@@ -105,6 +126,7 @@ public final class StaticData {
     public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
     public static final String dropBoxManager = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
+
 
     public static final ExecutorService temporaryFix = Executors.unconfigurableExecutorService(Executors.newCachedThreadPool());
 }

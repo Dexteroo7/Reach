@@ -32,7 +32,7 @@ import static reach.backend.OfyService.ofy;
  * WARNING: This generated code is intended as a sample or starting point for using a
  * Google Cloud Endpoints RESTful API with an Objectify entity. It provides no data access
  * restrictions and no data validation.
- * <p/>
+ * <p>
  * DO NOT deploy this code unchanged as part of a real application to real users.
  */
 @Api(
