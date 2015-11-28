@@ -65,8 +65,8 @@ dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
-    compile 'com.google.android.gms:play-services-gcm:8.3.0'
-    compile 'com.google.android.gms:play-services-analytics:8.3.0'
+    compile 'com.google.android.gms:play-services-gcm:7.0.0'
+    compile 'com.google.android.gms:play-services-analytics:7.0.0'
     compile 'com.google.code.gson:gson:2.4'
 
     //stupid shit
