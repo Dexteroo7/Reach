@@ -21,13 +21,22 @@
         <init-param>
             <param-name>services</param-name>
             <param-value>
-                reach.backend.Feedback.FeedBackEndpoint,
+
                 reach.backend.User.MessagingEndpoint,
                 reach.backend.User.ReachUserEndpoint,
+
+                reach.backend.Feedback.FeedBackEndpoint,
                 reach.backend.Transactions.CompletedOperationsEndpoint,
-                reach.backend.Music.MusicDataEndpoint,
+                reach.backend.ActiveCountLog.ActiveCountLogEndpoint,
+
                 reach.backend.Notifications.NotificationEndpoint,
-                reach.backend.ActiveCountLog.ActiveCountLogEndpoint
+
+                reach.backend.Music.MusicDataEndpoint,
+
+                reach.backend.applications.UnClassifiedAppsEndpoint,
+                reach.backend.applications.ClassifiedAppsEndpoint,
+                reach.backend.applications.AppVisibilityEndpoint
+
             </param-value>
         </init-param>
     </servlet>

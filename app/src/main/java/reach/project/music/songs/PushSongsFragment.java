@@ -445,9 +445,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             }
         };
 
-        public static final class PushSongsDevikaSpecial extends AsyncTask<Void, Integer, Boolean> {
-
-            int offset = 0;
+        public static final class PushSongsDevikaSpecial extends AsyncTask<Void, String, Boolean> {
 
             @Override
             protected Boolean doInBackground(Void... voids) {
@@ -481,13 +479,16 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                 }
 
                 Messaging.MessagingEndpoint.DevikaPushToAll devikaPushToAll;
-                while (offset != -1) {
+                String cursor = "";
 
-                    publishProgress(offset);
+                while (!cursor.equals("-1")) {
+
+                    publishProgress(cursor);
 
                     //create new request
+                    final String finalCursor = cursor;
                     devikaPushToAll = MiscUtils.autoRetry(() -> StaticData.messagingEndpoint.devikaPushToAll(
-                            offset, //offset
+                            finalCursor, //offset
                             1000, //number of users to push to each turn
 
                             toSend, //the container
@@ -507,10 +508,10 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
                         return false;
                     }
 
-                    offset = Integer.parseInt(myString.getString());
+                    cursor = myString.getString();
 
                     //update the offset
-                    if (offset == 0) {
+                    if (cursor.equals("0")) {
                         Log.i("Ayush", "Offset can not be zero");
                         return false; //shiz
                     }
@@ -530,7 +531,7 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             }
 
             @Override
-            protected void onProgressUpdate(Integer... values) {
+            protected void onProgressUpdate(String... values) {
                 super.onProgressUpdate(values);
                 Toast.makeText(reference.get().getContext(), "Pushed to " + values[0] + " users", Toast.LENGTH_LONG).show();
             }

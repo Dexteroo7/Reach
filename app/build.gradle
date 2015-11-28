@@ -15,20 +15,20 @@ android {
         versionName "0.9.21.7-beta"
     }
 
-    productFlavors {
-
-        // Define separate dev and prod product flavors.
-        dev {
-            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
-            // to pre-dex each module and produce an APK that can be tested on
-            // Android Lollipop without time consuming dex merging processes.
-            minSdkVersion 21
-        }
-        prod {
-            // The actual minSdkVersion for the application.
-            minSdkVersion 14
-        }
-    }
+//    productFlavors {
+//
+//        // Define separate dev and prod product flavors.
+//        dev {
+//            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+//            // to pre-dex each module and produce an APK that can be tested on
+//            // Android Lollipop without time consuming dex merging processes.
+//            minSdkVersion 21
+//        }
+//        prod {
+//            // The actual minSdkVersion for the application.
+//            minSdkVersion 14
+//        }
+//    }
 
     buildTypes {
 
@@ -57,12 +57,11 @@ android {
 
     dexOptions {
         incremental true
-        javaMaxHeapSize "4g"
+        javaMaxHeapSize "8g"
     }
 }
 
 dependencies {
-
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
