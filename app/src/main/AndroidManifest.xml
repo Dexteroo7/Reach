@@ -83,7 +83,6 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".apps.InterceptAppInstall"
             android:enabled="true"
@@ -101,7 +100,6 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
-
         <service
             android:name=".music.MusicScanner"
             android:exported="false" />
@@ -124,25 +122,25 @@
             android:label="@string/title_activity_reach_notification"
             android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Light.Dialog" />
-
         <activity android:name=".coreViews.yourProfile.YourProfileActivity" />
 
-        <!--<receiver-->
-        <!--android:name=".core.ReachActivity$PlayerUpdateListener"-->
-        <!--android:exported="false">-->
-        <!--<intent-filter>-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" />-->
-        <!--<action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" />-->
+        <!-- <receiver -->
+        <!-- android:name=".core.ReachActivity$PlayerUpdateListener" -->
+        <!-- android:exported="false"> -->
+        <!-- <intent-filter> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" /> -->
+        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" /> -->
 
-        <!--<category android:name="reach.project" />-->
-        <!--</intent-filter>-->
-        <!--</receiver>-->
+
+        <!-- <category android:name="reach.project" /> -->
+        <!-- </intent-filter> -->
+        <!-- </receiver> -->
 
         <activity android:name="com.mixpanel.android.surveys.SurveyActivity" />
         <activity
@@ -170,6 +168,17 @@
             android:exported="false"
             android:process=":remote" />
 
+        <activity
+            android:name=".player.PlayerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_player"
+            android:parentActivityName=".core.ReachActivity"
+            android:theme="@style/FullscreenTheme"
+            android:process=":remote">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
     </application>
 
 </manifest>

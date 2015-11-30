@@ -11,9 +11,14 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -54,6 +59,7 @@ import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.usageTracking.PostParams;
@@ -90,6 +96,21 @@ public class ProcessManager extends Service implements
     public static final String REPLY_MUSIC_DEAD = "reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD";
     public static final String REPLY_ERROR = "reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR";
 
+    private final Bundle bundle = new Bundle();
+
+    private static synchronized void sendMessage(@NonNull Bundle data) {
+
+        if (musicCallbacks == null)
+            return;
+
+        final Message message = Message.obtain();
+        message.setData(data);
+        try {
+            musicCallbacks.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void submitNetworkRequest(@NonNull Context context, @NonNull String message) {
         helper(context, Optional.of(message), NetworkHandler.ACTION_NETWORK_MESSAGE);
@@ -97,6 +118,14 @@ public class ProcessManager extends Service implements
 
     public static void submitMusicRequest(@NonNull Context context, @NonNull Optional<?> message, @NonNull String action) {
         helper(context, message, action);
+    }
+
+    public static void installMessenger(@NonNull Messenger messenger) {
+        ProcessManager.musicCallbacks = messenger;
+    }
+
+    public static void unInstallMessenger() {
+        ProcessManager.musicCallbacks = null;
     }
 
     private static void helper(@NonNull Context context, @NonNull Optional<?> message, @NonNull String action) {
@@ -110,6 +139,16 @@ public class ProcessManager extends Service implements
                 intent.putExtra("message", (MusicData) message.get());
         }
         context.startService(intent);
+    }
+
+    private static final class MusicId {
+        final long id;
+        final byte type;
+
+        private MusicId(long id, byte type) {
+            this.id = id;
+            this.type = type;
+        }
     }
     //////////////////////////////////
     /**
@@ -138,7 +177,10 @@ public class ProcessManager extends Service implements
      * sanitize() is strictly private. Always called ar start and end of run()
      */
 
-    public static WeakReference<ProcessManager> reference;
+    @Nullable
+    public static WeakReference<ProcessManager> reference = null;
+    @Nullable
+    private static Messenger musicCallbacks = null;
 
     private final Random random = new Random();
     private final ExecutorService fixedPool = Executors.newFixedThreadPool(8); //buffer of 1 thread
@@ -176,16 +218,6 @@ public class ProcessManager extends Service implements
         Log.i("Downloader", "KILLING SERVICE !!!");
     }
 
-    private final class MusicId {
-        final long id;
-        final byte type;
-
-        private MusicId(long id, byte type) {
-            this.id = id;
-            this.type = type;
-        }
-    }
-
     private void closeCursor(Optional<Cursor> cursor) {
         if (cursor.isPresent())
             cursor.get().close();
@@ -208,7 +240,8 @@ public class ProcessManager extends Service implements
             musicStack.push(currentSong);
             return previousSong(musicHandler.getCurrentSong());
         }
-        final MusicId lastSong = musicStack.pop(); //ignore current song !
+
+        final MusicId lastSong = musicStack.pop();
         final Cursor cursor;
         if (lastSong.type == 0)
             cursor = getContentResolver().query(
@@ -504,6 +537,10 @@ public class ProcessManager extends Service implements
 
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
+        bundle.putString(PlayerActivity.ACTION, REPLY_LATEST_MUSIC);
+        bundle.putParcelable(PlayerActivity.MUSIC_PARCEL, musicData);
+        sendMessage(bundle);
+
         final String toSend = new Gson().toJson(musicData, MusicData.class);
         SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE), toSend);
         /**
@@ -573,6 +610,9 @@ public class ProcessManager extends Service implements
     @Override
     public void updateDuration(String formattedDuration) {
 
+        bundle.putString(PlayerActivity.ACTION, REPLY_DURATION);
+        bundle.putString(PlayerActivity.DURATION, formattedDuration);
+        sendMessage(bundle);
     }
 
     @Override
@@ -617,6 +657,9 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
+
+        bundle.putString(PlayerActivity.ACTION, REPLY_PAUSED);
+        sendMessage(bundle);
     }
 
     @Override
@@ -625,13 +668,21 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
+
+        bundle.putString(PlayerActivity.ACTION, REPLY_UN_PAUSED);
+        sendMessage(bundle);
     }
 
     @Override
     public void musicPlayerDead() {
 
         musicHandler.close();
+
+        bundle.putString(PlayerActivity.ACTION, REPLY_MUSIC_DEAD);
+        sendMessage(bundle);
+
         Log.i("Downloader", "Sent Music player dead");
+
         switch (notificationState) {
 
             case Network:
@@ -1021,6 +1072,9 @@ public class ProcessManager extends Service implements
     public void errorReport(String songName, String missType) {
 
 //        pushNextSong(nextSong(Optional.absent(), false));
+        bundle.putString(PlayerActivity.ACTION, REPLY_ERROR);
+        sendMessage(bundle);
+
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory(missType)
                 .setAction("User Name - " + SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)))
@@ -1038,11 +1092,18 @@ public class ProcessManager extends Service implements
     @Override
     public void updateSecondaryProgress(short percent) {
 
+        bundle.putString(PlayerActivity.ACTION, REPLY_SECONDARY_PROGRESS);
+        bundle.putShort(PlayerActivity.SECONDARY_PROGRESS, percent);
+        sendMessage(bundle);
     }
 
     @Override
     public void updatePrimaryProgress(short percent, int position) {
 
+        bundle.putString(PlayerActivity.ACTION, REPLY_ERROR);
+        bundle.putShort(PlayerActivity.PRIMARY_PROGRESS, percent);
+        bundle.putInt(PlayerActivity.PLAYER_POSITION, position);
+        sendMessage(bundle);
     }
 
     @Override
@@ -1057,8 +1118,8 @@ public class ProcessManager extends Service implements
 
     public static InputStream getSERStream(String name) throws IOException {
 
-        final ProcessManager manager = reference.get();
-        if (manager == null)
+        final ProcessManager manager;
+        if (reference == null || (manager = reference.get()) == null)
             return null;
 
         return manager.getAssets().open(name);

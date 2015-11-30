@@ -650,6 +650,16 @@ public enum MiscUtils {
 
         activity.runOnUiThread(() -> task.work(activity));
     }
+
+    public static <T extends Activity> void runOnUiThreadActivity(final WeakReference<T> reference,
+                                                                  final UseActivity<T> task) {
+
+        final T activity;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
 //
 //    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
 //                                                                  final UseFragment<Void, T> task) {

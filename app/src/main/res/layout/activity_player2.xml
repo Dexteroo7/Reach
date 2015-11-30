@@ -1,0 +1,86 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc"
+    tools:context="reach.project.player.PlayerActivity">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/fullscreen_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+
+        fresco:actualImageScaleType="centerCrop"
+        fresco:failureImage="@drawable/icon_play_circle_pink"
+        fresco:failureImageScaleType="fitCenter"
+
+        fresco:placeholderImage="@drawable/icon_play_circle_pink"
+        fresco:placeholderImageScaleType="fitCenter" />
+
+    <!-- This FrameLayout insets its children based on system windows using
+         android:fitsSystemWindows. -->
+    <RelativeLayout
+        style="?metaButtonBarStyle"
+        android:id="@+id/fullscreen_content_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="@color/black_overlay"
+        android:orientation="horizontal"
+        tools:ignore="UselessParent">
+
+        <ImageButton
+            android:id="@+id/pause_play"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:padding="7dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/play_white_selector" />
+
+        <ImageView
+            android:id="@+id/albumArt"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/song_cover_icon" />
+
+        <TextView
+            android:id="@+id/songNamePlaying"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="8dp"
+            android:layout_toLeftOf="@id/pause_play"
+            android:layout_toRightOf="@id/albumArt"
+            android:maxLines="1"
+            android:text="Click to open Song Collection"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <SeekBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/songNamePlaying"
+            android:layout_toLeftOf="@id/pause_play"
+            android:layout_toRightOf="@id/albumArt"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:progressDrawable="@drawable/player_progressbar"
+            android:thumb="@drawable/thumb"
+            android:thumbOffset="5dp" />
+    </RelativeLayout>
+
+</FrameLayout>
