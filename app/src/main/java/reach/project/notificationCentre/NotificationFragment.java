@@ -1,6 +1,5 @@
 package reach.project.notificationCentre;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -30,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsHelper;
-import reach.project.friends.ReachFriendsProvider;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.notifications.BecameFriends;
 import reach.project.notificationCentre.notifications.Like;
 import reach.project.notificationCentre.notifications.NotificationBaseLocal;

@@ -1,4 +1,4 @@
-package reach.project.friends;
+package reach.project.coreViews.friends;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -23,7 +23,7 @@ public class ReachFriendsProvider extends ContentProvider {
     public static final int FRIENDS = 14;
     private static final int FRIENDS_ID = 24; //+10
     private static final String BASE_PATH = "database/contentProvider/ReachFriendsProvider";
-    public static final String AUTHORITY = "reach.project.friends.ReachFriendsProvider";
+    public static final String AUTHORITY = "reach.project.coreViews.friends.ReachFriendsProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
     static {

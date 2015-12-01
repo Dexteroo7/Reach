@@ -34,8 +34,8 @@ import reach.backend.entities.userApi.model.CompletedOperation;
 import reach.backend.entities.userApi.model.CompletedOperationCollection;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsHelper;
-import reach.project.friends.ReachFriendsProvider;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 

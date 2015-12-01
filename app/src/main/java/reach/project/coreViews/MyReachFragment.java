@@ -24,7 +24,7 @@ import android.widget.TextView;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.friends.ContactsListFragment;
+import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.utils.auxiliaryClasses.SuperInterface;

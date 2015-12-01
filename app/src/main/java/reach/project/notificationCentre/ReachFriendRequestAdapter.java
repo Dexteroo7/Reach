@@ -22,8 +22,8 @@ import reach.backend.notifications.notificationApi.model.Friend;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.MyReachFragment;
-import reach.project.friends.ReachFriendsHelper;
-import reach.project.friends.ReachFriendsProvider;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 
 /**

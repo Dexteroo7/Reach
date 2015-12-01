@@ -106,8 +106,8 @@
         <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
-            android:name=".friends.ReachFriendsProvider"
-            android:authorities="reach.project.friends.ReachFriendsProvider"
+            android:name=".coreViews.friends.ReachFriendsProvider"
+            android:authorities="reach.project.coreViews.friends.ReachFriendsProvider"
             android:exported="false"
             android:multiprocess="true" />
         <provider

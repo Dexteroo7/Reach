@@ -1,4 +1,4 @@
-package reach.project.friends.friendsAdapters;
+package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.ListHolder;

@@ -40,7 +40,7 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.friends.ContactsListFragment;
+import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SendSMS;

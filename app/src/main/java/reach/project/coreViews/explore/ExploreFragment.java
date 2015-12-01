@@ -33,8 +33,8 @@ import java.util.concurrent.Callable;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
-import reach.project.friends.ReachFriendsHelper;
-import reach.project.friends.ReachFriendsProvider;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 

@@ -24,8 +24,8 @@ import reach.backend.entities.userApi.model.JsonMap;
 import reach.backend.entities.userApi.model.QuickSync;
 import reach.backend.entities.userApi.model.StringList;
 import reach.project.core.StaticData;
-import reach.project.friends.ReachFriendsHelper;
-import reach.project.friends.ReachFriendsProvider;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 
 /**
  * Created by dexter on 19/07/15.

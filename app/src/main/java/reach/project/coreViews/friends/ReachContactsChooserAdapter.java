@@ -1,4 +1,4 @@
-package reach.project.friends;
+package reach.project.coreViews.friends;
 
 /**
  * Created by dexter on 1/8/14.

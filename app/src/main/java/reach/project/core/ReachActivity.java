@@ -79,7 +79,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.fragments.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.fragments.MyLibraryFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
-import reach.project.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.music.MusicScanner;
 import reach.project.music.MySongsHelper;
 import reach.project.music.PrivacyFragment;

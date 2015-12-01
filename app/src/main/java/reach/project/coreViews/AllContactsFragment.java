@@ -39,8 +39,8 @@ import java.util.List;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.friends.Contact;
-import reach.project.friends.ReachAllContactsAdapter;
+import reach.project.coreViews.friends.Contact;
+import reach.project.coreViews.friends.ReachAllContactsAdapter;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SendSMS;
 import reach.project.utils.SharedPrefUtils;

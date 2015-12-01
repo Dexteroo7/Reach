@@ -1,4 +1,4 @@
-package reach.project.friends;
+package reach.project.coreViews.friends;
 
 import android.content.ContentUris;
 import android.net.Uri;

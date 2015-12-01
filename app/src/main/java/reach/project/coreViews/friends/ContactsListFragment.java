@@ -1,4 +1,4 @@
-package reach.project.friends;
+package reach.project.coreViews.friends;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -43,7 +43,7 @@ import reach.project.core.GcmIntentService;
 import reach.project.core.StaticData;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
-import reach.project.friends.friendsAdapters.FriendsAdapter;
+import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
