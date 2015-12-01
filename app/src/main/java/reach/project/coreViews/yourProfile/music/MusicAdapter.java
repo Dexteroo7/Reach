@@ -117,8 +117,6 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
 
             final RecentSong recentSong = (RecentSong) message;
             final ListHolder listHolder = (ListHolder) holder;
-            listHolder.moreButton.setTag(position);
-            listHolder.moreButton.setOnClickListener(this);
             listHolder.headerText.setText(recentSong.title);
             listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
 
@@ -132,8 +130,6 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
 
             final SmartSong smartSong = (SmartSong) message;
             final ListHolder listHolder = (ListHolder) holder;
-            listHolder.moreButton.setTag(position);
-            listHolder.moreButton.setOnClickListener(this);
             listHolder.headerText.setText(smartSong.title);
             listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             if (smartSong.songList.size() < 4)

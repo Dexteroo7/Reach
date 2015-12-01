@@ -120,7 +120,6 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
             horizontalViewHolder.headerText.setText("Recently Added");
-            horizontalViewHolder.moreButton.setOnClickListener(this);
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomLinearLayoutManager(holder.itemView.getContext(),
                             LinearLayoutManager.HORIZONTAL, false));

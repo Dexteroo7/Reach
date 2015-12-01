@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -31,12 +30,11 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
-import reach.project.utils.viewHelpers.moreButton.MoreDialog;
 
 /**
  * Created by dexter on 25/11/15.
  */
-public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<Song> {
+public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<Song> {
 
     private final HandOverMessage<Cursor> handOverCursor;
     private final HandOverMessage<Song> handOverSong;
@@ -187,7 +185,6 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
             horizontalViewHolder.headerText.setText("Recently Added");
-            horizontalViewHolder.moreButton.setOnClickListener(this);
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomLinearLayoutManager(holder.itemView.getContext(),
                             LinearLayoutManager.HORIZONTAL, false));
@@ -256,40 +253,5 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Override
     public void handOverMessage(@Nonnull Song song) {
         handOverSong.handOverMessage(song);
-    }
-
-    @Override
-    public void onClick(View v) {
-
-        new MoreDialog<Song, SongItemHolder>(handOverSong, R.layout.song_list_item) {
-            @Override
-            public SongItemHolder mGetViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-                return new SongItemHolder(itemView, handOverMessage);
-            }
-
-            @Override
-            public void mOnBindViewHolder(SongItemHolder holder, Song item) {
-
-                holder.songName.setText(item.displayName);
-                holder.artistName.setText(item.artist);
-                final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName);
-
-                if (uriOptional.isPresent()) {
-
-//            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
-                    final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                            .setResizeOptions(new ResizeOptions(200, 200))
-                            .build();
-
-                    final DraweeController controller = Fresco.newDraweeControllerBuilder()
-                            .setOldController(holder.albumArt.getController())
-                            .setImageRequest(request)
-                            .build();
-
-                    holder.albumArt.setController(controller);
-                } else
-                    holder.albumArt.setImageBitmap(null);
-            }
-        }.show(v.getContext(), "Recent Songs").show();
     }
 }

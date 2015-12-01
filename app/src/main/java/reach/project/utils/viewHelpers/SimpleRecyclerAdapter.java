@@ -57,4 +57,16 @@ public abstract class SimpleRecyclerAdapter<T, F extends SingleItemViewHolder> e
     public T getItem(int position) {
         return messageList.get(position);
     }
+
+    public List<T> getMessageList() {
+        return messageList;
+    }
+
+    public HandOverMessage<T> getHandOverMessage() {
+        return handOverMessage;
+    }
+
+    public int getResourceId() {
+        return resourceId;
+    }
 }
