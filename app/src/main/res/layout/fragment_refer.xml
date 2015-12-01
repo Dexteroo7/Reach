@@ -1,0 +1,202 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="reach.project.coreViews.ReferFragment">
+    <android.support.design.widget.AppBarLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" >
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/referToolbar"
+            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:layout_height="wrap_content"
+            app:navigationIcon="@drawable/abc_ic_ab_back_mtrl_am_alpha"
+            android:layout_width="match_parent"
+            android:minHeight="?attr/actionBarSize"
+            android:background="?attr/colorPrimary" />
+    </android.support.design.widget.AppBarLayout>
+    <FrameLayout
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:background="@drawable/background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:id="@+id/totalEarningText"
+                    android:layout_marginTop="40dp"
+                    android:textColor="@color/reach_color"
+                    android:textSize="16sp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Earnings" />
+                <TextView
+                    android:id="@+id/totalEarning"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="20dp"
+                    android:layout_below="@id/totalEarningText"
+                    android:textColor="@color/reach_color"
+                    android:textSize="18sp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rs. 0" />
+                <TextView
+                    android:id="@+id/redeemableAmountText"
+                    android:layout_below="@id/totalEarning"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginLeft="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Redeemable Amount" />
+                <TextView
+                    android:id="@+id/redeemableAmount"
+                    android:layout_alignBottom="@id/redeemableAmountText"
+                    android:layout_alignParentRight="true"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginRight="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rs. 0" />
+                <TextView
+                    android:id="@+id/redeemedAmountText"
+                    android:layout_below="@id/redeemableAmountText"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginLeft="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Redeemed Amount" />
+                <TextView
+                    android:id="@+id/redeemedAmount"
+                    android:layout_alignBottom="@id/redeemedAmountText"
+                    android:layout_alignParentRight="true"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginRight="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rs. 0" />
+                <TextView
+                    android:id="@+id/referralEarningText"
+                    android:layout_below="@id/redeemedAmountText"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginLeft="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Referral Earnings" />
+                <TextView
+                    android:id="@+id/referralEarning"
+                    android:layout_alignBottom="@id/referralEarningText"
+                    android:layout_alignParentRight="true"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginRight="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rs. 0" />
+                <TextView
+                    android:id="@+id/transferEarningText"
+                    android:layout_below="@id/referralEarningText"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginLeft="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Transfer Earnings" />
+                <TextView
+                    android:id="@+id/transferEarning"
+                    android:layout_alignBottom="@id/transferEarningText"
+                    android:layout_alignParentRight="true"
+                    android:textColor="@color/reach_grey"
+                    android:layout_marginRight="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rs. 0" />
+
+                <EditText
+                    android:id="@+id/registerText"
+                    android:layout_below="@id/transferEarning"
+                    android:layout_marginTop="20dp"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:hint="Enter email id to Register"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/registerBtn"
+                    android:layout_below="@id/registerText"
+                    android:layout_marginTop="5dp"
+                    android:text="Register"
+                    android:background="@color/reach_color"
+                    android:textAllCaps="false"
+                    android:textColor="#fff"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp" />
+                
+                <TextView
+                    android:id="@+id/howText"
+                    android:layout_below="@id/registerBtn"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="5dp"
+                    android:textColor="#000"
+                    android:textSize="13sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="How to Earn:" />
+                <TextView
+                    android:id="@+id/how"
+                    android:layout_below="@id/howText"
+                    android:textColor="#000"
+                    android:textSize="13sp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="How" />
+                <TextView
+                    android:id="@+id/termsText"
+                    android:layout_below="@id/how"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="5dp"
+                    android:textColor="#000"
+                    android:textSize="13sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Terms and Conditions:" />
+                <TextView
+                    android:id="@+id/terms"
+                    android:layout_below="@id/termsText"
+                    android:textColor="#000"
+                    android:textSize="13sp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TnC" />
+            </RelativeLayout>
+        </ScrollView>
+        <View
+            android:id="@+id/mainShadow"
+            android:layout_gravity="top"
+            android:background="@drawable/shadow_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="3dp" />
+    </FrameLayout>
+</LinearLayout>

@@ -10,6 +10,7 @@ public enum SongMetadata {
     TITLE,
     DURATION,
     SIZE,
+    UPLOADER_ID,
 
     ACTUAL_NAME,
     USER_NAME,

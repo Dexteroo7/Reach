@@ -60,7 +60,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
-import com.crittercism.app.Crittercism;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -98,10 +97,9 @@ import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.coreViews.EditProfileFragment;
-import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MyReachFragment;
-import reach.project.coreViews.PromoCodeDialog;
+import reach.project.coreViews.ReferFragment;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
@@ -292,11 +290,15 @@ public class ReachActivity extends AppCompatActivity implements
                                 .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
                         return true;
                     case R.id.navigation_item_2:
-                        PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
+                        /*PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
                         if (promoCodeDialog.isAdded())
                             promoCodeDialog.dismiss();
                         if (!promoCodeDialog.isAdded())
-                            promoCodeDialog.show(fragmentManager, "promo_dialog");
+                            promoCodeDialog.show(fragmentManager, "promo_dialog");*/
+                        fragmentManager
+                                .beginTransaction()
+                                .addToBackStack(null)
+                                .replace(R.id.container, ReferFragment.newInstance(), "refer_fragment").commit();
                         return true;
                     case R.id.navigation_item_3:
                         fragmentManager
@@ -310,12 +312,12 @@ public class ReachActivity extends AppCompatActivity implements
                                 .addToBackStack(null)
                                 .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
                         return true;
-                    case R.id.navigation_item_5:
+                    /*case R.id.navigation_item_5:
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
                                 .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
-                        return true;
+                        return true;*/
                     case R.id.navigation_item_6:
                         final Intent intent = new Intent(mDrawerLayout.getContext(), ChatActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -1022,8 +1024,8 @@ public class ReachActivity extends AppCompatActivity implements
         final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        Crittercism.setUsername(userName + " " + phoneNumber);
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+//        Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize MixPanel
         MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
@@ -1462,6 +1464,7 @@ public class ReachActivity extends AppCompatActivity implements
         complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
         complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+        complexParams.put(SongMetadata.UPLOADER_ID, reachDatabase.getSenderId() + "");
 
         complexParams.put(SongMetadata.ACTUAL_NAME, reachDatabase.getActualName() + "");
         complexParams.put(SongMetadata.USER_NAME, reachDatabase.getSenderName() + "");

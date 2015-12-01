@@ -1,6 +1,8 @@
 package reach.project.core;
 
 import android.app.Application;
+import android.content.Context;
+import android.support.multidex.MultiDex;
 
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseException;
@@ -124,5 +126,11 @@ public class ReachApplication extends Application {
             Firebase.getDefaultConfig().setPersistenceEnabled(true);
         } catch (FirebaseException ignored) {
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 }
