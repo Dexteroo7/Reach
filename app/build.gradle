@@ -9,7 +9,6 @@ android {
     defaultConfig {
 
         applicationId "reach.project"
-        minSdkVersion 23
         targetSdkVersion 23
         versionCode 72
         versionName "0.9.21.7-beta"
@@ -81,7 +80,4 @@ dependencies {
 
 configurations {
     compile.exclude group: "org.apache.httpcomponents", module: "httpclient"
-}
-dependencies {
-    compile 'com.google.android.gms:play-services-appindexing:8.3.0'
 }
