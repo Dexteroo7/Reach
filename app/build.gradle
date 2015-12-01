@@ -13,37 +13,38 @@ android {
         targetSdkVersion 23
         versionCode 72
         versionName "0.9.21.7-beta"
+        multiDexEnabled true
     }
 
-//    productFlavors {
+    productFlavors {
+
+        // Define separate dev and prod product flavors.
+        dev {
+            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
+            // to pre-dex each module and produce an APK that can be tested on
+            // Android Lollipop without time consuming dex merging processes.
+            minSdkVersion 21
+        }
+        prod {
+            // The actual minSdkVersion for the application.
+            minSdkVersion 14
+        }
+    }
+
+//    buildTypes {
 //
-//        // Define separate dev and prod product flavors.
-//        dev {
-//            // dev utilizes minSDKVersion = 21 to allow the Android gradle plugin
-//            // to pre-dex each module and produce an APK that can be tested on
-//            // Android Lollipop without time consuming dex merging processes.
-//            minSdkVersion 21
+//        release {
+//            shrinkResources true
+//            minifyEnabled true
+//            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
 //        }
-//        prod {
-//            // The actual minSdkVersion for the application.
-//            minSdkVersion 14
+//
+//        debug {
+//            shrinkResources true
+//            minifyEnabled true
+//            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
 //        }
 //    }
-
-    buildTypes {
-
-        release {
-            shrinkResources true
-            minifyEnabled true
-            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-        }
-
-        debug {
-            shrinkResources true
-            minifyEnabled true
-            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
-        }
-    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
