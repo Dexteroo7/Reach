@@ -31,6 +31,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
+import reach.project.utils.viewHelpers.moreButton.MoreDialog;
 
 /**
  * Created by dexter on 25/11/15.
@@ -259,6 +260,36 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Override
     public void onClick(View v) {
-        //TODO MORE BUTTON HANDLE
+
+        new MoreDialog<Song, SongItemHolder>(handOverSong, R.layout.song_list_item) {
+            @Override
+            public SongItemHolder mGetViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+                return new SongItemHolder(itemView, handOverMessage);
+            }
+
+            @Override
+            public void mOnBindViewHolder(SongItemHolder holder, Song item) {
+
+                holder.songName.setText(item.displayName);
+                holder.artistName.setText(item.artist);
+                final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName);
+
+                if (uriOptional.isPresent()) {
+
+//            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
+                    final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
+                            .setResizeOptions(new ResizeOptions(200, 200))
+                            .build();
+
+                    final DraweeController controller = Fresco.newDraweeControllerBuilder()
+                            .setOldController(holder.albumArt.getController())
+                            .setImageRequest(request)
+                            .build();
+
+                    holder.albumArt.setController(controller);
+                } else
+                    holder.albumArt.setImageBitmap(null);
+            }
+        }.show(v.getContext(), "Recent Songs").show();
     }
 }

@@ -10,12 +10,12 @@ import java.util.List;
 
 import reach.project.apps.App;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.MoreButtonAdapter;
+import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 
 /**
  * Created by dexter on 25/11/15.
  */
-class RecentAdapter extends MoreButtonAdapter<App, AppItemHolder> {
+class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> {
 
     private final List<App> recentApps;
 
@@ -61,18 +61,15 @@ class RecentAdapter extends MoreButtonAdapter<App, AppItemHolder> {
     }
 
     @Override
-    public void onBindViewHolder(AppItemHolder holder, int position) {
+    public void onBindViewHolder(AppItemHolder holder, App item) {
 
         final PackageManager packageManager = holder.appName.getContext().getPackageManager();
-        final App app = getItem(position);
 
-        holder.bindPosition(position);
-        holder.appName.setText(app.applicationName);
+        holder.appName.setText(item.applicationName);
         try {
-            holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(app.packageName));
+            holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-
     }
 }

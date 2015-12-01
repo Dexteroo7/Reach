@@ -15,12 +15,12 @@ import java.util.List;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.MoreButtonAdapter;
+import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 
 /**
  * Created by dexter on 18/11/15.
  */
-class ListAdapterWithMore extends MoreButtonAdapter<Song, SongItemHolder> {
+class ListAdapterWithMore extends SimpleRecyclerAdapter<Song, SongItemHolder> {
 
     public ListAdapterWithMore(List<Song> messageList, HandOverMessage<Song> handOverMessage, int resourceId) {
         super(messageList, handOverMessage, resourceId);
@@ -32,14 +32,11 @@ class ListAdapterWithMore extends MoreButtonAdapter<Song, SongItemHolder> {
     }
 
     @Override
-    public void onBindViewHolder(SongItemHolder holder, int position) {
+    public void onBindViewHolder(SongItemHolder holder, Song item) {
 
-        final Song song = getItem(position);
-
-        holder.bindPosition(position);
-        holder.songName.setText(song.displayName);
-        holder.artistName.setText(song.artist);
-        final Optional<Uri> uriOptional = AlbumArtUri.getUri(song.album, song.artist, song.displayName);
+        holder.songName.setText(item.displayName);
+        holder.artistName.setText(item.artist);
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName);
 
         if (uriOptional.isPresent()) {
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -78,6 +79,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
+import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
@@ -343,6 +345,10 @@ public enum MiscUtils {
         ProcessManager.submitMusicRequest(context,
                 Optional.of(musicData),
                 MusicHandler.ACTION_NEW_SONG);
+
+        final Intent intent = new Intent(context, PlayerActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent);
         ////////////////////////////////////////
         return true;
     }

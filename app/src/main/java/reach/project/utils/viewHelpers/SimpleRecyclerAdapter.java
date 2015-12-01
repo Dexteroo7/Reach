@@ -6,20 +6,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.squareup.wire.Message;
-
 import java.util.List;
 
 /**
  * Created by dexter on 21/11/15.
  */
-public abstract class MoreButtonAdapter<T extends Message, F extends SingleItemViewHolder> extends RecyclerView.Adapter<F> implements HandOverMessage<Integer> {
+public abstract class SimpleRecyclerAdapter<T, F extends SingleItemViewHolder> extends RecyclerView.Adapter<F> implements HandOverMessage<Integer> {
 
     private final List<T> messageList;
     private final HandOverMessage<T> handOverMessage;
     private final int resourceId;
 
-    public MoreButtonAdapter(List<T> messageList, HandOverMessage<T> handOverMessage, int resourceId) {
+    public SimpleRecyclerAdapter(List<T> messageList, HandOverMessage<T> handOverMessage, int resourceId) {
         this.messageList = messageList;
         this.handOverMessage = handOverMessage;
         this.resourceId = resourceId;
@@ -32,11 +30,19 @@ public abstract class MoreButtonAdapter<T extends Message, F extends SingleItemV
     }
 
     @Override
+    public void onBindViewHolder(F holder, int position) {
+        holder.bindPosition(position);
+        onBindViewHolder(holder, messageList.get(position));
+    }
+
+    @Override
     public long getItemId(int position) {
         return messageList.get(position).hashCode();
     }
 
     public abstract F getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage);
+
+    public abstract void onBindViewHolder(F holder, T item);
 
     @Override
     public int getItemCount() {

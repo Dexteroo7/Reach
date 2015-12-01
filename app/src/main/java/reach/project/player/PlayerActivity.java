@@ -324,6 +324,7 @@ public class PlayerActivity extends AppCompatActivity {
             }
 
             case ProcessManager.REPLY_ERROR: {
+                //TODO clear views
                 break;
             }
 
