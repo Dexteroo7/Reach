@@ -1,6 +1,7 @@
 package reach.project.coreViews.yourProfile.music;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -183,7 +184,7 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
 //    }
 
     @Override
-    public void handOverMessage(Song song) {
+    public void handOverMessage(@NonNull Song song) {
         cacheAdapterInterface.handOverMessage(song);
     }
 }

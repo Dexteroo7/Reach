@@ -12,6 +12,9 @@ public class MusicData implements Parcelable {
     private final String displayName;
     private final String path;
     private final String artistName;
+    private final String albumName;
+
+    private final long dateAdded;
     private final long id;
     private final long length;
     private final long senderId;
@@ -27,9 +30,11 @@ public class MusicData implements Parcelable {
                      long length,
                      long senderId,
                      long processed,
+                     long dateAdded,
                      String path,
                      String displayName,
                      String artistName,
+                     String albumName,
                      boolean isLiked,
                      long duration,
                      byte type) {
@@ -44,6 +49,24 @@ public class MusicData implements Parcelable {
         this.type = type;
         this.isLiked = isLiked;
         this.duration = duration; //for MyLibrary case
+        this.dateAdded = dateAdded;
+        this.albumName = albumName;
+    }
+
+    public MusicData() {
+
+        this.displayName = "";
+        this.path = "";
+        this.id = 0;
+        this.length = 0;
+        this.senderId = 0;
+        this.processed = 0;
+        this.artistName = "";
+        this.type = 0;
+        this.isLiked = false;
+        this.duration = 0; //for MyLibrary case
+        this.dateAdded = 0;
+        this.albumName = "";
     }
 
     public void setDuration(long duration) {
@@ -169,6 +192,8 @@ public class MusicData implements Parcelable {
         currentPosition = in.readInt();
         primaryProgress = in.readInt();
         secondaryProgress = in.readInt();
+        albumName = in.readString();
+        dateAdded = in.readLong();
     }
 
     @Override
@@ -191,6 +216,8 @@ public class MusicData implements Parcelable {
         dest.writeInt(currentPosition);
         dest.writeInt(primaryProgress);
         dest.writeInt(secondaryProgress);
+        dest.writeString(albumName);
+        dest.writeLong(dateAdded);
     }
 
     public static final Parcelable.Creator<MusicData> CREATOR = new Parcelable.Creator<MusicData>() {
@@ -204,4 +231,12 @@ public class MusicData implements Parcelable {
             return new MusicData[size];
         }
     };
+
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    public long getDateAdded() {
+        return dateAdded;
+    }
 }

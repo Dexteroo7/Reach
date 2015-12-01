@@ -1,6 +1,8 @@
 package reach.project.utils.viewHelpers;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,7 +12,10 @@ import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 
+import javax.annotation.Nonnull;
+
 import reach.project.R;
+import reach.project.utils.ReachCursorAdapter;
 
 /**
  * Created by dexter on 18/11/15.
@@ -28,17 +33,30 @@ public final class ListHolder extends RecyclerView.ViewHolder implements View.On
         itemView.findViewById(R.id.moreButton).setOnClickListener(this);
     }
 
+    @Nullable
+    private AlertDialog dialog = null;
+
     @Override
     public void onClick(View view) {
 
-        final String title = (String) headerText.getText();
-        final Context context = view.getContext();
+        if (dialog != null) {
+            dialog.show();
+            return;
+        }
+
         final RecyclerView.Adapter adapter = listOfItems.getAdapter();
 
-        if (adapter instanceof MoreQualifier && adapter instanceof SimpleRecyclerAdapter) {
+        if (!(adapter instanceof MoreQualifier))
+            throw new IllegalArgumentException("More button qualifier failed");
+
+        final String title = (String) headerText.getText();
+        final Context context = view.getContext();
+        final RecyclerView.Adapter newAdapter;
+
+        if (adapter instanceof SimpleRecyclerAdapter) {
 
             final SimpleRecyclerAdapter<Object, SingleItemViewHolder> reference = (SimpleRecyclerAdapter) adapter;
-            final SimpleRecyclerAdapter<Object, SingleItemViewHolder> simpleRecyclerAdapter = new SimpleRecyclerAdapter<Object, SingleItemViewHolder>(
+            newAdapter = new SimpleRecyclerAdapter<Object, SingleItemViewHolder>(
                     reference.getMessageList(),
                     reference.getHandOverMessage(),
                     reference.getResourceId()) {
@@ -54,19 +72,40 @@ public final class ListHolder extends RecyclerView.ViewHolder implements View.On
                 }
             };
 
-            final RecyclerView recyclerView = new RecyclerView(context);
-            recyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
-            recyclerView.setAdapter(simpleRecyclerAdapter);
+        } else if (adapter instanceof ReachCursorAdapter) {
 
-            new AlertDialog.Builder(context)
-                    .setView(recyclerView)
-                    .setCancelable(true)
-                    .setTitle(title).show();
+            final ReachCursorAdapter<SingleItemViewHolder> reference = (ReachCursorAdapter) adapter;
+            newAdapter = new ReachCursorAdapter<SingleItemViewHolder>(
+                    reference.getHandOverMessage(),
+                    reference.getResourceId()) {
 
-            ((MoreQualifier) adapter).passNewAdapter(new WeakReference<>(simpleRecyclerAdapter));
+                @Override
+                public SingleItemViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+                    return reference.getViewHolder(itemView, handOverMessage);
+                }
 
-        }
-//        else
-//            throw new IllegalArgumentException("More button qualifier failed");
+                @Override
+                public void onBindViewHolder(SingleItemViewHolder holder, Cursor item) {
+                    reference.onBindViewHolder(holder, item);
+                }
+
+                @Override
+                public int getItemId(@Nonnull Cursor cursor) {
+                    return reference.getItemId(cursor);
+                }
+            };
+        } else
+            throw new IllegalArgumentException("More button invalid adapter type");
+
+        final RecyclerView recyclerView = new RecyclerView(context);
+        recyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
+        recyclerView.setAdapter(newAdapter);
+
+        (dialog = new AlertDialog.Builder(context)
+                .setView(recyclerView)
+                .setCancelable(true)
+                .setTitle(title).create()).show();
+
+        ((MoreQualifier) adapter).passNewAdapter(new WeakReference<>(newAdapter));
     }
 }

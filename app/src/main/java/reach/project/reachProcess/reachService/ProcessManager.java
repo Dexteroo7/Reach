@@ -150,6 +150,7 @@ public class ProcessManager extends Service implements
             this.type = type;
         }
     }
+
     //////////////////////////////////
     /**
      * Pi = ith parent_thread
@@ -542,7 +543,7 @@ public class ProcessManager extends Service implements
         sendMessage(bundle);
 
         final String toSend = new Gson().toJson(musicData, MusicData.class);
-        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE), toSend);
+        SharedPrefUtils.storeLastPlayed(this, toSend);
         /**
          * GA stuff
          */
@@ -814,7 +815,7 @@ public class ProcessManager extends Service implements
                 Log.i("Downloader", "ACTION_NEXT");
                 musicHandler.userUnPause();
                 final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
-                final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
+                final boolean shuffle = SharedPrefUtils.getShuffle(this);
                 if (shuffle && currentSong.isPresent())
                     pushNextSong(shuffleNext(currentSong.get().getId(), currentSong.get().getType()));
                 else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
@@ -823,7 +824,7 @@ public class ProcessManager extends Service implements
             case MusicHandler.ACTION_PREVIOUS: {
                 Log.i("Downloader", "ACTION_PREVIOUS");
                 musicHandler.userUnPause();
-                final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
+                final boolean shuffle = SharedPrefUtils.getShuffle(this);
                 if (shuffle)
                     pushNextSong(shufflePrevious());
                 else pushNextSong(previousSong(musicHandler.getCurrentSong()));
@@ -838,8 +839,8 @@ public class ProcessManager extends Service implements
                     pushNextSong(history);
                 else {
                     final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
-                    final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
-                    final boolean repeat = SharedPrefUtils.getRepeat(getSharedPreferences());
+                    final boolean shuffle = SharedPrefUtils.getShuffle(this);
+                    final boolean repeat = SharedPrefUtils.getRepeat(this);
                     if (repeat && currentSong.isPresent())
                         pushNextSong(currentSong);
                     else if (shuffle && currentSong.isPresent())
@@ -854,8 +855,8 @@ public class ProcessManager extends Service implements
                 if (musicHandler.processSeek(Short.parseShort(intent.getStringExtra("message"))))
                     break;
                 final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
-                final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
-                final boolean repeat = SharedPrefUtils.getRepeat(getSharedPreferences());
+                final boolean shuffle = SharedPrefUtils.getShuffle(this);
+                final boolean repeat = SharedPrefUtils.getRepeat(this);
                 if (repeat && currentSong.isPresent())
                     pushNextSong(currentSong);
                 else if (shuffle && currentSong.isPresent())
@@ -924,9 +925,11 @@ public class ProcessManager extends Service implements
                     cursor.getLong(1), //length
                     cursor.getLong(2), //senderId
                     cursor.getLong(3), //processed
+                    0,
                     cursor.getString(4), //path
                     cursor.getString(5), //displayName
                     cursor.getString(6), //artistName
+                    "",
                     liked,
                     cursor.getLong(9),
                     (byte) 0);
@@ -938,9 +941,11 @@ public class ProcessManager extends Service implements
                     cursor.getLong(2), //length
                     serverId, //senderId
                     cursor.getLong(2), //processed = length
+                    0,
                     cursor.getString(3), //path
                     cursor.getString(4), //displayName
                     cursor.getString(0), //artistName
+                    "",
                     false, //liked
                     cursor.getLong(6), //duration
                     (byte) 1); //type
@@ -1036,7 +1041,7 @@ public class ProcessManager extends Service implements
 
         if (!currentSong.isPresent())
             return shuffleNext(0, (byte) 0); //if no current song shuffleNext
-        if (SharedPrefUtils.getRepeat(getSharedPreferences()) && currentSong.isPresent() && automatic)
+        if (SharedPrefUtils.getRepeat(this) && currentSong.isPresent() && automatic)
             return currentSong;
 
         if (currentSong.get().getType() == 0) {

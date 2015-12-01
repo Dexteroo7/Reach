@@ -269,9 +269,11 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
                         reachDatabase.getLength(),
                         reachDatabase.getSenderId(),
                         cursor.getLong(1),
+                        0,
                         cursor.getString(2),
                         reachDatabase.getDisplayName(),
                         reachDatabase.getArtistName(),
+                        "",
                         liked,
                         reachDatabase.getDuration(),
                         (byte) 0);

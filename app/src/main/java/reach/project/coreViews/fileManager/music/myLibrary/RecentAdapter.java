@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.music.adapters;
+package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.net.Uri;
 import android.support.annotation.Nullable;
@@ -17,18 +17,18 @@ import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
-import reach.project.music.Song;
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 import reach.project.utils.viewHelpers.MoreQualifier;
+import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 
 /**
  * Created by dexter on 18/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements MoreQualifier {
+class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> implements MoreQualifier {
 
-    public RecentAdapter(List<Song> recentMusic, HandOverMessage<Song> handOverMessage, int resourceId) {
+    public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
 
@@ -40,21 +40,21 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
      *
      * @param newMessages the new collection to display
      */
-    public void updateRecent(List<Song> newMessages) {
+    public void updateRecent(List<MusicData> newMessages) {
 
-        final List<Song> recentMusic = getMessageList();
+        final List<MusicData> recentMusic = getMessageList();
         //remove to prevent duplicates
         recentMusic.removeAll(newMessages);
         //add new items
         recentMusic.addAll(newMessages);
 
         //pick top 20
-        final List<Song> newSortedList = Ordering.from(new Comparator<Song>() {
+        final List<MusicData> newSortedList = Ordering.from(new Comparator<MusicData>() {
             @Override
-            public int compare(Song lhs, Song rhs) {
+            public int compare(MusicData lhs, MusicData rhs) {
 
-                final Long a = lhs.dateAdded == null ? 0 : lhs.dateAdded;
-                final Long b = rhs.dateAdded == null ? 0 : rhs.dateAdded;
+                final Long a = lhs.getDateAdded();
+                final Long b = rhs.getDateAdded();
 
                 return a.compareTo(b);
             }
@@ -76,11 +76,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
     }
 
     @Override
-    public void onBindViewHolder(SongItemHolder holder, Song item) {
+    public void onBindViewHolder(SongItemHolder holder, MusicData item) {
 
-        holder.songName.setText(item.displayName);
-        holder.artistName.setText(item.artist);
-        final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName);
+        holder.songName.setText(item.getDisplayName());
+        holder.artistName.setText(item.getArtistName());
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(
+                item.getAlbumName(),
+                item.getArtistName(),
+                item.getDisplayName());
 
         if (uriOptional.isPresent()) {
 

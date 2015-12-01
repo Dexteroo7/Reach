@@ -202,7 +202,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (verticalCursor.moveToPosition(position))
                 return verticalCursor;
             else
-                return false;
+                return 1;
         } else {
 
             final int relativePosition = position - 1;
@@ -210,7 +210,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (verticalCursor.moveToPosition(relativePosition))
                 return verticalCursor;
             else
-                return false;
+                return 1;
         }
     }
 

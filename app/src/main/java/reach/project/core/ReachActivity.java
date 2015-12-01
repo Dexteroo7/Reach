@@ -25,17 +25,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.firebase.client.ChildEventListener;
@@ -77,11 +71,11 @@ import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.fragments.ApplicationFragment;
-import reach.project.coreViews.fileManager.music.fragments.MyLibraryFragment;
+import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
+import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.MusicScanner;
-import reach.project.music.MySongsHelper;
 import reach.project.music.PrivacyFragment;
 import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
@@ -89,7 +83,6 @@ import reach.project.music.TransferSong;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
@@ -126,32 +119,6 @@ public class ReachActivity extends AppCompatActivity implements
     ////////////////////////////////////////
     private Firebase firebaseReference = null;
 
-    private ImageButton pausePlayMinimized; //small
-    private SwipeRefreshLayout downloadRefresh;
-
-//    private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
-//
-//        @Override
-//        public void onScrollStateChanged(AbsListView absListView, int i) {
-//        }
-//
-//        @Override
-//        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-//
-//            boolean enable = false;
-//            if (view.getChildCount() > 0) {
-//
-//                final boolean firstItemVisible = view.getFirstVisiblePosition() == 0;
-//                final boolean topOfFirstItemVisible = view.getChildAt(0).getTop() == 0;
-//                enable = firstItemVisible && topOfFirstItemVisible;
-//            }
-//
-//            downloadRefresh.setEnabled(enable);
-//        }
-//    };
-
-    private final View.OnClickListener navHeaderClickListener = v -> onOpenProfile();
-
     @Override
     protected void onDestroy() {
 
@@ -168,10 +135,6 @@ public class ReachActivity extends AppCompatActivity implements
     protected void onPause() {
 
         super.onPause();
-
-        final PackageManager packageManager;
-        if ((packageManager = getPackageManager()) == null)
-            return;
 
         if (firebaseReference != null)
             firebaseReference.child("chat").child(serverId + "").removeEventListener(LocalUtils.listenerForUnReadChats);
@@ -233,11 +196,6 @@ public class ReachActivity extends AppCompatActivity implements
         }
 
         //TODO onResume is called twice sometimes
-        lastSong();
-
-        final PackageManager packageManager;
-        if ((packageManager = getPackageManager()) == null)
-            return;
 
         super.onResume();
     }
@@ -658,10 +616,10 @@ public class ReachActivity extends AppCompatActivity implements
                                     new String[]{"My Application"},
                                     "Bitch"),
                             new PagerFragment.Pages(
-                                    new Class[]{MyLibraryFragment.class},
-                                    new String[]{"My Library"},
+                                    new Class[]{MyLibraryFragment.class, DownloadingFragment.class},
+                                    new String[]{"My Library", "Downloading"},
                                     "Bitch")),
-                    PrivacyFragment.newInstance(false),
+                    PrivacyFragment.newInstance(false)
             };
 
             viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -718,21 +676,10 @@ public class ReachActivity extends AppCompatActivity implements
 //                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
 //                }
 //            });
-            lastSong();
             //some stuff
             if (networkPresent)
                 AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
         }
-    }
-
-    private void lastSong() {
-
-        final Boolean[] toSend = new Boolean[]{false, false, false};
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();
-
-        toSend[0] = (currentPlaying != null);
-        toSend[1] = SharedPrefUtils.getShuffle(preferences);
-        toSend[2] = SharedPrefUtils.getRepeat(preferences);
     }
 
     private synchronized void processIntent(Intent intent) {
@@ -799,6 +746,7 @@ public class ReachActivity extends AppCompatActivity implements
                         new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
                     }
                 }
+                ///////////
             }
         }
 
@@ -807,59 +755,6 @@ public class ReachActivity extends AppCompatActivity implements
         intent.removeExtra("openFriendRequests");
         intent.removeExtra("openNotifications");
     }
-
-//    @Override
-//    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-//
-//        if (id == StaticData.DOWNLOAD_LOADER) {
-//
-//            return new CursorLoader(this,
-//                    ReachDatabaseProvider.CONTENT_URI,
-//                    ReachDatabaseHelper.ADAPTER_LIST,
-//                    selectionDownloader,
-//                    selectionArgumentsDownloader,
-//                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
-//        } else if (id == StaticData.MY_LIBRARY_LOADER) {
-//
-//            return new CursorLoader(this,
-//                    MySongsProvider.CONTENT_URI,
-//                    MySongsHelper.DISK_LIST,
-//                    selectionMyLibrary,
-//                    selectionArgumentsMyLibrary,
-//                    MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
-//        }
-//
-//        return null;
-//    }
-//
-//    @Override
-//    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-//
-//        if (loader.getId() == StaticData.MY_LIBRARY_LOADER && data != null && !data.isClosed()) {
-//
-//            musicAdapter.swapCursor(data);
-//            if (data.getCount() == 0 && queueListView != null)
-//                combinedAdapter.setActive(emptyTV2, true);
-//            else
-//                combinedAdapter.setActive(emptyTV2, false);
-//        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER && data != null && !data.isClosed()) {
-//
-//            queueAdapter.swapCursor(data);
-//            if (data.getCount() == 0 && queueListView != null)
-//                combinedAdapter.setActive(emptyTV1, true);
-//            else
-//                combinedAdapter.setActive(emptyTV1, false);
-//        }
-//    }
-//
-//    @Override
-//    public void onLoaderReset(Loader<Cursor> loader) {
-//
-//        if (loader.getId() == StaticData.MY_LIBRARY_LOADER)
-//            musicAdapter.swapCursor(null);
-//        if (loader.getId() == StaticData.DOWNLOAD_LOADER)
-//            queueAdapter.swapCursor(null);
-//    }
 
     @Override
     public void addSongToQueue(long songId, long senderId, long size,
@@ -928,9 +823,11 @@ public class ReachActivity extends AppCompatActivity implements
                             size,
                             senderId,
                             cursor.getLong(1),
+                            0,
                             cursor.getString(2),
                             displayName,
                             artistName,
+                            "",
                             liked,
                             duration,
                             (byte) 0);
@@ -1054,142 +951,6 @@ public class ReachActivity extends AppCompatActivity implements
 
     private enum LocalUtils {
         ;
-
-        public static final SeekBar.OnSeekBarChangeListener playerSeekListener = new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser)
-                    ProcessManager.submitMusicRequest(seekBar.getContext(), Optional.of(progress + ""), MusicHandler.ACTION_SEEK);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        };
-
-        public static final View.OnClickListener repeatClick = view -> {
-
-            if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
-                view.setSelected(true);
-            else
-                view.setSelected(false);
-        };
-
-        public static final View.OnClickListener nextClick = v -> ProcessManager.submitMusicRequest(
-                v.getContext(),
-                Optional.absent(),
-                MusicHandler.ACTION_NEXT);
-
-        public static final View.OnClickListener previousClick = v -> ProcessManager.submitMusicRequest(
-                v.getContext(),
-                Optional.absent(),
-                MusicHandler.ACTION_PREVIOUS);
-
-        public static final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
-
-            private boolean toggleLiked(Context context) {
-
-                final ContentValues values = new ContentValues();
-                values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
-
-                return context.getContentResolver().update(
-                        Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
-                        values,
-                        ReachDatabaseHelper.COLUMN_ID + " = ?",
-                        new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
-            }
-
-            @Override
-            public void onClick(View view) {
-
-                if (currentPlaying == null || currentPlaying.getType() == 1)
-                    return;
-
-                final Context context = view.getContext();
-
-                if (toggleLiked(context)) {
-
-                    //usage tracking
-                    final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
-                    simpleParams.put(PostParams.USER_ID, serverId + "");
-                    simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(context));
-                    simpleParams.put(PostParams.OS, MiscUtils.getOsName());
-                    simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
-                    try {
-                        simpleParams.put(PostParams.APP_VERSION,
-                                context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    simpleParams.put(PostParams.SCREEN_NAME, "unknown");
-
-                    final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
-                    complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
-                    complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
-                    complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
-                    complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
-                    complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
-
-                    try {
-                        UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
-                    } catch (JSONException ignored) {
-                    }
-
-                    MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.addLike(
-                            currentPlaying.getSenderId(),
-                            serverId,
-                            currentPlaying.getDisplayName()).execute(), Optional.absent());
-                    currentPlaying.setIsLiked(true);
-
-                    ((ImageView) view).setImageResource(R.drawable.like_pink);
-                } else {
-
-                    ((ImageView) view).setImageResource(R.drawable.like_white);
-                    currentPlaying.setIsLiked(false);
-                }
-            }
-        };
-
-        public static final View.OnClickListener pauseClick = v -> {
-
-            if (currentPlaying != null)
-                ProcessManager.submitMusicRequest(
-                        v.getContext(),
-                        Optional.of(new Gson().toJson(currentPlaying, MusicData.class)),
-                        MusicHandler.ACTION_PLAY_PAUSE);
-            else
-                ProcessManager.submitMusicRequest(
-                        v.getContext(),
-                        Optional.absent(),
-                        MusicHandler.ACTION_PLAY_PAUSE);
-        };
-
-        public static final View.OnClickListener shuffleClick = view -> {
-
-            if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
-                view.setSelected(true);
-            else
-                view.setSelected(false);
-        };
-
-        /**
-         * Listener for music player click listener
-         * uses -> StaticData.DOWNLOADED_LIST & StaticData.DISK_LIST
-         */
-        public static final AdapterView.OnItemClickListener myLibraryClickListener = (adapterView, view, position, l) -> {
-
-            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-            final Context context = view.getContext();
-
-            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
-                MiscUtils.playSong(ReachDatabaseHelper.getMusicData(cursor), context);
-            else
-                MiscUtils.playSong(MySongsHelper.getMusicData(cursor, serverId), context);
-        };
 
         /**
          * Check the device to make sure it has the Google Play Services APK. If
