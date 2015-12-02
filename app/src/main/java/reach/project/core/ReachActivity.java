@@ -70,13 +70,12 @@ import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
-import reach.project.coreViews.fileManager.apps.fragments.ApplicationFragment;
+import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
+import reach.project.coreViews.myProfile.EditProfileFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.utils.MetaDataScanner;
-import reach.project.music.PrivacyFragment;
 import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
 import reach.project.music.TransferSong;
@@ -87,6 +86,7 @@ import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
@@ -115,7 +115,6 @@ public class ReachActivity extends AppCompatActivity implements
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
     ////////////////////////////////////////
-    private static MusicData currentPlaying;
     ////////////////////////////////////////
     private Firebase firebaseReference = null;
 
@@ -127,7 +126,6 @@ public class ReachActivity extends AppCompatActivity implements
         if (reference != null)
             reference.clear();
         reference = null;
-        currentPlaying = null;
         firebaseReference = null;
     }
 
@@ -613,13 +611,25 @@ public class ReachActivity extends AppCompatActivity implements
                     PagerFragment.getNewInstance(
                             new PagerFragment.Pages(
                                     new Class[]{ApplicationFragment.class},
-                                    new String[]{"My Application"},
+                                    new String[]{"My Applications"},
                                     "Bitch"),
                             new PagerFragment.Pages(
                                     new Class[]{MyLibraryFragment.class, DownloadingFragment.class},
                                     new String[]{"My Library", "Downloading"},
                                     "Bitch")),
-                    PrivacyFragment.newInstance(false)
+                    PagerFragment.getNewInstance(
+                            new PagerFragment.Pages(
+                                    new Class[]{reach.project.coreViews.myProfile.apps.ApplicationFragment.class},
+                                    new String[]{"My Applications"},
+                                    "Bitch"),
+                            new PagerFragment.Pages(
+                                    new Class[]{reach.project.coreViews.myProfile.music.myLibrary.MyLibraryFragment.class},
+                                    new String[]{"My Library"},
+                                    "Bitch"),
+                            new PagerFragment.Pages(
+                                    new Class[]{EditProfileFragment.class},
+                                    new String[]{"Edit Profile"},
+                                    "Bitch"))
             };
 
             viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {

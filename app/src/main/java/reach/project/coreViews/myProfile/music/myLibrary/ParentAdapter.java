@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.music.myLibrary;
+package reach.project.coreViews.myProfile.music.myLibrary;
 
 import android.database.Cursor;
 import android.net.Uri;

@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.apps.fragments;
+package reach.project.coreViews.fileManager.apps;
 
 import android.app.Activity;
 import android.content.Context;
@@ -29,7 +29,6 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.apps.adapters.ParentAdapter;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;

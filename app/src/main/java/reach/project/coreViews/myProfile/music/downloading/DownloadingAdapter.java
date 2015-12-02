@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.music.downloading;
+package reach.project.coreViews.myProfile.music.downloading;
 
 import android.database.Cursor;
 import android.view.View;

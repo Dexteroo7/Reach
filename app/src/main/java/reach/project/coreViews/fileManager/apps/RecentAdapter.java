@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.apps.adapters;
+package reach.project.coreViews.fileManager.apps;
 
 import android.content.pm.PackageManager;
 import android.view.View;

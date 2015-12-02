@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.coreViews.myProfile;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -66,6 +66,14 @@ public class EditProfileFragment extends Fragment {
     private static WeakReference<EditProfileFragment> reference = null;
 
     public static EditProfileFragment newInstance() {
+
+        EditProfileFragment fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            reference = new WeakReference<>(fragment = new EditProfileFragment());
+        return fragment;
+    }
+
+    public static EditProfileFragment getInstance(String header) {
 
         EditProfileFragment fragment;
         if (reference == null || (fragment = reference.get()) == null)

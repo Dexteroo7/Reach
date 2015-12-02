@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.apps.adapters;
+package reach.project.coreViews.fileManager.apps;
 
 import android.content.pm.PackageManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,7 +21,7 @@ import reach.project.utils.viewHelpers.ListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
-public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<App> {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<App> {
 
     private final HandOverMessage<App> handOverApp;
 
