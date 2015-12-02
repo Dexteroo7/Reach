@@ -118,7 +118,7 @@ public class MyReachFragment extends Fragment {
         }
 
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
-        mToolbar.setTitle("Reach");
+        mToolbar.setTitle("Friends");
         mToolbar.setNavigationOnClickListener(v -> mListener.onOpenNavigationDrawer());
         mToolbar.inflateMenu(R.menu.myreach_menu);
         final Menu menu = mToolbar.getMenu();
@@ -133,8 +133,6 @@ public class MyReachFragment extends Fragment {
         }
 
         mListener.setUpNavigationViews();
-        rootView.findViewById(R.id.share_music_fab).setOnClickListener(pushLibraryListener);
-        rootView.findViewById(R.id.invite_friend_fab).setOnClickListener(inviteFriendListener);
 
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         final ContactsListFragment contactsListFragment = ContactsListFragment.newInstance();

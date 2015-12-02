@@ -101,9 +101,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
     @Override
     public int getItemCount() {
-
-        final int length = super.getItemCount();
-        return length > 6 ? 6 : length;
+        int size = super.getItemCount();
+        return size < 4 ? size : 4;
     }
 
     @Override

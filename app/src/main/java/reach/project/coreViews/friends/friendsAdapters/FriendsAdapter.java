@@ -22,6 +22,7 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
  * Can not use ReachCursor adapter as item type is Object not cursor
@@ -38,6 +39,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public static final byte VIEW_TYPE_FRIEND = 0;
     public static final byte VIEW_TYPE_LOCKED = 1;
+    public static final byte VIEW_TYPE_FRIEND_LARGE = 2;
+    public static final byte VIEW_TYPE_INVITE = 3;
 
     ///////////Vertical Cursor (parent)
     @Nullable
@@ -89,6 +92,31 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             case VIEW_TYPE_LOCKED: {
                 return new ListHolder(parent);
             }
+
+            case VIEW_TYPE_FRIEND_LARGE: {
+                return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.myreach_large_item, parent, false), position -> {
+
+                            if (verticalCursor == null || !verticalCursor.moveToPosition(position))
+                                throw new IllegalStateException("Resource cursor has been computed");
+
+                            final ClickData clickData = new ClickData();
+                            clickData.friendId = verticalCursor.getLong(0);
+                            clickData.networkType = verticalCursor.getShort(4);
+                            clickData.status = verticalCursor.getShort(5);
+                            clickData.userName = verticalCursor.getString(2);
+                            handOverMessage.handOverMessage(clickData);
+                        });
+            }
+
+            case VIEW_TYPE_INVITE:
+                return new SingleItemViewHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.myreach_invite, parent, false), new HandOverMessage<Integer>() {
+                    @Override
+                    public void handOverMessage(@Nonnull Integer position) {
+
+                    }
+                });
 
             default:return null;
         }
@@ -171,7 +199,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             //use
-        } else {
+        }
+        else if (friend instanceof Boolean){
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
             horizontalViewHolder.headerText.setText("Newly added");
@@ -179,6 +208,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     new CustomLinearLayoutManager(holder.itemView.getContext(),
                             LinearLayoutManager.HORIZONTAL, false));
             horizontalViewHolder.listOfItems.setAdapter(lockedFriendsAdapter);
+        }
+        else {
+            //
         }
     }
 
@@ -191,26 +223,30 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Nonnull
     private Object getItem(int position) {
 
-        if (position == 10 || verticalCursor == null)
+        if (position == 9 || verticalCursor == null)
+            return 1;
+        else if (position == 10)
             return false;
 
-        else if (position < 10) {
+        else if (position < 9) {
 
             if (position == oldParentCount)
+                return 1;
+            else if (position == oldParentCount + 1)
                 return false;
 
             if (verticalCursor.moveToPosition(position))
                 return verticalCursor;
             else
-                return false;
+                return 1;
         } else {
 
-            final int relativePosition = position - 1;
+            final int relativePosition = position - 2;
 
             if (verticalCursor.moveToPosition(relativePosition))
                 return verticalCursor;
             else
-                return false;
+                return 1;
         }
     }
 
@@ -219,10 +255,15 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public int getItemViewType(int position) {
 
         final Object item = getItem(position);
-        if (item instanceof Cursor)
+        if (item instanceof Cursor) {
+            if (position == 0)
+                return VIEW_TYPE_FRIEND_LARGE;
             return VIEW_TYPE_FRIEND;
-        else
+        }
+        else if (item instanceof Boolean)
             return VIEW_TYPE_LOCKED;
+        else
+            return VIEW_TYPE_INVITE;
     }
 
     @Override
@@ -231,8 +272,10 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return ((Cursor) item).getInt(0); //TODO shift to dirtyHash
-        else
+        else if (item instanceof Boolean)
             return 0;
+        else
+            return 1;
     }
 
     @Override
@@ -240,7 +283,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         if (verticalCursor != null)
             oldParentCount = verticalCursor.getCount();
-        return oldParentCount + 1; //adjust for horizontal list
+        return oldParentCount + 2; //adjust for horizontal list
     }
 
     @Override

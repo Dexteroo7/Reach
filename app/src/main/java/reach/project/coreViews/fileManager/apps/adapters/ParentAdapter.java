@@ -1,7 +1,6 @@
 package reach.project.coreViews.fileManager.apps.adapters;
 
 import android.content.pm.PackageManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +13,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
 
@@ -59,7 +58,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     {
         final List<App> defaultList = new ArrayList<>(1);
         defaultList.add(new App.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_list_item);
+        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_grid_item);
     }
 
     public void updateRecentApps(List<App> newRecent) {
@@ -119,10 +118,10 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         } else {
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
-            horizontalViewHolder.headerText.setText("Recently Added");
+            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            horizontalViewHolder.headerText.setText("Recently Installed");
             horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomLinearLayoutManager(holder.itemView.getContext(),
-                            LinearLayoutManager.HORIZONTAL, false));
+                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }

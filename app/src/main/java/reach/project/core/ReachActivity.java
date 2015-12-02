@@ -78,8 +78,8 @@ import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.fragments.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.fragments.MyLibraryFragment;
-import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.MusicScanner;
 import reach.project.music.MySongsHelper;
 import reach.project.music.PrivacyFragment;
@@ -655,12 +655,12 @@ public class ReachActivity extends AppCompatActivity implements
                     PagerFragment.getNewInstance(
                             new PagerFragment.Pages(
                                     new Class[]{ApplicationFragment.class},
-                                    new String[]{"My Application"},
-                                    "Bitch"),
+                                    new String[]{""},
+                                    "Apps"),
                             new PagerFragment.Pages(
                                     new Class[]{MyLibraryFragment.class},
                                     new String[]{"My Library"},
-                                    "Bitch")),
+                                    "Songs")),
                     PrivacyFragment.newInstance(false),
             };
 
@@ -679,7 +679,7 @@ public class ReachActivity extends AppCompatActivity implements
             final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
             final int[] tabUnselectedIcons = new int[]{
 
-                    R.drawable.ic_friends_gray,
+                    R.drawable.icon_friends_gray,
                     R.drawable.icon_send_gray,
                     R.drawable.icon_grey,
                     R.drawable.icon_download_gray,
@@ -687,7 +687,7 @@ public class ReachActivity extends AppCompatActivity implements
             };
             final int[] tabSelectedIcons = new int[]{
 
-                    R.drawable.ic_friends_gray,
+                    R.drawable.icon_friends_gray,
                     R.drawable.icon_send_pink,
                     R.drawable.icon_plain,
                     R.drawable.icon_download_pink,
@@ -700,24 +700,44 @@ public class ReachActivity extends AppCompatActivity implements
                 if (tab != null)
                     tab.setIcon(tabUnselectedIcons[i]);
             }
+            tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    super.onTabSelected(tab);
+                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+                }
 
-//            tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-//
-//                @Override
-//                public void onTabSelected(TabLayout.Tab tab) {
-//                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
-//                }
-//
-//                @Override
-//                public void onTabUnselected(TabLayout.Tab tab) {
-//                    tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
-//                }
-//
-//                @Override
-//                public void onTabReselected(TabLayout.Tab tab) {
-//                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
-//                }
-//            });
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {
+                    super.onTabUnselected(tab);
+                    tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
+                }
+
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {
+                    super.onTabReselected(tab);
+                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+                }
+            });
+
+            /*tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+                }
+
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {
+                    tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
+                }
+
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {
+                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+                }
+            });*/
+
             lastSong();
             //some stuff
             if (networkPresent)

@@ -16,17 +16,16 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +42,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
@@ -52,7 +52,6 @@ import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 
 public class YourProfileActivity extends AppCompatActivity implements HandOverMessage<ReachDatabase> {
 
@@ -114,16 +113,12 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
             final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
             final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
-            final ImageView profilePic = (ImageView) headerRoot.findViewById(R.id.profilePic);
+            final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
 
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            Picasso.with(this)
-                    .load(StaticData.cloudStorageImageBaseUrl + imageId)
-                    .fit()
-                    .centerCrop()
-                    .into(profilePic);
+            profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId));
 
             cursor.close();
         }

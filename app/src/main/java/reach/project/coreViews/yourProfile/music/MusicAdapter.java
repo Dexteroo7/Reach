@@ -117,25 +117,21 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
 
             final RecentSong recentSong = (RecentSong) message;
             final ListHolder listHolder = (ListHolder) holder;
+            listHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             listHolder.headerText.setText(recentSong.title);
             listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
 
             Log.i("Ayush", "Found recent items with size " + recentSong.songList.size() + " ");
-            if (recentSong.songList.size() < 4)
-                listHolder.listOfItems.setAdapter(new ListAdapterWithMore(recentSong.songList, this, R.layout.song_list_item));
-            else
-                listHolder.listOfItems.setAdapter(new ListAdapterWithMore(recentSong.songList.subList(0, 4), this, R.layout.song_list_item));
+            listHolder.listOfItems.setAdapter(new ListAdapterWithMore(recentSong.songList, this, R.layout.song_grid_item));
 
         } else if (message instanceof SmartSong && holder instanceof ListHolder) {
 
             final SmartSong smartSong = (SmartSong) message;
             final ListHolder listHolder = (ListHolder) holder;
+            listHolder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             listHolder.headerText.setText(smartSong.title);
             listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
-            if (smartSong.songList.size() < 4)
-                listHolder.listOfItems.setAdapter(new ListAdapterWithMore(smartSong.songList, this, R.layout.song_list_item));
-            else
-                listHolder.listOfItems.setAdapter(new ListAdapterWithMore(smartSong.songList.subList(0, 4), this, R.layout.song_list_item));
+            listHolder.listOfItems.setAdapter(new ListAdapterWithMore(smartSong.songList, this, R.layout.song_grid_item));
         }
     }
 

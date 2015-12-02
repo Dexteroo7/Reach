@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/explore_menu_1"
-        android:checkable="true"
-        android:checked="true"
-        android:title="Show Music" />
+        android:id="@+id/notif_button"
+        android:title="Notifications"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_notification_new_pink"
+        />
     <item
-        android:id="@+id/explore_menu_2"
-        android:checkable="true"
-        android:checked="true"
-        android:title="Show Apps" />
+        android:id="@+id/settings_button"
+        android:title="Settings"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_settings_pink"
+        />
 </menu>

@@ -168,6 +168,9 @@ public enum MiscUtils {
 
         for (ApplicationInfo applicationInfo : applicationInfoList) {
 
+            if (applicationInfo.packageName.equals("reach.project"))
+                continue;
+
             final App.Builder appBuilder = new App.Builder();
 
             appBuilder.launchIntentFound(packageManager.getLaunchIntentForPackage(applicationInfo.packageName) != null);

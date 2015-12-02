@@ -1,21 +1,24 @@
 package reach.project.coreViews.fileManager.apps.adapters;
 
 import android.content.pm.PackageManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.google.common.collect.Ordering;
 
+import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
 import reach.project.apps.App;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 
 /**
  * Created by dexter on 25/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> {
+class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier{
 
     private final List<App> recentApps;
 
@@ -23,6 +26,12 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> {
         super(messageList, handOverMessage, resourceId);
         this.recentApps = messageList;
 
+    }
+
+    @Override
+    public int getItemCount() {
+        int size = super.getItemCount();
+        return size < 4 ? size : 4;
     }
 
     /**
@@ -71,5 +80,10 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
+
     }
 }

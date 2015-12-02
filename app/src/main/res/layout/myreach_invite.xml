@@ -1,0 +1,59 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" >
+    <android.support.v7.widget.CardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:fresco="http://schemas.android.com/apk/res-auto"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:layout_width="180dp"
+        android:layout_height="200dp"
+        android:layout_margin="10dp"
+        card_view:cardUseCompatPadding="true"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="2dp"
+        android:descendantFocusability="blocksDescendants">
+        <android.support.percent.PercentRelativeLayout
+            android:layout_height="match_parent"
+            android:layout_width="match_parent">
+
+            <com.facebook.drawee.view.SimpleDraweeView
+                android:id="@+id/coverPic"
+                fresco:placeholderImage="@color/reach_grey_light"
+                fresco:placeholderImageScaleType="focusCrop"
+                android:layout_width="match_parent"
+                android:layout_height="90dp"/>
+
+            <com.facebook.drawee.view.SimpleDraweeView
+                android:id="@+id/profilePhotoList"
+                android:layout_centerHorizontal="true"
+                app:layout_marginTopPercent="18%"
+                fresco:placeholderImage="@drawable/circular_background_pink"
+                fresco:roundAsCircle="true"
+                android:layout_width="70dp"
+                android:layout_height="70dp"/>
+
+            <TextView
+                android:id="@+id/userNameList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="2dp"
+                android:layout_below="@id/profilePhotoList"
+                android:layout_centerHorizontal="true"
+                android:text="Not able to find\nfriends?"
+                android:textColor="@color/reach_grey" />
+            <TextView
+                android:id="@+id/telephoneNumberList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="15dp"
+                android:text="INVITE"
+                android:textColor="@color/reach_color" />
+        </android.support.percent.PercentRelativeLayout>
+    </android.support.v7.widget.CardView>
+</FrameLayout>

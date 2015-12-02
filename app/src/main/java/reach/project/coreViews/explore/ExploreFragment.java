@@ -82,10 +82,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
+        toolbar.inflateMenu(R.menu.explore_menu);
         final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
         final PopupMenu popupMenu = new PopupMenu(container.getContext(), exploreToolbarText);
 
-        popupMenu.inflate(R.menu.explore_menu);
+        popupMenu.inflate(R.menu.explore_popup_menu);
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
         popupMenu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {

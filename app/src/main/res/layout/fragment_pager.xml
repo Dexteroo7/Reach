@@ -1,4 +1,5 @@
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,18 +10,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#fff"
-        android:fitsSystemWindows="true"
-        app:elevation="0dp">
-
+        android:fitsSystemWindows="true" >
         <android.support.v7.widget.Toolbar
-            android:id="@+id/myReachToolbar"
+            android:id="@+id/pagerToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:fitsSystemWindows="true"
+            app:titleTextColor="@color/reach_color"
             app:layout_scrollFlags="scroll|enterAlways"
-            app:navigationIcon="@android:drawable/arrow_down_float"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+        <com.astuetz.PagerSlidingTabStrip
+            android:id="@+id/tabLayoutPager"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:fitsSystemWindows="true"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:pstsIndicatorHeight="0dp"
+            app:pstsPaddingMiddle="true"
+            app:pstsShouldExpand="true"
+            app:pstsTabTextAllCaps="false"
+            app:pstsTabTextColor="@color/reach_grey" />
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.view.ViewPager

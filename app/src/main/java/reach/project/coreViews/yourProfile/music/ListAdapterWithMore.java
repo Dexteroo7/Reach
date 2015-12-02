@@ -27,6 +27,12 @@ class ListAdapterWithMore extends SimpleRecyclerAdapter<Song, SongItemHolder> {
     }
 
     @Override
+    public int getItemCount() {
+        int size = super.getItemCount();
+        return size < 4 ? size : 4;
+    }
+
+    @Override
     public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         return new SongItemHolder(itemView, handOverMessage);
     }

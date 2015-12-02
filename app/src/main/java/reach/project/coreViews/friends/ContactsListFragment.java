@@ -166,8 +166,8 @@ public class ContactsListFragment extends Fragment implements
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-
-                if (position == 0 || friendsAdapter.getItemViewType(position) == FriendsAdapter.VIEW_TYPE_LOCKED)
+                int itemType = friendsAdapter.getItemViewType(position);
+                if (itemType == FriendsAdapter.VIEW_TYPE_FRIEND_LARGE || itemType == FriendsAdapter.VIEW_TYPE_LOCKED)
                     return 2;
                 else
                     return 1;

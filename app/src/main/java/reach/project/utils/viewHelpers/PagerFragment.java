@@ -7,9 +7,12 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.astuetz.PagerSlidingTabStrip;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -102,6 +105,11 @@ public class PagerFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_pager, container, false);
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
+        final PagerSlidingTabStrip tabLayout = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabLayoutPager);
+        final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
+
+        toolbar.setTitle("Manager");
+        toolbar.inflateMenu(R.menu.pager_menu);
 
         final Bundle arguments = getArguments();
         final Parcelable[] parcelables = arguments.getParcelableArray(PARCEL_PAGER);
@@ -109,10 +117,12 @@ public class PagerFragment extends Fragment {
             return null;
 
         final Pages[] pages = (Pages[]) parcelables;
+        final String[] titles = new String[pages.length];
         final Fragment[] fragments = new Fragment[pages.length];
 
         for (int index = 0; index < pages.length; index++) {
 
+            titles[index] = pages[index].header;
             if (pages[index].classes.length > 1)
                 fragments[index] = PagerInnerFragment.getNewInstance(pages[index]);
             else if (pages[index].classes.length == 1) {
@@ -120,7 +130,7 @@ public class PagerFragment extends Fragment {
                 try {
                     final Class fragmentClass = Class.forName(pages[index].classes[0]);
                     final Method invoker = fragmentClass.getMethod("getInstance", String.class);
-                    fragments[index] = (Fragment) invoker.invoke(null, "Bitch");
+                    fragments[index] = (Fragment) invoker.invoke(null, pages[index].header);
                 } catch (ClassNotFoundException | NoSuchMethodException |
                         IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
@@ -132,6 +142,11 @@ public class PagerFragment extends Fragment {
             @Override
             public Fragment getItem(int position) {
                 return fragments[position];
+            }
+
+            @Override
+            public CharSequence getPageTitle(int position) {
+                return titles[position];
             }
 
             @Override
@@ -160,6 +175,7 @@ public class PagerFragment extends Fragment {
                 view.setScaleY(scaleFactor);
             }
         });
+        tabLayout.setViewPager(viewPager);
         return rootView;
     }
 }

@@ -13,4 +13,10 @@
         android:title="Notifications"
         app:showAsAction="always"
         />
+    <item
+        android:id="@+id/settings_button"
+        android:title="Settings"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_settings_pink"
+        />
 </menu>

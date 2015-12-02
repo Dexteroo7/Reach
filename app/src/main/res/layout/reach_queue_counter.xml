@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/counterContainer"
-    android:background="@drawable/counter_color_selector"
     android:paddingRight="10dp"
     android:layout_width="wrap_content"
     android:layout_height="match_parent">
     <ImageView
         android:layout_gravity="center_vertical"
-        android:src="@drawable/ic_notif_icon"
+        android:src="@drawable/icon_notification_new_pink"
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
         android:layout_width="wrap_content"
@@ -17,12 +16,12 @@
         android:textSize="12sp"
         android:visibility="gone"
         android:gravity="center"
-        android:background="@drawable/circular_background_lightpink"
+        android:background="@drawable/circular_background_grey"
         android:id="@+id/reach_q_count"
         android:layout_gravity="right|center_vertical"
         android:layout_marginBottom="10dp"
         android:layout_marginRight="2dp"
-        android:textColor="@color/white"
+        android:textColor="@color/reach_color"
         android:textStyle="bold"
         android:layout_width="18dp"
         android:layout_height="18dp" />

@@ -4,7 +4,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -27,7 +26,7 @@ import reach.project.music.MySongsHelper;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
 
@@ -95,7 +94,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     {
         final List<Song> defaultList = new ArrayList<>(1);
         defaultList.add(new Song.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.song_list_item);
+        recentAdapter = new RecentAdapter(defaultList, this, R.layout.song_grid_item);
     }
 
     public void updateRecentMusic(@NonNull List<Song> newRecent) {
@@ -184,10 +183,10 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         } else {
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
+            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomLinearLayoutManager(holder.itemView.getContext(),
-                            LinearLayoutManager.HORIZONTAL, false));
+                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }

@@ -10,7 +10,7 @@ public enum ExploreTypes {
     MUSIC("Song", R.layout.explore_music),
     APP("App", android.R.layout.simple_list_item_1),
     PHOTO("Photo", android.R.layout.simple_list_item_1),
-    LOADING("Loading", android.R.layout.simple_list_item_1),
+    LOADING("Loading", R.layout.explore_loading),
     DONE_FOR_TODAY("Done for today", android.R.layout.simple_list_item_1);
 
     private String title;

@@ -55,7 +55,7 @@ public final class ListHolder extends RecyclerView.ViewHolder implements View.On
             };
 
             final RecyclerView recyclerView = new RecyclerView(context);
-            recyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
+            recyclerView.setLayoutManager(new CustomGridLayoutManager(context, 2));
             recyclerView.setAdapter(simpleRecyclerAdapter);
 
             new AlertDialog.Builder(context)

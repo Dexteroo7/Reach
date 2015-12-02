@@ -502,7 +502,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         }
 
         final RecentSong.Builder recentBuilder = new RecentSong.Builder();
-        recentBuilder.title("Recent Songs");
+        recentBuilder.title("Recently Added");
         recentBuilder.songList(toReturn);
 
         return Collections.singletonList(recentBuilder.build());

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:padding="10dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <android.support.v7.widget.CardView
+        card_view:cardUseCompatPadding="true"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="2dp"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content">
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/albumArt"
+            fresco:placeholderImage="@color/reach_color"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="10dp"
+            android:layout_height="150dp" />
+        <RelativeLayout
+            android:layout_gravity="bottom"
+            android:background="#fff"
+            android:paddingRight="5dp"
+            android:paddingLeft="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/downButton"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:src="@drawable/icon_download_gray"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/songName"
+                android:text="Test"
+                android:lines="1"
+                android:textSize="13sp"
+                android:layout_toLeftOf="@id/downButton"
+                android:ellipsize="marquee"
+                android:textColor="#000"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/artistName"
+                android:text="Test"
+                android:lines="1"
+                android:textSize="12sp"
+                android:layout_below="@id/songName"
+                android:layout_alignLeft="@id/songName"
+                android:layout_toLeftOf="@id/downButton"
+                android:ellipsize="marquee"
+                android:textColor="@color/reach_grey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+</RelativeLayout>

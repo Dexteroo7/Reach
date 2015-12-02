@@ -1,36 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:paddingRight="10dp"
+    android:paddingLeft="10dp"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
     android:background="@drawable/border_shadow1"
-    android:padding="20dp">
-
-    <com.facebook.drawee.view.SimpleDraweeView
-        android:id="@+id/appIcon"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        fresco:placeholderImage="@color/reach_color" />
-
-    <ImageView
-        android:id="@+id/downButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <android.support.v7.widget.CardView
+        card_view:cardUseCompatPadding="true"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="2dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:src="@drawable/icon_download_gray" />
-
-    <TextView
-        android:id="@+id/appName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_toLeftOf="@id/downButton"
-        android:layout_toRightOf="@id/appIcon"
-        android:ellipsize="marquee"
-        android:lines="1"
-        android:text="Test"
-        android:textColor="#f33b5b"
-        android:textSize="16sp" />
-
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+            <com.facebook.drawee.view.SimpleDraweeView
+                android:id="@+id/appIcon"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="15dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                fresco:placeholderImage="@color/reach_color" />
+            <TextView
+                android:id="@+id/downButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/appIcon"
+                android:layout_alignParentRight="true"
+                android:textColor="#fff"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:paddingRight="10dp"
+                android:paddingLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@color/reach_color"
+                android:text="Open" />
+            <TextView
+                android:id="@+id/appName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="15dp"
+                android:layout_toLeftOf="@id/downButton"
+                android:layout_toRightOf="@id/appIcon"
+                android:ellipsize="marquee"
+                android:lines="1"
+                android:text="Test"
+                android:textColor="#f33b5b"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/artistName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/appName"
+                android:layout_below="@id/appName"
+                android:layout_marginTop="10dp"
+                android:layout_toLeftOf="@id/downButton"
+                android:ellipsize="marquee"
+                android:lines="1"
+                android:text="Test"
+                android:textColor="@color/reach_grey" />
+            <ImageView
+                android:id="@+id/extraButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="5dp"
+                android:src="@drawable/icon_extra_dots_gray" />
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
 </RelativeLayout>
