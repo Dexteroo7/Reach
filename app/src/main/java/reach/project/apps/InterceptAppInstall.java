@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import reach.backend.applications.appVisibilityApi.model.JsonMap;
 import reach.backend.applications.classifiedAppsApi.model.StringList;
 import reach.project.R;
 import reach.project.core.ReachActivity;
@@ -74,6 +75,13 @@ public class InterceptAppInstall extends BroadcastReceiver {
         appBuilder.packageName(interceptedApplication.packageName);
         appBuilder.processName(interceptedApplication.processName);
 
+        try {
+            appBuilder.installDate(
+                    packageManager.getPackageInfo(interceptedApplication.packageName, 0).firstInstallTime);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
         //Probability that network is absent when a package install intent is received is very low
         if (!MiscUtils.isOnline(context))
             return;
@@ -110,21 +118,39 @@ public class InterceptAppInstall extends BroadcastReceiver {
             final long serverId = (long) params[1];
             final byte status = (byte) params[2];
 
+            final String packageName = appBuilder.packageName;
             final boolean visibility;
+
+            /**
+             * TODO combine all server calls into 1 and ADD the new package to blob
+             */
 
             if (status == NOT_DEFINED) {
 
-                final StringList stringList = new StringList();
-                stringList.setUserId(serverId);
-                stringList.setStringList(Collections.singletonList(appBuilder.packageName));
+                /*
+                 *first try from online persistence
+                 */
+                final JsonMap visibilityMap = MiscUtils.autoRetry(() ->
+                        StaticData.appVisibilityApi.get(serverId).execute().getVisibility(), Optional.absent()).orNull();
 
-                final List<String> hiddenPackageList;
-                final StringList hiddenPackages = MiscUtils.autoRetry(() -> StaticData.classifiedAppsApi.getDefaultState(
-                        stringList).execute(), Optional.absent()).orNull();
+                if (visibilityMap != null && visibilityMap.containsKey(packageName))
+                    visibility = (boolean) visibilityMap.get(packageName);
+                else {
 
-                visibility = !(hiddenPackages != null &&
-                        (hiddenPackageList = hiddenPackages.getStringList()) != null &&
-                        !hiddenPackageList.isEmpty() && hiddenPackageList.contains(appBuilder.packageName));
+                    /**
+                     * new package, get the default visibility
+                     */
+                    final StringList stringList = new StringList();
+                    stringList.setUserId(serverId);
+                    stringList.setStringList(Collections.singletonList(appBuilder.packageName));
+
+                    final List<String> hiddenPackageList;
+                    final StringList hiddenPackages = MiscUtils.autoRetry(() -> StaticData.classifiedAppsApi.getDefaultState(
+                            stringList).execute(), Optional.absent()).orNull();
+                    visibility = !(hiddenPackages != null &&
+                            (hiddenPackageList = hiddenPackages.getStringList()) != null &&
+                            !hiddenPackageList.isEmpty() && hiddenPackageList.contains(appBuilder.packageName));
+                }
 
                 Log.i("Ayush", "Fetching visibility from server " + visibility);
 
@@ -143,6 +169,8 @@ public class InterceptAppInstall extends BroadcastReceiver {
                     serverId,
                     appBuilder.packageName,
                     appBuilder.visible).execute(), Optional.absent());
+
+            //TODO add the new package
 
             return appBuilder.build();
         }

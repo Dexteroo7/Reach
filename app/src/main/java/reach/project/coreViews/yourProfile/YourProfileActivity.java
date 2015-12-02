@@ -41,6 +41,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.coreViews.yourProfile.apps.YourProfileAppFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -134,23 +135,32 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
             @Override
             public Fragment getItem(int position) {
                 switch (position) {
-                    default:
+
+                    case 0:
+                        return YourProfileAppFragment.newInstance(userId);
+                    case 1:
                         return YourProfileMusicFragment.newInstance(userId);
+                    default:
+                        throw new IllegalStateException("Count and size clash");
                 }
             }
 
             @Override
             public int getCount() {
-                return 1;
+                return 2;
             }
 
             @Override
             public CharSequence getPageTitle(int position) {
                 switch (position) {
+
                     case 0:
+                        return "Apps";
+                    case 1:
                         return "Songs (" + finalNumberOfSongs + ")";
+                    default:
+                        throw new IllegalStateException("Count and size clash");
                 }
-                return "";
             }
         });
 
@@ -159,6 +169,10 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
                 case 0:
                     return HeaderDesign.fromColorResAndUrl(
                             R.color.reach_grey,
+                            "");
+                case 1:
+                    return HeaderDesign.fromColorResAndUrl(
+                            R.color.reach_color,
                             "");
             }
             return null;

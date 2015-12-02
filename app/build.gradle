@@ -52,6 +52,7 @@ dependencies {
     compile 'com.google.apis:google-api-services-storage:v1-rev51-1.20.0'
     compile 'com.google.android.gms:play-services-gcm:8.3.0'
     compile 'com.google.android.gms:play-services-analytics:8.3.0'
+    compile 'com.google.android.gms:play-services-appindexing:8.3.0'
     compile 'com.google.code.gson:gson:2.4'
 
     compile 'com.android.support:appcompat-v7:23.1.1'
@@ -81,7 +82,4 @@ dependencies {
 
 configurations {
     compile.exclude group: "org.apache.httpcomponents", module: "httpclient"
-}
-dependencies {
-    compile 'com.google.android.gms:play-services-appindexing:8.3.0'
 }

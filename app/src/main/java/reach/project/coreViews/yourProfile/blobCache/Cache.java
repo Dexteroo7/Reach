@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -41,8 +40,6 @@ public abstract class Cache implements Closeable {
     ///////////////
     @Nullable
     private RandomAccessFile cacheAccess = null;
-    @Nullable
-    private Map<Long, Boolean> visibilityMap = null;
     @Nullable
     private WeakReference<Cache> cacheWeakReference = null;
 
@@ -98,15 +95,6 @@ public abstract class Cache implements Closeable {
     ///////////////Public interaction
 
     /**
-     * Hook for item validation policy injection
-     *
-     * @param visibilityMap of validation policy
-     */
-    public void injectVisibilityMap(Map<Long, Boolean> visibilityMap) {
-        this.visibilityMap = visibilityMap;
-    }
-
-    /**
      * TODO
      * Hook for loading next batch
      */
@@ -145,10 +133,6 @@ public abstract class Cache implements Closeable {
 
         MiscUtils.closeQuietly(cacheAccess);
         cacheAccess = null;
-
-        if (visibilityMap != null)
-            visibilityMap.clear();
-        visibilityMap = null;
 
         if (cacheWeakReference != null)
             cacheWeakReference.clear();
@@ -284,14 +268,8 @@ public abstract class Cache implements Closeable {
                             break;
                         }
                         //handle visibility
-                        if (cache.visibilityMap == null)
+                        if (cache.cacheInjectorCallbacks.verifyItemVisibility(item))
                             itemsToReturn.add(item);
-                        else {
-                            //add only if visible
-                            final long itemId = cache.cacheInjectorCallbacks.getItemId(item);
-                            if (cache.visibilityMap.containsKey(itemId) && cache.visibilityMap.get(itemId))
-                                itemsToReturn.add(item);
-                        }
 
                     } else {
 

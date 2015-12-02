@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +40,10 @@ import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.coreViews.yourProfile.blobCache.Cache;
+import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
+import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
+import reach.project.coreViews.yourProfile.blobCache.CacheType;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.Song;
@@ -49,10 +52,6 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.CacheAdapterInterface;
-import reach.project.coreViews.yourProfile.blobCache.Cache;
-import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
-import reach.project.coreViews.yourProfile.blobCache.CacheType;
 
 /**
  * Full list loads from cache, and checks network for update, if update is found, whole data is reloaded.
@@ -85,8 +84,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private final List<Message> musicData = new ArrayList<>(100);
     private final SecureRandom secureRandom = new SecureRandom();
 
-    private HandOverMessage<ReachDatabase> addSongToQueue;
-
+    private HandOverMessage<ReachDatabase> addSongToQueue = null;
     private RecyclerViewMaterialAdapter materialAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
@@ -189,6 +187,12 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
+    public boolean verifyItemVisibility(Message item) {
+        //TODO
+        return true;
+    }
+
+    @Override
     public int getItemCount() {
 
         final int size = musicData.size();
@@ -198,44 +202,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         }
 
         return size;
-    }
-
-    @Override
-    public long getItemId(Message item) {
-
-        final Long id;
-
-        if (item instanceof Song)
-            id = ((Song) item).songId;
-
-        else if (item instanceof RecentSong) {
-
-            final RecentSong recentSong = (RecentSong) item;
-            final long[] songIds = new long[recentSong.songList.size()];
-
-            int index;
-            for (index = 0; index < recentSong.songList.size(); index++) {
-                final Long songId = recentSong.songList.get(index).songId;
-                songIds[index] = songId == null ? 0 : songId;
-            }
-
-            return Arrays.hashCode(songIds);
-        } else if (item instanceof SmartSong) {
-
-            final SmartSong recentSong = (SmartSong) item;
-            final long[] songIds = new long[recentSong.songList.size()];
-
-            int index;
-            for (index = 0; index < recentSong.songList.size(); index++) {
-                final Long songId = recentSong.songList.get(index).songId;
-                songIds[index] = songId == null ? 0 : songId;
-            }
-
-            return Arrays.hashCode(songIds);
-        } else
-            id = null;
-
-        return id == null ? 0 : id;
     }
 
     @Override

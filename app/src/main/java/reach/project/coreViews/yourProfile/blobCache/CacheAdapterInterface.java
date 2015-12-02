@@ -1,6 +1,8 @@
-package reach.project.utils.viewHelpers;
+package reach.project.coreViews.yourProfile.blobCache;
 
 import com.squareup.wire.Message;
+
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 18/11/15.
@@ -8,8 +10,6 @@ import com.squareup.wire.Message;
 public interface CacheAdapterInterface<T extends Message, E> extends HandOverMessage<E> {
 
     int getItemCount();
-
-    long getItemId(T item);
 
     T getItem(int position);
 }

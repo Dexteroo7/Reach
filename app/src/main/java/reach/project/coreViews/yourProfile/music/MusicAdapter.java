@@ -18,11 +18,11 @@ import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 
 import reach.project.R;
+import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.CacheAdapterInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
 
@@ -159,7 +159,7 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
 
     @Override
     public long getItemId(int position) {
-        return cacheAdapterInterface.getItemId(cacheAdapterInterface.getItem(position));
+        return cacheAdapterInterface.getItem(position).hashCode();
     }
 
     @Override

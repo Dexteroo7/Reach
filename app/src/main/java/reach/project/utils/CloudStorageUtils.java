@@ -244,7 +244,7 @@ public enum CloudStorageUtils {
             musicData = outputStream.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
-            return true;
+            return true; //error, but sync with local sql
         } finally {
             MiscUtils.closeQuietly(outputStream, gzipOutputStream);
         }

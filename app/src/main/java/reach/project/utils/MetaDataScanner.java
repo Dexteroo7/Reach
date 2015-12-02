@@ -2,9 +2,11 @@ package reach.project.utils;
 
 import android.app.IntentService;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
@@ -12,6 +14,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
@@ -25,12 +28,19 @@ import com.squareup.wire.Wire;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import reach.backend.applications.appVisibilityApi.model.AppVisibility;
+import reach.backend.applications.classifiedAppsApi.model.StringList;
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
 import reach.backend.music.musicVisibilityApi.model.MusicData;
+import reach.project.apps.App;
+import reach.project.apps.AppList;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -77,7 +87,8 @@ public class MetaDataScanner extends IntentService {
         //genre collection holder
         private static final HashSet<String> genreHashSet = new HashSet<>(50);
 
-        private static LongSparseArray<Song> getSongListing(Uri uri, ContentResolver resolver, long serverId) {
+        @NonNull
+        private static List<Song> getSongListing(Uri uri, ContentResolver resolver, long serverId) {
 
             ////////////////////persistence holder use songId as key !
             ////////////////////Loading old song data
@@ -91,7 +102,7 @@ public class MetaDataScanner extends IntentService {
                     new String[]{serverId + ""},
                     null);
 
-            LongSparseArray<SongPersist> songPersist;
+            LongSparseArray<SongPersist> songPersist = null;
             //try local first
             if (reachSongInitialCursor != null) {
 
@@ -107,8 +118,7 @@ public class MetaDataScanner extends IntentService {
                             persist); //visibility
                 }
                 reachSongInitialCursor.close();
-            } else
-                songPersist = null;
+            }
 
             //if no visibility found in table look in cloud
             if (songPersist == null || songPersist.size() == 0) {
@@ -143,7 +153,7 @@ public class MetaDataScanner extends IntentService {
                         //persist data found
                         final SongPersist persist = new SongPersist();
                         persist.visibility = (Boolean) value;
-                        persist.liked = false; //TODO track later
+                        persist.liked = false; //TODO persist later
 
                         songPersist.append(
                                 Long.parseLong(key),  //songId
@@ -156,9 +166,9 @@ public class MetaDataScanner extends IntentService {
             ////////////////////Loading new songs
             final Cursor musicCursor = resolver.query(uri, projection, null, null, null);
             if (musicCursor == null)
-                return null;
+                return Collections.emptyList();
 
-            final LongSparseArray<Song> toSend = new LongSparseArray<>(musicCursor.getCount());
+            final List<Song> toSend = new ArrayList<>(musicCursor.getCount());
             final HashSet<String> verifiedMusicPaths = new HashSet<>();
             final File[] directories = new File[]{
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
@@ -323,7 +333,7 @@ public class MetaDataScanner extends IntentService {
                     builder.isLiked(persist.liked);
                 }
 
-                toSend.append(builder.songId, builder.build());
+                toSend.add(builder.build());
                 sendMessage(SCANNING_SONGS, songCountTotal++);
             }
 
@@ -388,90 +398,7 @@ public class MetaDataScanner extends IntentService {
 
         }
 
-
-        /**
-         * Saves the music data to cloud and locally
-         *
-         * @param songs  LongSparseArray of myLibrarySongs
-         * @param genres all the genres
-         * @param first  true, if this force local DB update is needed
-         */
-        private static void saveMusicData(LongSparseArray<Song> songs,
-                                          Iterable<String> genres,
-                                          boolean first,
-                                          ContentResolver resolver,
-                                          long serverId,
-                                          AssetManager assetManager) {
-
-            if (songs == null) {
-                Log.i("Ayush", "Nothing new in MBID store");
-                return;
-            }
-
-            final ImmutableList.Builder<Song> myLibraryBuilder = new ImmutableList.Builder<>();
-
-            //get songs
-            for (int i = 0; i < songs.size(); i++) {
-
-                final Song song = songs.valueAt(i);
-                if (song == null)
-                    continue;
-                myLibraryBuilder.add(song);
-            }
-
-            /**
-             * Insert playLists and songs into cloud blob
-             */
-            final ImmutableList<Song> myLibrary = myLibraryBuilder.build();
-            final Iterable<Song> combinedView = Iterables.unmodifiableIterable(Iterables.concat(
-                    myLibrary,  //myLibrary songs
-                    getDownloadedSongs(resolver))); //downloaded songs
-
-            final byte[] music = new MusicList.Builder()
-                    .clientId(serverId)
-                    .genres(ImmutableList.copyOf(genres)) //list view of hash set
-                    .song(ImmutableList.copyOf(combinedView)) //concatenated list
-                    .build().toByteArray();
-
-            final InputStream key;
-            try {
-                key = assetManager.open("key.p12");
-            } catch (IOException | NullPointerException e) {
-                e.printStackTrace();
-                return; // what to do ? this should probably not happen
-            }
-
-            //return false if same Music found !
-            final boolean newMusic = CloudStorageUtils.uploadMetaData(
-                    music,
-                    MiscUtils.getMusicStorageKey(serverId),
-                    key,
-                    CloudStorageUtils.MUSIC);
-
-            /**
-             * if no new music is found and not a first time operations quit
-             * OR
-             * if drainage is true ! (local DB already exists)
-             */
-            if (!newMusic && !first) {
-
-                Log.i("Ayush", "Same Music found !");
-                return;
-            }
-
-            //update music visibility
-            createVisibilityMap(combinedView, serverId);
-
-            /**
-             * Commit to local DB now !
-             */
-            final List<Song> myLibrarySongs = myLibraryBuilder.build();
-            //save songs, albums & artists to database
-            MiscUtils.bulkInsertSongs(
-                    myLibrarySongs,
-                    resolver, serverId);
-        }
-
+        @NonNull
         private static ImmutableList<Song> getDownloadedSongs(ContentResolver resolver) {
 
             final ImmutableList.Builder<Song> downloadBuilder = new ImmutableList.Builder<>();
@@ -578,8 +505,155 @@ public class MetaDataScanner extends IntentService {
     }
 
     private enum ScanApps {
+        ;
 
+        @NonNull
+        public static List<App> getPackages(long userId, Context context) {
 
+            final PackageManager packageManager = context.getPackageManager();
+            final SharedPreferences preferences = context.getSharedPreferences("Reach", MODE_PRIVATE);
+
+            final List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+            if (applicationInfoList == null || applicationInfoList.isEmpty())
+                return Collections.emptyList();
+
+            final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(preferences);
+            final List<String> newPackages = new ArrayList<>();
+
+            /**
+             * Add packages which are new from local perspective
+             */
+            for (ApplicationInfo applicationInfo : applicationInfoList)
+                if (!packageVisibility.containsKey(applicationInfo.packageName))
+                    newPackages.add(applicationInfo.packageName);
+
+            /**
+             * Remove package from new list if found on server
+             */
+            if (!newPackages.isEmpty()) {
+
+                Log.i("Ayush", "Found " + newPackages.size() + " new packages");
+                final reach.backend.applications.appVisibilityApi.model.JsonMap visibilityMap = MiscUtils.autoRetry(() ->
+                        StaticData.appVisibilityApi.get(userId).execute().getVisibility(), Optional.absent()).orNull();
+                if (visibilityMap != null && !visibilityMap.isEmpty()) {
+
+                    final Set<Map.Entry<String, Object>> entrySet = visibilityMap.entrySet();
+                    Log.i("Ayush", "Found " + entrySet.size() + " persisted visibility");
+
+                    for (Map.Entry<String, Object> entry : entrySet) {
+
+                        final String packageName = entry.getKey();
+                        final Object visibility = entry.getValue();
+
+                        //ignore if already present locally
+                        if (TextUtils.isEmpty(packageName) ||
+                                visibility == null ||
+                                packageVisibility.containsKey(packageName))
+                            continue;
+
+                        final boolean visible;
+                        if (visibility instanceof Boolean)
+                            visible = (boolean) visibility;
+                        else {
+                            visible = false;
+                            Log.i("Ayush", "Found junk data");
+                        }
+
+                        Log.i("Ayush", "Marking " + packageName + " as " + visible);
+                        //add new visibility and remove from new
+                        packageVisibility.put(packageName, visible);
+                        newPackages.remove(packageName);
+
+                    }
+                }
+            }
+
+            /**
+             * If some really new packages are there get the default visibility
+             */
+            if (!newPackages.isEmpty()) {
+
+                Log.i("Ayush", "Found " + newPackages.size() + " really new packages");
+                final StringList request = new StringList();
+                request.setUserId(userId);
+                request.setStringList(newPackages);
+
+                final StringList defaultHidden = MiscUtils.autoRetry(() ->
+                        StaticData.classifiedAppsApi.getDefaultState(request).execute(), Optional.absent()).orNull();
+
+                final List<String> hiddenPackages;
+                if (defaultHidden != null && (hiddenPackages = defaultHidden.getStringList()) != null && !hiddenPackages.isEmpty()) {
+
+                    for (String hiddenPackage : hiddenPackages) {
+                        packageVisibility.put(hiddenPackage, false);
+                        newPackages.remove(hiddenPackage);
+                        Log.i("Ayush", "Marking " + hiddenPackage + " as not visible");
+                    }
+                }
+            }
+
+            //any remaining packages in "newPackages" will be marked as visible
+            for (String newPackage : newPackages)
+                packageVisibility.put(newPackage, true);
+
+            final List<App> applicationsFound = new ArrayList<>();
+            for (ApplicationInfo applicationInfo : applicationInfoList) {
+
+                final App.Builder appBuilder = new App.Builder();
+
+                appBuilder.launchIntentFound(packageManager.getLaunchIntentForPackage(applicationInfo.packageName) != null);
+                appBuilder.applicationName(applicationInfo.loadLabel(packageManager) + "");
+                appBuilder.description(applicationInfo.loadDescription(packageManager) + "");
+                appBuilder.packageName(applicationInfo.packageName);
+                appBuilder.processName(applicationInfo.processName);
+
+                try {
+                    appBuilder.installDate(
+                            packageManager.getPackageInfo(applicationInfo.packageName, 0).firstInstallTime);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                final Boolean visibility = packageVisibility.get(applicationInfo.packageName);
+                if (visibility == null)
+                    appBuilder.visible(true); //default as true
+                else
+                    appBuilder.visible(visibility);
+
+                applicationsFound.add(appBuilder.build());
+            }
+
+            //update the package visibility
+            SharedPrefUtils.overWritePackageVisibility(preferences, packageVisibility);
+
+            return applicationsFound;
+        }
+
+        /**
+         * Save the latest visibility data to the cloud
+         *
+         * @param apps     whose visibility needs to be committed
+         * @param serverId the id of the user
+         */
+        private static void createVisibilityMap(Iterable<App> apps,
+                                                long serverId) {
+
+            final reach.backend.applications.appVisibilityApi.model.JsonMap visibilityMap = new reach.backend.applications.appVisibilityApi.model.JsonMap();
+
+            for (App app : apps)
+                visibilityMap.put(app.packageName, app.visible);
+
+            final AppVisibility appVisibility = new AppVisibility();
+            appVisibility.setVisibility(visibilityMap);
+            appVisibility.setId(serverId);
+
+            //update music visibility data
+            MiscUtils.autoRetry(() -> {
+
+                StaticData.appVisibilityApi.insert(appVisibility).execute();
+                return null;
+            }, Optional.absent());
+        }
     }
 
     public MetaDataScanner() {
@@ -592,7 +666,7 @@ public class MetaDataScanner extends IntentService {
     public static int FINISHED = 3;
 
     @Nullable
-    private static Messenger messenger;
+    private static Messenger messenger = null;
 
     private synchronized static void sendMessage(int what, int arg1) {
 
@@ -605,6 +679,74 @@ public class MetaDataScanner extends IntentService {
                 messenger.send(message);
             } catch (RemoteException ignored) {
             }
+        }
+    }
+
+    /**
+     * Saves the music data to cloud and locally
+     *
+     * @param songs  iterable of songs
+     * @param apps   iterable of apps
+     * @param genres all the genres
+     * @param first  true, if this force local DB update is needed
+     */
+    private static void saveMetaData(List<Song> songs,
+                                     List<App> apps,
+                                     Iterable<String> genres,
+                                     boolean first,
+                                     long serverId,
+                                     Context context) {
+
+        final InputStream key;
+        try {
+            key = context.getAssets().open("key.p12");
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace();
+            return; // what to do ? this should probably not happen
+        }
+
+        ////////////////////Sync songs
+        //TODO verify empty case being handled
+        final byte[] musicBlob = new MusicList.Builder()
+                .clientId(serverId)
+                .genres(ImmutableList.copyOf(genres)) //list view of hash set
+                .song(songs) //concatenated list
+                .build().toByteArray();
+
+        //return false if same Music found !
+        final boolean newMusic = CloudStorageUtils.uploadMetaData(
+                musicBlob,
+                MiscUtils.getMusicStorageKey(serverId),
+                key,
+                CloudStorageUtils.MUSIC);
+
+        if (newMusic || first) {
+
+            //over-write music visibility
+            ScanMusic.createVisibilityMap(songs, serverId);
+
+            //over-write local db
+            MiscUtils.bulkInsertSongs(
+                    songs,
+                    context.getContentResolver(), serverId);
+        }
+
+        ////////////////////Sync Apps
+        final byte[] appBlob = new AppList.Builder()
+                .clientId(serverId)
+                .app(apps).build().toByteArray();
+
+        //return false if same app found !
+        final boolean newApps = CloudStorageUtils.uploadMetaData(
+                appBlob,
+                MiscUtils.getAppStorageKey(serverId),
+                key,
+                CloudStorageUtils.APP);
+
+        if (newApps || first) {
+
+            //over-write app visibility
+            ScanApps.createVisibilityMap(apps, serverId);
         }
     }
 
@@ -621,24 +763,23 @@ public class MetaDataScanner extends IntentService {
             return;
         }
 
-        ////////////////////Add all the songs
-        final LongSparseArray<Song> songs = ScanMusic.getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getContentResolver(), serverId);
+        ////////////////////Get my library songs
+        final List<Song> songs = ScanMusic.getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getContentResolver(), serverId);
+        ////////////////////Get downloaded songs
+        final List<Song> downloaded = ScanMusic.getDownloadedSongs(getContentResolver());
+        ////////////////////Get applications
+        final List<App> appList = ScanApps.getPackages(serverId, this);
+        ////////////////////Put into server
+        saveMetaData(
+                ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(songs, downloaded))), //music
+                appList, //apps
+                ScanMusic.genreHashSet, //genres
+                intent.getBooleanExtra("first", true),
+                serverId,
+                this);
 
-        if (songs == null || songs.size() == 0) {
-
-            //TODO remove from server ?
-            Log.i("Ayush", "Closing Music Scanner");
-            sendMessage(FINISHED, -1);
-            return;
-        }
-        sendMessage(SCANNING_APPLICATIONS, -1);
-
+        //locally store the genres
         SharedPrefUtils.storeGenres(sharedPreferences, ScanMusic.genreHashSet);
-
-        final boolean first = intent.getBooleanExtra("first", true);
-
-        //pre insert
-        ScanMusic.saveMusicData(songs, ScanMusic.genreHashSet, first, getContentResolver(), serverId, getAssets());
         sendMessage(FINISHED, -1); //send finished, so that UI can continue
     }
 }

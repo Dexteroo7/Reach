@@ -1,11 +1,25 @@
-//package reach.project.coreViews.yourProfile.apps;
-//
-//import android.support.v7.widget.RecyclerView;
-//import android.view.View;
-//
-///**
-// * Created by dexter on 21/11/15.
-// */
-//public class AppItemHolder extends RecyclerView.ViewHolder
-//        implements View.OnClickListener {
-//}
+package reach.project.coreViews.yourProfile.apps;
+
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import reach.project.R;
+import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.SingleItemViewHolder;
+
+/**
+ * Created by dexter on 26/11/15.
+ */
+class AppItemHolder extends SingleItemViewHolder {
+
+    public final ImageView appIcon;
+    public final TextView appName;
+
+    public AppItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+        super(itemView, handOverMessage);
+
+        this.appIcon = (ImageView) itemView.findViewById(R.id.appIcon);
+        this.appName = (TextView) itemView.findViewById(R.id.appName);
+    }
+}
