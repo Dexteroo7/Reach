@@ -75,7 +75,7 @@ import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.music.MusicScanner;
+import reach.project.utils.MetaDataScanner;
 import reach.project.music.PrivacyFragment;
 import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
@@ -1019,7 +1019,7 @@ public class ReachActivity extends AppCompatActivity implements
                 //Music scanner
                 MiscUtils.useContextFromContext(reference, activity -> {
 
-                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("first", false);
                     activity.startService(intent);
                     return null;

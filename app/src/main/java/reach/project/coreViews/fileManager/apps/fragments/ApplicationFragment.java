@@ -28,6 +28,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.apps.adapters.ParentAdapter;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -78,7 +79,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().execute(activity);
+        new GetApplications().executeOnExecutor(StaticData.temporaryFix, activity);
 
         return rootView;
     }
@@ -91,7 +92,9 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
             final SharedPreferences preferences = params[0].getSharedPreferences("Reach", Context.MODE_PRIVATE);
             final PackageManager packageManager = params[0].getPackageManager();
 
+//            final long currentTime = System.currentTimeMillis();
             final List<App> apps = MiscUtils.getApplications(packageManager, preferences);
+//            final long retrieveTime = System.currentTimeMillis();
             final List<App> recentApps = Ordering.from(new Comparator<App>() {
                 @Override
                 public int compare(App lhs, App rhs) {
@@ -102,6 +105,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                     return a.compareTo(b);
                 }
             }).greatestOf(apps, 20);
+//            final long sortTime = System.currentTimeMillis();
+//            Log.i("Ayush", "Retrieve time = " + (retrieveTime - currentTime) + " Sort time = " + (sortTime - retrieveTime));
 
             return new Pair<>(apps, recentApps);
         }

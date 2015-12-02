@@ -542,7 +542,6 @@ public enum MiscUtils {
         task.work(context);
     }
 
-    @SuppressWarnings("unchecked")
     public static <Param1 extends Context, Param2 extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<Param2> reference,
                                                                                                                     final UseContext<Result, Param1> task) {
 
@@ -557,7 +556,6 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work((Param1) activity));
     }
 
-    @SuppressWarnings("unchecked")
     public static <Param1 extends Context, Param2 extends Fragment> void useContextFromFragment(final WeakReference<Param2> reference,
                                                                                                 final UseContext2<Param1> task) {
 
@@ -570,7 +568,6 @@ public enum MiscUtils {
             task.work((Param1) activity);
     }
 
-    @SuppressWarnings("unchecked")
     public static <Param1 extends Context, Param2 extends Fragment> void useContextAndFragment(final WeakReference<Param2> reference,
                                                                                                final UseContextAndFragment<Param1, Param2> task) {
 
@@ -799,8 +796,11 @@ public enum MiscUtils {
     }
 
     public static String getMusicStorageKey(long serverId) {
-
         return serverId + "MUSIC";
+    }
+
+    public static String getAppStorageKey(long serverId) {
+        return serverId + "APP";
     }
 
     /**
@@ -961,6 +961,40 @@ public enum MiscUtils {
                 buffer.append("&song=").append(Uri.encode(song));
         } else if (!TextUtils.isEmpty(song))
             buffer.append("song=").append(Uri.encode(song));
+
+        final String toReturn = buffer.toString();
+//        Log.i("Ayush", toReturn);
+        return toReturn;
+    }
+
+    public synchronized static String getAlbumArt(String album, String artist,
+                                                  String displayName, String actualName) throws UnsupportedEncodingException {
+
+        buffer.setLength(0);
+        buffer.append(baseURL);
+        if (!TextUtils.isEmpty(album)) {
+
+            buffer.append("album=").append(Uri.encode(album));
+            if (!TextUtils.isEmpty(artist))
+                buffer.append("&artist=").append(Uri.encode(artist));
+            if (!TextUtils.isEmpty(displayName))
+                buffer.append("&song=").append(Uri.encode(displayName));
+            if (!TextUtils.isEmpty(actualName))
+                buffer.append("&actualName=").append(Uri.encode(actualName));
+        } else if (!TextUtils.isEmpty(artist)) {
+
+            buffer.append("artist=").append(Uri.encode(artist));
+            if (!TextUtils.isEmpty(displayName))
+                buffer.append("&song=").append(Uri.encode(displayName));
+            if (!TextUtils.isEmpty(actualName))
+                buffer.append("&actualName=").append(Uri.encode(actualName));
+        } else if (!TextUtils.isEmpty(displayName)) {
+
+            buffer.append("song=").append(Uri.encode(displayName));
+            if (!TextUtils.isEmpty(actualName))
+                buffer.append("&actualName=").append(Uri.encode(actualName));
+        } else if (!TextUtils.isEmpty(actualName))
+            buffer.append("actualName=").append(Uri.encode(actualName));
 
         final String toReturn = buffer.toString();
 //        Log.i("Ayush", toReturn);

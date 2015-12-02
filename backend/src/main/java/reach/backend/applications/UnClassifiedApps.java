@@ -16,7 +16,6 @@ public class UnClassifiedApps {
 
     @Id
     private String packageName;
-
     private String applicationName;
     private String description;
 

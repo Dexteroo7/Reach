@@ -75,19 +75,15 @@ public class ClassifiedAppsEndpoint {
 
         filterKeys.clear();
         for (String packageName : toProcess)
-            filterKeys.add(Key.create(ClassifiedApps.class, packageName));
+            filterKeys.add(Key.create(UnClassifiedApps.class, packageName));
 
-        //remove packages that have already been classified
+        //remove packages that have already been added to queue un-classified
         for (UnClassifiedApps unClassifiedApp : ofy().load().type(UnClassifiedApps.class)
                 .filterKey("in", filterKeys))
             toProcess.remove(unClassifiedApp.getPackageName());
 
-        filterKeys.clear();
-        for (String packageName : toProcess)
-            filterKeys.add(Key.create(ClassifiedApps.class, packageName));
-
-        final List<UnClassifiedApps> toSave = new ArrayList<>();
         //add unclassified packages to list
+        final List<UnClassifiedApps> toSave = new ArrayList<>();
         for (String packageName : toProcess) {
 
             final UnClassifiedApps unClassifiedApp = new UnClassifiedApps();

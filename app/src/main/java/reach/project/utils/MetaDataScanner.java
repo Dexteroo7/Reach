@@ -1,4 +1,4 @@
-package reach.project.music;
+package reach.project.utils;
 
 import android.app.IntentService;
 import android.content.ContentResolver;
@@ -35,11 +35,13 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
-import reach.project.utils.CloudStorageUtils;
-import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
+import reach.project.music.AlbumArtData;
+import reach.project.music.MusicList;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
+import reach.project.music.Song;
 
-public class MusicScanner extends IntentService {
+public class MetaDataScanner extends IntentService {
 
     private enum ScanMusic {
 
@@ -74,9 +76,6 @@ public class MusicScanner extends IntentService {
 
         //genre collection holder
         private static final HashSet<String> genreHashSet = new HashSet<>(50);
-        public static HashSet<String> getGenreHashSet() {
-            return genreHashSet;
-        }
 
         private static LongSparseArray<Song> getSongListing(Uri uri, ContentResolver resolver, long serverId) {
 
@@ -443,10 +442,11 @@ public class MusicScanner extends IntentService {
             }
 
             //return false if same Music found !
-            final boolean newMusic = CloudStorageUtils.uploadMusicData(
+            final boolean newMusic = CloudStorageUtils.uploadMetaData(
                     music,
                     MiscUtils.getMusicStorageKey(serverId),
-                    key);
+                    key,
+                    CloudStorageUtils.MUSIC);
 
             /**
              * if no new music is found and not a first time operations quit
@@ -577,8 +577,13 @@ public class MusicScanner extends IntentService {
         }
     }
 
-    public MusicScanner() {
-        super("MusicScanner");
+    private enum ScanApps {
+
+
+    }
+
+    public MetaDataScanner() {
+        super("MetaDataScanner");
     }
 
     public static int SCANNING_SONGS = 0;

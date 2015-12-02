@@ -287,7 +287,7 @@ public class EditProfileFragment extends Fragment {
                 }
 
                 //try upload
-                CloudStorageUtils.uploadFile(toUpload, keyStream, uploadProgress);
+                CloudStorageUtils.uploadImage(toUpload, keyStream, uploadProgress);
 
                 //uploadProgress will set the file name
                 if (TextUtils.isEmpty(imageId))
