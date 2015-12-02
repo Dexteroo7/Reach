@@ -623,7 +623,7 @@ public class ReachActivity extends AppCompatActivity implements
                                     new String[]{"My Applications"},
                                     "Bitch"),
                             new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.myProfile.music.myLibrary.MyLibraryFragment.class},
+                                    new Class[]{reach.project.coreViews.myProfile.music.MyLibraryFragment.class},
                                     new String[]{"My Library"},
                                     "Bitch"),
                             new PagerFragment.Pages(

@@ -22,7 +22,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> {
     public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId) {
         super(messageList, handOverMessage, resourceId);
         this.recentApps = messageList;
-
     }
 
     /**

@@ -419,7 +419,7 @@ public enum CloudStorageUtils {
 
         try {
 
-            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_APP_DATA, fileName);
             get.getRequestHeaders().setCacheControl("no-cache");
             get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
             download = get.executeMediaAsInputStream();

@@ -62,8 +62,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     private RecyclerViewMaterialAdapter materialAdapter = null;
     private Cache fullListCache = null;
-    private Cache smartListCache = null;
-    private Cache recentAppCache = null;
+//    private Cache smartListCache = null;
+//    private Cache recentAppCache = null;
 
     private int lastPosition = 0;
 
@@ -86,17 +86,17 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-        recentAppCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
-            @Override
-            protected Callable<List<? extends Message>> fetchFromNetwork() {
-                return getRecent;
-            }
-
-            @Override
-            protected Message getItem(byte[] source, int offset, int count) throws IOException {
-                return new Wire(AppList.class).parseFrom(source, offset, count, AppList.class);
-            }
-        };
+//        recentAppCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
+//            @Override
+//            protected Callable<List<? extends Message>> fetchFromNetwork() {
+//                return getRecent;
+//            }
+//
+//            @Override
+//            protected Message getItem(byte[] source, int offset, int count) throws IOException {
+//                return new Wire(AppList.class).parseFrom(source, offset, count, AppList.class);
+//            }
+//        };
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
@@ -114,13 +114,12 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         final int size = appData.size();
         if (size == 0) {
-            recentAppCache.loadMoreElements(true);
+//            recentAppCache.loadMoreElements(true);
             fullListCache.loadMoreElements(false);
         }
 
         return size;
     }
-
 
     @Override
     public Message getItem(int position) {
@@ -193,8 +192,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
          * If loading has finished request a full injection of smart lists
          * Else request partial injection
          */
-        if (typeChecker == App.class)
-            smartListCache.loadMoreElements(true);
+//        if (typeChecker == App.class)
+//            smartListCache.loadMoreElements(true);
     }
 
 //    private void intelligentOverwrite(List<? extends Message> elements, Class typeChecker) {
