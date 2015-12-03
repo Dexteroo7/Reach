@@ -7,6 +7,7 @@ import android.view.View;
 import javax.annotation.Nonnull;
 
 import reach.project.core.StaticData;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -29,6 +30,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> {
 
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(6) + "");
+        friendsViewHolder.coverPic.setImageURI(Uri.parse("res:///" + MiscUtils.getRandomPic()));
         friendsViewHolder.profilePhotoList.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + cursor.getString(3)));
         friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
     }

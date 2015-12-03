@@ -644,24 +644,32 @@ public class ReachActivity extends AppCompatActivity implements
 
                     R.drawable.icon_friends_gray,
                     R.drawable.icon_send_gray,
-                    R.drawable.icon_grey,
+                    R.drawable.icon_reach_magnet_gray,
                     R.drawable.icon_download_gray,
                     R.drawable.icon_myprofile_gray,
             };
             final int[] tabSelectedIcons = new int[]{
 
-                    R.drawable.icon_friends_gray,
+                    R.drawable.icon_friends_pink,
                     R.drawable.icon_send_pink,
-                    R.drawable.icon_plain,
+                    R.drawable.icon_reach_magnet_pink,
                     R.drawable.icon_download_pink,
                     R.drawable.icon_myprofile_pink,
             };
             tabLayout.setupWithViewPager(viewPager);
 
-            for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            //LayoutInflater.from(this).inflate();
+
+            int sPos = tabLayout.getSelectedTabPosition();
+            TabLayout.Tab sTab = tabLayout.getTabAt(sPos);
+            if (sTab != null)
+                sTab.setIcon(tabSelectedIcons[sPos]);
+
+            for (int i = 1; i < tabLayout.getTabCount(); i++) {
                 final TabLayout.Tab tab = tabLayout.getTabAt(i);
-                if (tab != null)
+                if (tab != null) {
                     tab.setIcon(tabUnselectedIcons[i]);
+                }
             }
             tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
                 @Override

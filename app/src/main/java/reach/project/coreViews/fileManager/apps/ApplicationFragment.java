@@ -16,8 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
-import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
@@ -73,8 +71,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final Activity activity = getActivity();
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
-        mRecyclerView.setAdapter(new RecyclerViewMaterialAdapter(parentAdapter));
-        MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
+        mRecyclerView.setAdapter(parentAdapter);
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 

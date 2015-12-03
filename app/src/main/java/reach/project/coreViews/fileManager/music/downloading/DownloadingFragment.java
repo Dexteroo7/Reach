@@ -16,9 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
-import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
-
 import java.lang.ref.WeakReference;
 
 import javax.annotation.Nonnull;
@@ -68,8 +65,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         final Activity activity = getActivity();
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
-        mRecyclerView.setAdapter(new RecyclerViewMaterialAdapter(downloadingAdapter));
-        MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
+        mRecyclerView.setAdapter(downloadingAdapter);
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);

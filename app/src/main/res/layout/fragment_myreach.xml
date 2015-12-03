@@ -17,7 +17,13 @@
             android:minHeight="?attr/actionBarSize"
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+            app:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+        <ImageView
+            android:background="#fff"
+            android:src="@drawable/shadow_bottom"
+            android:layout_width="match_parent"
+            app:layout_scrollFlags="scroll|enterAlways"
+            android:layout_height="2dp" />
     </android.support.design.widget.AppBarLayout>
 
     <FrameLayout

@@ -64,12 +64,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
+import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
@@ -155,6 +157,18 @@ public enum MiscUtils {
                 closeable.close();
             } catch (IOException ignored) {
             }
+    }
+
+    private static int[] randomPics = new int[] {
+            R.drawable.album_art_small_01,
+            R.drawable.album_art_small_02,
+            R.drawable.album_art_small_03,
+            R.drawable.album_art_small_04,
+            R.drawable.album_art_small_05
+    };
+
+    public static int getRandomPic() {
+        return randomPics[new Random().nextInt(5)];
     }
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {

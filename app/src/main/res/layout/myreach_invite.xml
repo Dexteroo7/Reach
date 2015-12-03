@@ -18,10 +18,9 @@
             android:layout_height="match_parent"
             android:layout_width="match_parent">
 
-            <com.facebook.drawee.view.SimpleDraweeView
+            <View
                 android:id="@+id/coverPic"
-                fresco:placeholderImage="@color/reach_grey_light"
-                fresco:placeholderImageScaleType="focusCrop"
+                android:background="#ececec"
                 android:layout_width="match_parent"
                 android:layout_height="90dp"/>
 
@@ -29,17 +28,15 @@
                 android:id="@+id/profilePhotoList"
                 android:layout_centerHorizontal="true"
                 app:layout_marginTopPercent="18%"
-                fresco:placeholderImage="@drawable/circular_background_pink"
-                fresco:roundAsCircle="true"
+                fresco:placeholderImage="@drawable/icon_invite_friend_ghost"
                 android:layout_width="70dp"
-                android:layout_height="70dp"/>
+                android:layout_height="80dp"/>
 
             <TextView
                 android:id="@+id/userNameList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:layout_marginTop="8dp"
                 android:layout_marginBottom="2dp"
                 android:layout_below="@id/profilePhotoList"
                 android:layout_centerHorizontal="true"

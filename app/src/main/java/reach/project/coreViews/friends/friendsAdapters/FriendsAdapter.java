@@ -2,7 +2,6 @@ package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,8 +19,8 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
@@ -161,14 +160,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
                 uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
             else {
-
-                viewHolder.profilePhotoList.setBackgroundColor(Color.parseColor("#eeeeee"));
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile01);
                 else
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
             }
 
+            viewHolder.coverPic.setImageURI(Uri.parse("res:///" + MiscUtils.getRandomPic()));
             viewHolder.profilePhotoList.setImageURI(uriToDisplay);
             viewHolder.lockIcon.setVisibility(View.GONE);
 

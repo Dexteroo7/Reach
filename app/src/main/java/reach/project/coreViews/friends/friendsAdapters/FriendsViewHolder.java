@@ -17,7 +17,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
 
     public final TextView userNameList, telephoneNumberList, newSongs;
     public final ImageView lockIcon;
-    public final SimpleDraweeView profilePhotoList;
+    public final SimpleDraweeView profilePhotoList, coverPic;
 
     protected FriendsViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
 
@@ -27,6 +27,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.telephoneNumberList = (TextView) itemView.findViewById(R.id.telephoneNumberList);
         this.newSongs = (TextView) itemView.findViewById(R.id.newSongs);
         this.profilePhotoList = (SimpleDraweeView) itemView.findViewById(R.id.profilePhotoList);
+        this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
     }
 }
