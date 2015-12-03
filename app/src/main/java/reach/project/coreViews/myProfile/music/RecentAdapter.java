@@ -28,7 +28,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
 
     public RecentAdapter(List<PrivacySongItem> recentMusic, HandOverMessage<PrivacySongItem> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
-        setHasStableIds(true);
     }
 
     private final Ordering<PrivacySongItem> primary = new Ordering<PrivacySongItem>() {

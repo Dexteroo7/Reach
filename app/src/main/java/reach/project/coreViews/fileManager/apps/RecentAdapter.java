@@ -18,7 +18,7 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier{
+class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
 
     private final List<App> recentApps;
 
@@ -56,6 +56,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         return size < 4 ? size : 4;
     }
 
+    @Nullable
+    private WeakReference<RecyclerView.Adapter> adapterWeakReference = null;
+
     /**
      * MUST CALL FROM UI THREAD
      *
@@ -75,6 +78,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         }
 
         notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -97,6 +103,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     @Override
     public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
-
+        this.adapterWeakReference = adapterWeakReference;
     }
 }

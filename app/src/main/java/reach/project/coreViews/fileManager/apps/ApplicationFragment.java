@@ -55,7 +55,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         return fragment;
     }
 
-    private ParentAdapter parentAdapter = new ParentAdapter(this);
+    private final ParentAdapter parentAdapter = new ParentAdapter(this);
 
     @Override
     public void handOverMessage(@Nonnull App message) {
@@ -117,7 +117,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                 fragment.parentAdapter.updateAllAppCount(pair.first);
                 fragment.parentAdapter.updateRecentApps(pair.second);
             });
-
         }
     }
 }

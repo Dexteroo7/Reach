@@ -17,6 +17,7 @@ import com.google.common.base.Optional;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -45,6 +46,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         final List<MusicData> defaultList = new ArrayList<>(1);
         defaultList.add(new MusicData());
         recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_grid_item);
+        setHasStableIds(true);
     }
 
     public static final byte VIEW_TYPE_RECENT = 0;
@@ -111,7 +113,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.song_list_item, parent, false), position -> {
 
-                    final Object object= getItem(position);
+                    final Object object = getItem(position);
                     if (object instanceof Cursor)
                         handOverCursor.handOverMessage((Cursor) object);
                     else
@@ -228,6 +230,35 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             return VIEW_TYPE_ALL;
         else
             return VIEW_TYPE_RECENT;
+    }
+
+    final Object [] reUsable = new Object[4];
+    @Override
+    public long getItemId(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof Cursor) {
+
+            final Cursor cursor = (Cursor) item;
+
+            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+
+                reUsable[0] = cursor.getString(5);
+                reUsable[1] = cursor.getString(6);
+                reUsable[2] = cursor.getString(16);
+                reUsable[3] = cursor.getString(17);
+            } else if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+
+                reUsable[0] = cursor.getString(3);
+                reUsable[1] = cursor.getString(4);
+                reUsable[2] = cursor.getString(6);
+                reUsable[3] = cursor.getString(9);
+            } else
+                throw new IllegalArgumentException("Unknown cursor type found");
+
+            return Arrays.hashCode(reUsable);
+        } else
+            return super.getItemId(position);
     }
 
     @Override
