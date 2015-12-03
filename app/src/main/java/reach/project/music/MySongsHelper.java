@@ -118,7 +118,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
             MySongsHelper.COLUMN_ID, //7
             MySongsHelper.COLUMN_ALBUM_ART_DATA, //8
             MySongsHelper.COLUMN_ACTUAL_NAME, //9
-            MySongsHelper.COLUMN_DATE_ADDED //9
+            MySongsHelper.COLUMN_DATE_ADDED, //9
+            MySongsHelper.COLUMN_VISIBILITY //10
     };
 
     //DISK_LIST specific !

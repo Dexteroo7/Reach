@@ -58,6 +58,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -190,6 +191,13 @@ public enum MiscUtils {
                 appBuilder.visible(visibility);
             applicationsFound.add(appBuilder.build());
         }
+
+        Collections.sort(applicationsFound, new Comparator<App>() {
+            @Override
+            public int compare(App lhs, App rhs) {
+                return lhs.applicationName.compareTo(rhs.applicationName);
+            }
+        });
 
         return applicationsFound;
     }

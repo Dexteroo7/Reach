@@ -14,10 +14,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
-import java.util.Comparator;
 import java.util.List;
 
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -26,13 +24,35 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 /**
  * Created by dexter on 18/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> implements MoreQualifier {
+class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolder> implements MoreQualifier {
 
-    public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
+    public RecentAdapter(List<PrivacySongItem> recentMusic, HandOverMessage<PrivacySongItem> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
+        setHasStableIds(true);
     }
 
-    @Nullable
+    private final Ordering<PrivacySongItem> primary = new Ordering<PrivacySongItem>() {
+        @Override
+        public int compare(@Nullable PrivacySongItem left, @Nullable PrivacySongItem right) {
+
+            final Long lhs = left == null ? 0 : left.dateAdded;
+            final Long rhs = right == null ? 0 : right.dateAdded;
+
+            return lhs.compareTo(rhs);
+        }
+    };
+
+    private final Ordering<PrivacySongItem> secondary = new Ordering<PrivacySongItem>() {
+        @Override
+        public int compare(@Nullable PrivacySongItem left, @Nullable PrivacySongItem right) {
+
+            final String lhs = left == null ? "" : left.displayName;
+            final String rhs = right == null ? "" : right.displayName;
+
+            return lhs.compareTo(rhs);
+        }
+    };
+
     private WeakReference<RecyclerView.Adapter> adapterWeakReference = null;
 
     /**
@@ -40,25 +60,16 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
      *
      * @param newMessages the new collection to display
      */
-    public void updateRecent(List<MusicData> newMessages) {
+    public synchronized void updateRecent(List<PrivacySongItem> newMessages) {
 
-        final List<MusicData> recentMusic = getMessageList();
+        final List<PrivacySongItem> recentMusic = getMessageList();
         //remove to prevent duplicates
         recentMusic.removeAll(newMessages);
         //add new items
         recentMusic.addAll(newMessages);
 
         //pick top 20
-        final List<MusicData> newSortedList = Ordering.from(new Comparator<MusicData>() {
-            @Override
-            public int compare(MusicData lhs, MusicData rhs) {
-
-                final Long a = lhs.getDateAdded();
-                final Long b = rhs.getDateAdded();
-
-                return a.compareTo(b);
-            }
-        }).greatestOf(recentMusic, 20);
+        final List<PrivacySongItem> newSortedList = Ordering.from(primary).compound(secondary).greatestOf(recentMusic, 20);
 
         //remove all
         recentMusic.clear();
@@ -76,14 +87,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     }
 
     @Override
-    public void onBindViewHolder(SongItemHolder holder, MusicData item) {
+    public void onBindViewHolder(SongItemHolder holder, PrivacySongItem item) {
 
-        holder.songName.setText(item.getDisplayName());
-        holder.artistName.setText(item.getArtistName());
+        holder.songName.setText(item.displayName);
+        holder.artistName.setText(item.visible + "");
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
-                item.getAlbumName(),
-                item.getArtistName(),
-                item.getDisplayName());
+                item.albumName,
+                item.artistName,
+                item.displayName);
 
         if (uriOptional.isPresent()) {
 

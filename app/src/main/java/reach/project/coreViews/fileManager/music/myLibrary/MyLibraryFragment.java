@@ -174,7 +174,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC LIMIT 20"); //top 20
+                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
         if (cursor == null || cursor.getCount() == 0)
             return Collections.emptyList();
@@ -194,7 +195,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
                 MySongsHelper.DISK_LIST,
-                null, null, MySongsHelper.COLUMN_DATE_ADDED + " DESC LIMIT 20");
+                null, null, MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
         if (cursor == null || cursor.getCount() == 0)
             return Collections.emptyList();

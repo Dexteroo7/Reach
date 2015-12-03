@@ -14,7 +14,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
-import java.util.Comparator;
 import java.util.List;
 
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -31,6 +30,28 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
+
+    private final Ordering<MusicData> primary = new Ordering<MusicData>() {
+        @Override
+        public int compare(@Nullable MusicData left, @Nullable MusicData right) {
+
+            final Long lhs = left == null ? 0 : left.getDateAdded();
+            final Long rhs = right == null ? 0 : right.getDateAdded();
+
+            return lhs.compareTo(rhs);
+        }
+    };
+
+    private final Ordering<MusicData> secondary = new Ordering<MusicData>() {
+        @Override
+        public int compare(@Nullable MusicData left, @Nullable MusicData right) {
+
+            final String lhs = left == null ? "" : left.getDisplayName();
+            final String rhs = right == null ? "" : right.getDisplayName();
+
+            return lhs.compareTo(rhs);
+        }
+    };
 
     @Nullable
     private WeakReference<RecyclerView.Adapter> adapterWeakReference = null;
@@ -49,16 +70,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         recentMusic.addAll(newMessages);
 
         //pick top 20
-        final List<MusicData> newSortedList = Ordering.from(new Comparator<MusicData>() {
-            @Override
-            public int compare(MusicData lhs, MusicData rhs) {
-
-                final Long a = lhs.getDateAdded();
-                final Long b = rhs.getDateAdded();
-
-                return a.compareTo(b);
-            }
-        }).greatestOf(recentMusic, 20);
+        final List<MusicData> newSortedList = Ordering.from(primary).compound(secondary).greatestOf(recentMusic, 20);
 
         //remove all
         recentMusic.clear();
