@@ -11,7 +11,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -57,7 +56,6 @@ public class PagerInnerFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_pager_inner, container, false);
         final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPagerInner);
         final TabLayout tabLayout = (TabLayout) rootView.findViewById(R.id.tabLayoutInner);
-        final TextView pageHeaderText = (TextView) rootView.findViewById(R.id.pageHeaderText);
 
         final Bundle arguments = getArguments();
         final Parcelable parcelables = arguments.getParcelable(PARCEL_INNER_PAGER);
@@ -100,9 +98,7 @@ public class PagerInnerFragment extends Fragment {
             }
         });
 
-
         tabLayout.setupWithViewPager(viewPager);
-        pageHeaderText.setText(page.header);
         return rootView;
     }
 }

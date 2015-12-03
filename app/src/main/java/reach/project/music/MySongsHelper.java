@@ -129,9 +129,11 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 cursor.getLong(1), //length
                 serverId, //senderId
                 cursor.getLong(1), //processed = length
+                cursor.getLong(9),
                 cursor.getString(2), //path
                 cursor.getString(3), //displayName
                 cursor.getString(4), //artistName
+                cursor.getString(6),
                 false, //liked
                 cursor.getLong(5), //duration
                 (byte) 1); //type

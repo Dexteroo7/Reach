@@ -16,25 +16,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fitsSystemWindows="true"
             android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/pageHeaderText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#85b3b0b1"
-                android:fitsSystemWindows="true"
-                android:gravity="center"
-                android:padding="17dp"
-                android:text="Test"
-                android:textColor="@color/colorPrimary" />
 
             <android.support.design.widget.TabLayout
                 android:id="@+id/tabLayoutInner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fitsSystemWindows="true"
                 app:tabMode="fixed"
                 app:tabSelectedTextColor="#f33b5b"
                 app:tabTextColor="#716e6f"
@@ -42,7 +29,7 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="3dp"
+                android:layout_height="1dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/shadow_bottom" />
 
@@ -50,7 +37,7 @@
                 android:id="@+id/viewPagerInner"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:fitsSystemWindows="true"
+
                 app:layout_behavior="@string/appbar_scrolling_view_behavior" />
         </LinearLayout>
     </android.support.v7.widget.CardView>

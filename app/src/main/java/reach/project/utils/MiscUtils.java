@@ -545,7 +545,6 @@ public enum MiscUtils {
         task.work(context);
     }
 
-    @SuppressWarnings("unchecked")
     public static <Param1 extends Context, Param2 extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<Param2> reference,
                                                                                                                     final UseContext<Result, Param1> task) {
 
@@ -560,7 +559,6 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work((Param1) activity));
     }
 
-    @SuppressWarnings("unchecked")
     public static <Param1 extends Context, Param2 extends Fragment> void useContextFromFragment(final WeakReference<Param2> reference,
                                                                                                 final UseContext2<Param1> task) {
 
@@ -573,7 +571,6 @@ public enum MiscUtils {
             task.work((Param1) activity);
     }
 
-    @SuppressWarnings("unchecked")
     public static <Param1 extends Context, Param2 extends Fragment> void useContextAndFragment(final WeakReference<Param2> reference,
                                                                                                final UseContextAndFragment<Param1, Param2> task) {
 
@@ -802,8 +799,11 @@ public enum MiscUtils {
     }
 
     public static String getMusicStorageKey(long serverId) {
-
         return serverId + "MUSIC";
+    }
+
+    public static String getAppStorageKey(long serverId) {
+        return serverId + "APP";
     }
 
     /**
@@ -970,6 +970,40 @@ public enum MiscUtils {
         return toReturn;
     }
 
+    public synchronized static String getAlbumArt(String album, String artist,
+                                                  String displayName, String actualName) throws UnsupportedEncodingException {
+
+        buffer.setLength(0);
+        buffer.append(baseURL);
+        if (!TextUtils.isEmpty(album)) {
+
+            buffer.append("album=").append(Uri.encode(album));
+            if (!TextUtils.isEmpty(artist))
+                buffer.append("&artist=").append(Uri.encode(artist));
+            if (!TextUtils.isEmpty(displayName))
+                buffer.append("&song=").append(Uri.encode(displayName));
+            if (!TextUtils.isEmpty(actualName))
+                buffer.append("&actualName=").append(Uri.encode(actualName));
+        } else if (!TextUtils.isEmpty(artist)) {
+
+            buffer.append("artist=").append(Uri.encode(artist));
+            if (!TextUtils.isEmpty(displayName))
+                buffer.append("&song=").append(Uri.encode(displayName));
+            if (!TextUtils.isEmpty(actualName))
+                buffer.append("&actualName=").append(Uri.encode(actualName));
+        } else if (!TextUtils.isEmpty(displayName)) {
+
+            buffer.append("song=").append(Uri.encode(displayName));
+            if (!TextUtils.isEmpty(actualName))
+                buffer.append("&actualName=").append(Uri.encode(actualName));
+        } else if (!TextUtils.isEmpty(actualName))
+            buffer.append("actualName=").append(Uri.encode(actualName));
+
+        final String toReturn = buffer.toString();
+//        Log.i("Ayush", toReturn);
+        return toReturn;
+    }
+
     public static String getDeviceId(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
@@ -1002,6 +1036,16 @@ public enum MiscUtils {
                                                                              long senderId,
                                                                              long databaseId) {
         return new StartDownloadOperation(context, reachDatabase, receiverId, senderId, databaseId);
+    }
+
+    public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
+        List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        /*for (ApplicationInfo applicationInfo : applicationInfoList) {
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM)== 0) {
+                applicationInfoList.remove(applicationInfo);
+            }
+        }*/
+        return applicationInfoList;
     }
 
     private static class StartDownloadOperation implements Runnable {

@@ -3,7 +3,7 @@
     <item android:id="@android:id/background">
         <shape android:shape="line">
             <corners android:radius="1dp" />
-            <stroke android:width="3dp" android:color="@color/white"/>
+            <stroke android:width="2dp" android:color="@color/white"/>
         </shape>
     </item>
 
@@ -11,7 +11,7 @@
         <clip>
             <shape android:shape="line">
                 <corners android:radius="1dp" />
-                <stroke android:width="3dp" android:color="@color/reach_light"/>
+                <stroke android:width="2dp" android:color="@color/reach_light"/>
             </shape>
         </clip>
     </item>
@@ -22,7 +22,7 @@
             <shape android:shape="line">
                 <corners
                     android:radius="1dp" />
-                <stroke android:width="3dp" android:color="@color/reach_color"/>
+                <stroke android:width="2dp" android:color="@color/reach_color"/>
             </shape>
         </clip>
     </item>

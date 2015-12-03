@@ -14,7 +14,7 @@ public interface CacheInjectorCallbacks<T extends Message> {
     File getCacheDirectory();
 
     //get ItemId for item
-    long getItemId(T item);
+    boolean verifyItemVisibility(T item);
 
     /**
      * hook for returning cache loading result, THIS IS NOT UI THREAD

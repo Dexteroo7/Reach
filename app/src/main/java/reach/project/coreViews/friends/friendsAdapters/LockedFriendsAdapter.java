@@ -4,8 +4,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;
 
-import com.google.common.base.Optional;
-
 import javax.annotation.Nonnull;
 
 import reach.project.core.StaticData;
@@ -27,19 +25,12 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(FriendsViewHolder friendsViewHolder, int position) {
+    public void onBindViewHolder(FriendsViewHolder friendsViewHolder, Cursor cursor) {
 
-        final Optional<Cursor> cursorOptional = getItem(position);
-        friendsViewHolder.bindPosition(position);
-
-        if (cursorOptional.isPresent()) {
-
-            Cursor cursor = cursorOptional.get();
-            friendsViewHolder.userNameList.setText(cursor.getString(2));
-            friendsViewHolder.telephoneNumberList.setText(cursor.getInt(6) + "");
-            friendsViewHolder.profilePhotoList.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + cursor.getString(3)));
-            friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
-        }
+        friendsViewHolder.userNameList.setText(cursor.getString(2));
+        friendsViewHolder.telephoneNumberList.setText(cursor.getInt(6) + "");
+        friendsViewHolder.profilePhotoList.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + cursor.getString(3)));
+        friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
     }
 
     @Override

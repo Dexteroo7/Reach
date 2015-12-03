@@ -16,11 +16,12 @@ import java.util.Arrays;
 public enum AlbumArtUri {
     ;
 
-    private static final String baseURL = "http://52.74.53.245:8080/getImage/small?";
+    private static final String baseURLSmall = "http://52.74.53.245:8080/getImage/small?";
+    private static final String baseURLLarge = "http://52.74.53.245:8080/getImage/large?";
     private static final SparseArray<Uri> simpleCache = new SparseArray<>(1000);
     private static final StringBuilder buffer = new StringBuilder(50);
 
-    public synchronized static Optional<Uri> getUri(String album, String artist, String song) {
+    public synchronized static Optional<Uri> getUri(String album, String artist, String song, boolean large) {
 
         final int key = Arrays.hashCode(new String[]{
                 TextUtils.isEmpty(album) ? "" : album,
@@ -35,7 +36,7 @@ public enum AlbumArtUri {
         //else calculate Uri
 
         buffer.setLength(0);
-        buffer.append(baseURL);
+        buffer.append(large ? baseURLLarge : baseURLSmall);
 
         if (!TextUtils.isEmpty(album)) {
 

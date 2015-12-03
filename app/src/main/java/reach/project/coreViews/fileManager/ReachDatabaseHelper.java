@@ -86,7 +86,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_VISIBILITY + " short" + "," +
             COLUMN_STATUS + " short" + " )";
 
-        public static final String[] projection =
+    public static final String[] projection =
             {
                     COLUMN_ID, //0
 
@@ -236,9 +236,11 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                 cursor.getLong(1), //length
                 cursor.getLong(2), //senderId
                 cursor.getLong(3), //processed
+                cursor.getLong(17), //date added
                 cursor.getString(4), //path
                 cursor.getString(5), //displayName
                 cursor.getString(6), //artistName
+                cursor.getString(15), //album
                 liked, //liked
                 cursor.getLong(8), //duration
                 (byte) 0); //type

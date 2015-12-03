@@ -3,22 +3,25 @@ package reach.project.utils;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.common.base.Optional;
 
+import java.io.Closeable;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import reach.project.utils.viewHelpers.SingleItemViewHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
  * Created by dexter on 18/11/15.
  */
-public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends RecyclerView.Adapter<T> implements HandOverMessage<Integer> {
+public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends RecyclerView.Adapter<T> implements HandOverMessage<Integer>, Closeable {
 
     private final int resourceId;
     private final HandOverMessage<Cursor> handOverMessage;
@@ -26,6 +29,12 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Nullable
     private Cursor cursor = null;
     private int oldCount = 0;
+
+    @Override
+    public void close() {
+        MiscUtils.closeQuietly(cursor);
+        notifyItemRangeRemoved(0, oldCount);
+    }
 
     public ReachCursorAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
 
@@ -40,7 +49,7 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
         if (cursor != null && cursor.moveToPosition(position))
             return getItemId(cursor);
         else
-            return 0;
+            return super.getItemId(position);
     }
 
     @Override
@@ -48,34 +57,51 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
         return getViewHolder(LayoutInflater.from(parent.getContext()).inflate(resourceId, parent, false), this);
     }
 
-    public void setCursor(@Nullable Cursor cursor) {
-
-        if (this.cursor != null)
-            this.cursor.close();
-        this.cursor = cursor;
+    public void setCursor(@Nullable Cursor newCursor) {
 
         if (cursor != null)
-            notifyDataSetChanged();
-        else
-            notifyItemRangeRemoved(0, oldCount);
+            cursor.close();
+        cursor = newCursor;
 
+        if (cursor != null) {
+            Log.i("Ayush", "Notifying data set changed");
+            notifyDataSetChanged();
+        } else
+            notifyItemRangeRemoved(0, oldCount);
     }
 
     public abstract T getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage);
+    public abstract void onBindViewHolder(T holder, Cursor item);
+
+    @Override
+    public void onBindViewHolder(T holder, int position) {
+
+        final Optional<Cursor> cursorOptional = getItem(position);
+        holder.bindPosition(position);
+
+        if (!cursorOptional.isPresent())
+            return;
+
+        onBindViewHolder(holder, cursorOptional.get());
+    }
 
     public abstract int getItemId(@Nonnull Cursor cursor);
 
     @Nonnull
     public Optional<Cursor> getItem(int position) {
 
-        if (cursor == null || !cursor.moveToPosition(position))
-            return Optional.absent();
-        return Optional.of(cursor);
+        Log.i("Ayush", "Moving cursor to " + position);
+        if (cursor != null && cursor.moveToPosition(position))
+            return Optional.of(cursor);
+        return Optional.absent();
     }
 
     @Override
     public int getItemCount() {
-        return oldCount = cursor != null ? cursor.getCount() : 1;
+
+        final int count = oldCount = cursor != null ? cursor.getCount() : 1;
+        Log.i("Ayush", "New Count " + count);
+        return count;
     }
 
     @Override
@@ -85,5 +111,13 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
             throw new IllegalStateException("Resource cursor has been computed");
 
         handOverMessage.handOverMessage(cursor);
+    }
+
+    public int getResourceId() {
+        return resourceId;
+    }
+
+    public HandOverMessage<Cursor> getHandOverMessage() {
+        return handOverMessage;
     }
 }

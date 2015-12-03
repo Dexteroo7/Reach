@@ -1,6 +1,7 @@
-package reach.project.coreViews.fileManager.apps.adapters;
+package reach.project.coreViews.myProfile.apps;
 
 import android.content.pm.PackageManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,14 +14,14 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.utils.viewHelpers.CustomGridLayoutManager;
+import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
 
 /**
  * Created by dexter on 25/11/15.
  */
-public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<App> {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<App> {
 
     private final HandOverMessage<App> handOverApp;
 
@@ -58,7 +59,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     {
         final List<App> defaultList = new ArrayList<>(1);
         defaultList.add(new App.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_grid_item);
+        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_list_item);
     }
 
     public void updateRecentApps(List<App> newRecent) {
@@ -118,10 +119,10 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         } else {
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
-            horizontalViewHolder.headerText.setText("Recently Installed");
+            horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+                    new CustomLinearLayoutManager(holder.itemView.getContext(),
+                            LinearLayoutManager.HORIZONTAL, false));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }

@@ -137,7 +137,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
                 return;
         }
 
-        final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName);
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
         if (uriOptional.isPresent()) {
 

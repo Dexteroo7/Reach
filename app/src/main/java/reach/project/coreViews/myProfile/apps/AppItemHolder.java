@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.apps.adapters;
+package reach.project.coreViews.myProfile.apps;
 
 import android.view.View;
 import android.widget.ImageView;

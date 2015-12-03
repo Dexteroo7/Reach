@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.music.adapters;
+package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -15,6 +15,7 @@ import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
-import reach.project.music.Song;
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
@@ -33,20 +34,31 @@ import reach.project.utils.viewHelpers.ListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
-public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<Song> {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
     private final HandOverMessage<Cursor> handOverCursor;
-    private final HandOverMessage<Song> handOverSong;
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<Song> handOverSong) {
+                         HandOverMessage<MusicData> handOverSong) {
 
         this.handOverCursor = handOverCursor;
-        this.handOverSong = handOverSong;
+        final List<MusicData> defaultList = new ArrayList<>(1);
+        defaultList.add(new MusicData());
+        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_grid_item);
     }
 
     public static final byte VIEW_TYPE_RECENT = 0;
     public static final byte VIEW_TYPE_ALL = 1;
+
+    ///////////Recent music adapter
+    private final RecentAdapter recentAdapter;
+
+    public void updateRecentMusic(@NonNull List<MusicData> newRecent) {
+        if (newRecent.isEmpty())
+            return;
+        recentAdapter.updateRecent(newRecent);
+    }
+    ///////////
 
     ///////////All songs cursor
     @Nullable
@@ -80,27 +92,12 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         notifyDataSetChanged();
     }
 
-    public void destroy() {
+    @Override
+    public void close() {
 
         MiscUtils.closeQuietly(downloadCursor, myLibraryCursor);
         downloadCursor = myLibraryCursor = null;
         notifyItemRangeRemoved(0, latestTotalCount);
-    }
-    ///////////
-
-    ///////////Recent music adapter
-    private final RecentAdapter recentAdapter;
-
-    {
-        final List<Song> defaultList = new ArrayList<>(1);
-        defaultList.add(new Song.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.song_grid_item);
-    }
-
-    public void updateRecentMusic(@NonNull List<Song> newRecent) {
-        if (newRecent.isEmpty())
-            return;
-        recentAdapter.updateRecent(newRecent);
     }
     ///////////
 
@@ -114,7 +111,6 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.song_list_item, parent, false), position -> {
 
-                    position++; //adjust for recent
                     final Object object= getItem(position);
                     if (object instanceof Cursor)
                         handOverCursor.handOverMessage((Cursor) object);
@@ -141,6 +137,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             final Cursor cursorExactType = (Cursor) friend;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
+            holder.itemView.setBackgroundResource(0);
             songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
@@ -161,7 +158,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);
-            final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName);
+            final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
             if (uriOptional.isPresent()) {
 
@@ -183,7 +180,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         } else {
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            holder.itemView.setBackgroundResource(0);
             horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomGridLayoutManager(holder.itemView.getContext(), 2));
@@ -247,10 +244,5 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             myLibraryCount = 0;
 
         return latestTotalCount = myLibraryCount + downloadedCount + 1; //adjust for recent list
-    }
-
-    @Override
-    public void handOverMessage(@Nonnull Song song) {
-        handOverSong.handOverMessage(song);
     }
 }

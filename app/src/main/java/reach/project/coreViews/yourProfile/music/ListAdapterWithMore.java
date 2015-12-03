@@ -42,7 +42,7 @@ class ListAdapterWithMore extends SimpleRecyclerAdapter<Song, SongItemHolder> {
 
         holder.songName.setText(item.displayName);
         holder.artistName.setText(item.artist);
-        final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName);
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(item.album, item.artist, item.displayName, false);
 
         if (uriOptional.isPresent()) {
 

@@ -101,7 +101,7 @@
             android:name=".core.GcmIntentService"
             android:exported="false" />
         <service
-            android:name=".music.MusicScanner"
+            android:name=".utils.MetaDataScanner"
             android:exported="false" />
         <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
@@ -173,7 +173,6 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_player"
             android:parentActivityName=".core.ReachActivity"
-            android:theme="@style/FullscreenTheme"
             android:process=":remote">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

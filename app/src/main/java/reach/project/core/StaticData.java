@@ -83,6 +83,7 @@ public final class StaticData {
     public static final byte PRIVACY_MY_LIBRARY_LOADER;
     public static final byte PRIVACY_DOWNLOADED_LOADER;
     public static final byte DOWNLOAD_LOADER;
+    public static final byte DOWNLOADING_LOADER;
     public static final byte UPLOAD_LOADER;
     public static final byte MY_LIBRARY_LOADER;
     public static final byte PUSH_MY_LIBRARY_LOADER;
@@ -97,6 +98,7 @@ public final class StaticData {
         PRIVACY_MY_LIBRARY_LOADER = i++;
         PRIVACY_DOWNLOADED_LOADER = i++;
         DOWNLOAD_LOADER = i++;
+        DOWNLOADING_LOADER = i++;
         UPLOAD_LOADER = i++;
         MY_LIBRARY_LOADER = i++;
         PUSH_MY_LIBRARY_LOADER = i++;

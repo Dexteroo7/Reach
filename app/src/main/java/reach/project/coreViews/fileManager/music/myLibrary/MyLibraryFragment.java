@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.music.fragments;
+package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.app.Activity;
 import android.content.Context;
@@ -32,10 +32,8 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
-import reach.project.coreViews.fileManager.music.adapters.ParentAdapter;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
-import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -72,7 +70,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
@@ -80,11 +78,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         mRecyclerView.setAdapter(new RecyclerViewMaterialAdapter(parentAdapter));
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
+        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        userId = SharedPrefUtils.getServerId(preferences);
+
         getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
 
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
         return rootView;
     }
 
@@ -94,7 +93,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
-        parentAdapter.destroy();
+        parentAdapter.close();
     }
 
     @Override
@@ -115,10 +114,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             } else
                 throw new IllegalArgumentException("Unknown column count found");
 
-        } else if (message instanceof Song) {
-
-            //TODO
-
+        } else if (message instanceof MusicData) {
+            MiscUtils.playSong((MusicData) message, getContext());
         } else
             throw new IllegalArgumentException("Unknown type handed over");
     }
@@ -170,7 +167,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     }
 
     @NonNull
-    private List<Song> getRecentDownloaded() {
+    private List<MusicData> getRecentDownloaded() {
 
         final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
                 ReachDatabaseHelper.ADAPTER_LIST,
@@ -182,29 +179,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (cursor == null || cursor.getCount() == 0)
             return Collections.emptyList();
 
-        final List<Song> latestDownloaded = new ArrayList<>(cursor.getCount());
+        final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
 
-            final Song.Builder songBuilder = new Song.Builder();
-            songBuilder.actualName(cursor.getString(16));
-            songBuilder.displayName(cursor.getString(5));
-            songBuilder.album(cursor.getString(15));
-            songBuilder.artist(cursor.getString(6));
-            songBuilder.path(cursor.getString(4));
-
-            songBuilder.songId(cursor.getLong(14));
-            songBuilder.duration(cursor.getLong(8));
-            songBuilder.size(cursor.getLong(1));
-            songBuilder.dateAdded(cursor.getLong(17));
-
-            latestDownloaded.add(songBuilder.build());
+            final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
+            latestDownloaded.add(musicData);
         }
 
         return latestDownloaded;
     }
 
     @NonNull
-    private List<Song> getRecentMyLibrary() {
+    private List<MusicData> getRecentMyLibrary() {
 
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
                 MySongsHelper.DISK_LIST,
@@ -213,21 +199,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (cursor == null || cursor.getCount() == 0)
             return Collections.emptyList();
 
-        final List<Song> latestDownloaded = new ArrayList<>(cursor.getCount());
+        final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
 
-            final Song.Builder songBuilder = new Song.Builder();
-            songBuilder.actualName(cursor.getString(9));
-            songBuilder.displayName(cursor.getString(3));
-            songBuilder.album(cursor.getString(6));
-            songBuilder.artist(cursor.getString(4));
-            songBuilder.path(cursor.getString(2));
-
-            songBuilder.songId(cursor.getLong(0));
-            songBuilder.duration(cursor.getLong(5));
-            songBuilder.size(cursor.getLong(1));
-            songBuilder.dateAdded(cursor.getLong(9));
-            latestDownloaded.add(songBuilder.build());
+            final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
+            latestDownloaded.add(musicData);
         }
 
         return latestDownloaded;

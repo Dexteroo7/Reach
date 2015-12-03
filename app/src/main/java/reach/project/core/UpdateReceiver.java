@@ -104,7 +104,7 @@ public class UpdateReceiver extends BroadcastReceiver {
 //            }
 //
 //        //refresh music list
-//        final Intent musicScannerIntent = new Intent(context, MusicScanner.class);
+//        final Intent musicScannerIntent = new Intent(context, MetaDataScanner.class);
 //        musicScannerIntent.putExtra("first", true);
 //        context.startService(musicScannerIntent);
 

@@ -56,8 +56,8 @@ import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
-import reach.project.music.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
@@ -276,7 +276,7 @@ public class AccountCreation extends Fragment {
 
                 if (keyStream != null) {
                     //try upload
-                    CloudStorageUtils.uploadFile(toUpload, keyStream, uploadProgress);
+                    CloudStorageUtils.uploadImage(toUpload, keyStream, uploadProgress);
                 }
             }
 
@@ -412,7 +412,7 @@ public class AccountCreation extends Fragment {
                     people.set("$name", user.getUserName() + "");
 
                     SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("messenger", messenger);
                     intent.putExtra("first", true);
                     activity.startService(intent);
@@ -480,7 +480,7 @@ public class AccountCreation extends Fragment {
                 if (message == null)
                     return false;
                     //TODO
-                if (message.what == MusicScanner.FINISHED) {
+                if (message.what == MetaDataScanner.FINISHED) {
 
                     bottomPart2.setVisibility(View.INVISIBLE);
                     bottomPart3.setVisibility(View.VISIBLE);
@@ -488,12 +488,12 @@ public class AccountCreation extends Fragment {
                     next.setOnClickListener(proceed);
                 }
 
-//                else if (message.what == MusicScanner.SONGS) {
+//                else if (message.what == MetaDataScanner.SONGS) {
 //                    progress.setText("Found " + message.arg1 + " songs");
 //                    songs = message.arg1 + 1;
 //                }
 //
-//                else if (message.what == MusicScanner.ALBUM_ARTIST)
+//                else if (message.what == MetaDataScanner.ALBUM_ARTIST)
 //                    progress.setText("Creating account");
 
                 return true;
