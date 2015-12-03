@@ -1,10 +1,11 @@
-package reach.project.coreViews.myProfile.music.myLibrary;
+package reach.project.coreViews.myProfile.music;
 
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -17,17 +18,16 @@ import com.google.common.base.Optional;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.music.MySongsHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
+import reach.project.utils.viewHelpers.GetActualAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
 
@@ -35,16 +35,21 @@ import reach.project.utils.viewHelpers.ListHolder;
  * Created by dexter on 25/11/15.
  */
 class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
-
+    
+    private final GetActualAdapter getActualAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<MusicData> handOverSong) {
+                         HandOverMessage<PrivacySongItem> handOverSong,
+                         GetActualAdapter getActualAdapter) {
 
         this.handOverCursor = handOverCursor;
-        final List<MusicData> defaultList = new ArrayList<>(1);
-        defaultList.add(new MusicData());
+        this.getActualAdapter = getActualAdapter;
+        
+        final List<PrivacySongItem> defaultList = new ArrayList<>(1);
+        defaultList.add(new PrivacySongItem());
         recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_list_item);
+        setHasStableIds(true);
     }
 
     public static final byte VIEW_TYPE_RECENT = 0;
@@ -53,7 +58,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     ///////////Recent music adapter
     private final RecentAdapter recentAdapter;
 
-    public void updateRecentMusic(@NonNull List<MusicData> newRecent) {
+    public void updateRecentMusic(@NonNull List<PrivacySongItem> newRecent) {
         if (newRecent.isEmpty())
             return;
         recentAdapter.updateRecent(newRecent);
@@ -78,7 +83,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         //set
         this.downloadCursor = newDownloadCursor;
-        notifyDataSetChanged();
+        Log.i("Ayush", "Setting new download cursor");
+        getActualAdapter.getActualAdapter().notifyDataSetChanged();
     }
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
@@ -89,7 +95,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         //set
         this.myLibraryCursor = newMyLibraryCursor;
-        notifyDataSetChanged();
+        Log.i("Ayush", "Setting new library cursor");
+        getActualAdapter.getActualAdapter().notifyDataSetChanged();
     }
 
     @Override
@@ -97,7 +104,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         MiscUtils.closeQuietly(downloadCursor, myLibraryCursor);
         downloadCursor = myLibraryCursor = null;
-        notifyItemRangeRemoved(0, latestTotalCount);
+//        getActualAdapter.getActualAdapter().notifyItemRangeRemoved(0, latestTotalCount);
     }
     ///////////
 
@@ -111,7 +118,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.song_list_item, parent, false), position -> {
 
-                    final Object object= getItem(position);
+                    final Object object = getItem(position);
                     if (object instanceof Cursor)
                         handOverCursor.handOverMessage((Cursor) object);
                     else
@@ -140,23 +147,16 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
-            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+            final boolean visible;
 
-                displayName = cursorExactType.getString(5);
-                artist = cursorExactType.getString(6);
-                album = cursorExactType.getString(16);
-                actualName = cursorExactType.getString(17);
-            } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-
-                displayName = cursorExactType.getString(3);
-                artist = cursorExactType.getString(4);
-                album = cursorExactType.getString(6);
-                actualName = cursorExactType.getString(9);
-            } else
-                throw new IllegalArgumentException("Unknown cursor type found");
+            displayName = cursorExactType.getString(3);
+            artist = cursorExactType.getString(5);
+            album = cursorExactType.getString(6);
+            actualName = cursorExactType.getString(4);
+            visible = cursorExactType.getShort(9) == 1;
 
             songItemHolder.songName.setText(displayName);
-            songItemHolder.artistName.setText(artist);
+            songItemHolder.artistName.setText(visible + "");
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
             if (uriOptional.isPresent()) {
@@ -227,6 +227,27 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             return VIEW_TYPE_ALL;
         else
             return VIEW_TYPE_RECENT;
+    }
+
+    @Override
+    public long getItemId(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof Cursor) {
+
+            final Cursor cursor = (Cursor) item;
+            return Arrays.hashCode(new Object[]{
+
+                    cursor.getLong(1), //songId
+                    cursor.getLong(2), //userId
+
+                    cursor.getString(3), //displayName
+                    cursor.getString(4), //actualName
+                    cursor.getString(5), //artist
+                    cursor.getString(6) //album
+            });
+        } else
+            return super.getItemId(position);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package reach.project.coreViews.myProfile.music.myLibrary;
+package reach.project.coreViews.myProfile.music;
 
 import android.view.View;
 import android.widget.ImageView;

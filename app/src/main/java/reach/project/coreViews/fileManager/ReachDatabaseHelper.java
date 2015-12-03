@@ -222,7 +222,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             ReachDatabaseHelper.COLUMN_SONG_ID, //14
             ReachDatabaseHelper.COLUMN_ALBUM, //15
             ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //16
-            ReachDatabaseHelper.COLUMN_DATE_ADDED //17
+            ReachDatabaseHelper.COLUMN_DATE_ADDED, //17
+            ReachDatabaseHelper.COLUMN_VISIBILITY //18
     };
 
     public static MusicData getMusicData(final Cursor cursor) {

@@ -463,8 +463,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             else
                 values.put(MySongsHelper.COLUMN_VISIBILITY, 0);
 
-            updateDatabase(values, songId, userId, view.getContext()
-            );
+            updateDatabase(values, songId, userId, view.getContext());
             new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix,
                     (long) reachSongCursor.getShort(9),
                     reachSongCursor.getLong(1),
