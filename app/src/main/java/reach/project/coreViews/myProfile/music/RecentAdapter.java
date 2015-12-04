@@ -1,7 +1,6 @@
 package reach.project.coreViews.myProfile.music;
 
 import android.net.Uri;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
@@ -14,6 +13,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
+import java.util.Comparator;
 import java.util.List;
 
 import reach.project.R;
@@ -29,31 +29,23 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
 
     public RecentAdapter(List<PrivacySongItem> recentMusic, HandOverMessage<PrivacySongItem> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
-        setHasStableIds(true);
     }
 
-    private final Ordering<PrivacySongItem> primary = new Ordering<PrivacySongItem>() {
-        @Override
-        public int compare(@Nullable PrivacySongItem left, @Nullable PrivacySongItem right) {
+    private final Comparator<PrivacySongItem> primary = (left, right) -> {
 
-            final Long lhs = left == null ? 0 : left.dateAdded;
-            final Long rhs = right == null ? 0 : right.dateAdded;
+        final Long lhs = left == null ? 0 : left.dateAdded;
+        final Long rhs = right == null ? 0 : right.dateAdded;
 
-            return lhs.compareTo(rhs);
-        }
+        return lhs.compareTo(rhs);
     };
 
-    private final Ordering<PrivacySongItem> secondary = new Ordering<PrivacySongItem>() {
-        @Override
-        public int compare(@Nullable PrivacySongItem left, @Nullable PrivacySongItem right) {
+    private final Comparator<PrivacySongItem> secondary = (left, right) -> {
 
-            final String lhs = left == null ? "" : left.displayName;
-            final String rhs = right == null ? "" : right.displayName;
+        final String lhs = left == null ? "" : left.displayName;
+        final String rhs = right == null ? "" : right.displayName;
 
-            return lhs.compareTo(rhs);
-        }
+        return lhs.compareTo(rhs);
     };
-
     private WeakReference<RecyclerView.Adapter> adapterWeakReference = null;
 
     /**

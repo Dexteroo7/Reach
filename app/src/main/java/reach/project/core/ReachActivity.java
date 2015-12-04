@@ -75,9 +75,9 @@ import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
+import reach.project.coreViews.push.PushFilesFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.PushContainer;
-import reach.project.music.PushSongsFragment;
 import reach.project.music.TransferSong;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
@@ -606,7 +606,7 @@ public class ReachActivity extends AppCompatActivity implements
             final Fragment[] fragments = new Fragment[]{
 
                     MyReachFragment.newInstance(),
-                    PushSongsFragment.newInstance(),
+                    PushFilesFragment.getInstance("Bitch"),
                     ExploreFragment.newInstance(serverId),
                     PagerFragment.getNewInstance(
                             new PagerFragment.Pages(

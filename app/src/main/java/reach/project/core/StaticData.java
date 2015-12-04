@@ -8,6 +8,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
+import java.util.Comparator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,8 +19,10 @@ import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
 import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
+import reach.project.apps.App;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
+import reach.project.music.Song;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -107,6 +110,37 @@ public final class StaticData {
         RECENT_LIST_LOADER = i++;
     }
 
+    public static Comparator<App> primaryApps = (left, right) -> {
+
+        final Long a = left == null || left.installDate == null ? 0 : left.installDate;
+        final Long b = right == null || right.installDate == null ? 0 : right.installDate;
+
+        return a.compareTo(b);
+    };
+
+    public static Comparator<App> secondaryApps = (left, right) -> {
+
+        final String a = left == null || left.applicationName == null ? "" : left.applicationName;
+        final String b = right == null || right.applicationName == null ? "" : right.applicationName;
+
+        return a.compareTo(b);
+    };
+
+    public static final Comparator<Song> primaryMusic = (left, right) -> {
+
+        final Long lhs = left == null || left.dateAdded == null ? 0 : left.dateAdded;
+        final Long rhs = right == null || right.dateAdded == null ? 0 : right.dateAdded;
+
+        return lhs.compareTo(rhs);
+    };
+
+    public static final Comparator<Song> secondaryMusic = (left, right) -> {
+        final String lhs = left == null || left.displayName == null ? "" : left.displayName;
+        final String rhs = right == null || right.displayName == null ? "" : right.displayName;
+
+        return lhs.compareTo(rhs);
+    };
+
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
 
@@ -129,6 +163,6 @@ public final class StaticData {
     public static final String dropBoxManager = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
     public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
 
-
+    //TODO remove
     public static final ExecutorService temporaryFix = Executors.unconfigurableExecutorService(Executors.newCachedThreadPool());
 }

@@ -11,6 +11,7 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 import reach.project.apps.App;
+import reach.project.core.StaticData;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -18,31 +19,9 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier{
+class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
 
     private final List<App> recentApps;
-
-    private final Ordering<App> primary = new Ordering<App>() {
-        @Override
-        public int compare(@Nullable App left, @Nullable App right) {
-
-            final Long a = left == null || left.installDate == null ? 0 : left.installDate;
-            final Long b = right == null || right.installDate == null ? 0 : right.installDate;
-
-            return a.compareTo(b);
-        }
-    };
-
-    private final Ordering<App> secondary = new Ordering<App>() {
-        @Override
-        public int compare(@Nullable App left, @Nullable App right) {
-
-            final String a = left == null || left.applicationName == null ? "" : left.applicationName;
-            final String b = right == null || right.applicationName == null ? "" : right.applicationName;
-
-            return a.compareTo(b);
-        }
-    };
 
     public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId) {
         super(messageList, handOverMessage, resourceId);
@@ -55,6 +34,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         int size = super.getItemCount();
         return size < 4 ? size : 4;
     }
+
+    @Nullable
+    private WeakReference<RecyclerView.Adapter> adapterWeakReference = null;
 
     /**
      * MUST CALL FROM UI THREAD
@@ -69,12 +51,15 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         synchronized (recentApps) {
 
             recentApps.addAll(newMessages);
-            newSortedList = Ordering.from(primary).compound(secondary).greatestOf(recentApps, 20);
+            newSortedList = Ordering.from(StaticData.primaryApps).compound(StaticData.secondaryApps).greatestOf(recentApps, 20);
             recentApps.clear();
             recentApps.addAll(newSortedList);
         }
 
         notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -97,6 +82,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     @Override
     public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
-
+        this.adapterWeakReference = adapterWeakReference;
     }
 }

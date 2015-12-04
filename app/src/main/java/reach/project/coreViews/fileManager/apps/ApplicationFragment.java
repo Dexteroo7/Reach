@@ -19,7 +19,6 @@ import android.widget.Toast;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -55,7 +54,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         return fragment;
     }
 
-    private ParentAdapter parentAdapter = new ParentAdapter(this);
+    private final ParentAdapter parentAdapter = new ParentAdapter(this);
 
     @Override
     public void handOverMessage(@Nonnull App message) {
@@ -91,16 +90,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 //            final long currentTime = System.currentTimeMillis();
             final List<App> apps = MiscUtils.getApplications(packageManager, preferences);
 //            final long retrieveTime = System.currentTimeMillis();
-            final List<App> recentApps = Ordering.from(new Comparator<App>() {
-                @Override
-                public int compare(App lhs, App rhs) {
-
-                    final Long a = lhs.installDate == null ? 0 : lhs.installDate;
-                    final Long b = rhs.installDate == null ? 0 : rhs.installDate;
-
-                    return a.compareTo(b);
-                }
-            }).greatestOf(apps, 20);
+            final List<App> recentApps = Ordering.from(StaticData.primaryApps).greatestOf(apps, 20);
 //            final long sortTime = System.currentTimeMillis();
 //            Log.i("Ayush", "Retrieve time = " + (retrieveTime - currentTime) + " Sort time = " + (sortTime - retrieveTime));
 
@@ -117,7 +107,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                 fragment.parentAdapter.updateAllAppCount(pair.first);
                 fragment.parentAdapter.updateRecentApps(pair.second);
             });
-
         }
     }
 }

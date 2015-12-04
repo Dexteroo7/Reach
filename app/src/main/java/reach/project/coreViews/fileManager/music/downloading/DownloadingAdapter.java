@@ -34,20 +34,21 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
         return new DownloadingItemHolder(itemView, handOverMessage);
     }
 
+    private final long[] reUsable = new long[7];
+
     @Override
     public int getItemId(@Nonnull Cursor cursor) {
 
-        final long id = cursor.getLong(0);
-        final long length = cursor.getLong(1);
-        final long processed = cursor.getLong(3);
-        final long senderId = cursor.getLong(2);
+        reUsable[0] = cursor.getLong(0); //id
+        reUsable[1] = cursor.getLong(1); //length
+        reUsable[2] = cursor.getLong(2); //senderId
+        reUsable[3] = cursor.getLong(3); //processed
 
-        return Arrays.hashCode(new long[]{
-                id,
-                length,
-                processed,
-                senderId
-        });
+        reUsable[4] = cursor.getShort(9); //status
+        reUsable[5] = cursor.getShort(10); //operation kind
+        reUsable[6] = cursor.getShort(13); //logical clock
+
+        return Arrays.hashCode(reUsable);
     }
 
     @Override
@@ -123,7 +124,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //            viewHolder.songSize.setText((processed * 100 / length) + "%");
             int prog = (int) ((processed * 100) / length);
             holder.progressBar.setProgress(prog);
-            holder.downProgress.setText(prog+"%");
+            holder.downProgress.setText(prog + "%");
             holder.progressBar.setVisibility(View.VISIBLE);
         }
 

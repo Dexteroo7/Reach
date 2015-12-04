@@ -58,7 +58,14 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
 
     private void measureScrapChild(RecyclerView.Recycler recycler, int position, int widthSpec,
                                    int heightSpec, int[] measuredDimension) {
-        View view = recycler.getViewForPosition(position);
+
+        View view;
+        try {
+            view = recycler.getViewForPosition(position);
+        } catch (IndexOutOfBoundsException ignored) {
+            return;
+        }
+
         if (view != null) {
             RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) view.getLayoutParams();
             int childWidthSpec = ViewGroup.getChildMeasureSpec(widthSpec,

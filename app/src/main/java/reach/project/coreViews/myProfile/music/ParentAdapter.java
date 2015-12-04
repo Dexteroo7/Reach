@@ -35,7 +35,7 @@ import reach.project.utils.viewHelpers.ListHolder;
  * Created by dexter on 25/11/15.
  */
 class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
-    
+
     private final GetActualAdapter getActualAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
 
@@ -45,7 +45,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         this.handOverCursor = handOverCursor;
         this.getActualAdapter = getActualAdapter;
-        
+
         final List<PrivacySongItem> defaultList = new ArrayList<>(1);
         defaultList.add(new PrivacySongItem());
         recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_mylibray_grid_item);
@@ -237,6 +237,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             return VIEW_TYPE_RECENT;
     }
 
+    private final Object[] reUsable = new Object[6];
+
     @Override
     public long getItemId(int position) {
 
@@ -244,16 +246,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         if (item instanceof Cursor) {
 
             final Cursor cursor = (Cursor) item;
-            return Arrays.hashCode(new Object[]{
-
-                    cursor.getLong(1), //songId
-                    cursor.getLong(2), //userId
-
-                    cursor.getString(3), //displayName
-                    cursor.getString(4), //actualName
-                    cursor.getString(5), //artist
-                    cursor.getString(6) //album
-            });
+            reUsable[0] = cursor.getLong(1); //songId
+            reUsable[1] = cursor.getLong(2); //userId
+            reUsable[2] = cursor.getString(3);//displayName
+            reUsable[3] = cursor.getString(4);//actualName
+            reUsable[4] = cursor.getString(5); //artist
+            reUsable[5] = cursor.getString(6); //album
+            return Arrays.hashCode(reUsable);
         } else
             return super.getItemId(position);
     }

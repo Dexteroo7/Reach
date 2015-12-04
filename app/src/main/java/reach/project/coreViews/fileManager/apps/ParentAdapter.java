@@ -3,7 +3,6 @@ package reach.project.coreViews.fileManager.apps;
 import android.content.pm.PackageManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import reach.project.utils.viewHelpers.ListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<App> {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<App> {
 
     private final HandOverMessage<App> handOverApp;
 
@@ -169,10 +168,5 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public void handOverMessage(@Nonnull App message) {
         handOverApp.handOverMessage(message);
-    }
-
-    @Override
-    public void onClick(View v) {
-        //TODO MORE BUTTON HANDLE
     }
 }

@@ -33,13 +33,13 @@ import java.lang.ref.WeakReference;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import reach.project.apps.App;
 import reach.project.apps.AppList;
+import reach.project.core.StaticData;
 import reach.project.music.MusicList;
 import reach.project.music.Song;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
@@ -391,12 +391,7 @@ public enum CloudStorageUtils {
             return Collections.emptyList();
 
         //sort and return
-        return Ordering.from(new Comparator<Song>() {
-            @Override
-            public int compare(Song lhs, Song rhs) {
-                return lhs.displayName.compareTo(rhs.displayName);
-            }
-        }).immutableSortedCopy(songList);
+        return Ordering.from(StaticData.primaryMusic).immutableSortedCopy(songList);
     }
 
     public static List<App> fetchApps(long userId, WeakReference<Context> reference) {
@@ -454,12 +449,7 @@ public enum CloudStorageUtils {
             return Collections.emptyList();
 
         //sort and return
-        return Ordering.from(new Comparator<App>() {
-            @Override
-            public int compare(App lhs, App rhs) {
-                return lhs.applicationName.compareTo(rhs.applicationName);
-            }
-        }).immutableSortedCopy(apps);
+        return Ordering.from(StaticData.secondaryApps).immutableSortedCopy(apps);
     }
 
     private static Storage storage = null;

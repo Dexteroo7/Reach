@@ -36,6 +36,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>,
         LoaderManager.LoaderCallbacks<Cursor> {
 
+    @Nullable
     private static WeakReference<DownloadingFragment> reference = null;
     private static long userId = 0;
 
@@ -54,7 +55,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         return fragment;
     }
 
-    private DownloadingAdapter downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
+    private final DownloadingAdapter downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
 
     @Nullable
     @Override
