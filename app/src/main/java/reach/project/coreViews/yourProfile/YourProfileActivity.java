@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -33,6 +34,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
@@ -331,5 +333,11 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
         } catch (JSONException ignored) {
         }
+
+        Snackbar.make(findViewById(R.id.root_layout), "Song added, click to view", Snackbar.LENGTH_LONG)
+                .setAction("VIEW", v -> {
+                    ReachActivity.openDownloading();
+                })
+                .show();
     }
 }

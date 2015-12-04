@@ -99,12 +99,22 @@ public class PagerFragment extends Fragment {
         return pagerFragment;
     }
 
+    public void setItem(int position) {
+
+        if (viewPager == null)
+            return;
+
+        viewPager.setCurrentItem(position, true);
+    }
+
+    private ViewPager viewPager;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_pager, container, false);
-        final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
+        viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         final PagerSlidingTabStrip tabLayout = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabLayoutPager);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
 

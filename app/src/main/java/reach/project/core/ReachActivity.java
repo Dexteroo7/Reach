@@ -485,6 +485,29 @@ public class ReachActivity extends AppCompatActivity implements
         super.onNewIntent(intent);
     }
 
+    private CustomViewPager viewPager = null;
+    private final PagerFragment downloadPager = PagerFragment.getNewInstance(
+            new PagerFragment.Pages(
+                    new Class[]{ApplicationFragment.class},
+                    new String[]{"My Applications"},
+                    "Apps"),
+            new PagerFragment.Pages(
+                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
+                    new String[]{"Downloading", "My Library"},
+                    "Songs"));
+
+    public static void openDownloading() {
+
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (activity.viewPager == null)
+                return;
+
+            activity.viewPager.setCurrentItem(3, true);
+            activity.downloadPager.setItem(1);
+        });
+    }
+
     @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -521,10 +544,11 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        toggleDrawer(true);
-
-        //small
-        toggleSliding(false);
+//        toggleDrawer(true);
+//
+//        //small
+//        toggleSliding(false);
+        viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
 
         //accountCreation ? numberVerification ? contactListFragment ? and other stuff
         loadFragment();
@@ -588,113 +612,106 @@ public class ReachActivity extends AppCompatActivity implements
             return; //fail
         }
 
-        if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
+        viewPager.setPagingEnabled(false);
+        viewPager.setOffscreenPageLimit(5);
 
-            startNumberVerification();
-            toggleSliding(false);
-        } else if (TextUtils.isEmpty(userName)) {
+        final Fragment[] fragments = new Fragment[]{
 
-            startAccountCreation(Optional.absent());
-            toggleSliding(false);
-        } else {
+                MyReachFragment.newInstance(),
+                PushFilesFragment.getInstance("Bitch"),
+                ExploreFragment.newInstance(serverId),
+                downloadPager,
+                PagerFragment.getNewInstance(
+                        new PagerFragment.Pages(
+                                new Class[]{reach.project.coreViews.myProfile.apps.ApplicationFragment.class},
+                                new String[]{"My Applications"},
+                                "Apps"),
+                        new PagerFragment.Pages(
+                                new Class[]{reach.project.coreViews.myProfile.music.MyLibraryFragment.class},
+                                new String[]{"My Library"},
+                                "Songs"))
+        };
 
-            final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
-            viewPager.setPagingEnabled(false);
-            viewPager.setOffscreenPageLimit(5);
-
-            final Fragment[] fragments = new Fragment[]{
-
-                    MyReachFragment.newInstance(),
-                    PushFilesFragment.getInstance("Bitch"),
-                    ExploreFragment.newInstance(serverId),
-                    PagerFragment.getNewInstance(
-                            new PagerFragment.Pages(
-                                    new Class[]{ApplicationFragment.class},
-                                    new String[]{"My Applications"},
-                                    "Apps"),
-                            new PagerFragment.Pages(
-                                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
-                                    new String[]{"Downloading", "My Library"},
-                                    "Songs")),
-                    PagerFragment.getNewInstance(
-                            new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.myProfile.apps.ApplicationFragment.class},
-                                    new String[]{"My Applications"},
-                                    "Apps"),
-                            new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.myProfile.music.MyLibraryFragment.class},
-                                    new String[]{"My Library"},
-                                    "Songs"))
-            };
-
-            viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-                @Override
-                public Fragment getItem(int position) {
-                    return fragments[position];
-                }
-
-                @Override
-                public int getCount() {
-                    return fragments.length;
-                }
-            });
-
-            final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
-            final int[] tabUnselectedIcons = new int[]{
-
-                    R.drawable.icon_friends_gray,
-                    R.drawable.icon_send_gray,
-                    R.drawable.icon_reach_magnet_gray,
-                    R.drawable.icon_download_gray,
-                    R.drawable.icon_myprofile_gray,
-            };
-            final int[] tabSelectedIcons = new int[]{
-
-                    R.drawable.icon_friends_pink,
-                    R.drawable.icon_send_pink,
-                    R.drawable.icon_reach_magnet_pink,
-                    R.drawable.icon_download_pink,
-                    R.drawable.icon_myprofile_pink,
-            };
-            tabLayout.setupWithViewPager(viewPager);
-
-            //LayoutInflater.from(this).inflate();
-
-            int sPos = tabLayout.getSelectedTabPosition();
-            TabLayout.Tab sTab = tabLayout.getTabAt(sPos);
-            if (sTab != null)
-                sTab.setIcon(tabSelectedIcons[sPos]);
-
-            for (int i = 1; i < tabLayout.getTabCount(); i++) {
-                final TabLayout.Tab tab = tabLayout.getTabAt(i);
-                if (tab != null) {
-                    tab.setIcon(tabUnselectedIcons[i]);
-                }
+        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
+            @Override
+            public Fragment getItem(int position) {
+                return fragments[position];
             }
-            tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
-                @Override
-                public void onTabSelected(TabLayout.Tab tab) {
-                    super.onTabSelected(tab);
-                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
-                }
 
-                @Override
-                public void onTabUnselected(TabLayout.Tab tab) {
-                    super.onTabUnselected(tab);
-                    tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
-                }
+            @Override
+            public int getCount() {
+                return fragments.length;
+            }
+        });
 
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {
-                    super.onTabReselected(tab);
-                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
-                }
-            });
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+        final int[] tabUnselectedIcons = new int[]{
 
-            //some stuff
-            if (networkPresent)
-                AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
+                R.drawable.icon_friends_gray,
+                R.drawable.icon_send_gray,
+                R.drawable.icon_reach_magnet_gray,
+                R.drawable.icon_download_gray,
+                R.drawable.icon_myprofile_gray,
+        };
+        final int[] tabSelectedIcons = new int[]{
+
+                R.drawable.icon_friends_pink,
+                R.drawable.icon_send_pink,
+                R.drawable.icon_reach_magnet_pink,
+                R.drawable.icon_download_pink,
+                R.drawable.icon_myprofile_pink,
+        };
+        tabLayout.setupWithViewPager(viewPager);
+
+        //LayoutInflater.from(this).inflate();
+
+        int sPos = tabLayout.getSelectedTabPosition();
+        TabLayout.Tab sTab = tabLayout.getTabAt(sPos);
+        if (sTab != null)
+            sTab.setIcon(tabSelectedIcons[sPos]);
+
+        for (int i = 1; i < tabLayout.getTabCount(); i++) {
+            final TabLayout.Tab tab = tabLayout.getTabAt(i);
+            if (tab != null) {
+                tab.setIcon(tabUnselectedIcons[i]);
+            }
         }
+        tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                super.onTabSelected(tab);
+                tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                super.onTabUnselected(tab);
+                tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                super.onTabReselected(tab);
+                tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+            }
+        });
+
+        //some stuff
+        if (networkPresent)
+            AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
+
+//        if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
+//
+//            startNumberVerification();
+//            toggleSliding(false);
+//        } else if (TextUtils.isEmpty(userName)) {
+//
+//            startAccountCreation(Optional.absent());
+//            toggleSliding(false);
+//        } else {
+//
+//
+//        }
     }
 
     private synchronized void processIntent(Intent intent) {

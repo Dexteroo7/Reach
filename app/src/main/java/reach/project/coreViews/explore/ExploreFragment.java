@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.PopupMenu;
@@ -43,6 +44,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
@@ -56,7 +58,6 @@ import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
@@ -86,15 +87,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return fragment;
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        mListener = (SuperInterface) context;
-    }
-
     private final ExploreBuffer<ExploreContainer> buffer = ExploreBuffer.getInstance(this);
-    private ExploreAdapter exploreAdapter;
-    private SuperInterface mListener;
+    private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
+    private View rootView = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -102,7 +97,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         userId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
-        final View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+        rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
         final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
@@ -128,11 +123,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     return true;
             }
         });
-        mListener.toggleSliding(false);
 
         final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
-        exploreAdapter = new ExploreAdapter(getActivity(), this, this);
-
         explorePager.setAdapter(exploreAdapter);
         explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
@@ -497,5 +489,13 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
         } catch (JSONException ignored) {
         }
+
+        Snackbar.make(rootView, "\"Song added, click to view\"", Snackbar.LENGTH_LONG)
+                .setAction("VIEW", v -> {
+
+                    ReachActivity.openDownloading();
+                })
+                .show();
+
     }
 }

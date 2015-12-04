@@ -1,7 +1,6 @@
 package reach.project.coreViews.explore;
 
 import android.animation.ValueAnimator;
-import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
@@ -28,16 +27,14 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 class ExploreAdapter extends PagerAdapter {
 
-    private final Context context;
     private final Explore explore;
     private final HandOverMessage<Long> handOverMessage;
 
     @Nullable
     private static WeakReference<ExploreAdapter> adapterWeakReference = null;
 
-    public ExploreAdapter(Context context, Explore explore,
+    public ExploreAdapter(Explore explore,
                           HandOverMessage<Long> handOverId) {
-        this.context = context;
         this.explore = explore;
         this.handOverMessage = handOverId;
         adapterWeakReference = new WeakReference<>(this);
@@ -47,7 +44,7 @@ class ExploreAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup collection, int position) {
 
         final ExploreContainer container = explore.getContainerForIndex(position);
-        final View layout = LayoutInflater.from(context).inflate(container.types.getLayoutResId(), collection, false);
+        final View layout = LayoutInflater.from(collection.getContext()).inflate(container.types.getLayoutResId(), collection, false);
 
         final TextView title = (TextView) layout.findViewById(R.id.title);
         final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
@@ -150,7 +147,7 @@ class ExploreAdapter extends PagerAdapter {
 
         exploreAdapter.handOverMessage.handOverMessage((long) view.getTag());
 
-        final ValueAnimator animator = ValueAnimator.ofInt(0,  MiscUtils.dpToPx(5));
+        final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
         animator.setDuration(300);
         animator.addUpdateListener(animation -> {
             final int val = (int) animation.getAnimatedValue();
