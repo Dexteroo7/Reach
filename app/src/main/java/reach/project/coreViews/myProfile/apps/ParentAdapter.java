@@ -1,7 +1,6 @@
 package reach.project.coreViews.myProfile.apps;
 
 import android.content.pm.PackageManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -18,7 +17,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.GetActualAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
@@ -69,7 +68,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     {
         final List<App> defaultList = new ArrayList<>(1);
         defaultList.add(new App.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_list_item, this);
+        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_mylibray_grid_item, this);
     }
 
     public void updateRecentApps(List<App> newRecent) {
@@ -118,7 +117,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             case VIEW_TYPE_ALL: {
 
                 return new AppItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.app_list_item, parent, false), position -> {
+                        .inflate(R.layout.app_mylibray_list_item, parent, false), position -> {
 
                     final Object object = getItem(position);
                     if (object instanceof App)
@@ -160,18 +159,22 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             //if contains and is true
-            if (packageVisibility.containsKey(appExactType.packageName) && packageVisibility.get(appExactType.packageName))
-                appItemHolder.appIcon.setAlpha(1.0f);
-            else
-                appItemHolder.appIcon.setAlpha(0.5f);
+            if (packageVisibility.containsKey(appExactType.packageName) && packageVisibility.get(appExactType.packageName)) {
+                appItemHolder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+                appItemHolder.toggleText.setText("Everyone");
+            }
+            else {
+                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+                appItemHolder.toggleText.setText("Only Me");
+            }
 
         } else {
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
-            horizontalViewHolder.headerText.setText("Recently Added");
+            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            horizontalViewHolder.headerText.setText("Recently Installed");
             horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomLinearLayoutManager(holder.itemView.getContext(),
-                            LinearLayoutManager.HORIZONTAL, false));
+                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }

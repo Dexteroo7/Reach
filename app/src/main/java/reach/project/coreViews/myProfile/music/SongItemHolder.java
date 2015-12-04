@@ -17,7 +17,9 @@ class SongItemHolder extends SingleItemViewHolder {
 
     public final TextView songName;
     public final TextView artistName;
-    public final ImageView downButton;
+    public final ImageView toggleButton;
+    public final ImageView toggleButton2;
+    public final TextView toggleText;
     public final SimpleDraweeView albumArt;
 
     protected SongItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
@@ -26,7 +28,9 @@ class SongItemHolder extends SingleItemViewHolder {
 
         this.songName = (TextView) itemView.findViewById(R.id.songName);
         this.artistName = (TextView) itemView.findViewById(R.id.artistName);
-        this.downButton = (ImageView) itemView.findViewById(R.id.downButton);
+        this.toggleText = (TextView) itemView.findViewById(R.id.toggleText);
+        this.toggleButton = (ImageView) itemView.findViewById(R.id.toggleButton);
+        this.toggleButton2 = (ImageView) itemView.findViewById(R.id.toggleButton2);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
     }
 }

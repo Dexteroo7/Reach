@@ -74,6 +74,7 @@ import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
@@ -616,15 +617,7 @@ public class ReachActivity extends AppCompatActivity implements
                                     new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
                                     new String[]{"Downloading", "My Library"},
                                     "Songs")),
-                    PagerFragment.getNewInstance(
-                            new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.myProfile.apps.ApplicationFragment.class},
-                                    new String[]{"My Applications"},
-                                    "Apps"),
-                            new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.myProfile.music.MyLibraryFragment.class},
-                                    new String[]{"My Library"},
-                                    "Songs"))
+                    MyProfileFragment.newInstance()
             };
 
             viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {

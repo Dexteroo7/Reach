@@ -12,6 +12,7 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 
+import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -137,10 +138,16 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         }
 
         //if contains and is true
-        if (visibilityHook.isVisible(item.packageName))
-            holder.appIcon.setAlpha(1.0f);
-        else
-            holder.appIcon.setAlpha(0.5f);
+        if (visibilityHook.isVisible(item.packageName)) {
+            holder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+            holder.toggleButton2.setVisibility(View.GONE);
+            holder.toggleText.setText("Everyone");
+        }
+        else {
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
+            holder.toggleButton2.setVisibility(View.VISIBLE);
+            holder.toggleText.setText("Only Me");
+        }
     }
 
     @Override
@@ -151,5 +158,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     public interface VisibilityHook {
 
         boolean isVisible(String packageName);
+    }
+
+    @Override
+    public int getItemCount() {
+        int size = super.getItemCount();
+        return size < 4 ? size : 4;
     }
 }

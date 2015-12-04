@@ -16,8 +16,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <RelativeLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="wrap_content">
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/appIcon"
                 android:layout_marginLeft="15dp"
@@ -25,27 +26,13 @@
                 android:layout_marginBottom="15dp"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                fresco:placeholderImage="@color/reach_color" />
-            <TextView
-                android:id="@+id/downButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignBottom="@id/appIcon"
-                android:layout_alignParentRight="true"
-                android:textColor="#fff"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
-                android:paddingRight="10dp"
-                android:paddingLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:background="@color/reach_color"
-                android:text="Open" />
+                fresco:placeholderImage="@drawable/ic_default_music" />
             <TextView
                 android:id="@+id/appName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="20dp"
                 android:layout_toLeftOf="@id/downButton"
                 android:layout_toRightOf="@id/appIcon"
                 android:ellipsize="marquee"
@@ -53,18 +40,6 @@
                 android:text="Test"
                 android:textColor="#f33b5b"
                 android:textSize="16sp" />
-            <TextView
-                android:id="@+id/artistName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignLeft="@id/appName"
-                android:layout_below="@id/appName"
-                android:layout_marginTop="10dp"
-                android:layout_toLeftOf="@id/downButton"
-                android:ellipsize="marquee"
-                android:lines="1"
-                android:text="Test"
-                android:textColor="@color/reach_grey" />
             <ImageView
                 android:id="@+id/extraButton"
                 android:layout_width="wrap_content"
@@ -72,6 +47,25 @@
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="5dp"
                 android:src="@drawable/icon_extra_dots_gray" />
+            <TextView
+                android:id="@+id/toggleText"
+                android:text="Only Me"
+                android:textSize="12sp"
+                android:layout_alignBottom="@id/appIcon"
+                android:layout_alignParentRight="true"
+                android:textColor="@color/reach_grey"
+                android:layout_marginRight="10dp"
+                android:paddingBottom="1dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <ImageView
+                android:id="@+id/toggleButton"
+                android:src="@drawable/icon_locked"
+                android:layout_alignBottom="@id/toggleText"
+                android:layout_toLeftOf="@id/toggleText"
+                android:layout_marginRight="2dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp" />
         </RelativeLayout>
     </android.support.v7.widget.CardView>
 </RelativeLayout>

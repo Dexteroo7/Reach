@@ -178,6 +178,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
+
+        <activity
+            android:name=".coreViews.myProfile.EditProfileActivity"
+            android:label="@string/title_activity_player"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
     </application>
 
 </manifest>

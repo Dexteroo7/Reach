@@ -25,5 +25,6 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
 
     <string name="title_activity_player">PlayerActivity</string>
+    <string name="title_activity_edit_profile">EditProfileActivity</string>
 
 </resources>

@@ -16,6 +16,7 @@ import com.google.common.collect.Ordering;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -89,8 +90,18 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
     @Override
     public void onBindViewHolder(SongItemHolder holder, PrivacySongItem item) {
 
+        holder.artistName.setText(item.artistName);
+        if (item.visible) {
+            holder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+            holder.toggleButton2.setVisibility(View.GONE);
+            holder.toggleText.setText("Everyone");
+        }
+        else {
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
+            holder.toggleButton2.setVisibility(View.VISIBLE);
+            holder.toggleText.setText("Only Me");
+        }
         holder.songName.setText(item.displayName);
-        holder.artistName.setText(item.visible + "");
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.albumName,
                 item.artistName,

@@ -48,7 +48,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         
         final List<PrivacySongItem> defaultList = new ArrayList<>(1);
         defaultList.add(new PrivacySongItem());
-        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_list_item);
+        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_mylibray_grid_item);
         setHasStableIds(true);
     }
 
@@ -116,7 +116,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             case VIEW_TYPE_ALL: {
 
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_list_item, parent, false), position -> {
+                        .inflate(R.layout.song_mylibray_list_item, parent, false), position -> {
 
                     final Object object = getItem(position);
                     if (object instanceof Cursor)
@@ -155,8 +155,16 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             actualName = cursorExactType.getString(4);
             visible = cursorExactType.getShort(9) == 1;
 
+            if (visible) {
+                songItemHolder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+                songItemHolder.toggleText.setText("Everyone");
+            }
+            else {
+                songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+                songItemHolder.toggleText.setText("Only Me");
+            }
             songItemHolder.songName.setText(displayName);
-            songItemHolder.artistName.setText(visible + "");
+            songItemHolder.artistName.setText(artist);
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
             if (uriOptional.isPresent()) {
