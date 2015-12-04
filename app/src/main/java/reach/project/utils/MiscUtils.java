@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewParent;
@@ -41,6 +42,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
@@ -58,7 +60,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -160,7 +161,7 @@ public enum MiscUtils {
             }
     }
 
-    private static int[] randomPics = new int[] {
+    private static int[] randomPics = new int[]{
             R.drawable.album_art_small_01,
             R.drawable.album_art_small_02,
             R.drawable.album_art_small_03,
@@ -209,14 +210,10 @@ public enum MiscUtils {
             applicationsFound.add(appBuilder.build());
         }
 
-        Collections.sort(applicationsFound, new Comparator<App>() {
-            @Override
-            public int compare(App lhs, App rhs) {
-                return lhs.applicationName.compareTo(rhs.applicationName);
-            }
-        });
-
-        return applicationsFound;
+        return Ordering
+                .from(StaticData.primaryApps)
+                .compound(StaticData.secondaryApps)
+                .sortedCopy(applicationsFound);
     }
 
     /**
@@ -291,11 +288,22 @@ public enum MiscUtils {
 
         if (capacity < 1000) //use lighter collection
             if (Build.VERSION.SDK_INT >= 19)
-                return new android.util.ArrayMap<>();
+                return new android.util.ArrayMap<>(capacity);
             else
                 return new ArrayMap<>(capacity); //else use the support one
         else
             return new HashMap<>(capacity);
+    }
+
+    public static <T> Set<T> getSet(int capacity) {
+
+        if (capacity < 1000) //use lighter collection
+            if (Build.VERSION.SDK_INT >= 23)
+                return new ArraySet<>(capacity);
+            else
+                return new HashSet<>(capacity); //else use the support one
+        else
+            return new HashSet<>(capacity);
     }
 
     public static boolean containsIgnoreCase(CharSequence str, CharSequence searchStr) {

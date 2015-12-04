@@ -3,7 +3,7 @@ package reach.project.coreViews.myProfile.music;
 /**
  * Created by dexter on 03/12/15.
  */
-public final class PrivacySongItem {
+final class PrivacySongItem {
 
     static final byte DOWNLOADED_SONG = 0;
     static final byte MY_LIBRARY = 1;

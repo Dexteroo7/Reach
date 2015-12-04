@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+
+    android:padding="10dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <android.support.v7.widget.CardView
+        card_view:cardUseCompatPadding="true"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="2dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/image"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_centerVertical="true"
+            fresco:placeholderImage="@color/reach_color" />
+        <TextView
+            android:id="@+id/text"
+            android:layout_gravity="bottom"
+            android:text="Test"
+            android:padding="8dp"
+            android:textColor="#f33b5b"
+            android:background="#fff"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content" />
+        <CheckBox
+            android:id="@+id/checkBox"
+            android:clickable="false"
+            android:layout_gravity="bottom|right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <View
+            android:id="@+id/mask"
+            android:visibility="gone"
+            android:background="#30f33b5b"
+            android:layout_width="150dp"
+            android:layout_height="150dp" />
+    </android.support.v7.widget.CardView>
+</RelativeLayout>

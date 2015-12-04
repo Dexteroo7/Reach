@@ -34,7 +34,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
         return new DownloadingItemHolder(itemView, handOverMessage);
     }
 
-    private final long[] reUsable = new long[6];
+    private final long[] reUsable = new long[7];
 
     @Override
     public int getItemId(@Nonnull Cursor cursor) {

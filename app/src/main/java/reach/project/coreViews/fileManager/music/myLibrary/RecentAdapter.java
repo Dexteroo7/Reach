@@ -14,6 +14,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
+import java.util.Comparator;
 import java.util.List;
 
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -31,26 +32,19 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         super(recentMusic, handOverMessage, resourceId);
     }
 
-    private final Ordering<MusicData> primary = new Ordering<MusicData>() {
-        @Override
-        public int compare(@Nullable MusicData left, @Nullable MusicData right) {
+    private final Comparator<MusicData> primary = (left, right) -> {
 
-            final Long lhs = left == null ? 0 : left.getDateAdded();
-            final Long rhs = right == null ? 0 : right.getDateAdded();
+        final Long lhs = left == null ? 0 : left.getDateAdded();
+        final Long rhs = right == null ? 0 : right.getDateAdded();
 
-            return lhs.compareTo(rhs);
-        }
+        return lhs.compareTo(rhs);
     };
 
-    private final Ordering<MusicData> secondary = new Ordering<MusicData>() {
-        @Override
-        public int compare(@Nullable MusicData left, @Nullable MusicData right) {
+    private final Comparator<MusicData> secondary = (left, right) -> {
+        final String lhs = left == null ? "" : left.getDisplayName();
+        final String rhs = right == null ? "" : right.getDisplayName();
 
-            final String lhs = left == null ? "" : left.getDisplayName();
-            final String rhs = right == null ? "" : right.getDisplayName();
-
-            return lhs.compareTo(rhs);
-        }
+        return lhs.compareTo(rhs);
     };
 
     @Nullable
