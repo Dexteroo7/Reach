@@ -18,13 +18,11 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.common.base.Optional;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
@@ -45,8 +43,6 @@ import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.apps.YourProfileAppFragment;
 import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.reachProcess.reachService.MusicHandler;
-import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
@@ -196,37 +192,6 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
 
     }
 
-//    public void addSongToQueue(long songId, long senderId, long size,
-//                               String displayName, String actualName,
-//                               String userName, String onlineStatus,
-//                               String networkType, String artistName, long duration,
-//                               String albumName, String genre) {
-//
-//
-//    }
-
-    private boolean playSong(MusicData musicData, Context context) {
-
-        //stop any other play clicks till current is processed
-        //sanity check
-//            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
-        if (musicData.getLength() == 0 || TextUtils.isEmpty(musicData.getPath())) {
-            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        if (musicData.getProcessed() == 0) {
-            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        ProcessManager.submitMusicRequest(context,
-                Optional.of(musicData),
-                MusicHandler.ACTION_NEW_SONG);
-        ////////////////////////////////////////
-        return true;
-    }
-
     @Override
     public void handOverMessage(@Nonnull ReachDatabase reachDatabase) {
 
@@ -286,7 +251,7 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
                         liked,
                         reachDatabase.getDuration(),
                         (byte) 0);
-                playSong(musicData, this);
+                MiscUtils.playSong(musicData, this);
                 //in both cases close and continue
                 cursor.close();
                 return;

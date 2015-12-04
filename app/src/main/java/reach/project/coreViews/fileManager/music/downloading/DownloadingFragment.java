@@ -99,7 +99,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
                     ReachDatabaseHelper.COLUMN_STATUS + " != ? and " + //show only non finished
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "0"},
-                    null);
+                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
 
         return null;
     }

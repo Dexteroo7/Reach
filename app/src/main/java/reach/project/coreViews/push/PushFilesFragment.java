@@ -197,15 +197,25 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
         return null;
     }
 
+    //Count check to prevent bull shit
+    int oldDownloadCount = 0;
+    int oldMyLibraryCount = 0;
+
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
         if (data == null || data.isClosed())
             return;
 
-        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
+        final int count = data.getCount();
+
+        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER && count != oldMyLibraryCount) {
+
+            oldMyLibraryCount = count;
             recentMusicAdapter.updateRecent(getRecentMyLibrary());
-        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
+        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && count != oldDownloadCount) {
+
+            oldDownloadCount = count;
             recentMusicAdapter.updateRecent(getRecentDownloaded());
         }
     }
