@@ -3,6 +3,7 @@ package reach.project.coreViews.explore;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -15,40 +16,38 @@ import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 
+import java.lang.ref.WeakReference;
+
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 16/10/15.
  */
-public class ExploreAdapter extends PagerAdapter {
+class ExploreAdapter extends PagerAdapter {
 
     private final Context context;
     private final Explore explore;
+    private final HandOverMessage<Long> handOverMessage;
 
-    public ExploreAdapter(Context context, Explore explore) {
+    @Nullable
+    private static WeakReference<ExploreAdapter> adapterWeakReference = null;
+
+    public ExploreAdapter(Context context, Explore explore,
+                          HandOverMessage<Long> handOverId) {
         this.context = context;
         this.explore = explore;
+        this.handOverMessage = handOverId;
+        adapterWeakReference = new WeakReference<>(this);
     }
-
-    private View.OnClickListener clickListener = v -> {
-        //long id = (long) v.getTag();
-        ValueAnimator animator = ValueAnimator.ofInt(0,  MiscUtils.dpToPx(5));
-        animator.setDuration(300);
-        animator.addUpdateListener(animation -> {
-            int val = (int) animation.getAnimatedValue();
-            v.setPadding(val, val, val, val);
-        });
-        animator.setInterpolator(new AccelerateInterpolator());
-        animator.start();
-    };
 
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
 
         final ExploreContainer container = explore.getContainerForIndex(position);
-        final View layout = LayoutInflater.from(context).inflate(container.getTypes().getLayoutResId(), collection, false);
+        final View layout = LayoutInflater.from(context).inflate(container.types.getLayoutResId(), collection, false);
 
         final TextView title = (TextView) layout.findViewById(R.id.title);
         final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
@@ -58,23 +57,26 @@ public class ExploreAdapter extends PagerAdapter {
         final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
         final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
 
-        switch (container.getTypes()) {
+        switch (container.types) {
 
             case MUSIC:
-                title.setText(container.getTitle());
-                subTitle.setText(container.getSubTitle());
-                userHandle.setText(container.getUserHandle());
-                typeText.setText(container.getTypes().getTitle());
-                String imageId = container.getImageId();
-                if (imageId!=null && !TextUtils.isEmpty(imageId))
-                    image.setImageURI(Uri.parse(imageId));
-                userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.getUserImageId()));
+
+                final MusicContainer musicContainer = (MusicContainer) container;
+
+                title.setText(musicContainer.displayName);
+                subTitle.setText(musicContainer.artistName);
+                userHandle.setText(musicContainer.userHandle);
+                typeText.setText(musicContainer.types.getTitle());
+                if (!TextUtils.isEmpty(container.imageId))
+                    image.setImageURI(Uri.parse(container.imageId));
+                userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.userImageId));
                 //downButton.setTag(container.getId());
                 downButton.setOnClickListener(clickListener);
+                downButton.setTag(musicContainer.id);
                 layout.setTag(POSITION_UNCHANGED);
                 break;
             case APP:
-                container.getRating();
+//                container.getRating();
                 layout.setTag(POSITION_UNCHANGED);
                 break;
             case PHOTO:
@@ -129,10 +131,32 @@ public class ExploreAdapter extends PagerAdapter {
         return POSITION_UNCHANGED; //default, should not happen
     }
 
-    public interface Explore {
+    interface Explore {
 
         ExploreContainer getContainerForIndex(int index);
 
         int getCount();
     }
+
+    private static final View.OnClickListener clickListener = view -> {
+        //long id = (long) v.getTag();
+
+        if (adapterWeakReference == null)
+            return;
+
+        final ExploreAdapter exploreAdapter = adapterWeakReference.get();
+        if (exploreAdapter == null)
+            return;
+
+        exploreAdapter.handOverMessage.handOverMessage((long) view.getTag());
+
+        final ValueAnimator animator = ValueAnimator.ofInt(0,  MiscUtils.dpToPx(5));
+        animator.setDuration(300);
+        animator.addUpdateListener(animation -> {
+            final int val = (int) animation.getAnimatedValue();
+            view.setPadding(val, val, val, val);
+        });
+        animator.setInterpolator(new AccelerateInterpolator());
+        animator.start();
+    };
 }

@@ -1,13 +1,19 @@
 package reach.project.coreViews.explore;
 
+import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -15,6 +21,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -28,15 +36,28 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nonnull;
+
 import reach.project.R;
 import reach.project.core.ReachApplication;
+import reach.project.core.StaticData;
+import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.SongMetadata;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -44,8 +65,9 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
  * create an instance of this fragment.
  */
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
-        ExploreBuffer.Exploration<ExploreContainer> {
+        ExploreBuffer.Exploration<ExploreContainer>, HandOverMessage<Long> {
 
+    private static final Random random = new Random();
     private static WeakReference<ExploreFragment> reference;
     private static long userId = 0;
 
@@ -84,7 +106,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
         final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
-        final PopupMenu popupMenu = new PopupMenu(container.getContext(), exploreToolbarText);
+        final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
 
         popupMenu.inflate(R.menu.explore_popup_menu);
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
@@ -109,7 +131,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         mListener.toggleSliding(false);
 
         final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
-        exploreAdapter = new ExploreAdapter(getActivity(), this);
+        exploreAdapter = new ExploreAdapter(getActivity(), this, this);
 
         explorePager.setAdapter(exploreAdapter);
         explorePager.setOffscreenPageLimit(2);
@@ -144,8 +166,42 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public synchronized Callable<Collection<ExploreContainer>> fetchNextBatch() {
-//        Toast.makeText(getContext(), "Server Fetching next batch of 10", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(activity, "Server Fetching next batch of 10", Toast.LENGTH_SHORT).show();
         return fetchNextBatch;
+    }
+
+    @Override
+    public ExploreContainer getContainerForIndex(int index) {
+
+        //return data
+        return buffer.getViewItem(index);
+    }
+
+    @Override
+    public boolean isDoneForDay(ExploreContainer container) {
+        return container.types.equals(ExploreTypes.DONE_FOR_TODAY);
+    }
+
+    @Override
+    public boolean isLoading(ExploreContainer container) {
+        return container.types.equals(ExploreTypes.LOADING);
+    }
+
+    @Override
+    public ExploreContainer getLoadingResponse() {
+        return new ExploreContainer(ExploreTypes.LOADING, new Random().nextLong());
+    }
+
+    @Override
+    public int getCount() {
+        return buffer.currentBufferSize();
+    }
+
+    @Override
+    public synchronized void notifyDataAvailable() {
+
+        //This is UI thread !
+        exploreAdapter.notifyDataSetChanged();
     }
 
     private static final Callable<Collection<ExploreContainer>> fetchNextBatch = () -> {
@@ -204,8 +260,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             Log.i("Ayush", "Got Explore response " + exploreJson.getString("displayName"));
 
-            long userId = Long.parseLong(exploreJson.getString("userId"));
-            Pair <String, String> pair = MiscUtils.useContextFromFragment(reference, context -> {
+            final long userId = Long.parseLong(exploreJson.getString("userId"));
+            final Pair<String, String> pair = MiscUtils.useContextFromFragment(reference, context -> {
 
                 final Cursor cursor = context.getContentResolver().query(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
@@ -213,24 +269,34 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                                 ReachFriendsHelper.COLUMN_IMAGE_ID},
                         ReachFriendsHelper.COLUMN_ID + " = ?",
                         new String[]{userId + ""}, null);
+
                 if (cursor == null)
                     return null;
                 if (!cursor.moveToFirst())
                     cursor.close();
-                String userName = cursor.getString(0);
-                String userImageId = cursor.getString(1);
-                return new Pair<>(userName, userImageId);
+                return new Pair<>(cursor.getString(0), //userName
+                        cursor.getString(1)); //userImageId
+
             }).get();
 
-            containers.add(new ExploreContainer(
-                    exploreJson.getString("displayName"),
-                    exploreJson.getString("artistName"),
+            final MusicContainer musicContainer = new MusicContainer(
                     exploreJson.getString("largeImageUrl"),
                     pair.second,
-                    "@" + pair.first.toLowerCase().split(" ")[0],
-                    3.0f,
+                    pair.first,
                     ExploreTypes.MUSIC,
-                    exploreJson.getLong("contentId")));
+                    random.nextLong());
+
+            musicContainer.actualName = exploreJson.getString("actualName");
+            musicContainer.displayName = exploreJson.getString("displayName");
+            musicContainer.artistName = exploreJson.getString("artistName");
+            musicContainer.albumName = exploreJson.getString("albumName");
+
+            musicContainer.length = exploreJson.getLong("size");
+            musicContainer.songId = exploreJson.getLong("contentId");
+            musicContainer.duration = exploreJson.getLong("duration");
+            musicContainer.senderId = userId;
+
+            containers.add(musicContainer);
         }
 
         Log.i("Ayush", "Explore has " + containers.size() + " stories");
@@ -238,36 +304,198 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     };
 
     @Override
-    public ExploreContainer getContainerForIndex(int index) {
+    public void handOverMessage(@Nonnull Long id) {
 
-        //return data
-        return buffer.getViewItem(index);
+        MusicContainer musicContainer = null;
+        final int size = buffer.currentBufferSize();
+        for (int index = 0; index < size; index++) {
+
+            final ExploreContainer container = buffer.getViewItem(index);
+            if (container.id == id) {
+                musicContainer = (MusicContainer) container;
+                break;
+            }
+        }
+
+        if (musicContainer == null)
+            return;
+
+        final ReachDatabase reachDatabase = new ReachDatabase();
+
+        reachDatabase.setId(-1);
+        reachDatabase.setSongId(musicContainer.songId);
+        reachDatabase.setReceiverId(userId);
+        reachDatabase.setSenderId(musicContainer.senderId);
+
+        reachDatabase.setOperationKind((short) 0);
+        reachDatabase.setPath("hello_world");
+        reachDatabase.setSenderName(musicContainer.userHandle);
+        reachDatabase.setOnlineStatus(0 + "");
+
+        reachDatabase.setArtistName(musicContainer.artistName);
+        reachDatabase.setIsLiked(false);
+        reachDatabase.setDisplayName(musicContainer.displayName);
+        reachDatabase.setActualName(musicContainer.actualName);
+        reachDatabase.setLength(musicContainer.length);
+        reachDatabase.setProcessed(0);
+        reachDatabase.setAdded(System.currentTimeMillis());
+        reachDatabase.setUniqueId(random.nextInt(Integer.MAX_VALUE));
+
+        reachDatabase.setDuration(musicContainer.duration);
+        reachDatabase.setLogicalClock((short) 0);
+        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+
+        reachDatabase.setLastActive(0);
+        reachDatabase.setReference(0);
+
+        reachDatabase.setAlbumName(musicContainer.albumName);
+        reachDatabase.setGenre("hello_world");
+
+        reachDatabase.setVisibility((short) 1);
+
+        handOverMessage(reachDatabase);
     }
 
-    @Override
-    public boolean isDoneForDay(ExploreContainer container) {
-        return container.getTypes().equals(ExploreTypes.DONE_FOR_TODAY);
-    }
+    public void handOverMessage(@Nonnull ReachDatabase reachDatabase) {
 
-    @Override
-    public boolean isLoading(ExploreContainer container) {
-        return container.getTypes().equals(ExploreTypes.LOADING);
-    }
+        final Activity activity = getActivity();
+        final ContentResolver contentResolver = activity.getContentResolver();
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
-    @Override
-    public ExploreContainer getLoadingResponse() {
-        return new ExploreContainer(ExploreTypes.LOADING, new Random().nextLong());
-    }
+        if (contentResolver == null)
+            return;
 
-    @Override
-    public int getCount() {
-        return buffer.currentBufferSize();
-    }
+        /**
+         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
+         */
 
-    @Override
-    public synchronized void notifyDataAvailable() {
+        final Cursor cursor;
 
-        //This is UI thread !
-        exploreAdapter.notifyDataSetChanged();
+        //this cursor can be used to play if entry exists
+        cursor = contentResolver.query(
+                ReachDatabaseProvider.CONTENT_URI,
+                new String[]{
+
+                        ReachDatabaseHelper.COLUMN_ID, //0
+                        ReachDatabaseHelper.COLUMN_PROCESSED, //1
+                        ReachDatabaseHelper.COLUMN_PATH, //2
+
+                        ReachDatabaseHelper.COLUMN_IS_LIKED, //3
+                        ReachDatabaseHelper.COLUMN_SENDER_ID,
+                        ReachDatabaseHelper.COLUMN_RECEIVER_ID,
+                        ReachDatabaseHelper.COLUMN_SIZE,
+
+                },
+
+                ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                new String[]{reachDatabase.getDisplayName(), reachDatabase.getActualName(),
+                        reachDatabase.getLength() + "", reachDatabase.getDuration() + ""},
+                null);
+
+        if (cursor != null) {
+
+            if (cursor.moveToFirst()) {
+
+                //if not multiple addition, play the song
+                final boolean liked;
+                final String temp = cursor.getString(3);
+                liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+
+                final MusicData musicData = new MusicData(
+                        cursor.getLong(0), //id
+                        reachDatabase.getLength(),
+                        reachDatabase.getSenderId(),
+                        cursor.getLong(1),
+                        0,
+                        cursor.getString(2),
+                        reachDatabase.getDisplayName(),
+                        reachDatabase.getArtistName(),
+                        "",
+                        liked,
+                        reachDatabase.getDuration(),
+                        (byte) 0);
+                MiscUtils.playSong(musicData, activity);
+                //in both cases close and continue
+                cursor.close();
+                return;
+            }
+            cursor.close();
+        }
+
+        final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
+
+        //new song
+        //We call bulk starter always
+        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
+                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
+        if (uri == null) {
+
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Add song failed")
+                    .setAction("User Name - " + clientName)
+                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setValue(1)
+                    .build());
+            return;
+        }
+
+        final String[] splitter = uri.toString().split("/");
+        if (splitter.length == 0)
+            return;
+        reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
+        //start this operation
+        StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
+                activity,
+                reachDatabase,
+                reachDatabase.getReceiverId(), //myID
+                reachDatabase.getSenderId(),   //the uploaded
+                reachDatabase.getId()));
+
+        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + clientName)
+                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                .setValue(1)
+                .build());
+
+        final MixpanelAPI mixpanel = MixpanelAPI.getInstance(activity, "7877f44b1ce4a4b2db7790048eb6587a");
+        final JSONObject props = new JSONObject();
+        try {
+            props.put("User Name", clientName);
+            props.put("From", reachDatabase.getDisplayName());
+            props.put("Song", reachDatabase.getSenderId());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        mixpanel.track("Transaction - Add Song", props);
+
+        //usage tracking
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, reachDatabase.getReceiverId() + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(activity));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
+        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
+        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
+        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
+        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+
+        try {
+            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
+        } catch (JSONException ignored) {
+        }
     }
 }

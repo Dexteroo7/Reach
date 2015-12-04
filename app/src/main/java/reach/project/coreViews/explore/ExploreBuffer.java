@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by dexter on 15/10/15.
  */
-public class ExploreBuffer<T> implements Closeable {
+class ExploreBuffer<T> implements Closeable {
 
     private static final AtomicBoolean isDoneForToday = new AtomicBoolean(false);
     private static WeakReference<ExploreBuffer> bufferWeakReference;
@@ -46,7 +47,7 @@ public class ExploreBuffer<T> implements Closeable {
     }
 
     //holds a buffer of network objects
-    private final CopyOnWriteArrayList<T> storyBuffer = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<T> storyBuffer = new CopyOnWriteArrayList<>(new ArrayList<>(100));
 
     //interface for stuff
     private final Exploration<T> exploration;
@@ -183,7 +184,7 @@ public class ExploreBuffer<T> implements Closeable {
         }
     }
 
-    public interface Exploration<T> {
+    interface Exploration<T> {
 
         //notify new batch added
         void notifyDataAvailable();
