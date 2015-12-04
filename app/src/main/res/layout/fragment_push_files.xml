@@ -12,49 +12,28 @@
         android:fitsSystemWindows="true"
         android:orientation="vertical"
         app:elevation="0dp">
-
         <android.support.v7.widget.Toolbar
             android:id="@+id/pushToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
             android:minHeight="?attr/actionBarSize"
-            android:titleTextColor="#f33b5b"
+            app:titleTextColor="@color/reach_color"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
-
         <View
             android:layout_width="match_parent"
             android:layout_height="2dp"
-            android:background="@drawable/shadow_top"
-            app:layout_scrollFlags="scroll|enterAlways" />
+            android:background="@drawable/shadow_bottom" />
     </android.support.design.widget.AppBarLayout>
 
-    <RelativeLayout
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="10dp"
-        android:background="@drawable/border_shadow2"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_marginTop="?attr/actionBarSize"
+        android:paddingTop="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp" />
 
-        <TextView
-            android:id="@+id/header"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#83d9d9d9"
-            android:gravity="center"
-            android:padding="10dp"
-            android:text="Choose Files"
-            android:textColor="@color/colorPrimary" />
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-
-            android:layout_below="@id/header"
-            app:layout_heightPercent="100%" />
-
-    </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>

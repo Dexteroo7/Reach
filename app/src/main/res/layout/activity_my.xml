@@ -17,7 +17,7 @@
             app:tabIndicatorHeight="0dp"
             android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
-            android:layout_height="60dp" />
+            android:layout_height="wrap_content" />
         <FrameLayout
             android:layout_above="@id/mainTabLayout"
             android:layout_width="match_parent"

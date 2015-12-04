@@ -56,6 +56,7 @@ public class MyProfileFragment extends Fragment {
 
         toolbar.inflateMenu(R.menu.myprofile_menu);
         toolbar.setTitleTextColor(Color.WHITE);
+        toolbar.setNavigationIcon(null);
 
         toolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {

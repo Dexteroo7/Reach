@@ -2,16 +2,25 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/border_shadow4">
-
+    android:background="@drawable/border_shadow2">
+    <TextView
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#83d9d9d9"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="Choose Files"
+        android:textColor="@color/colorPrimary" />
     <TextView
         android:id="@+id/headerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="15dp"
         android:layout_marginLeft="15dp"
-        android:text="Test"
         android:layout_marginBottom="10dp"
+        android:text="Test"
+        android:layout_below="@id/header"
         android:textColor="#f33b5b"
         android:textSize="18sp" />
 
@@ -21,7 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_marginRight="15dp"
-        android:layout_marginTop="10dp"
+        android:layout_alignTop="@id/headerText"
         android:background="@color/reach_color"
         android:paddingBottom="2dp"
         android:paddingLeft="4dp"
@@ -35,6 +44,5 @@
         android:id="@+id/listOfItems"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/headerText"
-        android:layout_marginBottom="10dp" />
+        android:layout_below="@id/headerText" />
 </RelativeLayout>

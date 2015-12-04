@@ -1,5 +1,6 @@
 package reach.project.coreViews.push;
 
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
@@ -20,7 +21,16 @@ public class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
     }
 
     public ListHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ListHolder(parent);
+        switch (viewType) {
+            case 0: return new ListHolder(parent, R.layout.list_with_more_button_header);
+            case 1: return new ListHolder(parent);
+            default: return new ListHolder(parent);
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
     }
 
     @Override
@@ -30,18 +40,19 @@ public class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
 
             case 0: {
 
-                holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
-                holder.headerText.setText("Recently Installed Apps");
-                holder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext()));
+                holder.headerText.setText("Apps");
+                holder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(
+                        holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
                 holder.listOfItems.setAdapter(apps);
                 break;
             }
 
             case 1: {
 
-                holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
-                holder.headerText.setText("Recent Music");
-                holder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext()));
+                holder.itemView.setBackgroundResource(R.drawable.border_shadow1);
+                holder.headerText.setText("Songs");
+                holder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(
+                        holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
                 holder.listOfItems.setAdapter(music);
                 break;
             }

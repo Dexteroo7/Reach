@@ -12,7 +12,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -104,7 +103,7 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
 //        });
 
         final Activity activity = getActivity();
-        parent.setLayoutManager(new CustomLinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false));
+        parent.setLayoutManager(new CustomLinearLayoutManager(activity));
         parent.setAdapter(new ParentAdapter(recentAppsAdapter, recentMusicAdapter));
 
         getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
