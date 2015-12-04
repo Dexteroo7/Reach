@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -204,7 +205,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         exploreAdapter.notifyDataSetChanged();
     }
 
+    private static short count = 0;
     private static final Callable<Collection<ExploreContainer>> fetchNextBatch = () -> {
+
+        if (count > 8)
+            return Collections.singletonList(new ExploreContainer(ExploreTypes.DONE_FOR_TODAY, random.nextInt()));
 
         final JSONObject jsonObject = new JSONObject();
         jsonObject.put("userId", userId);
@@ -298,6 +303,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             containers.add(musicContainer);
         }
+
+        count += containers.size();
 
         Log.i("Ayush", "Explore has " + containers.size() + " stories");
         return containers;

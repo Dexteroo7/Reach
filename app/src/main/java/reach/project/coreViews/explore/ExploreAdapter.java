@@ -86,6 +86,8 @@ class ExploreAdapter extends PagerAdapter {
                 layout.setTag(POSITION_NONE);
                 break;
             case DONE_FOR_TODAY:
+
+                title.setText("No more stories for today");
                 layout.setTag(POSITION_NONE);
                 break;
         }
