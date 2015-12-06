@@ -3,8 +3,8 @@
     android:id="@id/materialviewpager_pagerTitleStrip"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:pstsIndicatorHeight="0dp"
     app:pstsPaddingMiddle="true"
     app:pstsShouldExpand="true"
+    app:pstsIndicatorColor="#fff"
     app:pstsTabTextAllCaps="false"
     app:pstsTabTextColor="@color/white" />

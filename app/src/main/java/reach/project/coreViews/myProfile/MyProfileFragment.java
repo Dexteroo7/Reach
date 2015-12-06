@@ -1,17 +1,21 @@
 package reach.project.coreViews.myProfile;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -27,6 +31,7 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
+import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -46,6 +51,10 @@ public class MyProfileFragment extends Fragment {
             Log.i("Ayush", "Reusing YourProfileAppFragment object :)");
         return fragment;
     }
+
+    private Activity activity;
+    private int songCount;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -53,20 +62,16 @@ public class MyProfileFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.activity_your_profile, container, false);
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
         final Toolbar toolbar = materialViewPager.getToolbar();
+        activity = getActivity();
 
-        toolbar.inflateMenu(R.menu.myprofile_menu);
         toolbar.setTitleTextColor(Color.WHITE);
+        toolbar.setTitle("My Profile");
+        toolbar.inflateMenu(R.menu.myprofile_menu);
+        MenuItem menuItem = toolbar.getMenu().findItem(R.id.edit_button);
+        MenuItemCompat.setActionView(menuItem, R.layout.edit_profile_button);
+        final View editProfileContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.editProfileLayout);
+        editProfileContainer.setOnClickListener(v -> startActivity(new Intent(activity, EditProfileActivity.class)));
         toolbar.setNavigationIcon(null);
-
-        toolbar.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.edit_button:
-                    startActivity(new Intent(getActivity(), EditProfileActivity.class));
-                    return true;
-                default:
-                    return true;
-            }
-        });
 
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
         final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
@@ -74,12 +79,17 @@ public class MyProfileFragment extends Fragment {
         final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
         final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
 
-        SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         final String uName = SharedPrefUtils.getUserName(preferences);
-        toolbar.setTitle(uName);
         userName.setText(uName);
-        //musicCount.setText(SharedPrefUtils.get);
+        Cursor cursor = activity.getContentResolver().query(MySongsProvider.CONTENT_URI,
+                null, null, null, null);
+        if (cursor != null) {
+            songCount = cursor.getCount();
+            cursor.close();
+        }
+        musicCount.setText(songCount+"");
         userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
         profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + SharedPrefUtils.getImageId(preferences)));
 
@@ -111,7 +121,7 @@ public class MyProfileFragment extends Fragment {
                     case 0:
                         return "Apps";
                     case 1:
-                        return "Songs";
+                        return "Songs ("+songCount+")";
                     default:
                         throw new IllegalStateException("Count and size clash");
                 }
@@ -122,7 +132,7 @@ public class MyProfileFragment extends Fragment {
             switch (page) {
                 case 0:
                     return HeaderDesign.fromColorResAndUrl(
-                            R.color.reach_grey,
+                            R.color.reach_color,
                             "");
                 case 1:
                     return HeaderDesign.fromColorResAndUrl(
@@ -152,6 +162,7 @@ public class MyProfileFragment extends Fragment {
             }
         });
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
+        materialViewPager.getPagerTitleStrip().setOnTouchListener((v, event) -> true);
 
         return rootView;
     }

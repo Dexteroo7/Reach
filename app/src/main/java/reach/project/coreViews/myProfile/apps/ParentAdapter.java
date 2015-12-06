@@ -128,7 +128,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             case VIEW_TYPE_RECENT: {
-                return new ListHolder(parent);
+                return new ListHolder(parent, R.layout.list_with_more_button_padding);
             }
 
             default:

@@ -486,6 +486,29 @@ public class ReachActivity extends AppCompatActivity implements
         super.onNewIntent(intent);
     }
 
+    private CustomViewPager viewPager = null;
+    private final PagerFragment downloadPager = PagerFragment.getNewInstance(
+            new PagerFragment.Pages(
+                    new Class[]{ApplicationFragment.class},
+                    new String[]{"My Applications"},
+                    "Apps"),
+            new PagerFragment.Pages(
+                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
+                    new String[]{"Downloading", "My Library"},
+                    "Songs"));
+
+    public static void openDownloading() {
+
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (activity.viewPager == null)
+                return;
+
+            activity.viewPager.setCurrentItem(3, true);
+            activity.downloadPager.setItem(1);
+        });
+    }
+
     @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -522,10 +545,11 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
-        toggleDrawer(true);
-
-        //small
-        toggleSliding(false);
+//        toggleDrawer(true);
+//
+//        //small
+//        toggleSliding(false);
+        viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
 
         //accountCreation ? numberVerification ? contactListFragment ? and other stuff
         loadFragment();
@@ -687,6 +711,19 @@ public class ReachActivity extends AppCompatActivity implements
             //some stuff
             if (networkPresent)
                 AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
+
+//        if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
+//
+//            startNumberVerification();
+//            toggleSliding(false);
+//        } else if (TextUtils.isEmpty(userName)) {
+//
+//            startAccountCreation(Optional.absent());
+//            toggleSliding(false);
+//        } else {
+//
+//
+//        }
         }
     }
 

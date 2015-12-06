@@ -18,6 +18,7 @@ public final class SmartSong extends Message {
     public static final String DEFAULT_TITLE = "hello_world";
     public static final List<Song> DEFAULT_SONGLIST = Collections.emptyList();
 
+
     @ProtoField(tag = 1, type = STRING)
     public final String title;
 
