@@ -139,7 +139,7 @@
         <!-- </intent-filter> -->
         <!-- </receiver> -->
 
-        <activity
+        <!--<activity
             android:name=".devikaChat.ChatActivity"
             android:label="@string/title_activity_chat"
             android:launchMode="singleTop"
@@ -149,7 +149,7 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
-        </activity>
+        </activity>-->
 
         <!-- Things on process :remote -->
 
