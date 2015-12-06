@@ -19,8 +19,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:paddingBottom="10dp"
-                android:layout_centerVertical="true"
-                fresco:placeholderImage="@drawable/ic_default_music" />
+                android:layout_centerVertical="true" />
             <RelativeLayout
                 android:layout_alignParentBottom="true"
                 android:orientation="horizontal"

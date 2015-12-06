@@ -39,7 +39,7 @@
                     android:layout_height="20dp"
                     android:padding="2dp"
                     android:background="@drawable/circular_background_pink"
-                    android:src="@drawable/icon_play_white" />
+                    android:src="@drawable/icon_play_circle_white" />
                 <TextView
                     android:id="@+id/downProgress"
                     android:text="100%"

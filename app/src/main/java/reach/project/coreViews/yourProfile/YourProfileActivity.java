@@ -24,10 +24,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 import com.google.android.gms.analytics.HitBuilders;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -296,17 +294,6 @@ public class YourProfileActivity extends AppCompatActivity implements HandOverMe
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
-
-        final MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        final JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", clientName);
-            props.put("From", reachDatabase.getDisplayName());
-            props.put("Song", reachDatabase.getSenderId());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Transaction - Add Song", props);
 
         //usage tracking
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);

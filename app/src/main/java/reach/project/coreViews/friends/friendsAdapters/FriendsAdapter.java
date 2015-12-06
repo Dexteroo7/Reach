@@ -36,6 +36,18 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.handOverMessage = handOverMessage;
     }
 
+    public static String[] requiredProjection = new String[]{
+
+            ReachFriendsHelper.COLUMN_ID, //0
+            ReachFriendsHelper.COLUMN_PHONE_NUMBER, //1
+            ReachFriendsHelper.COLUMN_USER_NAME, //2
+            ReachFriendsHelper.COLUMN_IMAGE_ID, //3
+            ReachFriendsHelper.COLUMN_NETWORK_TYPE, //4
+            ReachFriendsHelper.COLUMN_STATUS, //5
+            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //6
+            ReachFriendsHelper.COLUMN_NEW_SONGS, //7
+    };
+
     public static final byte VIEW_TYPE_FRIEND = 0;
     public static final byte VIEW_TYPE_LOCKED = 1;
     public static final byte VIEW_TYPE_FRIEND_LARGE = 2;
@@ -155,16 +167,16 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             //first invalidate
             viewHolder.profilePhotoList.setImageURI(null);
 
-            final Uri uriToDisplay;
+            Uri uriToDisplay = null;
 
             if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
                 uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
-            else {
+            /*else {
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile01);
                 else
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
-            }
+            }*/
 
             viewHolder.coverPic.setImageURI(Uri.parse("res:///" + MiscUtils.getRandomPic()));
             viewHolder.profilePhotoList.setImageURI(uriToDisplay);

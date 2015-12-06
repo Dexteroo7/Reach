@@ -84,7 +84,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
 
         holder.artistName.setText(item.artistName);
         if (item.visible) {
-            holder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
             holder.toggleButton2.setVisibility(View.GONE);
             holder.toggleText.setText("Everyone");
         }

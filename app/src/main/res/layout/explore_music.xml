@@ -21,7 +21,7 @@
             android:layout_height="match_parent">
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/image"
-                fresco:placeholderImage="@drawable/playstore_2"
+                fresco:placeholderImage="@drawable/album_art_small_01"
                 fresco:placeholderImageScaleType="centerCrop"
                 android:layout_width="match_parent"
                 app:layout_heightPercent="60%" />
@@ -49,7 +49,7 @@
                 <ImageView
                     android:id="@+id/typeIcon"
                     android:layout_marginRight="2dp"
-                    android:src="@drawable/song_icon_gray_small"
+                    android:src="@drawable/icon_song_indicator_gray"
                     android:layout_width="15dp"
                     android:layout_height="15dp" />
                 <TextView
@@ -99,7 +99,6 @@
                 <com.facebook.drawee.view.SimpleDraweeView
                     android:id="@+id/userImage"
                     fresco:roundAsCircle="true"
-                    fresco:placeholderImage="@drawable/profile_pic_blue"
                     android:layout_marginRight="2dp"
                     android:layout_width="18dp"
                     android:layout_height="18dp" />

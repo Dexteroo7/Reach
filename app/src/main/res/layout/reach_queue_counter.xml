@@ -15,7 +15,7 @@
         android:textSize="12sp"
         android:visibility="gone"
         android:gravity="center"
-        android:background="@drawable/circular_background_grey"
+        android:background="@drawable/circular_background_pink"
         android:id="@+id/reach_q_count"
         android:layout_gravity="right|center_vertical"
         android:layout_marginBottom="10dp"

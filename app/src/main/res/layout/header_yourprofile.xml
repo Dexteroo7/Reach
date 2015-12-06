@@ -18,8 +18,7 @@
         android:layout_height="70dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp"
-        fresco:roundAsCircle="true"
-        fresco:placeholderImage="@drawable/circular_background" />
+        fresco:roundAsCircle="true" />
 
     <TextView
         android:id="@+id/userName"
@@ -61,5 +60,5 @@
         android:layout_alignBottom="@id/musicCount"
         android:layout_marginBottom="1dp"
         android:layout_toLeftOf="@id/musicCount"
-        android:src="@drawable/song_icon_gray_small" />
+        android:src="@drawable/icon_song_indicator_gray" />
 </RelativeLayout>

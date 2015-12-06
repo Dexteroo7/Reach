@@ -31,10 +31,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -553,16 +551,6 @@ public class ProcessManager extends Service implements
                 .setLabel("SongBrainz - " + musicData.getDisplayName())
                 .setValue(1)
                 .build());
-
-        final MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        final JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-            props.put("Song", musicData.getDisplayName());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Play song", props);
 
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
         simpleParams.put(PostParams.USER_ID, serverId + "");

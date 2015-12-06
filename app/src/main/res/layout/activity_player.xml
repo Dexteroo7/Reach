@@ -10,7 +10,7 @@
         android:id="@+id/albumArt"
         android:layout_width="match_parent"
         fresco:placeholderImageScaleType="centerCrop"
-        fresco:placeholderImage="@drawable/playstore_2"
+        fresco:placeholderImage="@drawable/album_art_small_01"
         app:layout_heightPercent="70%" />
     <android.support.design.widget.AppBarLayout
         android:id="@+id/toolbarLayout"
@@ -40,7 +40,7 @@
         app:layout_marginTopPercent="63%"
         app:layout_marginRightPercent="5%"
         android:layout_alignParentRight="true"
-        android:src="@drawable/explore_download_btn"
+        android:src="@drawable/icon_heart_dark_gray"
         android:visibility="visible" />
     <TextView
         android:id="@+id/songNamePlaying"

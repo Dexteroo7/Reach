@@ -23,7 +23,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.google.android.gms.analytics.HitBuilders;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -459,17 +458,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
-
-        final MixpanelAPI mixpanel = MixpanelAPI.getInstance(activity, "7877f44b1ce4a4b2db7790048eb6587a");
-        final JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", clientName);
-            props.put("From", reachDatabase.getDisplayName());
-            props.put("Song", reachDatabase.getSenderId());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Transaction - Add Song", props);
 
         //usage tracking
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);

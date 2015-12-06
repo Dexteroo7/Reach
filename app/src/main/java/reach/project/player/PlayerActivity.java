@@ -79,7 +79,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         reference = new WeakReference<>(this);
-        setContentView(R.layout.activity_player2);
+        setContentView(R.layout.activity_player);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
         toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
@@ -374,10 +374,10 @@ public class PlayerActivity extends AppCompatActivity {
                             currentPlaying.getDisplayName()).execute(), Optional.absent());
                     currentPlaying.setIsLiked(true);
 
-                    ((ImageView) view).setImageResource(R.drawable.like_pink);
+                    //((ImageView) view).setImageResource(R.drawable.like_pink);
                 } else {
 
-                    ((ImageView) view).setImageResource(R.drawable.like_white);
+                    //((ImageView) view).setImageResource(R.drawable.like_white);
                     currentPlaying.setIsLiked(false);
                 }
             }

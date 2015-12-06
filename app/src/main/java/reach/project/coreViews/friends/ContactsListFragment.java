@@ -2,11 +2,9 @@ package reach.project.coreViews.friends;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -17,32 +15,30 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
-import reach.project.core.GcmIntentService;
 import reach.project.core.StaticData;
-import reach.project.devikaChat.Chat;
-import reach.project.devikaChat.ChatActivity;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
@@ -60,6 +56,31 @@ public class ContactsListFragment extends Fragment implements
 
     private SharedPreferences sharedPreferences;
     private SuperInterface mListener;
+
+    /*private TextView notificationCount;
+      public static void checkNewNotifications() {
+
+        final ContactsListFragment fragment;
+        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
+            return;
+
+        final int friendRequestCount = FriendRequestFragment.receivedRequests.size();
+        final int notificationsCount = NotificationFragment.notifications.size();
+
+        if (friendRequestCount == 0 && notificationsCount == 0)
+            fragment.notificationCount.setVisibility(View.GONE);
+        else {
+            fragment.notificationCount.setVisibility(View.VISIBLE);
+            fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
+        }
+    }
+
+    private final View.OnClickListener openNotification = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListener.onOpenNotificationDrawer();
+        }
+    };*/
 
     public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false);//have we already synchronized ?
     private static final AtomicBoolean
@@ -158,6 +179,19 @@ public class ContactsListFragment extends Fragment implements
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
 
+        final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
+        mToolbar.setTitle("Friends");
+        mToolbar.inflateMenu(R.menu.myreach_menu);
+        final Menu menu = mToolbar.getMenu();
+
+        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
+        if (notificationButton != null) {
+            MenuItemCompat.setActionView(notificationButton, R.layout.reach_queue_counter);
+            final View notificationContainer = MenuItemCompat.getActionView(notificationButton).findViewById(R.id.counterContainer);
+//            notificationContainer.setOnClickListener(openNotification);
+//            notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
+        }
+
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
@@ -204,7 +238,7 @@ public class ContactsListFragment extends Fragment implements
         if (id == StaticData.FRIENDS_VERTICAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
-                    ReachContactsAdapter.requiredProjection,
+                    FriendsAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
                     ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
@@ -212,7 +246,7 @@ public class ContactsListFragment extends Fragment implements
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
-                    ReachContactsAdapter.requiredProjection,
+                    FriendsAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
                     ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
@@ -235,7 +269,7 @@ public class ContactsListFragment extends Fragment implements
         final int count = data.getCount();
         //TODO handle empty view
 
-        if (count != 0) {
+        /*if (count != 0) {
 
             if (firstTimeLoad.get()) {
 
@@ -268,7 +302,7 @@ public class ContactsListFragment extends Fragment implements
                     notificationManager.notify(GcmIntentService.NOTIFICATION_ID_CHAT, notificationBuilder.build());
                 }
             }
-        }
+        }*/
     }
 
     @Override

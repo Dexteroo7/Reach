@@ -20,7 +20,6 @@
                 android:layout_height="130dp">
                 <com.facebook.drawee.view.SimpleDraweeView
                     android:id="@+id/albumArt"
-                    fresco:placeholderImage="@drawable/ic_default_music"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
                 <View
@@ -54,7 +53,7 @@
                 <ImageView
                     android:id="@+id/toggleButton2"
                     android:layout_alignParentRight="true"
-                    android:src="@drawable/ic_locked_friends"
+                    android:src="@drawable/icon_locked"
                     android:layout_margin="5dp"
                     android:layout_width="25dp"
                     android:layout_height="25dp" />

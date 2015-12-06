@@ -29,9 +29,7 @@
                 android:id="@+id/profilePhotoList"
                 android:layout_centerHorizontal="true"
                 app:layout_marginTopPercent="18%"
-                android:background="@drawable/circular_background"
-                fresco:placeholderImage="@drawable/default_profile02"
-                fresco:roundAsCircle="true"
+                android:background="@drawable/circular_background" fresco:roundAsCircle="true"
                 android:layout_width="70dp"
                 android:layout_height="70dp"/>
 

@@ -118,7 +118,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
         //if contains and is true
         if (visibilityHook.isVisible(item.packageName)) {
-            holder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
             holder.toggleButton2.setVisibility(View.GONE);
             holder.toggleText.setText("Everyone");
         }

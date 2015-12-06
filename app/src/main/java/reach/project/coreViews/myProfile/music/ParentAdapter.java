@@ -48,7 +48,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         final List<PrivacySongItem> defaultList = new ArrayList<>(1);
         defaultList.add(new PrivacySongItem());
-        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_mylibray_grid_item);
+        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_mylibrary_grid_item);
         setHasStableIds(true);
     }
 
@@ -116,7 +116,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             case VIEW_TYPE_ALL: {
 
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_mylibray_list_item, parent, false), position -> {
+                        .inflate(R.layout.song_mylibrary_list_item, parent, false), position -> {
 
                     final Object object = getItem(position);
                     if (object instanceof Cursor)
@@ -156,7 +156,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             visible = cursorExactType.getShort(9) == 1;
 
             if (visible) {
-                songItemHolder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+                songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 songItemHolder.toggleText.setText("Everyone");
             }
             else {

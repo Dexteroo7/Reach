@@ -21,10 +21,6 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 import reach.project.R;
-import reach.project.devikaChat.ChatActivity;
-import reach.project.devikaChat.ChatActivityFragment;
-import reach.project.notificationCentre.FriendRequestFragment;
-import reach.project.notificationCentre.NotificationFragment;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -86,11 +82,11 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("openFriendRequests", true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_FRIEND, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
+            /*MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
                 fragment.refresh();
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
-            });
+            });*/
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)
@@ -121,11 +117,11 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("openNotifications", true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_FRIEND, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
+            /*MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
-            });
+            });*/
 
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
@@ -169,11 +165,11 @@ public class GcmIntentService extends IntentService {
             viewIntent.putExtra("openNotifications", true);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_SYNC, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-            MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
+            /*MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return null;
-            });
+            });*/
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)
@@ -226,7 +222,7 @@ public class GcmIntentService extends IntentService {
         /**
          * Service chat notification, IF, chat is not open
          */
-        else if (message.startsWith("CHAT") && !ChatActivityFragment.connected.get()) {
+        /*else if (message.startsWith("CHAT") && !ChatActivityFragment.connected.get()) {
 
             final Intent viewIntent = new Intent(this, ChatActivity.class);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
@@ -240,7 +236,7 @@ public class GcmIntentService extends IntentService {
                             .setPriority(NotificationCompat.PRIORITY_MAX)
                             .setWhen(System.currentTimeMillis());
             notificationManager.notify(NOTIFICATION_ID_CHAT, notificationBuilder.build());
-        }
+        }*/
 
         /**
          * Service PONG

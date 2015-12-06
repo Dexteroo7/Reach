@@ -43,12 +43,9 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -62,9 +59,7 @@ import java.util.UUID;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
-import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
-import reach.project.coreViews.MyReachFragment;
 import reach.project.coreViews.UpdateFragment;
 import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
@@ -73,6 +68,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
+import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushFilesFragment;
@@ -209,64 +205,7 @@ public class ReachActivity extends AppCompatActivity implements
             firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
     }
 
-    @Override
-    public void onOpenProfile() {
-//        if (isFinishing())
-//            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .addToBackStack(null).replace(R.id.mainContainer, EditProfileFragment.newInstance(), "edit_profile_fragment").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void onOpenNotificationDrawer() {
-
-    }
-
-    @Override
-    public void onOpenNavigationDrawer() {
-
-    }
-
-    @Override
-    public void onAccountCreated() {
-
-        if (isFinishing())
-            return;
-//        try {
-//            //containerFrame.setPadding(0, topPadding, 0, 0);
-//            //slidingUpPanelLayout.getChildAt(0).setPadding(0, topPadding, 0, 0);
-//            fragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-//                    .replace(R.id.mainContainer, PrivacyFragment.newInstance(true), "privacy_fragment").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void startNumberVerification() {
-
-        if (isFinishing())
-            return;
-//        try {
-//            Log.i("Downloader", "Start number verification");
-//            fragmentManager.beginTransaction()
-//                    .replace(R.id.mainContainer, NumberVerification.newInstance(), "number_verification").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void closeDrawers() {
-
-    }
-
-    @Override
+    /*@Override
     public void onPrivacyDone() {
 
         if (isFinishing())
@@ -294,42 +233,7 @@ public class ReachActivity extends AppCompatActivity implements
         } catch (IllegalStateException ignored) {
             finish();
         }
-    }
-
-    @Override
-    public void onPushNext(HashSet<TransferSong> songsList) {
-
-        if (isFinishing())
-            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-//                    .addToBackStack(null).replace(R.id.mainContainer, ContactsChooserFragment.newInstance(songsList), "contacts_chooser").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void onOpenInvitePage() {
-
-        if (isFinishing())
-            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .addToBackStack(null)
-//                    .replace(R.id.mainContainer, InviteFragment.newInstance(), "invite_fragment").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void updateDetails(File image, String userName) {
-
-//        ((SimpleDraweeView) findViewById(R.id.userImageNav)).setImageURI(Uri.fromFile(image));
-//        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
-    }
+    }*/
 
     @Override
     public Optional<Firebase> getFireBase() {
@@ -341,69 +245,6 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (!isFinishing())
             YourProfileActivity.openProfile(userId, this);
-    }
-
-    @Override
-    public void onOpenPushLibrary() {
-
-        if (isFinishing())
-            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .addToBackStack(null).replace(R.id.mainContainer, PushSongsFragment.newInstance(), "push_library").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void toggleDrawer(boolean lock) {
-
-    }
-
-    @Override
-    public void toggleSliding(boolean show) {
-
-    }
-
-    @Override
-    public void anchorFooter() {
-
-    }
-
-    @Override
-    public void setUpNavigationViews() {
-
-    }
-
-    @Override
-    public void startAccountCreation(Optional<OldUserContainerNew> container) {
-
-        if (isFinishing())
-            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-//                    .replace(R.id.mainContainer, AccountCreation.newInstance(container), "account_creation").commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
-    }
-
-    @Override
-    public void startMusicListFragment(long id, String albumName, String artistName, String playListName, int type) {
-
-//        if (isFinishing())
-//            return;
-//        try {
-//            fragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-//                    .addToBackStack(null)
-//                    .replace(R.id.container, MusicListFragment.newTypeInstance(id, albumName, artistName, playListName, type), "now_playing")
-//                    .commit();
-//        } catch (IllegalStateException ignored) {
-//            finish();
-//        }
     }
 
 //    @Override
@@ -544,7 +385,7 @@ public class ReachActivity extends AppCompatActivity implements
         firebaseReference.keepSynced(true);
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my);
+        setContentView(R.layout.activity_reach);
 //        toggleDrawer(true);
 //
 //        //small
@@ -578,10 +419,6 @@ public class ReachActivity extends AppCompatActivity implements
         //Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //Crittercism.setUsername(userName + " " + phoneNumber);
 
-        //initialize MixPanel
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        MixpanelAPI.People ppl = mixpanel.getPeople();
-
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
         tracker.setScreenName("reach.project.core.ReachActivity");
@@ -590,22 +427,8 @@ public class ReachActivity extends AppCompatActivity implements
 
             tracker.set("&uid", serverId + "");
             tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
-            mixpanel.identify(serverId + "");
-            JSONObject props = new JSONObject();
-            try {
-                props.put("UserID", serverId + "");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            mixpanel.registerSuperPropertiesOnce(props);
-            ppl.identify(serverId + "");
-            ppl.set("UserID", serverId + "");
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
-        if (!TextUtils.isEmpty(phoneNumber))
-            ppl.set("$phone", phoneNumber + "");
-        if (!TextUtils.isEmpty(userName))
-            ppl.set("$name", userName + "");
 
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
@@ -615,12 +438,12 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
 
-            startNumberVerification();
-            toggleSliding(false);
+            //startNumberVerification();
+            //toggleSliding(false);
         } else if (TextUtils.isEmpty(userName)) {
 
-            startAccountCreation(Optional.absent());
-            toggleSliding(false);
+            //startAccountCreation(Optional.absent());
+            //toggleSliding(false);
         } else {
 
             final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
@@ -629,7 +452,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final Fragment[] fragments = new Fragment[]{
 
-                    MyReachFragment.newInstance(),
+                    ContactsListFragment.newInstance(),
                     PushFilesFragment.getInstance("Bitch"),
                     ExploreFragment.newInstance(serverId),
                     PagerFragment.getNewInstance(
@@ -731,15 +554,16 @@ public class ReachActivity extends AppCompatActivity implements
 
         Log.i("Ayush", "Processing Intent");
 
-        if (intent.getBooleanExtra("openNotificationFragment", false))
-            onOpenNotificationDrawer();
+//        if (intent.getBooleanExtra("openNotificationFragment", false))
+//            onOpenNotificationDrawer();
 //        else if (intent.getBooleanExtra("openFriendRequests", false)) {
 //            if (viewPager != null)
 //                viewPager.setCurrentItem(0);
 //        } else if (intent.getBooleanExtra("openNotifications", false)) {
 //            if (viewPager != null)
 //                viewPager.setCurrentItem(1);
-        else if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
+//        else
+        if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
 
             Log.i("Ayush", "FOUND PUSH DATA");
 
@@ -955,17 +779,6 @@ public class ReachActivity extends AppCompatActivity implements
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
-
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-            props.put("From", reachDatabase.getDisplayName());
-            props.put("Song", reachDatabase.getSenderId());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Transaction - Add Song", props);
 
         //usage tracking
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);

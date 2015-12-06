@@ -17,9 +17,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             fresco:actualImageScaleType="centerCrop"
-            fresco:failureImage="@drawable/profile_pic_blue"
             fresco:failureImageScaleType="centerCrop"
-            fresco:placeholderImage="@drawable/profile_pic_blue"
             fresco:placeholderImageScaleType="centerCrop"
             fresco:roundAsCircle="true" />
 
@@ -59,14 +57,12 @@
             android:layout_width="110dp"
             android:layout_height="30dp"
             android:layout_marginRight="20dp"
-            android:background="@drawable/tour_button_selector"
             android:clickable="false"
             android:gravity="center">
 
             <ImageView
                 android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/accept" />
+                android:layout_height="20dp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -81,14 +77,12 @@
             android:id="@+id/reject"
             android:layout_width="110dp"
             android:layout_height="30dp"
-            android:background="@drawable/reject_button_selector"
             android:clickable="false"
             android:gravity="center">
 
             <ImageView
                 android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:src="@drawable/reject_white" />
+                android:layout_height="15dp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -106,7 +100,6 @@
         android:layout_height="wrap_content"
         android:layout_alignRight="@id/textView1"
         android:layout_below="@id/textView1"
-        android:background="@drawable/number_text_selector"
         android:paddingBottom="10dp"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"

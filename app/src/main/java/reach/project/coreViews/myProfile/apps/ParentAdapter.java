@@ -160,7 +160,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             //if contains and is true
             if (packageVisibility.containsKey(appExactType.packageName) && packageVisibility.get(appExactType.packageName)) {
-                appItemHolder.toggleButton.setImageResource(R.drawable.ic_pending_lock);
+                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 appItemHolder.toggleText.setText("Everyone");
             }
             else {
