@@ -24,11 +24,6 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE'
     }
-
-    dexOptions {
-        incremental true
-        javaMaxHeapSize "4g"
-    }
 }
 
 dependencies {

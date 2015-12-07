@@ -14,10 +14,11 @@
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/profilePic"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp"
+        fresco:placeholderImage="@drawable/default_profile_circle"
         fresco:roundAsCircle="true" />
 
     <TextView
@@ -42,23 +43,26 @@
         android:textColor="#fff"
         android:textSize="15sp" />
 
-    <TextView
-        android:id="@+id/musicCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_below="@id/userHandle"
         android:layout_centerHorizontal="true"
-        android:layout_marginLeft="2dp"
-        android:text="999"
-        android:textColor="#fff"
-        android:textSize="15sp" />
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/musicIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_song_indicator_gray" />
+        <TextView
+            android:id="@+id/musicCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:text="999"
+            android:textColor="#fff"
+            android:textSize="15sp" />
+    </LinearLayout>
 
-    <ImageView
-        android:id="@+id/musicIcon"
-        android:layout_width="15dp"
-        android:layout_height="15dp"
-        android:layout_alignBottom="@id/musicCount"
-        android:layout_marginBottom="1dp"
-        android:layout_toLeftOf="@id/musicCount"
-        android:src="@drawable/icon_song_indicator_gray" />
 </RelativeLayout>
