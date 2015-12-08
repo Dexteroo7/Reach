@@ -57,6 +57,8 @@ import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.MusicScanner;
@@ -170,6 +172,13 @@ public class AccountCreation extends Fragment {
             rootView.findViewById(R.id.bottomPart1).setVisibility(View.INVISIBLE);
             rootView.findViewById(R.id.bottomPart2).setVisibility(View.VISIBLE);
             progress.setText("Starting Profile Creation");
+
+            final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);
+            simpleParams.put(PostParams.USER_NUMBER, phoneNumber);
+            simpleParams.put(PostParams.USER_NAME, name);
+            try {
+                UsageTracker.trackLogEvent(simpleParams, UsageTracker.NAME_ENTERED);
+            } catch (JSONException ignored) {}
 
             new SaveUserData(
                     rootView.findViewById(R.id.bottomPart2),

@@ -1,6 +1,8 @@
 package reach.project.coreViews;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,7 +35,6 @@ public class ReferFragment extends Fragment {
 
     private static WeakReference<ReferFragment> reference = null;
     public static ReferFragment newInstance() {
-
         ReferFragment fragment;
         if(reference == null || (fragment = reference.get()) == null)
             reference = new WeakReference<>(fragment = new ReferFragment());
@@ -64,6 +65,8 @@ public class ReferFragment extends Fragment {
         registerText = (EditText) rootView.findViewById(R.id.registerText);
         registerBtn = (Button) rootView.findViewById(R.id.registerBtn);
 
+        new GetTerms().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         String userId = String.valueOf(SharedPrefUtils.getServerId(
                 getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)));
         String shortId = userId.substring(2, (userId.length()-3));
@@ -83,7 +86,7 @@ public class ReferFragment extends Fragment {
             e.printStackTrace();
         }
 
-        String url = "http://54.169.227.37:8080/campaign/getUserDetails?userId="
+        String url = "http://52.74.117.248:8080/campaign/getUserDetails?userId="
                 + userId
                 + "&userKey="
                 + md5;
@@ -92,11 +95,7 @@ public class ReferFragment extends Fragment {
 
         registerBtn.setOnClickListener(v -> {
             String email = registerText.getText().toString();
-            if (!TextUtils.isEmpty(email)) {
-                registerText.setText("Registered with " + email);
-                registerText.setEnabled(false);
-                registerBtn.setVisibility(View.GONE);
-            }
+            new setEmail(email).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userId);
         });
 
         return rootView;
@@ -127,15 +126,91 @@ public class ReferFragment extends Fragment {
                     JSONObject jsonObject = new JSONObject(string);
                     String email = jsonObject.getString("emailId");
                     if (!TextUtils.isEmpty(email)) {
-                        fragment.registerText.setText("Registered with " + email);
                         fragment.registerText.setEnabled(false);
+                        fragment.registerText.setText("You will get updates on\n" + email);
+                        fragment.registerText.setTypeface(Typeface.DEFAULT_BOLD);
+                        fragment.registerText.setTextColor(Color.BLACK);
                         fragment.registerBtn.setVisibility(View.GONE);
                     }
                     fragment.totalEarning.setText("Rs. " + jsonObject.getString("totalAmount"));
                     fragment.redeemableAmount.setText("Rs. " + jsonObject.getString("redeemableAmount"));
                     fragment.redeemedAmount.setText("Rs. " + jsonObject.getString("redeemedAmount"));
-                    fragment.referralEarning.setText(jsonObject.getString("referralAmount"));
+                    fragment.referralEarning.setText("Rs. " + jsonObject.getString("referralAmount"));
                     fragment.transferEarning.setText("Rs. " + jsonObject.getString("transfersAmount"));
+                }
+                catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    private static class setEmail extends AsyncTask<String,Void,String> {
+
+        private String email;
+
+        public setEmail(String email) {
+            this.email = email;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            Request request = new Request.Builder()
+                    .url("http://52.74.117.248:8080/campaign/setEmail?emailId="
+                            + email + "&userId=" + params[0])
+                    .build();
+            try {
+                Response response = ReachApplication.okHttpClient.newCall(request).execute();
+                if (response!=null)
+                    return response.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String string) {
+            super.onPostExecute(string);
+            MiscUtils.useFragment(reference, fragment -> {
+                if (!TextUtils.isEmpty(email)) {
+                    fragment.registerText.setEnabled(false);
+                    fragment.registerText.setText("You will get updates on\n" + email);
+                    fragment.registerText.setTypeface(Typeface.DEFAULT_BOLD);
+                    fragment.registerText.setTextColor(Color.BLACK);
+                    fragment.registerBtn.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+
+    private static class GetTerms extends AsyncTask<Void,Void,String> {
+
+        @Override
+        protected String doInBackground(Void... params) {
+            Request request = new Request.Builder()
+                    .url("http://52.74.117.248:8080/campaign/getCampaignTerms")
+                    .build();
+            try {
+                Response response = ReachApplication.okHttpClient.newCall(request).execute();
+                if (response!=null)
+                    return response.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String string) {
+            super.onPostExecute(string);
+            MiscUtils.useFragment(reference, fragment -> {
+                try {
+                    JSONObject jsonObject = new JSONObject(string);
+                    String rules = jsonObject.getString("rules");
+                    String howTo = jsonObject.getString("howTo");
+                    fragment.terms.setText(rules);
+                    fragment.how.setText(howTo);
                 }
                 catch (JSONException e) {
                     e.printStackTrace();

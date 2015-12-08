@@ -582,10 +582,13 @@ public class ProcessManager extends Service implements
         complexParams.put(SongMetadata.ALBUM, musicData.getAlbumName() + "");
         complexParams.put(SongMetadata.GENRE, musicData.getGenre() + "");
 
+        final Map<PostParams, String> sParams = MiscUtils.getMap(1);
+        sParams.put(PostParams.USER_ID, serverId + "");
+
         try {
+            UsageTracker.trackLogEvent(sParams, UsageTracker.PLAY_SONG);
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
-        } catch (JSONException ignored) {
-        }
+        } catch (JSONException ignored) {}
 
         switch (notificationState) {
 

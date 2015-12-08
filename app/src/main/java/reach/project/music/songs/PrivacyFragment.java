@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -33,8 +34,11 @@ import android.widget.Toast;
 import com.commonsware.cwac.merge.MergeAdapter;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.Map;
 
 import reach.backend.music.musicVisibilityApi.model.MyString;
 import reach.project.R;
@@ -42,6 +46,8 @@ import reach.project.core.StaticData;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -178,7 +184,8 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                              Bundle savedInstanceState) {
 
         final Activity activity = getActivity();
-        serverId = SharedPrefUtils.getServerId(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE));
+        SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         rootView = inflater.inflate(R.layout.fragment_privacy, container, false);
         privacyList = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.privacyList));
@@ -197,6 +204,14 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             toolbar.inflateMenu(R.menu.privacy_menu);
             toolbar.setOnMenuItemClickListener(item -> {
                 if (item.getItemId() == R.id.done_button) {
+
+                    final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);
+                    simpleParams.put(PostParams.USER_ID, SharedPrefUtils.getServerId(sharedPreferences)+"");
+                    simpleParams.put(PostParams.USER_NUMBER, SharedPrefUtils.getPhoneNumber(sharedPreferences));
+                    try {
+                        UsageTracker.trackLogEvent(simpleParams, UsageTracker.PRIVACY_DONE);
+                    } catch (JSONException ignored) {}
+
                     mListener.onPrivacyDone();
                     return true;
                 }
