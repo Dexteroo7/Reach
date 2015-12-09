@@ -1,6 +1,7 @@
 package reach.project.coreViews;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -44,12 +46,15 @@ public class ReferFragment extends Fragment {
             referralEarning, transferEarning, how, terms;
     private EditText registerText;
     private Button registerBtn;
+    private static SharedPreferences sharedPrefs;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_refer, container, false);
+
+        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.referToolbar);
         mToolbar.setTitle("Refer and Earn");
@@ -67,8 +72,7 @@ public class ReferFragment extends Fragment {
 
         new GetTerms().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        String userId = String.valueOf(SharedPrefUtils.getServerId(
-                getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+        String userId = String.valueOf(SharedPrefUtils.getServerId(sharedPrefs));
         String shortId = userId.substring(2, (userId.length()-3));
 
         String md5 = "";
@@ -123,8 +127,25 @@ public class ReferFragment extends Fragment {
             super.onPostExecute(string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
-                    JSONObject jsonObject = new JSONObject(string);
+
+                    String jsonString = SharedPrefUtils.getCampaignValues(sharedPrefs);
+                    if (TextUtils.isEmpty(string)) {
+                        if (TextUtils.isEmpty(jsonString)) {
+                            Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                    else {
+                        if (TextUtils.isEmpty(jsonString))
+                            SharedPrefUtils.storeCampaignValues(sharedPrefs, string);
+                        jsonString = string;
+                    }
+
+                    JSONObject jsonObject = new JSONObject(jsonString);
                     String email = jsonObject.getString("emailId");
+                    String savedEmail = SharedPrefUtils.getCampaignEmail(sharedPrefs);
+                    if (!TextUtils.isEmpty(savedEmail))
+                        email = savedEmail;
                     if (!TextUtils.isEmpty(email)) {
                         fragment.registerText.setEnabled(false);
                         fragment.registerText.setText("You will get updates on\n" + email);
@@ -173,6 +194,11 @@ public class ReferFragment extends Fragment {
         protected void onPostExecute(String string) {
             super.onPostExecute(string);
             MiscUtils.useFragment(reference, fragment -> {
+                if (TextUtils.isEmpty(string)) {
+                    Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                SharedPrefUtils.storeCampaignEmail(sharedPrefs, email);
                 if (!TextUtils.isEmpty(email)) {
                     fragment.registerText.setEnabled(false);
                     fragment.registerText.setText("You will get updates on\n" + email);
@@ -206,7 +232,19 @@ public class ReferFragment extends Fragment {
             super.onPostExecute(string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
-                    JSONObject jsonObject = new JSONObject(string);
+                    String jsonString = SharedPrefUtils.getCampaignTerms(sharedPrefs);
+                    if (TextUtils.isEmpty(string)) {
+                        if (TextUtils.isEmpty(jsonString)) {
+                            Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                    else {
+                        if (TextUtils.isEmpty(jsonString))
+                            SharedPrefUtils.storeCampaignTerms(sharedPrefs, string);
+                        jsonString = string;
+                    }
+                    JSONObject jsonObject = new JSONObject(jsonString);
                     String rules = jsonObject.getString("rules");
                     String howTo = jsonObject.getString("howTo");
                     fragment.terms.setText(rules);
