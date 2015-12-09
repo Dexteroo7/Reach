@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -24,7 +25,6 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
@@ -98,7 +98,7 @@ public class ProcessManager extends Service implements
             if (message.get() instanceof String)
                 intent.putExtra("message", (String) message.get());
             else if (message.get() instanceof MusicData)
-                intent.putExtra("message", (MusicData) message.get());
+                intent.putExtra("message", (Parcelable) message.get());
         }
         context.sendBroadcast(intent);
     }
@@ -136,7 +136,7 @@ public class ProcessManager extends Service implements
             if (message.get() instanceof String)
                 intent.putExtra("message", (String) message.get());
             else if (message.get() instanceof MusicData)
-                intent.putExtra("message", (MusicData) message.get());
+                intent.putExtra("message", (Parcelable) message.get());
         }
         context.startService(intent);
     }
@@ -535,8 +535,7 @@ public class ProcessManager extends Service implements
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
-        final String toSend = new Gson().toJson(musicData, MusicData.class);
-        SharedPrefUtils.storeLastPlayed(this, toSend);
+        SharedPrefUtils.storeLastPlayed(this, musicData);
         /**
          * GA stuff
          */

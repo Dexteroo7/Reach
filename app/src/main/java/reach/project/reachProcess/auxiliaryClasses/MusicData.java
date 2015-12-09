@@ -3,11 +3,15 @@ package reach.project.reachProcess.auxiliaryClasses;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.Serializable;
+
 /**
  * Created by Dexter on 15-05-2015.
  */
 
-public class MusicData implements Parcelable {
+public class MusicData implements Parcelable, Serializable {
+
+    private static final long serialVersionUID = -6470090944414208496L;
 
     private final String displayName;
     private final String path;
