@@ -11,3 +11,4 @@ local.properties
 .DS_Store
 settings.gradle
 httptest/*
+gradle/
