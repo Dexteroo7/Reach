@@ -57,7 +57,7 @@ dependencies {
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
-    compile 'com.crittercism:crittercism-android-agent:5.3.3'
+    //compile 'com.crittercism:crittercism-android-agent:5.3.3'
     compile 'com.firebase:firebase-client-android:2.4.0'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
 
