@@ -115,11 +115,15 @@ public class ReachSongHelper extends SQLiteOpenHelper {
             ReachSongHelper.COLUMN_DURATION, //5
             ReachSongHelper.COLUMN_ALBUM, //6
             ReachSongHelper.COLUMN_ID, //7
-            ReachSongHelper.COLUMN_ALBUM_ART_DATA //8
+            ReachSongHelper.COLUMN_ALBUM_ART_DATA, //8
+
+            ReachSongHelper.COLUMN_ACTUAL_NAME, //9
+            ReachSongHelper.COLUMN_ALBUM, //10
+            ReachSongHelper.COLUMN_GENRE //11
     };
 
     //DISK_LIST specific !
-    public static MusicData getMusicData(final Cursor cursor, final long serverId) {
+    public static MusicData getMusicData(Cursor cursor, long serverId, String userName) {
 
         return new MusicData(
                 cursor.getLong(0), //songId
@@ -131,7 +135,12 @@ public class ReachSongHelper extends SQLiteOpenHelper {
                 cursor.getString(4), //artistName
                 false, //liked
                 cursor.getLong(5), //duration
-                (byte) 1); //type
+                (byte) 1, //type
+
+                cursor.getString(9), //actualName
+                userName, //userName
+                cursor.getString(10), //album
+                cursor.getString(11)); //genre
     }
 
     public ReachSongHelper(Context context) {

@@ -58,7 +58,12 @@ public final class StaticData {
             ReachDatabaseHelper.COLUMN_IS_LIKED, //6
             ReachDatabaseHelper.COLUMN_SONG_ID, //7
             ReachDatabaseHelper.COLUMN_ARTIST, //8
-            ReachDatabaseHelper.COLUMN_DURATION}; //9
+            ReachDatabaseHelper.COLUMN_DURATION, //9
+
+            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //10
+            ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
+            ReachDatabaseHelper.COLUMN_ALBUM, //12
+            ReachDatabaseHelper.COLUMN_GENRE}; //13
 
     public static final String[] DISK_PARTIAL = new String[]{
             ReachSongHelper.COLUMN_ARTIST, //0
@@ -67,7 +72,11 @@ public final class StaticData {
             ReachSongHelper.COLUMN_PATH, //3
             ReachSongHelper.COLUMN_DISPLAY_NAME, //4
             ReachSongHelper.COLUMN_ID, //5
-            ReachSongHelper.COLUMN_DURATION}; //6
+            ReachSongHelper.COLUMN_DURATION, //6
+
+            ReachSongHelper.COLUMN_ACTUAL_NAME, //7
+            ReachSongHelper.COLUMN_ALBUM, //8
+            ReachSongHelper.COLUMN_GENRE}; //9
 
     public static final byte ALBUM_LOADER = 0;
     public static final byte ARTIST_LOADER = 1;

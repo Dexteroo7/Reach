@@ -1,5 +1,6 @@
 package reach.project.utils;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
@@ -114,11 +115,11 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putBoolean("mobileDataOn", false).apply();
     }
 
-    public static void storeLastPlayed(SharedPreferences sharedPreferences, String data) {
-        sharedPreferences.edit().putString("last_played", data).apply();
+    public static void storeLastPlayed(Context context, String data) {
+        context.getSharedPreferences("reach_process", Context.MODE_PRIVATE).edit().putString("last_played", data).apply();
     }
 
-    public static boolean getMobileData (SharedPreferences sharedPreferences) {
+    public static boolean getMobileData(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("mobileDataOn", true);
     }
 
@@ -130,8 +131,9 @@ public enum SharedPrefUtils {
         return sharedPreferences.getBoolean("reachQueueSeen", false);
     }
 
-    public static Optional<MusicData> getLastPlayed(SharedPreferences sharedPreferences) {
-        final String unParsed = sharedPreferences.getString("last_played", "");
+    public static Optional<MusicData> getLastPlayed(Context context) {
+        
+        final String unParsed = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE).getString("last_played", "");
         if (TextUtils.isEmpty(unParsed))
             return Optional.absent();
         final MusicData toReturn;
@@ -160,24 +162,29 @@ public enum SharedPrefUtils {
         return sharedPreferences.getString("imageId", "");
     }
 
-    public static boolean toggleShuffle(SharedPreferences sharedPreferences) {
+    public static boolean toggleShuffle(Context context) {
 
+        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
         final boolean currentValue = sharedPreferences.getBoolean("shuffle", false);
         sharedPreferences.edit().putBoolean("shuffle", !currentValue).apply();
         return !currentValue;
     }
 
-    public static boolean getShuffle(SharedPreferences sharedPreferences) {
+    public static boolean getShuffle(Context context) {
+
+        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean("shuffle", false);
     }
 
-    public static boolean toggleRepeat(SharedPreferences sharedPreferences) {
+    public static boolean toggleRepeat(Context context) {
+        
+        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
         final boolean currentValue = sharedPreferences.getBoolean("repeat", false);
         sharedPreferences.edit().putBoolean("repeat", !currentValue).apply();
         return !currentValue;
     }
 
-    public static boolean getRepeat(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getBoolean("repeat", false);
+    public static boolean getRepeat(Context context) {
+        return context.getSharedPreferences("reach_process", Context.MODE_PRIVATE).getBoolean("repeat", false);
     }
 }

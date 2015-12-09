@@ -95,11 +95,11 @@ import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.coreViews.EditProfileFragment;
-import reach.project.coreViews.FeedbackFragment;
 import reach.project.coreViews.InviteFragment;
 import reach.project.coreViews.MyReachFragment;
-import reach.project.coreViews.PromoCodeDialog;
+import reach.project.coreViews.ReferFragment;
 import reach.project.coreViews.UpdateFragment;
+import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
@@ -137,7 +137,6 @@ import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
-import reach.project.yourprofile.YourProfileFragment;
 
 public class ReachActivity extends AppCompatActivity implements
         SuperInterface,
@@ -286,11 +285,15 @@ public class ReachActivity extends AppCompatActivity implements
                                 .replace(R.id.container, PrivacyFragment.newInstance(false), "privacy_fragment").commit();
                         return true;
                     case R.id.navigation_item_2:
-                        PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
+                        /*PromoCodeDialog promoCodeDialog = PromoCodeDialog.newInstance();
                         if (promoCodeDialog.isAdded())
                             promoCodeDialog.dismiss();
                         if (!promoCodeDialog.isAdded())
-                            promoCodeDialog.show(fragmentManager, "promo_dialog");
+                            promoCodeDialog.show(fragmentManager, "promo_dialog");*/
+                        fragmentManager
+                                .beginTransaction()
+                                .addToBackStack(null)
+                                .replace(R.id.container, ReferFragment.newInstance(), "refer_fragment").commit();
                         return true;
                     case R.id.navigation_item_3:
                         fragmentManager
@@ -304,12 +307,12 @@ public class ReachActivity extends AppCompatActivity implements
                                 .addToBackStack(null)
                                 .replace(R.id.container, UploadHistory.newUploadInstance(), "upload_history").commit();
                         return true;
-                    case R.id.navigation_item_5:
+                    /*case R.id.navigation_item_5:
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
                                 .replace(R.id.container, FeedbackFragment.newInstance(), "feedback_fragment").commit();
-                        return true;
+                        return true;*/
                     case R.id.navigation_item_6:
                         final Intent intent = new Intent(mDrawerLayout.getContext(), ChatActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -655,7 +658,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, new YourProfileFragment(), "user_library " + id).commit();
+                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library" + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
@@ -1042,10 +1045,6 @@ public class ReachActivity extends AppCompatActivity implements
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
         final long userID = SharedPrefUtils.getServerId(preferences);
 
-        //initialize bug tracking
-        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        //Crittercism.setUsername(userName + " " + phoneNumber);
-
         //initialize MixPanel
         MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
         MixpanelAPI.People ppl = mixpanel.getPeople();
@@ -1138,11 +1137,11 @@ public class ReachActivity extends AppCompatActivity implements
     private void lastSong() {
 
         final Boolean[] toSend = new Boolean[]{false, false, false};
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();
+        currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
 
         toSend[0] = (currentPlaying != null);
-        toSend[1] = SharedPrefUtils.getShuffle(preferences);
-        toSend[2] = SharedPrefUtils.getRepeat(preferences);
+        toSend[1] = SharedPrefUtils.getShuffle(this);
+        toSend[2] = SharedPrefUtils.getRepeat(this);
 
         if (toSend[0]) {
             //last song is present
@@ -1191,7 +1190,7 @@ public class ReachActivity extends AppCompatActivity implements
             String unCompressed;
             try {
                 unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
-            } catch (IOException e) {
+            } catch (IOException | IllegalArgumentException e) {
                 e.printStackTrace();
                 unCompressed = "";
             }
@@ -1369,7 +1368,11 @@ public class ReachActivity extends AppCompatActivity implements
                             artistName,
                             liked,
                             duration,
-                            (byte) 0);
+                            (byte) 0,
+                            actualName,
+                            userName,
+                            albumName,
+                            genre);
                     LocalUtils.playSong(musicData, this);
                 }
                 //in both cases close and continue
@@ -1481,6 +1484,12 @@ public class ReachActivity extends AppCompatActivity implements
         complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
         complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+        complexParams.put(SongMetadata.UPLOADER_ID, reachDatabase.getSenderId() + "");
+
+        complexParams.put(SongMetadata.ACTUAL_NAME, reachDatabase.getActualName() + "");
+        complexParams.put(SongMetadata.USER_NAME, reachDatabase.getSenderName() + "");
+        complexParams.put(SongMetadata.ALBUM, reachDatabase.getAlbumName() + "");
+        complexParams.put(SongMetadata.GENRE, reachDatabase.getGenre() + "");
 
         try {
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
@@ -1525,7 +1534,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener repeatClick = view -> {
 
-            if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
+            if (SharedPrefUtils.toggleRepeat(view.getContext()))
                 view.setSelected(true);
             else
                 view.setSelected(false);
@@ -1586,6 +1595,11 @@ public class ReachActivity extends AppCompatActivity implements
                     complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
                     complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
 
+                    complexParams.put(SongMetadata.ACTUAL_NAME, currentPlaying.getActualName() + "");
+                    complexParams.put(SongMetadata.USER_NAME, currentPlaying.getUserName() + "");
+                    complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbumName() + "");
+                    complexParams.put(SongMetadata.GENRE, currentPlaying.getGenre() + "");
+
                     try {
                         UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
                     } catch (JSONException ignored) {
@@ -1622,7 +1636,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener shuffleClick = view -> {
 
-            if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
+            if (SharedPrefUtils.toggleShuffle(view.getContext()))
                 view.setSelected(true);
             else
                 view.setSelected(false);
@@ -1634,13 +1648,21 @@ public class ReachActivity extends AppCompatActivity implements
          */
         public static final AdapterView.OnItemClickListener myLibraryClickListener = (adapterView, view, position, l) -> {
 
-            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-            final Context context = view.getContext();
+            final Object item = adapterView.getAdapter().getItem(position);
 
-            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
-                playSong(ReachDatabaseHelper.getMusicData(cursor), context);
-            else
-                playSong(ReachSongHelper.getMusicData(cursor, serverId), context);
+            if (item instanceof Cursor) {
+
+                final Cursor cursor = (Cursor) item;
+                final Context context = view.getContext();
+
+                final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", MODE_PRIVATE);
+
+                if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
+                    playSong(ReachDatabaseHelper.getMusicData(cursor), context);
+                else
+                    playSong(ReachSongHelper.getMusicData(cursor, serverId,
+                            SharedPrefUtils.getUserName(sharedPreferences)), context);
+            }
         };
 
         /**
@@ -2193,7 +2215,7 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 case ProcessManager.REPLY_ERROR: {
                     Log.i("Downloader", "REPLY_ERROR received");
-                    updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0), true, activity);
+                    updateMusic(new MusicData(0, 0, 0, 0, "", "", "", false, 0, (byte) 0, "", "", "", ""), true, activity);
                     activity.runOnUiThread(() -> Toast.makeText(activity, "Play When Download Completes", Toast.LENGTH_SHORT).show());
                     break;
                 }

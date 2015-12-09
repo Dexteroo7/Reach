@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -34,12 +35,20 @@ public enum UsageTracker {
 
     ////////////
 
+    ACTIVE_APPLICATIONS,
     LIKE_APP, //user likes an app (his own or someone else's)
     REDIRECT_PLAY_STORE, //user redirected to play store
 
     ////////////
 
-    APP_OPEN //user opened the app
+    APP_OPEN, //user opened the app
+
+    ////////////
+
+    NUM_ENTERED, //user submitted his number
+    OTP_RECEIVED, //user received OTP
+    NAME_ENTERED, //user submitted his name
+    PRIVACY_DONE //user completed privacy setup
 
     ////////////
     ;
@@ -122,6 +131,44 @@ public enum UsageTracker {
         asyncTracker.execute(track);
     }
 
+    public static void trackOpenApplications(@NonNull Map<PostParams, String> simpleParams,
+                                             @NonNull List<String> openApplications,
+                                             @NonNull UsageTracker eventName) throws JSONException {
+
+        final JSONObject jsonObject = new JSONObject();
+
+        ///////////////
+        final Set<Map.Entry<PostParams, String>> simpleEntries = simpleParams.entrySet();
+        for (Map.Entry<PostParams, String> entry : simpleEntries)
+            jsonObject.put(entry.getKey().getValue(), entry.getValue());
+        ///////////////
+        final StringBuilder builder = new StringBuilder(50);
+
+        String or = "";
+        for (String openApplication : openApplications) {
+
+            builder.append(or);
+            or = "|"; //next time onwards, we append a pipe
+            builder.append(openApplication);
+        }
+        ///////////////
+        jsonObject.put(PostParams.META_INFO.getValue(), builder.toString());
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
+
+        final String toPost = jsonObject.toString();
+        Log.i("Ayush", "Posting " + toPost);
+
+        synchronized (requests) {
+
+            requests.push(new Request.Builder()
+                    .url("http://52.74.175.56:8080/analytics/events")
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))
+                    .build());
+        }
+
+        asyncTracker.execute(track);
+    }
+
     //TODO
     public static void trackEvent(@NonNull Map<PostParams, String> simpleParams,
                                   @NonNull UsageTracker eventName) throws JSONException {
@@ -134,6 +181,7 @@ public enum UsageTracker {
             jsonObject.put(entry.getKey().getValue(), entry.getValue());
         jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
         ///////////////
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
 
         final String toPost = jsonObject.toString();
         Log.i("Ayush", "Posting " + toPost);
@@ -142,6 +190,32 @@ public enum UsageTracker {
 
             requests.push(new Request.Builder()
                     .url("http://52.74.175.56:8080/analytics/events")
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))
+                    .build());
+        }
+
+        asyncTracker.execute(track);
+    }
+
+    public static void trackLogEvent(@NonNull Map<PostParams, String> simpleParams,
+                                  @NonNull UsageTracker eventName) throws JSONException {
+
+        final JSONObject jsonObject = new JSONObject();
+
+        ///////////////
+        final Set<Map.Entry<PostParams, String>> simpleEntries = simpleParams.entrySet();
+        for (Map.Entry<PostParams, String> entry : simpleEntries)
+            jsonObject.put(entry.getKey().getValue(), entry.getValue());
+        ///////////////
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
+
+        final String toPost = jsonObject.toString();
+        Log.i("Ayush", "Posting " + toPost);
+
+        synchronized (requests) {
+
+            requests.push(new Request.Builder()
+                    .url("http://52.74.175.56:8080/analytics/logEvents")
                     .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))
                     .build());
         }

@@ -33,7 +33,10 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.viewpagerindicator.CirclePageIndicator;
 
+import org.json.JSONException;
+
 import java.lang.ref.WeakReference;
+import java.util.Map;
 import java.util.Random;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
@@ -41,6 +44,8 @@ import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ContactsListFragment;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SendSMS;
@@ -330,6 +335,12 @@ public class NumberVerification extends Fragment {
                     final String receivedCode = splitter[4];
                     Log.i("SmsReceiver", " message: " + message);
 
+                    final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
+                    simpleParams.put(PostParams.USER_NUMBER, phoneNumber);
+                    try {
+                        UsageTracker.trackLogEvent(simpleParams, UsageTracker.OTP_RECEIVED);
+                    } catch (JSONException ignored) {}
+
                     MiscUtils.useFragment(reference, fragment -> {
 
                         if (fragment.verifyCode != null) {
@@ -525,6 +536,13 @@ public class NumberVerification extends Fragment {
             });
 
             final int length = parsed.length();
+
+            final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
+            simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
+            try {
+                UsageTracker.trackLogEvent(simpleParams, UsageTracker.NUM_ENTERED);
+            } catch (JSONException ignored) {}
+
             //take last 10 digits
             new GetOldAccount().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, parsed.substring(length - 10, length));
         };

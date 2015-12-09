@@ -1,11 +1,9 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -57,7 +55,6 @@ import reach.project.music.songs.ReachSongProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.TextDrawable;
 import reach.project.utils.viewHelpers.astuetz.PagerSlidingTabStrip;
 import reach.project.utils.viewHelpers.flavienlaurent.notboringactionbar.AlphaForegroundColorSpan;
@@ -74,7 +71,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     private ViewPager viewPager;
     private PagerAdapter mPagerAdapter;
-    private SuperInterface mListener;
 
     private int mHeaderHeight;
     private int mMinHeaderTranslation;
@@ -391,25 +387,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 return null;
             });
         }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-
-        super.onAttach(context);
-        try {
-            mListener = (SuperInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-
-        super.onDetach();
-        mListener = null;
     }
 
     @Override
