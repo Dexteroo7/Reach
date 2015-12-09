@@ -1,6 +1,5 @@
 package reach.project.notificationCentre;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -87,6 +86,8 @@ public class NotificationFragment extends Fragment {
                 0L, TimeUnit.MILLISECONDS,
                 new SynchronousQueue<>(),
                 (r, executor) -> {/**ignored**/}));
+
+        reference = new WeakReference<>(this);
 
         refresh();
         return rootView;
