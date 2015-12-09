@@ -1,4 +1,4 @@
-package reach.project.music.songs;
+package reach.project.music;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -95,11 +95,11 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         if (id == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
 
             return new CursorLoader(getActivity(),
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     myLibraryAdapter.getProjectionMyLibrary(),
                     selectionMyLibrary,
                     selectionArgumentsMyLibrary,
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
         } else if (id == StaticData.PRIVACY_DOWNLOADED_LOADER) {
 
             return new CursorLoader(getActivity(),
@@ -230,7 +230,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
         if (first)
             new LocalUtils.InfoDialog().show(getChildFragmentManager(), "info_dialog");
 
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
@@ -245,7 +245,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
     public boolean onClose() {
 
 //        searchView.setQuery(null, true);
-//        selection = ReachSongHelper.COLUMN_USER_ID + " = ? ";
+//        selection = MySongsHelper.COLUMN_USER_ID + " = ? ";
 //        selectionArguments = new String[]{serverId + ""};
 //        getLoaderManager().restartLoader(StaticData.SONGS_LOADER, null, this);
         if (searchView != null) {
@@ -283,7 +283,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
         if (TextUtils.isEmpty(newText)) {
 
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
@@ -291,8 +291,8 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             selectionArgumentsDownloader = new String[]{serverId + "", ReachDatabase.FINISHED + ""};
         } else {
 
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
             selectionArgumentsMyLibrary = new String[]{serverId + "", "%" + mCurFilter + "%"};
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
@@ -417,7 +417,7 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
                 if (failed) {
                     //reset if failed
                     final ContentValues values = new ContentValues(1);
-                    values.put(ReachSongHelper.COLUMN_VISIBILITY, params[0]);
+                    values.put(MySongsHelper.COLUMN_VISIBILITY, params[0]);
                     MiscUtils.useContextFromFragment(reference, context -> {
                         updateDatabase(values, params[1], params[2], context);
                     });
@@ -445,9 +445,9 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
             final ContentResolver resolver = context.getContentResolver();
 
             int updated = resolver.update(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     contentValues,
-                    ReachSongHelper.COLUMN_SONG_ID + " = ? and " + ReachSongHelper.COLUMN_USER_ID + " = ?",
+                    MySongsHelper.COLUMN_SONG_ID + " = ? and " + MySongsHelper.COLUMN_USER_ID + " = ?",
                     new String[]{songId + "", userId + ""});
 
             if (updated == 0)
@@ -474,9 +474,9 @@ public class PrivacyFragment extends Fragment implements LoaderManager.LoaderCal
 
             final ContentValues values = new ContentValues();
             if (oldVisibility == 0)
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, 1);
+                values.put(MySongsHelper.COLUMN_VISIBILITY, 1);
             else
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, 0);
+                values.put(MySongsHelper.COLUMN_VISIBILITY, 0);
 
             updateDatabase(values, songId, userId, view.getContext()
             );

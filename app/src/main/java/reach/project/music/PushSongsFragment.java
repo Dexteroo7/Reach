@@ -1,4 +1,4 @@
-package reach.project.music.songs;
+package reach.project.music;
 
 import android.app.Activity;
 import android.content.Context;
@@ -86,11 +86,11 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         if (id == StaticData.PUSH_MY_LIBRARY_LOADER) {
 
             return new CursorLoader(getActivity(),
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     myLibraryAdapter.getProjectionMyLibrary(),
                     selectionMyLibrary,
                     selectionArgumentsMyLibrary,
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
         } else if (id == StaticData.PUSH_DOWNLOADED_LOADER) {
 
             return new CursorLoader(getActivity(),
@@ -212,8 +212,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
         searchView.setOnQueryTextListener(this);
         searchView.setOnCloseListener(this);
 
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                ReachSongHelper.COLUMN_VISIBILITY + " = ?";
+        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                MySongsHelper.COLUMN_VISIBILITY + " = ?";
         selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
@@ -231,13 +231,13 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 //        searchView.setQuery(null, true);
 //        searchView.clearFocus();
 //
-//        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-//                ReachSongHelper.COLUMN_VISIBILITY + " = ?";
+//        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+//                MySongsHelper.COLUMN_VISIBILITY + " = ?";
 //        selectionArgumentsMyLibrary = new String[]{serverId + "", 1 + ""};
 //        getLoaderManager().restartLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
 //
-//        selectionDownloader = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-//                ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
+//        selectionDownloader = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+//                MySongsHelper.COLUMN_VISIBILITY + " = ? and " +
 //                ReachDatabaseHelper.COLUMN_STATUS + " = ?";
 //        selectionArgumentsDownloader = new String[]{serverId + "", "1", ReachDatabase.FINISHED + ""};
 //        getLoaderManager().restartLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
@@ -276,8 +276,8 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
 
         if (TextUtils.isEmpty(newText)) {
 
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                    ReachSongHelper.COLUMN_VISIBILITY + " = ?";
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                    MySongsHelper.COLUMN_VISIBILITY + " = ?";
             selectionArgumentsMyLibrary = new String[]{serverId + "", "1"};
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
@@ -286,9 +286,9 @@ public class PushSongsFragment extends Fragment implements LoaderManager.LoaderC
             selectionArgumentsDownloader = new String[]{serverId + "", "1", ReachDatabase.FINISHED + ""};
         } else {
 
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                    ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                    MySongsHelper.COLUMN_VISIBILITY + " = ? and " +
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " LIKE ?";
             selectionArgumentsMyLibrary = new String[]{serverId + "", "1", "%" + mCurFilter + "%"};
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +

@@ -46,8 +46,8 @@ import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.music.songs.PushContainer;
-import reach.project.music.songs.TransferSong;
+import reach.project.music.PushContainer;
+import reach.project.music.TransferSong;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
@@ -89,7 +89,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public void onDestroyView() {
 
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_FULL_LOADER);
         if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
 
@@ -128,7 +128,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
         listView.setOnItemClickListener(clickListener);
         listView.setAdapter(reachContactsAdapter);
 
-        getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.FRIENDS_FULL_LOADER, null, this);
         return rootView;
     }
 
@@ -146,7 +146,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         Log.i("Ayush", "Resetting Contacts adapter, AUTO");
-        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER && cursor != null && !cursor.isClosed()) {
+        if (cursorLoader.getId() == StaticData.FRIENDS_FULL_LOADER && cursor != null && !cursor.isClosed()) {
             reachContactsAdapter.swapCursor(cursor);
             if (cursor.getCount() == 0)
                 MiscUtils.setEmptyTextForListView(listView, "No friends found");
@@ -155,7 +155,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        if (cursorLoader.getId() == StaticData.FRIENDS_LOADER)
+        if (cursorLoader.getId() == StaticData.FRIENDS_FULL_LOADER)
             reachContactsAdapter.swapCursor(null);
     }
 
@@ -166,7 +166,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
 //        searchView.setQuery(null, true);
 //        selection = ReachFriendsHelper.COLUMN_STATUS + " < ?";
 //        selectionArguments = new String[]{"2"};
-//        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+//        getLoaderManager().restartLoader(StaticData.FRIENDS_FULL_LOADER, null, this);
 
         if (searchView != null) {
             searchView.setQuery(null, true);
@@ -209,7 +209,7 @@ public class ContactsChooserFragment extends Fragment implements LoaderManager.L
                     ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ?";
             selectionArguments = new String[]{"2", "%" + mCurFilter + "%"};
         }
-        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+        getLoaderManager().restartLoader(StaticData.FRIENDS_FULL_LOADER, null, this);
         return true;
     }
 

@@ -49,8 +49,8 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.uploadDownload.ReachDatabase;
@@ -249,10 +249,10 @@ public class ProcessManager extends Service implements
                     new String[]{lastSong.id + "", "0"}, null);
         else
             cursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " = ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " = ?",
                     new String[]{serverId + "", lastSong.id + ""}, null);
         if (cursor != null)
             cursor.moveToFirst();
@@ -273,10 +273,10 @@ public class ProcessManager extends Service implements
         } else {
             reachSongCursor = getReachDatabaseCursor();
             myLibraryCursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " != ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " != ?",
                     new String[]{serverId + "", id + ""}, null);
         }
 
@@ -884,11 +884,11 @@ public class ProcessManager extends Service implements
     private Cursor getMyLibraryCursor() {
 
         return getContentResolver().query(
-                ReachSongProvider.CONTENT_URI,
+                MySongsProvider.CONTENT_URI,
                 StaticData.DISK_PARTIAL,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{serverId + ""},
-                ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
     }
 
     private Optional<MusicData> playFromCursor(Optional<Cursor> optional, byte type) {

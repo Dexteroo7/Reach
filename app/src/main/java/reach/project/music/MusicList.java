@@ -7,9 +7,6 @@ import com.squareup.wire.ProtoField;
 import java.util.Collections;
 import java.util.List;
 
-import reach.project.music.playLists.Playlist;
-import reach.project.music.songs.Song;
-
 import static com.squareup.wire.Message.Datatype.INT64;
 import static com.squareup.wire.Message.Datatype.STRING;
 import static com.squareup.wire.Message.Label.REPEATED;
@@ -20,7 +17,6 @@ public final class MusicList extends Message {
   public static final Long DEFAULT_CLIENTID = 0L;
   public static final List<String> DEFAULT_GENRES = Collections.emptyList();
   public static final List<Song> DEFAULT_SONG = Collections.emptyList();
-  public static final List<Playlist> DEFAULT_PLAYLIST = Collections.emptyList();
 
   @ProtoField(tag = 1, type = INT64)
   public final Long clientId;
@@ -31,18 +27,14 @@ public final class MusicList extends Message {
   @ProtoField(tag = 3, label = REPEATED, messageType = Song.class)
   public final List<Song> song;
 
-  @ProtoField(tag = 4, label = REPEATED, messageType = Playlist.class)
-  public final List<Playlist> playlist;
-
-  public MusicList(Long clientId, List<String> genres, List<Song> song, List<Playlist> playlist) {
+  public MusicList(Long clientId, List<String> genres, List<Song> song) {
     this.clientId = clientId;
     this.genres = immutableCopyOf(genres);
     this.song = immutableCopyOf(song);
-    this.playlist = immutableCopyOf(playlist);
   }
 
   private MusicList(Builder builder) {
-    this(builder.clientId, builder.genres, builder.song, builder.playlist);
+    this(builder.clientId, builder.genres, builder.song);
     setBuilder(builder);
   }
 
@@ -53,8 +45,7 @@ public final class MusicList extends Message {
     MusicList o = (MusicList) other;
     return equals(clientId, o.clientId)
         && equals(genres, o.genres)
-        && equals(song, o.song)
-        && equals(playlist, o.playlist);
+        && equals(song, o.song);
   }
 
   @Override
@@ -64,7 +55,6 @@ public final class MusicList extends Message {
       result = clientId != null ? clientId.hashCode() : 0;
       result = result * 37 + (genres != null ? genres.hashCode() : 1);
       result = result * 37 + (song != null ? song.hashCode() : 1);
-      result = result * 37 + (playlist != null ? playlist.hashCode() : 1);
       hashCode = result;
     }
     return result;
@@ -75,7 +65,6 @@ public final class MusicList extends Message {
     public Long clientId;
     public List<String> genres;
     public List<Song> song;
-    public List<Playlist> playlist;
 
     public Builder() {
     }
@@ -86,7 +75,6 @@ public final class MusicList extends Message {
       this.clientId = message.clientId;
       this.genres = copyOf(message.genres);
       this.song = copyOf(message.song);
-      this.playlist = copyOf(message.playlist);
     }
 
     public Builder clientId(Long clientId) {
@@ -101,11 +89,6 @@ public final class MusicList extends Message {
 
     public Builder song(List<Song> song) {
       this.song = checkForNulls(song);
-      return this;
-    }
-
-    public Builder playlist(List<Playlist> playlist) {
-      this.playlist = checkForNulls(playlist);
       return this;
     }
 

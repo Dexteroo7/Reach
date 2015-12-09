@@ -1,4 +1,4 @@
-package reach.project.music.songs;
+package reach.project.music;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -49,19 +49,19 @@ public class PushSongAdapter extends ResourceCursorAdapter {
 
     private final String [] projectionMyLibrary = new String[] {
 
-            ReachSongHelper.COLUMN_ID, //0
+            MySongsHelper.COLUMN_ID, //0
 
-            ReachSongHelper.COLUMN_SONG_ID, //1
-            ReachSongHelper.COLUMN_DISPLAY_NAME, //2
-            ReachSongHelper.COLUMN_ACTUAL_NAME, //3
+            MySongsHelper.COLUMN_SONG_ID, //1
+            MySongsHelper.COLUMN_DISPLAY_NAME, //2
+            MySongsHelper.COLUMN_ACTUAL_NAME, //3
 
-            ReachSongHelper.COLUMN_ARTIST, //4
-            ReachSongHelper.COLUMN_DURATION, //5
-            ReachSongHelper.COLUMN_ALBUM, //6
-            ReachSongHelper.COLUMN_SIZE, //7
+            MySongsHelper.COLUMN_ARTIST, //4
+            MySongsHelper.COLUMN_DURATION, //5
+            MySongsHelper.COLUMN_ALBUM, //6
+            MySongsHelper.COLUMN_SIZE, //7
 
-            ReachSongHelper.COLUMN_GENRE, //8
-            ReachSongHelper.COLUMN_ALBUM_ART_DATA, //9
+            MySongsHelper.COLUMN_GENRE, //8
+            MySongsHelper.COLUMN_ALBUM_ART_DATA, //9
     };
 
     private final String [] projectionDownloaded = new String[] {

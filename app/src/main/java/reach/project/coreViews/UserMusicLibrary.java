@@ -49,9 +49,9 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.MusicListFragment;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MusicListFragment;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -288,8 +288,8 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                                                       JsonMap visibilityMap,
                                                       long serverId) {
 
-        final ReachSongHelper reachSongHelper = new ReachSongHelper(context);
-        final SQLiteDatabase sqlDB = reachSongHelper.getWritableDatabase();
+        final MySongsHelper mySongsHelper = new MySongsHelper(context);
+        final SQLiteDatabase sqlDB = mySongsHelper.getWritableDatabase();
         sqlDB.beginTransaction();
 
         try {
@@ -312,11 +312,11 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 }
 
                 final ContentValues values = new ContentValues();
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
+                values.put(MySongsHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
 
-                sqlDB.update(ReachSongHelper.SONG_TABLE,
+                sqlDB.update(MySongsHelper.SONG_TABLE,
                         values,
-                        ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_SONG_ID + " = ?", new String[]{serverId + "", key});
+                        MySongsHelper.COLUMN_USER_ID + " = ? and " + MySongsHelper.COLUMN_SONG_ID + " = ?", new String[]{serverId + "", key});
             }
 
             visibilityMap.clear();
@@ -325,9 +325,9 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         } finally {
 
             sqlDB.endTransaction();
-            reachSongHelper.close();
+            mySongsHelper.close();
         }
-        context.getContentResolver().notifyChange(ReachSongProvider.CONTENT_URI, null);
+        context.getContentResolver().notifyChange(MySongsProvider.CONTENT_URI, null);
     }
 
     //TODO recycle bitmap

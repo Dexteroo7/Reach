@@ -1,4 +1,4 @@
-package reach.project.music.songs;
+package reach.project.music;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -188,8 +188,8 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
             searchView.setOnCloseListener(this);
         }
 
-        whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
+        whereClause = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                MySongsHelper.COLUMN_VISIBILITY + " = ? ";
         whereArgs = new String[]{userId + "", "1"};
 
 //        switch (type) {
@@ -201,18 +201,18 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 //            }
 //            case StaticData.RECENT_LIST_LOADER: {
 //
-//                whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-//                        ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
-//                        ReachSongHelper.COLUMN_ALBUM + " = ? ";
+//                whereClause = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+//                        MySongsHelper.COLUMN_VISIBILITY + " = ? and " +
+//                        MySongsHelper.COLUMN_ALBUM + " = ? ";
 //                whereArgs = new String[]{userId + "", 1 + "", getArguments().getString("albumName")};
 //                break;
 //            }
 
 //            case 2: {
 //
-//                whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-//                        ReachSongHelper.COLUMN_VISIBILITY + " = ? and " +
-//                        ReachSongHelper.COLUMN_ARTIST + " = ? ";
+//                whereClause = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+//                        MySongsHelper.COLUMN_VISIBILITY + " = ? and " +
+//                        MySongsHelper.COLUMN_ARTIST + " = ? ";
 //                whereArgs = new String[]{userId + "", 1 + "", getArguments().getString("artistName")};
 //                break;
 //            }
@@ -249,9 +249,9 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 //                        inList.append(",");
 //                    inList.append("?");
 //                }
-//                whereClause = ReachSongHelper.COLUMN_SONG_ID + " IN (" + inList.toString() + ") and " +
-//                        ReachSongHelper.COLUMN_VISIBILITY + " = 1 and " +
-//                        ReachSongHelper.COLUMN_USER_ID + " = " + userId;
+//                whereClause = MySongsHelper.COLUMN_SONG_ID + " IN (" + inList.toString() + ") and " +
+//                        MySongsHelper.COLUMN_VISIBILITY + " = 1 and " +
+//                        MySongsHelper.COLUMN_USER_ID + " = " + userId;
 //                whereArgs = ids;
 //                break;
 //            }
@@ -311,19 +311,19 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
         if (id == StaticData.FULL_LIST_LOADER && type == StaticData.FULL_LIST_LOADER) {
 
             return new CursorLoader(getActivity(),
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     reachMusicAdapter.getProjectionMyLibrary(),
                     whereClause,
                     whereArgs,
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
         } else if (id == StaticData.RECENT_LIST_LOADER && type == StaticData.RECENT_LIST_LOADER) {
 
             return new CursorLoader(getActivity(),
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     reachMusicAdapter.getProjectionMyLibrary(),
                     whereClause,
                     whereArgs,
-                    ReachSongHelper.COLUMN_DATE_ADDED + " DESC LIMIT 20");
+                    MySongsHelper.COLUMN_DATE_ADDED + " DESC LIMIT 20");
         }
 
         return null;
@@ -361,8 +361,8 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
     public boolean onClose() {
 
 //        searchView.setQuery(null, true);
-//        whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-//                ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
+//        whereClause = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+//                MySongsHelper.COLUMN_VISIBILITY + " = ? ";
 //        whereArgs = new String[]{userId + "", "1"};
 //
 //        getLoaderManager().restartLoader(type, null, this);
@@ -399,18 +399,18 @@ public class MusicListFragment extends ScrollTabHolderFragment implements Loader
 
         if (TextUtils.isEmpty(newText)) {
 
-            whereClause = ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                    ReachSongHelper.COLUMN_VISIBILITY + " = ? ";
+            whereClause = MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                    MySongsHelper.COLUMN_VISIBILITY + " = ? ";
             whereArgs = new String[]{userId + "", "1"};
         } else {
 
             whereClause =
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_VISIBILITY + " = ? and (" +
-                            ReachSongHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
-                            ReachSongHelper.COLUMN_ARTIST + " LIKE ? or " +
-                            ReachSongHelper.COLUMN_ALBUM + " LIKE ? or " +
-                            ReachSongHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_VISIBILITY + " = ? and (" +
+                            MySongsHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
+                            MySongsHelper.COLUMN_ARTIST + " LIKE ? or " +
+                            MySongsHelper.COLUMN_ALBUM + " LIKE ? or " +
+                            MySongsHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
             whereArgs = new String[]{userId + "", "1", filter, filter, filter, filter};
         }
 

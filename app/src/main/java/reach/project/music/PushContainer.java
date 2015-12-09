@@ -1,4 +1,4 @@
-package reach.project.music.songs;
+package reach.project.music;
 
 /**
  * Created by Dexter on 11-04-2015.

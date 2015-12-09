@@ -103,16 +103,15 @@ import reach.project.coreViews.UserMusicLibrary;
 import reach.project.devikaChat.Chat;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
-import reach.project.explore.ExploreFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.music.songs.PrivacyFragment;
-import reach.project.music.songs.PushContainer;
-import reach.project.music.songs.PushSongsFragment;
-import reach.project.music.songs.ReachMusicAdapter;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.music.songs.TransferSong;
+import reach.project.music.MySongsHelper;
+import reach.project.music.PrivacyFragment;
+import reach.project.music.PushContainer;
+import reach.project.music.PushSongsFragment;
+import reach.project.music.ReachMusicAdapter;
+import reach.project.music.MySongsProvider;
+import reach.project.music.TransferSong;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
@@ -122,7 +121,7 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.reachScanner.MusicScanner;
+import reach.project.utils.MetaDataScanner;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
@@ -299,7 +298,7 @@ public class ReachActivity extends AppCompatActivity implements
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
-                                .replace(R.id.container, ExploreFragment.newInstance(), "explore_fragment").commit();
+                                .replace(R.id.container, InviteFragment.newInstance(), "invite_fragment").commit();
                         return true;
                     case R.id.navigation_item_4:
                         fragmentManager
@@ -745,9 +744,9 @@ public class ReachActivity extends AppCompatActivity implements
 //        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
 
 //        final Cursor countCursor = getContentResolver().query(
-//                ReachSongProvider.CONTENT_URI,
-//                ReachSongHelper.projection,
-//                ReachSongHelper.COLUMN_USER_ID + " = ?",
+//                MySongsProvider.CONTENT_URI,
+//                MySongsHelper.projection,
+//                MySongsHelper.COLUMN_USER_ID + " = ?",
 //                new String[]{SharedPrefUtils.getServerId(preferences) + ""},
 //                null);
 //        if (countCursor == null) return;
@@ -815,7 +814,7 @@ public class ReachActivity extends AppCompatActivity implements
 //        selectionArgumentsDownloader = new String[]{0 + ""};
 //        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
 //
-//        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+//        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
 //        selectionArgumentsMyLibrary = new String[]{serverId + ""};
 //        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         onQueryTextChange(null);
@@ -849,7 +848,7 @@ public class ReachActivity extends AppCompatActivity implements
         if (TextUtils.isEmpty(newText)) {
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
             selectionArgumentsDownloader = new String[]{"0"};
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
         } else {
@@ -857,7 +856,7 @@ public class ReachActivity extends AppCompatActivity implements
             selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and (" +
                     ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
                     ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and (" +
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and (" +
                     ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
                     ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
             selectionArgumentsDownloader = new String[]{"0",
@@ -1017,7 +1016,7 @@ public class ReachActivity extends AppCompatActivity implements
         progressBarMinimized.setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
         selectionArgumentsDownloader = new String[]{"0"};
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
@@ -1257,11 +1256,11 @@ public class ReachActivity extends AppCompatActivity implements
         } else if (id == StaticData.MY_LIBRARY_LOADER) {
 
             return new CursorLoader(this,
-                    ReachSongProvider.CONTENT_URI,
-                    ReachSongHelper.DISK_LIST,
+                    MySongsProvider.CONTENT_URI,
+                    MySongsHelper.DISK_LIST,
                     selectionMyLibrary,
                     selectionArgumentsMyLibrary,
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
         }
 
         return null;
@@ -1660,7 +1659,7 @@ public class ReachActivity extends AppCompatActivity implements
                 if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
                     playSong(ReachDatabaseHelper.getMusicData(cursor), context);
                 else
-                    playSong(ReachSongHelper.getMusicData(cursor, serverId,
+                    playSong(MySongsHelper.getMusicData(cursor, serverId,
                             SharedPrefUtils.getUserName(sharedPreferences)), context);
             }
         };
@@ -1732,7 +1731,7 @@ public class ReachActivity extends AppCompatActivity implements
                 //Music scanner
                 MiscUtils.useContextFromContext(reference, activity -> {
 
-                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("first", false);
                     activity.startService(intent);
                     return null;

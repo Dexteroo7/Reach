@@ -1,4 +1,4 @@
-package reach.project.music.songs;
+package reach.project.music;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -12,7 +12,7 @@ import reach.project.reachProcess.auxiliaryClasses.MusicData;
 /**
  * Created by Dexter on 2/14/2015.
  */
-public class ReachSongHelper extends SQLiteOpenHelper {
+public class MySongsHelper extends SQLiteOpenHelper {
 
     public static final String SONG_TABLE = "songs";
     public static final String COLUMN_ID = "_id";
@@ -35,7 +35,7 @@ public class ReachSongHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IS_LIKED = "isLiked";
 
 
-    private static final String DATABASE_NAME = "reach.database.sql.ReachSongHelper";
+    private static final String DATABASE_NAME = "reach.database.sql.MySongsHelper";
     private static final int DATABASE_VERSION = 3;
 
     // Database creation sql statement
@@ -107,19 +107,19 @@ public class ReachSongHelper extends SQLiteOpenHelper {
     }
 
     public static final String[] DISK_LIST = new String[]{ //count = 8
-            ReachSongHelper.COLUMN_SONG_ID, //0
-            ReachSongHelper.COLUMN_SIZE, //1
-            ReachSongHelper.COLUMN_PATH, //2
-            ReachSongHelper.COLUMN_DISPLAY_NAME, //3
-            ReachSongHelper.COLUMN_ARTIST, //4
-            ReachSongHelper.COLUMN_DURATION, //5
-            ReachSongHelper.COLUMN_ALBUM, //6
-            ReachSongHelper.COLUMN_ID, //7
-            ReachSongHelper.COLUMN_ALBUM_ART_DATA, //8
+            MySongsHelper.COLUMN_SONG_ID, //0
+            MySongsHelper.COLUMN_SIZE, //1
+            MySongsHelper.COLUMN_PATH, //2
+            MySongsHelper.COLUMN_DISPLAY_NAME, //3
+            MySongsHelper.COLUMN_ARTIST, //4
+            MySongsHelper.COLUMN_DURATION, //5
+            MySongsHelper.COLUMN_ALBUM, //6
+            MySongsHelper.COLUMN_ID, //7
+            MySongsHelper.COLUMN_ALBUM_ART_DATA, //8
 
-            ReachSongHelper.COLUMN_ACTUAL_NAME, //9
-            ReachSongHelper.COLUMN_ALBUM, //10
-            ReachSongHelper.COLUMN_GENRE //11
+            MySongsHelper.COLUMN_ACTUAL_NAME, //9
+            MySongsHelper.COLUMN_ALBUM, //10
+            MySongsHelper.COLUMN_GENRE //11
     };
 
     //DISK_LIST specific !
@@ -143,7 +143,7 @@ public class ReachSongHelper extends SQLiteOpenHelper {
                 cursor.getString(11)); //genre
     }
 
-    public ReachSongHelper(Context context) {
+    public MySongsHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -154,7 +154,7 @@ public class ReachSongHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-        Log.w(ReachSongHelper.class.getName(),
+        Log.w(MySongsHelper.class.getName(),
                 "Upgrading database from version " + oldVersion + " to "
                         + newVersion + ", which will destroy all old data");
         database.execSQL("DROP TABLE IF EXISTS " + SONG_TABLE);

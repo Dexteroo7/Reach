@@ -5,6 +5,8 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -18,12 +20,8 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
-import android.support.v4.util.SparseArrayCompat;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.LongSparseArray;
-import android.util.Pair;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
@@ -41,6 +39,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
@@ -59,6 +58,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -70,18 +70,9 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.music.albums.Album;
-import reach.project.music.albums.ReachAlbumHelper;
-import reach.project.music.albums.ReachAlbumProvider;
-import reach.project.music.artists.Artist;
-import reach.project.music.artists.ReachArtistHelper;
-import reach.project.music.artists.ReachArtistProvider;
-import reach.project.music.playLists.Playlist;
-import reach.project.music.playLists.ReachPlayListHelper;
-import reach.project.music.playLists.ReachPlayListProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.music.songs.Song;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
+import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.uploadDownload.ReachDatabase;
@@ -133,6 +124,10 @@ public enum MiscUtils {
 
         return new SimpleDateFormat("dd-MM-yyyy HH-mm-ss", Locale.getDefault()).format(
                 new Date(milliSeconds));
+    }
+
+    public static String getAppStorageKey(long serverId) {
+        return serverId + "APP";
     }
 
     public static void closeQuietly(Collection... collections) {
@@ -376,6 +371,19 @@ public enum MiscUtils {
         return listView;
     }
 
+    public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
+
+        final Iterator<ApplicationInfo> applicationInfoIterator = packageManager.getInstalledApplications(PackageManager.GET_META_DATA).iterator();
+        while (applicationInfoIterator.hasNext()) {
+
+            final ApplicationInfo applicationInfo = applicationInfoIterator.next();
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0)
+                applicationInfoIterator.remove();
+        }
+
+        return ImmutableList.copyOf(applicationInfoIterator);
+    }
+
     public static GridView addLoadingToGridView(GridView gridView) {
 
         final ProgressBar loading = new ProgressBar(gridView.getContext());
@@ -402,130 +410,28 @@ public enum MiscUtils {
     public static void deleteSongs(long userId, ContentResolver contentResolver) {
 
         contentResolver.delete(
-                ReachSongProvider.CONTENT_URI,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-
-        contentResolver.delete(
-                ReachAlbumProvider.CONTENT_URI,
-                ReachAlbumHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-
-        contentResolver.delete(
-                ReachArtistProvider.CONTENT_URI,
-                ReachArtistHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-    }
-
-    public static void deletePlayLists(long userId, ContentResolver contentResolver) {
-
-        contentResolver.delete(
-                ReachPlayListProvider.CONTENT_URI,
-                ReachPlayListHelper.COLUMN_USER_ID + " = ?",
+                MySongsProvider.CONTENT_URI,
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{userId + ""});
     }
 
     public static void bulkInsertSongs(Collection<Song> reachSongs,
-                                       Collection<Album> reachAlbums,
-                                       Collection<Artist> reachArtists,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
         //Add all songs
         final ContentValues[] songs = new ContentValues[reachSongs.size()];
-        final ContentValues[] albums = new ContentValues[reachAlbums.size()];
-        final ContentValues[] artists = new ContentValues[reachArtists.size()];
 
         int i = 0;
         if (reachSongs.size() > 0) {
 
             for (Song song : reachSongs)
-                songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
-            i = 0; //reset counter
-            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
+                songs[i++] = MySongsHelper.contentValuesCreator(song, serverId);
+            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
         } else
-            contentResolver.delete(ReachSongProvider.CONTENT_URI,
-                    ReachSongHelper.COLUMN_USER_ID + " = ?",
+            contentResolver.delete(MySongsProvider.CONTENT_URI,
+                    MySongsHelper.COLUMN_USER_ID + " = ?",
                     new String[]{serverId + ""});
-
-        if (reachAlbums.size() > 0) {
-
-            for (Album album : reachAlbums)
-                albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
-            Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
-            i = 0; //reset counter
-        } else
-            contentResolver.delete(ReachAlbumProvider.CONTENT_URI,
-                    ReachAlbumHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-
-        if (reachArtists.size() > 0) {
-
-            for (Artist artist : reachArtists)
-                artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
-            Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
-        } else
-            contentResolver.delete(ReachArtistProvider.CONTENT_URI,
-                    ReachArtistHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-    }
-
-    public static void bulkInsertPlayLists(List<Playlist> playlistList,
-                                           ContentResolver contentResolver,
-                                           long serverId) {
-
-        if (playlistList != null && !playlistList.isEmpty()) {
-
-            final ContentValues[] playLists = new ContentValues[playlistList.size()];
-            int i = 0;
-            for (Playlist playlist : playlistList) {
-                playLists[i++] = ReachPlayListHelper.contentValuesCreator(playlist, serverId);
-            }
-            Log.i("Ayush", "PlayLists Inserted " + contentResolver.bulkInsert(ReachPlayListProvider.CONTENT_URI, playLists));
-        } else
-            contentResolver.delete(ReachPlayListProvider.CONTENT_URI,
-                    ReachPlayListHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-    }
-
-    public static Pair<Collection<Album>, Collection<Artist>> getAlbumsAndArtists(Collection<Song> songs,
-                                                                                  long serverId) {
-
-        final Map<String, Album> albumMap = getMap(songs.size());
-        final Map<String, Artist> artistMap = getMap(songs.size());
-
-        for (Song song : songs) {
-
-            //don't consider invisible files
-            if (!song.visibility)
-                continue;
-
-            if (!TextUtils.isEmpty(song.album)) {
-
-                Album album = albumMap.get(song.album);
-                if (album == null)
-                    albumMap.put(song.album, album = new Album());
-                album.setAlbumName(song.album);
-                album.setUserId(serverId);
-                album.setArtist(song.artist);
-                album.incrementSize();
-            }
-
-            if (!TextUtils.isEmpty(song.artist)) {
-
-                Artist artist = artistMap.get(song.artist);
-                if (artist == null)
-                    artistMap.put(song.artist, artist = new Artist());
-                artist.setArtistName(song.artist);
-                artist.setUserID(serverId);
-                artist.setAlbum(song.album);
-                artist.incrementSize();
-            }
-        }
-
-        Log.i("Ayush", "Found " + albumMap.size() + " " + artistMap.size());
-        ///////////////////////
-        return new Pair<>(albumMap.values(), artistMap.values());
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {

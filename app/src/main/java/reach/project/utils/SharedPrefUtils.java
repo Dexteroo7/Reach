@@ -2,9 +2,12 @@ package reach.project.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,7 +15,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
+import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -286,5 +293,63 @@ public enum SharedPrefUtils {
         } finally {
             MiscUtils.closeQuietly(randomAccessFile);
         }
+    }
+
+    @Nonnull
+    public synchronized static Map<String, Boolean> getPackageVisibilities(SharedPreferences sharedPreferences) {
+
+        final String serializedString = sharedPreferences.getString("app_visibility", "");
+        if (TextUtils.isEmpty(serializedString))
+            return MiscUtils.getMap(0);
+
+        final Map<String, Boolean> toReturn;
+        try {
+            toReturn = new Gson().fromJson(
+                    serializedString,
+                    new TypeToken<Map<String, Boolean>>() {
+                    }.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MiscUtils.getMap(0);
+        }
+
+        return toReturn;
+    }
+
+    public synchronized static void addPackageVisibility(SharedPreferences sharedPreferences,
+                                                         String packageName,
+                                                         boolean visibility) {
+
+        @Nullable
+        Map<String, Boolean> toSave = null;
+
+        final String serializedString = sharedPreferences.getString("app_visibility", "");
+        if (!TextUtils.isEmpty(serializedString))
+            try {
+                toSave = new Gson().fromJson(
+                        serializedString,
+                        new TypeToken<Map<String, Boolean>>() {
+                        }.getType());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        if (toSave == null)
+            toSave = MiscUtils.getMap(0);
+
+        toSave.put(packageName, visibility);
+
+        sharedPreferences.edit().putString("app_visibility",
+                new Gson().toJson(toSave, new TypeToken<Map<String, Boolean>>() {
+                }.getType())).apply();
+        Log.i("Ayush", "Saving new application visibility " + packageName + " " + visibility + " " + toSave.size());
+    }
+
+    public synchronized static void overWritePackageVisibility(SharedPreferences sharedPreferences, Map<String, Boolean> visibilities) {
+
+        sharedPreferences.edit().putString("app_visibility",
+                new Gson().toJson(visibilities, new TypeToken<Map<String, Boolean>>() {
+                }.getType())).apply();
+        Log.i("Ayush", "Saving new application visibility " + visibilities.size());
     }
 }

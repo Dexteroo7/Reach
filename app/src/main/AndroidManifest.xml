@@ -79,8 +79,9 @@
             android:name=".core.GcmIntentService"
             android:exported="false" />
         <service
-            android:name=".reachScanner.MusicScanner"
+            android:name=".utils.MetaDataScanner"
             android:exported="false" />
+
         <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
@@ -89,22 +90,10 @@
             android:exported="false"
             android:multiprocess="true" />
         <provider
-            android:name=".music.songs.ReachSongProvider"
-            android:authorities="reach.project.music.songs.ReachSongProvider"
+            android:name=".music.MySongsProvider"
+            android:authorities="reach.project.music.MySongsProvider"
             android:exported="false"
             android:multiprocess="true" />
-        <provider
-            android:name=".music.albums.ReachAlbumProvider"
-            android:authorities="reach.project.music.albums.ReachAlbumProvider"
-            android:exported="false" />
-        <provider
-            android:name=".music.artists.ReachArtistProvider"
-            android:authorities="reach.project.music.artists.ReachArtistProvider"
-            android:exported="false" />
-        <provider
-            android:name=".music.playLists.ReachPlayListProvider"
-            android:authorities="reach.project.music.playLists.ReachPlayListProvider"
-            android:exported="false" />
 
         <activity
             android:name=".core.DialogActivity"
@@ -131,6 +120,7 @@
         </receiver>
 
         <activity android:name="com.mixpanel.android.surveys.SurveyActivity" />
+
         <activity
             android:name=".devikaChat.ChatActivity"
             android:label="@string/title_activity_chat"
@@ -155,9 +145,6 @@
             android:name=".reachProcess.reachService.ProcessManager"
             android:exported="false"
             android:process=":remote" />
-        <service
-            android:name=".reachScanner.ApplicationScanner"
-            android:exported="false" />
     </application>
 
 </manifest>
