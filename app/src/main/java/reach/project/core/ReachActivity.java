@@ -32,10 +32,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.firebase.client.ChildEventListener;
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
@@ -112,7 +108,6 @@ public class ReachActivity extends AppCompatActivity implements
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
     ////////////////////////////////////////
     ////////////////////////////////////////
-    private Firebase firebaseReference = null;
 
     @Override
     protected void onDestroy() {
@@ -122,16 +117,6 @@ public class ReachActivity extends AppCompatActivity implements
         if (reference != null)
             reference.clear();
         reference = null;
-        firebaseReference = null;
-    }
-
-    @Override
-    protected void onPause() {
-
-        super.onPause();
-
-        if (firebaseReference != null)
-            firebaseReference.child("chat").child(serverId + "").removeEventListener(LocalUtils.listenerForUnReadChats);
     }
 
     @Override
@@ -200,9 +185,6 @@ public class ReachActivity extends AppCompatActivity implements
         super.onPostResume();
         Log.i("Ayush", "Called onResume");
         processIntent(getIntent());
-
-        if (firebaseReference != null && serverId != 0)
-            firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
     }
 
     /*@Override
@@ -234,11 +216,6 @@ public class ReachActivity extends AppCompatActivity implements
             finish();
         }
     }*/
-
-    @Override
-    public Optional<Firebase> getFireBase() {
-        return Optional.fromNullable(firebaseReference);
-    }
 
     @Override
     public void onOpenLibrary(long userId) {
@@ -379,10 +356,6 @@ public class ReachActivity extends AppCompatActivity implements
             UsageTracker.trackEvent(simpleParams, UsageTracker.APP_OPEN);
         } catch (JSONException ignored) {
         }
-
-        // Setup our Firebase mFirebaseRef
-        firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
-        firebaseReference.keepSynced(true);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reach);
@@ -865,11 +838,6 @@ public class ReachActivity extends AppCompatActivity implements
             public void run() {
 
                 ////////////////////////////////////////
-                //check devikaChat token
-                MiscUtils.useActivity(reference, activity -> MiscUtils.checkChatToken(
-                        new WeakReference<>(activity.preferences),
-                        new WeakReference<>(activity.firebaseReference),
-                        reference));
                 //refresh gcm
                 checkGCM();
                 //refresh download ops
@@ -1127,41 +1095,5 @@ public class ReachActivity extends AppCompatActivity implements
             }
         }
 
-        public static final ChildEventListener listenerForUnReadChats = new ChildEventListener() {
-
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-                if (dataSnapshot.getValue() instanceof Map) {
-
-                    final Map value = (Map) dataSnapshot.getValue();
-                    final Object admin = value.get("admin");
-                    final Object status = value.get("status");
-
-                    final String adminValue = String.valueOf(admin);
-                    final String statusValue = String.valueOf(status);
-                }
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        };
     }
 }

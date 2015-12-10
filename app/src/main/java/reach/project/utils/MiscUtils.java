@@ -34,10 +34,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.AuthData;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
@@ -72,10 +68,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.messaging.model.MyBoolean;
-import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -1185,81 +1179,4 @@ public enum MiscUtils {
         ////////
     }
 
-    public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
-                                                   WeakReference<Firebase> firebaseWeakReference,
-                                                   WeakReference<? extends Activity> toHelpTrack) {
-
-        final SharedPreferences preferences = preferencesWeakReference.get();
-        if (preferences == null)
-            return;
-
-        final String localToken = SharedPrefUtils.getChatToken(preferences);
-        final String localUUID = SharedPrefUtils.getChatUUID(preferences);
-        final long serverId = SharedPrefUtils.getServerId(preferences);
-
-        if (serverId == 0)
-            return; //shiz
-
-        //if not empty exit
-        if (!TextUtils.isEmpty(localToken) && !TextUtils.isEmpty(localUUID))
-            return;
-
-        //fetch from server
-        final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
-        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString())) {
-
-            MiscUtils.useContextFromContext(toHelpTrack, activity -> {
-
-                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("SEVERE ERROR, chat token failed")
-                        .setAction("User Id - " + serverId)
-                        .setValue(1)
-                        .build());
-            });
-            Log.i("Ayush", "Chat token check failed !");
-        } else {
-
-            final Firebase firebase = firebaseWeakReference.get();
-            if (firebase == null)
-                return;
-            firebase.authWithCustomToken(fetchTokenFromServer.getString(), new Firebase.AuthResultHandler() {
-
-                @Override
-                public void onAuthenticationError(FirebaseError error) {
-
-                    MiscUtils.useContextFromContext(toHelpTrack, activity -> {
-
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("SEVERE ERROR " + error.getDetails())
-                                .setAction("User Id - " + serverId)
-                                .setValue(1)
-                                .build());
-                    });
-                    Log.e("Ayush", "Login Failed! " + error.getMessage());
-                }
-
-                @Override
-                public void onAuthenticated(AuthData authData) {
-
-                    final String chatUUID = authData.getUid();
-                    //if found save
-                    SharedPrefUtils.storeChatUUID(preferences, chatUUID);
-                    SharedPrefUtils.storeChatToken(preferences, fetchTokenFromServer.getString());
-                    Log.i("Ayush", "Chat authenticated " + chatUUID);
-
-                    final Map<String, Object> userData = new HashMap<>();
-                    userData.put("uid", authData.getAuth().get("uid"));
-                    userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
-                    userData.put("userName", authData.getAuth().get("userName"));
-                    userData.put("imageId", authData.getAuth().get("imageId"));
-                    userData.put("lastActivated", 0);
-                    userData.put("newMessage", true);
-
-                    final Firebase firebase = firebaseWeakReference.get();
-                    if (firebase != null)
-                        firebase.child("user").child(chatUUID).setValue(userData);
-                }
-            });
-        }
-    }
 }
