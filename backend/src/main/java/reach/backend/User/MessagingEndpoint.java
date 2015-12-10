@@ -8,6 +8,8 @@ import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.appengine.api.ThreadManager;
+import com.google.appengine.api.datastore.Cursor;
+import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.log.InvalidRequestException;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
@@ -15,12 +17,14 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.cmd.Query;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -30,9 +34,15 @@ import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
+import reach.backend.Notifications.Notification;
+import reach.backend.Notifications.NotificationBase;
 import reach.backend.Notifications.NotificationEndpoint;
+import reach.backend.Notifications.Push;
+import reach.backend.Notifications.Types;
 import reach.backend.ObjectWrappers.MyBoolean;
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.OfyService;
+import reach.backend.TextUtils;
 
 import static reach.backend.OfyService.ofy;
 
@@ -62,7 +72,7 @@ import static reach.backend.OfyService.ofy;
 public class MessagingEndpoint {
 
     private static final Logger log = Logger.getLogger(MessagingEndpoint.class.getName());
-    private static final String API_KEY = System.getProperty("gcm.api.key");
+    public static final String API_KEY = System.getProperty("gcm.api.key");
 //    private static final String API = "AIzaSyAYAjGP-6Xsz06ElmSv8yABvb8u6HFOP7Y";
 
     public static MessagingEndpoint messagingEndpoint = null;
@@ -178,13 +188,13 @@ public class MessagingEndpoint {
         if (client == null)
             return null;
 
-        //remove from both received and sent
+        //remove request from both received and sent
         if (client.getReceivedRequests() != null)
             client.getReceivedRequests().remove(sender.getId());
         if (client.getSentRequests() != null)
             client.getSentRequests().remove(sender.getId());
 
-        //remove from both received and sent
+        //remove request from both received and sent
         if (sender.getSentRequests() != null)
             sender.getSentRequests().remove(clientId);
         if (sender.getReceivedRequests() != null)
@@ -211,6 +221,11 @@ public class MessagingEndpoint {
         }
 
         ofy().save().entities(client, sender).now();
+
+        //DO NOT SEND GCM, Devika does not have a gcm id !
+        if (isDevika(sender.getPhoneNumber(), sender.getId()))
+            return new MyString("true");
+
         if (sender.getGcmId() == null || sender.getGcmId().equals("")) {
 
             log.info("Error handling reply " + sender.getId() + " " + clientId);
@@ -236,9 +251,17 @@ public class MessagingEndpoint {
 
     public MyString sendBulkChat() {
 
-        return new MyString(sendMultiCastMessage("CHAT", ofy().load().type(ReachUser.class)
-                .filter("gcmId !=", "")
-                .project("gcmId")) + "");
+        final Sender sender = new Sender(API_KEY);
+        final Message actualMessage = new Message.Builder()
+                .addData("message", "CHAT")
+                .build();
+
+        return new MyString(sendMultiCastMessage(
+                actualMessage,
+                sender,
+                ofy().load().type(ReachUser.class)
+                        .filter("gcmId !=", "")
+                        .project("gcmId")) + "");
     }
 
     protected boolean sendMessage(@Nonnull String message,
@@ -289,8 +312,17 @@ public class MessagingEndpoint {
                               @Named("message") String message,
                               @Named("heading") String heading) {
 
-        return new MyString(sendMultiCastMessage("MANUAL`" + type + "`" + heading + "`" + message,
-                ofy().load().type(ReachUser.class).filter("gcmId !=", "").project("gcmId")) + " Result");
+        final Sender sender = new Sender(API_KEY);
+        final Message actualMessage = new Message.Builder()
+                .addData("message", "MANUAL`" + type + "`" + heading + "`" + message)
+                .build();
+
+        return new MyString(sendMultiCastMessage(
+                actualMessage,
+                sender,
+                ofy().load().type(ReachUser.class)
+                        .filter("gcmId !=", "")
+                        .project("gcmId")) + " Result");
     }
 
     public void handleAnnounce(@Named("clientId") final long clientId,
@@ -310,13 +342,23 @@ public class MessagingEndpoint {
         final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
         for (Long id : clientUser.getMyReach())
             keysBuilder.add(Key.create(ReachUser.class, id));
-        sendMultiCastMessage("PONG " + clientId + " " + networkType, ofy().load().type(ReachUser.class)
-                .filterKey("in", keysBuilder.build())
-                .filter("gcmId !=", "")
-                .project("gcmId"));
+
+        final Sender sender = new Sender(API_KEY);
+        final Message message = new Message.Builder()
+                .addData("message", "PONG " + clientId + " " + networkType)
+                .build();
+
+        sendMultiCastMessage(
+                message,
+                sender,
+                ofy().load().type(ReachUser.class)
+                        .filterKey("in", keysBuilder.build())
+                        .filter("gcmId !=", "")
+                        .project("gcmId"));
     }
 
-    protected boolean sendMultiCastMessage(String message,
+    protected boolean sendMultiCastMessage(@Nonnull Message message,
+                                           @Nonnull Sender sender,
                                            @Nonnull Query<ReachUser> userQuery) {
 
         final List<ReachUser> users = new ArrayList<>(1000);
@@ -335,7 +377,7 @@ public class MessagingEndpoint {
 
                 if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
 
-                    result = result && actualSendMultiCastMessage(message, users, regIds);
+                    result = result && actualSendMultiCastMessage(message, users, regIds, sender);
                     if (result)
                         log.info("refreshed gcm of " + totalSize);
                     else
@@ -359,7 +401,7 @@ public class MessagingEndpoint {
 
         if (regIds.size() > 0 && users.size() > 0 && regIds.size() == users.size()) {
 
-            result = result && actualSendMultiCastMessage(message, users, regIds);
+            result = result && actualSendMultiCastMessage(message, users, regIds, sender);
             if (result)
                 log.info("refreshed gcm of " + totalSize);
             else
@@ -370,9 +412,9 @@ public class MessagingEndpoint {
     }
 
     private boolean actualSendMultiCastMessage(@Nonnull Message message,
-                                         @Nonnull List<ReachUser> users,
-                                         @Nonnull List<String> regIds,
-                                         @Nonnull Sender sender) {
+                                               @Nonnull List<ReachUser> users,
+                                               @Nonnull List<String> regIds,
+                                               @Nonnull Sender sender) {
 
         if (users.size() > 1000 || regIds.size() > 1000)
             return false;
@@ -383,9 +425,8 @@ public class MessagingEndpoint {
         try {
             multicastResult = sender.send(message, regIds, 5);
         } catch (IOException | IllegalArgumentException e) {
-
             e.printStackTrace();
-            logger.log(Level.SEVERE, e.getLocalizedMessage() + " error");
+            log.log(Level.SEVERE, e.getLocalizedMessage() + " error");
             return false;
         }
 
@@ -393,7 +434,7 @@ public class MessagingEndpoint {
         final int resultLength = results.size();
 
         if (resultLength != users.size()) {
-            logger.log(Level.SEVERE, "Multi-part messages size different error");
+            log.log(Level.SEVERE, "Multi-part messages size different error");
             return false;
         }
 
@@ -404,12 +445,12 @@ public class MessagingEndpoint {
 
             final Result result = results.get(index);
 
-            if (!isEmpty(result.getMessageId())) {
+            if (!TextUtils.isEmpty(result.getMessageId())) {
 
                 final String canonicalRegistrationId = result.getCanonicalRegistrationId();
-                if (!isEmpty(canonicalRegistrationId)) {
+                if (!TextUtils.isEmpty(canonicalRegistrationId)) {
                     // if the regId changed, we have to update the data-store
-                    logger.info("Registration Id changed for " + users.get(index).getId() + " updating to " + canonicalRegistrationId);
+                    log.info("Registration Id changed for " + users.get(index).getId() + " updating to " + canonicalRegistrationId);
 
                     final LoadResult<ReachUser> loadResult = ofy().load().type(ReachUser.class).id(users.get(index).getId());
                     toChange.add(loadResult);
@@ -423,13 +464,13 @@ public class MessagingEndpoint {
                         result.getErrorCodeName().equals(Constants.ERROR_MISMATCH_SENDER_ID) ||
                         result.getErrorCodeName().equals(Constants.ERROR_MISSING_REGISTRATION)) {
 
-                    logger.info("Registration Id " + users.get(index).getUserName() + " no longer registered with GCM, removing from data-store");
+                    log.info("Registration Id " + users.get(index).getUserName() + " no longer registered with GCM, removing from data-store");
                     // if the device is no longer registered with Gcm, remove it from the data-store
                     final LoadResult<ReachUser> loadResult = ofy().load().type(ReachUser.class).id(users.get(index).getId());
                     toChange.add(loadResult);
                     toPut.add(""); //empty string
                 } else {
-                    logger.info("Error when sending message : " + result.getErrorCodeName());
+                    log.info("Error when sending message : " + result.getErrorCodeName());
                 }
             }
         }
@@ -448,8 +489,116 @@ public class MessagingEndpoint {
             toBatch.add(reachUser);
         }
 
-        logger.info("Changing gcmIds of " + toBatch.size() + " users");
+        log.info("Changing gcmIds of " + toBatch.size() + " users");
         ofy().save().entities(toBatch);
         return true;
+    }
+
+    /**
+     * Used for sending a push song to every user from Devika, with love :)
+     */
+
+    public MyString devikaPushToAll(@Named("cursor") String cursor,
+                                    @Named("limit") int limit,
+
+                                    @Named("container") String container,
+                                    @Named("firstSongName") final String firstSongName,
+                                    @Named("customMessage") String customMessage,
+                                    @Named("size") final int size) {
+
+        log.info("Starting devika push to all");
+
+        final QueryResultIterator<ReachUser> usersToPushTo;
+        if (TextUtils.isEmpty(cursor))
+            usersToPushTo = ofy().load().type(ReachUser.class)
+                    .limit(limit)
+                    .project("id").iterator();
+        else
+            usersToPushTo = ofy().load().type(ReachUser.class)
+                    .limit(limit)
+                    .project("id")
+                    .startAt(Cursor.fromWebSafeString(cursor)).iterator();
+
+        //create the push notification
+        final Push push = new Push();
+        push.setRead(NotificationBase.NEW);
+        push.setHostId(OfyService.devikaId); //sender is Devika
+        push.setSystemTime(System.currentTimeMillis());
+        push.setTypes(Types.PUSH);
+
+        push.setCustomMessage(customMessage);
+        push.setFirstSongName(firstSongName);
+        push.setPushContainer(container);
+        push.setSize(size);
+
+        final List<Notification> notificationToSave = new ArrayList<>(limit);
+        final List<Long> receiverIds = new ArrayList<>(limit);
+        while (usersToPushTo.hasNext())
+            receiverIds.add(usersToPushTo.next().getId());
+
+        if (receiverIds.isEmpty())
+            return new MyString("-1");
+
+        log.info("Adding push to " + receiverIds.size() + " users");
+
+        int processCount = 0;
+        //load all notifications and add push to each
+        final Map<Long, Notification> notificationMap = ofy().load().type(Notification.class).ids(receiverIds);
+        for (Map.Entry<Long, Notification> entry : notificationMap.entrySet()) {
+
+            final Long receiverId = entry.getKey();
+            Notification notification = entry.getValue();
+
+            processCount++;
+            //instantiate if null / not present
+            notification = getNotification(notification, receiverId);
+            //add the push notification
+            if (notification.getNotifications().add(push)) {
+
+                //add to save batch
+                notificationToSave.add(notification);
+                log.info("Adding push " + OfyService.devikaId + " " + firstSongName + " " + size);
+            }
+        }
+
+        if (notificationToSave.isEmpty())
+            return new MyString(usersToPushTo.getCursor().toWebSafeString());
+
+        log.info("Batch save of " + notificationToSave.size() + " notifications");
+
+        //save "new" notification collections asynchronously
+        ofy().save().entities(notificationToSave);
+
+        log.info("Send notification to reach user");
+
+        //send bulk to required users !
+        final Message message = new Message.Builder()
+                .addData("message", "SYNC" + 1) //fixed 1 un-read, perf matters !
+                .build();
+        final Sender sender = new Sender(API_KEY);
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        for (Notification id : notificationToSave)
+            keysBuilder.add(Key.create(ReachUser.class, id.getId()));
+
+        sendMultiCastMessage(message, //the message that needs to be sent
+                sender, //the sender id
+                ofy().load().type(ReachUser.class)
+                        .filterKey("in", keysBuilder.build()) //required users
+                        .filter("gcmId !=", "") //not if gcm id is dead
+                        .project("gcmId")); //project only the gcmId
+
+        log.info("processed " + processCount);
+
+        return new MyString(usersToPushTo.getCursor().toWebSafeString());
+    }
+
+    private Notification getNotification(Notification notification, long id) {
+
+        if (notification == null || notification.getNotifications() == null) {
+            notification = new Notification();
+            notification.setId(id);
+            notification.initializeCollection();
+        }
+        return notification;
     }
 }

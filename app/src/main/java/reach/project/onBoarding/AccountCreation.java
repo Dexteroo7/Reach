@@ -35,11 +35,9 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,7 +46,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
 
 import reach.backend.entities.userApi.model.InsertContainer;
@@ -60,8 +57,8 @@ import reach.project.core.StaticData;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
@@ -76,6 +73,7 @@ public class AccountCreation extends Fragment {
     private static String imageId = "hello_world";
     private static String phoneNumber = "";
     private static long serverId = 0;
+    private final CircleTransform transform = new CircleTransform();
     private static WeakReference<AccountCreation> reference = null;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
@@ -96,7 +94,6 @@ public class AccountCreation extends Fragment {
         return fragment;
     }
 
-    private final CircleTransform transform = new CircleTransform();
     private final int IMAGE_PICKER_SELECT = 999;
     private SuperInterface mListener = null;
     private ImageView profilePhotoSelector = null;
@@ -186,8 +183,8 @@ public class AccountCreation extends Fragment {
                     rootView.findViewById(R.id.nextBtn),
                     (TextView) rootView.findViewById(R.id.telephoneNumber),
                     progress,
-                    SharedPrefUtils.getDeviceId(activity).trim().replace(" ", "-"))
-                    .executeOnExecutor(StaticData.temporaryFix, name, phoneNumber);
+                    MiscUtils.getDeviceId(activity).trim().replace(" ", "-"))
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, name, phoneNumber);
         });
         return rootView;
     }
@@ -289,7 +286,7 @@ public class AccountCreation extends Fragment {
 
                 if (keyStream != null) {
                     //try upload
-                    CloudStorageUtils.uploadFile(toUpload, keyStream, uploadProgress);
+                    CloudStorageUtils.uploadImage(toUpload, keyStream, uploadProgress);
                 }
             }
 
@@ -401,8 +398,6 @@ public class AccountCreation extends Fragment {
                     }
 
 
-                    final MixpanelAPI mixpanel = MixpanelAPI.getInstance(activity, StaticData.mixPanelId);
-                    final MixpanelAPI.People people = mixpanel.getPeople();
                     final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
                     tracker.setScreenName(AccountCreation.class.getPackage().getName());
 
@@ -410,22 +405,10 @@ public class AccountCreation extends Fragment {
 
                         tracker.set("&uid", user.getId() + "");
                         tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
-                        mixpanel.identify(user.getId() + "");
-                        JSONObject props = new JSONObject();
-                        try {
-                            props.put("UserID", user.getId() + "");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        mixpanel.registerSuperPropertiesOnce(props);
-                        people.identify(user.getId() + "");
-                        people.set("UserID", user.getId() + "");
                     }
-                    people.set("$phone", user.getPhoneNumber() + "");
-                    people.set("$name", user.getUserName() + "");
 
                     SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
-                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("messenger", messenger);
                     intent.putExtra("first", true);
                     activity.startService(intent);
@@ -493,20 +476,16 @@ public class AccountCreation extends Fragment {
                 if (message == null)
                     return false;
 
-                if (message.what == MusicScanner.FINISHED) {
+                if (message.what == MetaDataScanner.FINISHED) {
 
                     bottomPart2.setVisibility(View.INVISIBLE);
                     bottomPart3.setVisibility(View.VISIBLE);
                     phoneNumber.setText(songs + " songs");
                     next.setOnClickListener(proceed);
-                } else if (message.what == MusicScanner.SONGS) {
+                } else if (message.what == MetaDataScanner.SCANNING_SONGS) {
                     progress.setText("Found " + message.arg1 + " songs");
                     songs = message.arg1 + 1;
-                } else if (message.what == MusicScanner.PLAY_LISTS) {
-
-                    progress.setText("Found " + message.arg1 + " playLists");
-                    playLists = message.arg1 + 1;
-                } else if (message.what == MusicScanner.ALBUM_ARTIST)
+                } else if (message.what == MetaDataScanner.UPLOADING)
                     progress.setText("Creating account");
 
                 return true;
@@ -607,6 +586,19 @@ public class AccountCreation extends Fragment {
 
         @Override
         public void onAuthenticationError(FirebaseError error) {
+
+            MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                @Override
+                public void work(Activity activity) {
+
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR " + error.getDetails())
+                            .setAction("User Id - " + serverId)
+                            .setAction("Label - " + phoneNumber)
+                            .setValue(1)
+                            .build());
+                }
+            });
             Log.e("Ayush", "Login Failed! " + error.getMessage());
         }
 
@@ -621,7 +613,7 @@ public class AccountCreation extends Fragment {
             });
 
             Log.i("Ayush", "Chat authenticated " + chatUUID);
-            final Map<String, Object> userData = new HashMap<>();
+            final Map<String, Object> userData = MiscUtils.getMap(6);
             userData.put("uid", authData.getAuth().get("uid"));
             userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
             userData.put("userName", authData.getAuth().get("userName"));

@@ -7,6 +7,7 @@ package reach.project.friends;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
+
 
 import com.squareup.picasso.Picasso;
 
@@ -29,8 +31,11 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 //    private final CircleTransform transform = new CircleTransform();
 //    private final int[] colors;
 
+    private final Picasso picasso;
+
     public ReachContactsAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
+        this.picasso = Picasso.with(context);
 //        this.grey = ContextCompat.getColor(context, R.color.darkgrey);
 //        this.color = ContextCompat.getColor(context, R.color.reach_color);
 //        this.colors = context.getResources().getIntArray(R.array.androidcolors);
@@ -39,7 +44,8 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
     private final class ViewHolder {
 
         private final TextView userNameList, telephoneNumberList, onlineText, newSongs;
-        private final ImageView profilePhotoList, onlineIcon, lockIcon, profileGradient;
+        private final ImageView onlineIcon, lockIcon, profileGradient;
+        private final ImageView profilePhotoList;
 
         private ViewHolder(TextView userNameList,
                            TextView telephoneNumberList,
@@ -90,12 +96,11 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
         viewHolder.telephoneNumberList.setText(numberOfSongs + " songs ");
         if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) &&
-                !newSongs.equals("hello_world") && Integer.parseInt(newSongs)>0) {
+                !newSongs.equals("hello_world") && Integer.parseInt(newSongs) > 0) {
 
             viewHolder.newSongs.setVisibility(View.VISIBLE);
-            viewHolder.newSongs.setText("+"+newSongs);
-        }
-        else {
+            viewHolder.newSongs.setText("+" + newSongs);
+        } else {
             viewHolder.newSongs.setVisibility(View.INVISIBLE);
             viewHolder.newSongs.setText("");
         }
@@ -104,26 +109,29 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
         viewHolder.profilePhotoList.setImageBitmap(null);
         viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
         viewHolder.profileGradient.setBackgroundResource(0);
-        if (!TextUtils.isEmpty(imageId) &&
-                !imageId.equals("hello_world")) {
-            Picasso.with(context).load(StaticData.cloudStorageImageBaseUrl +
-                    imageId).centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
-        } else {
+
+        final Uri uriToDisplay;
+
+        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
+            uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
+            picasso.load(uriToDisplay).fit().centerCrop().into(viewHolder.profilePhotoList);
+        }
+        else {
+
             viewHolder.profilePhotoList.setBackgroundColor(Color.parseColor("#eeeeee"));
+            int res;
             if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
-                Picasso.with(context).load(R.drawable.default_profile01)
-                        .centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
+                res = R.drawable.default_profile01;
             else {
-                Picasso.with(context).load(R.drawable.default_profile02)
-                        .centerCrop().fit().centerCrop().into(viewHolder.profilePhotoList);
+                res = R.drawable.default_profile02;
                 if (status == ReachFriendsHelper.REQUEST_NOT_SENT || status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+
                     viewHolder.profileGradient.setImageBitmap(null);
                     viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
                 }
             }
+            picasso.load(res).fit().centerCrop().into(viewHolder.profilePhotoList);
         }
-
-
 
         /*if (networkType == 1) {
             Picasso.with(context).load(R.drawable.wifi).into(viewHolder.networkStatus);

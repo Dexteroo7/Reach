@@ -27,8 +27,8 @@ public class ReachContactsChooserAdapter extends ResourceCursorAdapter {
 
     private final int grey;
     private final int color;
-//    private final int layoutParameter = MiscUtils.dpToPx(20);
     private final CircleTransform transform = new CircleTransform();
+//    private final int layoutParameter = MiscUtils.dpToPx(20);
 
     public ReachContactsChooserAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);

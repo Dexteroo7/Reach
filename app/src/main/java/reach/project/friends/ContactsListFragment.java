@@ -117,7 +117,7 @@ public class ContactsListFragment extends Fragment implements
         pinging.set(false);
         synchronizing.set(false);
 
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_LOADER);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_FULL_LOADER);
         if (reachContactsAdapter != null && reachContactsAdapter.getCursor() != null && !reachContactsAdapter.getCursor().isClosed())
             reachContactsAdapter.getCursor().close();
 
@@ -211,14 +211,14 @@ public class ContactsListFragment extends Fragment implements
             new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
         }
 
-        getLoaderManager().initLoader(StaticData.FRIENDS_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.FRIENDS_FULL_LOADER, null, this);
         return rootView;
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        if (id == StaticData.FRIENDS_LOADER)
+        if (id == StaticData.FRIENDS_FULL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     ReachContactsAdapter.requiredProjection,
@@ -232,7 +232,7 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (loader.getId() != StaticData.FRIENDS_LOADER || data == null || data.isClosed())
+        if (loader.getId() != StaticData.FRIENDS_FULL_LOADER || data == null || data.isClosed())
             return;
 
         reachContactsAdapter.swapCursor(data);
@@ -249,7 +249,7 @@ public class ContactsListFragment extends Fragment implements
                 final Activity activity = getActivity();
                 final Chat chat = new Chat();
                 chat.setMessage("Hey! I am Devika. I handle customer relations at Reach. I will help you with any problems you face inside the app. So ping me here if you face any difficulties :)");
-                chat.setTimestamp(System.currentTimeMillis());
+                chat.setTimestamp(0);
                 chat.setAdmin(Chat.ADMIN);
 
                 final Optional<Firebase> firebaseOptional = mListener.getFireBase();
@@ -278,7 +278,7 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.FRIENDS_LOADER)
+        if (loader.getId() == StaticData.FRIENDS_FULL_LOADER)
             reachContactsAdapter.swapCursor(null);
     }
 
@@ -290,7 +290,7 @@ public class ContactsListFragment extends Fragment implements
 ////        searchView.setQuery(null, true);
 ////
 ////        inviteAdapter.getFilter().filter(null);
-////        getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+////        getLoaderManager().restartLoader(StaticData.FRIENDS_FULL_LOADER, null, this);
 ////        return false;
         if (searchView != null) {
 
@@ -334,7 +334,7 @@ public class ContactsListFragment extends Fragment implements
             selectionArguments = new String[]{"%" + mCurFilter + "%"};
         }
         try {
-            getLoaderManager().restartLoader(StaticData.FRIENDS_LOADER, null, this);
+            getLoaderManager().restartLoader(StaticData.FRIENDS_FULL_LOADER, null, this);
         } catch (IllegalStateException ignored) {
         }
         return true;

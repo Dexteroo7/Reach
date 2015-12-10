@@ -64,7 +64,6 @@ public class NotificationEndpoint {
         return notificationEndpoint;
     }
 
-
     /**
      * Returns all the {@link Notification} with the corresponding ID.
      *
@@ -236,11 +235,6 @@ public class NotificationEndpoint {
         }
     }
 
-    /**
-     * @param receiverId the person who will receive the push
-     * @param senderId   the person who sent the push
-     * @param container  blob of required data
-     */
     @ApiMethod(
             name = "addPush",
             path = "notification/addPush",

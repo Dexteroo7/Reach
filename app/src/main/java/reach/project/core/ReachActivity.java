@@ -72,13 +72,11 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +84,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -108,13 +105,13 @@ import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
-import reach.project.music.songs.PrivacyFragment;
-import reach.project.music.songs.PushContainer;
-import reach.project.music.songs.PushSongsFragment;
-import reach.project.music.songs.ReachMusicAdapter;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.music.songs.TransferSong;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
+import reach.project.music.PrivacyFragment;
+import reach.project.music.PushContainer;
+import reach.project.music.PushSongsFragment;
+import reach.project.music.ReachMusicAdapter;
+import reach.project.music.TransferSong;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
 import reach.project.onBoarding.AccountCreation;
@@ -132,8 +129,8 @@ import reach.project.uploadDownload.UploadHistory;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.MusicScanner;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -167,23 +164,21 @@ public class ReachActivity extends AppCompatActivity implements
     private ReachMusicAdapter musicAdapter = null;
 
     private String selectionDownloader, selectionMyLibrary, mCurFilter;
-    private String[] selectionArgumentsDownloader;
-    private String[] selectionArgumentsMyLibrary;
+    private String[] selectionArgumentsDownloader, selectionArgumentsMyLibrary;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     //private int topPadding;
     //private FrameLayout containerFrame;
-    private TextView emptyTV1, emptyTV2;
     ////////////////////////////////////////
     private static MusicData currentPlaying;
 
     ////////////////////////////////////////
-    private TextView songNameMinimized, songNameMaximized, artistName, songDuration;
-    private TextView playerPos;
-    private SeekBar progressBarMaximized;
-    private SeekBar progressBarMinimized;
+    private TextView songNameMinimized, songNameMaximized, artistName, songDuration, playerPos,
+            numberOfSongsNav, userNameNav, emptyTV1, emptyTV2;
+    private SeekBar progressBarMaximized, progressBarMinimized;
     private ListView queueListView;
-    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton; //fullscreen
+    private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton, userImageNav; //fullscreen
     private CustomViewPager viewPager;
+    private View headerView;
 
     private MergeAdapter combinedAdapter = null;
     private Firebase firebaseReference = null;
@@ -247,7 +242,6 @@ public class ReachActivity extends AppCompatActivity implements
         public void onPanelHidden(View view) {
         }
     };
-
 
     private final AbsListView.OnScrollListener scrollListener = new AbsListView.OnScrollListener() {
 
@@ -396,7 +390,10 @@ public class ReachActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
         if (requestCode == MY_PERMISSIONS_READ_CONTACTS) {
             if (!(grantResults.length > 0 && grantResults[0] == 0)) {
                 Toast.makeText(this,
@@ -419,8 +416,10 @@ public class ReachActivity extends AppCompatActivity implements
     protected void onResume() {
 
         if (Build.VERSION.SDK_INT >= 23) {
+
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.READ_CONTACTS) != 0) {
+
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.READ_CONTACTS))
                     Toast.makeText(this,
@@ -432,6 +431,7 @@ public class ReachActivity extends AppCompatActivity implements
                         }, MY_PERMISSIONS_READ_CONTACTS);
             } else if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
+
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE))
                     Toast.makeText(this,
@@ -445,7 +445,7 @@ public class ReachActivity extends AppCompatActivity implements
         }
 
         //TODO onResume is called twice sometimes
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();
+        lastSong();
 
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
@@ -598,7 +598,7 @@ public class ReachActivity extends AppCompatActivity implements
             if (firebaseReference != null && serverId != 0) {
                 firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
                 //update time stamp
-                final Map<String, Object> userData = new HashMap<>();
+                final Map<String, Object> userData = MiscUtils.getMap(3);
                 userData.put("uid", serverId);
                 userData.put("newMessage", true);
                 userData.put("lastActivated", System.currentTimeMillis());
@@ -641,8 +641,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void updateDetails(File image, String userName) {
 
-        Picasso.with(ReachActivity.this).load(image).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+        Picasso.with(this).load(image).fit().centerCrop().into(userImageNav);
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
     }
 
     @Override
@@ -658,7 +658,7 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             fragmentManager.beginTransaction()
                     .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library " + id).commit();
+                    .addToBackStack(null).replace(R.id.container, UserMusicLibrary.newInstance(id), "user_library" + id).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
@@ -714,8 +714,7 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void setUpNavigationViews() {
-
-        final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
+        final SwitchCompat netToggle = (SwitchCompat) headerView.findViewById(R.id.netToggle);
         if (SharedPrefUtils.getMobileData(preferences))
             netToggle.setChecked(true);
         else
@@ -738,15 +737,16 @@ public class ReachActivity extends AppCompatActivity implements
         });
 
         final String path = SharedPrefUtils.getImageId(preferences);
+
         if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-            Picasso.with(ReachActivity.this).load(StaticData.cloudStorageImageBaseUrl + path).fit().centerCrop().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
-        ////////////////////
+            Picasso.with(this).load(Uri.parse(StaticData.cloudStorageImageBaseUrl + path)).fit().centerCrop().into(userImageNav);
+
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
 
         final Cursor countCursor = getContentResolver().query(
-                ReachSongProvider.CONTENT_URI,
-                ReachSongHelper.projection,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
+                MySongsProvider.CONTENT_URI,
+                MySongsHelper.projection,
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{SharedPrefUtils.getServerId(preferences) + ""},
                 null);
         if (countCursor == null) return;
@@ -757,7 +757,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         final long count = countCursor.getCount();
         countCursor.close();
-        ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
+        numberOfSongsNav.setText(count + " Songs");
     }
 
     @Override
@@ -814,7 +814,7 @@ public class ReachActivity extends AppCompatActivity implements
 //        selectionArgumentsDownloader = new String[]{0 + ""};
 //        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
 //
-//        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+//        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
 //        selectionArgumentsMyLibrary = new String[]{serverId + ""};
 //        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         onQueryTextChange(null);
@@ -848,7 +848,7 @@ public class ReachActivity extends AppCompatActivity implements
         if (TextUtils.isEmpty(newText)) {
 
             selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
             selectionArgumentsDownloader = new String[]{"0"};
             selectionArgumentsMyLibrary = new String[]{serverId + ""};
         } else {
@@ -856,7 +856,7 @@ public class ReachActivity extends AppCompatActivity implements
             selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and (" +
                     ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
                     ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
-            selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ? and (" +
+            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and (" +
                     ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
                     ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
             selectionArgumentsDownloader = new String[]{"0",
@@ -889,6 +889,22 @@ public class ReachActivity extends AppCompatActivity implements
         Log.i("Ayush", "TEST " + AccountCreation.class.getPackage().getName());
 
         Pacemaker.scheduleLinear(this, 5);
+
+        /*ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT < 21) {
+            List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(100);
+            for (ActivityManager.RunningTaskInfo info : tasks)
+                Log.d("Ashish", info.topActivity.getPackageName() + "");
+        }
+        else {
+            List<ActivityManager.RunningAppProcessInfo> processes = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo info : processes)
+                Log.d("Ashish", info.processName + "");
+        }
+        PackageManager packageManager = getPackageManager();
+        List<PackageInfo> list = packageManager.getInstalledPackages(PackageManager.GET_META_DATA);
+        for (PackageInfo info : list)
+            Log.d("Ashish", info.packageName + " - " + MiscUtils.dateFormatter(info.firstInstallTime));*/
 
         preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         fragmentManager = getSupportFragmentManager();
@@ -961,6 +977,7 @@ public class ReachActivity extends AppCompatActivity implements
         downloadRefresh = (SwipeRefreshLayout) findViewById(R.id.downloadRefresh);
 
         final NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
+        headerView = mNavigationView.inflateHeaderView(R.layout.nav_drawer_header);
         mNavigationView.setItemIconTintList(null);
         liveHelpItem = mNavigationView.getMenu().getItem(4);
         final View navListView = mNavigationView.getChildAt(0);
@@ -971,7 +988,11 @@ public class ReachActivity extends AppCompatActivity implements
         mNavigationView.setNavigationItemSelectedListener(navigationItemSelectedListener);
         fragmentManager.addOnBackStackChangedListener(this);
 
-        findViewById(R.id.userImageNav).setOnClickListener(navHeaderClickListener);
+        userImageNav = (ImageView) headerView.findViewById(R.id.userImageNav);
+        userNameNav = (TextView) headerView.findViewById(R.id.userNameNav);
+        numberOfSongsNav = (TextView) headerView.findViewById(R.id.numberOfSongsNav);
+        userImageNav.setOnClickListener(navHeaderClickListener);
+
         findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
         findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
         findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
@@ -996,7 +1017,7 @@ public class ReachActivity extends AppCompatActivity implements
         progressBarMinimized.setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
 
         selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-        selectionMyLibrary = ReachSongHelper.COLUMN_USER_ID + " = ?";
+        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
         selectionArgumentsDownloader = new String[]{"0"};
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
@@ -1025,12 +1046,8 @@ public class ReachActivity extends AppCompatActivity implements
         final long userID = SharedPrefUtils.getServerId(preferences);
 
         //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        Crittercism.setUsername(userName + " " + phoneNumber);
-
-        //initialize MixPanel
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        MixpanelAPI.People ppl = mixpanel.getPeople();
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+//        Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize GA tracker
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
@@ -1039,22 +1056,8 @@ public class ReachActivity extends AppCompatActivity implements
         if (userID != 0) {
             tracker.set("&uid", userID + "");
             tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
-            mixpanel.identify(userID + "");
-            JSONObject props = new JSONObject();
-            try {
-                props.put("UserID", userID + "");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            mixpanel.registerSuperPropertiesOnce(props);
-            ppl.identify(userID + "");
-            ppl.set("UserID", userID + "");
         } else
             tracker.send(new HitBuilders.ScreenViewBuilder().build());
-        if (!TextUtils.isEmpty(phoneNumber))
-            ppl.set("$phone", phoneNumber + "");
-        if (!TextUtils.isEmpty(userName))
-            ppl.set("$name", userName + "");
 
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
@@ -1120,11 +1123,11 @@ public class ReachActivity extends AppCompatActivity implements
     private void lastSong() {
 
         final Boolean[] toSend = new Boolean[]{false, false, false};
-        currentPlaying = SharedPrefUtils.getLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE)).orNull();
+        currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
 
         toSend[0] = (currentPlaying != null);
-        toSend[1] = SharedPrefUtils.getShuffle(preferences);
-        toSend[2] = SharedPrefUtils.getRepeat(preferences);
+        toSend[1] = SharedPrefUtils.getShuffle(this);
+        toSend[2] = SharedPrefUtils.getRepeat(this);
 
         if (toSend[0]) {
             //last song is present
@@ -1173,7 +1176,7 @@ public class ReachActivity extends AppCompatActivity implements
             String unCompressed;
             try {
                 unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
-            } catch (IOException e) {
+            } catch (IOException | IllegalArgumentException e) {
                 e.printStackTrace();
                 unCompressed = "";
             }
@@ -1240,11 +1243,11 @@ public class ReachActivity extends AppCompatActivity implements
         } else if (id == StaticData.MY_LIBRARY_LOADER) {
 
             return new CursorLoader(this,
-                    ReachSongProvider.CONTENT_URI,
-                    ReachSongHelper.DISK_LIST,
+                    MySongsProvider.CONTENT_URI,
+                    MySongsHelper.DISK_LIST,
                     selectionMyLibrary,
                     selectionArgumentsMyLibrary,
-                    ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
         }
 
         return null;
@@ -1427,23 +1430,14 @@ public class ReachActivity extends AppCompatActivity implements
                     reachDatabase.getSenderId(),   //the uploaded
                     reachDatabase.getId()));
 
+        //tracing shit
+
         ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
-
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-            props.put("From", reachDatabase.getDisplayName());
-            props.put("Song", reachDatabase.getSenderId());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Transaction - Add Song", props);
 
         //usage tracking
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
@@ -1515,7 +1509,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener repeatClick = view -> {
 
-            if (SharedPrefUtils.toggleRepeat(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
+            if (SharedPrefUtils.toggleRepeat(view.getContext()))
                 view.setSelected(true);
             else
                 view.setSelected(false);
@@ -1617,7 +1611,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener shuffleClick = view -> {
 
-            if (SharedPrefUtils.toggleShuffle(view.getContext().getSharedPreferences("Reach", MODE_PRIVATE)))
+            if (SharedPrefUtils.toggleShuffle(view.getContext()))
                 view.setSelected(true);
             else
                 view.setSelected(false);
@@ -1629,16 +1623,21 @@ public class ReachActivity extends AppCompatActivity implements
          */
         public static final AdapterView.OnItemClickListener myLibraryClickListener = (adapterView, view, position, l) -> {
 
-            final Cursor cursor = (Cursor) adapterView.getAdapter().getItem(position);
-            final Context context = view.getContext();
+            final Object item = adapterView.getAdapter().getItem(position);
 
-            final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", MODE_PRIVATE);
+            if (item instanceof Cursor) {
 
-            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
-                playSong(ReachDatabaseHelper.getMusicData(cursor), context);
-            else
-                playSong(ReachSongHelper.getMusicData(cursor, serverId,
-                        SharedPrefUtils.getUserName(sharedPreferences)), context);
+                final Cursor cursor = (Cursor) item;
+                final Context context = view.getContext();
+
+                final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", MODE_PRIVATE);
+
+                if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length)
+                    playSong(ReachDatabaseHelper.getMusicData(cursor), context);
+                else
+                    playSong(MySongsHelper.getMusicData(cursor, serverId,
+                            SharedPrefUtils.getUserName(sharedPreferences)), context);
+            }
         };
 
         /**
@@ -1708,7 +1707,7 @@ public class ReachActivity extends AppCompatActivity implements
                 //Music scanner
                 MiscUtils.useContextFromContext(reference, activity -> {
 
-                    final Intent intent = new Intent(activity, MusicScanner.class);
+                    final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("first", false);
                     activity.startService(intent);
                     return null;

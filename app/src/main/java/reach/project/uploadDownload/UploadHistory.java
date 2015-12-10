@@ -117,7 +117,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
 
         View rootView = inflater.inflate(R.layout.fragment_list, container, false);
 
-        Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.listToolbar);
+        Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.listToolbar);
         mToolbar.setTitle("Upload History");
         mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
@@ -188,7 +188,7 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
             if (dataToReturn == null || (list = dataToReturn.getItems()) == null || list.isEmpty())
                 return null;
 
-            final Set<Long> ids = new HashSet<>();
+            final Set<Long> ids = new HashSet<>(list.size());
             for (CompletedOperation completedOperation : list)
                 ids.addAll(completedOperation.getReceiver());
             final String[] whereArgument = new String[ids.size()];
@@ -203,8 +203,8 @@ public class UploadHistory extends Fragment implements LoaderManager.LoaderCallb
                     inList.append(",");
                 inList.append("?");
             }
-            final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN (" + inList.toString() + ")";
 
+            final String whereClause = ReachFriendsHelper.COLUMN_ID + " IN (" + inList.toString() + ")";
             final Cursor cursor = MiscUtils.useContextFromFragment(reference, context -> {
 
                 return context.getContentResolver().query(

@@ -1,6 +1,7 @@
 package reach.project.core;
 
 import android.app.Application;
+import android.support.annotation.NonNull;
 
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseException;
@@ -63,6 +64,7 @@ public class ReachApplication extends Application {
         } catch (NoSuchAlgorithmException | KeyManagementException ignored) {
             //ignore !!
         }
+
         okHttpClient.setHostnameVerifier((hostname, session) -> true);
         /////////////////no http response cache
         okHttpClient.setCache(null);
@@ -105,7 +107,35 @@ public class ReachApplication extends Application {
         tracker.send(screenViewBuilder.build());
     }
 
+    public synchronized void track(@NonNull Optional<String> category,
+                                   @NonNull Optional<String> action,
+                                   @NonNull Optional<String> label,
+                                   int value) {
+
+        //set values
+        if (category.isPresent())
+            builder.setCategory(category.get());
+
+        if (action.isPresent())
+            builder.setAction(action.get());
+
+        if (label.isPresent())
+            builder.setLabel(label.get());
+
+        if (value > 0)
+            builder.setValue(value);
+
+        //send track
+        getTracker().send(builder.build());
+
+        //reset
+        builder.setCategory(null);
+        builder.setAction(null);
+        builder.setLabel(null);
+    }
+
     synchronized public Tracker getTracker() {
+
         if (mTracker == null) {
 
             final GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);

@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
+import com.squareup.picasso.Picasso;
 import com.viewpagerindicator.CirclePageIndicator;
 
 import org.json.JSONException;
@@ -91,22 +92,33 @@ public class NumberVerification extends Fragment {
         //stuff that auto fills
         verifyCode = (EditText) rootView.findViewById(R.id.verifyCode);
 
-        rootView.postDelayed(() -> {
+        final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
+        (telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber)).requestFocus();
+        TourPagerAdapter tourPagerAdapter = new TourPagerAdapter(rootView.getContext());
+        viewPager.setAdapter(tourPagerAdapter);
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-            rootView.setBackgroundResource(0);
+            }
 
-            rootView.findViewById(R.id.reach_logo).setVisibility(View.GONE);
-            rootView.findViewById(R.id.otherStuff).setVisibility(View.VISIBLE);
-            rootView.findViewById(R.id.numberVerificationPoster).setVisibility(View.VISIBLE);
+            @Override
+            public void onPageSelected(int position) {
+            /*if (position == tourPagerAdapter.getCount())
+                ((ReachApplication)getActivity().getApplication())
+                        .trackGA(Optional.of("OnBoarding"),
+                                Optional.of("Completed App Tour"),
+                                Optional.of(""),
+                                1);*/
+            }
 
-            final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.logo);
-            (telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber)).requestFocus();
-            TourPagerAdapter tourPagerAdapter = new TourPagerAdapter(rootView.getContext());
-            viewPager.setAdapter(tourPagerAdapter);
+            @Override
+            public void onPageScrollStateChanged(int state) {
 
-            ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
-            rootView.findViewById(R.id.verify).setOnClickListener(LocalUtils.clickListener);
-        }, 2000);
+            }
+        });
+        ((CirclePageIndicator) rootView.findViewById(R.id.circles)).setViewPager(viewPager);
+        rootView.findViewById(R.id.verify).setOnClickListener(LocalUtils.clickListener);
         return rootView;
     }
 
@@ -193,7 +205,8 @@ public class NumberVerification extends Fragment {
             final View itemView = mLayoutInflater.inflate(R.layout.tour_item, container, false);
             ((TextView) itemView.findViewById(R.id.tour_text)).setText(tourTexts[position]);
             ((ImageView) itemView.findViewById(R.id.tour_image)).setImageResource(tourImages[position]);
-            //Picasso.with(container.getContext()).load(tourImages[position]).noFade().into((ImageView) itemView.findViewById(R.id.tour_image));
+            Picasso.with(container.getContext()).load(tourImages[position]).noFade()
+                    .into((ImageView) itemView.findViewById(R.id.tour_image));
             container.addView(itemView);
             return itemView;
         }
@@ -435,7 +448,6 @@ public class NumberVerification extends Fragment {
                 phoneNumber = pair.second;
                 finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
                 Log.i("Verification", "" + finalAuthKey);
-                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
 //                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
             }
         }

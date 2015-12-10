@@ -5,6 +5,8 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -20,7 +22,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Gravity;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
@@ -38,6 +39,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
@@ -49,12 +52,14 @@ import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,18 +71,9 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.music.albums.Album;
-import reach.project.music.albums.ReachAlbumHelper;
-import reach.project.music.albums.ReachAlbumProvider;
-import reach.project.music.artists.Artist;
-import reach.project.music.artists.ReachArtistHelper;
-import reach.project.music.artists.ReachArtistProvider;
-import reach.project.music.playLists.Playlist;
-import reach.project.music.playLists.ReachPlayListHelper;
-import reach.project.music.playLists.ReachPlayListProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
-import reach.project.music.songs.Song;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
+import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.uploadDownload.ReachDatabase;
@@ -129,6 +125,10 @@ public enum MiscUtils {
 
         return new SimpleDateFormat("dd-MM-yyyy HH-mm-ss", Locale.getDefault()).format(
                 new Date(milliSeconds));
+    }
+
+    public static String getAppStorageKey(long serverId) {
+        return serverId + "APP";
     }
 
     public static void closeQuietly(Collection... collections) {
@@ -226,12 +226,14 @@ public enum MiscUtils {
 
     public static <T, E> Map<T, E> getMap(int capacity) {
 
-        if (Build.VERSION.SDK_INT >= 19)
-            return new ArrayMap<>(capacity);
+        if (capacity < 1000) //use lighter collection
+            if (Build.VERSION.SDK_INT >= 19)
+                return new android.util.ArrayMap<>();
+            else
+                return new ArrayMap<>(capacity); //else use the support one
         else
             return new HashMap<>(capacity);
     }
-
 
     public static boolean containsIgnoreCase(CharSequence str, CharSequence searchStr) {
 
@@ -370,6 +372,19 @@ public enum MiscUtils {
         return listView;
     }
 
+    public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
+
+        final Iterator<ApplicationInfo> applicationInfoIterator = packageManager.getInstalledApplications(PackageManager.GET_META_DATA).iterator();
+        while (applicationInfoIterator.hasNext()) {
+
+            final ApplicationInfo applicationInfo = applicationInfoIterator.next();
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0)
+                applicationInfoIterator.remove();
+        }
+
+        return ImmutableList.copyOf(applicationInfoIterator);
+    }
+
     public static GridView addLoadingToGridView(GridView gridView) {
 
         final ProgressBar loading = new ProgressBar(gridView.getContext());
@@ -396,137 +411,28 @@ public enum MiscUtils {
     public static void deleteSongs(long userId, ContentResolver contentResolver) {
 
         contentResolver.delete(
-                ReachSongProvider.CONTENT_URI,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-
-        contentResolver.delete(
-                ReachAlbumProvider.CONTENT_URI,
-                ReachAlbumHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-
-        contentResolver.delete(
-                ReachArtistProvider.CONTENT_URI,
-                ReachArtistHelper.COLUMN_USER_ID + " = ?",
+                MySongsProvider.CONTENT_URI,
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{userId + ""});
     }
 
-    public static void deletePlayLists(long userId, ContentResolver contentResolver) {
-
-        contentResolver.delete(
-                ReachPlayListProvider.CONTENT_URI,
-                ReachPlayListHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-    }
-
-    public static void bulkInsertSongs(List<Song> songList,
-                                       ArrayMap<String, Album> reachAlbums,
-                                       ArrayMap<String, Artist> reachArtists,
+    public static void bulkInsertSongs(Collection<Song> reachSongs,
                                        ContentResolver contentResolver,
                                        long serverId) {
 
         //Add all songs
-        final ContentValues[] songs = new ContentValues[songList.size()];
-        final ContentValues[] albums = new ContentValues[reachAlbums.size()];
-        final ContentValues[] artists = new ContentValues[reachArtists.size()];
+        final ContentValues[] songs = new ContentValues[reachSongs.size()];
 
         int i = 0;
-        if (songList.size() > 0) {
+        if (reachSongs.size() > 0) {
 
-            for (Song song : songList)
-                songs[i++] = ReachSongHelper.contentValuesCreator(song, serverId);
-            i = 0;
-            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(ReachSongProvider.CONTENT_URI, songs));
+            for (Song song : reachSongs)
+                songs[i++] = MySongsHelper.contentValuesCreator(song, serverId);
+            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
         } else
-            contentResolver.delete(ReachSongProvider.CONTENT_URI,
-                    ReachSongHelper.COLUMN_USER_ID + " = ?",
+            contentResolver.delete(MySongsProvider.CONTENT_URI,
+                    MySongsHelper.COLUMN_USER_ID + " = ?",
                     new String[]{serverId + ""});
-
-        if (reachAlbums.size() > 0) {
-
-            for (int j = 0; j < reachAlbums.size(); j++) {
-
-                final Album album = reachAlbums.valueAt(j);
-                if (album != null)
-                    albums[i++] = ReachAlbumHelper.contentValuesCreator(album);
-            }
-            Log.i("Ayush", "Albums Inserted " + contentResolver.bulkInsert(ReachAlbumProvider.CONTENT_URI, albums));
-            i = 0;
-        } else
-            contentResolver.delete(ReachAlbumProvider.CONTENT_URI,
-                    ReachAlbumHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-
-        if (reachArtists.size() > 0) {
-
-            for (int j = 0; i < reachArtists.size(); j++) {
-
-                final Artist artist = reachArtists.valueAt(j);
-                if (artist != null)
-                    artists[i++] = ReachArtistHelper.contentValuesCreator(artist);
-            }
-            Log.i("Ayush", "Artists Inserted " + contentResolver.bulkInsert(ReachArtistProvider.CONTENT_URI, artists));
-        } else
-            contentResolver.delete(ReachArtistProvider.CONTENT_URI,
-                    ReachArtistHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-    }
-
-    public static void bulkInsertPlayLists(List<Playlist> playlistList,
-                                           ContentResolver contentResolver,
-                                           long serverId) {
-
-        if (playlistList != null && !playlistList.isEmpty()) {
-
-            final ContentValues[] playLists = new ContentValues[playlistList.size()];
-            int i = 0;
-            for (Playlist playlist : playlistList) {
-                playLists[i++] = ReachPlayListHelper.contentValuesCreator(playlist, serverId);
-            }
-            Log.i("Ayush", "PlayLists Inserted " + contentResolver.bulkInsert(ReachPlayListProvider.CONTENT_URI, playLists));
-        } else
-            contentResolver.delete(ReachPlayListProvider.CONTENT_URI,
-                    ReachPlayListHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
-    }
-
-    public static Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> getAlbumsAndArtists(Iterable<Song> songs, long serverId) {
-
-        final ArrayMap<String, Album> albumMap = new ArrayMap<>();
-        final ArrayMap<String, Artist> artistMap = new ArrayMap<>();
-
-        for (Song song : songs) {
-
-            //don't consider invisible files
-            if (!song.visibility)
-                continue;
-
-            if (!TextUtils.isEmpty(song.album)) {
-
-                Album album = albumMap.get(song.album);
-                if (album == null)
-                    albumMap.put(song.album, album = new Album());
-                album.setAlbumName(song.album);
-                album.setUserId(serverId);
-                album.setArtist(song.artist);
-                album.incrementSize();
-            }
-
-            if (!TextUtils.isEmpty(song.artist)) {
-
-                Artist artist = artistMap.get(song.artist);
-                if (artist == null)
-                    artistMap.put(song.artist, artist = new Artist());
-                artist.setArtistName(song.artist);
-                artist.setUserID(serverId);
-                artist.setAlbum(song.album);
-                artist.incrementSize();
-            }
-        }
-
-        Log.i("Ayush", "Found " + albumMap.size() + " " + artistMap.size());
-        ///////////////////////
-        return new Pair<>(albumMap, artistMap);
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
@@ -660,7 +566,7 @@ public enum MiscUtils {
         task.work(activity);
     }
 
-//    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
+    //    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
 //                                                          final UseContext<Void, T> task) {
 //
 //        final T activity;
@@ -670,19 +576,33 @@ public enum MiscUtils {
 //        activity.runOnUiThread(() -> task.work(activity));
 //    }
 //
-//    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-//                                                                  final UseContext<Void, Activity> task) {
-//
-//        final T fragment;
-//        if (reference == null || (fragment = reference.get()) == null)
-//            return;
-//
-//        final Activity activity = fragment.getActivity();
-//        if (activity == null || activity.isFinishing())
-//            return;
-//
-//        activity.runOnUiThread(() -> task.work(activity));
-//    }
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext<Void, Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContext2<Activity> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity));
+    }
 //
 //    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
 //                                                                  final UseFragment<Void, T> task) {
@@ -776,13 +696,19 @@ public enum MiscUtils {
                  * Else we return
                  */
                 return Optional.fromNullable(resultAfterWork);
-            } catch (InterruptedException | UnknownHostException | NullPointerException e) {
+            } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
+
+                Log.i("Ayush", Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
                 return Optional.absent();
             } catch (GoogleJsonResponseException e) {
-                if (e.getLocalizedMessage().contains("404"))
+
+                Log.i("Ayush", Throwables.getStackTraceAsString(e));
+                if (Throwables.getStackTraceAsString(e).contains("404"))
                     return Optional.absent();
             } catch (IOException e) {
+
+                Log.i("Ayush", Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
             }
         }
@@ -1125,7 +1051,7 @@ public enum MiscUtils {
             MiscUtils.useContextFromContext(toHelpTrack, activity -> {
 
                 ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                        .setCategory("SEVERE ERROR, account creation failed")
+                        .setCategory("SEVERE ERROR, chat token failed")
                         .setAction("User Id - " + serverId)
                         .setValue(1)
                         .build());
@@ -1140,6 +1066,15 @@ public enum MiscUtils {
 
                 @Override
                 public void onAuthenticationError(FirebaseError error) {
+
+                    MiscUtils.useContextFromContext(toHelpTrack, activity -> {
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("SEVERE ERROR " + error.getDetails())
+                                .setAction("User Id - " + serverId)
+                                .setValue(1)
+                                .build());
+                    });
                     Log.e("Ayush", "Login Failed! " + error.getMessage());
                 }
 

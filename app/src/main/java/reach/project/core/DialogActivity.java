@@ -1,6 +1,7 @@
 package reach.project.core;
 
 import android.app.Activity;
+import android.net.Uri;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -11,9 +12,8 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import reach.project.R;
-import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.CircleTransform;
 
+//TODO shift to where required
 public class DialogActivity extends Activity {
 
     @Override
@@ -27,25 +27,22 @@ public class DialogActivity extends Activity {
         final TextView exit = (TextView) findViewById(R.id.exit);
         final LinearLayout accept = (LinearLayout) findViewById(R.id.accept);
         final LinearLayout reject = (LinearLayout) findViewById(R.id.reject);
-        final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
-        final int type = getIntent().getIntExtra("type",0);
+        final int type = getIntent().getIntExtra("type", 0);
 
-        final int px = MiscUtils.dpToPx(50);
-        Picasso.with(DialogActivity.this)
-                .load(StaticData.dropBoxManager)
-                .centerCrop()
-                .resize(px, px)
-                .transform(new CircleTransform())
-                .into(userImageView);
+        final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
+        Picasso.with(userImageView.getContext()).load(Uri.parse(StaticData.dropBoxManager)).fit().centerCrop().into(userImageView);
+
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);
         exit.setVisibility(View.VISIBLE);
+
         exit.setOnClickListener(v -> {
             Intent viewIntent = new Intent(v.getContext(), ReachActivity.class);
             viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(viewIntent);
             DialogActivity.this.finish();
         });
+
         if (type == 1) {
             userName.setText("Hey!");
             textView1.setText("I am Devika from Team Reach! \n" +

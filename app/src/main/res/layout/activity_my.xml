@@ -6,7 +6,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@drawable/splash_bg"
-    tools:context=".core.MyActivity">
+    tools:context=".core.ReachActivity">
     <!-- As the main content view, the view below consumes the entire
          space available using match_parent in both dimensions. -->
     <com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:sothree="http://schemas.android.com/apk/res-auto"
@@ -304,7 +304,6 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:headerLayout="@layout/nav_drawer_header"
         app:menu="@menu/nav_draw_menu">
 
         <FrameLayout

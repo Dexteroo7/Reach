@@ -3,11 +3,15 @@ package reach.project.reachProcess.auxiliaryClasses;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.Serializable;
+
 /**
  * Created by Dexter on 15-05-2015.
  */
 
-public class MusicData implements Parcelable {
+public class MusicData implements Parcelable, Serializable {
+
+    private static final long serialVersionUID = -6470090944414208496L;
 
     private final String displayName;
     private final String path;
@@ -16,9 +20,10 @@ public class MusicData implements Parcelable {
     private final long length;
     private final long senderId;
     private final byte type;
-
     private final String actualName;
     private final String userName;
+    private final String albumName;
+    private final String genre;
 
     public String getActualName() {
         return actualName;
@@ -35,9 +40,6 @@ public class MusicData implements Parcelable {
     public String getGenre() {
         return genre;
     }
-
-    private final String albumName;
-    private final String genre;
 
     public MusicData(long id, long length, long senderId, long processed, String path, String displayName,
                      String artistName, boolean isLiked, long duration, byte type,

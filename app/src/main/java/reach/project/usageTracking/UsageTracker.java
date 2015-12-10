@@ -52,6 +52,7 @@ public enum UsageTracker {
 
     ////////////
     ;
+
     private static final Stack<Request> requests = new Stack<>(); //singleton request object
 
     private static final Executor asyncTracker = Executors.newSingleThreadExecutor();
@@ -111,6 +112,7 @@ public enum UsageTracker {
             builder.append(entry.getKey().name()).append(":").append(entry.getValue());
         }
         ///////////////
+
         jsonObject.put(PostParams.META_INFO.getValue(), builder.toString());
         jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
         jsonObject.put(PostParams.TIME_STAMP.getValue(), calendar.getTimeInMillis());
@@ -177,6 +179,7 @@ public enum UsageTracker {
         final Set<Map.Entry<PostParams, String>> simpleEntries = simpleParams.entrySet();
         for (Map.Entry<PostParams, String> entry : simpleEntries)
             jsonObject.put(entry.getKey().getValue(), entry.getValue());
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
         ///////////////
         jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
 
