@@ -30,7 +30,7 @@ public class DialogActivity extends Activity {
         final int type = getIntent().getIntExtra("type", 0);
 
         final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
-        Picasso.with(userImageView.getContext()).load(Uri.parse(StaticData.dropBoxManager)).fit().into(userImageView);
+        Picasso.with(userImageView.getContext()).load(Uri.parse(StaticData.dropBoxManager)).fit().centerCrop().into(userImageView);
 
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);

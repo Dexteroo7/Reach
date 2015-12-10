@@ -36,6 +36,7 @@ import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,10 +56,10 @@ import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.utils.MetaDataScanner;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
@@ -66,6 +67,7 @@ import reach.project.utils.auxiliaryClasses.UploadProgress;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 public class AccountCreation extends Fragment {
 
@@ -73,6 +75,7 @@ public class AccountCreation extends Fragment {
     private static String imageId = "hello_world";
     private static String phoneNumber = "";
     private static long serverId = 0;
+    private final CircleTransform transform = new CircleTransform();
     private static WeakReference<AccountCreation> reference = null;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
@@ -131,12 +134,12 @@ public class AccountCreation extends Fragment {
             if (!TextUtils.isEmpty(oldData[1])) {
 
                 imageId = oldData[1];
-//                Picasso.with(activity)
-//                        .load(StaticData.cloudStorageImageBaseUrl + imageId)
-//                        .transform(transform)
-//                        .fit()
-//                        .centerCrop()
-//                        .into(profilePhotoSelector);
+                Picasso.with(activity)
+                        .load(StaticData.cloudStorageImageBaseUrl + imageId)
+                        .transform(transform)
+                        .fit()
+                        .centerCrop()
+                        .into(profilePhotoSelector);
             }
         }
 
@@ -580,12 +583,12 @@ public class AccountCreation extends Fragment {
                     } else if (fragment.profilePhotoSelector != null) {
 
                         toUpload = file;
-//                        Picasso.with(context)
-//                                .load(toUpload)
-//                                .fit()
-//                                .centerCrop()
-//                                .transform(fragment.transform)
-//                                .centerCrop().into(fragment.profilePhotoSelector);
+                        Picasso.with(context)
+                                .load(toUpload)
+                                .fit()
+                                .centerCrop()
+                                .transform(fragment.transform)
+                                .centerCrop().into(fragment.profilePhotoSelector);
                     }
                 }
             });

@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
+import com.squareup.picasso.Picasso;
 
 import java.lang.ref.WeakReference;
 
@@ -80,7 +81,7 @@ public class InviteFragment extends Fragment {
                 viewHolder = (ViewHolder) convertView.getTag();
 
             viewHolder.listTitle.setText(getItem(position));
-//            Picasso.with(convertView.getContext()).load(iconIds[position]).into(viewHolder.listImage);
+            Picasso.with(convertView.getContext()).load(iconIds[position]).into(viewHolder.listImage);
             return convertView;
         }
     }

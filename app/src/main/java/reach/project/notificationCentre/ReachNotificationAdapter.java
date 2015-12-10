@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ import reach.project.notificationCentre.notifications.PushAccepted;
 import reach.project.notificationCentre.notifications.Types;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 /**
  * Created by ashish on 10/07/15.
@@ -43,6 +45,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
     private static final SparseBooleanArray opened = new SparseBooleanArray();
     private static final int a = MiscUtils.dpToPx(70);
     private static final int b = MiscUtils.dpToPx(110);
+    private final CircleTransform transform = new CircleTransform();
 
     private final int resID;
     private final Activity activity;
@@ -154,11 +157,11 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText(" likes " + like.getSongName());
-//                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + like.getImageId())
-//                        .fit()
-//                        .centerCrop()
-//                        .transform(transform)
-//                        .into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + like.getImageId())
+                        .fit()
+                        .centerCrop()
+                        .transform(transform)
+                        .into(viewHolder.profilePhoto);
                 break;
 
             case PUSH:
@@ -167,7 +170,8 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
-//                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId()).fit().centerCrop().transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + push.getImageId())
+                        .fit().centerCrop().transform(transform).into(viewHolder.profilePhoto);
 
                 if (accepted.get(notificationBaseLocal.getNotificationId(), false)) {
 
@@ -263,7 +267,9 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
-//                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + becameFriends.getImageId()).fit().centerCrop().transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl
+                        +becameFriends.getImageId()).fit().centerCrop().transform(transform)
+                        .into(viewHolder.profilePhoto);
                 break;
 
             case PUSH_ACCEPTED:
@@ -281,7 +287,9 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                     builder.append("s ");
                 builder.append(" with you");
                 viewHolder.notifType.setText(builder.toString());
-//                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl + pushAccepted.getImageId()).transform(transform).into(viewHolder.profilePhoto);
+                Picasso.with(activity).load(StaticData.cloudStorageImageBaseUrl
+                        +pushAccepted.getImageId()).transform(transform)
+                        .into(viewHolder.profilePhoto);
                 break;
         }
         return convertView;

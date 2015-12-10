@@ -112,25 +112,26 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         final Uri uriToDisplay;
 
-        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
+        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
+            picasso.load(uriToDisplay).fit().centerCrop().into(viewHolder.profilePhotoList);
+        }
         else {
 
             viewHolder.profilePhotoList.setBackgroundColor(Color.parseColor("#eeeeee"));
+            int res;
             if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
-                uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile01);
+                res = R.drawable.default_profile01;
             else {
-
-                uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
+                res = R.drawable.default_profile02;
                 if (status == ReachFriendsHelper.REQUEST_NOT_SENT || status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
 
                     viewHolder.profileGradient.setImageBitmap(null);
                     viewHolder.profileGradient.setBackgroundColor(Color.parseColor("#60000000"));
                 }
             }
+            picasso.load(res).fit().centerCrop().into(viewHolder.profilePhotoList);
         }
-
-        picasso.load(uriToDisplay).fit().into(viewHolder.profilePhotoList);
 
         /*if (networkType == 1) {
             Picasso.with(context).load(R.drawable.wifi).into(viewHolder.networkStatus);
