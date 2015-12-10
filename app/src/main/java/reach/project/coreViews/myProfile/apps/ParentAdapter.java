@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
@@ -18,22 +19,20 @@ import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
-import reach.project.utils.viewHelpers.GetActualAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
+import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<App>, RecentAdapter.VisibilityHook {
+class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements HandOverMessage<App>, RecentAdapter.VisibilityHook {
 
     private final HandOverMessage<App> handOverApp;
-    private final GetActualAdapter getActualAdapter;
 
-    public ParentAdapter(HandOverMessage<App> handOverApp,
-                         GetActualAdapter getActualAdapter) {
+    public ParentAdapter(HandOverMessage<App> handOverApp) {
+
         this.handOverApp = handOverApp;
-        this.getActualAdapter = getActualAdapter;
         setHasStableIds(true);
     }
 
@@ -83,7 +82,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     public synchronized void visibilityChanged(String packageName) {
 
         if (TextUtils.isEmpty(packageName)) {
-            getActualAdapter.getActualAdapter().notifyDataSetChanged();
+            notifyDataSetChanged();
             recentAdapter.notifyDataSetChanged();
         }
 
@@ -105,78 +104,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 //        Log.i("Ayush", hasObservers() + " obs");
 
 //        getActualAdapter.getActualAdapter().notifyDataSetChanged();
-        getActualAdapter.getActualAdapter().notifyItemChanged(position); //adjust for header
+        notifyItemChanged(position); //adjust for header
         recentAdapter.visibilityChanged(packageName);
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
-        switch (viewType) {
-
-            case VIEW_TYPE_ALL: {
-
-                return new AppItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.app_mylibray_list_item, parent, false), position -> {
-
-                    final Object object = getItem(position);
-                    if (object instanceof App)
-                        handOverApp.handOverMessage((App) object);
-                    else
-                        throw new IllegalStateException("Position must correspond with an App");
-                });
-            }
-
-            case VIEW_TYPE_RECENT: {
-                return new ListHolder(parent, R.layout.list_with_more_button_padding);
-            }
-
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-        Log.i("Ayush", "Re-binding parent " + position);
-
-        final Object friend = getItem(position);
-        if (friend instanceof App) {
-
-            final App appExactType = (App) friend;
-            final AppItemHolder appItemHolder = (AppItemHolder) holder;
-            final PackageManager packageManager = appItemHolder.appName.getContext().getPackageManager();
-
-            appItemHolder.bindPosition(position);
-            appItemHolder.appName.setText(appExactType.applicationName);
-            try {
-
-                appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-                appItemHolder.appIcon.setImageDrawable(null);
-            }
-
-            //if contains and is true
-            if (packageVisibility.containsKey(appExactType.packageName) && packageVisibility.get(appExactType.packageName)) {
-                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
-                appItemHolder.toggleText.setText("Everyone");
-            }
-            else {
-                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
-                appItemHolder.toggleText.setText("Only Me");
-            }
-
-        } else {
-
-            final ListHolder horizontalViewHolder = (ListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
-            horizontalViewHolder.headerText.setText("Recently Installed");
-            horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
-            horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
-        }
     }
 
     /**
@@ -202,18 +131,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             else
                 throw new IllegalStateException("App list has been invalidated");
         }
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-
-//        Log.i("Ayush", "PARENT GET ITEM VIEW TYPE " + position);
-
-        final Object item = getItem(position);
-        if (item instanceof App)
-            return VIEW_TYPE_ALL;
-        else
-            return VIEW_TYPE_RECENT;
     }
 
     final Object[] reUsable = new Object[2];
@@ -242,7 +159,88 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
 
     @Override
-    public int getItemCount() {
+    public void handOverMessage(@Nonnull App message) {
+        handOverApp.handOverMessage(message);
+    }
+
+    @Override
+    public boolean isVisible(String packageName) {
+        return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
+    }
+
+    //////////////////////
+
+    @Override
+    public void newBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+        Log.i("Ayush", "Re-binding parent " + position);
+
+        final Object friend = getItem(position);
+        if (friend instanceof App) {
+
+            final App appExactType = (App) friend;
+            final AppItemHolder appItemHolder = (AppItemHolder) holder;
+            final PackageManager packageManager = appItemHolder.appName.getContext().getPackageManager();
+
+            appItemHolder.bindPosition(position);
+            appItemHolder.appName.setText(appExactType.applicationName);
+            try {
+
+                appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                appItemHolder.appIcon.setImageDrawable(null);
+            }
+
+            //if contains and is true
+            if (packageVisibility.containsKey(appExactType.packageName) && packageVisibility.get(appExactType.packageName)) {
+                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+                appItemHolder.toggleText.setText("Everyone");
+            } else {
+                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+                appItemHolder.toggleText.setText("Only Me");
+            }
+
+        } else {
+
+            final ListHolder horizontalViewHolder = (ListHolder) holder;
+            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            horizontalViewHolder.headerText.setText("Recently Installed");
+            horizontalViewHolder.listOfItems.setLayoutManager(
+                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
+        }
+    }
+
+    @Override
+    public RecyclerView.ViewHolder newCreateViewHolder(ViewGroup parent, int viewType) {
+
+        switch (viewType) {
+
+            case VIEW_TYPE_ALL: {
+
+                return new AppItemHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.app_mylibray_list_item, parent, false), position -> {
+
+                    final Object object = getItem(position);
+                    if (object instanceof App)
+                        handOverApp.handOverMessage((App) object);
+                    else
+                        throw new IllegalStateException("Position must correspond with an App");
+                });
+            }
+
+            case VIEW_TYPE_RECENT: {
+                return new ListHolder(parent, R.layout.list_with_more_button_padding);
+            }
+
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public int newGetItemCount() {
 
         Log.i("Ayush", "PARENT GET ITEM COUNT");
 
@@ -251,12 +249,17 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
 
     @Override
-    public void handOverMessage(@Nonnull App message) {
-        handOverApp.handOverMessage(message);
+    public int newGetItemViewType(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof App)
+            return VIEW_TYPE_ALL;
+        else
+            return VIEW_TYPE_RECENT;
     }
 
     @Override
-    public boolean isVisible(String packageName) {
-        return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
+    public RecyclerView.ViewHolder inflatePlaceHolder(View view) {
+        return null;
     }
 }

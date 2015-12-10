@@ -15,6 +15,7 @@ android {
         versionName "0.9.21.7-beta"
         multiDexEnabled true
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -27,6 +28,7 @@ android {
 }
 
 dependencies {
+
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev54-1.21.0'
