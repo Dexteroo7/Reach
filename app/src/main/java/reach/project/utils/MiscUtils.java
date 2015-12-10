@@ -48,7 +48,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
@@ -858,30 +857,6 @@ public enum MiscUtils {
 
     private static final StringBuffer buffer = new StringBuffer();
     private static final String baseURL = "http://52.74.53.245:8080/getImage/small?";
-
-    public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
-
-        buffer.setLength(0);
-        buffer.append(baseURL);
-        if (!TextUtils.isEmpty(album)) {
-
-            buffer.append("album=").append(Uri.encode(album));
-            if (!TextUtils.isEmpty(artist))
-                buffer.append("&artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(Uri.encode(song));
-        } else if (!TextUtils.isEmpty(artist)) {
-
-            buffer.append("artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(Uri.encode(song));
-        } else if (!TextUtils.isEmpty(song))
-            buffer.append("song=").append(Uri.encode(song));
-
-        final String toReturn = buffer.toString();
-//        Log.i("Ayush", toReturn);
-        return toReturn;
-    }
 
     public static String getDeviceId(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);

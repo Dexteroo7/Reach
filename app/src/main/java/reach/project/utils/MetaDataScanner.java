@@ -740,7 +740,7 @@ public class MetaDataScanner extends IntentService {
         final boolean newApps = CloudStorageUtils.uploadMetaData(
                 appBlob,
                 MiscUtils.getAppStorageKey(serverId),
-                key,
+                key, //is wrong but storage object will already be created
                 CloudStorageUtils.APP);
 
         if (newApps || first) {
