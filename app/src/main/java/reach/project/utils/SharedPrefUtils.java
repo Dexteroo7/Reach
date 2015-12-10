@@ -2,15 +2,24 @@ package reach.project.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.RandomAccessFile;
+import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -22,10 +31,6 @@ public enum SharedPrefUtils {
     ;
 
     //TODO centralize all keys,
-
-    public static String getDeviceId(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-    }
 
     public static void storeReachUser(SharedPreferences sharedPreferences, ReachUser reachUserDatabase) {
 
@@ -132,11 +137,7 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putBoolean("mobileDataOn", false).apply();
     }
 
-    public static void storeLastPlayed(SharedPreferences sharedPreferences, String data) {
-        sharedPreferences.edit().putString("last_played", data).apply();
-    }
-
-    public static boolean getMobileData (SharedPreferences sharedPreferences) {
+    public static boolean getMobileData(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("mobileDataOn", true);
     }
 
@@ -146,20 +147,6 @@ public enum SharedPrefUtils {
 
     public static boolean getReachQueueSeen(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("reachQueueSeen", false);
-    }
-
-    public static Optional<MusicData> getLastPlayed(SharedPreferences sharedPreferences) {
-        final String unParsed = sharedPreferences.getString("last_played", "");
-        if (TextUtils.isEmpty(unParsed))
-            return Optional.absent();
-        final MusicData toReturn;
-        try {
-            toReturn = new Gson().fromJson(unParsed, MusicData.class);
-        } catch (IllegalStateException | JsonSyntaxException e) {
-            e.printStackTrace();
-            return Optional.absent();
-        }
-        return Optional.of(toReturn);
     }
 
     public static long getServerId(SharedPreferences sharedPreferences) {
@@ -190,24 +177,204 @@ public enum SharedPrefUtils {
         return sharedPreferences.getString("campaignEmail", "");
     }
 
-    public static boolean toggleShuffle(SharedPreferences sharedPreferences) {
+    //////////////////
 
-        final boolean currentValue = sharedPreferences.getBoolean("shuffle", false);
-        sharedPreferences.edit().putBoolean("shuffle", !currentValue).apply();
-        return !currentValue;
+    public static Optional<MusicData> getLastPlayed(Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+        final byte[] stuff;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "last_played", "r");
+            final int size = randomAccessFile.readInt();
+            stuff = new byte[size];
+            randomAccessFile.readFully(stuff, 0, size); //read fully
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Optional.absent();
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+
+        return deserialize(stuff);
     }
 
-    public static boolean getShuffle(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getBoolean("shuffle", false);
+    public synchronized static void storeLastPlayed(Context context, MusicData musicData) {
+
+        RandomAccessFile randomAccessFile = null;
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "last_played", "rwd");
+            randomAccessFile.setLength(0);
+            final byte[] bytes = serialize(musicData);
+            randomAccessFile.writeInt(bytes.length);
+            randomAccessFile.write(bytes, 0, bytes.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
     }
 
-    public static boolean toggleRepeat(SharedPreferences sharedPreferences) {
-        final boolean currentValue = sharedPreferences.getBoolean("repeat", false);
-        sharedPreferences.edit().putBoolean("repeat", !currentValue).apply();
-        return !currentValue;
+    private static byte[] serialize(MusicData obj) throws IOException {
+
+        ByteArrayOutputStream out = null;
+        ObjectOutputStream os = null;
+        try {
+
+            out = new ByteArrayOutputStream();
+            os = new ObjectOutputStream(out);
+            os.writeObject(obj);
+            return out.toByteArray();
+        } finally {
+            MiscUtils.closeQuietly(out, os);
+        }
     }
 
-    public static boolean getRepeat(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getBoolean("repeat", false);
+    private static Optional<MusicData> deserialize(byte[] data) {
+
+
+        ByteArrayInputStream in = null;
+        ObjectInputStream is = null;
+
+        try {
+            in = new ByteArrayInputStream(data);
+            is = new ObjectInputStream(in);
+            return Optional.fromNullable((MusicData) is.readObject());
+        } catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+            return Optional.absent();
+        } finally {
+            MiscUtils.closeQuietly(in, is);
+        }
+    }
+
+    //////////////////
+
+    public synchronized static boolean toggleShuffle(Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "shuffle_boolean", "rwd");
+            final boolean newShuffle = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
+            randomAccessFile.setLength(0);
+            randomAccessFile.writeBoolean(newShuffle); //write new shuffle
+            return newShuffle;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    public static boolean getShuffle(Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "shuffle_boolean", "r");
+            return randomAccessFile.readBoolean();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    //////////////////
+
+    public synchronized static boolean toggleRepeat(Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "repeat_boolean", "rwd");
+            final boolean newRepeat = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
+            randomAccessFile.setLength(0);
+            randomAccessFile.writeBoolean(newRepeat); //write new repeat
+            return newRepeat;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    public static boolean getRepeat(Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "repeat_boolean", "r");
+            return randomAccessFile.readBoolean();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    //////////////////
+
+    @Nonnull
+    public static Map<String, Boolean> getPackageVisibilities(SharedPreferences sharedPreferences) {
+
+        final String serializedString = sharedPreferences.getString("app_visibility", "");
+        if (TextUtils.isEmpty(serializedString))
+            return MiscUtils.getMap(0);
+
+        final Map<String, Boolean> toReturn;
+        try {
+            toReturn = new Gson().fromJson(
+                    serializedString,
+                    new TypeToken<Map<String, Boolean>>() {
+                    }.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MiscUtils.getMap(0);
+        }
+
+        return toReturn;
+    }
+
+    public synchronized static void addPackageVisibility(SharedPreferences sharedPreferences,
+                                                         String packageName,
+                                                         boolean visibility) {
+
+        @Nullable
+        Map<String, Boolean> toSave = null;
+
+        final String serializedString = sharedPreferences.getString("app_visibility", "");
+        if (!TextUtils.isEmpty(serializedString))
+            try {
+                toSave = new Gson().fromJson(
+                        serializedString,
+                        new TypeToken<Map<String, Boolean>>() {
+                        }.getType());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        if (toSave == null)
+            toSave = MiscUtils.getMap(0);
+
+        toSave.put(packageName, visibility);
+
+        sharedPreferences.edit().putString("app_visibility",
+                new Gson().toJson(toSave, new TypeToken<Map<String, Boolean>>() {
+                }.getType())).apply();
+        Log.i("Ayush", "Saving new application visibility " + packageName + " " + visibility + " " + toSave.size());
+    }
+
+    public synchronized static void overWritePackageVisibility(SharedPreferences sharedPreferences, Map<String, Boolean> visibilities) {
+
+        sharedPreferences.edit().putString("app_visibility",
+                new Gson().toJson(visibilities, new TypeToken<Map<String, Boolean>>() {
+                }.getType())).apply();
+        Log.i("Ayush", "Saving new application visibility " + visibilities.size());
     }
 }

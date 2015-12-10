@@ -1,19 +1,17 @@
 package reach.project.coreViews;
 
 import android.app.Activity;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -44,7 +42,6 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Map;
 
 import reach.backend.music.musicVisibilityApi.model.JsonMap;
@@ -54,13 +51,12 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.MusicListFragment;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MusicListFragment;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CircleTransform;
 import reach.project.utils.viewHelpers.TextDrawable;
 import reach.project.utils.viewHelpers.astuetz.PagerSlidingTabStrip;
@@ -78,7 +74,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
 
     private ViewPager viewPager;
     private PagerAdapter mPagerAdapter;
-    private SuperInterface mListener;
 
     private int mHeaderHeight;
     private int mMinHeaderTranslation;
@@ -287,11 +282,25 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 return; //no visibility data found
             }
 
-            //parse visibility data
-            final ArrayList<ContentProviderOperation> operations = new ArrayList<>(visibilityMap.size());
+            //handle visibility data
+            MiscUtils.useContextFromFragment(reference, (Context context) -> handleVisibility(context, visibilityMap, hostId));
+        }
+    }
+
+    private static synchronized void handleVisibility(Context context,
+                                                      JsonMap visibilityMap,
+                                                      long serverId) {
+
+        final MySongsHelper mySongsHelper = new MySongsHelper(context);
+        final SQLiteDatabase sqlDB = mySongsHelper.getWritableDatabase();
+        sqlDB.beginTransaction();
+
+        try {
+
             for (Map.Entry<String, Object> objectEntry : visibilityMap.entrySet()) {
 
                 if (objectEntry == null) {
+                    //TODO track
                     Log.i("Ayush", "objectEntry was null");
                     continue;
                 }
@@ -300,33 +309,28 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 final Object value = objectEntry.getValue();
 
                 if (TextUtils.isEmpty(key) || !TextUtils.isDigitsOnly(key) || value == null || !(value instanceof Boolean)) {
+                    //TODO track
                     Log.i("Ayush", "Found shit data inside visibilityMap " + key + " " + value);
                     continue;
                 }
 
                 final ContentValues values = new ContentValues();
-                values.put(ReachSongHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
+                values.put(MySongsHelper.COLUMN_VISIBILITY, (short) ((Boolean) value ? 1 : 0));
 
-                operations.add(ContentProviderOperation
-                        .newUpdate(ReachSongProvider.CONTENT_URI)
-                        .withValues(values)
-                        .withSelection(ReachSongHelper.COLUMN_USER_ID + " = ? and " + ReachSongHelper.COLUMN_SONG_ID + " = ?",
-                                new String[]{hostId + "", key}).build());
+                sqlDB.update(MySongsHelper.SONG_TABLE,
+                        values,
+                        MySongsHelper.COLUMN_USER_ID + " = ? and " + MySongsHelper.COLUMN_SONG_ID + " = ?", new String[]{serverId + "", key});
             }
 
-            //update visibility into database
-            if (operations.size() > 0) {
-                MiscUtils.useContextFromFragment(reference, context -> {
-                    try {
-                        context.getContentResolver().applyBatch(ReachSongProvider.AUTHORITY, operations);
-                        Log.i("Ayush", "Visibility updated !");
-                    } catch (RemoteException | OperationApplicationException e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                });
-            }
+            visibilityMap.clear();
+            sqlDB.setTransactionSuccessful();
+
+        } finally {
+
+            sqlDB.endTransaction();
+            mySongsHelper.close();
         }
+        context.getContentResolver().notifyChange(MySongsProvider.CONTENT_URI, null);
     }
 
     //TODO recycle bitmap
@@ -385,25 +389,6 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 return null;
             });
         }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-
-        super.onAttach(context);
-        try {
-            mListener = (SuperInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-
-        super.onDetach();
-        mListener = null;
     }
 
     @Override

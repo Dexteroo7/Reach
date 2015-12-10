@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -24,12 +25,9 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,8 +47,8 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.friends.ReachFriendsProvider;
-import reach.project.music.songs.ReachSongHelper;
-import reach.project.music.songs.ReachSongProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.uploadDownload.ReachDatabase;
@@ -98,7 +96,7 @@ public class ProcessManager extends Service implements
             if (message.get() instanceof String)
                 intent.putExtra("message", (String) message.get());
             else if (message.get() instanceof MusicData)
-                intent.putExtra("message", (MusicData) message.get());
+                intent.putExtra("message", (Parcelable) message.get());
         }
         context.sendBroadcast(intent);
     }
@@ -136,7 +134,7 @@ public class ProcessManager extends Service implements
             if (message.get() instanceof String)
                 intent.putExtra("message", (String) message.get());
             else if (message.get() instanceof MusicData)
-                intent.putExtra("message", (MusicData) message.get());
+                intent.putExtra("message", (Parcelable) message.get());
         }
         context.startService(intent);
     }
@@ -249,10 +247,10 @@ public class ProcessManager extends Service implements
                     new String[]{lastSong.id + "", "0"}, null);
         else
             cursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " = ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " = ?",
                     new String[]{serverId + "", lastSong.id + ""}, null);
         if (cursor != null)
             cursor.moveToFirst();
@@ -273,10 +271,10 @@ public class ProcessManager extends Service implements
         } else {
             reachSongCursor = getReachDatabaseCursor();
             myLibraryCursor = getContentResolver().query(
-                    ReachSongProvider.CONTENT_URI,
+                    MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    ReachSongHelper.COLUMN_USER_ID + " = ? and " +
-                            ReachSongHelper.COLUMN_SONG_ID + " != ?",
+                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
+                            MySongsHelper.COLUMN_SONG_ID + " != ?",
                     new String[]{serverId + "", id + ""}, null);
         }
 
@@ -535,8 +533,7 @@ public class ProcessManager extends Service implements
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
         sendMessage(this, Optional.of(musicData), REPLY_LATEST_MUSIC);
-        final String toSend = new Gson().toJson(musicData, MusicData.class);
-        SharedPrefUtils.storeLastPlayed(getSharedPreferences("reach_process", MODE_PRIVATE), toSend);
+        SharedPrefUtils.storeLastPlayed(this, musicData);
         /**
          * GA stuff
          */
@@ -546,16 +543,6 @@ public class ProcessManager extends Service implements
                 .setLabel("SongBrainz - " + musicData.getDisplayName())
                 .setValue(1)
                 .build());
-
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-            props.put("Song", musicData.getDisplayName());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Play song", props);
 
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
         simpleParams.put(PostParams.USER_ID, serverId + "");
@@ -806,7 +793,7 @@ public class ProcessManager extends Service implements
                 Log.i("Downloader", "ACTION_NEXT");
                 musicHandler.userUnPause();
                 final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
-                final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
+                final boolean shuffle = SharedPrefUtils.getShuffle(this);
                 if (shuffle && currentSong.isPresent())
                     pushNextSong(shuffleNext(currentSong.get().getId(), currentSong.get().getType()));
                 else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
@@ -815,7 +802,7 @@ public class ProcessManager extends Service implements
             case MusicHandler.ACTION_PREVIOUS: {
                 Log.i("Downloader", "ACTION_PREVIOUS");
                 musicHandler.userUnPause();
-                final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
+                final boolean shuffle = SharedPrefUtils.getShuffle(this);
                 if (shuffle)
                     pushNextSong(shufflePrevious());
                 else pushNextSong(previousSong(musicHandler.getCurrentSong()));
@@ -830,8 +817,8 @@ public class ProcessManager extends Service implements
                     pushNextSong(history);
                 else {
                     final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
-                    final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
-                    final boolean repeat = SharedPrefUtils.getRepeat(getSharedPreferences());
+                    final boolean shuffle = SharedPrefUtils.getShuffle(this);
+                    final boolean repeat = SharedPrefUtils.getRepeat(this);
                     if (repeat && currentSong.isPresent())
                         pushNextSong(currentSong);
                     else if (shuffle && currentSong.isPresent())
@@ -846,8 +833,8 @@ public class ProcessManager extends Service implements
                 if (musicHandler.processSeek(Short.parseShort(intent.getStringExtra("message"))))
                     break;
                 final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
-                final boolean shuffle = SharedPrefUtils.getShuffle(getSharedPreferences());
-                final boolean repeat = SharedPrefUtils.getRepeat(getSharedPreferences());
+                final boolean shuffle = SharedPrefUtils.getShuffle(this);
+                final boolean repeat = SharedPrefUtils.getRepeat(this);
                 if (repeat && currentSong.isPresent())
                     pushNextSong(currentSong);
                 else if (shuffle && currentSong.isPresent())
@@ -872,6 +859,7 @@ public class ProcessManager extends Service implements
 
     //////////////////////////////////
     private Cursor getReachDatabaseCursor() {
+
         return getContentResolver().query(
                 ReachDatabaseProvider.CONTENT_URI,
                 StaticData.DOWNLOADED_PARTIAL,
@@ -882,12 +870,13 @@ public class ProcessManager extends Service implements
     }
 
     private Cursor getMyLibraryCursor() {
+
         return getContentResolver().query(
-                ReachSongProvider.CONTENT_URI,
+                MySongsProvider.CONTENT_URI,
                 StaticData.DISK_PARTIAL,
-                ReachSongHelper.COLUMN_USER_ID + " = ?",
+                MySongsHelper.COLUMN_USER_ID + " = ?",
                 new String[]{serverId + ""},
-                ReachSongHelper.COLUMN_DISPLAY_NAME + " ASC");
+                MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
     }
 
     private Optional<MusicData> playFromCursor(Optional<Cursor> optional, byte type) {
@@ -1036,7 +1025,7 @@ public class ProcessManager extends Service implements
 
         if (!currentSong.isPresent())
             return shuffleNext(0, (byte) 0); //if no current song shuffleNext
-        if (SharedPrefUtils.getRepeat(getSharedPreferences()) && currentSong.isPresent() && automatic)
+        if (SharedPrefUtils.getRepeat(this) && currentSong.isPresent() && automatic)
             return currentSong;
 
         if (currentSong.get().getType() == 0) {

@@ -9,15 +9,18 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="160dp">
+
         <ImageView
             android:id="@+id/userImageNav"
             android:scaleType="centerCrop"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
         <ImageView
             android:background="@drawable/nav_pic_gradient"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
         <LinearLayout
             android:layout_gravity="bottom"
             android:layout_marginLeft="15dp"

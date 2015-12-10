@@ -57,7 +57,7 @@ public class ReferFragment extends Fragment {
         sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.referToolbar);
-        mToolbar.setTitle("Refer and Earn");
+        mToolbar.setTitle("Earn Rewards");
         mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
         totalEarning = (TextView) rootView.findViewById(R.id.totalEarning);

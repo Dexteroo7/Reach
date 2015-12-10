@@ -11,19 +11,32 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
     //////////////////////////////////
+    <listener>
+        <listener-class>reach.backend.Servlets.ObjectifyLoaderContextListener</listener-class>
+    </listener>
+    //////////////////////////////////
     <servlet>
         <servlet-name>SystemServiceServlet</servlet-name>
         <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
             <param-value>
-                reach.backend.Feedback.FeedBackEndpoint,
+
                 reach.backend.User.MessagingEndpoint,
                 reach.backend.User.ReachUserEndpoint,
+
+                reach.backend.Feedback.FeedBackEndpoint,
                 reach.backend.Transactions.CompletedOperationsEndpoint,
-                reach.backend.Music.MusicDataEndpoint,
+                reach.backend.ActiveCountLog.ActiveCountLogEndpoint,
+
                 reach.backend.Notifications.NotificationEndpoint,
-                reach.backend.ActiveCountLog.ActiveCountLogEndpoint
+
+                reach.backend.Music.MusicDataEndpoint,
+
+                reach.backend.applications.UnClassifiedAppsEndpoint,
+                reach.backend.applications.ClassifiedAppsEndpoint,
+                reach.backend.applications.AppVisibilityEndpoint
+
             </param-value>
         </init-param>
     </servlet>
@@ -49,10 +62,6 @@
         <servlet-name>RefreshGCM</servlet-name>
         <url-pattern>/refreshGCM</url-pattern>
     </servlet-mapping>
-    //////////////////////////////////
-    <listener>
-        <listener-class>reach.backend.Servlets.ObjectifyLoaderContextListener</listener-class>
-    </listener>
     //////////////////////////////////
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

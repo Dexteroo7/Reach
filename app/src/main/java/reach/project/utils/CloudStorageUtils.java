@@ -3,11 +3,9 @@ package reach.project.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
@@ -38,8 +36,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import reach.project.music.MusicList;
-import reach.project.music.albums.Album;
-import reach.project.music.artists.Artist;
 import reach.project.utils.auxiliaryClasses.UploadProgress;
 
 /**
@@ -48,13 +44,17 @@ import reach.project.utils.auxiliaryClasses.UploadProgress;
 public enum CloudStorageUtils {
     ;
 
+    public static byte APP = 0;
+    public static byte MUSIC = 1;
+
     private static final String APPLICATION_NAME_PROPERTY = "Reach";
     private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
     private static final String BUCKET_NAME_IMAGES = "able-door-616-images";
     private static final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
+    private static final String BUCKET_NAME_APP_DATA = "able-door-616-app-data";
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
-    public static void uploadFile(final File file, InputStream key, UploadProgress uploadProgress) {
+    public static void uploadImage(final File file, InputStream key, UploadProgress uploadProgress) {
 
         //get file name
         String fileName;
@@ -218,6 +218,117 @@ public enum CloudStorageUtils {
 //    }
 
     /**
+     * Uploads the Music data to google cloud storage
+     *
+     * @param metadata bytes of meta data (un-compressed)
+     * @param fileName the name of file
+     * @param key      the cloud storage key as input stream
+     */
+    public static boolean uploadMetaData(byte[] metadata, final String fileName, InputStream key, byte type) {
+
+        final byte[] musicData;
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(metadata.length);
+        GZIPOutputStream gzipOutputStream = null;
+
+        try {
+            gzipOutputStream = new GZIPOutputStream(outputStream);
+            gzipOutputStream.write(metadata);
+            gzipOutputStream.close();
+            musicData = outputStream.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return true; //error, but sync with local sql
+        } finally {
+            MiscUtils.closeQuietly(outputStream, gzipOutputStream);
+        }
+
+        Log.i("Ayush", "Compression ratio " + (musicData.length * 100) / metadata.length);
+        //prepare storage object
+        final Storage storage = getStorage(key).orNull();
+        MiscUtils.closeQuietly(key);
+        if (storage == null)
+            return true; //error, but sync with local sql
+
+        //compute hash of current Music data
+        final String currentHash = Base64.encodeToString(Hashing.md5().newHasher()
+                .putBytes(musicData)
+                .hash().asBytes(), Base64.DEFAULT).trim();
+        Log.i("Ayush", "Current hash = " + currentHash);
+
+        //getMd5Hash of meta data on storage
+        final String bucketToUse;
+        if (type == APP)
+            bucketToUse = BUCKET_NAME_APP_DATA;
+        else if (type == MUSIC)
+            bucketToUse = BUCKET_NAME_MUSIC_DATA;
+        else
+            throw new IllegalArgumentException("Un-expected type");
+
+        String hash = "";
+        try {
+            hash = storage.objects().get(bucketToUse, fileName).execute().getMd5Hash().trim();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.i("Ayush", "Server hash = " + hash);
+
+        //compare hash
+        if (currentHash.equals(hash))
+            return false; //hash was same
+
+        //file not present OR old
+        Log.i("Ayush", "File not found, Uploading " + fileName);
+        final Storage.Objects.Insert insert;
+        final AbstractInputStreamContent content = new AbstractInputStreamContent("application/octet-stream") {
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(musicData); //can be retried
+            }
+
+            @Override
+            public long getLength() throws IOException {
+                return musicData.length;
+            }
+
+            @Override
+            public boolean retrySupported() {
+                return true;
+            }
+        };
+
+        try {
+            insert = storage.objects().insert(bucketToUse, null, content);
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            Log.i("Ayush", "Error while creating request" + fileName);
+            return true; //error, but sync with local sql
+        }
+
+        insert.setPredefinedAcl("publicRead");
+        insert.setName(fileName);
+        insert.getMediaHttpUploader().setDirectUploadEnabled(true);
+//        insert.getMediaHttpUploader().setProgressListener(uploadProgress);
+
+        //upload
+        final String md5;
+        try {
+            md5 = insert.execute().getMd5Hash();
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            Log.i("Ayush", "Error while uploading" + fileName);
+//            uploadProgress.error();
+            return true; //error, but sync with local sql
+        }
+
+        Log.i("Ayush", "Upload complete " + md5);
+//        uploadProgress.success(fileName);
+        return true; //success, sync with local
+    }
+
+    /**
      * Fetches music data from server and also inserts into database
      *
      * @param hostId  id of person to fetch from
@@ -304,7 +415,6 @@ public enum CloudStorageUtils {
 
             //All the music got deleted
             MiscUtils.deleteSongs(hostId, resolver);
-            MiscUtils.deletePlayLists(hostId, resolver);
             //Get rid of the hash
             SharedPrefUtils.removeMusicHash(preferences, fileName);
             return false; //no songs found !
@@ -313,137 +423,17 @@ public enum CloudStorageUtils {
         //first update the hash
         SharedPrefUtils.storeMusicHash(preferences, fileName, serverHash);
 
-        final Pair<ArrayMap<String, Album>, ArrayMap<String, Artist>> pair =
-                MiscUtils.getAlbumsAndArtists(musicList.song, hostId);
         MiscUtils.bulkInsertSongs(
                 musicList.song,
-                pair.first,
-                pair.second,
                 resolver,
                 hostId);
 
-        if (musicList.playlist == null || musicList.playlist.isEmpty())
-            //All playLists got deleted
-            MiscUtils.deletePlayLists(hostId, resolver);
-        else
-            MiscUtils.bulkInsertPlayLists(musicList.playlist, resolver, hostId);
-
         return true; //all good, check for visibility as well
-    }
-
-    /**
-     * Uploads the Music data to google cloud storage
-     *
-     * @param music    bytes of Music data (un-compressed)
-     * @param fileName the name of file (@MiscUtils.getMusicStorageKey())
-     * @param key      the cloud storage key as input stream
-     */
-    public static boolean uploadMusicData(byte[] music, final String fileName, InputStream key) {
-
-        final byte[] musicData;
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(music.length);
-        GZIPOutputStream gzipOutputStream = null;
-
-        try {
-            gzipOutputStream = new GZIPOutputStream(outputStream);
-            gzipOutputStream.write(music);
-            gzipOutputStream.close();
-            musicData = outputStream.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return true;
-        } finally {
-            MiscUtils.closeQuietly(outputStream, gzipOutputStream);
-        }
-
-        Log.i("Ayush", "Compression ratio " + (musicData.length * 100) / music.length);
-        //prepare storage object
-        final Storage storage = getStorage(key).orNull();
-        MiscUtils.closeQuietly(key);
-        if (storage == null)
-            return true; //error, but sync with local sql
-
-        //compute hash of current Music data
-        final String currentHash = Base64.encodeToString(Hashing.md5().newHasher()
-                .putBytes(musicData)
-                .hash().asBytes(), Base64.DEFAULT).trim();
-        Log.i("Ayush", "Current hash = " + currentHash);
-
-        //getMd5Hash of Music data on storage
-        String hash = "";
-        try {
-            hash = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName).execute().getMd5Hash().trim();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Log.i("Ayush", "Server hash = " + hash);
-
-        //compare hash
-        if (currentHash.equals(hash))
-            return false; //hash was same
-
-        //file not present OR old
-        Log.i("Ayush", "File not found, Uploading " + fileName);
-        final Storage.Objects.Insert insert;
-        final AbstractInputStreamContent content = new AbstractInputStreamContent("application/octet-stream") {
-
-            @Override
-            public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(musicData); //can be retried
-            }
-
-            @Override
-            public long getLength() throws IOException {
-                return musicData.length;
-            }
-
-            @Override
-            public boolean retrySupported() {
-                return true;
-            }
-        };
-
-        try {
-            insert = storage.objects().insert(BUCKET_NAME_MUSIC_DATA, null, content);
-        } catch (IOException e) {
-
-            e.printStackTrace();
-            Log.i("Ayush", "Error while creating request" + fileName);
-            return true; //error, but sync with local sql
-        }
-
-        insert.setPredefinedAcl("publicRead");
-        insert.setName(fileName);
-        insert.getMediaHttpUploader().setDirectUploadEnabled(true);
-//        insert.getMediaHttpUploader().setProgressListener(uploadProgress);
-
-        //upload
-        final String md5;
-        try {
-            md5 = insert.execute().getMd5Hash();
-        } catch (IOException e) {
-
-            e.printStackTrace();
-            Log.i("Ayush", "Error while uploading" + fileName);
-//            uploadProgress.error();
-            return true; //error, but sync with local sql
-        }
-
-        Log.i("Ayush", "Upload complete " + md5);
-//        uploadProgress.success(fileName);
-        return true; //success, sync with local
     }
 
     private static Storage storage = null;
 
     private static Optional<Storage> getStorage(InputStream stream) {
-
-//        final HttpResponseCache cache = HttpResponseCache.();
-//        if (cache != null)
-//            try {
-//                cache.delete();
-//            } catch (IOException ignored) {
-//            }
 
         if (storage != null)
             return Optional.of(storage);
@@ -464,6 +454,7 @@ public enum CloudStorageUtils {
                     stream,
                     "notasecret", "privatekey", "notasecret");
         } catch (GeneralSecurityException | IOException e) {
+
             e.printStackTrace();
             try {
                 transport.shutdown();
