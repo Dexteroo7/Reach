@@ -22,6 +22,7 @@ import android.widget.RemoteViews;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -736,7 +737,7 @@ public class ProcessManager extends Service implements
                 close(); //shut down process
             } catch (Throwable e) {
                 e.printStackTrace();
-                Log.i("Downloader", "EXCEPTION IN REACH TASK " + e.getLocalizedMessage());
+                Log.i("Downloader", "EXCEPTION IN REACH TASK " + Throwables.getStackTraceAsString(e));
             } finally {
                 killCheck.release();
                 Log.i("Downloader", "DEATH CHECK " + killCheck.availablePermits());

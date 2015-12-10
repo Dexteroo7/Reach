@@ -39,6 +39,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 
@@ -697,17 +698,17 @@ public enum MiscUtils {
                 return Optional.fromNullable(resultAfterWork);
             } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
 
-                Log.i("Ayush", e.getLocalizedMessage());
+                Log.i("Ayush", Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
                 return Optional.absent();
             } catch (GoogleJsonResponseException e) {
 
-                Log.i("Ayush", e.getLocalizedMessage());
-                if (e.getLocalizedMessage().contains("404"))
+                Log.i("Ayush", Throwables.getStackTraceAsString(e));
+                if (Throwables.getStackTraceAsString(e).contains("404"))
                     return Optional.absent();
             } catch (IOException e) {
 
-                Log.i("Ayush", e.getLocalizedMessage());
+                Log.i("Ayush", Throwables.getStackTraceAsString(e));
                 e.printStackTrace();
             }
         }

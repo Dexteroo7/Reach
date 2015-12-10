@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 
 import java.io.File;
 import java.io.IOException;
@@ -192,10 +193,11 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             Log.i("Downloader", currentSong.getPath() + " could not be prepared");
             final File check = new File(currentSong.getPath());
             final String missType;
+            final String stackTrace = Throwables.getStackTraceAsString(e);
             if (!(check.isFile() && check.length() == currentSong.getLength()))
-                missType = "Possible File Corruption " + e.getLocalizedMessage();
+                missType = "Possible File Corruption " + stackTrace;
             else
-                missType = "AudioTrackError " + e.getLocalizedMessage();
+                missType = "AudioTrackError " + stackTrace;
             handlerInterface.errorReport(currentSong.getDisplayName(), missType);
             return 0;
         }

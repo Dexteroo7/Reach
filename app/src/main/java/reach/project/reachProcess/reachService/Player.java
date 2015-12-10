@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
@@ -297,7 +298,7 @@ public class Player {
 //            playerSource.close();
 //            pipeFuture.cancel(true);
             e.printStackTrace();
-            throw new IOException("Probably corrupt file : header fetch timed out, " + e.getLocalizedMessage());
+            throw new IOException("Probably corrupt file : header fetch timed out, " + Throwables.getStackTraceAsString(e));
         } finally {
             getHeader.cancel(true);
         }
