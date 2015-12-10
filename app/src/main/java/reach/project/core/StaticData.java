@@ -69,7 +69,12 @@ public final class StaticData {
             ReachDatabaseHelper.COLUMN_IS_LIKED, //6
             ReachDatabaseHelper.COLUMN_SONG_ID, //7
             ReachDatabaseHelper.COLUMN_ARTIST, //8
-            ReachDatabaseHelper.COLUMN_DURATION}; //9
+            ReachDatabaseHelper.COLUMN_DURATION, //9
+
+            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //10
+            ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
+            ReachDatabaseHelper.COLUMN_ALBUM, //12
+            ReachDatabaseHelper.COLUMN_GENRE}; //13
 
     public static final String[] DISK_PARTIAL = new String[]{
             MySongsHelper.COLUMN_ARTIST, //0
@@ -78,7 +83,11 @@ public final class StaticData {
             MySongsHelper.COLUMN_PATH, //3
             MySongsHelper.COLUMN_DISPLAY_NAME, //4
             MySongsHelper.COLUMN_ID, //5
-            MySongsHelper.COLUMN_DURATION}; //6
+            MySongsHelper.COLUMN_DURATION, //6
+
+            MySongsHelper.COLUMN_ACTUAL_NAME, //7
+            MySongsHelper.COLUMN_ALBUM, //8
+            MySongsHelper.COLUMN_GENRE}; //9
 
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;
