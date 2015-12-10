@@ -11,9 +11,9 @@
         android:layout_width="match_parent"
         android:layout_height="160dp">
 
-        <com.facebook.drawee.view.SimpleDraweeView
+        <ImageView
             android:id="@+id/userImageNav"
-            fresco:actualImageScaleType="centerCrop"
+            android:scaleType="centerCrop"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 

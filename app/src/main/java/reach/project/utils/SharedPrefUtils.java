@@ -176,7 +176,7 @@ public enum SharedPrefUtils {
         return deserialize(stuff);
     }
 
-    public static void storeLastPlayed(Context context, MusicData musicData) {
+    public synchronized static void storeLastPlayed(Context context, MusicData musicData) {
 
         RandomAccessFile randomAccessFile = null;
         try {
@@ -227,7 +227,7 @@ public enum SharedPrefUtils {
 
     //////////////////
 
-    public static boolean toggleShuffle(Context context) {
+    public synchronized static boolean toggleShuffle(Context context) {
 
         RandomAccessFile randomAccessFile = null;
 
@@ -262,7 +262,7 @@ public enum SharedPrefUtils {
 
     //////////////////
 
-    public static boolean toggleRepeat(Context context) {
+    public synchronized static boolean toggleRepeat(Context context) {
 
         RandomAccessFile randomAccessFile = null;
 
@@ -295,8 +295,10 @@ public enum SharedPrefUtils {
         }
     }
 
+    //////////////////
+
     @Nonnull
-    public synchronized static Map<String, Boolean> getPackageVisibilities(SharedPreferences sharedPreferences) {
+    public static Map<String, Boolean> getPackageVisibilities(SharedPreferences sharedPreferences) {
 
         final String serializedString = sharedPreferences.getString("app_visibility", "");
         if (TextUtils.isEmpty(serializedString))

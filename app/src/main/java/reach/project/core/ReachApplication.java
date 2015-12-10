@@ -3,9 +3,6 @@ package reach.project.core;
 import android.app.Application;
 import android.support.annotation.NonNull;
 
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
-import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseException;
 import com.google.android.gms.analytics.GoogleAnalytics;
@@ -157,12 +154,5 @@ public class ReachApplication extends Application {
             Firebase.getDefaultConfig().setPersistenceEnabled(true);
         } catch (FirebaseException ignored) {
         }
-        //initialize fresco
-        final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, okHttpClient)
-                .setDownsampleEnabled(true)
-                .setResizeAndRotateEnabledForNetwork(true)
-                .build();
-
-        Fresco.initialize(this, config);
     }
 }

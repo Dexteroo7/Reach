@@ -16,7 +16,8 @@ import android.widget.LinearLayout;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
-import com.facebook.drawee.view.SimpleDraweeView;
+
+import com.squareup.picasso.Picasso;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -30,8 +31,11 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 //    private final CircleTransform transform = new CircleTransform();
 //    private final int[] colors;
 
+    private final Picasso picasso;
+
     public ReachContactsAdapter(Context context, int layout, Cursor c, int flags) {
         super(context, layout, c, flags);
+        this.picasso = Picasso.with(context);
 //        this.grey = ContextCompat.getColor(context, R.color.darkgrey);
 //        this.color = ContextCompat.getColor(context, R.color.reach_color);
 //        this.colors = context.getResources().getIntArray(R.array.androidcolors);
@@ -41,14 +45,14 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         private final TextView userNameList, telephoneNumberList, onlineText, newSongs;
         private final ImageView onlineIcon, lockIcon, profileGradient;
-        private final SimpleDraweeView profilePhotoList;
+        private final ImageView profilePhotoList;
 
         private ViewHolder(TextView userNameList,
                            TextView telephoneNumberList,
                            TextView onlineText,
                            TextView newSongs,
                            ImageView onlineIcon,
-                           SimpleDraweeView profilePhotoList,
+                           ImageView profilePhotoList,
                            ImageView lockIcon,
                            ImageView profileGradient) {
 
@@ -126,7 +130,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
             }
         }
 
-        viewHolder.profilePhotoList.setImageURI(uriToDisplay);
+        picasso.load(uriToDisplay).fit().into(viewHolder.profilePhotoList);
 
         /*if (networkType == 1) {
             Picasso.with(context).load(R.drawable.wifi).into(viewHolder.networkStatus);
@@ -214,7 +218,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
                 (TextView) view.findViewById(R.id.onlineText),
                 (TextView) view.findViewById(R.id.newSongs),
                 (ImageView) view.findViewById(R.id.onlineIcon),
-                (SimpleDraweeView) view.findViewById(R.id.profilePhotoList),
+                (ImageView) view.findViewById(R.id.profilePhotoList),
                 (ImageView) view.findViewById(R.id.lockIcon),
                 (ImageView) view.findViewById(R.id.profileGradient));
         view.setTag(viewHolder);

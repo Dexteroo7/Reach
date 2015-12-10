@@ -59,7 +59,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.commonsware.cwac.merge.MergeAdapter;
-import com.facebook.drawee.view.SimpleDraweeView;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -74,6 +73,7 @@ import com.google.gson.reflect.TypeToken;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -640,7 +640,7 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void updateDetails(File image, String userName) {
 
-        ((SimpleDraweeView) findViewById(R.id.userImageNav)).setImageURI(Uri.fromFile(image));
+        Picasso.with(this).load(image).fit().into((ImageView) findViewById(R.id.userImageNav));
         ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
     }
 

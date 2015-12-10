@@ -11,13 +11,8 @@ import android.widget.ImageView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.drawee.interfaces.DraweeController;
-import com.facebook.drawee.view.SimpleDraweeView;
-import com.facebook.imagepipeline.common.ResizeOptions;
-import com.facebook.imagepipeline.request.ImageRequest;
-import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
+import com.squareup.picasso.Picasso;
 
 import reach.project.R;
 import reach.project.uploadDownload.ReachDatabaseHelper;
@@ -84,19 +79,21 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
 
     private final byte type;
     private final int width = 50, height = 50; //fixed dimensions
+    private final Picasso picasso;
 
     public ReachMusicAdapter(Context context, int layout, Cursor c, int flags, byte type) {
         super(context, layout, c, flags);
         this.type = type;
+        this.picasso = Picasso.with(context);
     }
 
     private final class ViewHolder {
 
-        private final SimpleDraweeView albumArt;
+        private final ImageView albumArt;
         private final ImageView listToggle;
         private final TextView listTitle, listSubTitle, songDuration;
 
-        private ViewHolder(ImageView listToggle, SimpleDraweeView albumArt, TextView listTitle, TextView listSubTitle, TextView songDuration) {
+        private ViewHolder(ImageView listToggle, ImageView albumArt, TextView listTitle, TextView listSubTitle, TextView songDuration) {
 
             this.listToggle = listToggle;
             this.albumArt = albumArt;
@@ -143,17 +140,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         if (uriOptional.isPresent()) {
 
             Log.i("Ayush", "Url found = " + uriOptional.get().toString());
-
-            final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                    .setResizeOptions(new ResizeOptions(width, height))
-                    .build();
-
-            final DraweeController controller = Fresco.newDraweeControllerBuilder()
-                    .setOldController(viewHolder.albumArt.getController())
-                    .setImageRequest(request)
-                    .build();
-
-            viewHolder.albumArt.setController(controller);
+            picasso.load(uriOptional.get()).fit().into(viewHolder.albumArt);
         } else
             viewHolder.albumArt.setImageBitmap(null);
 
@@ -184,7 +171,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         final View view = super.newView(context, cursor, parent);
         final ViewHolder viewHolder = new ViewHolder(
                 (ImageView) view.findViewById(R.id.listToggle),
-                (SimpleDraweeView) view.findViewById(R.id.albumArt),
+                (ImageView) view.findViewById(R.id.albumArt),
                 (TextView) view.findViewById(R.id.listTitle),
                 (TextView) view.findViewById(R.id.listSubTitle),
                 (TextView) view.findViewById(R.id.songDuration));

@@ -53,7 +53,6 @@ android {
 dependencies {
 
     compile fileTree(includes: ['*.jar'], dir: 'libs')
-
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev45-1.20.0'
     compile 'com.google.android.gms:play-services-gcm:8.3.0'
@@ -64,15 +63,11 @@ dependencies {
     compile 'com.android.support:cardview-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:percent:23.1.1'
-
     // non-google stuff
     compile 'com.mixpanel.android:mixpanel-android:4.6.4'
-    compile 'com.facebook.fresco:fresco:0.7.0'
-    compile 'com.facebook.fresco:imagepipeline-okhttp:0.7.0'
+    compile 'com.squareup.okhttp:okhttp:2.6.0'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
     compile 'com.firebase:firebase-client-android:2.4.0'
-    compile 'com.squareup:tape:1.2.3'
-
     // to remove
     compile 'com.daimajia.swipelayout:library:1.2.0@aar'
     compile 'com.viewpagerindicator:library:2.4.1'

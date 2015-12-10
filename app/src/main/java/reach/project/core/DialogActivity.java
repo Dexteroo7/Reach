@@ -5,10 +5,11 @@ import android.net.Uri;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.facebook.drawee.view.SimpleDraweeView;
+import com.squareup.picasso.Picasso;
 
 import reach.project.R;
 
@@ -28,8 +29,8 @@ public class DialogActivity extends Activity {
         final LinearLayout reject = (LinearLayout) findViewById(R.id.reject);
         final int type = getIntent().getIntExtra("type", 0);
 
-        final SimpleDraweeView userImageView = (SimpleDraweeView) findViewById(R.id.userImage);
-        userImageView.setImageURI(Uri.parse(StaticData.dropBoxManager));
+        final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
+        Picasso.with(userImageView.getContext()).load(Uri.parse(StaticData.dropBoxManager)).fit().into(userImageView);
 
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);
