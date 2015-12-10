@@ -111,8 +111,6 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name="com.mixpanel.android.surveys.SurveyActivity" />
-
         <activity
             android:name=".devikaChat.ChatActivity"
             android:label="@string/title_activity_chat"
