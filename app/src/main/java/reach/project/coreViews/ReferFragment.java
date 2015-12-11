@@ -43,7 +43,7 @@ public class ReferFragment extends Fragment {
         return fragment;
     }
     private TextView totalEarning, redeemableAmount, redeemedAmount,
-            referralEarning, transferEarning, how, terms;
+            heading, note, how, terms;
     private EditText registerText;
     private Button registerBtn;
     private static SharedPreferences sharedPrefs;
@@ -63,8 +63,8 @@ public class ReferFragment extends Fragment {
         totalEarning = (TextView) rootView.findViewById(R.id.totalEarning);
         redeemableAmount = (TextView) rootView.findViewById(R.id.redeemableAmount);
         redeemedAmount = (TextView) rootView.findViewById(R.id.redeemedAmount);
-        referralEarning = (TextView) rootView.findViewById(R.id.referralEarning);
-        transferEarning = (TextView) rootView.findViewById(R.id.transferEarning);
+        heading = (TextView) rootView.findViewById(R.id.headingText);
+        note = (TextView) rootView.findViewById(R.id.noteText);
         how = (TextView) rootView.findViewById(R.id.how);
         terms = (TextView) rootView.findViewById(R.id.terms);
         registerText = (EditText) rootView.findViewById(R.id.registerText);
@@ -156,8 +156,6 @@ public class ReferFragment extends Fragment {
                     fragment.totalEarning.setText("Rs. " + jsonObject.getString("totalAmount"));
                     fragment.redeemableAmount.setText("Rs. " + jsonObject.getString("redeemableAmount"));
                     fragment.redeemedAmount.setText("Rs. " + jsonObject.getString("redeemedAmount"));
-                    fragment.referralEarning.setText("Rs. " + jsonObject.getString("referralAmount"));
-                    fragment.transferEarning.setText("Rs. " + jsonObject.getString("transfersAmount"));
                 }
                 catch (JSONException e) {
                     e.printStackTrace();
@@ -245,10 +243,10 @@ public class ReferFragment extends Fragment {
                         jsonString = string;
                     }
                     JSONObject jsonObject = new JSONObject(jsonString);
-                    String rules = jsonObject.getString("rules");
-                    String howTo = jsonObject.getString("howTo");
-                    fragment.terms.setText(rules);
-                    fragment.how.setText(howTo);
+                    fragment.terms.setText(jsonObject.getString("rules"));
+                    fragment.how.setText(jsonObject.getString("howTo"));
+                    fragment.heading.setText(jsonObject.getString("heading"));
+                    fragment.note.setText(jsonObject.getString("note"));
                 }
                 catch (JSONException e) {
                     e.printStackTrace();

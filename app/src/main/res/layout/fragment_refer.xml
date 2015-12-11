@@ -31,10 +31,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <TextView
+                    android:id="@+id/headingText"
+                    android:layout_marginTop="25dp"
+                    android:textColor="#000"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Invite Friends and Share Music with them to earn upto Rs 300!" />
+                <TextView
                     android:id="@+id/totalEarningText"
-                    android:layout_marginTop="30dp"
+                    android:layout_marginTop="20dp"
                     android:textColor="@color/reach_color"
-                    android:textSize="16sp"
+                    android:textSize="17sp"
+                    android:layout_below="@id/headingText"
                     android:layout_centerHorizontal="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -42,10 +56,10 @@
                 <TextView
                     android:id="@+id/totalEarning"
                     android:textStyle="bold"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_below="@id/totalEarningText"
                     android:textColor="@color/reach_color"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:layout_centerHorizontal="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -57,6 +71,7 @@
                     android:layout_marginLeft="40dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textSize="16sp"
                     android:text="Redeemable Amount" />
                 <TextView
                     android:id="@+id/redeemableAmount"
@@ -66,6 +81,7 @@
                     android:layout_marginRight="40dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textSize="16sp"
                     android:text="Rs. 0" />
                 <TextView
                     android:id="@+id/redeemedAmountText"
@@ -73,6 +89,7 @@
                     android:layout_marginTop="10dp"
                     android:textColor="@color/reach_grey"
                     android:layout_marginLeft="40dp"
+                    android:textSize="16sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Redeemed Amount" />
@@ -81,51 +98,28 @@
                     android:layout_alignBottom="@id/redeemedAmountText"
                     android:layout_alignParentRight="true"
                     android:textColor="@color/reach_grey"
+                    android:textSize="16sp"
                     android:layout_marginRight="40dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Rs. 0" />
                 <TextView
-                    android:id="@+id/referralEarningText"
+                    android:id="@+id/noteText"
                     android:layout_below="@id/redeemedAmountText"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/reach_grey"
-                    android:layout_marginLeft="40dp"
+                    android:layout_marginTop="20dp"
+                    android:textColor="#000"
+                    android:textStyle="bold"
+                    android:layout_marginLeft="30dp"
+                    android:layout_marginRight="30dp"
+                    android:layout_centerHorizontal="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Referral Earnings" />
-                <TextView
-                    android:id="@+id/referralEarning"
-                    android:layout_alignBottom="@id/referralEarningText"
-                    android:layout_alignParentRight="true"
-                    android:textColor="@color/reach_grey"
-                    android:layout_marginRight="40dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Rs. 0" />
-                <TextView
-                    android:id="@+id/transferEarningText"
-                    android:layout_below="@id/referralEarningText"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/reach_grey"
-                    android:layout_marginLeft="40dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Transfer Earnings" />
-                <TextView
-                    android:id="@+id/transferEarning"
-                    android:layout_alignBottom="@id/transferEarningText"
-                    android:layout_alignParentRight="true"
-                    android:textColor="@color/reach_grey"
-                    android:layout_marginRight="40dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Rs. 0" />
+                    android:text="Note:\nMinimum Redeemable Amount is Rs 100. Money can be redeemed in multiples of Rs 100 only!" />
                 <EditText
                     android:id="@+id/registerText"
-                    android:layout_below="@id/transferEarning"
+                    android:layout_below="@id/noteText"
                     android:layout_marginTop="20dp"
-                    android:textSize="14sp"
+                    android:textSize="15sp"
                     android:gravity="center"
                     android:inputType="textEmailAddress"
                     android:hint="Enter email id to Register"
@@ -140,6 +134,7 @@
                     android:background="@color/reach_color"
                     android:textAllCaps="false"
                     android:textColor="#fff"
+                    android:textSize="16sp"
                     android:layout_centerHorizontal="true"
                     android:layout_width="wrap_content"
                     android:layout_height="30dp" />
@@ -147,12 +142,12 @@
                     android:id="@+id/howText"
                     android:textStyle="bold"
                     android:layout_below="@id/registerBtn"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="30dp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
                     android:layout_marginBottom="5dp"
                     android:textColor="#000"
-                    android:textSize="14sp"
+                    android:textSize="15sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="How to Earn:" />
@@ -160,7 +155,7 @@
                     android:id="@+id/how"
                     android:layout_below="@id/howText"
                     android:textColor="#000"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
                     android:layout_marginBottom="20dp"
@@ -174,7 +169,7 @@
                     android:layout_marginRight="20dp"
                     android:layout_marginBottom="5dp"
                     android:textColor="#000"
-                    android:textSize="14sp"
+                    android:textSize="15sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Terms and Conditions:" />
@@ -182,7 +177,7 @@
                     android:id="@+id/terms"
                     android:layout_below="@id/termsText"
                     android:textColor="#000"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
                     android:layout_marginBottom="20dp"

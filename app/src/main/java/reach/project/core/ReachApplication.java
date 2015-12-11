@@ -155,10 +155,4 @@ public class ReachApplication extends Application {
         } catch (FirebaseException ignored) {
         }
     }
-
-    /*@Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
-    }*/
 }

@@ -22,12 +22,16 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.analytics.HitBuilders;
+
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
 import reach.project.friends.ContactsListFragment;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.ViewPagerReusable;
 
@@ -80,7 +84,10 @@ public class MyReachFragment extends Fragment {
     private final View.OnClickListener pushLibraryListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
+            ((ReachApplication)getActivity().getApplication()).getTracker().send(new HitBuilders
+                    .EventBuilder("Shuffle Click",
+                    "User Name - " + SharedPrefUtils.getUserName(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)))
+                    .build());
             mListener.onOpenPushLibrary();
         }
     };
