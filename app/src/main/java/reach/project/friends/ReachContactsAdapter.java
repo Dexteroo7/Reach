@@ -107,7 +107,7 @@ public class ReachContactsAdapter extends ResourceCursorAdapter {
 
         //first invalidate
         viewHolder.profilePhotoList.setImageBitmap(null);
-        viewHolder.profileGradient.setImageResource(R.drawable.gradient_light);
+        viewHolder.profileGradient.setImageResource(R.drawable.gradient_light_profile);
         viewHolder.profileGradient.setBackgroundResource(0);
 
         final Uri uriToDisplay;
