@@ -140,7 +140,7 @@ public class ReachMusicAdapter extends ResourceCursorAdapter {
         if (uriOptional.isPresent()) {
 
             Log.i("Ayush", "Url found = " + uriOptional.get().toString());
-            picasso.load(uriOptional.get()).fit().into(viewHolder.albumArt);
+            picasso.load(uriOptional.get()).fit().centerCrop().into(viewHolder.albumArt);
         } else
             viewHolder.albumArt.setImageBitmap(null);
 

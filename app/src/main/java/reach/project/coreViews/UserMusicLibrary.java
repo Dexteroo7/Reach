@@ -38,7 +38,9 @@ import android.widget.TextView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.nineoldandroids.view.ViewHelper;
+import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 
@@ -55,6 +57,7 @@ import reach.project.music.MySongsProvider;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.viewHelpers.CircleTransform;
 import reach.project.utils.viewHelpers.TextDrawable;
 import reach.project.utils.viewHelpers.astuetz.PagerSlidingTabStrip;
 import reach.project.utils.viewHelpers.flavienlaurent.notboringactionbar.AlphaForegroundColorSpan;
@@ -220,7 +223,7 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         final String path;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
             path = StaticData.cloudStorageImageBaseUrl + imageId;
-//            Picasso.with(activity).load(path).fit().centerCrop().into(largeProfilePic);
+            Picasso.with(activity).load(path).fit().centerCrop().into(largeProfilePic);
         } else
             path = "default";
 
@@ -346,19 +349,18 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
             if (params[0].equals("default"))
                 return null;
 
-//            return MiscUtils.useContextFromFragment(reference, context -> {
-//
-//                try {
-//                    return Picasso.with(context).load(params[0])
-//                            .resize(margin, margin)
-//                            .centerCrop()
-//                            .transform(new CircleTransform()).get();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    return null;
-//                }
-//            }).orNull();
-            return null;
+            return MiscUtils.useContextFromFragment(reference, context -> {
+
+                try {
+                    return Picasso.with(context).load(params[0])
+                            .resize(margin, margin)
+                            .centerCrop()
+                            .transform(new CircleTransform()).get();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }).orNull();
         }
 
         @Override

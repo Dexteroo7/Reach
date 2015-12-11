@@ -8,6 +8,7 @@
         android:id="@+id/albumArt"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:background="@drawable/ic_default_music"
         android:layout_marginLeft="15dp"
         android:layout_marginTop="20dp"
         android:scaleType="centerCrop"/>

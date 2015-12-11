@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import reach.project.R;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 //TODO shift to where required
 public class DialogActivity extends Activity {
@@ -30,7 +31,7 @@ public class DialogActivity extends Activity {
         final int type = getIntent().getIntExtra("type", 0);
 
         final ImageView userImageView = (ImageView) findViewById(R.id.userImage);
-        Picasso.with(userImageView.getContext()).load(Uri.parse(StaticData.dropBoxManager)).fit().into(userImageView);
+        Picasso.with(userImageView.getContext()).load(Uri.parse(StaticData.dropBoxManager)).transform(new CircleTransform()).fit().centerCrop().into(userImageView);
 
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);

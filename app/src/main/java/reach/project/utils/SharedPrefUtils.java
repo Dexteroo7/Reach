@@ -109,6 +109,18 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("imageId", imageId).apply();
     }
 
+    public static void storeCampaignValues(SharedPreferences sharedPreferences, String campaignValues) {
+        sharedPreferences.edit().putString("campaignValues", campaignValues).apply();
+    }
+
+    public static void storeCampaignTerms(SharedPreferences sharedPreferences, String campaignTerms) {
+        sharedPreferences.edit().putString("campaignTerms", campaignTerms).apply();
+    }
+
+    public static void storeCampaignEmail(SharedPreferences sharedPreferences, String campaignEmail) {
+        sharedPreferences.edit().putString("campaignEmail", campaignEmail).apply();
+    }
+
     public static void setReachQueueSeen(SharedPreferences sharedPreferences) {
         sharedPreferences.edit().putBoolean("reachQueueSeen", true).apply();
     }
@@ -153,6 +165,18 @@ public enum SharedPrefUtils {
         return sharedPreferences.getString("imageId", "");
     }
 
+    public static String getCampaignValues(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("campaignValues", "");
+    }
+
+    public static String getCampaignTerms(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("campaignTerms", "");
+    }
+
+    public static String getCampaignEmail(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("campaignEmail", "");
+    }
+
     //////////////////
 
     public static Optional<MusicData> getLastPlayed(Context context) {
@@ -161,7 +185,6 @@ public enum SharedPrefUtils {
         final byte[] stuff;
 
         try {
-
             randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "last_played", "r");
             final int size = randomAccessFile.readInt();
             stuff = new byte[size];

@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
+import com.squareup.picasso.Picasso;
 import com.viewpagerindicator.CirclePageIndicator;
 
 import org.json.JSONException;
@@ -204,7 +205,8 @@ public class NumberVerification extends Fragment {
             final View itemView = mLayoutInflater.inflate(R.layout.tour_item, container, false);
             ((TextView) itemView.findViewById(R.id.tour_text)).setText(tourTexts[position]);
             ((ImageView) itemView.findViewById(R.id.tour_image)).setImageResource(tourImages[position]);
-            //Picasso.with(container.getContext()).load(tourImages[position]).noFade().into((ImageView) itemView.findViewById(R.id.tour_image));
+            Picasso.with(container.getContext()).load(tourImages[position]).noFade()
+                    .into((ImageView) itemView.findViewById(R.id.tour_image));
             container.addView(itemView);
             return itemView;
         }

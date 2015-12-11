@@ -15,12 +15,14 @@ import android.widget.Filter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import reach.project.R;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.CircleTransform;
 
 public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
 
@@ -28,7 +30,7 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
     private final int layoutResourceId;
     private final List<Contact> originalData;
     private final List<Contact> filteredData;
-//    private final CircleTransform transform = new CircleTransform();
+    private final CircleTransform transform = new CircleTransform();
 
     public ReachAllContactsAdapter(Context context, int ResourceId,
                                    List<Contact> friends) {
@@ -85,12 +87,12 @@ public abstract class ReachAllContactsAdapter extends ArrayAdapter<Contact> {
         viewHolder.userNameList.setText(contact.getUserName());
         viewHolder.subTitle.setText(contact.getPhoneNumber());
         viewHolder.userInitials.setText(MiscUtils.generateInitials(contact.getUserName()));
-//        Picasso.with(context).load(contact.getPhotoUri()).transform(transform).into(viewHolder.profilePhotoList);
-//
-//        if (contact.isInviteSent())
-//            Picasso.with(context).load(R.drawable.add_tick).into(viewHolder.listToggle);
-//        else
-//            Picasso.with(context).load(R.drawable.icon_invite).into(viewHolder.listToggle);
+        Picasso.with(context).load(contact.getPhotoUri()).transform(transform).into(viewHolder.profilePhotoList);
+
+        if (contact.isInviteSent())
+            Picasso.with(context).load(R.drawable.add_tick).into(viewHolder.listToggle);
+        else
+            Picasso.with(context).load(R.drawable.icon_invite).into(viewHolder.listToggle);
         return convertView;
     }
 

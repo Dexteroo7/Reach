@@ -1,14 +1,13 @@
 <reach.project.utils.viewHelpers.GridViewItem xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:descendantFocusability="blocksDescendants">
 
-    <com.facebook.drawee.view.SimpleDraweeView
+    <ImageView
         android:id="@+id/profilePhotoList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
+        android:scaleType="centerCrop"
+        android:layout_height="match_parent" />
     <ImageView
         android:id="@+id/profileGradient"
         android:layout_width="match_parent"

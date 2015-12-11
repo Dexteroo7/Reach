@@ -38,6 +38,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -70,13 +71,11 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,11 +105,11 @@ import reach.project.devikaChat.ChatActivityFragment;
 import reach.project.friends.ContactsChooserFragment;
 import reach.project.friends.ReachFriendsHelper;
 import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.music.PrivacyFragment;
 import reach.project.music.PushContainer;
 import reach.project.music.PushSongsFragment;
 import reach.project.music.ReachMusicAdapter;
-import reach.project.music.MySongsProvider;
 import reach.project.music.TransferSong;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
@@ -121,7 +120,6 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
-import reach.project.utils.MetaDataScanner;
 import reach.project.uploadDownload.ReachDatabase;
 import reach.project.uploadDownload.ReachDatabaseHelper;
 import reach.project.uploadDownload.ReachDatabaseProvider;
@@ -130,6 +128,7 @@ import reach.project.uploadDownload.UploadHistory;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
@@ -152,7 +151,7 @@ public class ReachActivity extends AppCompatActivity implements
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
 
-    private SharedPreferences preferences;
+    private static SharedPreferences preferences;
     private FragmentManager fragmentManager;
     private DrawerLayout mDrawerLayout;
     private SearchView searchView;
@@ -172,12 +171,14 @@ public class ReachActivity extends AppCompatActivity implements
     private static MusicData currentPlaying;
 
     ////////////////////////////////////////
-    private TextView songNameMinimized, songNameMaximized, artistName, songDuration, playerPos, userNameNav, emptyTV1, emptyTV2;
+    private TextView songNameMinimized, songNameMaximized, artistName, songDuration, playerPos,
+            numberOfSongsNav, userNameNav, emptyTV1, emptyTV2;
     private SeekBar progressBarMaximized, progressBarMinimized;
     private ListView queueListView;
     private ImageView shuffleBtn, repeatBtn, pausePlayMaximized, likeButton, userImageNav; //fullscreen
     private CustomViewPager viewPager;
     private View headerView;
+    private static Tracker mTracker;
 
     private MergeAdapter combinedAdapter = null;
     private Firebase firebaseReference = null;
@@ -288,7 +289,7 @@ public class ReachActivity extends AppCompatActivity implements
                         if (promoCodeDialog.isAdded())
                             promoCodeDialog.dismiss();
                         if (!promoCodeDialog.isAdded())
-                            promoCodeDialog.show(fragmentManager, "promo_dialog");*/
+                               promoCodeDialog.show(fragmentManager, "promo_dialog");*/
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
@@ -640,8 +641,8 @@ public class ReachActivity extends AppCompatActivity implements
     @Override
     public void updateDetails(File image, String userName) {
 
-        Picasso.with(this).load(image).fit().into((ImageView) findViewById(R.id.userImageNav));
-        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+        Picasso.with(this).load(image).fit().centerCrop().into(userImageNav);
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
     }
 
     @Override
@@ -713,51 +714,50 @@ public class ReachActivity extends AppCompatActivity implements
 
     @Override
     public void setUpNavigationViews() {
-        //TODO
-//        final SwitchCompat netToggle = (SwitchCompat) findViewById(R.id.netToggle);
-//        if (SharedPrefUtils.getMobileData(preferences))
-//            netToggle.setChecked(true);
-//        else
-//            netToggle.setChecked(false);
-//
-//        netToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
-//
-//            if (isChecked)
-//                SharedPrefUtils.setDataOn(preferences);
-//            else {
-//                SharedPrefUtils.setDataOff(preferences);
-//                ////////////////////purge all upload operations, but retain paused operations
-//                //TODO
-//                getContentResolver().delete(
-//                        ReachDatabaseProvider.CONTENT_URI,
-//                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-//                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-//                        new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
-//            }
-//        });
+        final SwitchCompat netToggle = (SwitchCompat) headerView.findViewById(R.id.netToggle);
+        if (SharedPrefUtils.getMobileData(preferences))
+            netToggle.setChecked(true);
+        else
+            netToggle.setChecked(false);
 
-//        final String path = SharedPrefUtils.getImageId(preferences);
+        netToggle.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
-//        if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
-//            ((SimpleDraweeView) findViewById(R.id.userImageNav)).setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + path));
+            if (isChecked)
+                SharedPrefUtils.setDataOn(preferences);
+            else {
+                SharedPrefUtils.setDataOff(preferences);
+                ////////////////////purge all upload operations, but retain paused operations
+                //TODO
+                getContentResolver().delete(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                        new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
+            }
+        });
 
-//        ((TextView) findViewById(R.id.userNameNav)).setText(SharedPrefUtils.getUserName(preferences));
+        final String path = SharedPrefUtils.getImageId(preferences);
 
-//        final Cursor countCursor = getContentResolver().query(
-//                MySongsProvider.CONTENT_URI,
-//                MySongsHelper.projection,
-//                MySongsHelper.COLUMN_USER_ID + " = ?",
-//                new String[]{SharedPrefUtils.getServerId(preferences) + ""},
-//                null);
-//        if (countCursor == null) return;
-//        if (!countCursor.moveToFirst()) {
-//            countCursor.close();
-//            return;
-//        }
-//
-//        final long count = countCursor.getCount();
-//        countCursor.close();
-//        ((TextView) findViewById(R.id.numberOfSongsNav)).setText(count + " Songs");
+        if (!TextUtils.isEmpty(path) && !path.equals("hello_world"))
+            Picasso.with(this).load(Uri.parse(StaticData.cloudStorageImageBaseUrl + path)).fit().centerCrop().into(userImageNav);
+
+        userNameNav.setText(SharedPrefUtils.getUserName(preferences));
+
+        final Cursor countCursor = getContentResolver().query(
+                MySongsProvider.CONTENT_URI,
+                MySongsHelper.projection,
+                MySongsHelper.COLUMN_USER_ID + " = ?",
+                new String[]{SharedPrefUtils.getServerId(preferences) + ""},
+                null);
+        if (countCursor == null) return;
+        if (!countCursor.moveToFirst()) {
+            countCursor.close();
+            return;
+        }
+
+        final long count = countCursor.getCount();
+        countCursor.close();
+        numberOfSongsNav.setText(count + " Songs");
     }
 
     @Override
@@ -924,10 +924,13 @@ public class ReachActivity extends AppCompatActivity implements
             e.printStackTrace();
         }
 
+        final Map<PostParams, String> sParams = MiscUtils.getMap(1);
+        sParams.put(PostParams.USER_ID, serverId + "");
+
         try {
+            UsageTracker.trackLogEvent(sParams, UsageTracker.APP_OPEN);
             UsageTracker.trackEvent(simpleParams, UsageTracker.APP_OPEN);
-        } catch (JSONException ignored) {
-        }
+        } catch (JSONException ignored) {}
 
         // Setup our Firebase mFirebaseRef
         firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
@@ -935,6 +938,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
+
+        mTracker = ((ReachApplication) getApplication()).getTracker();
 
         slidingUpPanelLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
 
@@ -990,6 +995,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         userImageNav = (ImageView) headerView.findViewById(R.id.userImageNav);
         userNameNav = (TextView) headerView.findViewById(R.id.userNameNav);
+        numberOfSongsNav = (TextView) headerView.findViewById(R.id.numberOfSongsNav);
         userImageNav.setOnClickListener(navHeaderClickListener);
 
         findViewById(R.id.footer).setOnClickListener(LocalUtils.footerClickListener);
@@ -1044,37 +1050,22 @@ public class ReachActivity extends AppCompatActivity implements
         final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
         final long userID = SharedPrefUtils.getServerId(preferences);
 
-        //initialize MixPanel
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        MixpanelAPI.People ppl = mixpanel.getPeople();
+        //initialize bug tracking
+        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        //Crittercism.setUsername(userName + " " + phoneNumber);
 
         //initialize GA tracker
-        final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
-        tracker.setScreenName("reach.project.core.ReachActivity");
+        mTracker.setScreenName("reach.project.core.ReachActivity");
 
         if (userID != 0) {
-            tracker.set("&uid", userID + "");
-            tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
-            mixpanel.identify(userID + "");
-            JSONObject props = new JSONObject();
-            try {
-                props.put("UserID", userID + "");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            mixpanel.registerSuperPropertiesOnce(props);
-            ppl.identify(userID + "");
-            ppl.set("UserID", userID + "");
+            mTracker.set("&uid", userID + "");
+            mTracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userID + "").build());
         } else
-            tracker.send(new HitBuilders.ScreenViewBuilder().build());
-        if (!TextUtils.isEmpty(phoneNumber))
-            ppl.set("$phone", phoneNumber + "");
-        if (!TextUtils.isEmpty(userName))
-            ppl.set("$name", userName + "");
+            mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         //first check playServices
         if (!LocalUtils.checkPlayServices(this)) {
-            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
+            mTracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
             return; //fail
         }
 
@@ -1421,7 +1412,7 @@ public class ReachActivity extends AppCompatActivity implements
                 ReachDatabaseHelper.contentValuesCreator(reachDatabase));
         if (uri == null) {
 
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+            mTracker.send(new HitBuilders.EventBuilder()
                     .setCategory("Add song failed")
                     .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                     .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
@@ -1445,23 +1436,12 @@ public class ReachActivity extends AppCompatActivity implements
 
         //tracing shit
 
-        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+        mTracker.send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                 .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                 .setValue(1)
                 .build());
-
-        MixpanelAPI mixpanel = MixpanelAPI.getInstance(this, "7877f44b1ce4a4b2db7790048eb6587a");
-        JSONObject props = new JSONObject();
-        try {
-            props.put("User Name", SharedPrefUtils.getUserName(getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-            props.put("From", reachDatabase.getDisplayName());
-            props.put("Song", reachDatabase.getSenderId());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mixpanel.track("Transaction - Add Song", props);
 
         //usage tracking
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
@@ -1533,6 +1513,10 @@ public class ReachActivity extends AppCompatActivity implements
 
         public static final View.OnClickListener repeatClick = view -> {
 
+            mTracker.send(new HitBuilders
+                    .EventBuilder("Repeat Click",
+                    "User Name - " + SharedPrefUtils.getUserName(preferences))
+                    .build());
             if (SharedPrefUtils.toggleRepeat(view.getContext()))
                 view.setSelected(true);
             else
@@ -1634,7 +1618,10 @@ public class ReachActivity extends AppCompatActivity implements
         };
 
         public static final View.OnClickListener shuffleClick = view -> {
-
+            mTracker.send(new HitBuilders
+                    .EventBuilder("Shuffle Click",
+                    "User Name - " + SharedPrefUtils.getUserName(preferences))
+                    .build());
             if (SharedPrefUtils.toggleShuffle(view.getContext()))
                 view.setSelected(true);
             else

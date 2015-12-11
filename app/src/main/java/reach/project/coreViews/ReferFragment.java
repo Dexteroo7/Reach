@@ -1,19 +1,22 @@
 package reach.project.coreViews;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -40,10 +43,10 @@ public class ReferFragment extends Fragment {
             reference = new WeakReference<>(fragment = new ReferFragment());
         return fragment;
     }
-    private TextView totalEarning, redeemableAmount, redeemedAmount,
-            referralEarning, transferEarning, how, terms;
+    private TextView earning, remaining, heading, note, how, terms;
     private EditText registerText;
     private Button registerBtn;
+    private static SharedPreferences sharedPrefs;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,15 +54,16 @@ public class ReferFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_refer, container, false);
 
+        sharedPrefs = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
         Toolbar mToolbar = (Toolbar)rootView.findViewById(R.id.referToolbar);
-        mToolbar.setTitle("Refer and Earn");
+        mToolbar.setTitle("Earn Rewards");
         mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
-        totalEarning = (TextView) rootView.findViewById(R.id.totalEarning);
-        redeemableAmount = (TextView) rootView.findViewById(R.id.redeemableAmount);
-        redeemedAmount = (TextView) rootView.findViewById(R.id.redeemedAmount);
-        referralEarning = (TextView) rootView.findViewById(R.id.referralEarning);
-        transferEarning = (TextView) rootView.findViewById(R.id.transferEarning);
+        earning = (TextView) rootView.findViewById(R.id.earningText);
+        remaining = (TextView) rootView.findViewById(R.id.remainingText);
+        heading = (TextView) rootView.findViewById(R.id.headingText);
+        note = (TextView) rootView.findViewById(R.id.note);
         how = (TextView) rootView.findViewById(R.id.how);
         terms = (TextView) rootView.findViewById(R.id.terms);
         registerText = (EditText) rootView.findViewById(R.id.registerText);
@@ -67,8 +71,7 @@ public class ReferFragment extends Fragment {
 
         new GetTerms().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        String userId = String.valueOf(SharedPrefUtils.getServerId(
-                getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+        String userId = String.valueOf(SharedPrefUtils.getServerId(sharedPrefs));
         String shortId = userId.substring(2, (userId.length()-3));
 
         String md5 = "";
@@ -103,6 +106,10 @@ public class ReferFragment extends Fragment {
 
     private static class GetDetails extends AsyncTask<String,Void,String> {
 
+        private int getRemainingAmount(int amount) {
+            return 100 - (amount%100);
+        }
+
         @Override
         protected String doInBackground(String... params) {
             Request request = new Request.Builder()
@@ -121,22 +128,48 @@ public class ReferFragment extends Fragment {
         @Override
         protected void onPostExecute(String string) {
             super.onPostExecute(string);
+            Log.d("Ashish", string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
-                    JSONObject jsonObject = new JSONObject(string);
+
+                    String jsonString = SharedPrefUtils.getCampaignValues(sharedPrefs);
+                    if (TextUtils.isEmpty(string)) {
+                        if (TextUtils.isEmpty(jsonString)) {
+                            Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                    else {
+                        if (TextUtils.isEmpty(jsonString))
+                            SharedPrefUtils.storeCampaignValues(sharedPrefs, string);
+                        jsonString = string;
+                    }
+
+                    JSONObject jsonObject = new JSONObject(jsonString);
                     String email = jsonObject.getString("emailId");
+                    String savedEmail = SharedPrefUtils.getCampaignEmail(sharedPrefs);
+                    if (!TextUtils.isEmpty(savedEmail))
+                        email = savedEmail;
                     if (!TextUtils.isEmpty(email)) {
                         fragment.registerText.setEnabled(false);
-                        fragment.registerText.setText("You will get updates on\n" + email);
-                        fragment.registerText.setTypeface(Typeface.DEFAULT_BOLD);
+                        fragment.registerText.setText("You will get updates on your email id");
                         fragment.registerText.setTextColor(Color.BLACK);
                         fragment.registerBtn.setVisibility(View.GONE);
                     }
-                    fragment.totalEarning.setText("Rs. " + jsonObject.getString("totalAmount"));
-                    fragment.redeemableAmount.setText("Rs. " + jsonObject.getString("redeemableAmount"));
-                    fragment.redeemedAmount.setText("Rs. " + jsonObject.getString("redeemedAmount"));
-                    fragment.referralEarning.setText("Rs. " + jsonObject.getString("referralAmount"));
-                    fragment.transferEarning.setText("Rs. " + jsonObject.getString("transfersAmount"));
+                    int totalAmount = jsonObject.getInt("totalAmount");
+                    if (totalAmount > 300) {
+                        fragment.remaining.setText(jsonObject.getString("done"));
+                    }
+                    else {
+                        String milestone = totalAmount < 100 ? "first" : "next";
+                        fragment.remaining.setText(Html.fromHtml("<b>" + getRemainingAmount(totalAmount)
+                                + " points</b> needed<br />to reach the " + milestone + " milestone"));
+                    }
+
+                    int redeemedAmount = jsonObject.getInt("redeemedAmount");
+                    int earning = jsonObject.getInt("redeemableAmount") + redeemedAmount;
+                    fragment.earning.setText(Html.fromHtml("<b>Rs. " + earning +
+                            "</b> earned till now<br />(<b>Rs. " + redeemedAmount + "</b> redeemed)"));
                 }
                 catch (JSONException e) {
                     e.printStackTrace();
@@ -145,7 +178,7 @@ public class ReferFragment extends Fragment {
         }
     }
 
-    private static class setEmail extends AsyncTask<String,Void,String> {
+    private static class setEmail extends AsyncTask<String,Void,Integer> {
 
         private String email;
 
@@ -154,7 +187,7 @@ public class ReferFragment extends Fragment {
         }
 
         @Override
-        protected String doInBackground(String... params) {
+        protected Integer doInBackground(String... params) {
             Request request = new Request.Builder()
                     .url("http://52.74.117.248:8080/campaign/setEmail?emailId="
                             + email + "&userId=" + params[0])
@@ -162,21 +195,26 @@ public class ReferFragment extends Fragment {
             try {
                 Response response = ReachApplication.okHttpClient.newCall(request).execute();
                 if (response!=null)
-                    return response.body().string();
+                    return response.code();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return null;
+            return -1;
         }
 
         @Override
-        protected void onPostExecute(String string) {
-            super.onPostExecute(string);
+        protected void onPostExecute(Integer code) {
+            super.onPostExecute(code);
+            Log.d("Ashish", "setEmail res code = " + code);
             MiscUtils.useFragment(reference, fragment -> {
+                if (code != 200) {
+                    Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                SharedPrefUtils.storeCampaignEmail(sharedPrefs, email);
                 if (!TextUtils.isEmpty(email)) {
                     fragment.registerText.setEnabled(false);
-                    fragment.registerText.setText("You will get updates on\n" + email);
-                    fragment.registerText.setTypeface(Typeface.DEFAULT_BOLD);
+                    fragment.registerText.setText("You will get updates on your email id");
                     fragment.registerText.setTextColor(Color.BLACK);
                     fragment.registerBtn.setVisibility(View.GONE);
                 }
@@ -204,13 +242,26 @@ public class ReferFragment extends Fragment {
         @Override
         protected void onPostExecute(String string) {
             super.onPostExecute(string);
+            Log.d("Ashish", string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
-                    JSONObject jsonObject = new JSONObject(string);
-                    String rules = jsonObject.getString("rules");
-                    String howTo = jsonObject.getString("howTo");
-                    fragment.terms.setText(rules);
-                    fragment.how.setText(howTo);
+                    String jsonString = SharedPrefUtils.getCampaignTerms(sharedPrefs);
+                    if (TextUtils.isEmpty(string)) {
+                        if (TextUtils.isEmpty(jsonString)) {
+                            Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                    else {
+                        if (TextUtils.isEmpty(jsonString))
+                            SharedPrefUtils.storeCampaignTerms(sharedPrefs, string);
+                        jsonString = string;
+                    }
+                    JSONObject jsonObject = new JSONObject(jsonString);
+                    fragment.terms.setText(jsonObject.getString("rules"));
+                    fragment.how.setText(jsonObject.getString("howTo"));
+                    fragment.heading.setText(jsonObject.getString("heading"));
+                    fragment.note.setText(jsonObject.getString("note"));
                 }
                 catch (JSONException e) {
                     e.printStackTrace();
