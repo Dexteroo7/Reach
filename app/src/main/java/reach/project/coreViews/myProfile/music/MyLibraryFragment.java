@@ -23,7 +23,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
-import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -44,14 +43,12 @@ import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.GetActualAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 25/11/15.
  */
-public class MyLibraryFragment extends Fragment implements HandOverMessage,
-        LoaderManager.LoaderCallbacks<Cursor>, GetActualAdapter {
+public class MyLibraryFragment extends Fragment implements HandOverMessage, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static WeakReference<MyLibraryFragment> reference = null;
     private static long myUserId = 0;
@@ -71,8 +68,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return fragment;
     }
 
-    private ParentAdapter parentAdapter = new ParentAdapter(this, this, this);
-    private RecyclerView.Adapter actualAdapter = new RecyclerViewMaterialAdapter(parentAdapter);
+    private ParentAdapter parentAdapter = new ParentAdapter(this, this);
 
     @Nullable
     @Override
@@ -83,7 +79,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final Activity activity = getActivity();
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
-        mRecyclerView.setAdapter(actualAdapter);
+        mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -126,23 +122,25 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                     songId,
                     userId);
 
+            parentAdapter.updateVisibility(songId, !visible);
+
         } else if (message instanceof PrivacySongItem) {
 
             final PrivacySongItem song = (PrivacySongItem) message;
-            final boolean visible = song.visible;
 
             final ContentValues values = new ContentValues();
-            if (visible)
+            if (song.visible)
                 values.put(MySongsHelper.COLUMN_VISIBILITY, 0); //flip
             else
                 values.put(MySongsHelper.COLUMN_VISIBILITY, 1); //flip
 
             updateDatabase(values, song.songId, song.userId, getContext());
             new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix,
-                    (long) (visible ? 0 : 1), //flip
+                    (long) (song.visible ? 0 : 1), //flip
                     song.songId,
                     song.userId);
 
+            parentAdapter.updateVisibility(song.songId, !song.visible);
 
         } else
             throw new IllegalArgumentException("Unknown type handed over");
@@ -167,9 +165,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return null;
     }
 
-    //Count check to prevent bull shit
-    int oldDownloadCount = 0;
-    int oldMyLibraryCount = 0;
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
@@ -178,17 +173,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final int count = data.getCount();
 
-        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER  && count != oldMyLibraryCount) {
+        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
 
-            oldMyLibraryCount = count;
             parentAdapter.setNewMyLibraryCursor(data);
-            parentAdapter.updateRecentMusic(getRecentMyLibrary());
+            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
-        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER && count != oldDownloadCount) {
+        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
 
-            oldDownloadCount = count;
             parentAdapter.setNewDownLoadCursor(data);
-            parentAdapter.updateRecentMusic(getRecentDownloaded());
+            if (count != parentAdapter.downloadedCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentDownloaded());
+
         }
     }
 
@@ -252,7 +248,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
                         ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
-        if (cursor == null || cursor.getCount() == 0)
+        if (cursor == null)
             return Collections.emptyList();
 
         final List<PrivacySongItem> latestDownloaded = new ArrayList<>(cursor.getCount());
@@ -271,6 +267,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
             latestDownloaded.add(songItem);
         }
+
+        cursor.close();
 
         return latestDownloaded;
     }
@@ -284,10 +282,10 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
                         MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
-        if (cursor == null || cursor.getCount() == 0)
+        if (cursor == null)
             return Collections.emptyList();
 
-        final List<PrivacySongItem> latestDownloaded = new ArrayList<>(cursor.getCount());
+        final List<PrivacySongItem> latestMyLibrary = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
 
             final PrivacySongItem songItem = new PrivacySongItem();
@@ -301,15 +299,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             songItem.size = cursor.getLong(8);
             songItem.visible = cursor.getShort(9) == 1;
 
-            latestDownloaded.add(songItem);
+            latestMyLibrary.add(songItem);
         }
 
-        return latestDownloaded;
-    }
+        cursor.close();
 
-    @Override
-    public RecyclerView.Adapter getActualAdapter() {
-        return actualAdapter;
+        return latestMyLibrary;
     }
 
     public static class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
@@ -361,7 +356,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
     public static synchronized void updateDatabase(ContentValues contentValues, long songId, long userId, Context context) {
 
-        if (context == null || contentValues == null || songId == 0 || userId == 0)
+        //sanity check
+        if (context == null || contentValues == null || userId == 0)
             return;
 
         final ContentResolver resolver = context.getContentResolver();

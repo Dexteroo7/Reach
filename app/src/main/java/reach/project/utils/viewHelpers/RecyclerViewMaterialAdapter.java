@@ -35,15 +35,11 @@ public abstract class RecyclerViewMaterialAdapter<T extends RecyclerView.ViewHol
     @Override
     public final T onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        final View view;
-
         switch (viewType) {
 
-            case TYPE_PLACEHOLDER: {
-                view = LayoutInflater.from(parent.getContext())
-                        .inflate(com.github.florent37.materialviewpager.R.layout.material_view_pager_placeholder, parent, false);
-                return inflatePlaceHolder(view);
-            }
+            case TYPE_PLACEHOLDER:
+                return inflatePlaceHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(com.github.florent37.materialviewpager.R.layout.material_view_pager_placeholder, parent, false));
             default:
                 return newCreateViewHolder(parent, viewType);
         }
@@ -62,13 +58,24 @@ public abstract class RecyclerViewMaterialAdapter<T extends RecyclerView.ViewHol
         }
     }
 
-    public abstract void newBindViewHolder(RecyclerView.ViewHolder holder, int position);
+    @Override
+    public final long getItemId(int position) {
 
-    public abstract T newCreateViewHolder(ViewGroup parent, int viewType);
+        if (position < mPlaceholderSize)
+            return super.getItemId(position);
 
-    public abstract int newGetItemCount();
+        return newGetItemId(position - mPlaceholderSize);
+    }
 
-    public abstract int newGetItemViewType(int position);
+    protected abstract void newBindViewHolder(RecyclerView.ViewHolder holder, int position);
 
-    public abstract T inflatePlaceHolder(View view);
+    protected abstract T newCreateViewHolder(ViewGroup parent, int viewType);
+
+    protected abstract int newGetItemCount();
+
+    protected abstract int newGetItemViewType(int position);
+
+    protected abstract long newGetItemId(int position);
+
+    protected abstract T inflatePlaceHolder(View view);
 }

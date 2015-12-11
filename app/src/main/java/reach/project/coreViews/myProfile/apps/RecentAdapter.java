@@ -3,7 +3,6 @@ package reach.project.coreViews.myProfile.apps;
 import android.content.pm.PackageManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 
 import com.google.common.collect.Ordering;
@@ -67,15 +66,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
                 break;
             }
 
-        Log.i("Ayush", hasObservers() + " obs");
-
-        //will pick the new visibility from the map
-        if (position > -1)
+        //recent adapter might not contain everything, as is limited to 4
+        if (position < getItemCount())
             notifyItemChanged(position);
 
         final RecyclerView.Adapter adapter;
         if (moreAdapter != null && (adapter = moreAdapter.get()) != null)
-            adapter.notifyDataSetChanged();
+            adapter.notifyItemChanged(position); //position will be same
     }
 
     final Object[] reUsable = new Object[2];

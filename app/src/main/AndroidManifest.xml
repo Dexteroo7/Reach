@@ -121,23 +121,23 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Light.Dialog" />
 
-        <!-- <receiver -->
-        <!-- android:name=".core.ReachActivity$PlayerUpdateListener" -->
-        <!-- android:exported="false"> -->
-        <!-- <intent-filter> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_LATEST_MUSIC" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PAUSED" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_UN_PAUSED" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR" /> -->
-        <!-- <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_DURATION" /> -->
+        <activity
+            android:name=".coreViews.myProfile.EditProfileActivity"
+            android:label="@string/title_activity_edit_profile"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
 
-
-        <!-- <category android:name="reach.project" /> -->
-        <!-- </intent-filter> -->
-        <!-- </receiver> -->
+        <activity
+            android:name=".coreViews.yourProfile.YourProfileActivity"
+            android:label="@string/title_activity_your_profile"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
 
         <!--<activity
             android:name=".devikaChat.ChatActivity"
@@ -170,24 +170,6 @@
             android:label="@string/title_activity_player"
             android:parentActivityName=".core.ReachActivity"
             android:process=":remote">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-
-        <activity
-            android:name=".coreViews.myProfile.EditProfileActivity"
-            android:label="@string/title_activity_edit_profile"
-            android:parentActivityName=".core.ReachActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-
-        <activity
-            android:name=".coreViews.yourProfile.YourProfileActivity"
-            android:label="@string/title_activity_your_profile"
-            android:parentActivityName=".core.ReachActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />

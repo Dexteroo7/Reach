@@ -62,7 +62,7 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
         View view;
         try {
             view = recycler.getViewForPosition(position);
-        } catch (IndexOutOfBoundsException ignored) {
+        } catch (IndexOutOfBoundsException | NullPointerException ignored) {
             return;
         }
 

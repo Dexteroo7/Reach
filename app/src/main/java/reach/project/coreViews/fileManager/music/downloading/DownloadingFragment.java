@@ -1,8 +1,6 @@
 package reach.project.coreViews.fileManager.music.downloading;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -26,7 +24,6 @@ import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -38,7 +35,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
     @Nullable
     private static WeakReference<DownloadingFragment> reference = null;
-    private static long userId = 0;
+//    private static long userId = 0;
 
     public static DownloadingFragment getInstance(String header) {
 
@@ -68,8 +65,8 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(downloadingAdapter);
 
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
+//        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+//        userId = SharedPrefUtils.getServerId(preferences);
 
         getLoaderManager().initLoader(StaticData.DOWNLOADING_LOADER, null, this);
 

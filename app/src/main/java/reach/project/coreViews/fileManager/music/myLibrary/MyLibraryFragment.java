@@ -135,9 +135,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return null;
     }
 
-    //Count check to prevent bull shit
-    int oldDownloadCount = 0;
-    int oldMyLibraryCount = 0;
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
@@ -146,17 +143,20 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final int count = data.getCount();
 
-        if (loader.getId() == StaticData.MY_LIBRARY_LOADER && count != oldMyLibraryCount) {
+        if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
-            oldMyLibraryCount = count;
+
             parentAdapter.setNewMyLibraryCursor(data);
-            parentAdapter.updateRecentMusic(getRecentMyLibrary());
+            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
-        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER && count != oldDownloadCount) {
 
-            oldDownloadCount = count;
+        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
+
             parentAdapter.setNewDownLoadCursor(data);
-            parentAdapter.updateRecentMusic(getRecentDownloaded());
+            if (count != parentAdapter.downloadedCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentDownloaded());
+
         }
     }
 
@@ -180,7 +180,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
                         ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
-        if (cursor == null || cursor.getCount() == 0)
+        if (cursor == null)
             return Collections.emptyList();
 
         final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
@@ -189,6 +189,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
             latestDownloaded.add(musicData);
         }
+
+        cursor.close();
 
         return latestDownloaded;
     }
@@ -201,16 +203,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 null, null, MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
                         MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
-        if (cursor == null || cursor.getCount() == 0)
+        if (cursor == null)
             return Collections.emptyList();
 
-        final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
+        final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
 
             final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
-            latestDownloaded.add(musicData);
+            latestMyLibrary.add(musicData);
         }
 
-        return latestDownloaded;
+        cursor.close();
+
+        return latestMyLibrary;
     }
 }

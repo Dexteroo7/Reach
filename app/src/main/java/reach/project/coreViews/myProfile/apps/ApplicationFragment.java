@@ -185,8 +185,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                 MiscUtils.useFragment(reference, fragment -> {
 
                     //reset in memory
-                    synchronized (fragment.parentAdapter.packageVisibility) {
-                        fragment.parentAdapter.packageVisibility.put(packageName, !visibility);
+                    synchronized (ParentAdapter.packageVisibility) {
+                        ParentAdapter.packageVisibility.put(packageName, !visibility);
                     }
                     //reset in disk
                     SharedPrefUtils.addPackageVisibility(fragment.preferences, packageName, !visibility);

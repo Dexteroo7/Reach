@@ -1,7 +1,6 @@
 package reach.project.coreViews.yourProfile.music;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -23,15 +22,14 @@ import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
+import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 
 /**
  * Created by dexter on 13/11/15.
  */
-class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.ViewHolder>
-        implements View.OnClickListener, HandOverMessage<Song> {
+class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> {
 
     private static final byte SONG_ITEM_TYPE = 1;
     private static final byte RECENT_LIST_TYPE = 2;
@@ -39,51 +37,13 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
 
     private final CacheAdapterInterface<T, Song> cacheAdapterInterface;
 
-    public MusicAdapter(CacheAdapterInterface<T, Song> cacheAdapterInterface) {
+    public ParentAdapter(CacheAdapterInterface<T, Song> cacheAdapterInterface) {
         this.cacheAdapterInterface = cacheAdapterInterface;
         setHasStableIds(true);
     }
 
     @Override
-    public int getItemViewType(int position) {
-
-        final Message message = cacheAdapterInterface.getItem(position);
-        if (message instanceof Song)
-            return SONG_ITEM_TYPE;
-        else if (message instanceof RecentSong)
-            return RECENT_LIST_TYPE;
-        else if (message instanceof SmartSong)
-            return SMART_LIST_TYPE;
-        else
-            throw new IllegalArgumentException("Unknown message found in list");
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
-        switch (viewType) {
-
-            case SONG_ITEM_TYPE:
-                return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_list_item, parent, false), position -> {
-
-                            final T message = cacheAdapterInterface.getItem(position);
-                            if (message instanceof Song)
-                                cacheAdapterInterface.handOverMessage((Song) message);
-                            else
-                                throw new IllegalArgumentException("Song item holder passed on an illegal value type");
-                        });
-            case RECENT_LIST_TYPE:
-                return new ListHolder(parent);
-            case SMART_LIST_TYPE:
-                return new ListHolder(parent);
-            default:
-                throw new IllegalArgumentException("Unknown view type found");
-        }
-    }
-
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    protected void newBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         final Message message = cacheAdapterInterface.getItem(position);
         if (message instanceof Song && holder instanceof SongItemHolder) {
@@ -123,7 +83,7 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
             listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
 
             Log.i("Ayush", "Found recent items with size " + recentSong.songList.size() + " ");
-            listHolder.listOfItems.setAdapter(new ListAdapterWithMore(recentSong.songList, this, R.layout.song_grid_item));
+            listHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
 
         } else if (message instanceof SmartSong && holder instanceof ListHolder) {
 
@@ -132,55 +92,59 @@ class MusicAdapter<T extends Message> extends RecyclerView.Adapter<RecyclerView.
             listHolder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             listHolder.headerText.setText(smartSong.title);
             listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
-            listHolder.listOfItems.setAdapter(new ListAdapterWithMore(smartSong.songList, this, R.layout.song_grid_item));
+            listHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
         }
     }
 
     @Override
-    public void onClick(View v) {
+    protected RecyclerView.ViewHolder newCreateViewHolder(ViewGroup parent, int viewType) {
+        switch (viewType) {
 
-        Object object = v.getTag();
-        if (!(object instanceof Integer))
-            return;
-        int pos = (int) object;
+            case SONG_ITEM_TYPE:
+                return new SongItemHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.song_list_item, parent, false), position -> {
 
-        final Message message = cacheAdapterInterface.getItem(pos);
-        if (message instanceof RecentSong) {
-            RecentSong recentSong = (RecentSong) message;
-            //open MoreMusicFragment
-        } else if (message instanceof SmartSong) {
-            SmartSong smartSong = (SmartSong) message;
+                    final T message = cacheAdapterInterface.getItem(position);
+                    if (message instanceof Song)
+                        cacheAdapterInterface.handOverMessage((Song) message);
+                    else
+                        throw new IllegalArgumentException("Song item holder passed on an illegal value type");
+                });
+            case RECENT_LIST_TYPE:
+                return new ListHolder(parent);
+            case SMART_LIST_TYPE:
+                return new ListHolder(parent);
+            default:
+                throw new IllegalArgumentException("Unknown view type found");
         }
     }
 
     @Override
-    public long getItemId(int position) {
+    protected int newGetItemCount() {
+        return cacheAdapterInterface.getItemCount();
+    }
+
+    @Override
+    protected int newGetItemViewType(int position) {
+        final Message message = cacheAdapterInterface.getItem(position);
+        if (message instanceof Song)
+            return SONG_ITEM_TYPE;
+        else if (message instanceof RecentSong)
+            return RECENT_LIST_TYPE;
+        else if (message instanceof SmartSong)
+            return SMART_LIST_TYPE;
+        else
+            throw new IllegalArgumentException("Unknown message found in list");
+    }
+
+    @Override
+    protected long newGetItemId(int position) {
         return cacheAdapterInterface.getItem(position).hashCode();
     }
 
     @Override
-    public int getItemCount() {
-//        Log.i("Ayush", "Returning new size " + cacheAdapterInterface.getItemCount());
-        return cacheAdapterInterface.getItemCount();
-    }
-
-//    @Override
-//    public void handOverMessage(Song song) {
-//        cacheAdapterInterface.handOverMessage(song);
-//    }
-//
-//    @Override
-//    public void handOverMessage(int position) {
-//
-//        final T item = cacheAdapterInterface.getItem(position);
-//        if (item instanceof Song)
-//            cacheAdapterInterface.handOverMessage((Song) item);
-//        else
-//            throw new IllegalArgumentException("Expecting Song, found something else");
-//    }
-
-    @Override
-    public void handOverMessage(@NonNull Song song) {
-        cacheAdapterInterface.handOverMessage(song);
+    protected RecyclerView.ViewHolder inflatePlaceHolder(View view) {
+        return new RecyclerView.ViewHolder(view) {
+        };
     }
 }

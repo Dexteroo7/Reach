@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -27,76 +28,76 @@ import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
-import reach.project.utils.viewHelpers.GetActualAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.ListHolder;
+import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
+class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements Closeable {
 
-    private final GetActualAdapter getActualAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
+    private final RecentAdapter recentAdapter;
+
+    private static final byte VIEW_TYPE_RECENT = 0;
+    private static final byte VIEW_TYPE_ALL = 1;
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<PrivacySongItem> handOverSong,
-                         GetActualAdapter getActualAdapter) {
+                         HandOverMessage<PrivacySongItem> handOverSong) {
 
         this.handOverCursor = handOverCursor;
-        this.getActualAdapter = getActualAdapter;
-
-        final List<PrivacySongItem> defaultList = new ArrayList<>(1);
-        defaultList.add(new PrivacySongItem());
-        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_mylibrary_grid_item);
+        recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_mylibrary_grid_item);
         setHasStableIds(true);
     }
 
-    public static final byte VIEW_TYPE_RECENT = 0;
-    public static final byte VIEW_TYPE_ALL = 1;
-
-    ///////////Recent music adapter
-    private final RecentAdapter recentAdapter;
-
-    public void updateRecentMusic(@NonNull List<PrivacySongItem> newRecent) {
-        if (newRecent.isEmpty())
-            return;
-        recentAdapter.updateRecent(newRecent);
-    }
-    ///////////
-
-    ///////////All songs cursor
+    ///////////Data-set ops
     @Nullable
     private Cursor downloadCursor = null;
     @Nullable
     private Cursor myLibraryCursor = null;
-    private int downloadedCount = 0;
-    @SuppressWarnings("FieldCanBeLocal")
-    private int myLibraryCount = 0;
-    private int latestTotalCount = 0;
+
+    public int myLibraryCount = 0;
+    public int downloadedCount = 0;
 
     public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
 
         //destroy
-        if (this.downloadCursor != null)
+        if (downloadCursor != null)
             downloadCursor.close();
 
         //set
-        this.downloadCursor = newDownloadCursor;
+        downloadCursor = newDownloadCursor;
         Log.i("Ayush", "Setting new download cursor");
-        getActualAdapter.getActualAdapter().notifyDataSetChanged();
+        notifyDataSetChanged();
     }
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
 
         //destroy
-        if (this.myLibraryCursor != null)
+        if (myLibraryCursor != null)
             myLibraryCursor.close();
 
         //set
-        this.myLibraryCursor = newMyLibraryCursor;
+        myLibraryCursor = newMyLibraryCursor;
         Log.i("Ayush", "Setting new library cursor");
-        getActualAdapter.getActualAdapter().notifyDataSetChanged();
+        notifyDataSetChanged();
+    }
+
+    public void updateRecentMusic(@NonNull List<PrivacySongItem> newRecent) {
+
+        if (newRecent.isEmpty())
+            return;
+        recentAdapter.updateRecent(newRecent);
+    }
+
+    /**
+     * MUST CALL FROM UI THREAD
+     *
+     * @param songId the song id to toggle visibility for
+     */
+    public synchronized void updateVisibility(long songId, boolean newVisibility) {
+        recentAdapter.updateVisibility(songId, newVisibility);
     }
 
     @Override
@@ -108,41 +109,47 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
     ///////////
 
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    /**
+     * Will either return Cursor object OR flag for recent list
+     *
+     * @param position position to load
+     * @return object
+     */
+    @Nonnull
+    private Object getItem(int position) {
 
-        switch (viewType) {
+        if (position == 0)
+            return false; //recent
 
-            case VIEW_TYPE_ALL: {
+        else {
 
-                return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_mylibrary_list_item, parent, false), position -> {
+            position--; //account for recent shit
 
-                    final Object object = getItem(position);
-                    if (object instanceof Cursor)
-                        handOverCursor.handOverMessage((Cursor) object);
-                    else
-                        throw new IllegalStateException("Position must correspond with a cursor");
+            if (position < downloadedCount) {
 
-                });
+                if (downloadCursor == null || downloadCursor.isClosed() || !downloadCursor.moveToPosition(position))
+                    throw new IllegalStateException("Resource cursor has been corrupted");
+                return downloadCursor;
+
+            } else {
+
+                position -= downloadedCount; //adjust fot myLibrary
+                if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
+                    throw new IllegalStateException("Resource cursor has been corrupted");
+                return myLibraryCursor;
             }
-
-            case VIEW_TYPE_RECENT: {
-                return new ListHolder(parent, R.layout.list_with_more_button_padding);
-            }
-
-            default:
-                return null;
         }
     }
 
+    ////////////////////
+
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    protected void newBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
-        final Object friend = getItem(position);
-        if (friend instanceof Cursor) {
+        final Object object = getItem(position);
+        if (object instanceof Cursor) {
 
-            final Cursor cursorExactType = (Cursor) friend;
+            final Cursor cursorExactType = (Cursor) object;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
             songItemHolder.bindPosition(position);
 
@@ -158,8 +165,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 songItemHolder.toggleText.setText("Everyone");
-            }
-            else {
+            } else {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 songItemHolder.toggleText.setText("Only Me");
             }
@@ -195,40 +201,46 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         }
     }
 
-    /**
-     * Will either return Cursor object OR flag for recent list
-     *
-     * @param position position to load
-     * @return object
-     */
-    @Nonnull
-    private Object getItem(int position) {
+    @Override
+    protected RecyclerView.ViewHolder newCreateViewHolder(ViewGroup parent, int viewType) {
 
-        if (position == 0)
-            return false; //recent
+        switch (viewType) {
 
-        else {
+            case VIEW_TYPE_ALL: {
 
-            position--; //account for recent shit
-
-            if (position < downloadedCount) {
-
-                if (downloadCursor == null || downloadCursor.isClosed() || !downloadCursor.moveToPosition(position))
-                    throw new IllegalStateException("Resource cursor has been corrupted");
-                return downloadCursor;
-
-            } else {
-
-                position -= downloadedCount; //adjust fot myLibrary
-                if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
-                    throw new IllegalStateException("Resource cursor has been corrupted");
-                return myLibraryCursor;
+                return new SongItemHolder(LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.song_mylibrary_list_item, parent, false), position -> handOverCursor.handOverMessage((Cursor) getItem(position)));
             }
+
+            case VIEW_TYPE_RECENT: {
+                return new ListHolder(parent, R.layout.list_with_more_button_padding);
+            }
+
+            default:
+                return null;
         }
     }
 
     @Override
-    public int getItemViewType(int position) {
+    protected int newGetItemCount() {
+
+        if (downloadCursor != null && !downloadCursor.isClosed())
+            downloadedCount = downloadCursor.getCount();
+        else
+            downloadedCount = 0;
+
+        if (myLibraryCursor != null && !myLibraryCursor.isClosed())
+            myLibraryCount = myLibraryCursor.getCount();
+        else
+            myLibraryCount = 0;
+
+        Log.i("Ayush", "Total size = " + (myLibraryCount + downloadedCount + 1));
+
+        return myLibraryCount + downloadedCount + 1; //adjust for recent list
+    }
+
+    @Override
+    protected int newGetItemViewType(int position) {
 
         final Object item = getItem(position);
         if (item instanceof Cursor)
@@ -240,7 +252,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final Object[] reUsable = new Object[6];
 
     @Override
-    public long getItemId(int position) {
+    protected long newGetItemId(int position) {
 
         final Object item = getItem(position);
         if (item instanceof Cursor) {
@@ -258,18 +270,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
 
     @Override
-    public int getItemCount() {
-
-        if (downloadCursor != null && !downloadCursor.isClosed())
-            downloadedCount = downloadCursor.getCount();
-        else
-            downloadedCount = 0;
-
-        if (myLibraryCursor != null && !myLibraryCursor.isClosed())
-            myLibraryCount = myLibraryCursor.getCount();
-        else
-            myLibraryCount = 0;
-
-        return latestTotalCount = myLibraryCount + downloadedCount + 1; //adjust for recent list
+    protected RecyclerView.ViewHolder inflatePlaceHolder(View view) {
+        return new RecyclerView.ViewHolder(view) {
+        };
     }
 }

@@ -37,40 +37,28 @@ import reach.project.utils.viewHelpers.ListHolder;
  */
 class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
+    private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
                          HandOverMessage<MusicData> handOverSong) {
 
         this.handOverCursor = handOverCursor;
-        final List<MusicData> defaultList = new ArrayList<>(1);
-        defaultList.add(new MusicData());
-        recentAdapter = new RecentAdapter(defaultList, handOverSong, R.layout.song_grid_item);
+        recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item);
         setHasStableIds(true);
     }
 
     public static final byte VIEW_TYPE_RECENT = 0;
     public static final byte VIEW_TYPE_ALL = 1;
 
-    ///////////Recent music adapter
-    private final RecentAdapter recentAdapter;
-
-    public void updateRecentMusic(@NonNull List<MusicData> newRecent) {
-        if (newRecent.isEmpty())
-            return;
-        recentAdapter.updateRecent(newRecent);
-    }
-    ///////////
-
-    ///////////All songs cursor
+    ///////////Data set ops
     @Nullable
     private Cursor downloadCursor = null;
     @Nullable
     private Cursor myLibraryCursor = null;
-    private int downloadedCount = 0;
-    @SuppressWarnings("FieldCanBeLocal")
-    private int myLibraryCount = 0;
-    private int latestTotalCount = 0;
+
+    public int myLibraryCount = 0;
+    public int downloadedCount = 0;
 
     public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
 
@@ -94,12 +82,17 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         notifyDataSetChanged();
     }
 
+    public void updateRecentMusic(@NonNull List<MusicData> newRecent) {
+        if (newRecent.isEmpty())
+            return;
+        recentAdapter.updateRecent(newRecent);
+    }
+
     @Override
     public void close() {
 
         MiscUtils.closeQuietly(downloadCursor, myLibraryCursor);
         downloadCursor = myLibraryCursor = null;
-        notifyItemRangeRemoved(0, latestTotalCount);
     }
     ///////////
 
@@ -274,6 +267,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         else
             myLibraryCount = 0;
 
-        return latestTotalCount = myLibraryCount + downloadedCount + 1; //adjust for recent list
+        return myLibraryCount + downloadedCount + 1; //adjust for recent list
     }
 }

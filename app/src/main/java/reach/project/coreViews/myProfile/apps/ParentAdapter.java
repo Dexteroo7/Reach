@@ -13,8 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.MiscUtils;
@@ -26,25 +24,24 @@ import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements HandOverMessage<App>, RecentAdapter.VisibilityHook {
+final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements RecentAdapter.VisibilityHook {
+
+    private static final byte VIEW_TYPE_RECENT = 0;
+    private static final byte VIEW_TYPE_ALL = 1;
+    static final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
 
     private final HandOverMessage<App> handOverApp;
+    private final RecentAdapter recentAdapter;
 
     public ParentAdapter(HandOverMessage<App> handOverApp) {
 
         this.handOverApp = handOverApp;
         setHasStableIds(true);
+        recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, R.layout.app_mylibray_grid_item, this);
     }
 
-    static final byte VIEW_TYPE_RECENT = 0;
-    static final byte VIEW_TYPE_ALL = 1;
-
-    public final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
-
-    ///////////All songs cursor
+    ///////////Data set ops
     private final List<App> allAppsList = new ArrayList<>(100);
-
-    private int allAppCount = 0;
 
     public void updateAllApps(List<App> allApps) {
 
@@ -58,16 +55,6 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
     public void destroy() {
         allAppsList.clear();
-    }
-    ///////////
-
-    ///////////Recent music adapter
-    private final RecentAdapter recentAdapter;
-
-    {
-        final List<App> defaultList = new ArrayList<>(1);
-        defaultList.add(new App.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_mylibray_grid_item, this);
     }
 
     public void updateRecentApps(List<App> newRecent) {
@@ -96,72 +83,12 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
         position++;//adjust for recent
         position++;//adjust for material header
-//        Log.i("Ayush", "Toggle " + position + " " +
-//                packageVisibility.get(packageName) + " " +
-//                ((App) getItem(position)).packageName);
 
-        //will pick the new visibility from the map
-//        Log.i("Ayush", hasObservers() + " obs");
-
-//        getActualAdapter.getActualAdapter().notifyDataSetChanged();
         notifyItemChanged(position); //adjust for header
         recentAdapter.visibilityChanged(packageName);
     }
 
-    /**
-     * Will either return App object OR flag for recent list
-     *
-     * @param position position to load
-     * @return object
-     */
-    @Nonnull
-    private Object getItem(int position) {
-
-//        Log.i("Ayush", "PARENT GET ITEM CALL " + position);
-
-        if (position == 0)
-            return false; //recent
-
-        else {
-
-            position--; //account for recent shit
-
-            if (position < allAppCount)
-                return allAppsList.get(position);
-            else
-                throw new IllegalStateException("App list has been invalidated");
-        }
-    }
-
-    final Object[] reUsable = new Object[2];
-
-    @Override
-    public long getItemId(int position) {
-
-//        Log.i("Ayush", "Checking item id parent " + position);
-
-        final Object item = getItem(position);
-        if (item instanceof App) {
-
-            final App app = (App) item;
-            final boolean visibility;
-            if (packageVisibility.containsKey(app.packageName))
-                visibility = packageVisibility.get(app.packageName);
-            else
-                visibility = true;
-
-            reUsable[0] = app;
-            reUsable[1] = visibility;
-
-            return Arrays.hashCode(reUsable);
-        } else
-            return super.getItemId(position);
-    }
-
-    @Override
-    public void handOverMessage(@Nonnull App message) {
-        handOverApp.handOverMessage(message);
-    }
+    private final Object[] reUsable = new Object[2];
 
     @Override
     public boolean isVisible(String packageName) {
@@ -171,14 +98,12 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     //////////////////////
 
     @Override
-    public void newBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    protected void newBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         Log.i("Ayush", "Re-binding parent " + position);
+        if (position > 0) {
 
-        final Object friend = getItem(position);
-        if (friend instanceof App) {
-
-            final App appExactType = (App) friend;
+            final App appExactType = allAppsList.get(position - 1); //re-adjust for recent
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
             final PackageManager packageManager = appItemHolder.appName.getContext().getPackageManager();
 
@@ -193,16 +118,16 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             }
 
             //if contains and is true
-            if (packageVisibility.containsKey(appExactType.packageName) && packageVisibility.get(appExactType.packageName)) {
+            if (isVisible(appExactType.packageName)) {
                 appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 appItemHolder.toggleText.setText("Everyone");
             } else {
                 appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 appItemHolder.toggleText.setText("Only Me");
             }
-
         } else {
 
+            //assume its recent
             final ListHolder horizontalViewHolder = (ListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             horizontalViewHolder.headerText.setText("Recently Installed");
@@ -213,21 +138,15 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     }
 
     @Override
-    public RecyclerView.ViewHolder newCreateViewHolder(ViewGroup parent, int viewType) {
+    protected RecyclerView.ViewHolder newCreateViewHolder(ViewGroup parent, int viewType) {
 
         switch (viewType) {
 
             case VIEW_TYPE_ALL: {
 
                 return new AppItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.app_mylibray_list_item, parent, false), position -> {
-
-                    final Object object = getItem(position);
-                    if (object instanceof App)
-                        handOverApp.handOverMessage((App) object);
-                    else
-                        throw new IllegalStateException("Position must correspond with an App");
-                });
+                        .inflate(R.layout.app_mylibray_list_item, parent, false),
+                        position -> handOverApp.handOverMessage(allAppsList.get(position - 1))); //re-adjust for recent
             }
 
             case VIEW_TYPE_RECENT: {
@@ -240,26 +159,40 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     }
 
     @Override
-    public int newGetItemCount() {
-
-        Log.i("Ayush", "PARENT GET ITEM COUNT");
-
-        allAppCount = allAppsList.size();
-        return allAppCount + 1; //adjust for recent
+    protected int newGetItemCount() {
+        return allAppsList.size() + 1; //adjust for recent
     }
 
     @Override
-    public int newGetItemViewType(int position) {
+    protected int newGetItemViewType(int position) {
 
-        final Object item = getItem(position);
-        if (item instanceof App)
+        if (position > 0)
             return VIEW_TYPE_ALL;
         else
             return VIEW_TYPE_RECENT;
     }
 
     @Override
-    public RecyclerView.ViewHolder inflatePlaceHolder(View view) {
-        return null;
+    protected RecyclerView.ViewHolder inflatePlaceHolder(View view) {
+        return new RecyclerView.ViewHolder(view) {
+        };
+    }
+
+    @Override
+    protected long newGetItemId(int position) {
+
+//        Log.i("Ayush", "Checking item id parent " + position);
+
+        if (position > 0) {
+
+            final App app = allAppsList.get(position - 1); //re-adjust for recent
+            final boolean visibility = isVisible(app.packageName);
+
+            reUsable[0] = app;
+            reUsable[1] = visibility;
+
+            return Arrays.hashCode(reUsable);
+        } else
+            return super.getItemId(position);
     }
 }
