@@ -5,9 +5,6 @@ package reach.project.coreViews.myProfile.music;
  */
 final class PrivacySongItem {
 
-    static final byte DOWNLOADED_SONG = 0;
-    static final byte MY_LIBRARY = 1;
-
     String displayName;
     String actualName;
     String artistName;
@@ -19,13 +16,10 @@ final class PrivacySongItem {
     long userId;
     long songId;
 
-    byte type;
-
     boolean visible;
 
     public PrivacySongItem(String displayName, String actualName, String artistName, String albumName,
-                           long size, long duration, long dateAdded, long userId, long songId,
-                           byte type, boolean visible) {
+                           long size, long duration, long dateAdded, long userId, long songId, boolean visible) {
 
         this.displayName = displayName;
         this.actualName = actualName;
@@ -36,7 +30,6 @@ final class PrivacySongItem {
         this.dateAdded = dateAdded;
         this.userId = userId;
         this.songId = songId;
-        this.type = type;
         this.visible = visible;
     }
 
@@ -51,7 +44,6 @@ final class PrivacySongItem {
         this.dateAdded = 0;
         this.userId = 0;
         this.songId = 0;
-        this.type = -1;
         this.visible = false;
     }
 
@@ -67,7 +59,6 @@ final class PrivacySongItem {
         if (dateAdded != songItem.dateAdded) return false;
         if (userId != songItem.userId) return false;
         if (songId != songItem.songId) return false;
-        if (type != songItem.type) return false;
         if (displayName != null ? !displayName.equals(songItem.displayName) : songItem.displayName != null)
             return false;
         if (actualName != null ? !actualName.equals(songItem.actualName) : songItem.actualName != null)
@@ -89,7 +80,6 @@ final class PrivacySongItem {
         result = 31 * result + (int) (dateAdded ^ (dateAdded >>> 32));
         result = 31 * result + (int) (userId ^ (userId >>> 32));
         result = 31 * result + (int) (songId ^ (songId >>> 32));
-        result = 31 * result + (int) type;
         return result;
     }
 }

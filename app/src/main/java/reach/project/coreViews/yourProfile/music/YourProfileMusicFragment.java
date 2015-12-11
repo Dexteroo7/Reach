@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
-import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 import com.google.common.base.Optional;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -82,10 +81,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
+    private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
     private final SecureRandom secureRandom = new SecureRandom();
 
     private HandOverMessage<ReachDatabase> addSongToQueue = null;
-    private RecyclerViewMaterialAdapter materialAdapter = null;
     private Cache fullListCache = null;
     private Cache smartListCache = null;
     private Cache recentMusicCache = null;
@@ -95,7 +94,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void onDestroyView() {
 
-        materialAdapter = null;
         userId = 0;
 
         MiscUtils.closeQuietly(fullListCache, smartListCache, recentMusicCache);
@@ -174,7 +172,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         //mRecyclerView.setHasFixedSize(true);
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(materialAdapter = new RecyclerViewMaterialAdapter(new MusicAdapter<>(this)));
+        mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
         return rootView;
     }
@@ -315,10 +313,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             painter(elements, typeChecker);
 
         //notify
-        if (materialAdapter != null) {
-            Log.i("Ayush", "Reloading list " + musicData.size());
-            materialAdapter.notifyDataSetChanged();
-        }
+        Log.i("Ayush", "Reloading list " + musicData.size());
+        parentAdapter.notifyDataSetChanged();
 
         /**
          * If loading has finished request a full injection of smart lists

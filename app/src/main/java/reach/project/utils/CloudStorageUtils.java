@@ -18,7 +18,6 @@ import com.google.api.client.util.SecurityUtils;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
 import com.google.common.base.Optional;
-import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.squareup.wire.Wire;
@@ -391,7 +390,8 @@ public enum CloudStorageUtils {
             return Collections.emptyList();
 
         //sort and return
-        return Ordering.from(StaticData.primaryMusic).immutableSortedCopy(songList);
+        Collections.sort(songList, StaticData.primaryMusic);
+        return songList;
     }
 
     public static List<App> fetchApps(long userId, WeakReference<Context> reference) {
@@ -449,7 +449,8 @@ public enum CloudStorageUtils {
             return Collections.emptyList();
 
         //sort and return
-        return Ordering.from(StaticData.secondaryApps).immutableSortedCopy(apps);
+        Collections.sort(apps, StaticData.secondaryApps);
+        return apps;
     }
 
     private static Storage storage = null;

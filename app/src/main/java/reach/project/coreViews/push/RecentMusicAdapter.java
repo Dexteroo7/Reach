@@ -54,7 +54,7 @@ class RecentMusicAdapter extends SimpleRecyclerAdapter<Song, PushItemHolder> imp
         final List<Song> recentMusic = getMessageList();
 
         //remove to prevent duplicates
-        Log.i("Ayush", "Previous size " + recentMusic.size());
+//        Log.i("Ayush", "Previous size " + recentMusic.size());
         final ListIterator<Song> songListIterator = recentMusic.listIterator();
         while (songListIterator.hasNext()) {
 
@@ -65,7 +65,7 @@ class RecentMusicAdapter extends SimpleRecyclerAdapter<Song, PushItemHolder> imp
                 songListIterator.remove(); //remove id is same found
             }
         }
-        Log.i("Ayush", "After removal size " + recentMusic.size());
+//        Log.i("Ayush", "After removal size " + recentMusic.size());
 
         //add new items
         recentMusic.addAll(newMessages);

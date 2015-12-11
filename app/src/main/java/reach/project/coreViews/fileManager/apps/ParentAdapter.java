@@ -19,18 +19,20 @@ import reach.project.utils.viewHelpers.ListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<App> {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final HandOverMessage<App> handOverApp;
+    private final RecentAdapter recentAdapter;
 
     public ParentAdapter(HandOverMessage<App> handOverApp) {
         this.handOverApp = handOverApp;
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, R.layout.app_grid_item);
     }
 
-    public static final byte VIEW_TYPE_RECENT = 0;
-    public static final byte VIEW_TYPE_ALL = 1;
+    private static final byte VIEW_TYPE_RECENT = 0;
+    private static final byte VIEW_TYPE_ALL = 1;
 
-    ///////////All songs cursor
+    ///////////Data set ops
     private final List<App> allAppsList = new ArrayList<>(100);
     private int allAppCount = 0;
     private int latestTotalCount = 0;
@@ -44,6 +46,12 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         notifyDataSetChanged();
     }
 
+    public void updateRecentApps(List<App> newRecent) {
+        if (newRecent.isEmpty())
+            return;
+        recentAdapter.updateRecent(newRecent);
+    }
+
     public void destroy() {
 
         allAppsList.clear();
@@ -51,21 +59,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
     ///////////
 
-    ///////////Recent music adapter
-    private final RecentAdapter recentAdapter;
-
-    {
-        final List<App> defaultList = new ArrayList<>(1);
-        defaultList.add(new App.Builder().build());
-        recentAdapter = new RecentAdapter(defaultList, this, R.layout.app_grid_item);
-    }
-
-    public void updateRecentApps(List<App> newRecent) {
-        if (newRecent.isEmpty())
-            return;
-        recentAdapter.updateRecent(newRecent);
-    }
-    ///////////
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -163,10 +156,5 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         allAppCount = allAppsList.size();
         return latestTotalCount = allAppCount + 1; //adjust for recent
-    }
-
-    @Override
-    public void handOverMessage(@Nonnull App message) {
-        handOverApp.handOverMessage(message);
     }
 }

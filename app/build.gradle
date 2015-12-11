@@ -10,10 +10,12 @@ android {
 
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 21
-        versionCode 72
-        versionName "0.9.21.7-beta"
+        minSdkVersion 14
+        versionCode 74
+        versionName "0.9.21.9-beta"
+        multiDexEnabled true
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -28,9 +30,18 @@ android {
         incremental true
         javaMaxHeapSize '4g'
     }
+
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+        }
+    }
 }
 
 dependencies {
+
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev54-1.21.0'
@@ -47,6 +58,7 @@ dependencies {
     compile 'com.facebook.fresco:fresco:0.8.1'
     compile 'com.facebook.fresco:imagepipeline-okhttp:0.8.1'
     compile 'com.squareup.wire:wire-runtime:1.8.0'
+    //compile 'com.crittercism:crittercism-android-agent:5.3.3'
     //compile 'com.firebase:firebase-client-android:2.4.0'
     //compile 'com.squareup:tape:1.2.3'
 

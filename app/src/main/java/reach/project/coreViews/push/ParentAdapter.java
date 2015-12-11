@@ -11,7 +11,7 @@ import reach.project.utils.viewHelpers.ListHolder;
 /**
  * Created by dexter on 04/12/15.
  */
-public class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
+class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
 
     private final RecyclerView.Adapter apps, music;
 

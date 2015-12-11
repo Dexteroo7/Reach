@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
-import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 import com.google.common.collect.Ordering;
 
 import java.io.IOException;
@@ -34,13 +33,12 @@ import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.GetActualAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 25/11/15.
  */
-public class ApplicationFragment extends Fragment implements HandOverMessage<App>, GetActualAdapter {
+public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
     @Nullable
     private static WeakReference<ApplicationFragment> reference = null;
@@ -65,8 +63,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     @Nullable
     private SharedPreferences preferences = null;
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
-    private final RecyclerView.Adapter actualAdapter = new RecyclerViewMaterialAdapter(parentAdapter);
+    private final ParentAdapter parentAdapter = new ParentAdapter(this);
 
     @Override
     public void handOverMessage(@Nonnull App message) {
@@ -100,7 +97,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final Activity activity = getActivity();
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
-        mRecyclerView.setAdapter(actualAdapter);
+        mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
@@ -111,11 +108,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
 
         return rootView;
-    }
-
-    @Override
-    public RecyclerView.Adapter getActualAdapter() {
-        return actualAdapter;
     }
 
     private static final class GetApplications extends AsyncTask<Context, Void, Pair<List<App>, List<App>>> {
@@ -193,8 +185,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                 MiscUtils.useFragment(reference, fragment -> {
 
                     //reset in memory
-                    synchronized (fragment.parentAdapter.packageVisibility) {
-                        fragment.parentAdapter.packageVisibility.put(packageName, !visibility);
+                    synchronized (ParentAdapter.packageVisibility) {
+                        ParentAdapter.packageVisibility.put(packageName, !visibility);
                     }
                     //reset in disk
                     SharedPrefUtils.addPackageVisibility(fragment.preferences, packageName, !visibility);

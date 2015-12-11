@@ -203,3 +203,7 @@
 }
 
 -dontwarn javax.annotation.**
+
+-keep class reach.project.coreViews.fileManager.apps.ApplicationFragment { *; }
+-keep class reach.project.coreViews.fileManager.music.downloading.DownloadingFragment { *; }
+-keep class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }

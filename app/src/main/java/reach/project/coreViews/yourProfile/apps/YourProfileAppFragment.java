@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
-import com.github.florent37.materialviewpager.adapter.RecyclerViewMaterialAdapter;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 
@@ -37,8 +36,7 @@ import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 /**
  * Created by dexter on 15/11/15.
  */
-public class YourProfileAppFragment extends Fragment implements CacheInjectorCallbacks<Message>,
-        CacheAdapterInterface<Message, App> {
+public class YourProfileAppFragment extends Fragment implements CacheInjectorCallbacks<Message>, CacheAdapterInterface<Message, App> {
 
     private static WeakReference<YourProfileAppFragment> reference = null;
     private static long userId = 0;
@@ -59,8 +57,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     }
 
     private final List<Message> appData = new ArrayList<>(100);
+    private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
 
-    private RecyclerViewMaterialAdapter materialAdapter = null;
     private Cache fullListCache = null;
 //    private Cache smartListCache = null;
 //    private Cache recentAppCache = null;
@@ -103,7 +101,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         //mRecyclerView.setHasFixedSize(true);
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(materialAdapter = new RecyclerViewMaterialAdapter(new AppAdapter<>(this)));
+        mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
 
         return rootView;
@@ -183,10 +181,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         appData.addAll(elements);
 
         //notify
-        if (materialAdapter != null) {
-            Log.i("Ayush", "Reloading list " + appData.size());
-            materialAdapter.notifyDataSetChanged();
-        }
+        Log.i("Ayush", "Reloading list " + appData.size());
+        parentAdapter.notifyDataSetChanged();
 
         /**
          * If loading has finished request a full injection of smart lists
