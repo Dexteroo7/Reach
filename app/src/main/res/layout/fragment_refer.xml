@@ -27,163 +27,107 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <RelativeLayout
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <TextView
                     android:id="@+id/headingText"
-                    android:layout_marginTop="25dp"
                     android:textColor="#000"
                     android:textSize="18sp"
-                    android:textStyle="bold"
                     android:gravity="center"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Invite Friends and Share Music with them to earn upto Rs 300!" />
-                <TextView
-                    android:id="@+id/totalEarningText"
-                    android:layout_marginTop="20dp"
-                    android:textColor="@color/reach_color"
-                    android:textSize="17sp"
-                    android:layout_below="@id/headingText"
-                    android:layout_centerHorizontal="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Total Earnings" />
-                <TextView
-                    android:id="@+id/totalEarning"
                     android:textStyle="bold"
-                    android:layout_marginBottom="10dp"
-                    android:layout_below="@id/totalEarningText"
+                    android:layout_marginBottom="30dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/remainingText"
                     android:textColor="@color/reach_color"
-                    android:textSize="20sp"
-                    android:layout_centerHorizontal="true"
+                    android:textSize="19sp"
+                    android:gravity="center"
+                    android:layout_marginBottom="20dp"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Rs. 0" />
+                    android:layout_height="wrap_content" />
                 <TextView
-                    android:id="@+id/redeemableAmountText"
-                    android:layout_below="@id/totalEarning"
+                    android:id="@+id/earningText"
                     android:textColor="@color/reach_grey"
-                    android:layout_marginLeft="40dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:text="Redeemable Amount" />
-                <TextView
-                    android:id="@+id/redeemableAmount"
-                    android:layout_alignBottom="@id/redeemableAmountText"
-                    android:layout_alignParentRight="true"
-                    android:textColor="@color/reach_grey"
-                    android:layout_marginRight="40dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:text="Rs. 0" />
-                <TextView
-                    android:id="@+id/redeemedAmountText"
-                    android:layout_below="@id/redeemableAmountText"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/reach_grey"
-                    android:layout_marginLeft="40dp"
-                    android:textSize="16sp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Redeemed Amount" />
-                <TextView
-                    android:id="@+id/redeemedAmount"
-                    android:layout_alignBottom="@id/redeemedAmountText"
-                    android:layout_alignParentRight="true"
-                    android:textColor="@color/reach_grey"
-                    android:textSize="16sp"
-                    android:layout_marginRight="40dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Rs. 0" />
-                <TextView
-                    android:id="@+id/noteText"
-                    android:layout_below="@id/redeemedAmountText"
-                    android:layout_marginTop="20dp"
-                    android:textColor="#000"
-                    android:textStyle="bold"
-                    android:layout_marginLeft="30dp"
-                    android:layout_marginRight="30dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Note:\nMinimum Redeemable Amount is Rs 100. Money can be redeemed in multiples of Rs 100 only!" />
+                    android:textSize="19sp"
+                    android:layout_marginBottom="20dp"
+                    android:gravity="center" />
                 <EditText
                     android:id="@+id/registerText"
-                    android:layout_below="@id/noteText"
-                    android:layout_marginTop="20dp"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:gravity="center"
+                    android:layout_marginBottom="10dp"
                     android:inputType="textEmailAddress"
                     android:hint="Enter email id to Register"
-                    android:layout_centerHorizontal="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
                 <Button
                     android:id="@+id/registerBtn"
-                    android:layout_below="@id/registerText"
-                    android:layout_marginTop="5dp"
                     android:text="Register"
                     android:background="@color/reach_color"
                     android:textAllCaps="false"
                     android:textColor="#fff"
                     android:textSize="16sp"
-                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="20dp"
                     android:layout_width="wrap_content"
                     android:layout_height="30dp" />
                 <TextView
-                    android:id="@+id/howText"
-                    android:textStyle="bold"
-                    android:layout_below="@id/registerBtn"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginBottom="5dp"
-                    android:textColor="#000"
-                    android:textSize="15sp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="How to Earn:" />
-                <TextView
-                    android:id="@+id/how"
-                    android:layout_below="@id/howText"
-                    android:textColor="#000"
-                    android:textSize="14sp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginBottom="20dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <TextView
                     android:id="@+id/termsText"
                     android:textStyle="bold"
-                    android:layout_below="@id/how"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginBottom="5dp"
                     android:textColor="#000"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
+                    android:layout_gravity="start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Terms and Conditions:" />
                 <TextView
                     android:id="@+id/terms"
-                    android:layout_below="@id/termsText"
                     android:textColor="#000"
-                    android:textSize="14sp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginRight="20dp"
+                    android:textSize="15sp"
                     android:layout_marginBottom="20dp"
+                    android:layout_gravity="start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
-            </RelativeLayout>
+                <TextView
+                    android:id="@+id/howText"
+                    android:textStyle="bold"
+                    android:textColor="#000"
+                    android:layout_gravity="start"
+                    android:textSize="16sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="How do i get my money:" />
+                <TextView
+                    android:id="@+id/how"
+                    android:textColor="#000"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_gravity="start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/noteText"
+                    android:textStyle="bold"
+                    android:textColor="#000"
+                    android:textSize="16sp"
+                    android:layout_gravity="start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Note:" />
+                <TextView
+                    android:id="@+id/note"
+                    android:textColor="#000"
+                    android:textSize="15sp"
+                    android:layout_gravity="start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
         </ScrollView>
         <View
             android:id="@+id/mainShadow"

@@ -290,7 +290,7 @@ public class ReachActivity extends AppCompatActivity implements
                         if (promoCodeDialog.isAdded())
                             promoCodeDialog.dismiss();
                         if (!promoCodeDialog.isAdded())
-                            promoCodeDialog.show(fragmentManager, "promo_dialog");*/
+                               promoCodeDialog.show(fragmentManager, "promo_dialog");*/
                         fragmentManager
                                 .beginTransaction()
                                 .addToBackStack(null)
