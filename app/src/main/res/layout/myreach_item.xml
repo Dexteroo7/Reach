@@ -12,7 +12,7 @@
         android:id="@+id/profileGradient"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/gradient_light_profile" />
+        android:background="@drawable/nav_pic_gradient_light" />
 
     <TextView
         android:id="@+id/newSongs"

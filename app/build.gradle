@@ -13,7 +13,7 @@ android {
         versionCode 75
         versionName "0.9.22-beta"
 
-        //multiDexEnabled true
+        multiDexEnabled true
     }
 
     buildTypes {
