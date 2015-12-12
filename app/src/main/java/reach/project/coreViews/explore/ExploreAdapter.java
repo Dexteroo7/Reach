@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 
@@ -28,13 +32,13 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 class ExploreAdapter extends PagerAdapter {
 
     private final Explore explore;
-    private final HandOverMessage<Long> handOverMessage;
+    private final HandOverMessage<Integer> handOverMessage;
 
     @Nullable
     private static WeakReference<ExploreAdapter> adapterWeakReference = null;
 
     public ExploreAdapter(Explore explore,
-                          HandOverMessage<Long> handOverId) {
+                          HandOverMessage<Integer> handOverId) {
         this.explore = explore;
         this.handOverMessage = handOverId;
         adapterWeakReference = new WeakReference<>(this);
@@ -43,9 +47,16 @@ class ExploreAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
 
-        final ExploreContainer container = explore.getContainerForIndex(position);
-        final View layout = LayoutInflater.from(collection.getContext()).inflate(container.types.getLayoutResId(), collection, false);
+        final JSONObject jsonObject = explore.getContainerForIndex(position);
+        ExploreTypes exploreTypes;
+        try {
+            exploreTypes = ExploreTypes.valueOf(jsonObject.getString("type"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            exploreTypes = ExploreTypes.MUSIC; //default to music
+        }
 
+        final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);
         final TextView title = (TextView) layout.findViewById(R.id.title);
         final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
         final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
@@ -54,39 +65,39 @@ class ExploreAdapter extends PagerAdapter {
         final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
         final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
 
-        switch (container.types) {
+        try {
 
-            case MUSIC:
+            switch (exploreTypes) {
 
-                final MusicContainer musicContainer = (MusicContainer) container;
+                case MUSIC:
 
-                title.setText(musicContainer.displayName);
-                subTitle.setText(musicContainer.artistName);
-                userHandle.setText(musicContainer.userHandle);
-                typeText.setText(musicContainer.types.getTitle());
-                if (!TextUtils.isEmpty(container.imageId))
-                    image.setImageURI(Uri.parse(container.imageId));
-                userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.userImageId));
-                //downButton.setTag(container.getId());
-                downButton.setOnClickListener(clickListener);
-                downButton.setTag(musicContainer.id);
-                layout.setTag(POSITION_UNCHANGED);
-                break;
-            case APP:
+                    title.setText(jsonObject.getString("displayName"));
+                    subTitle.setText(jsonObject.getString("artistName"));
+                    userHandle.setText(musicContainer.userHandle);
+                    typeText.setText(musicContainer.types.getTitle());
+                    if (!TextUtils.isEmpty(container.imageId))
+                        image.setImageURI(Uri.parse(container.imageId));
+                    userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.userImageId));
+                    //downButton.setTag(container.getId());
+                    downButton.setOnClickListener(clickListener);
+                    downButton.setTag(position);
+                    layout.setTag(POSITION_UNCHANGED);
+                    break;
+                case APP:
 //                container.getRating();
-                layout.setTag(POSITION_UNCHANGED);
-                break;
-            case PHOTO:
-                layout.setTag(POSITION_UNCHANGED);
-                break;
-            case LOADING:
-                layout.setTag(POSITION_NONE);
-                break;
-            case DONE_FOR_TODAY:
+                    layout.setTag(POSITION_UNCHANGED);
+                    break;
+                case LOADING:
+                    layout.setTag(POSITION_NONE);
+                    break;
+                case DONE_FOR_TODAY:
 
-                //title.setText("No more stories for today");
-                layout.setTag(POSITION_NONE);
-                break;
+                    //title.setText("No more stories for today");
+                    layout.setTag(POSITION_NONE);
+                    break;
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
         collection.addView(layout);
@@ -132,7 +143,7 @@ class ExploreAdapter extends PagerAdapter {
 
     interface Explore {
 
-        ExploreContainer getContainerForIndex(int index);
+        JSONObject getContainerForIndex(int index);
 
         int getCount();
     }
@@ -147,7 +158,7 @@ class ExploreAdapter extends PagerAdapter {
         if (exploreAdapter == null)
             return;
 
-        exploreAdapter.handOverMessage.handOverMessage((long) view.getTag());
+        exploreAdapter.handOverMessage.handOverMessage((int) view.getTag());
 
         final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
         animator.setDuration(300);

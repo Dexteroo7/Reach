@@ -3,20 +3,24 @@ package reach.project.coreViews.explore;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import reach.project.utils.MiscUtils;
 
 /**
  * Created by dexter on 15/10/15.
@@ -47,7 +51,7 @@ class ExploreBuffer<T> implements Closeable {
     }
 
     //holds a buffer of network objects
-    private final CopyOnWriteArrayList<T> storyBuffer = new CopyOnWriteArrayList<>(new ArrayList<>(100));
+    private final List<T> storyBuffer = new ArrayList<>(100);
 
     //interface for stuff
     private final Exploration<T> exploration;
@@ -100,6 +104,9 @@ class ExploreBuffer<T> implements Closeable {
             new FetchNextBatch<>().executeOnExecutor(executorService, exploration.fetchNextBatch());
         }
 
+        if (position > currentSize)
+            return null;
+
         return storyBuffer.get(position);
     }
 
@@ -115,51 +122,42 @@ class ExploreBuffer<T> implements Closeable {
     @Override
     public void close() {
 
-        storyBuffer.clear();
+        synchronized (storyBuffer) {
+            storyBuffer.clear();
+        }
         executorService.shutdownNow();
     }
 
     //runnable to fetch stories
-    private static class FetchNextBatch<T> extends AsyncTask<Callable, Void, Collection<T>> {
+    private static class FetchNextBatch<T> extends AsyncTask<Callable, Void, Optional<Exploration>> {
 
         @Override
-        protected final Collection<T> doInBackground(Callable... params) {
+        protected final Optional<Exploration> doInBackground(Callable... params) {
 
             Log.i("Ayush", "Fetching next batch of stories");
 
             if (params == null || params.length == 0)
-                return null;
+                return Optional.absent();
 
-            try {
-                return (Collection<T>) params[0].call();
-            } catch (Exception e) {
-                e.printStackTrace();
-                //TODO track
-            }
+            //cast to exact type
+            final Callable<Collection<T>> exactType = params[0];
+            final Collection<T> stories = MiscUtils.autoRetry(exactType::call, Optional.absent()).or(Collections.emptyList());
 
-            return null;
-        }
-
-        @Override
-        protected final void onPostExecute(Collection<T> batch) {
-
-            super.onPostExecute(batch);
-
-            if (batch == null || batch.isEmpty())
-                return;
+            if (stories == null || stories.isEmpty())
+                return Optional.absent();
 
             final ExploreBuffer<T> buffer;
             //noinspection unchecked
             if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)
-                return; //buffer destroyed
+                return Optional.absent(); //buffer destroyed
 
             //handle done for today response
-            for (T item : batch)
+            for (T item : stories)
                 if (buffer.exploration.isDoneForDay(item)) {
 
                     isDoneForToday.set(true);
                     Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
-                    buffer.executorService.shutdownNow(); //shut down this shit
+                    buffer.executorService.shutdown(); //shut down this shit
                     break;
                 }
 
@@ -167,20 +165,33 @@ class ExploreBuffer<T> implements Closeable {
             final int currentSize = buffer.storyBuffer.size();
             final T lastItem = buffer.storyBuffer.get(currentSize - 1);
             final int insertFrom;
+
             if (buffer.exploration.isDoneForDay(lastItem) || buffer.exploration.isLoading(lastItem)) {
-//                buffer.storyBuffer.remove(currentSize - 1);
+
                 if (isDoneForToday.get()) {
                     insertFrom = currentSize - 1;
-                    buffer.storyBuffer.remove(currentSize-1);
-                }
-                else
+                    synchronized (buffer.storyBuffer) {
+                        buffer.storyBuffer.remove(currentSize - 1);
+                    }
+                } else
                     insertFrom = currentSize - 1;
                 Log.i("Ayush", "Removing loading response");
             } else
                 insertFrom = currentSize;
 
-            buffer.storyBuffer.addAll(insertFrom, batch); //make the insertion
-            buffer.exploration.notifyDataAvailable();
+            synchronized (buffer.storyBuffer) {
+                buffer.storyBuffer.addAll(insertFrom, stories); //make the insertion
+            }
+
+            return Optional.of(buffer.exploration);
+        }
+
+        @Override
+        protected final void onPostExecute(Optional<Exploration> optional) {
+
+            super.onPostExecute(optional);
+            if (optional.isPresent())
+                optional.get().notifyDataAvailable();
         }
     }
 

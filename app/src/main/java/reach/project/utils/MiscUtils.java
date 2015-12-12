@@ -95,6 +95,7 @@ import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment2;
+import reach.project.utils.viewHelpers.RetryHook;
 
 /**
  * Created by dexter on 1/10/14.
@@ -807,7 +808,8 @@ public enum MiscUtils {
                 } catch (NullPointerException ignored) {
                 }
                 e.printStackTrace();
-                return Optional.absent();
+                return Optional.absent(); //do not retry
+
             } catch (GoogleJsonResponseException e) {
 
                 try {
@@ -815,8 +817,71 @@ public enum MiscUtils {
                 } catch (NullPointerException ignored) {
                 }
                 if (e.getLocalizedMessage().contains("404"))
-                    return Optional.absent();
-            } catch (IOException e) {
+                    return Optional.absent(); //do not retry on 404
+
+            } catch (Exception e) {
+
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
+                e.printStackTrace();
+            }
+        }
+        return Optional.absent();
+    }
+
+    /**
+     * Performs a work, retries upon failure with exponential back-off.
+     * Kindly don't use on UI thread.
+     *
+     * @param <T>       the return type of work
+     * @param task      the work that needs to be performed
+     * @param predicate the extra condition for failure
+     * @return the result/output of performing the work
+     */
+    public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
+                                            @NonNull final Optional<Predicate<T>> predicate,
+                                            @NonNull final Optional<RetryHook> retryHookOptional) {
+
+        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+
+            if (retryHookOptional.isPresent() && retry > 0)
+                retryHookOptional.get().retryCount(retry);
+
+            try {
+
+                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                final T resultAfterWork = task.doWork();
+                /**
+                 * If the result was not
+                 * desirable we RETRY.
+                 */
+                if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                    continue;
+                /**
+                 * Else we return
+                 */
+                return Optional.fromNullable(resultAfterWork);
+            } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
+
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
+                e.printStackTrace();
+                return Optional.absent(); //do not retry
+
+            } catch (GoogleJsonResponseException e) {
+
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
+                if (e.getLocalizedMessage().contains("404"))
+                    return Optional.absent(); //do not retry on 404
+
+            } catch (Exception e) {
 
                 try {
                     Log.i("Ayush", e.getLocalizedMessage());
@@ -866,10 +931,30 @@ public enum MiscUtils {
                      * Else we return
                      */
                     return;
-                } catch (InterruptedException | UnknownHostException e) {
+                } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
+
+                    try {
+                        Log.i("Ayush", e.getLocalizedMessage());
+                    } catch (NullPointerException ignored) {
+                    }
                     e.printStackTrace();
-                    return;
-                } catch (IOException e) {
+                    return; //do not retry
+
+                } catch (GoogleJsonResponseException e) {
+
+                    try {
+                        Log.i("Ayush", e.getLocalizedMessage());
+                    } catch (NullPointerException ignored) {
+                    }
+                    if (e.getLocalizedMessage().contains("404"))
+                        return; //do not retry on 404
+
+                } catch (Exception e) {
+
+                    try {
+                        Log.i("Ayush", e.getLocalizedMessage());
+                    } catch (NullPointerException ignored) {
+                    }
                     e.printStackTrace();
                 }
             }

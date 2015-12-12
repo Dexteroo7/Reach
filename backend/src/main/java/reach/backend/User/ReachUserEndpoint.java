@@ -1341,21 +1341,6 @@ public class ReachUserEndpoint {
         return toReturn;
     }
 
-    public static void closeQuietly(Closeable... closeables) {
-        for (Closeable closeable : closeables)
-            if (closeable != null)
-                try {
-                    closeable.close();
-                } catch (IOException ignored) {
-                }
-    }
 
-    public static void closeQuietly(Closeable closeable) {
-        if (closeable != null)
-            try {
-                closeable.close();
-            } catch (IOException ignored) {
-            }
-    }
 
 }
