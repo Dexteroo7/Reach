@@ -6,12 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="reach.project.player.PlayerActivity">
-    <ImageView
-        android:id="@+id/headerRoot"
-        android:scaleType="centerCrop"
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/coverPic"
         app:layout_heightPercent="40%"
         android:layout_width="match_parent"
-        android:src="@drawable/album_art_small_03" />
+        fresco:placeholderImageScaleType="centerCrop"
+        fresco:placeholderImage="@drawable/album_art_small_03" />
     <android.support.design.widget.AppBarLayout
         android:id="@+id/toolbarLayout"
         app:elevation="0dp"
@@ -30,7 +30,7 @@
     <FrameLayout
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="50dp"
         android:layout_centerHorizontal="true"
         android:id="@+id/profilePicContainer" >
         <com.facebook.drawee.view.SimpleDraweeView
@@ -53,7 +53,8 @@
         android:orientation="horizontal"
         android:layout_below="@id/profilePicContainer"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <ImageView
@@ -107,7 +108,6 @@
                 android:layout_marginLeft="32dp"
                 android:layout_marginRight="32dp"
                 android:layout_width="match_parent"
-                android:minWidth="200dp"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:hint="Enter your name"
