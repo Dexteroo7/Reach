@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,6 +82,16 @@ public class ReferFragment extends Fragment {
         registerBtn.setOnClickListener(view -> {
 
             final String email = registerText.getText().toString();
+            if (TextUtils.isEmpty(email)) {
+                Toast.makeText(view.getContext(), "Enter an email id first", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(view.getContext(), "Enter a valid email id", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             new SetEmail(email).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userId);
         });
 
