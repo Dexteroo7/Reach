@@ -163,7 +163,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             visible = cursorExactType.getShort(9) == 1;
 
             if (visible) {
-                songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+                songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
                 songItemHolder.toggleText.setText("Everyone");
             } else {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);

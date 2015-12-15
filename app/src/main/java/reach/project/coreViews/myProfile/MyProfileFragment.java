@@ -72,6 +72,22 @@ public class MyProfileFragment extends Fragment {
         final View editProfileContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.editProfileLayout);
         editProfileContainer.setOnClickListener(v -> startActivity(new Intent(activity, EditProfileActivity.class)));
         toolbar.setNavigationIcon(null);
+        toolbar.setOnMenuItemClickListener(item -> {
+            boolean check;
+            switch (item.getItemId()) {
+                case R.id.show_visible:
+                    check = !item.isChecked();
+                    //TODO show visible files
+                    item.setChecked(check);
+                    return true;
+                case R.id.show_invisible:
+                    check = !item.isChecked();
+                    //TODO show invisible files
+                    item.setChecked(check);
+                    return true;
+            }
+            return false;
+        });
 
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
         final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);

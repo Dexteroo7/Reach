@@ -119,7 +119,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
 
             //if contains and is true
             if (isVisible(appExactType.packageName)) {
-                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+                appItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
                 appItemHolder.toggleText.setText("Everyone");
             } else {
                 appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
