@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -128,7 +127,6 @@ public class ReferFragment extends Fragment {
         @Override
         protected void onPostExecute(String string) {
             super.onPostExecute(string);
-            Log.d("Ashish", string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
 
@@ -205,7 +203,6 @@ public class ReferFragment extends Fragment {
         @Override
         protected void onPostExecute(Integer code) {
             super.onPostExecute(code);
-            Log.d("Ashish", "setEmail res code = " + code);
             MiscUtils.useFragment(reference, fragment -> {
                 if (code != 200) {
                     Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
@@ -242,7 +239,6 @@ public class ReferFragment extends Fragment {
         @Override
         protected void onPostExecute(String string) {
             super.onPostExecute(string);
-            Log.d("Ashish", string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
                     String jsonString = SharedPrefUtils.getCampaignTerms(sharedPrefs);
