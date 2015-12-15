@@ -5,12 +5,14 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
@@ -40,6 +42,8 @@ import com.google.common.base.Optional;
 import com.nineoldandroids.view.ViewHelper;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -54,6 +58,8 @@ import reach.project.friends.ReachFriendsProvider;
 import reach.project.music.MusicListFragment;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -121,6 +127,8 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
         // Inflate the layout for this fragment
 
         final long userId = getArguments().getLong("id");
+        final long myId = SharedPrefUtils.getServerId(getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE));
+
         final Activity activity = getActivity();
 
         if (MiscUtils.isOnline(activity))
@@ -248,6 +256,30 @@ public class UserMusicLibrary extends Fragment implements ScrollTabHolder, OnPag
                 .setLabel("Friend - " + userId)
                 .setValue(1)
                 .build());
+
+        final Context context = getContext();
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, myId + "");
+        simpleParams.put(PostParams.USER_NUMBER, SharedPrefUtils.getPhoneNumber(sharedPreferences));
+        simpleParams.put(PostParams.USER_NAME, SharedPrefUtils.getUserName(sharedPreferences));
+
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(context));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        simpleParams.put(PostParams.SCREEN_NAME, "user_music_library");
+        simpleParams.put(PostParams.META_INFO, userId + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            UsageTracker.trackEvent(simpleParams, UsageTracker.BROWSE_LIBRARY);
+            UsageTracker.trackLogEvent(simpleParams, UsageTracker.BROWSE_LIBRARY);
+        } catch (JSONException ignored) {
+        }
 
         return rootView;
     }

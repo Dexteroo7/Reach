@@ -40,7 +40,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 
 import java.io.Closeable;
@@ -373,15 +372,21 @@ public enum MiscUtils {
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
-        final Iterator<ApplicationInfo> applicationInfoIterator = packageManager.getInstalledApplications(PackageManager.GET_META_DATA).iterator();
+        final List<ApplicationInfo> applicationInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+
+        Log.i("Ayush", "Old size " + applicationInfos.size());
+
+        final Iterator<ApplicationInfo> applicationInfoIterator = applicationInfos.iterator();
+
         while (applicationInfoIterator.hasNext()) {
 
             final ApplicationInfo applicationInfo = applicationInfoIterator.next();
             if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0)
                 applicationInfoIterator.remove();
         }
+        Log.i("Ayush", "New size " + applicationInfos.size());
 
-        return ImmutableList.copyOf(applicationInfoIterator);
+        return applicationInfos;
     }
 
     public static GridView addLoadingToGridView(GridView gridView) {

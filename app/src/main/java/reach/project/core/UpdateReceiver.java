@@ -9,6 +9,9 @@ public class UpdateReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
+        //fix default visibility being inserted into package visibility
+        context.getSharedPreferences("Reach", Context.MODE_PRIVATE).edit().remove("app_visibility");
+
 //        final Cursor cursor = context.getContentResolver().query(
 //                ReachDatabaseProvider.CONTENT_URI,
 //                new String[]{ReachDatabaseHelper.COLUMN_ID,

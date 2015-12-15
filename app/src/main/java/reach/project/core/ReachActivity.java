@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.LoaderManager;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentProviderOperation;
@@ -446,8 +447,6 @@ public class ReachActivity extends AppCompatActivity implements
         }
 
         //TODO onResume is called twice sometimes
-        lastSong();
-
         final PackageManager packageManager;
         if ((packageManager = getPackageManager()) == null)
             return;
@@ -931,7 +930,8 @@ public class ReachActivity extends AppCompatActivity implements
         try {
             UsageTracker.trackLogEvent(sParams, UsageTracker.APP_OPEN);
             UsageTracker.trackEvent(simpleParams, UsageTracker.APP_OPEN);
-        } catch (JSONException ignored) {}
+        } catch (JSONException ignored) {
+        }
 
         // Setup our Firebase mFirebaseRef
         firebaseReference = new Firebase("https://flickering-fire-7874.firebaseio.com/");
@@ -1728,8 +1728,17 @@ public class ReachActivity extends AppCompatActivity implements
             }
         };
 
-        private static final View.OnClickListener footerClickListener =
-                v -> v.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+        private static final View.OnClickListener footerClickListener = view -> {
+
+            final Context context = view.getContext();
+
+            try {
+                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+            } catch (ActivityNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(context, "Play store app not installed", Toast.LENGTH_SHORT).show();
+            }
+        };
 
         public static TextView getMyLibraryTextView(Context context) {
             final TextView textView = new TextView(context);

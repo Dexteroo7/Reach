@@ -218,7 +218,7 @@ public enum CloudStorageUtils {
 //    }
 
     /**
-     * Uploads the Music data to google cloud storage
+     * Uploads the metaData to google cloud storage
      *
      * @param metadata bytes of meta data (un-compressed)
      * @param fileName the name of file
@@ -226,7 +226,7 @@ public enum CloudStorageUtils {
      */
     public static boolean uploadMetaData(byte[] metadata, final String fileName, InputStream key, byte type) {
 
-        final byte[] musicData;
+        final byte[] metaData;
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(metadata.length);
         GZIPOutputStream gzipOutputStream = null;
 
@@ -234,7 +234,7 @@ public enum CloudStorageUtils {
             gzipOutputStream = new GZIPOutputStream(outputStream);
             gzipOutputStream.write(metadata);
             gzipOutputStream.close();
-            musicData = outputStream.toByteArray();
+            metaData = outputStream.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
             return true; //error, but sync with local sql
@@ -242,16 +242,16 @@ public enum CloudStorageUtils {
             MiscUtils.closeQuietly(outputStream, gzipOutputStream);
         }
 
-        Log.i("Ayush", "Compression ratio " + (musicData.length * 100) / metadata.length);
+        Log.i("Ayush", "Compression ratio " + (metaData.length * 100) / metadata.length);
         //prepare storage object
         final Storage storage = getStorage(key).orNull();
         MiscUtils.closeQuietly(key);
         if (storage == null)
             return true; //error, but sync with local sql
 
-        //compute hash of current Music data
+        //compute hash of current metaData data
         final String currentHash = Base64.encodeToString(Hashing.md5().newHasher()
-                .putBytes(musicData)
+                .putBytes(metaData)
                 .hash().asBytes(), Base64.DEFAULT).trim();
         Log.i("Ayush", "Current hash = " + currentHash);
 
@@ -283,12 +283,12 @@ public enum CloudStorageUtils {
 
             @Override
             public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(musicData); //can be retried
+                return new ByteArrayInputStream(metaData); //can be retried
             }
 
             @Override
             public long getLength() throws IOException {
-                return musicData.length;
+                return metaData.length;
             }
 
             @Override
