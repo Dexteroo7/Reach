@@ -8,12 +8,12 @@ android {
     buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId "reach.project"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 75
         versionName "0.9.22-beta"
 
-        //multiDexEnabled true
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -57,7 +57,7 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:percent:23.1.1'
 
-    //compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support:multidex:1.0.1'
 
     // non-google stuff
     compile 'com.squareup.picasso:picasso:2.5.2'

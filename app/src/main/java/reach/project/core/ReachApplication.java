@@ -1,7 +1,7 @@
 package reach.project.core;
 
-import android.app.Application;
 import android.support.annotation.NonNull;
+import android.support.multidex.MultiDexApplication;
 
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseException;
@@ -26,7 +26,7 @@ import reach.project.R;
 /**
  * Created by ashish on 23/3/15.
  */
-public class ReachApplication extends Application {
+public class ReachApplication extends MultiDexApplication {
 
     public static final OkHttpClient okHttpClient;
 
