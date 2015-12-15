@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
-import reach.backend.OfyService;
+import reach.backend.User.ReachUser;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -78,9 +78,16 @@ public class AppVisibilityEndpoint {
         if (appVisibility.getId() == null || appVisibility.getId() == 0)
             throw new IllegalArgumentException("Please specific the item id");
 
-        ofy().save().entity(appVisibility).now();
-        logger.info("Created AppVisibility with ID: " + appVisibility.getId());
+        int visibleApps = 0;
+        for (Boolean aBoolean : appVisibility.getVisibility().values())
+            if (aBoolean != null && aBoolean)
+                visibleApps++;
 
+        final ReachUser user = ofy().load().type(ReachUser.class).id(appVisibility.getId()).now();
+        user.setNumberOfApps(visibleApps);
+        ofy().save().entities(appVisibility, user).now();
+
+        logger.info("Created AppVisibility with ID: " + appVisibility.getId());
         return ofy().load().entity(appVisibility).now();
     }
 
@@ -100,7 +107,7 @@ public class AppVisibilityEndpoint {
                            @Named("packageName") String packageName,
                            @Named("visibility") boolean visibility) {
 
-        AppVisibility appVisibility = OfyService.ofy().load().type(AppVisibility.class).id(id).now();
+        AppVisibility appVisibility = ofy().load().type(AppVisibility.class).id(id).now();
         if (appVisibility == null || appVisibility.getVisibility() == null) {
 
             appVisibility = new AppVisibility();

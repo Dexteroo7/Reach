@@ -26,8 +26,9 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
+import reach.backend.Constants;
+import reach.backend.MiscUtils;
 import reach.backend.ObjectWrappers.MyString;
-import reach.backend.OfyService;
 import reach.backend.User.FriendContainers.Friend;
 import reach.backend.User.MessagingEndpoint;
 import reach.backend.User.ReachUser;
@@ -360,10 +361,10 @@ public class NotificationEndpoint {
 
         //noinspection StringBufferReplaceableByString
         final StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append(OfyService.BASE_LOG_NEW_FRIEND)
-                .append(OfyService.USER_ID).append("=")
+        urlBuilder.append(Constants.BASE_LOG_NEW_FRIEND)
+                .append(Constants.USER_ID).append("=")
                 .append(senderId).append("&")
-                .append(OfyService.FRIEND_ID).append("=")
+                .append(Constants.FRIEND_ID).append("=")
                 .append(receiverId);
 
         final String log = urlBuilder.toString();
@@ -394,7 +395,7 @@ public class NotificationEndpoint {
 
             final BackLog backLog = new BackLog();
             backLog.setFailedUrl(log);
-            backLog.setId(OfyService.longHash(log));
+            backLog.setId(MiscUtils.longHash(log));
             ofy().save().entities(backLog);
         }
 

@@ -39,7 +39,6 @@ import reach.backend.Notifications.Push;
 import reach.backend.Notifications.Types;
 import reach.backend.ObjectWrappers.MyBoolean;
 import reach.backend.ObjectWrappers.MyString;
-import reach.backend.OfyService;
 import reach.backend.TextUtils;
 
 import static reach.backend.OfyService.ofy;
@@ -506,7 +505,7 @@ public class MessagingEndpoint {
 
         log.info("Starting devika push to all");
 
-        final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+        final ReachUser devika = ofy().load().type(ReachUser.class).id(reach.backend.Constants.devikaId).now();
         final int reachSize = devika.getMyReach().size();
 
         if (TextUtils.isEmpty(devika.getGcmId())) //meh... handle later TODO
@@ -518,7 +517,7 @@ public class MessagingEndpoint {
         //create the push notification
         final Push push = new Push();
         push.setRead(NotificationBase.NEW);
-        push.setHostId(OfyService.devikaId); //sender is Devika
+        push.setHostId(reach.backend.Constants.devikaId); //sender is Devika
         push.setSystemTime(System.currentTimeMillis());
         push.setTypes(Types.PUSH);
 
@@ -557,7 +556,7 @@ public class MessagingEndpoint {
 
                 //add to save batch
                 notificationToSave.add(notification);
-                log.info("Adding push " + OfyService.devikaId + " " + firstSongName + " " + size);
+                log.info("Adding push " + reach.backend.Constants.devikaId + " " + firstSongName + " " + size);
             }
         }
 

@@ -36,7 +36,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -49,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,13 +62,17 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
+import reach.backend.Constants;
+import reach.backend.MiscUtils;
+import reach.backend.ObjectWrappers.App;
+import reach.backend.ObjectWrappers.AppList;
 import reach.backend.ObjectWrappers.LongArray;
 import reach.backend.ObjectWrappers.MusicList;
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.ObjectWrappers.SimpleApp;
 import reach.backend.ObjectWrappers.SimpleSong;
 import reach.backend.ObjectWrappers.Song;
 import reach.backend.ObjectWrappers.StringList;
-import reach.backend.OfyService;
 import reach.backend.TextUtils;
 import reach.backend.Transactions.CompletedOperation;
 import reach.backend.Transactions.CompletedOperations;
@@ -77,16 +81,8 @@ import reach.backend.User.FriendContainers.QuickSync;
 import reach.backend.User.FriendContainers.ReceivedRequest;
 import reach.backend.campaign.BackLog;
 
-import static reach.backend.OfyService.devikaId;
 import static reach.backend.OfyService.ofy;
 
-/**
- * WARNING: This generated code is intended as a sample or starting point for using a
- * Google Cloud Endpoints RESTful API with an Objectify entity. It provides no data access
- * restrictions and no data validation.
- * <p>
- * DO NOT deploy this code unchanged as part of a real application to real users.
- */
 @Api(
         name = "userApi",
         version = "v1",
@@ -102,9 +98,9 @@ public class ReachUserEndpoint {
     private static final Logger logger = Logger.getLogger(ReachUserEndpoint.class.getName());
     @SuppressWarnings("SpellCheckingInspection")
     private static final String FIRE_BASE_SECRET = "0bGwoCDidft2U0aDuK2L6UKi92EfGARMtAP9iC0s";
-    private static final int DEFAULT_LIST_LIMIT = 20;
 
     /**
+     * TODO remove
      * Use this to sync up the phoneBook, only send those numbers which are not known / are new
      *
      * @param contactsWrapper list of phoneNumbers
@@ -127,9 +123,9 @@ public class ReachUserEndpoint {
                 .filter("gcmId !=", ""))
             friends.add(new Friend(user, false, 0));
 
-        if (phoneNumbers.contains(OfyService.devikaPhoneNumber)) {
+        if (phoneNumbers.contains(Constants.devikaPhoneNumber)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
             friends.add(new Friend(devika, false, 0));
         }
 
@@ -137,6 +133,7 @@ public class ReachUserEndpoint {
     }
 
     /**
+     * TODO remove
      * Use this to sync up the phoneBook, only send those numbers which are not known / are new
      *
      * @param phoneNumbers list of phoneNumbers
@@ -165,9 +162,9 @@ public class ReachUserEndpoint {
             statusMap.put(user.getPhoneNumber(), true);
         }
 
-        if (phoneNumbers.contains(OfyService.devikaPhoneNumber)) {
+        if (phoneNumbers.contains(Constants.devikaPhoneNumber)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
             friends.add(new Friend(devika, false, 0));
         }
 
@@ -197,7 +194,7 @@ public class ReachUserEndpoint {
             phoneBookPost.put("phoneNumber", user.getPhoneNumber());
             phoneBookPost.put("phoneBook", arrayOfPhoneNumbers);
 
-            final URL url = new URL("http://img-1052310213.ap-southeast-1.elb.amazonaws.com/reach/addPhoneBook");
+            final URL url = new URL("http://52.74.117.248:8080/reach/addPhoneBook");
             final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
@@ -251,9 +248,9 @@ public class ReachUserEndpoint {
             statusMap.put(user.getPhoneNumber(), true);
         }
 
-        if (phoneNumbers.getStringList().contains(OfyService.devikaPhoneNumber)) {
+        if (phoneNumbers.getStringList().contains(Constants.devikaPhoneNumber)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
             friends.add(new Friend(devika, false, 0));
         }
 
@@ -285,7 +282,7 @@ public class ReachUserEndpoint {
             phoneBookPost.put("phoneNumber", user.getPhoneNumber());
             phoneBookPost.put("phoneBook", arrayOfPhoneNumbers);
 
-            final URL url = new URL("http://img-1052310213.ap-southeast-1.elb.amazonaws.com/reach/addPhoneBook");
+            final URL url = new URL("http://52.74.117.248:8080/reach/addPhoneBook");
             final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
@@ -350,14 +347,14 @@ public class ReachUserEndpoint {
 
         if (myReachCheck) {
 
-            keysBuilder.add(Key.create(ReachUser.class, devikaId));
+            keysBuilder.add(Key.create(ReachUser.class, Constants.devikaId));
             for (long id : client.getMyReach())
                 keysBuilder.add(Key.create(ReachUser.class, id));
         }
 
         if (sentRequestsCheck) {
 
-            keysBuilder.add(Key.create(ReachUser.class, devikaId));
+            keysBuilder.add(Key.create(ReachUser.class, Constants.devikaId));
             for (long id : client.getSentRequests())
                 keysBuilder.add(Key.create(ReachUser.class, id));
         }
@@ -368,8 +365,8 @@ public class ReachUserEndpoint {
                 .project(Friend.projectNewFriend)) {
 
             final long lastSeen;
-            if (user.getId() != devikaId)
-                lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
+            if (user.getId() != Constants.devikaId)
+                lastSeen = MiscUtils.computeLastSeen(syncCache, user.getId());
             else
                 lastSeen = 0;
 
@@ -431,7 +428,7 @@ public class ReachUserEndpoint {
 
         //dirty check query
         final QueryResultIterable<ReachUser> dirtyCheckQuery = ofy().load().type(ReachUser.class)
-                .filterKey("in", getKeyBuilder(ids).build())
+                .filterKey("in", MiscUtils.getKeyBuilder(ids).build())
                 .project("dirtyCheck").iterable(); //will load async
 
         //new friend query
@@ -444,10 +441,10 @@ public class ReachUserEndpoint {
         if (myReach != null && myReach.size() > 0)
             for (long id : myReach)
                 if (pair.containsKey(id))
-                    if (id == devikaId)
+                    if (id == Constants.devikaId)
                         newStatus.put(id, (short) 0); //always online !
                     else
-                        newStatus.put(id, (short) (computeLastSeen((byte[]) syncCache.get(id)) > ReachUser.ONLINE_LIMIT ? 1 : 0));
+                        newStatus.put(id, (short) (MiscUtils.computeLastSeen(syncCache, id) > ReachUser.ONLINE_LIMIT ? 1 : 0));
                 else //if this id was not originally present !
                     newIds.add(id);
         //sync-up sentRequests
@@ -461,7 +458,7 @@ public class ReachUserEndpoint {
         //newStatus built
         if (newIds.size() > 0)
             newIdQuery = ofy().load().type(ReachUser.class)
-                    .filterKey("in", getKeyBuilder(newIds).build())
+                    .filterKey("in", MiscUtils.getKeyBuilder(newIds).build())
                     .filter("gcmId !=", "")
                     .project(Friend.projectNewFriend).iterable(); //will load async
         else
@@ -480,7 +477,7 @@ public class ReachUserEndpoint {
             if ((reachUser.getGcmId() == null || reachUser.getGcmId().equals(""))) {
 
                 //DO NOT MARK AS DEAD IF DEVIKA !
-                if (!(reachUser.getPhoneNumber().equals(OfyService.devikaPhoneNumber) || reachUser.getId() == devikaId)) {
+                if (!(reachUser.getPhoneNumber().equals(Constants.devikaPhoneNumber) || reachUser.getId() == Constants.devikaId)) {
                     logger.info("Marking dead ! " + reachUser.getUserName());
                     toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
                 }
@@ -488,7 +485,7 @@ public class ReachUserEndpoint {
 
                 logger.info("Marking for update ! " + reachUser.getUserName());
                 toUpdate.add(new Friend(reachUser, myReach, sentRequests,
-                        (short) (computeLastSeen((byte[]) syncCache.get(reachUser.getId())) > ReachUser.ONLINE_LIMIT ? 1 : 0)));
+                        (short) (MiscUtils.computeLastSeen(syncCache, reachUser.getId()) > ReachUser.ONLINE_LIMIT ? 1 : 0)));
             }
         }
 
@@ -505,12 +502,12 @@ public class ReachUserEndpoint {
                     user,
                     myReach,
                     sentRequests,
-                    computeLastSeen((byte[]) syncCache.get(user.getId()))));
+                    MiscUtils.computeLastSeen(syncCache, user.getId())));
         }
 
-        if (newIds.contains(devikaId)) {
+        if (newIds.contains(Constants.devikaId)) {
 
-            final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
             newFriends.add(new Friend(
                     devika,
                     myReach,
@@ -520,75 +517,6 @@ public class ReachUserEndpoint {
         logger.info("Slow " + client.getUserName());
         return new QuickSync(newStatus, newFriends, toUpdate);
     }
-
-    //////////////////////////Optimized friend sync operations
-
-//    private Set<Friend> syncMyReach(Map<Long, Integer> pair,
-//                                    long clientId) {
-//
-//        if (clientId == 0)
-//            return null; //illegal
-//
-//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-//        if (client == null || client.getMyReach() == null || client.getMyReach().isEmpty())
-//            return null; //no friends :(
-//
-//        //mark as online
-//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-//
-//        //process myReach
-//        final List<Long> toLoad = new ArrayList<>();
-//        for (ReachUser user : ofy().load().type(ReachUser.class)
-//                .filterKey("in", getKeyBuilder(client.getMyReach()).build())
-//                .project("dirtyCheck")) {
-//
-//            final long userId = user.getId();
-//            //add if new friend or data was changed
-//            if (!pair.containsKey(userId) || pair.get(userId) != user.getDirtyCheck())
-//                toLoad.add(userId);
-//        }
-//
-//        if (toLoad.isEmpty())
-//            return null; //nothing to do
-//
-//        final Set<Friend> newFriends = new HashSet<>();
-//        for (ReachUser user : ofy().load().type(ReachUser.class)
-//                .filterKey("in", getKeyBuilder(toLoad).build())
-//                .filter("gcmId !=", "")
-//                .project(Friend.projectNewFriend)) {
-//
-//            final long lastSeen = computeLastSeen((byte[]) syncCache.get(user.getId()));
-//            newFriends.add(new Friend(client, true, lastSeen)); //parse into friend
-//        }
-//
-//        return newFriends;
-//    }
-//
-//    private Set<Friend> syncSentRequests(Collection<Long> sentRequests,
-//                                         long clientId) {
-//
-//        if (clientId == 0)
-//            return null; //illegal
-//
-//        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
-//        if (client == null || client.getSentRequests() == null || client.getSentRequests().isEmpty())
-//            return null; //no requests sent :(
-//
-//        //mark as online
-//        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-//        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-//        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(),
-//                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
-//    }
-//
-//    private Set<Friend> syncReceivedRequests(Collection<Long> receivedRequests,
-//                                             long clientId) {
-//
-//
-//    }
 
     //////////////////////////
 
@@ -601,46 +529,13 @@ public class ReachUserEndpoint {
 
         final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-        syncCache.put(clientId, (System.currentTimeMillis() + "").getBytes(), Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
 
         final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
         if (!client.getMyReach().contains(hostId))
             return null;
 
         final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
-        return new Friend(host, true, computeLastSeen((byte[]) syncCache.get(host)));
-    }
-
-    private ImmutableList.Builder<Key> getKeyBuilder(Iterable<Long> ids) {
-
-        final ImmutableList.Builder<Key> dirtyCheck = new ImmutableList.Builder<>();
-        for (Long id : ids)
-            dirtyCheck.add(Key.create(ReachUser.class, id));
-        return dirtyCheck;
-    }
-
-    private ImmutableList.Builder<Key> getKeyBuilder(Long... ids) {
-
-        final ImmutableList.Builder<Key> dirtyCheck = new ImmutableList.Builder<>();
-        for (Long id : ids)
-            dirtyCheck.add(Key.create(ReachUser.class, id));
-        return dirtyCheck;
-    }
-
-    private long computeLastSeen(byte[] value) {
-
-        final long currentTime = System.currentTimeMillis();
-        final long lastSeen;
-        if (value == null || value.length == 0)
-            lastSeen = currentTime;
-        else {
-            final String val = new String(value);
-            if (val.equals(""))
-                lastSeen = currentTime;
-            else
-                lastSeen = currentTime - Long.parseLong(val);
-        }
-        return lastSeen;
+        return new Friend(host, true, MiscUtils.computeLastSeen(syncCache, hostId));
     }
 
     @ApiMethod(
@@ -690,13 +585,14 @@ public class ReachUserEndpoint {
 
         final List<ReceivedRequest> requests = new ArrayList<>();
         for (ReachUser user : ofy().load().type(ReachUser.class)
-                .filterKey("in", getKeyBuilder(client.getReceivedRequests()).build())
+                .filterKey("in", MiscUtils.getKeyBuilder(client.getReceivedRequests()).build())
                 .filter("gcmId !=", "")
                 .project(ReceivedRequest.projectReceivedRequest)) {
 
             requests.add(new ReceivedRequest(
                     user.getId(),
                     user.getNumberOfSongs(),
+                    user.getNumberOfApps(),
                     user.getPhoneNumber(),
                     user.getUserName(),
                     user.getImageId()));
@@ -774,7 +670,15 @@ public class ReachUserEndpoint {
                     reachUser.getTimeCreated(),
                     reachUser.getUserName(),
                     reachUser.getPhoneNumber(),
+
+                    reachUser.getImageId(),
+                    reachUser.getCoverPicId(),
+                    reachUser.getStatusSong(),
+                    reachUser.getEmailId(),
+                    reachUser.getBirthday(),
+
                     reachUser.getNumberOfSongs(),
+                    reachUser.getNumberOfApps(),
                     reachUser.getMyReach() == null ? 0 : reachUser.getMyReach().size(),
                     reachUser.getSentRequests() == null ? 0 : reachUser.getSentRequests().size(),
                     reachUser.getReceivedRequests() == null ? 0 : reachUser.getReceivedRequests().size(),
@@ -810,14 +714,22 @@ public class ReachUserEndpoint {
              * we don't re-use same accounts on the basis of device ID
              */
             user.setId(oldUser.getId());
-            user.setReceivedRequests(oldUser.getReceivedRequests());
-            user.setSentRequests(oldUser.getSentRequests());
-            user.setMyReach(oldUser.getMyReach());
+
+            user.setStatusSong(oldUser.getStatusSong());
+            user.setEmailId(oldUser.getEmailId());
+            user.setBirthday(oldUser.getBirthday());
+
+            user.setPromoCode(oldUser.getPromoCode());
+            user.setChatToken(oldUser.getChatToken());
+
             user.setMegaBytesReceived(oldUser.getMegaBytesReceived());
             user.setMegaBytesSent(oldUser.getMegaBytesSent());
             user.setTimeCreated(oldUser.getTimeCreated());
-            user.setPromoCode(oldUser.getPromoCode());
-            user.setChatToken(oldUser.getChatToken());
+
+            user.setReceivedRequests(oldUser.getReceivedRequests());
+            user.setSentRequests(oldUser.getSentRequests());
+            user.setMyReach(oldUser.getMyReach());
+
             ofy().delete().entity(oldUser).now();
         } else
             user.setTimeCreated(System.currentTimeMillis());
@@ -920,11 +832,36 @@ public class ReachUserEndpoint {
         logger.info("Trying to update " + Arrays.toString(details));
         final String newName = details[0];
         final String newImageId = details[1];
+
+        //new stuff
+        final String coverPic, statusSong, emailId;
+        final Date birthday;
+        if (details.length == 6) {
+
+            coverPic = details[2];
+            statusSong = details[3];
+            emailId = details[4];
+            birthday = new Date(Long.parseLong(details[5]));
+        } else {
+
+            coverPic = "hello_world";
+            statusSong = "hello_world";
+            emailId = "hello_world";
+            birthday = new Date(0);
+        }
+
         final ReachUser userToSave = ofy().load().type(ReachUser.class).id(clientId).now();
         if (userToSave == null)
             return;
+
         userToSave.setUserName(newName);
         userToSave.setImageId(newImageId);
+
+        userToSave.setCoverPicId(coverPic);
+        userToSave.setStatusSong(statusSong);
+        userToSave.setEmailId(emailId);
+        userToSave.setBirthday(birthday);
+
         ofy().save().entities(userToSave).now();
     }
 
@@ -964,12 +901,12 @@ public class ReachUserEndpoint {
 
         //noinspection StringBufferReplaceableByString
         final StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append(OfyService.BASE_LOG_TRANSACTION)
-                .append(OfyService.USER_ID).append("=")
+        urlBuilder.append(Constants.BASE_LOG_TRANSACTION)
+                .append(Constants.USER_ID).append("=")
                 .append(clientId).append("&")
-                .append(OfyService.FRIEND_ID).append("=")
+                .append(Constants.FRIEND_ID).append("=")
                 .append(hostId).append("&")
-                .append(OfyService.SONG_ID).append("=")
+                .append(Constants.SONG_ID).append("=")
                 .append(hashCode.toString());
 
         final String log = urlBuilder.toString();
@@ -1000,7 +937,7 @@ public class ReachUserEndpoint {
 
             final BackLog backLog = new BackLog();
             backLog.setFailedUrl(log);
-            backLog.setId(OfyService.longHash(log));
+            backLog.setId(MiscUtils.longHash(log));
             ofy().save().entities(backLog);
         }
     }
@@ -1091,7 +1028,13 @@ public class ReachUserEndpoint {
                     oldUser.getUserName(),
                     oldUser.getPromoCode(),
                     oldUser.getImageId(),
-                    oldUser.getId());
+                    oldUser.getId(),
+
+                    //new stuff
+                    oldUser.getCoverPicId(),
+                    oldUser.getStatusSong(),
+                    oldUser.getEmailId(),
+                    oldUser.getBirthday());
         return null;
     }
 
@@ -1136,6 +1079,53 @@ public class ReachUserEndpoint {
     }
 
     @ApiMethod(
+            name = "resetStatus",
+            path = "user/resetStatus/{serverId}/{friendId}",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public void resetStatus(@Named("serverId") long serverId,
+                            @Named("friendId") long friendId) {
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(serverId).now();
+        final ReachUser host = ofy().load().type(ReachUser.class).id(friendId).now();
+
+        if (client == null || host == null)
+            return;
+
+        //removing friend from myReach
+        if (client.getMyReach() !=null && !client.getMyReach().isEmpty())
+            client.getMyReach().remove(friendId);
+
+        //removing friend from sent
+        if (client.getSentRequests() !=null && !client.getSentRequests().isEmpty())
+            client.getSentRequests().remove(friendId);
+        
+        //removing friend from received
+        if (client.getReceivedRequests() !=null && !client.getReceivedRequests().isEmpty())
+            client.getReceivedRequests().remove(friendId);
+
+        //////////////////Remove from host also
+
+        //removing friend from myReach
+        if (host.getMyReach() !=null && !host.getMyReach().isEmpty())
+            host.getMyReach().remove(serverId);
+
+        //removing friend from sent
+        if (host.getSentRequests() !=null && !host.getSentRequests().isEmpty())
+            host.getSentRequests().remove(serverId);
+
+        //removing friend from received
+        if (host.getReceivedRequests() !=null && !host.getReceivedRequests().isEmpty())
+            host.getReceivedRequests().remove(serverId);
+
+        ofy().save().entities(host, client);
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(serverId, (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+    }
+
+    @ApiMethod(
             name = "bulkAliveCheck",
             path = "user/bulkAliveCheck",
             httpMethod = ApiMethod.HttpMethod.POST)
@@ -1149,7 +1139,7 @@ public class ReachUserEndpoint {
 
         int index = 0;
         for (ReachUser user : ofy().load().type(ReachUser.class)
-                .filterKey("in", getKeyBuilder(ids).build())
+                .filterKey("in", MiscUtils.getKeyBuilder(ids).build())
                 .project("gcmId")) {
 
             ids[index] = user.getId();
@@ -1174,7 +1164,7 @@ public class ReachUserEndpoint {
             throw new IllegalArgumentException("U noob don't send empty data");
 
         final Map<Long, ReachUser> hostMap = ofy().load().type(ReachUser.class).ids(ids);
-        final ReachUser devika = ofy().load().type(ReachUser.class).id(devikaId).now();
+        final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
         final List<ReachUser> hostsToSave = new ArrayList<>();
 
         final HashSet<Long> devikaSent = devika.getSentRequests() == null ? new HashSet<Long>() : devika.getSentRequests();
@@ -1193,12 +1183,12 @@ public class ReachUserEndpoint {
             if ((!devikaReach.contains(hostId)) && !devikaSent.contains(hostId))
                 logger.info("Saving Sent Request on " + devika.getUserName() + " " + devikaSent.add(hostId));
 
-            if ((host.getMyReach() == null || !host.getMyReach().contains(devikaId)) &&
-                    (host.getReceivedRequests() == null || !host.getReceivedRequests().contains(devikaId))) {
+            if ((host.getMyReach() == null || !host.getMyReach().contains(Constants.devikaId)) &&
+                    (host.getReceivedRequests() == null || !host.getReceivedRequests().contains(Constants.devikaId))) {
 
                 if (host.getReceivedRequests() == null)
                     host.setReceivedRequests(new HashSet<Long>());
-                logger.info("Saving Received Request on " + host.getUserName() + " " + host.getReceivedRequests().add(devikaId));
+                logger.info("Saving Received Request on " + host.getUserName() + " " + host.getReceivedRequests().add(Constants.devikaId));
                 hostsToSave.add(host);
             }
 
@@ -1222,7 +1212,7 @@ public class ReachUserEndpoint {
         //send bulk to required users !
         final MessagingEndpoint messagingEndpoint = MessagingEndpoint.getInstance();
         final Message message = new Message.Builder()
-                .addData("message", "PERMISSION_REQUEST`" + devikaId + "`" + devika.getUserName())
+                .addData("message", "PERMISSION_REQUEST`" + Constants.devikaId + "`" + devika.getUserName())
                 .build();
         final Sender sender = new Sender(MessagingEndpoint.API_KEY);
         final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
@@ -1245,11 +1235,36 @@ public class ReachUserEndpoint {
             httpMethod = ApiMethod.HttpMethod.POST)
     public void cleanUpDevika() {
 
-        final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
+        final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
 
         devika.getMyReach().clear();
         devika.getSentRequests().clear();
         ofy().save().entities(devika).now();
+    }
+
+    @ApiMethod(
+            name = "sendBulkNotification",
+            path = "user/sendBulkNotification/{message}/{heading}",
+            httpMethod = ApiMethod.HttpMethod.POST)
+    public MyString sendBulkNotification(@Named("message") String message,
+                                     @Named("heading") String heading,
+                                     LongArray ids) {
+
+        final String notification = "MANUAL`" + 0 + "`" + heading + "`" + message;
+
+        final Sender sender = new Sender(MessagingEndpoint.API_KEY);
+        final Message toSend = new Message.Builder().addData("message", notification).build();
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        for (Long id : ids.getList())
+            keysBuilder.add(Key.create(ReachUser.class, id));
+
+        return new MyString(MessagingEndpoint.getInstance().sendMultiCastMessage(
+                toSend,
+                sender,
+                ofy().load().type(ReachUser.class)
+                        .filterKey("in", keysBuilder.build())
+                        .filter("gcmId !=", "")
+                        .project("gcmId"))+"");
     }
 
     @ApiMethod(
@@ -1285,7 +1300,7 @@ public class ReachUserEndpoint {
             return Collections.emptyList(); //fail
         }
 
-        closeQuietly(bufferedInputStream, inputChannel, compressedData, inputStream);
+        MiscUtils.closeQuietly(bufferedInputStream, inputChannel, compressedData, inputStream);
 
         final List<Song> songs;
         //sanity checks
@@ -1341,21 +1356,85 @@ public class ReachUserEndpoint {
         return toReturn;
     }
 
-    public static void closeQuietly(Closeable... closeables) {
-        for (Closeable closeable : closeables)
-            if (closeable != null)
-                try {
-                    closeable.close();
-                } catch (IOException ignored) {
-                }
-    }
+    @ApiMethod(
+            name = "fetchRecentApps",
+            path = "user/fetchRecentApps/{serverId}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public List<SimpleApp> fetchRecentApps(@Named("serverId") long serverId) {
 
-    public static void closeQuietly(Closeable closeable) {
-        if (closeable != null)
-            try {
-                closeable.close();
-            } catch (IOException ignored) {
+        final String FILE_NAME = serverId + "APP";
+        final String BUCKET_NAME_APP_DATA = "able-door-616-app-data";
+
+        final GcsFilename gcsFilename = new GcsFilename(BUCKET_NAME_APP_DATA, FILE_NAME);
+        final GcsService gcsService = GcsServiceFactory.createGcsService();
+
+        //to close
+        final GcsInputChannel inputChannel;
+        final BufferedInputStream bufferedInputStream;
+        final GZIPInputStream compressedData;
+        final InputStream inputStream;
+
+        final AppList appList;
+
+        logger.info("Receiving the object");
+        try {
+
+            inputChannel = gcsService.openReadChannel(gcsFilename, 0);
+            bufferedInputStream = new BufferedInputStream(inputStream = Channels.newInputStream(inputChannel));
+            compressedData = new GZIPInputStream(bufferedInputStream);
+            appList = new Wire(AppList.class).parseFrom(compressedData, AppList.class);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList(); //fail
+        }
+
+        MiscUtils.closeQuietly(bufferedInputStream, inputChannel, compressedData, inputStream);
+
+        final List<App> apps;
+        //sanity checks
+        if (appList == null || (apps = appList.app) == null || apps.isEmpty())
+            return Collections.emptyList();
+
+        logger.info("Copying to array before sort");
+
+        final int totalApps = apps.size();
+        final App[] appArray = new App[totalApps];
+
+        int index = 0;
+        for (App app : apps)
+            appArray[index++] = app;
+
+        logger.info("Sorting");
+        //sort the app array
+        Arrays.sort(appArray, new Comparator<App>() {
+            @Override
+            public int compare(App lhs, App rhs) {
+
+                final Long a = lhs.installDate == null ? 0 : lhs.installDate;
+                final Long b = rhs.installDate == null ? 0 : rhs.installDate;
+                return a.compareTo(b);
             }
-    }
+        });
 
+        final List<SimpleApp> toReturn = new ArrayList<>();
+        //generate return list of max 20 apps
+        for (index = 0; index < 20 && index < totalApps; index++) {
+
+            final SimpleApp simpleApp = new SimpleApp();
+            final App app = appArray[index];
+
+            simpleApp.applicationName = app.applicationName;
+            simpleApp.description = app.description;
+            simpleApp.installDate = app.installDate;
+            simpleApp.launchIntentFound = app.launchIntentFound;
+            simpleApp.packageName = app.packageName;
+            simpleApp.processName = app.processName;
+            simpleApp.visible = app.visible;
+
+            toReturn.add(simpleApp);
+        }
+
+        return toReturn;
+    }
 }

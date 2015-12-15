@@ -34,7 +34,8 @@
                 reach.backend.applications.UnClassifiedAppsEndpoint,
                 reach.backend.applications.ClassifiedAppsEndpoint,
                 reach.backend.applications.AppVisibilityEndpoint,
-                reach.backend.campaign.BackLogEndpoint</param-value>
+                reach.backend.campaign.BackLogEndpoint
+            </param-value>
         </init-param>
     </servlet>
     <servlet-mapping>
@@ -58,6 +59,15 @@
     <servlet-mapping>
         <servlet-name>RefreshGCM</servlet-name>
         <url-pattern>/refreshGCM</url-pattern>
+    </servlet-mapping>
+    //////////////////////////////////
+    <servlet>
+        <servlet-name>BacklogCron</servlet-name>
+        <servlet-class>reach.backend.Servlets.BacklogCron</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>BacklogCron</servlet-name>
+        <url-pattern>/backlogCron</url-pattern>
     </servlet-mapping>
     //////////////////////////////////
     <welcome-file-list>

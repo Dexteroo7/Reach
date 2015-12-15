@@ -11,15 +11,21 @@ public class Friend {
 
     public static String[] projectNewFriend = new String[]{
             "numberOfSongs",
+            "numberOfApps",
             "userName",
             "imageId",
             "phoneNumber"};
 
     private final long id;
     private final int hash;
+
     private final int numberOfSongs; //can change
+    private final int numberOfApps;  //can change
+
     private final String userName;   //can change
     private final String imageId;    //can change
+    private final String coverPicId; //can change
+
     private final String phoneNumber;
     /*
         0 - offline and permission-request granted
@@ -32,19 +38,22 @@ public class Friend {
 
     /**
      * Used to mark a friend as dead (hash = 0)
-     * @param id the id who died
+     *
+     * @param id   the id who died
      * @param dead HAS TO BE TRUE if using this constructor
      */
     public Friend(long id, boolean dead) {
 
-        if(!dead)
+        if (!dead)
             throw new IllegalArgumentException("Dead has to be true if using this constructor");
 
         this.id = id;
         this.hash = 0;
         numberOfSongs = 0;
+        this.numberOfApps = 0;
         userName = null;
         imageId = null;
+        coverPicId = null;
         phoneNumber = null;
         status = 0;
         lastSeen = 0;
@@ -52,6 +61,7 @@ public class Friend {
 
     /**
      * To be used when host is a new friends with status 3
+     *
      * @param host the friend
      */
     public Friend(ReachUser host, boolean friend, long lastSeen) {
@@ -60,7 +70,9 @@ public class Friend {
         this.phoneNumber = host.getPhoneNumber();
         this.userName = host.getUserName();
         this.imageId = host.getImageId();
+        this.coverPicId = host.getCoverPicId();
         this.numberOfSongs = host.getNumberOfSongs();
+        this.numberOfApps = host.getNumberOfApps();
         this.lastSeen = ReachUser.ONLINE_LIMIT + 1;
         //in-case dirty check was not set compute
         this.hash = host.getDirtyCheck() == 0 ? host.computeDirtyHash() : host.getDirtyCheck();
@@ -74,17 +86,18 @@ public class Friend {
             else
                 this.status = 0;  //online and permission-request granted
 
-        //Not a friend (also request not sent)
+            //Not a friend (also request not sent)
         else
             this.status = 3; //request not sent and permission not granted
     }
 
     /**
      * General purpose constructor
-     * @param host the friend
-     * @param myReach list of friends with status < 2
+     *
+     * @param host         the friend
+     * @param myReach      list of friends with status < 2
      * @param sentRequests list of friends with status 2
-     * @param lastSeen lastSeen parameter (decides status 01)
+     * @param lastSeen     lastSeen parameter (decides status 01)
      */
     public Friend(ReachUser host,
                   HashSet<Long> myReach,
@@ -95,12 +108,14 @@ public class Friend {
         this.phoneNumber = host.getPhoneNumber();
         this.userName = host.getUserName();
         this.imageId = host.getImageId();
+        this.coverPicId = host.getCoverPicId();
         this.numberOfSongs = host.getNumberOfSongs();
+        this.numberOfApps = host.getNumberOfApps();
         this.lastSeen = lastSeen;
         //in-case dirty check was not set compute
         this.hash = host.getDirtyCheck() == 0 ? host.computeDirtyHash() : host.getDirtyCheck();
-        if(this.hash == 0)
-            throw  new IllegalArgumentException("Hash should not be zero " + this.userName);
+        if (this.hash == 0)
+            throw new IllegalArgumentException("Hash should not be zero " + this.userName);
 
         if (myReach != null && myReach.contains(id))
             if (lastSeen > ReachUser.ONLINE_LIMIT)
@@ -143,6 +158,14 @@ public class Friend {
 
     public int getHash() {
         return hash;
+    }
+
+    public String getCoverPicId() {
+        return coverPicId;
+    }
+
+    public int getNumberOfApps() {
+        return numberOfApps;
     }
 
     @Override

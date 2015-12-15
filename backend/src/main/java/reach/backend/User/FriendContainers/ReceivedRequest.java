@@ -6,13 +6,16 @@ package reach.backend.User.FriendContainers;
 public class ReceivedRequest {
 
     public static String[] projectReceivedRequest = new String[]{
-        "numberOfSongs",
-        "userName",
-        "imageId",
-        "phoneNumber"};
+            "numberOfSongs",
+            "numberOfApps",
+            "userName",
+            "imageId",
+            "phoneNumber"};
 
     private final long id;
     private final int numberOfSongs;
+    private final int numberOfApps;
+
     private final String phoneNumber;
     private final String userName;
     private final String imageId;
@@ -37,11 +40,17 @@ public class ReceivedRequest {
         return id;
     }
 
-    public ReceivedRequest(long id, int numberOfSongs, String phoneNumber, String userName, String imageId) {
+    public ReceivedRequest(long id, int numberOfSongs, int numberOfApps,
+                           String phoneNumber, String userName, String imageId) {
         this.id = id;
         this.numberOfSongs = numberOfSongs;
+        this.numberOfApps = numberOfApps;
         this.phoneNumber = phoneNumber;
         this.userName = userName;
         this.imageId = imageId;
+    }
+
+    public int getNumberOfApps() {
+        return numberOfApps;
     }
 }
