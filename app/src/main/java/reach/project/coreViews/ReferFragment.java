@@ -187,7 +187,7 @@ public class ReferFragment extends Fragment {
         protected Integer doInBackground(Long... params) {
 
             Request request = new Request.Builder()
-                    .url("http://52.74.117.248:8080/campaign/SetEmail?emailId="
+                    .url("http://52.74.117.248:8080/campaign/setEmail?emailId="
                             + email + "&userId=" + params[0])
                     .build();
             try {
