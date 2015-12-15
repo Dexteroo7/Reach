@@ -60,8 +60,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
 
     private Cache fullListCache = null;
-//    private Cache smartListCache = null;
-//    private Cache recentAppCache = null;
+    private Cache smartListCache = null;
+    private Cache recentAppCache = null;
 
     private int lastPosition = 0;
 
@@ -84,17 +84,29 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-//        recentAppCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
-//            @Override
-//            protected Callable<List<? extends Message>> fetchFromNetwork() {
-//                return getRecent;
-//            }
-//
-//            @Override
-//            protected Message getItem(byte[] source, int offset, int count) throws IOException {
-//                return new Wire(AppList.class).parseFrom(source, offset, count, AppList.class);
-//            }
-//        };
+        recentAppCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
+            @Override
+            protected Callable<List<? extends Message>> fetchFromNetwork() {
+                return getRecent;
+            }
+
+            @Override
+            protected Message getItem(byte[] source, int offset, int count) throws IOException {
+                return new Wire(AppList.class).parseFrom(source, offset, count, AppList.class);
+            }
+        };
+
+        smartListCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
+            @Override
+            protected Callable<List<? extends Message>> fetchFromNetwork() {
+                return getSmart;
+            }
+
+            @Override
+            protected Message getItem(byte[] source, int offset, int count) throws IOException {
+                return new Wire(AppList.class).parseFrom(source, offset, count, AppList.class);
+            }
+        };
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
@@ -112,7 +124,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         final int size = appData.size();
         if (size == 0) {
-//            recentAppCache.loadMoreElements(true);
+            recentAppCache.loadMoreElements(true);
             fullListCache.loadMoreElements(false);
         }
 
@@ -174,10 +186,10 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         ///////////
 
-//        if (overWrite)
-//            intelligentOverwrite(elements, typeChecker);
-//        if (!elements.isEmpty())
-//            painter(elements, typeChecker);
+        if (overWrite)
+            intelligentOverwrite(elements, typeChecker);
+        if (!elements.isEmpty())
+            painter(elements, typeChecker);
         appData.addAll(elements);
 
         //notify
@@ -260,6 +272,12 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 //            }
 //    }
 
-    //TODO
-    private static final Callable<List<? extends Message>> getRecent = Collections::emptyList;
+    private static final Callable<List<? extends Message>> getRecent = new Callable<List<? extends Message>>() {
+        @Override
+        public List<? extends Message> call() throws Exception {
+            return null;
+        }
+    };
+
+    private static final Callable<List<? extends Message>> getSmart = Collections::emptyList;
 }

@@ -25,6 +25,7 @@ public class Friend {
     private final String userName;   //can change
     private final String imageId;    //can change
     private final String coverPicId; //can change
+    private final String statusSong; //can change
 
     private final String phoneNumber;
     /*
@@ -55,6 +56,7 @@ public class Friend {
         imageId = null;
         coverPicId = null;
         phoneNumber = null;
+        this.statusSong = null;
         status = 0;
         lastSeen = 0;
     }
@@ -71,6 +73,7 @@ public class Friend {
         this.userName = host.getUserName();
         this.imageId = host.getImageId();
         this.coverPicId = host.getCoverPicId();
+        this.statusSong = host.getStatusSong();
         this.numberOfSongs = host.getNumberOfSongs();
         this.numberOfApps = host.getNumberOfApps();
         this.lastSeen = ReachUser.ONLINE_LIMIT + 1;
@@ -109,6 +112,7 @@ public class Friend {
         this.userName = host.getUserName();
         this.imageId = host.getImageId();
         this.coverPicId = host.getCoverPicId();
+        this.statusSong = host.getStatusSong();
         this.numberOfSongs = host.getNumberOfSongs();
         this.numberOfApps = host.getNumberOfApps();
         this.lastSeen = lastSeen;
@@ -185,5 +189,9 @@ public class Friend {
         int result = (int) (id ^ (id >>> 32));
         result = 31 * result + (phoneNumber != null ? phoneNumber.hashCode() : 0);
         return result;
+    }
+
+    public String getStatusSong() {
+        return statusSong;
     }
 }

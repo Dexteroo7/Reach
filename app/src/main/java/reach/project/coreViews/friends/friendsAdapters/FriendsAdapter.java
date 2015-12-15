@@ -42,10 +42,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ReachFriendsHelper.COLUMN_PHONE_NUMBER, //1
             ReachFriendsHelper.COLUMN_USER_NAME, //2
             ReachFriendsHelper.COLUMN_IMAGE_ID, //3
-            ReachFriendsHelper.COLUMN_NETWORK_TYPE, //4
-            ReachFriendsHelper.COLUMN_STATUS, //5
-            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //6
-            ReachFriendsHelper.COLUMN_NEW_SONGS, //7
+            ReachFriendsHelper.COLUMN_COVER_PIC_ID, //4
+            ReachFriendsHelper.COLUMN_NETWORK_TYPE, //5
+            ReachFriendsHelper.COLUMN_STATUS, //6
+            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //7
+            ReachFriendsHelper.COLUMN_NUMBER_OF_APPS, //8
+            ReachFriendsHelper.COLUMN_NEW_SONGS, //9
+            ReachFriendsHelper.COLUMN_NEW_APPS, //10
     };
 
     public static final byte VIEW_TYPE_FRIEND = 0;
@@ -147,16 +150,20 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 //        final String phoneNumber = cursor.getString(1);
             final String userName = cursorExactType.getString(2);
             final String imageId = cursorExactType.getString(3);
+            final String coverPicId = cursorExactType.getString(4);
 //        final short networkType = cursor.getShort(4);
-            final short status = cursorExactType.getShort(5);
-            final int numberOfSongs = cursorExactType.getShort(6);
-            final String newSongs = cursorExactType.getString(7);
+            final short status = cursorExactType.getShort(6);
+
+            final int numberOfSongs = cursorExactType.getInt(7);
+            final int numberOfApps = cursorExactType.getInt(8);
+            final int newSongs = cursorExactType.getInt(9);
+            final int newApps = cursorExactType.getInt(10);
 
             viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
-            if ((status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED || status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED) &&
-                    !newSongs.equals("hello_world") && Integer.parseInt(newSongs) > 0) {
+            if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
 
+                //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
                 viewHolder.newSongs.setText("+" + newSongs);
             } else {

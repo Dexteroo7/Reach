@@ -26,12 +26,6 @@ public class ForceSyncFriends implements Runnable {
     private final long serverId;
     private final String myNumber;
 
-    public <T extends Context> ForceSyncFriends(T activity, long serverId, String myNumber) {
-        this.reference = new WeakReference<>(activity);
-        this.serverId = serverId;
-        this.myNumber = myNumber;
-    }
-
     public ForceSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
         this.reference = reference;
         this.serverId = serverId;
