@@ -685,12 +685,14 @@ public class MetaDataScanner extends IntentService {
     /**
      * Saves the music data to cloud and locally
      *
-     * @param songs  iterable of songs
+     * @param libraryMusic  iterable of library songs
+     * @param downloadedMusic  iterable of downloaded songs
      * @param apps   iterable of apps
      * @param genres all the genres
      * @param first  true, if this force local DB update is needed
      */
-    private static void saveMetaData(List<Song> songs,
+    private static void saveMetaData(List<Song> libraryMusic,
+                                     List<Song> downloadedMusic,
                                      List<App> apps,
                                      Iterable<String> genres,
                                      boolean first,
@@ -706,11 +708,11 @@ public class MetaDataScanner extends IntentService {
         }
 
         ////////////////////Sync songs
-        //TODO verify empty case being handled
+        final List<Song> fullList = ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(libraryMusic, downloadedMusic)));
         final byte[] musicBlob = new MusicList.Builder()
                 .clientId(serverId)
                 .genres(ImmutableList.copyOf(genres)) //list view of hash set
-                .song(songs) //concatenated list
+                .song(fullList) //concatenated list
                 .build().toByteArray();
 
         //return false if same Music found !
@@ -723,11 +725,11 @@ public class MetaDataScanner extends IntentService {
         if (newMusic || first) {
 
             //over-write music visibility
-            ScanMusic.createVisibilityMap(songs, serverId);
+            ScanMusic.createVisibilityMap(fullList, serverId);
 
             //over-write local db
             MiscUtils.bulkInsertSongs(
-                    songs,
+                    libraryMusic, //only need to "re-insert" library songs
                     context.getContentResolver(), serverId);
         }
 
@@ -773,7 +775,8 @@ public class MetaDataScanner extends IntentService {
         sendMessage(UPLOADING, -1);
 
         saveMetaData(
-                ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(songs, downloaded))), //music
+                songs, //library music
+                downloaded, //downloaded music
                 appList, //apps
                 ScanMusic.genreHashSet, //genres
                 intent.getBooleanExtra("first", true),

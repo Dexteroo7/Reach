@@ -91,7 +91,8 @@ public class AllContactsFragment extends Fragment implements
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();
 
-        sharedPrefs.edit().putStringSet(inviteKey, LocalUtils.inviteSentTo).apply();
+        if (sharedPrefs != null && !TextUtils.isEmpty(inviteKey))
+            sharedPrefs.edit().putStringSet(inviteKey, LocalUtils.inviteSentTo).apply();
         //listView.setOnScrollListener(null);
 
         super.onDestroyView();
@@ -106,7 +107,7 @@ public class AllContactsFragment extends Fragment implements
             searchView.setOnQueryTextListener(null);
             searchView.setOnCloseListener(null);
             searchView = null;
-        } else if (sView != null){
+        } else if (sView != null) {
             //set new
             searchView = sView;
             searchView.setOnQueryTextListener(this);
@@ -145,6 +146,7 @@ public class AllContactsFragment extends Fragment implements
 
         return rootView;
     }
+
     @Override
     public boolean onClose() {
 

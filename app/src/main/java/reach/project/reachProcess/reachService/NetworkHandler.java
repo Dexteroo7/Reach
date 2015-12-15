@@ -40,6 +40,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -174,7 +175,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             return;
         }
 
-        LocalUtils.sanitizeReachDirectory(handlerInterface, reachDirectory); //sanitizeReachDirectory
+        LocalUtils.verifyFilePaths(handlerInterface); //verifyFilePaths
         (wifiLock = handlerInterface.getWifiManager().createWifiLock(WifiManager.WIFI_MODE_FULL, "network_lock")).acquire(); //lock wifi
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(5); //create thread pool
         //////////////////////////////////
@@ -858,6 +859,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                                     Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + memoryReach.getId())).build());
                             needToUpdate = true;
                         }
+
                         handlerInterface.downloadFail(memoryReach.getDisplayName(), "Failed in keyKiller");
                     } else {
 
@@ -895,7 +897,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         /**
          * Clean up the directory, if file not found, marks as FILE_NOT_CREATED
          */
-        public static void sanitizeReachDirectory(NetworkHandlerInterface handlerInterface, File reachDirectory) {
+        public static void verifyFilePaths(NetworkHandlerInterface handlerInterface) {
 
             //////////////////////////////////purge all upload operations, but retain paused operations
             handlerInterface.getContentResolver().delete(
@@ -912,41 +914,37 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                             null);
             if (cursor == null)
                 return; //this should never happen
-            //first we mask all operations as ReachDatabase.FILE_NOT_CREATED
-            final LongSparseArray<ReachDatabase> temp = new LongSparseArray<>();
-            while (cursor.moveToNext()) {
 
-                final ReachDatabase reachDatabase = ReachDatabaseHelper.cursorToProcess(cursor);
-                if (reachDatabase.getProcessed() > 0) //mask only those which have associated file
-                    reachDatabase.setStatus(ReachDatabase.FILE_NOT_CREATED);
-                else //has not started, obviously no file !
-                    reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
-                temp.append(reachDatabase.getId(), reachDatabase);
-            }
+            //first we mask all operations as ReachDatabase.FILE_NOT_CREATED
+            final ArrayList<ContentProviderOperation> operations = new ArrayList<>(cursor.getCount());
+            final List<ReachDatabase> temp = new ArrayList<>(cursor.getCount());
+
+            while (cursor.moveToNext())
+                temp.add(ReachDatabaseHelper.cursorToProcess(cursor));
+
             cursor.close();
             //now we scan the directory and unmask those files that were found
-            for (File file : reachDirectory.listFiles()) {
+            for (ReachDatabase reachDatabase : temp) {
 
-                final ReachDatabase reachDatabase = temp.get(Long.parseLong(file.getName().replaceAll("[^0-9]", "")), null);
-                if (reachDatabase == null)
-                    continue;
+                if (reachDatabase.getProcessed() > 0 && !TextUtils.isEmpty(reachDatabase.getPath()) && !reachDatabase.getPath().equals("hello_world")) {
 
-                if (reachDatabase.getProcessed() == reachDatabase.getLength())
-                    reachDatabase.setStatus(ReachDatabase.FINISHED);  //completed
-                else
-                    reachDatabase.setStatus(ReachDatabase.NOT_WORKING); //not working (file found, can continue download)
-            }
+                    //verify file integrity
+                    final File file = new File(reachDatabase.getPath());
+                    if (!file.exists() || !file.isFile() || file.length() == 0)
+                        reachDatabase.setStatus(ReachDatabase.FILE_NOT_CREATED); //missing file
+                    if (reachDatabase.getProcessed() == reachDatabase.getLength())
+                        reachDatabase.setStatus(ReachDatabase.FINISHED);  //file found and completed
+                    else
+                        reachDatabase.setStatus(ReachDatabase.NOT_WORKING); //not working (file found, can continue download)
 
-            final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-            for (int i = 0; i < temp.size(); i++) {
-                // get the object by the key.
-                final ReachDatabase database = temp.get(temp.keyAt(i));
-                if (database == null)
-                    continue;
+                } else { //has not started, obviously no file !
+                    reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+                    reachDatabase.setPath("hello_world"); //make sure no file
+                }
 
                 final ContentValues values = new ContentValues();
-                values.put(ReachDatabaseHelper.COLUMN_STATUS, database.getStatus());
-                operations.add(LocalUtils.getUpdateOperation(values, database.getId()));
+                values.put(ReachDatabaseHelper.COLUMN_STATUS, reachDatabase.getStatus());
+                operations.add(LocalUtils.getUpdateOperation(values, reachDatabase.getId()));
             }
 
             if (operations.size() > 0)
@@ -1554,6 +1552,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
             Log.i("Downloader", message + "TOAST");
 
+            //track event
             ((ReachApplication) handlerInterface.getApplication()).track(
                     Optional.of(message),
                     Optional.of("ServerId " + id),

@@ -42,6 +42,7 @@ public enum UsageTracker {
     ////////////
 
     APP_OPEN, //user opened the app
+    BROWSE_LIBRARY, //user browsed friends library
 
     ////////////
 
@@ -198,7 +199,7 @@ public enum UsageTracker {
     }
 
     public static void trackLogEvent(@NonNull Map<PostParams, String> simpleParams,
-                                  @NonNull UsageTracker eventName) throws JSONException {
+                                     @NonNull UsageTracker eventName) throws JSONException {
 
         final JSONObject jsonObject = new JSONObject();
 
@@ -222,5 +223,4 @@ public enum UsageTracker {
 
         asyncTracker.execute(track);
     }
-
 }

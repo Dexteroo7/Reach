@@ -25,8 +25,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
@@ -42,10 +41,11 @@ public class ReferFragment extends Fragment {
             reference = new WeakReference<>(fragment = new ReferFragment());
         return fragment;
     }
+
     private TextView earning, remaining, heading, note, how, terms;
     private EditText registerText;
     private Button registerBtn;
-    private static SharedPreferences sharedPrefs;
+    private SharedPreferences sharedPrefs;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -70,34 +70,18 @@ public class ReferFragment extends Fragment {
 
         new GetTerms().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        String userId = String.valueOf(SharedPrefUtils.getServerId(sharedPrefs));
-        String shortId = userId.substring(2, (userId.length()-3));
-
-        String md5 = "";
-
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-            messageDigest.update(shortId.getBytes());
-            byte[] digestedBytes = messageDigest.digest();
-
-            StringBuilder hexString = new StringBuilder();
-            for (byte digestedByte : digestedBytes)
-                hexString.append(Integer.toHexString(0xFF & digestedByte));
-            md5 = hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
-        String url = "http://52.74.117.248:8080/campaign/getUserDetails?userId="
+        final long userId = SharedPrefUtils.getServerId(sharedPrefs);
+        final String url = "http://52.74.117.248:8080/campaign/getUserDetails?userId="
                 + userId
                 + "&userKey="
-                + md5;
+                + UUID.randomUUID().toString();
 
         new GetDetails().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
 
-        registerBtn.setOnClickListener(v -> {
-            String email = registerText.getText().toString();
-            new setEmail(email).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userId);
+        registerBtn.setOnClickListener(view -> {
+
+            final String email = registerText.getText().toString();
+            new SetEmail(email).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userId);
         });
 
         return rootView;
@@ -111,11 +95,13 @@ public class ReferFragment extends Fragment {
 
         @Override
         protected String doInBackground(String... params) {
-            Request request = new Request.Builder()
+
+            final Request request = new Request.Builder()
                     .url(params[0])
                     .build();
+
             try {
-                Response response = ReachApplication.okHttpClient.newCall(request).execute();
+                final Response response = ReachApplication.okHttpClient.newCall(request).execute();
                 if (response!=null)
                     return response.body().string();
             } catch (IOException e) {
@@ -126,11 +112,14 @@ public class ReferFragment extends Fragment {
 
         @Override
         protected void onPostExecute(String string) {
+
             super.onPostExecute(string);
+
             MiscUtils.useFragment(reference, fragment -> {
+
                 try {
 
-                    String jsonString = SharedPrefUtils.getCampaignValues(sharedPrefs);
+                    String jsonString = SharedPrefUtils.getCampaignValues(fragment.sharedPrefs);
                     if (TextUtils.isEmpty(string)) {
                         if (TextUtils.isEmpty(jsonString)) {
                             Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
@@ -139,13 +128,13 @@ public class ReferFragment extends Fragment {
                     }
                     else {
                         if (TextUtils.isEmpty(jsonString))
-                            SharedPrefUtils.storeCampaignValues(sharedPrefs, string);
+                            SharedPrefUtils.storeCampaignValues(fragment.sharedPrefs, string);
                         jsonString = string;
                     }
 
                     JSONObject jsonObject = new JSONObject(jsonString);
                     String email = jsonObject.getString("emailId");
-                    String savedEmail = SharedPrefUtils.getCampaignEmail(sharedPrefs);
+                    String savedEmail = SharedPrefUtils.getCampaignEmail(fragment.sharedPrefs);
                     if (!TextUtils.isEmpty(savedEmail))
                         email = savedEmail;
                     if (!TextUtils.isEmpty(email)) {
@@ -176,18 +165,19 @@ public class ReferFragment extends Fragment {
         }
     }
 
-    private static class setEmail extends AsyncTask<String,Void,Integer> {
+    private static class SetEmail extends AsyncTask<Long,Void,Integer> {
 
         private String email;
 
-        public setEmail(String email) {
+        public SetEmail(String email) {
             this.email = email;
         }
 
         @Override
-        protected Integer doInBackground(String... params) {
+        protected Integer doInBackground(Long... params) {
+
             Request request = new Request.Builder()
-                    .url("http://52.74.117.248:8080/campaign/setEmail?emailId="
+                    .url("http://52.74.117.248:8080/campaign/SetEmail?emailId="
                             + email + "&userId=" + params[0])
                     .build();
             try {
@@ -202,13 +192,14 @@ public class ReferFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Integer code) {
+
             super.onPostExecute(code);
             MiscUtils.useFragment(reference, fragment -> {
                 if (code != 200) {
                     Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                SharedPrefUtils.storeCampaignEmail(sharedPrefs, email);
+                SharedPrefUtils.storeCampaignEmail(fragment.sharedPrefs, email);
                 if (!TextUtils.isEmpty(email)) {
                     fragment.registerText.setEnabled(false);
                     fragment.registerText.setText("You will get updates on your email id");
@@ -241,7 +232,7 @@ public class ReferFragment extends Fragment {
             super.onPostExecute(string);
             MiscUtils.useFragment(reference, fragment -> {
                 try {
-                    String jsonString = SharedPrefUtils.getCampaignTerms(sharedPrefs);
+                    String jsonString = SharedPrefUtils.getCampaignTerms(fragment.sharedPrefs);
                     if (TextUtils.isEmpty(string)) {
                         if (TextUtils.isEmpty(jsonString)) {
                             Toast.makeText(fragment.getContext(), "No internet connectivity", Toast.LENGTH_SHORT).show();
@@ -250,7 +241,7 @@ public class ReferFragment extends Fragment {
                     }
                     else {
                         if (TextUtils.isEmpty(jsonString))
-                            SharedPrefUtils.storeCampaignTerms(sharedPrefs, string);
+                            SharedPrefUtils.storeCampaignTerms(fragment.sharedPrefs, string);
                         jsonString = string;
                     }
                     JSONObject jsonObject = new JSONObject(jsonString);
