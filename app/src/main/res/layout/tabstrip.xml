@@ -6,5 +6,5 @@
     app:pstsPaddingMiddle="true"
     app:pstsShouldExpand="true"
     app:pstsIndicatorColor="#fff"
-    app:pstsTabTextAllCaps="false"
+    app:pstsTabTextAllCaps="true"
     app:pstsTabTextColor="@color/white" />

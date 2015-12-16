@@ -137,7 +137,7 @@ public class MyProfileFragment extends Fragment {
                     case 0:
                         return "Apps";
                     case 1:
-                        return "Songs ("+songCount+")";
+                        return "Songs";
                     default:
                         throw new IllegalStateException("Count and size clash");
                 }
