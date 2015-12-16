@@ -27,9 +27,9 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.AbstractListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
@@ -192,7 +192,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             //use
         } else {
 
-            final ListHolder horizontalViewHolder = (ListHolder) holder;
+            final AbstractListHolder horizontalViewHolder = (AbstractListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(
@@ -213,7 +213,11 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             }
 
             case VIEW_TYPE_RECENT: {
-                return new ListHolder(parent, R.layout.list_with_more_button_padding);
+                return new AbstractListHolder(parent,
+                        R.layout.list_with_more_button_padding,
+                        R.id.headerText,
+                        R.id.listOfItems,
+                        R.id.moreButton);
             }
 
             default:

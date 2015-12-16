@@ -20,11 +20,10 @@ import reach.project.R;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
+import reach.project.utils.viewHelpers.AbstractListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
-
 
 /**
  * Created by dexter on 13/11/15.
@@ -74,25 +73,25 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             } else
                 songSongItemHolder.albumArt.setImageBitmap(null);
 
-        } else if (message instanceof RecentSong && holder instanceof ListHolder) {
+        } else if (message instanceof RecentSong && holder instanceof AbstractListHolder) {
 
             final RecentSong recentSong = (RecentSong) message;
-            final ListHolder listHolder = (ListHolder) holder;
-            listHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
-            listHolder.headerText.setText(recentSong.title);
-            listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            final AbstractListHolder simpleListHolder = (AbstractListHolder) holder;
+            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
+            simpleListHolder.headerText.setText(recentSong.title);
+            simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
 
             Log.i("Ayush", "Found recent items with size " + recentSong.songList.size() + " ");
-            listHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
+            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
 
-        } else if (message instanceof SmartSong && holder instanceof ListHolder) {
+        } else if (message instanceof SmartSong && holder instanceof AbstractListHolder) {
 
             final SmartSong smartSong = (SmartSong) message;
-            final ListHolder listHolder = (ListHolder) holder;
-            listHolder.itemView.setBackgroundResource(R.drawable.border_shadow3);
-            listHolder.headerText.setText(smartSong.title);
-            listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
-            listHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
+            final AbstractListHolder simpleListHolder = (AbstractListHolder) holder;
+            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            simpleListHolder.headerText.setText(smartSong.title);
+            simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            simpleListHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
         }
     }
 
@@ -111,9 +110,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         throw new IllegalArgumentException("Song item holder passed on an illegal value type");
                 });
             case RECENT_LIST_TYPE:
-                return new ListHolder(parent);
+                return new AbstractListHolder(parent);
             case SMART_LIST_TYPE:
-                return new ListHolder(parent);
+                return new AbstractListHolder(parent);
             default:
                 throw new IllegalArgumentException("Unknown view type found");
         }

@@ -1092,29 +1092,29 @@ public class ReachUserEndpoint {
             return;
 
         //removing friend from myReach
-        if (client.getMyReach() !=null && !client.getMyReach().isEmpty())
+        if (client.getMyReach() != null && !client.getMyReach().isEmpty())
             client.getMyReach().remove(friendId);
 
         //removing friend from sent
-        if (client.getSentRequests() !=null && !client.getSentRequests().isEmpty())
+        if (client.getSentRequests() != null && !client.getSentRequests().isEmpty())
             client.getSentRequests().remove(friendId);
-        
+
         //removing friend from received
-        if (client.getReceivedRequests() !=null && !client.getReceivedRequests().isEmpty())
+        if (client.getReceivedRequests() != null && !client.getReceivedRequests().isEmpty())
             client.getReceivedRequests().remove(friendId);
 
         //////////////////Remove from host also
 
         //removing friend from myReach
-        if (host.getMyReach() !=null && !host.getMyReach().isEmpty())
+        if (host.getMyReach() != null && !host.getMyReach().isEmpty())
             host.getMyReach().remove(serverId);
 
         //removing friend from sent
-        if (host.getSentRequests() !=null && !host.getSentRequests().isEmpty())
+        if (host.getSentRequests() != null && !host.getSentRequests().isEmpty())
             host.getSentRequests().remove(serverId);
 
         //removing friend from received
-        if (host.getReceivedRequests() !=null && !host.getReceivedRequests().isEmpty())
+        if (host.getReceivedRequests() != null && !host.getReceivedRequests().isEmpty())
             host.getReceivedRequests().remove(serverId);
 
         ofy().save().entities(host, client);
@@ -1247,8 +1247,8 @@ public class ReachUserEndpoint {
             path = "user/sendBulkNotification/{message}/{heading}",
             httpMethod = ApiMethod.HttpMethod.POST)
     public MyString sendBulkNotification(@Named("message") String message,
-                                     @Named("heading") String heading,
-                                     LongArray ids) {
+                                         @Named("heading") String heading,
+                                         LongArray ids) {
 
         final String notification = "MANUAL`" + 0 + "`" + heading + "`" + message;
 
@@ -1256,7 +1256,8 @@ public class ReachUserEndpoint {
         final Message toSend = new Message.Builder().addData("message", notification).build();
         final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
         for (Long id : ids.getList())
-            keysBuilder.add(Key.create(ReachUser.class, id));
+            if (id != null)
+                keysBuilder.add(Key.create(ReachUser.class, id));
 
         return new MyString(MessagingEndpoint.getInstance().sendMultiCastMessage(
                 toSend,
@@ -1264,7 +1265,7 @@ public class ReachUserEndpoint {
                 ofy().load().type(ReachUser.class)
                         .filterKey("in", keysBuilder.build())
                         .filter("gcmId !=", "")
-                        .project("gcmId"))+"");
+                        .project("gcmId")) + "");
     }
 
     @ApiMethod(

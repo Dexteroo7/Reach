@@ -5,13 +5,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
 import reach.project.R;
+import reach.project.utils.viewHelpers.AbstractListHolder;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.ListHolder;
 
 /**
  * Created by dexter on 04/12/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
+class ParentAdapter extends RecyclerView.Adapter<AbstractListHolder> {
 
     private final RecyclerView.Adapter apps, music;
 
@@ -20,11 +20,15 @@ class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
         this.music = music;
     }
 
-    public ListHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public AbstractListHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
-            case 0: return new ListHolder(parent, R.layout.list_with_more_button_header);
-            case 1: return new ListHolder(parent);
-            default: return new ListHolder(parent);
+            case 0: return new AbstractListHolder(parent,
+                    R.layout.list_with_more_button_header,
+                    R.id.headerText,
+                    R.id.listOfItems,
+                    R.id.moreButton);
+            case 1: return new AbstractListHolder(parent);
+            default: return new AbstractListHolder(parent);
         }
     }
 
@@ -34,7 +38,7 @@ class ParentAdapter extends RecyclerView.Adapter<ListHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ListHolder holder, int position) {
+    public void onBindViewHolder(AbstractListHolder holder, int position) {
 
         switch (position) {
 

@@ -11,7 +11,7 @@ import com.squareup.wire.Message;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
-import reach.project.utils.viewHelpers.ListHolder;
+import reach.project.utils.viewHelpers.AbstractListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 
@@ -53,10 +53,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
         }
 
-//        else if (message instanceof RecentApp && holder instanceof ListHolder) {
+//        else if (message instanceof RecentApp && holder instanceof SimpleListHolder) {
 //
 //            final RecentApp recentApp = (RecentApp) message;
-//            final ListHolder listHolder = (ListHolder) holder;
+//            final SimpleListHolder listHolder = (SimpleListHolder) holder;
 //            listHolder.headerText.setText(recentApp.title);
 //            listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
 //
@@ -66,10 +66,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 //            else
 //                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), this, R.layout.app_list_item));
 //
-//        } else if (message instanceof SmartApp && holder instanceof ListHolder) {
+//        } else if (message instanceof SmartApp && holder instanceof SimpleListHolder) {
 //
 //            final SmartApp smartApp = (SmartApp) message;
-//            final ListHolder listHolder = (ListHolder) holder;
+//            final SimpleListHolder listHolder = (SimpleListHolder) holder;
 //            listHolder.headerText.setText(smartApp.title);
 //            listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
 //            if (smartApp.appList.size() < 4)
@@ -95,9 +95,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         throw new IllegalArgumentException("App item holder passed on an illegal value type");
                 });
             case RECENT_LIST_TYPE:
-                return new ListHolder(parent);
+                return new AbstractListHolder(parent);
             case SMART_LIST_TYPE:
-                return new ListHolder(parent);
+                return new AbstractListHolder(parent);
             default:
                 throw new IllegalArgumentException("Unknown view type found");
         }

@@ -18,9 +18,9 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.AbstractListHolder;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
@@ -104,7 +104,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             case VIEW_TYPE_LOCKED: {
-                return new ListHolder(parent);
+                return new AbstractListHolder(parent);
             }
 
             case VIEW_TYPE_FRIEND_LARGE: {
@@ -219,7 +219,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
         else if (friend instanceof Boolean){
 
-            final ListHolder horizontalViewHolder = (ListHolder) holder;
+            final AbstractListHolder horizontalViewHolder = (AbstractListHolder) holder;
             horizontalViewHolder.headerText.setText("Newly added");
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomLinearLayoutManager(holder.itemView.getContext(),

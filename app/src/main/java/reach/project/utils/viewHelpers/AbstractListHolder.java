@@ -18,24 +18,30 @@ import reach.project.R;
 import reach.project.utils.ReachCursorAdapter;
 
 /**
- * Created by dexter on 18/11/15.
+ * Created by dexter on 16/12/15.
  */
-public final class ListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class AbstractListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     public final TextView headerText;
     public final RecyclerView listOfItems;
 
-    public ListHolder(ViewGroup parent, int layoutId) {
-        super(LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false));
-        headerText = (TextView) itemView.findViewById(R.id.headerText);
-        listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
-        itemView.findViewById(R.id.moreButton).setOnClickListener(this);
+    public AbstractListHolder(ViewGroup parent,
+                              int itemViewResourceId,
+                              int headerTextResourceId,
+                              int listOfItemsResourceId,
+                              int moreButtonId) {
+
+        super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
+        this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
+        this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
+        itemView.findViewById(moreButtonId).setOnClickListener(this);
     }
 
-    public ListHolder(ViewGroup parent) {
+    public AbstractListHolder(ViewGroup parent) {
+
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_with_more_button, parent, false));
-        headerText = (TextView) itemView.findViewById(R.id.headerText);
-        listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
+        this.headerText = (TextView) itemView.findViewById(R.id.headerText);
+        this.listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
         itemView.findViewById(R.id.moreButton).setOnClickListener(this);
     }
 
