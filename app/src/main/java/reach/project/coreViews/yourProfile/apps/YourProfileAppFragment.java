@@ -42,6 +42,7 @@ import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
  */
 public class YourProfileAppFragment extends Fragment implements CacheInjectorCallbacks<Message>, CacheAdapterInterface<Message, App> {
 
+    @Nullable
     private static WeakReference<YourProfileAppFragment> reference = null;
     private static long userId = 0;
 
@@ -63,8 +64,11 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     private final List<Message> appData = new ArrayList<>(100);
     private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
 
+    @Nullable
     private Cache fullListCache = null;
+    @Nullable
     private Cache smartListCache = null;
+    @Nullable
     private Cache recentAppCache = null;
 
     private int lastPosition = 0;
@@ -100,7 +104,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-        smartListCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
+        smartListCache = new Cache(this, CacheType.APPLICATIONS_SMART_LIST, userId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getSmart;
@@ -128,8 +132,10 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         final int size = appData.size();
         if (size == 0) {
-            recentAppCache.loadMoreElements(true);
-            fullListCache.loadMoreElements(false);
+            if (recentAppCache != null)
+                recentAppCache.loadMoreElements(true);
+            if (fullListCache != null)
+                fullListCache.loadMoreElements(false);
         }
 
         return size;
@@ -144,7 +150,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         final int currentSize = appData.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 5)
+        if (position > currentSize - 5 && fullListCache != null)
             //request a partial load
             fullListCache.loadMoreElements(false);
 
@@ -197,10 +203,6 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         if (!elements.isEmpty())
             painter(elements, typeChecker);
 
-        synchronized (appData) {
-            appData.addAll(elements);
-        }
-
         //notify
         Log.i("Ayush", "Reloading list " + appData.size());
         parentAdapter.notifyDataSetChanged();
@@ -209,7 +211,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
          * If loading has finished request a full injection of smart lists
          * Else request partial injection
          */
-        if (typeChecker == App.class)
+        if (typeChecker == App.class && smartListCache != null)
             smartListCache.loadMoreElements(true);
     }
 

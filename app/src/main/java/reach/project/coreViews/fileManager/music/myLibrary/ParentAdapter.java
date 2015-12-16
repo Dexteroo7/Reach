@@ -28,7 +28,7 @@ import reach.project.music.MySongsHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.AbstractListHolder;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -116,7 +116,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             case VIEW_TYPE_RECENT: {
-                return new AbstractListHolder(parent);
+                return new MoreListHolder(parent);
             }
 
             default:
@@ -174,7 +174,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             //use
         } else {
 
-            final AbstractListHolder horizontalViewHolder = (AbstractListHolder) holder;
+            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(0);
             horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(

@@ -27,7 +27,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.AbstractListHolder;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
@@ -192,7 +192,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             //use
         } else {
 
-            final AbstractListHolder horizontalViewHolder = (AbstractListHolder) holder;
+            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(
@@ -213,7 +213,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             }
 
             case VIEW_TYPE_RECENT: {
-                return new AbstractListHolder(parent,
+                return new MoreListHolder(parent,
                         R.layout.list_with_more_button_padding,
                         R.id.headerText,
                         R.id.listOfItems,
@@ -238,7 +238,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         else
             myLibraryCount = 0;
 
-        Log.i("Ayush", "Total size = " + (myLibraryCount + downloadedCount + 1));
+//        Log.i("Ayush", "Total size = " + (myLibraryCount + downloadedCount + 1));
 
         return myLibraryCount + downloadedCount + 1; //adjust for recent list
     }

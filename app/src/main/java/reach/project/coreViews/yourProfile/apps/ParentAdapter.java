@@ -1,7 +1,9 @@
 package reach.project.coreViews.yourProfile.apps;
 
 import android.content.pm.PackageManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +13,9 @@ import com.squareup.wire.Message;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
-import reach.project.utils.viewHelpers.AbstractListHolder;
+import reach.project.utils.viewHelpers.MoreListHolder;
+import reach.project.utils.viewHelpers.CustomGridLayoutManager;
+import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 
@@ -51,32 +55,32 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                 e.printStackTrace();
             }
 
-        }
+        } else if (message instanceof RecentApps && holder instanceof MoreListHolder) {
 
-//        else if (message instanceof RecentApp && holder instanceof SimpleListHolder) {
-//
-//            final RecentApp recentApp = (RecentApp) message;
-//            final SimpleListHolder listHolder = (SimpleListHolder) holder;
-//            listHolder.headerText.setText(recentApp.title);
-//            listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
-//
-//            Log.i("Ayush", "Found recent items with size " + recentApp.appList.size() + " ");
-//            if (recentApp.appList.size() < 4)
-//                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, this, R.layout.app_list_item));
-//            else
-//                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), this, R.layout.app_list_item));
-//
-//        } else if (message instanceof SmartApp && holder instanceof SimpleListHolder) {
-//
-//            final SmartApp smartApp = (SmartApp) message;
-//            final SimpleListHolder listHolder = (SimpleListHolder) holder;
-//            listHolder.headerText.setText(smartApp.title);
-//            listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
-//            if (smartApp.appList.size() < 4)
-//                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, this, R.layout.app_list_item));
-//            else
-//                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), this, R.layout.app_list_item));
-//        }
+            final RecentApps recentApp = (RecentApps) message;
+            final MoreListHolder listHolder = (MoreListHolder) holder;
+            listHolder.headerText.setText(recentApp.title);
+            listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+
+            Log.i("Ayush", "Found recent apps with size " + recentApp.appList.size() + " ");
+            if (recentApp.appList.size() < 4)
+                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_list_item));
+            else
+                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_list_item));
+
+        } else if (message instanceof SmartApps && holder instanceof MoreListHolder) {
+
+            final SmartApps smartApp = (SmartApps) message;
+            final MoreListHolder listHolder = (MoreListHolder) holder;
+            listHolder.headerText.setText(smartApp.title);
+            listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+
+            Log.i("Ayush", "Found smart apps with size " + smartApp.appList.size() + " ");
+            if (smartApp.appList.size() < 4)
+                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_list_item));
+            else
+                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_list_item));
+        }
     }
 
     @Override
@@ -95,9 +99,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         throw new IllegalArgumentException("App item holder passed on an illegal value type");
                 });
             case RECENT_LIST_TYPE:
-                return new AbstractListHolder(parent);
+                return new MoreListHolder(parent);
             case SMART_LIST_TYPE:
-                return new AbstractListHolder(parent);
+                return new MoreListHolder(parent);
             default:
                 throw new IllegalArgumentException("Unknown view type found");
         }
@@ -114,10 +118,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
         final Message message = cacheAdapterInterface.getItem(position);
         if (message instanceof App)
             return APP_ITEM_TYPE;
-//        else if (message instanceof AppL)
-//            return RECENT_LIST_TYPE;
-//        else if (message instanceof SmartApp)
-//            return SMART_LIST_TYPE;
+        else if (message instanceof RecentApps)
+            return RECENT_LIST_TYPE;
+        else if (message instanceof SmartApps)
+            return SMART_LIST_TYPE;
         else
             throw new IllegalArgumentException("Unknown message found in list");
     }
@@ -132,19 +136,4 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
         return new RecyclerView.ViewHolder(view) {
         };
     }
-
-//    @Override
-//    public void handOverMessage(App app) {
-//        cacheAdapterInterface.handOverMessage(app);
-//    }
-//
-//    @Override
-//    public void handOverMessage(int position) {
-//
-//        final T item = cacheAdapterInterface.getItem(position);
-//        if (item instanceof App)
-//            cacheAdapterInterface.handOverMessage((App) item);
-//        else
-//            throw new IllegalArgumentException("Expecting App, found something else");
-//    }
 }

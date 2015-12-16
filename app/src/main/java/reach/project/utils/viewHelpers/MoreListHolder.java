@@ -20,16 +20,16 @@ import reach.project.utils.ReachCursorAdapter;
 /**
  * Created by dexter on 16/12/15.
  */
-public class AbstractListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     public final TextView headerText;
     public final RecyclerView listOfItems;
 
-    public AbstractListHolder(ViewGroup parent,
-                              int itemViewResourceId,
-                              int headerTextResourceId,
-                              int listOfItemsResourceId,
-                              int moreButtonId) {
+    public MoreListHolder(ViewGroup parent,
+                          int itemViewResourceId,
+                          int headerTextResourceId,
+                          int listOfItemsResourceId,
+                          int moreButtonId) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
         this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
@@ -37,7 +37,7 @@ public class AbstractListHolder extends RecyclerView.ViewHolder implements View.
         itemView.findViewById(moreButtonId).setOnClickListener(this);
     }
 
-    public AbstractListHolder(ViewGroup parent) {
+    public MoreListHolder(ViewGroup parent) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_with_more_button, parent, false));
         this.headerText = (TextView) itemView.findViewById(R.id.headerText);

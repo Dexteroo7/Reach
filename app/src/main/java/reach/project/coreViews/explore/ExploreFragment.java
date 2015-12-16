@@ -1,20 +1,12 @@
 package reach.project.coreViews.explore;
 
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -22,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import com.google.android.gms.analytics.HitBuilders;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -37,27 +28,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
-import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.usageTracking.PostParams;
-import reach.project.usageTracking.SongMetadata;
-import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
@@ -351,146 +332,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         reachDatabase.setVisibility((short) 1);
 
-        handOverMessage(reachDatabase);
-    }
-
-    public void handOverMessage(@Nonnull ReachDatabase reachDatabase) {
-
-        final Activity activity = getActivity();
-        final ContentResolver contentResolver = activity.getContentResolver();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
-        if (contentResolver == null)
-            return;
-
-        /**
-         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
-         */
-
-        final Cursor cursor;
-
-        //this cursor can be used to play if entry exists
-        cursor = contentResolver.query(
-                ReachDatabaseProvider.CONTENT_URI,
-                new String[]{
-
-                        ReachDatabaseHelper.COLUMN_ID, //0
-                        ReachDatabaseHelper.COLUMN_PROCESSED, //1
-                        ReachDatabaseHelper.COLUMN_PATH, //2
-
-                        ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                        ReachDatabaseHelper.COLUMN_SENDER_ID,
-                        ReachDatabaseHelper.COLUMN_RECEIVER_ID,
-                        ReachDatabaseHelper.COLUMN_SIZE,
-
-                },
-
-                ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_DURATION + " = ?",
-                new String[]{reachDatabase.getDisplayName(), reachDatabase.getActualName(),
-                        reachDatabase.getLength() + "", reachDatabase.getDuration() + ""},
-                null);
-
-        if (cursor != null) {
-
-            if (cursor.moveToFirst()) {
-
-                //if not multiple addition, play the song
-                final boolean liked;
-                final String temp = cursor.getString(3);
-                liked = !TextUtils.isEmpty(temp) && temp.equals("1");
-
-                final MusicData musicData = new MusicData(
-                        cursor.getLong(0), //id
-                        reachDatabase.getLength(),
-                        reachDatabase.getSenderId(),
-                        cursor.getLong(1),
-                        0,
-                        cursor.getString(2),
-                        reachDatabase.getDisplayName(),
-                        reachDatabase.getArtistName(),
-                        "",
-                        liked,
-                        reachDatabase.getDuration(),
-                        (byte) 0);
-                MiscUtils.playSong(musicData, activity);
-                //in both cases close and continue
-                cursor.close();
-                return;
-            }
-            cursor.close();
-        }
-
-        final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
-
-        //new song
-        //We call bulk starter always
-        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
-        if (uri == null) {
-
-            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Add song failed")
-                    .setAction("User Name - " + clientName)
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                    .setValue(1)
-                    .build());
-            return;
-        }
-
-        final String[] splitter = uri.toString().split("/");
-        if (splitter.length == 0)
-            return;
-        reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
-        //start this operation
-        StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
-                activity,
-                reachDatabase,
-                reachDatabase.getReceiverId(), //myID
-                reachDatabase.getSenderId(),   //the uploaded
-                reachDatabase.getId()));
-
-        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + clientName)
-                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                .setValue(1)
-                .build());
-
-        //usage tracking
-        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
-        simpleParams.put(PostParams.USER_ID, reachDatabase.getReceiverId() + "");
-        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(activity));
-        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
-        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
-        try {
-            simpleParams.put(PostParams.APP_VERSION,
-                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
-
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
-        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
-        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
-        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
-        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
-        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
-
-        try {
-            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
-        } catch (JSONException ignored) {
-        }
-
-        Snackbar.make(rootView, "\"Song added, click to view\"", Snackbar.LENGTH_LONG)
-                .setAction("VIEW", v -> {
-
-                    ReachActivity.openDownloading();
-                })
-                .show();
-
+        MiscUtils.startDownload(reachDatabase, getActivity(), rootView);
     }
 }

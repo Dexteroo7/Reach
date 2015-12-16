@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.utils.viewHelpers.AbstractListHolder;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -80,7 +80,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
 
             case VIEW_TYPE_RECENT: {
-                return new AbstractListHolder(parent);
+                return new MoreListHolder(parent);
             }
 
             default:
@@ -109,7 +109,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             //use
         } else {
 
-            final AbstractListHolder horizontalViewHolder = (AbstractListHolder) holder;
+            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             horizontalViewHolder.headerText.setText("Recently Installed");
             horizontalViewHolder.listOfItems.setLayoutManager(
