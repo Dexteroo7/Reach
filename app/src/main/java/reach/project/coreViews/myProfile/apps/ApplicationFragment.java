@@ -75,8 +75,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final boolean newVisibility = !parentAdapter.isVisible(packageName);
 
         //update in memory
-        synchronized (parentAdapter.packageVisibility) {
-            parentAdapter.packageVisibility.put(packageName, newVisibility);
+        synchronized (ParentAdapter.packageVisibility) {
+            ParentAdapter.packageVisibility.put(packageName, newVisibility);
         }
         //update in disk
         SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
@@ -105,7 +105,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         new GetApplications().executeOnExecutor(StaticData.temporaryFix, activity);
 
         //update the package visibilities
-        parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
+        ParentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
 
         return rootView;
     }

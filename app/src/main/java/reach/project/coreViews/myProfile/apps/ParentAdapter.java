@@ -16,9 +16,9 @@ import java.util.Map;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.ListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
@@ -128,7 +128,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
         } else {
 
             //assume its recent
-            final ListHolder horizontalViewHolder = (ListHolder) holder;
+            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
             horizontalViewHolder.headerText.setText("Recently Installed");
             horizontalViewHolder.listOfItems.setLayoutManager(
@@ -150,7 +150,11 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
             }
 
             case VIEW_TYPE_RECENT: {
-                return new ListHolder(parent, R.layout.list_with_more_button_padding);
+                return new MoreListHolder(parent,
+                        R.layout.list_with_more_button_padding, //Main resource id
+                        R.id.headerText, //id for header text
+                        R.id.listOfItems, //id for list (recycler view)
+                        R.id.moreButton); //id of more button
             }
 
             default:

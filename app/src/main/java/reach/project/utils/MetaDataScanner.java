@@ -517,6 +517,7 @@ public class MetaDataScanner extends IntentService {
             if (applicationInfoList == null || applicationInfoList.isEmpty())
                 return Collections.emptyList();
 
+            //fetch local visibility
             final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(preferences);
             final List<String> newPackages = new ArrayList<>();
 
@@ -535,6 +536,7 @@ public class MetaDataScanner extends IntentService {
                 Log.i("Ayush", "Found " + newPackages.size() + " new packages");
                 final reach.backend.applications.appVisibilityApi.model.JsonMap visibilityMap = MiscUtils.autoRetry(() ->
                         StaticData.appVisibilityApi.get(userId).execute().getVisibility(), Optional.absent()).orNull();
+
                 if (visibilityMap != null && !visibilityMap.isEmpty()) {
 
                     final Set<Map.Entry<String, Object>> entrySet = visibilityMap.entrySet();
@@ -592,9 +594,12 @@ public class MetaDataScanner extends IntentService {
                 }
             }
 
+            /**
+             * Remaining packages will not have a visibility
+             */
             //any remaining packages in "newPackages" will be marked as visible
-            for (String newPackage : newPackages)
-                packageVisibility.put(newPackage, true);
+//            for (String newPackage : newPackages)
+//                packageVisibility.put(newPackage, true);
 
             final List<App> applicationsFound = new ArrayList<>();
             for (ApplicationInfo applicationInfo : applicationInfoList) {

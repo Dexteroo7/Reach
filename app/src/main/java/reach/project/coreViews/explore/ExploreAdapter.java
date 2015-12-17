@@ -1,12 +1,9 @@
 package reach.project.coreViews.explore;
 
 import android.animation.ValueAnimator;
-import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
-import android.text.TextUtils;
 import android.util.Log;
-import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +19,6 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -52,8 +48,7 @@ class ExploreAdapter extends PagerAdapter {
         try {
             exploreTypes = ExploreTypes.valueOf(jsonObject.getString("type"));
         } catch (JSONException e) {
-            e.printStackTrace();
-            exploreTypes = ExploreTypes.MUSIC; //default to music
+            throw new RuntimeException(e); //error is not recoverable
         }
 
         final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);
@@ -73,11 +68,11 @@ class ExploreAdapter extends PagerAdapter {
 
                     title.setText(jsonObject.getString("displayName"));
                     subTitle.setText(jsonObject.getString("artistName"));
-                    userHandle.setText(musicContainer.userHandle);
-                    typeText.setText(musicContainer.types.getTitle());
-                    if (!TextUtils.isEmpty(container.imageId))
-                        image.setImageURI(Uri.parse(container.imageId));
-                    userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.userImageId));
+//                    userHandle.setText(musicContainer.userHandle);
+//                    typeText.setText(musicContainer.types.getTitle());
+//                    if (!TextUtils.isEmpty(container.imageId))
+//                        image.setImageURI(Uri.parse(container.imageId));
+//                    userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.userImageId));
                     //downButton.setTag(container.getId());
                     downButton.setOnClickListener(clickListener);
                     downButton.setTag(position);

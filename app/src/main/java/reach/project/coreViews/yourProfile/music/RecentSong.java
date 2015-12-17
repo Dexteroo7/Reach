@@ -12,7 +12,7 @@ import reach.project.music.Song;
 import static com.squareup.wire.Message.Datatype.STRING;
 import static com.squareup.wire.Message.Label.REPEATED;
 
-public final class RecentSong extends Message {
+final class RecentSong extends Message {
     private static final long serialVersionUID = 0L;
 
     public static final String DEFAULT_TITLE = "hello_world";

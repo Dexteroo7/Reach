@@ -86,9 +86,10 @@ public class UnClassifiedAppsEndpoint {
      */
     @ApiMethod(
             name = "update",
-            path = "unClassifiedApps/{packageName}",
+            path = "unClassifiedApps/",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public UnClassifiedApps update(@Named("packageName") String packageName, UnClassifiedApps unClassifiedApps) throws NotFoundException {
+    public UnClassifiedApps update(@Named("packageName") String packageName,
+                                   UnClassifiedApps unClassifiedApps) throws NotFoundException {
 
         if (TextUtils.isEmpty(unClassifiedApps.getPackageName()))
             throw new IllegalArgumentException("Please specific package name");

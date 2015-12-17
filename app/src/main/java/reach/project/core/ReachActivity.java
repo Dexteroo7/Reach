@@ -80,7 +80,6 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
-import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
@@ -745,66 +744,7 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
-        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
-        if (uri == null) {
-
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Add song failed")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                    .setValue(1)
-                    .build());
-            return;
-        }
-
-        final String[] splitter = uri.toString().split("/");
-        if (splitter.length == 0)
-            return;
-        reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
-        //start this operation
-        if (!multiple)
-            StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
-                    this,
-                    reachDatabase,
-                    reachDatabase.getReceiverId(), //myID
-                    reachDatabase.getSenderId(),   //the uploaded
-                    reachDatabase.getId()));
-
-        //tracing shit
-
-        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                .setValue(1)
-                .build());
-
-        //usage tracking
-        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
-        simpleParams.put(PostParams.USER_ID, serverId + "");
-        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
-        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
-        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
-        try {
-            simpleParams.put(PostParams.APP_VERSION,
-                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
-
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
-        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
-        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
-        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
-        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
-        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
-
-        try {
-            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
-        } catch (JSONException ignored) {
-        }
+        MiscUtils.startDownload(reachDatabase, this, null);
     }
 
     private enum LocalUtils {
