@@ -1,14 +1,22 @@
 package reach.project.reachProcess.reachService;
 
+
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer.FrameworkSampleSource;
+import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
+import com.google.android.exoplayer.SampleSource;
+import com.google.android.exoplayer.TrackRenderer;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -41,7 +49,8 @@ public class Player {
     private enum WhichPlayer {
 
         AudioTrack, //we are streaming
-        MediaPlayer //static playBack (seek-able)
+        MediaPlayer, //static playBack (seek-able)
+        Exoplayer
     }
 
     //Single threaded executor to avoid fuck ups
@@ -63,6 +72,7 @@ public class Player {
     private WhichPlayer whichPlayer = WhichPlayer.MediaPlayer;
     private AudioTrack audioTrack;
     private MediaPlayer mediaPlayer;
+    private ExoPlayer exoplayer;
 
     private Future decodeFuture;
     private Future pipeFuture;
@@ -246,20 +256,33 @@ public class Player {
     protected int createMediaPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
                                             MediaPlayer.OnErrorListener onErrorListener,
                                             String path) throws IOException, InterruptedException {
-
         reset(); //throws InterruptedException
-        whichPlayer = WhichPlayer.MediaPlayer;
-
-        if (mediaPlayer == null) {
-
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayer.setOnCompletionListener(completionListener);
-            mediaPlayer.setOnErrorListener(onErrorListener);
+        if(Build.VERSION.SDK_INT>=16)
+        {
+            whichPlayer=WhichPlayer.Exoplayer;
+            if(exoplayer==null)
+            {
+                exoplayer=ExoPlayer.Factory.newInstance(1);
+            }
+            SampleSource sampleSource=new FrameworkSampleSource(handlerInterface.getContext(),Uri.parse(path),null);
+            TrackRenderer audio=new MediaCodecAudioTrackRenderer(sampleSource,null,true);
+            exoplayer.prepare(audio);
+            return (int)exoplayer.getDuration();
         }
-        mediaPlayer.setDataSource(path);
-        mediaPlayer.prepare();
-        return mediaPlayer.getDuration();
+        else
+        {
+            whichPlayer = WhichPlayer.MediaPlayer;
+            if (mediaPlayer == null)
+            {
+                mediaPlayer = new MediaPlayer();
+                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mediaPlayer.setOnCompletionListener(completionListener);
+                mediaPlayer.setOnErrorListener(onErrorListener);
+            }
+            mediaPlayer.setDataSource(path);
+            mediaPlayer.prepare();
+            return mediaPlayer.getDuration();
+        }
     }
 
     protected long createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
@@ -449,5 +472,7 @@ public class Player {
         void updateSecondaryProgress(short progress);
 
         void onCompletion(MediaPlayer player);
+
+        Context getContext();
     }
 }

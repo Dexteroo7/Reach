@@ -375,6 +375,11 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     @Override
+    public Context getContext() {
+        return handlerInterface.getContext();
+    }
+
+    @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
 
         kill.set(true);

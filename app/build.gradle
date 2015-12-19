@@ -73,6 +73,7 @@ dependencies {
     compile 'com.getbase:floatingactionbutton:1.10.1'
     compile 'com.sothree.slidinguppanel:library:3.2.0'
     compile 'com.commonsware.cwac:merge:1.1.1'
+    compile project(':exolib:library')
 }
 
 configurations {
