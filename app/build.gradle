@@ -8,7 +8,7 @@ android {
     buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId "reach.project"
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion 23
         versionCode 77
         versionName "0.9.22.2-beta"
@@ -20,7 +20,7 @@ android {
         release {
             shrinkResources true
             minifyEnabled true
-            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
         }
     }
 
