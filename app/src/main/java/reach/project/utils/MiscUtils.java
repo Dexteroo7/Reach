@@ -48,6 +48,7 @@ import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.File;
@@ -1172,7 +1173,7 @@ public enum MiscUtils {
         while (iterator.hasNext()) {
 
             final ApplicationInfo applicationInfo = iterator.next();
-            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0)
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM & ApplicationInfo.FLAG_TEST_ONLY) == 1)
                 iterator.remove();
         }
 
@@ -1425,7 +1426,7 @@ public enum MiscUtils {
                         liked,
                         reachDatabase.getDuration(),
                         (byte) 0);
-                MiscUtils.playSong(musicData, activity);
+                playSong(musicData, activity);
                 //in both cases close and continue
                 cursor.close();
                 return;
@@ -1503,5 +1504,15 @@ public enum MiscUtils {
                     })
                     .show();
 
+    }
+
+    public static <T> T get(JSONObject jsonObject, GetName getName) {
+
+        try {
+            //noinspection unchecked
+            return (T) jsonObject.get(getName.getName());
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -15,8 +15,8 @@ enum ExploreTypes {
     LOADING("Loading", R.layout.explore_loading),
     DONE_FOR_TODAY("Done for today", android.R.layout.simple_list_item_1);
 
-    private String title;
-    private int layoutResId;
+    private final String title;
+    private final int layoutResId;
 
     ExploreTypes(String title, int layoutResId) {
         this.title = title;

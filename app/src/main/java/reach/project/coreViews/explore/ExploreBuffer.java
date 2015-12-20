@@ -75,8 +75,7 @@ class ExploreBuffer<T> implements Closeable {
             0L, TimeUnit.MILLISECONDS, //no waiting
             new SynchronousQueue<>(false), //only 1 thread
             factory,
-            (r, executor) -> {
-                //TODO track and ignore
+            (r, executor) -> {//ignored
             });
 
     /**

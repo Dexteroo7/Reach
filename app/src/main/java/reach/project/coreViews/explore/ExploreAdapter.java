@@ -1,8 +1,10 @@
 package reach.project.coreViews.explore;
 
 import android.animation.ValueAnimator;
+import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +15,6 @@ import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
@@ -21,6 +22,9 @@ import java.lang.ref.WeakReference;
 import reach.project.R;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
+
+import static reach.project.coreViews.explore.ExploreJSON.MusicViewInfo;
+import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
 
 /**
  * Created by dexter on 16/10/15.
@@ -43,56 +47,88 @@ class ExploreAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
 
-        final JSONObject jsonObject = explore.getContainerForIndex(position);
-        ExploreTypes exploreTypes;
-        try {
-            exploreTypes = ExploreTypes.valueOf(jsonObject.getString("type"));
-        } catch (JSONException e) {
-            throw new RuntimeException(e); //error is not recoverable
-        }
+        final JSONObject exploreJSON = explore.getContainerForIndex(position);
+        final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE));
 
         final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);
+        final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+
         final TextView title = (TextView) layout.findViewById(R.id.title);
         final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
         final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
         final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
         final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
         final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
-        final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
 
-        try {
+        switch (exploreTypes) {
 
-            switch (exploreTypes) {
+            case MUSIC: {
 
-                case MUSIC:
 
-                    title.setText(jsonObject.getString("displayName"));
-                    subTitle.setText(jsonObject.getString("artistName"));
-//                    userHandle.setText(musicContainer.userHandle);
-//                    typeText.setText(musicContainer.types.getTitle());
-//                    if (!TextUtils.isEmpty(container.imageId))
-//                        image.setImageURI(Uri.parse(container.imageId));
-//                    userImage.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + container.userImageId));
-                    //downButton.setTag(container.getId());
-                    downButton.setOnClickListener(clickListener);
-                    downButton.setTag(position);
-                    layout.setTag(POSITION_UNCHANGED);
-                    break;
-                case APP:
-//                container.getRating();
-                    layout.setTag(POSITION_UNCHANGED);
-                    break;
-                case LOADING:
-                    layout.setTag(POSITION_NONE);
-                    break;
-                case DONE_FOR_TODAY:
+                final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID);
+                final String userName = ExploreFragment.userNameSparseArray.get(userId);
 
-                    //title.setText("No more stories for today");
-                    layout.setTag(POSITION_NONE);
-                    break;
+                //take out view info from this object
+                final JSONObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO);
+
+                title.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE));
+                subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE));
+                final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME);
+                if (TextUtils.isEmpty(originalUserName))
+                    userHandle.setText(userName);
+                else
+                    userHandle.setText(originalUserName);
+                typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT));
+
+                final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL);
+                if (!TextUtils.isEmpty(imageId))
+                    image.setImageURI(Uri.parse(imageId));
+
+                final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL);
+                if (!TextUtils.isEmpty(albumArt))
+                    userImage.setImageURI(Uri.parse(albumArt));
+
+                downButton.setOnClickListener(clickListener);
+                downButton.setTag(position);
+                layout.setTag(POSITION_UNCHANGED);
+                break;
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+            case APP:
+
+                final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID);
+                final String userName = ExploreFragment.userNameSparseArray.get(userId);
+
+                //take out view info from this object
+                final JSONObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO);
+
+                title.setText(MiscUtils.get(appViewInfo, AppViewInfo.TITLE));
+                subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE));
+                final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME);
+                if (TextUtils.isEmpty(originalUserName))
+                    userHandle.setText(userName);
+                else
+                    userHandle.setText(originalUserName);
+                typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT));
+
+                final String imageId = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL);
+                if (!TextUtils.isEmpty(imageId))
+                    image.setImageURI(Uri.parse(imageId));
+
+                final String albumArt = MiscUtils.get(appViewInfo, AppViewInfo.LARGE_IMAGE_URL);
+                if (!TextUtils.isEmpty(albumArt))
+                    userImage.setImageURI(Uri.parse(albumArt));
+
+//                container.getRating();
+                layout.setTag(POSITION_UNCHANGED);
+                break;
+            case LOADING:
+                layout.setTag(POSITION_NONE);
+                break;
+            case DONE_FOR_TODAY:
+
+                //title.setText("No more stories for today");
+                layout.setTag(POSITION_NONE);
+                break;
         }
 
         collection.addView(layout);
