@@ -13,16 +13,20 @@
         android:title="Edit"
         app:showAsAction="always"
         />
-    <group android:checkableBehavior="all">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/show_all"
+            android:checked="true"
+            android:title="Show all files"
+            app:showAsAction="never"
+            />
         <item
             android:id="@+id/show_visible"
-            android:checked="true"
             android:title="Show visible files"
             app:showAsAction="never"
             />
         <item
             android:id="@+id/show_invisible"
-            android:checked="true"
             android:title="Show invisible files"
             app:showAsAction="never"
             />

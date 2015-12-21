@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 
 /**
@@ -103,7 +105,8 @@ public final class ListHolder extends RecyclerView.ViewHolder implements View.On
             throw new IllegalArgumentException("More button invalid adapter type");
 
         final RecyclerView recyclerView = new RecyclerView(context);
-        recyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
+        recyclerView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
+        recyclerView.setLayoutManager(new GridLayoutManager(context, 2));
         recyclerView.setAdapter(newAdapter);
 
         (dialog = new AlertDialog.Builder(context)

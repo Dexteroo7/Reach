@@ -6,6 +6,9 @@
     <string name="title_activity_chat">ChatActivity</string>
     <string name="title_activity_player">PlayerActivity</string>
     <string name="title_activity_edit_profile">EditProfileActivity</string>
+    <string name="title_activity_settings">SettingsActivity</string>
     <string name="title_activity_your_profile">YourProfileActivity</string>
+    <string name="title_activity_invite">InviteActivity</string>
+    <string name="title_activity_profile">ProfileActivity</string>
 
 </resources>

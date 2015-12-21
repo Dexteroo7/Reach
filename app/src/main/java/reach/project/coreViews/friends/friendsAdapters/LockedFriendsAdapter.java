@@ -14,7 +14,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 18/11/15.
  */
-final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> {
+final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHolder> {
 
     public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
@@ -26,7 +26,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(FriendsViewHolder friendsViewHolder, Cursor cursor) {
+    public void onBindViewHolder(LockedFriendsViewHolder friendsViewHolder, Cursor cursor) {
 
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(6) + "");
@@ -36,7 +36,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> {
     }
 
     @Override
-    public FriendsViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new FriendsViewHolder(itemView, handOverMessage);
+    public LockedFriendsViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+        return new LockedFriendsViewHolder(itemView, handOverMessage);
     }
 }

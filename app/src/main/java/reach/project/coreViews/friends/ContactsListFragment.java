@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -39,7 +40,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.coreViews.SettingsActivity;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
+import reach.project.coreViews.yourProfile.ProfileActivity;
+import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
@@ -183,6 +187,13 @@ public class ContactsListFragment extends Fragment implements
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.myreach_menu);
         final Menu menu = mToolbar.getMenu();
+        mToolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.settings_button) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return false;
+        });
 
         final MenuItem notificationButton = menu.findItem(R.id.notif_button);
         if (notificationButton != null) {
@@ -343,10 +354,16 @@ public class ContactsListFragment extends Fragment implements
             if (clickData.networkType == 5)
                 Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
             MiscUtils.useFragment(reference, fragment -> {
-                fragment.mListener.onOpenLibrary(clickData.friendId);
+
+                YourProfileActivity.openProfile(clickData.friendId, getActivity());
             });
 
-        } else if (clickData.status >= 2) {
+        } else {
+
+            ProfileActivity.openProfile(clickData.friendId, getActivity());
+
+        }
+        /*else if (clickData.status == 3) {
 
             final AlertDialog alertDialog = new AlertDialog.Builder(rootView.getContext())
                     .setMessage("Send a friend request to " + clickData.userName + " ?")
@@ -360,7 +377,7 @@ public class ContactsListFragment extends Fragment implements
                     new Object[]{clickData.friendId, clickData.status, new WeakReference<>(rootView)}
             ));
             alertDialog.show();
-        }
+        }*/
     }
 
     private enum LocalUtils {

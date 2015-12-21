@@ -1,6 +1,7 @@
 package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.invite.InviteActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -122,12 +124,10 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             case VIEW_TYPE_INVITE:
                 return new SingleItemViewHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.myreach_invite, parent, false), new HandOverMessage<Integer>() {
-                    @Override
-                    public void handOverMessage(@Nonnull Integer position) {
-
-                    }
-                });
+                        .inflate(R.layout.myreach_invite, parent, false), position -> {
+                            parent.getContext().startActivity(new Intent(parent.getContext(),
+                                    InviteActivity.class));
+                        });
 
             default:return null;
         }
@@ -183,22 +183,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             viewHolder.lockIcon.setVisibility(View.GONE);
 
             switch (status) {
-
-                case ReachFriendsHelper.OFFLINE_REQUEST_GRANTED:
-                    //viewHolder.listToggle.setImageResource(R.drawable.icon_user_offline);
-                    //viewHolder.listStatus.setText("Offline");
-                    break;
-                case ReachFriendsHelper.ONLINE_REQUEST_GRANTED:
-                    //viewHolder.listToggle.setImageResource(R.drawable.icon_user_online);
-                    //viewHolder.listStatus.setText("Online");
-                    //viewHolder.note.setImageResource(R.drawable.ic_music_count);
-                    //viewHolder.userNameList.setTextColor(color);
-                    //viewHolder.telephoneNumberList.setTextColor(color);
-                    //viewHolder.profilePhoto.setBackgroundResource(R.drawable.circular_background_pink);
-                    break;
                 case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
+                    viewHolder.lockIcon.setImageResource(R.drawable.icon_pending_invite);
                     viewHolder.lockIcon.setVisibility(View.VISIBLE);
-                    //viewHolder.listToggle.setImageResource(R.drawable.ic_pending_lock);
                     //viewHolder.listStatus.setText("Pending");
                     break;
                 case ReachFriendsHelper.REQUEST_NOT_SENT:

@@ -110,7 +110,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else {
 
             final ListHolder horizontalViewHolder = (ListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            holder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             horizontalViewHolder.headerText.setText("Recently Installed");
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomGridLayoutManager(holder.itemView.getContext(), 2));
