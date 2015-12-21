@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="reach.project">
+    package="reach.project" >
 
     <permission
         android:name="reach.project.permission.C2D_MESSAGE"
@@ -16,7 +16,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.GET_TASKS" />
-
     <uses-permission
         android:name="android.permission.RECEIVE_SMS"
         android:required="false" />
@@ -29,7 +28,7 @@
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -39,17 +38,18 @@
             android:label="@string/app_name"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="process_multiple" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
             android:name=".core.GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND">
+            android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
@@ -58,7 +58,7 @@
             </intent-filter>
         </receiver>
         <receiver android:name=".pacemaker.HeartbeatReceiver" />
-        <receiver android:name=".core.UpdateReceiver">
+        <receiver android:name=".core.UpdateReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -73,7 +73,6 @@
         <service
             android:name=".utils.MetaDataScanner"
             android:exported="false" />
-
         <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
@@ -96,7 +95,7 @@
 
         <receiver
             android:name=".core.ReachActivity$PlayerUpdateListener"
-            android:exported="false">
+            android:exported="false" >
             <intent-filter>
                 <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_PRIMARY_PROGRESS" />
                 <action android:name="reach.project.reachProcess.reachService.ProcessManager.REPLY_SECONDARY_PROGRESS" />
@@ -117,7 +116,7 @@
             android:launchMode="singleTop"
             android:parentActivityName=".core.ReachActivity"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />

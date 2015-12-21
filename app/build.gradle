@@ -13,13 +13,13 @@ android {
         versionCode 75
         versionName "0.9.22-beta"
 
-        //multiDexEnabled true
+        multiDexEnabled true
     }
 
     buildTypes {
         release {
             shrinkResources true
-            minifyEnabled true
+            //minifyEnabled true
             proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
         }
     }
@@ -57,7 +57,7 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:percent:23.1.1'
 
-    //compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support:multidex:1.0.1'
 
     // non-google stuff
     compile 'com.squareup.picasso:picasso:2.5.2'

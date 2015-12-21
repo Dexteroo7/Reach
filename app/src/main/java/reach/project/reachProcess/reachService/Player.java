@@ -21,6 +21,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.lang.Object;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.CancellationException;
@@ -135,6 +139,8 @@ public class Player {
 
         if (whichPlayer == WhichPlayer.MediaPlayer)
             return mediaPlayer.getCurrentPosition() / 1000;
+        else if(whichPlayer==WhichPlayer.Exoplayer)
+            return (int)exoplayer.getCurrentPosition()/1000;
         else
             return (audioTrack.getPlaybackHeadPosition() / audioTrack.getSampleRate());
     }
@@ -155,7 +161,13 @@ public class Player {
     public void start() {
 
         if (whichPlayer == WhichPlayer.MediaPlayer)
+        {
             mediaPlayer.start();
+        }
+        else if(whichPlayer==WhichPlayer.Exoplayer)
+        {
+            exoplayer.setPlayWhenReady(true);
+        }
         else {
             audioTrack.play();
             pauseDecoding.set(false);
@@ -256,21 +268,34 @@ public class Player {
     protected int createMediaPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
                                             MediaPlayer.OnErrorListener onErrorListener,
                                             String path) throws IOException, InterruptedException {
+        Log.i("create","lala");
         reset(); //throws InterruptedException
-        if(Build.VERSION.SDK_INT>=16)
+        if(Build.VERSION.SDK_INT>=116)
         {
             whichPlayer=WhichPlayer.Exoplayer;
+            //Log.d("Exoplayer instantite","true");
             if(exoplayer==null)
             {
                 exoplayer=ExoPlayer.Factory.newInstance(1);
             }
-            SampleSource sampleSource=new FrameworkSampleSource(handlerInterface.getContext(),Uri.parse(path),null);
-            TrackRenderer audio=new MediaCodecAudioTrackRenderer(sampleSource,null,true);
-            exoplayer.prepare(audio);
+            try
+            {
+                File file=new File(path);
+                FileInputStream inputStream=new FileInputStream(file);
+                FileDescriptor fd=inputStream.getFD();
+                SampleSource sampleSource=new FrameworkSampleSource(fd,0,file.length());
+                TrackRenderer audio=new MediaCodecAudioTrackRenderer(sampleSource,null,true);
+                exoplayer.prepare(audio);
+            }
+            catch(Exception e)
+            {
+                Log.e("Player","exception",e);
+            }
             return (int)exoplayer.getDuration();
         }
         else
         {
+            Log.i("Mediaplayer", "hogaya");
             whichPlayer = WhichPlayer.MediaPlayer;
             if (mediaPlayer == null)
             {

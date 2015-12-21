@@ -1027,6 +1027,7 @@ public class ReachActivity extends AppCompatActivity implements
         selectionArgumentsMyLibrary = new String[]{serverId + ""};
 
         //accountCreation ? numberVerification ? contactListFragment ? and other stuff
+        Log.i("fragmenthoo","loaded");
         loadFragment();
     }
 
