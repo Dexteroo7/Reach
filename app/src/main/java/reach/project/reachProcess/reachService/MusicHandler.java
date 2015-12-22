@@ -191,7 +191,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             if(currentSong.getProcessed() < currentSong.getLength())
             {
                 if(Build.VERSION.SDK_INT>=16)
-                    duration=player.createStreamingExoPlayerIfNeeded(Optional.fromNullable(currentSong.getPath()));
+                    duration=player.createStreamingExoPlayerIfNeeded(Optional.fromNullable(currentSong.getPath()),currentSong.getLength());
                 else
                     duration=player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength());
             }

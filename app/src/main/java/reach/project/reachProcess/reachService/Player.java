@@ -227,8 +227,13 @@ public class Player {
         Log.i("Downloader", "Seeking to " + i);
         if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
             mediaPlayer.seekTo(i);
-        else if(whichPlayer==WhichPlayer.Exoplayer && exoplayer!=null)
-            exoplayer.seekTo(i);
+        else if(whichPlayer==WhichPlayer.Exoplayer && exoplayer!=null) {
+            int buffered=exoplayer.getBufferedPercentage();
+            if(i<buffered)
+                exoplayer.seekTo(i);
+            else
+                exoplayer.seekTo(exoplayer.getBufferedPosition());
+        }
         else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
     }
 
@@ -334,7 +339,7 @@ public class Player {
         return exoplayer.getDuration();
     }
 
-    protected long createStreamingExoPlayerIfNeeded(Optional<String> path) throws IOException, InterruptedException
+    protected long createStreamingExoPlayerIfNeeded(Optional<String> path,final long contentLength) throws IOException, InterruptedException
     {
         reset();
         whichPlayer=WhichPlayer.Exoplayer;
@@ -346,11 +351,13 @@ public class Player {
         {
             exoplayer=ProcessManager.exoplayer;
         }
+        //create source
+        playerSource = new PlayerSource(
+                handlerInterface,
+                path.get(),
+                contentLength);
 
         String pa=path.get();
-        File file = new File(pa);
-        FileInputStream inputStream = new FileInputStream(file);
-        FileDescriptor fd = inputStream.getFD();
         SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
         audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
         exoplayer.prepare(audio);
