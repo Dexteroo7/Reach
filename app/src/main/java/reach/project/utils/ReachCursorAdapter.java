@@ -63,10 +63,9 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
             cursor.close();
         cursor = newCursor;
 
-        if (cursor != null) {
-            Log.i("Ayush", "Notifying data set changed");
+        if (cursor != null)
             notifyDataSetChanged();
-        } else
+        else
             notifyItemRangeRemoved(0, oldCount);
     }
 

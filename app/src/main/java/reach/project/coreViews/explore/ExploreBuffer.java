@@ -128,27 +128,33 @@ class ExploreBuffer<T> implements Closeable {
     }
 
     //runnable to fetch stories
-    private static class FetchNextBatch<T> extends AsyncTask<Callable, Void, Optional<Exploration>> {
+    private static class FetchNextBatch<T> extends AsyncTask<Callable, Void, Collection<T>> {
 
         @Override
-        protected final Optional<Exploration> doInBackground(Callable... params) {
+        protected final Collection<T> doInBackground(Callable... params) {
 
             Log.i("Ayush", "Fetching next batch of stories");
 
             if (params == null || params.length == 0)
-                return Optional.absent();
+                return Collections.emptyList();
 
             //cast to exact type
             final Callable<Collection<T>> exactType = params[0];
-            final Collection<T> stories = MiscUtils.autoRetry(exactType::call, Optional.absent()).or(Collections.emptyList());
+            return MiscUtils.autoRetry(exactType::call, Optional.absent()).or(Collections.emptyList());
+        }
+
+        @Override
+        protected final void onPostExecute(Collection<T> stories) {
+
+            super.onPostExecute(stories);
 
             if (stories == null || stories.isEmpty())
-                return Optional.absent();
+                return;
 
             final ExploreBuffer<T> buffer;
             //noinspection unchecked
             if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)
-                return Optional.absent(); //buffer destroyed
+                return; //buffer destroyed
 
             //handle done for today response
             for (T item : stories)
@@ -182,15 +188,9 @@ class ExploreBuffer<T> implements Closeable {
                 buffer.storyBuffer.addAll(insertFrom, stories); //make the insertion
             }
 
-            return Optional.of(buffer.exploration);
-        }
+            Log.i("Ayush", "Stories inserted and trying to notify");
 
-        @Override
-        protected final void onPostExecute(Optional<Exploration> optional) {
-
-            super.onPostExecute(optional);
-            if (optional.isPresent())
-                optional.get().notifyDataAvailable();
+            buffer.exploration.notifyDataAvailable();
         }
     }
 

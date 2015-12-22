@@ -46,9 +46,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.File;
@@ -1506,13 +1507,8 @@ public enum MiscUtils {
 
     }
 
-    public static <T> T get(JSONObject jsonObject, GetName getName) {
-
-        try {
-            //noinspection unchecked
-            return (T) jsonObject.get(getName.getName());
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+    public static JsonElement get(JsonObject jsonObject, GetName getName) {
+        //noinspection unchecked
+        return jsonObject.get(getName.getName());
     }
 }

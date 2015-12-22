@@ -1,33 +1,33 @@
 package reach.project.coreViews.explore;
 
 import reach.project.R;
+import reach.project.utils.GetName;
 
 /**
  * Created by dexter on 15/10/15.
  */
-enum ExploreTypes {
+enum ExploreTypes implements GetName {
 
-    MUSIC("Song", R.layout.explore_music),
-    APP("App", android.R.layout.simple_list_item_1),
+    MUSIC(R.layout.explore_music),
+    APP(android.R.layout.simple_list_item_1),
 
-    MISC("Misc", R.layout.explore_music),
+    MISC(R.layout.explore_music),
 
-    LOADING("Loading", R.layout.explore_loading),
-    DONE_FOR_TODAY("Done for today", android.R.layout.simple_list_item_1);
+    LOADING(R.layout.explore_loading),
+    DONE_FOR_TODAY(android.R.layout.simple_list_item_1);
 
-    private final String title;
     private final int layoutResId;
 
-    ExploreTypes(String title, int layoutResId) {
-        this.title = title;
+    ExploreTypes(int layoutResId) {
         this.layoutResId = layoutResId;
-    }
-
-    public String getTitle() {
-        return title;
     }
 
     public int getLayoutResId() {
         return layoutResId;
+    }
+
+    @Override
+    public String getName() {
+        return name();
     }
 }

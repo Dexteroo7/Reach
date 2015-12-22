@@ -19,20 +19,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -56,7 +54,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
  * create an instance of this fragment.
  */
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
-        ExploreBuffer.Exploration<JSONObject>, HandOverMessage<Integer> {
+        ExploreBuffer.Exploration<JsonObject>, HandOverMessage<Integer> {
 
     private static final Random random = new Random();
 
@@ -81,8 +79,27 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return fragment;
     }
 
-    private final ExploreBuffer<JSONObject> buffer = ExploreBuffer.getInstance(this);
+    private final ExploreBuffer<JsonObject> buffer = ExploreBuffer.getInstance(this);
     private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
+
+    private final ViewPager.PageTransformer transformer = (page, position) -> {
+
+        if (position <= 1) {
+
+            // Modify the default slide transition to shrink the page as well
+            final float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
+            final float vertMargin = page.getHeight() * (1 - scaleFactor) / 2;
+            final float horzMargin = page.getWidth() * (1 - scaleFactor) / 2;
+            if (position < 0)
+                page.setTranslationX(horzMargin - vertMargin / 2);
+            else
+                page.setTranslationX(-horzMargin + vertMargin / 2);
+
+            // Scale the page down (between MIN_SCALE and 1)
+            page.setScaleX(scaleFactor);
+            page.setScaleY(scaleFactor);
+        }
+    };
 
     @Nullable
     private View rootView = null;
@@ -126,24 +143,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager.setAdapter(exploreAdapter);
         explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
-        explorePager.setPageTransformer(true, (view, position) -> {
-
-            if (position <= 1) {
-
-                // Modify the default slide transition to shrink the page as well
-                final float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
-                final float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
-                final float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
-                if (position < 0)
-                    view.setTranslationX(horzMargin - vertMargin / 2);
-                else
-                    view.setTranslationX(-horzMargin + vertMargin / 2);
-
-                // Scale the page down (between MIN_SCALE and 1)
-                view.setScaleX(scaleFactor);
-                view.setScaleY(scaleFactor);
-            }
-        });
+        explorePager.setPageTransformer(true, transformer);
 
         return rootView;
     }
@@ -156,54 +156,34 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
-    public synchronized Callable<Collection<JSONObject>> fetchNextBatch() {
+    public synchronized Callable<Collection<JsonObject>> fetchNextBatch() {
 //        Toast.makeText(activity, "Server Fetching next batch of 10", Toast.LENGTH_SHORT).show();
         return fetchNextBatch;
     }
 
     @Override
-    public JSONObject getContainerForIndex(int index) {
+    public JsonObject getContainerForIndex(int index) {
 
         //return data
         return buffer.getViewItem(index);
     }
 
     @Override
-    public boolean isDoneForDay(JSONObject exploreJSON) {
-
-        try {
-            return exploreJSON.getString("type").equals(ExploreTypes.DONE_FOR_TODAY.name());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return false;
+    public boolean isDoneForDay(JsonObject exploreJSON) {
+        return exploreJSON.get("type").getAsString().equals(ExploreTypes.DONE_FOR_TODAY.name());
     }
 
     @Override
-    public boolean isLoading(JSONObject exploreJSON) {
-
-        try {
-            return exploreJSON.getString("type").equals(ExploreTypes.LOADING.name());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return false;
+    public boolean isLoading(JsonObject exploreJSON) {
+        return exploreJSON.get("type").getAsString().equals(ExploreTypes.LOADING.name());
     }
 
     @Override
-    public JSONObject getLoadingResponse() {
+    public JsonObject getLoadingResponse() {
 
-        final JSONObject loading = new JSONObject();
-
-        try {
-            loading.put(ExploreJSON.TYPE.getName(), ExploreTypes.LOADING.name());
-            loading.put(ExploreJSON.ID.getName(), random.nextLong());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
+        final JsonObject loading = new JsonObject();
+        loading.addProperty(ExploreJSON.TYPE.getName(), ExploreTypes.LOADING.getName());
+        loading.addProperty(ExploreJSON.ID.getName(), random.nextLong());
         return loading;
     }
 
@@ -216,17 +196,18 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public synchronized void notifyDataAvailable() {
 
         //This is UI thread !
+        Log.i("Ayush", "Notifying data set changed on explore adapter");
         exploreAdapter.notifyDataSetChanged();
     }
 
     private static short count = 0;
 
-    private static final Callable<Collection<JSONObject>> fetchNextBatch = () -> {
+    private static final Callable<Collection<JsonObject>> fetchNextBatch = () -> {
 
 //        if (count > 8)
 //            return Collections.singletonList(new ExploreContainer(ExploreTypes.DONE_FOR_TODAY, random.nextInt()));
 
-        final JSONObject jsonObject = MiscUtils.useContextFromFragment(reference, context -> {
+        final JsonObject jsonObject = MiscUtils.useContextFromFragment(reference, context -> {
 
             //retrieve list of online friends
             final Cursor cursor = context.getContentResolver().query(
@@ -243,8 +224,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             if (cursor == null)
                 return null;
 
-            final JSONArray jsonArray = new JSONArray();
-            jsonArray.put(StaticData.devika);
+            final JsonArray jsonArray = new JsonArray();
+            jsonArray.add(StaticData.devika);
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
             while (cursor.moveToNext()) {
@@ -252,19 +233,19 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 final long onlineId = cursor.getLong(0);
                 final String userName = cursor.getString(1);
                 Log.i("Ayush", "Adding online friend id " + onlineId);
-                jsonArray.put(onlineId);
+                jsonArray.add(onlineId);
                 userNameSparseArray.append(onlineId, userName); //save userName
             }
             cursor.close();
 
-            final Map<String, Object> requestMap = MiscUtils.getMap(3);
-            requestMap.put("userId", myServerId);
-            requestMap.put("friends", jsonArray);
-            requestMap.put("lastRequestTime", SharedPrefUtils.getLastRequestTime(preferences));
+            final JsonObject toReturn = new JsonObject();
+            toReturn.addProperty("userId", myServerId);
+            toReturn.add("friends", jsonArray);
+//            requestMap.put("lastRequestTime", SharedPrefUtils.getLastRequestTime(preferences));
 
-            return new JSONObject(requestMap);
+            return toReturn;
 
-        }).or(new JSONObject());
+        }).or(new JsonObject());
 
         Log.i("Ayush", jsonObject.toString());
 
@@ -275,11 +256,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 .post(body)
                 .build();
         final Response response = ReachApplication.okHttpClient.newCall(request).execute();
-        final JSONArray receivedData = new JSONArray(response.body().string());
+        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
 
-        final List<JSONObject> containers = new ArrayList<>();
-        for (int index = 0; index < receivedData.length(); index++)
-            containers.add(receivedData.getJSONObject(index));
+        final List<JsonObject> containers = new ArrayList<>();
+        for (int index = 0; index < receivedData.size(); index++)
+            containers.add(receivedData.get(index).getAsJsonObject());
 
         count += containers.size();
 
@@ -297,26 +278,16 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void handOverMessage(@Nonnull Integer position) {
 
         //retrieve full json
-        final JSONObject exploreJson = buffer.getViewItem(position);
+        final JsonObject exploreJson = buffer.getViewItem(position);
 
         if (exploreJson == null)
             return;
 
-        final String type;
-        try {
-            type = exploreJson.getString("type");
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return;
-        }
+        final String type = exploreJson.get(ExploreJSON.TYPE.getName()).getAsString();
 
         if (type.equals(ExploreTypes.MUSIC.name())) {
 
-            try {
-                addToDownload(exploreJson);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            addToDownload(exploreJson);
 
         } else if (type.equals(ExploreTypes.APP.name())) {
 
@@ -327,16 +298,16 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         }
     }
 
-    public void addToDownload(JSONObject exploreJSON) throws JSONException {
+    public void addToDownload(JsonObject exploreJSON) {
 
         final Activity activity = getActivity();
         final ContentResolver contentResolver = activity.getContentResolver();
 
         //extract meta info to process current click request
-        final JSONObject metaInfo = exploreJSON.getJSONObject(ExploreJSON.META_INFO.getName());
+        final JsonObject metaInfo = exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
 
         //get user name and imageId
-        final long senderId = MiscUtils.get(metaInfo, MusicMetaInfo.SENDER_ID);
+        final long senderId = MiscUtils.get(metaInfo, MusicMetaInfo.SENDER_ID).getAsLong();
         final String userName;
 
         Cursor cursor = contentResolver.query(
@@ -360,7 +331,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         final ReachDatabase reachDatabase = new ReachDatabase();
 
         reachDatabase.setId(-1);
-        reachDatabase.setSongId(MiscUtils.get(metaInfo, MusicMetaInfo.SONG_ID));
+        reachDatabase.setSongId(MiscUtils.get(metaInfo, MusicMetaInfo.SONG_ID).getAsLong());
         reachDatabase.setReceiverId(myServerId);
         reachDatabase.setSenderId(senderId);
 
@@ -369,23 +340,23 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setSenderName(userName);
         reachDatabase.setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "");
 
-        reachDatabase.setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST));
+        reachDatabase.setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST).getAsString());
         reachDatabase.setIsLiked(false);
-        reachDatabase.setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME));
-        reachDatabase.setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME));
-        reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE));
+        reachDatabase.setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString());
+        reachDatabase.setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME).getAsString());
+        reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
         reachDatabase.setUniqueId(random.nextInt(Integer.MAX_VALUE));
 
-        reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION));
+        reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
         reachDatabase.setLogicalClock((short) 0);
         reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
 
-        reachDatabase.setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM));
+        reachDatabase.setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM).getAsString());
         reachDatabase.setGenre("hello_world");
 
         reachDatabase.setVisibility((short) 1);
