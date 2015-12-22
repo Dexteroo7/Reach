@@ -1,11 +1,6 @@
 package reach.project.reachProcess.reachService;
 
 import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.exoplayer.FrameworkSampleSource;
-import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
-import com.google.android.exoplayer.SampleSource;
-import com.google.android.exoplayer.TrackRenderer;
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -26,7 +21,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -83,7 +77,7 @@ public class ProcessManager extends Service implements
     }
 
 
-    public static final ExoPlayer exoplayer= ExoPlayer.Factory.newInstance(1);
+    public static ExoPlayer exoplayer;
     //////////////////////////////////
     private NotificationState notificationState = NotificationState.Dead;
     //////////////////////////////////
@@ -694,6 +688,7 @@ public class ProcessManager extends Service implements
 
     @Override
     public void onCreate() {
+
         super.onCreate();
         serverId = SharedPrefUtils.getServerId(getSharedPreferences());
         userName = SharedPrefUtils.getUserName(getSharedPreferences());
@@ -704,6 +699,7 @@ public class ProcessManager extends Service implements
         // Remember that to use this, we have to declare the android.permission.WAKE_LOCK
         // permission in AndroidManifest.xml.
         reference = new WeakReference<>(this);
+        exoplayer= ExoPlayer.Factory.newInstance(1);
     }
 
     @Override

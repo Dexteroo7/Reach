@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.common.base.Optional;
@@ -184,12 +185,28 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         final short toReturn;
         final long duration;
 
-        try {
-            Log.e("musichandler","try");
-            duration = (currentSong.getProcessed() < currentSong.getLength()) ?
-                    player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength()) :
-                    player.createMediaPlayerIfNeeded(this, this, currentSong.getPath());
-        } catch (IOException e) {
+        try
+        {
+            Log.e("musichandler", "try");
+            if(currentSong.getProcessed() < currentSong.getLength())
+            {
+                if(Build.VERSION.SDK_INT>=16)
+                    duration=player.createStreamingExoPlayerIfNeeded(Optional.fromNullable(currentSong.getPath()));
+                else
+                    duration=player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength());
+            }
+            else if(Build.VERSION.SDK_INT>=16)
+            {
+                duration=player.createExoPlayerIfNeeded(this, this, currentSong.getPath());
+            }
+            else
+            {
+                duration=player.createMediaPlayerIfNeeded(this, this, currentSong.getPath());
+            }
+
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
             Log.i("Downloader", currentSong.getPath() + " could not be prepared");
             final File check = new File(currentSong.getPath());

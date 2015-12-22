@@ -16,6 +16,7 @@ import com.google.android.exoplayer.FrameworkSampleSource;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.SampleSource;
 import com.google.android.exoplayer.TrackRenderer;
+import com.google.android.exoplayer.util.PlayerControl;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -23,7 +24,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.lang.Object;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.CancellationException;
@@ -71,6 +72,7 @@ public class Player {
 
     private final AtomicBoolean stopDecoding = new AtomicBoolean(true), pauseDecoding = new AtomicBoolean(false);
     private final DecoderHandler handlerInterface;
+    private TrackRenderer audio;
 
     private WhichPlayer whichPlayer = WhichPlayer.MediaPlayer;
     private AudioTrack audioTrack;
@@ -85,16 +87,24 @@ public class Player {
         this.handlerInterface = handlerInterface;
     }
 
-    public boolean isNull() {
-        return (mediaPlayer == null && audioTrack == null) || whichPlayer == null;
+    public boolean isNull()
+    {
+        return (mediaPlayer == null && exoplayer==null && audioTrack == null) || whichPlayer == null;
     }
 
-    public boolean isPlaying() {
+    public boolean isPlaying()
+    {
+        try
+        {
+            PlayerControl pl=new PlayerControl(exoplayer);
+            boolean IS_PLAYING_EXOPLAYER=(exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer && pl.isPlaying());
+            boolean IS_PLAYING_MEDIA_PLAYER=(mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer.isPlaying());
+            boolean IS_PLAYING_AUDIO_TRACK=(whichPlayer == WhichPlayer.AudioTrack && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING);
+            return IS_PLAYING_AUDIO_TRACK || IS_PLAYING_EXOPLAYER || IS_PLAYING_MEDIA_PLAYER;
+        }
+        catch (IllegalStateException ignored)
+        {
 
-        try {
-            return (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) ||
-                    (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer.isPlaying());
-        } catch (IllegalStateException ignored) {
         }
 
         return false;
@@ -109,7 +119,8 @@ public class Player {
 //        Log.i("Downloader", "Cancelling decoder");
         if (decodeFuture != null) {
             decodeFuture.cancel(true);
-            try {
+            try
+            {
                 decodeFuture.get();
             } catch (ExecutionException | CancellationException ignored) {
             }
@@ -141,7 +152,7 @@ public class Player {
         if (whichPlayer == WhichPlayer.MediaPlayer)
             return mediaPlayer.getCurrentPosition() / 1000;
         else if(whichPlayer==WhichPlayer.Exoplayer)
-            return (int)exoplayer.getCurrentPosition()/1000;
+            return (int)(exoplayer.getCurrentPosition()/1000);
         else
             return (audioTrack.getPlaybackHeadPosition() / audioTrack.getSampleRate());
     }
@@ -149,36 +160,48 @@ public class Player {
     /**
      * Pauses which ever player is running, no checks, much lazy
      */
-    public void pause() {
+    public void pause()
+    {
+        if(exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer)
+        {
+            exoplayer.setPlayWhenReady(false);
+        }
 
-        if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack) {
+        if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack)
+        {
             audioTrack.pause();
             pauseDecoding.set(true);
         }
         if (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer)
+        {
             mediaPlayer.pause();
-        if(exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer)
-            exoplayer.setPlayWhenReady(false);
+        }
+
+
     }
 
-    public void start() {
+    public void start()
+    {
 
         if (whichPlayer == WhichPlayer.MediaPlayer)
         {
-            Log.i("info","mediahoho");
             mediaPlayer.start();
         }
         else if(whichPlayer==WhichPlayer.Exoplayer)
         {
             exoplayer.setPlayWhenReady(true);
         }
-        else {
+        else
+        {
             audioTrack.play();
             pauseDecoding.set(false);
         }
     }
 
-    public void setVolume(float duck_volume) {
+    public void setVolume(float duck_volume)
+    {
+        if(exoplayer!=null)
+            exoplayer.sendMessage(audio,MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,duck_volume);
         if (mediaPlayer != null)
             mediaPlayer.setVolume(duck_volume, duck_volume);
         if (audioTrack == null)
@@ -266,6 +289,9 @@ public class Player {
         if (mediaPlayer != null)
             mediaPlayer.release();
 
+        if(exoplayer!=null)
+            exoplayer.seekTo(0);
+
 //        Log.i("Downloader", "shutting down decoder service");
         decoderService.shutdownNow();
         Log.i("Downloader", "decoder service shutdown !");
@@ -274,51 +300,64 @@ public class Player {
     protected int createMediaPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
                                             MediaPlayer.OnErrorListener onErrorListener,
                                             String path) throws IOException, InterruptedException {
-        //Log.e("create", "lala");
         reset(); //throws InterruptedException
-        if(Build.VERSION.SDK_INT>=16)
+        whichPlayer = WhichPlayer.MediaPlayer;
+        if (mediaPlayer == null)
         {
-            whichPlayer=WhichPlayer.Exoplayer;
-
-            {
-
-                Log.d("Exoplayer instantite", "true");
-
-                if (exoplayer == null)
-                {
-                    Log.d("Exoplayernull", "donehaha");
-                    exoplayer = ProcessManager.exoplayer;
-                }
-
-                {
-                    File file = new File(path);
-                    FileInputStream inputStream = new FileInputStream(file);
-                    FileDescriptor fd = inputStream.getFD();
-                    SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
-                    TrackRenderer audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-                    exoplayer.prepare(audio);
-                }
-
-
-            }
-
-            return (int) exoplayer.getDuration();
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mediaPlayer.setOnCompletionListener(completionListener);
+            mediaPlayer.setOnErrorListener(onErrorListener);
         }
-        else
+        mediaPlayer.setDataSource(path);
+        mediaPlayer.prepare();
+        return mediaPlayer.getDuration();
+
+    }
+    protected long createExoPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
+                                            MediaPlayer.OnErrorListener onErrorListener,
+                                            String path) throws IOException, InterruptedException {
+        reset(); //throws InterruptedException
+
+        whichPlayer=WhichPlayer.Exoplayer;
+        if (exoplayer == null)
         {
-            Log.i("Mediaplayer", "hogaya");
-            whichPlayer = WhichPlayer.MediaPlayer;
-            if (mediaPlayer == null)
-            {
-                mediaPlayer = new MediaPlayer();
-                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mediaPlayer.setOnCompletionListener(completionListener);
-                mediaPlayer.setOnErrorListener(onErrorListener);
-            }
-            mediaPlayer.setDataSource(path);
-            mediaPlayer.prepare();
-            return mediaPlayer.getDuration();
+            exoplayer=ProcessManager.exoplayer;
         }
+        File file = new File(path);
+        FileInputStream inputStream = new FileInputStream(file);
+        FileDescriptor fd = inputStream.getFD();
+        SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
+        audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+        exoplayer.prepare(audio);
+        exoplayer.seekTo(0);
+        return exoplayer.getDuration();
+    }
+
+    protected long createStreamingExoPlayerIfNeeded(Optional<String> path) throws IOException, InterruptedException
+    {
+        reset();
+        whichPlayer=WhichPlayer.Exoplayer;
+
+        if (!path.isPresent() || TextUtils.isEmpty(path.get()) || path.get().equals("hello_world"))
+            throw new IOException("Given path is invalid");
+
+        if(exoplayer == null)
+        {
+            exoplayer=ProcessManager.exoplayer;
+        }
+
+        String pa=path.get();
+        File file = new File(pa);
+        FileInputStream inputStream = new FileInputStream(file);
+        FileDescriptor fd = inputStream.getFD();
+        SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
+        audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+        exoplayer.prepare(audio);
+        exoplayer.seekTo(0);
+        Log.i("Exoplayer bufffer","Done");
+        return exoplayer.getDuration();
+
     }
 
     protected long createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
@@ -491,10 +530,14 @@ public class Player {
                 }
             }
 
-            try {
+            try
+            {
                 bitStream.close();
-            } catch (BitStreamException ignored) {
-            } finally {
+            }
+            catch (BitStreamException ignored) {
+            }
+            finally
+            {
                 playerSource.close();
                 pipeFuture.cancel(true);
             }
