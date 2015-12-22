@@ -134,10 +134,8 @@ public class ContactsListFragment extends Fragment implements
 
         getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
         getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
-        if (friendsAdapter != null) {
-            friendsAdapter.setHorizontalCursor(null);
-            friendsAdapter.setVerticalCursor(null);
-        }
+        friendsAdapter.setHorizontalCursor(null);
+        friendsAdapter.setVerticalCursor(null);
 
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();

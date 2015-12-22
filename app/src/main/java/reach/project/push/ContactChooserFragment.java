@@ -16,10 +16,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.lang.ref.WeakReference;
+import java.util.Iterator;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -34,6 +36,7 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
     private ContactChooserInterface chooserInterface = null;
     @Nullable
     private static WeakReference<ContactChooserFragment> reference;
+
     public static ContactChooserFragment getInstance() {
 
         ContactChooserFragment fragment;
@@ -41,14 +44,25 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
             Log.i("Ayush", "Creating new instance of contacts list fragment");
             reference = new WeakReference<>(fragment = new ContactChooserFragment());
         } else
-            Log.i("Ayush", "Reusing contacts list fragment object :)");
+            Log.i("Ayush", "Reusing ContactChooserFragment fragment object :)");
 
         return fragment;
     }
 
     private final ContactChooserAdapter contactChooserAdapter = new ContactChooserAdapter(this, R.layout.myreach_item);
+    private final View.OnClickListener clickListener = v -> {
 
-    @Override
+        final long [] serverIds = new long[contactChooserAdapter.selectedUsers.size()];
+        final Iterator<Long> longIterator = contactChooserAdapter.selectedUsers.iterator();
+
+        int index = 0;
+        while (longIterator.hasNext())
+            serverIds[index++] = longIterator.next();
+
+        if (chooserInterface != null)
+            chooserInterface.switchToMessageWriter(serverIds);
+    };
+
     public void handOverMessage(@Nonnull Cursor message) {
 
         final long userId = message.getLong(0);
@@ -72,14 +86,25 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_contact_chooser, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View proceed = rootView.findViewById(R.id.proceed);
         final Activity activity = getActivity();
 
+        proceed.setOnClickListener(clickListener);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(contactChooserAdapter);
 
+        getLoaderManager().initLoader(StaticData.CONTACTS_CHOOSER_LOADER, null, this);
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+
+        super.onDestroyView();
+        contactChooserAdapter.setCursor(null);
+        getLoaderManager().destroyLoader(StaticData.CONTACTS_CHOOSER_LOADER);
     }
 
     @Override
@@ -102,21 +127,27 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(getActivity(),
-                ReachFriendsProvider.CONTENT_URI,
-                contactChooserAdapter.requiredProjection,
-                ReachFriendsHelper.COLUMN_STATUS + " < ?",
-                new String[]{ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED+""},
-                ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+
+        if (id == StaticData.CONTACTS_CHOOSER_LOADER)
+            return new CursorLoader(getActivity(),
+                    ReachFriendsProvider.CONTENT_URI,
+                    contactChooserAdapter.requiredProjection,
+                    ReachFriendsHelper.COLUMN_STATUS + " < ?",
+                    new String[]{ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""}, null);
+        return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
+        if (loader.getId() == StaticData.CONTACTS_CHOOSER_LOADER && data != null && !data.isClosed())
+            contactChooserAdapter.setCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+        if (loader.getId() == StaticData.CONTACTS_CHOOSER_LOADER)
+            contactChooserAdapter.setCursor(null);
     }
 }

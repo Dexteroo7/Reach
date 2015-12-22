@@ -21,9 +21,6 @@ public final class PushContainer extends Message {
   public static final String DEFAULT_USERNAME = "hello_world";
   public static final String DEFAULT_USERIMAGE = "hello_world";
 
-  @ProtoField(tag = 1, type = INT64)
-  public final Long receiverId;
-
   @ProtoField(tag = 2, type = INT64)
   public final Long senderId;
 
@@ -43,7 +40,6 @@ public final class PushContainer extends Message {
   public final String userImage;
 
   public PushContainer(Long receiverId, Long senderId, Integer songCount, List<TransferSong> transferSong, String firstSongName, String userName, String userImage) {
-    this.receiverId = receiverId;
     this.senderId = senderId;
     this.songCount = songCount;
     this.transferSong = immutableCopyOf(transferSong);
@@ -62,8 +58,7 @@ public final class PushContainer extends Message {
     if (other == this) return true;
     if (!(other instanceof PushContainer)) return false;
     PushContainer o = (PushContainer) other;
-    return equals(receiverId, o.receiverId)
-        && equals(senderId, o.senderId)
+    return equals(senderId, o.senderId)
         && equals(songCount, o.songCount)
         && equals(transferSong, o.transferSong)
         && equals(firstSongName, o.firstSongName)
@@ -75,7 +70,7 @@ public final class PushContainer extends Message {
   public int hashCode() {
     int result = hashCode;
     if (result == 0) {
-      result = receiverId != null ? receiverId.hashCode() : 0;
+
       result = result * 37 + (senderId != null ? senderId.hashCode() : 0);
       result = result * 37 + (songCount != null ? songCount.hashCode() : 0);
       result = result * 37 + (transferSong != null ? transferSong.hashCode() : 1);
@@ -103,18 +98,12 @@ public final class PushContainer extends Message {
     public Builder(PushContainer message) {
       super(message);
       if (message == null) return;
-      this.receiverId = message.receiverId;
       this.senderId = message.senderId;
       this.songCount = message.songCount;
       this.transferSong = copyOf(message.transferSong);
       this.firstSongName = message.firstSongName;
       this.userName = message.userName;
       this.userImage = message.userImage;
-    }
-
-    public Builder receiverId(Long receiverId) {
-      this.receiverId = receiverId;
-      return this;
     }
 
     public Builder senderId(Long senderId) {

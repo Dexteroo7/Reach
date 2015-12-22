@@ -311,11 +311,8 @@ public enum MiscUtils {
 
     public static <T> Set<T> getSet(int capacity) {
 
-        if (capacity < 1000) //use lighter collection
-            if (Build.VERSION.SDK_INT >= 23)
-                return new ArraySet<>(capacity);
-            else
-                return new HashSet<>(capacity); //else use the support one
+        if (capacity < 1000 && Build.VERSION.SDK_INT >= 23) //use lighter collection
+            return new ArraySet<>(capacity);
         else
             return new HashSet<>(capacity);
     }

@@ -27,7 +27,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -42,7 +41,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.squareup.wire.Wire;
 
 import org.json.JSONException;
 
@@ -51,7 +50,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -73,9 +71,9 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushFilesFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
-import reach.project.music.PushContainer;
-import reach.project.music.TransferSong;
 import reach.project.pacemaker.Pacemaker;
+import reach.project.push.PushContainer;
+import reach.project.push.TransferSong;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
@@ -567,52 +565,47 @@ public class ReachActivity extends AppCompatActivity implements
             Log.i("Ayush", "FOUND PUSH DATA");
 
             final String compressed = intent.getStringExtra("data");
-            String unCompressed;
+
+            byte [] unCompressed = null;
             try {
-                unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
+                unCompressed = StringCompress.deCompressStringToBytes(compressed);
             } catch (IOException e) {
                 e.printStackTrace();
-                unCompressed = "";
+                unCompressed = null;
             }
 
-            Log.i("Ayush", "UNCOMPRESSED " + unCompressed);
+            if (unCompressed != null && unCompressed.length > 0) {
 
-            if (!TextUtils.isEmpty(unCompressed)) {
+                PushContainer pushContainer = null;
+                try {
+                    pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    pushContainer = null;
+                }
 
-                final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
+                if (pushContainer != null && pushContainer.transferSong != null && !pushContainer.transferSong.isEmpty()) {
 
-                Log.i("Ayush", "FOUND PUSH CONTAINER");
+                    for (TransferSong transferSong : pushContainer.transferSong) {
 
-                if (pushContainer != null && !TextUtils.isEmpty(pushContainer.getSongData())) {
+                        if (transferSong == null)
+                            continue;
 
-                    final HashSet<TransferSong> transferSongs = new Gson().fromJson(
-                            pushContainer.getSongData(),
-                            new TypeToken<HashSet<TransferSong>>() {
-                            }.getType());
-
-                    if (transferSongs != null && !transferSongs.isEmpty()) {
-
-                        for (TransferSong transferSong : transferSongs) {
-
-                            if (transferSong == null)
-                                continue;
-
-                            addSongToQueue(transferSong.getSongId(),
-                                    pushContainer.getSenderId(),
-                                    transferSong.getSize(),
-                                    transferSong.getDisplayName(),
-                                    transferSong.getActualName(),
-                                    true,
-                                    pushContainer.getUserName(),
-                                    ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                                    pushContainer.getNetworkType(),
-                                    transferSong.getArtistName(),
-                                    transferSong.getDuration(),
-                                    transferSong.getAlbumName(),
-                                    transferSong.getGenre());
-                        }
-                        new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
+                        addSongToQueue(transferSong.songId,
+                                pushContainer.senderId,
+                                transferSong.size,
+                                transferSong.displayName,
+                                transferSong.actualName,
+                                true,
+                                pushContainer.userName,
+                                ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                "0",
+                                transferSong.artistName,
+                                transferSong.duration,
+                                transferSong.albumName,
+                                transferSong.genre);
                     }
+                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
                 }
                 ///////////
             }

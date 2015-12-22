@@ -35,7 +35,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_STATUS = "status";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachFriendsHelper";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
@@ -185,6 +185,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(DATABASE_CREATE);
+        db.execSQL("create index value_index on " + FRIENDS_TABLE + " (" + COLUMN_USER_NAME + " COLLATE NOCASE ASC)");
     }
 
     @Override

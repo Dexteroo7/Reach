@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.view.View;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -25,7 +26,7 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
     }
 
     final Set<Long> selectedUsers = MiscUtils.getSet(10);
-    final String [] requiredProjection = new String[]{
+    final String[] requiredProjection = new String[]{
 
             ReachFriendsHelper.COLUMN_ID, //0
             ReachFriendsHelper.COLUMN_USER_NAME, //1
@@ -51,13 +52,21 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
             uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
         holder.profilePhotoList.setImageURI(uriToDisplay);
 
-
         //use this
-        final boolean selected = selectedUsers.contains(userId);
+        if (selectedUsers.contains(userId))
+            holder.profilePhotoList.setAlpha(1.0f);
+        else
+            holder.profilePhotoList.setAlpha(0.5f);
     }
 
+    private final Object [] reUse = new Object[3];
     @Override
     public int getItemId(@Nonnull Cursor cursor) {
-        return 0;
+
+        reUse[0] = cursor.getLong(0);
+        reUse[1] = cursor.getString(1);
+        reUse[2] = cursor.getString(2);
+
+        return Arrays.hashCode(reUse);
     }
 }
