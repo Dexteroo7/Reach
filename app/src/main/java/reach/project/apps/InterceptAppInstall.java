@@ -47,7 +47,7 @@ public class InterceptAppInstall extends BroadcastReceiver {
         Log.i("Ayush", intent.getAction() + " ACTION");
 
         final PackageManager packageManager = context.getPackageManager();
-        final List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> applicationInfoList = MiscUtils.getInstalledApps(packageManager);
         if (applicationInfoList == null || applicationInfoList.isEmpty())
             return;
 

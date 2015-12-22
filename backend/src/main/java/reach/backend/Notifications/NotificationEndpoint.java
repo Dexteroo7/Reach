@@ -29,6 +29,7 @@ import javax.inject.Named;
 import reach.backend.Constants;
 import reach.backend.MiscUtils;
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.ObjectWrappers.PushContainerJSON;
 import reach.backend.User.FriendContainers.Friend;
 import reach.backend.User.MessagingEndpoint;
 import reach.backend.User.ReachUser;
@@ -276,6 +277,47 @@ public class NotificationEndpoint {
 
                 final String message = "SYNC" + count;
                 MessagingEndpoint.getInstance().sendMessage(message, receiverId, senderId);
+            }
+        }
+    }
+
+    @ApiMethod(
+            name = "addPushMultiple",
+            path = "notification/addPushMultiple",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public void addPushMultiple(PushContainerJSON pushContainerJSON) {
+
+        //sanity checks
+        if (pushContainerJSON.container == null ||
+                pushContainerJSON.receiverId == null ||
+                pushContainerJSON.receiverId.isEmpty() ||
+                pushContainerJSON.senderId == 0)
+            return;
+
+        final Push push = new Push();
+        push.setRead(NotificationBase.NEW);
+        push.setHostId(pushContainerJSON.senderId);
+        push.setSystemTime(System.currentTimeMillis());
+        push.setTypes(Types.PUSH);
+
+        push.setCustomMessage(pushContainerJSON.customMessage);
+        push.setFirstSongName(pushContainerJSON.firstContentName);
+        push.setPushContainer(pushContainerJSON.container);
+        push.setSize(pushContainerJSON.size);
+
+        for (long receiverId : pushContainerJSON.receiverId) {
+
+            final Notification notification = getNotification(receiverId);
+            if (notification.getNotifications().add(push)) {
+
+                ofy().save().entity(notification);
+                logger.info("Adding push " + pushContainerJSON.senderId + " " + pushContainerJSON.firstContentName + " " + pushContainerJSON.size);
+                final int count = getNewCount(notification.getNotifications());
+                if (count > 0) {
+
+                    final String message = "SYNC" + count;
+                    MessagingEndpoint.getInstance().sendMessage(message, receiverId, pushContainerJSON.senderId);
+                }
             }
         }
     }

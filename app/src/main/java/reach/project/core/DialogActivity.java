@@ -19,7 +19,7 @@ public class DialogActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_push);
+        setContentView(R.layout.activity_devika_dialog);
 
         final TextView userName = (TextView) findViewById(R.id.userName);
         final TextView textView1 = (TextView) findViewById(R.id.textView1);

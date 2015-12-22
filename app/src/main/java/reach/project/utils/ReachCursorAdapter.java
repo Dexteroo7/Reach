@@ -27,6 +27,11 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     private final HandOverMessage<Cursor> handOverMessage;
 
     @Nullable
+    public Cursor getCursor() {
+        return cursor;
+    }
+
+    @Nullable
     private Cursor cursor = null;
     private int oldCount = 0;
 
@@ -40,6 +45,14 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
 
         this.handOverMessage = handOverMessage;
         this.resourceId = resourceId;
+        setHasStableIds(true);
+    }
+
+    public ReachCursorAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId, Cursor cursor) {
+
+        this.handOverMessage = handOverMessage;
+        this.resourceId = resourceId;
+        this.cursor = cursor;
         setHasStableIds(true);
     }
 

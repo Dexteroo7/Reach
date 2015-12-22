@@ -88,7 +88,8 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
             final ReachCursorAdapter<SingleItemViewHolder> reference = (ReachCursorAdapter) adapter;
             newAdapter = new ReachCursorAdapter<SingleItemViewHolder>(
                     reference.getHandOverMessage(),
-                    reference.getResourceId()) {
+                    reference.getResourceId(),
+                    reference.getCursor()) {
 
                 @Override
                 public SingleItemViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {

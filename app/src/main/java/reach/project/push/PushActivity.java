@@ -15,9 +15,9 @@ import reach.project.utils.StringCompress;
 
 public class PushActivity extends AppCompatActivity implements ContactChooserInterface {
 
-    public static final String PUSH_CONTAINER = "push_container";
-    public static final String FIRST_SONG_NAME = "first_song_name";
-    public static final String PUSH_SIZE = "push_size";
+    public static final String PUSH_CONTAINER = "PUSH_CONTAINER";
+    public static final String FIRST_CONTENT_NAME = "FIRST_CONTENT_NAME";
+    public static final String PUSH_SIZE = "PUSH_SIZE";
 
     public static Intent getPushActivityIntent(PushContainer pushContainer, Context context) throws IOException {
 
@@ -25,15 +25,20 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
         final String compressedString = StringCompress.compressBytesToString(pushContainer.toByteArray());
 
         intent.putExtra(PUSH_CONTAINER, compressedString);
-        intent.putExtra(FIRST_SONG_NAME, pushContainer.firstSongName);
-        intent.putExtra(PUSH_SIZE, pushContainer.songCount);
+
+        if (TextUtils.isEmpty(pushContainer.firstSongName))
+            intent.putExtra(FIRST_CONTENT_NAME, pushContainer.firstAppName);
+        else
+            intent.putExtra(FIRST_CONTENT_NAME, pushContainer.firstSongName);
+
+        intent.putExtra(PUSH_SIZE, pushContainer.songCount + pushContainer.appCount);
 
         return intent;
     }
 
     @Nullable
-    private static String pushContainer, firstSongName = null;
-    private int songCount = 0;
+    private static String pushContainer, firstContentName = null;
+    private int contentCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +48,11 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
 
         //get data to be pushed
         pushContainer = getIntent().getStringExtra(PUSH_CONTAINER);
-        firstSongName = getIntent().getStringExtra(FIRST_SONG_NAME);
-        songCount = getIntent().getIntExtra(PUSH_SIZE, 0);
+        firstContentName = getIntent().getStringExtra(FIRST_CONTENT_NAME);
+        contentCount = getIntent().getIntExtra(PUSH_SIZE, 0);
 
         //sanity check
-        if (TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstSongName) || songCount == 0) {
+        if (TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstContentName) || contentCount == 0) {
             finish();
             return;
         }
@@ -55,6 +60,7 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        switchToContactChooser();
     }
 
     @Override
@@ -70,10 +76,10 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
     @Override
     public void switchToMessageWriter(long[] serverIds) {
 
-        if (serverIds == null || serverIds.length == 0 || TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstSongName) || songCount == 0)
+        if (serverIds == null || serverIds.length == 0 || TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstContentName) || contentCount == 0)
             finish(); //sanity check
         else
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, MessageWriterFragment.getInstance(serverIds, pushContainer, firstSongName, songCount), "message_writer").commit();
+                    .replace(R.id.container, MessageWriterFragment.getInstance(serverIds, pushContainer, firstContentName, contentCount), "message_writer").commit();
     }
 }

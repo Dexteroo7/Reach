@@ -42,7 +42,6 @@ import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
 import reach.project.push.PushActivity;
 import reach.project.push.PushContainer;
-import reach.project.push.TransferSong;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -77,24 +76,27 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
     private final RecentAppsAdapter recentAppsAdapter = new RecentAppsAdapter(new ArrayList<>(100), this, R.layout.push_files_item);
     private final RecentMusicAdapter recentMusicAdapter = new RecentMusicAdapter(new ArrayList<>(100), this, R.layout.push_files_item);
 
-    private final Set<TransferSong> selectedSongs = MiscUtils.getSet(5);
-    private final Set<String> selectedPackages = MiscUtils.getSet(5);
+    private final Set<Song> selectedSongs = MiscUtils.getSet(5);
+    private final Set<App> selectedApps = MiscUtils.getSet(5);
 
     private final View.OnClickListener pushListener = view -> {
         
         final Context context = view.getContext();
         
-        if (selectedSongs.isEmpty())
+        if (selectedSongs.isEmpty() || selectedApps.isEmpty())
             Toast.makeText(context, "First select some songs", Toast.LENGTH_SHORT).show();
         else {
-            
+
             final PushContainer pushContainer = new PushContainer.Builder()
                     .senderId(myUserId)
                     .userName(myUserName)
                     .userImage(myImageId)
                     .firstSongName(selectedSongs.iterator().next().displayName)
-                    .transferSong(ImmutableList.copyOf(selectedSongs))
+                    .firstAppName(selectedApps.iterator().next().applicationName)
+                    .song(ImmutableList.copyOf(selectedSongs))
+                    .app(ImmutableList.copyOf(selectedApps))
                     .songCount(selectedSongs.size())
+                    .appCount(selectedApps.size())
                     .build();
 
             try {
@@ -159,16 +161,16 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
 
             if (!isSelected) {
 
-                if (selectedPackages.size() < 5) {
+                if (selectedApps.size() < 5) {
 
                     recentAppsAdapter.selected.put(packageName, true);
-                    selectedPackages.add(packageName);
+                    selectedApps.add(app);
                 } else
                     Toast.makeText(getContext(), "Maximum 5 apps allowed", Toast.LENGTH_SHORT).show();
             } else {
 
                 recentAppsAdapter.selected.put(packageName, false);
-                selectedPackages.remove(packageName);
+                selectedApps.remove(app);
             }
 
             recentAppsAdapter.selectionChanged(packageName);
@@ -179,28 +181,18 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
             final boolean isSelected = recentMusicAdapter.selected.get(song.songId, false);
 
             //create transfer song object
-            final TransferSong transferSong = new TransferSong.Builder()
-                    .size(song.size)
-                    .songId(song.songId)
-                    .duration(song.duration)
-                    .displayName(song.displayName)
-                    .actualName(song.actualName)
-                    .artistName(song.artist)
-                    .albumName(song.album)
-                    .genre(song.genre).build();
-
             if (!isSelected) {
 
                 if (selectedSongs.size() < 5) {
 
                     recentMusicAdapter.selected.append(song.songId, true);
-                    selectedSongs.add(transferSong);
+                    selectedSongs.add(song);
                 } else
                     Toast.makeText(getContext(), "Maximum 5 Songs allowed", Toast.LENGTH_SHORT).show();
             } else {
 
                 recentMusicAdapter.selected.append(song.songId, false);
-                selectedSongs.remove(transferSong);
+                selectedSongs.remove(song);
             }
 
             recentMusicAdapter.selectionChanged(song.songId);
@@ -252,11 +244,11 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
-            //TODO
-        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
-            //TODO
-        }
+//        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
+//            //TODO
+//        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
+//            //TODO
+//        }
     }
 
     private final String[] projectionMyLibrary =

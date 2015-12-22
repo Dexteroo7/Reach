@@ -71,9 +71,9 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushFilesFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
+import reach.project.music.Song;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.push.PushContainer;
-import reach.project.push.TransferSong;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
@@ -566,7 +566,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             final String compressed = intent.getStringExtra("data");
 
-            byte [] unCompressed = null;
+            byte [] unCompressed;
             try {
                 unCompressed = StringCompress.deCompressStringToBytes(compressed);
             } catch (IOException e) {
@@ -576,7 +576,7 @@ public class ReachActivity extends AppCompatActivity implements
 
             if (unCompressed != null && unCompressed.length > 0) {
 
-                PushContainer pushContainer = null;
+                PushContainer pushContainer;
                 try {
                     pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
                 } catch (IOException e) {
@@ -584,26 +584,26 @@ public class ReachActivity extends AppCompatActivity implements
                     pushContainer = null;
                 }
 
-                if (pushContainer != null && pushContainer.transferSong != null && !pushContainer.transferSong.isEmpty()) {
+                if (pushContainer != null && pushContainer.song != null && !pushContainer.song.isEmpty()) {
 
-                    for (TransferSong transferSong : pushContainer.transferSong) {
+                    for (Song song : pushContainer.song) {
 
-                        if (transferSong == null)
+                        if (song == null)
                             continue;
 
-                        addSongToQueue(transferSong.songId,
+                        addSongToQueue(song.songId,
                                 pushContainer.senderId,
-                                transferSong.size,
-                                transferSong.displayName,
-                                transferSong.actualName,
+                                song.size,
+                                song.displayName,
+                                song.actualName,
                                 true,
                                 pushContainer.userName,
                                 ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
                                 "0",
-                                transferSong.artistName,
-                                transferSong.duration,
-                                transferSong.albumName,
-                                transferSong.genre);
+                                song.artist,
+                                song.duration,
+                                song.album,
+                                song.genre);
                     }
                     new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
                 }

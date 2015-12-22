@@ -189,7 +189,7 @@ public enum MiscUtils {
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
 
-        final List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> applicationInfoList = getInstalledApps(packageManager);
         if (applicationInfoList == null || applicationInfoList.isEmpty())
             return Collections.emptyList();
 
@@ -1171,7 +1171,9 @@ public enum MiscUtils {
         while (iterator.hasNext()) {
 
             final ApplicationInfo applicationInfo = iterator.next();
-            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM & ApplicationInfo.FLAG_TEST_ONLY) == 1)
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                    || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                    || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
                 iterator.remove();
         }
 
@@ -1507,5 +1509,20 @@ public enum MiscUtils {
     public static JsonElement get(JsonObject jsonObject, GetName getName) {
         //noinspection unchecked
         return jsonObject.get(getName.getName());
+    }
+
+    public static <T> List<T> convertToList(T[] array) {
+
+        final List<T> list = new ArrayList<>(array.length);
+        Collections.addAll(list, array);
+        return list;
+    }
+
+    public static List<Long> convertToList(long[] array) {
+
+        final List<Long> list = new ArrayList<>(array.length);
+        for (long item : array)
+            list.add(item);
+        return list;
     }
 }
