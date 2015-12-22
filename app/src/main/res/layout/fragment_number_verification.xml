@@ -1,0 +1,69 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#fff"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:src="@drawable/onboarding_graphic_owl_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <ImageView
+        android:id="@+id/logo"
+        android:src="@drawable/logo_latest"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_width="150dp"
+        android:layout_height="100dp" />
+    <Button
+        android:id="@+id/verify"
+        android:orientation="horizontal"
+        android:layout_above="@id/logo"
+        android:layout_centerHorizontal="true"
+        android:background="@color/reach_color"
+        android:textColor="#fff"
+        android:layout_margin="20dp"
+        android:text="SEND CODE"
+        android:paddingLeft="35dp"
+        android:paddingRight="35dp"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp" />
+    <TextView
+        android:id="@+id/whyAns"
+        android:layout_above="@id/verify"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_margin="30dp"
+        android:text="We will send an SMS to your mobile number with a verification code. You need a valid mobile number to use Reach."
+        android:textColor="@color/reach_grey_light"
+        android:textSize="13sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <EditText
+        android:id="@+id/telephoneNumber"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:textCursorDrawable="@null"
+        android:layout_above="@id/whyAns"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/reach_grey_light"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:inputType="numberSigned" />
+    <ImageView
+        android:src="@drawable/icon_tag_phone"
+        android:layout_toLeftOf="@id/telephoneNumber"
+        android:layout_alignTop="@id/telephoneNumber"
+        android:layout_marginTop="5dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp" />
+    <TextView
+        android:id="@+id/title"
+        android:layout_above="@id/telephoneNumber"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_marginBottom="10dp"
+        android:text="Please verify your mobile number"
+        android:textColor="@color/reach_blue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</RelativeLayout>
