@@ -7,7 +7,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
@@ -132,6 +131,8 @@ public class Player {
 //        Log.i("Downloader", "Resetting mediaPlayer");
         if (mediaPlayer != null)
             mediaPlayer.reset();
+        if(exoplayer!=null)
+            exoplayer.stop();
         Log.i("Downloader", "Reset complete");
     }
 
@@ -156,12 +157,15 @@ public class Player {
         }
         if (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer)
             mediaPlayer.pause();
+        if(exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer)
+            exoplayer.setPlayWhenReady(false);
     }
 
     public void start() {
 
         if (whichPlayer == WhichPlayer.MediaPlayer)
         {
+            Log.i("info","mediahoho");
             mediaPlayer.start();
         }
         else if(whichPlayer==WhichPlayer.Exoplayer)
@@ -200,6 +204,8 @@ public class Player {
         Log.i("Downloader", "Seeking to " + i);
         if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
             mediaPlayer.seekTo(i);
+        else if(whichPlayer==WhichPlayer.Exoplayer && exoplayer!=null)
+            exoplayer.seekTo(i);
         else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
     }
 
@@ -268,30 +274,35 @@ public class Player {
     protected int createMediaPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
                                             MediaPlayer.OnErrorListener onErrorListener,
                                             String path) throws IOException, InterruptedException {
-        Log.i("create","lala");
+        //Log.e("create", "lala");
         reset(); //throws InterruptedException
-        if(Build.VERSION.SDK_INT>=116)
+        if(Build.VERSION.SDK_INT>=16)
         {
             whichPlayer=WhichPlayer.Exoplayer;
-            //Log.d("Exoplayer instantite","true");
-            if(exoplayer==null)
+
             {
-                exoplayer=ExoPlayer.Factory.newInstance(1);
+
+                Log.d("Exoplayer instantite", "true");
+
+                if (exoplayer == null)
+                {
+                    Log.d("Exoplayernull", "donehaha");
+                    exoplayer = ProcessManager.exoplayer;
+                }
+
+                {
+                    File file = new File(path);
+                    FileInputStream inputStream = new FileInputStream(file);
+                    FileDescriptor fd = inputStream.getFD();
+                    SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
+                    TrackRenderer audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
+                    exoplayer.prepare(audio);
+                }
+
+
             }
-            try
-            {
-                File file=new File(path);
-                FileInputStream inputStream=new FileInputStream(file);
-                FileDescriptor fd=inputStream.getFD();
-                SampleSource sampleSource=new FrameworkSampleSource(fd,0,file.length());
-                TrackRenderer audio=new MediaCodecAudioTrackRenderer(sampleSource,null,true);
-                exoplayer.prepare(audio);
-            }
-            catch(Exception e)
-            {
-                Log.e("Player","exception",e);
-            }
-            return (int)exoplayer.getDuration();
+
+            return (int) exoplayer.getDuration();
         }
         else
         {

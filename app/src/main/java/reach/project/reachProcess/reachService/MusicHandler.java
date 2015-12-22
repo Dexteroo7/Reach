@@ -185,6 +185,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         final long duration;
 
         try {
+            Log.e("musichandler","try");
             duration = (currentSong.getProcessed() < currentSong.getLength()) ?
                     player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength()) :
                     player.createMediaPlayerIfNeeded(this, this, currentSong.getPath());
