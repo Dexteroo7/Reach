@@ -308,8 +308,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         final ClickData clickData = new ClickData();
         clickData.friendId = cursor.getLong(0);
-        clickData.networkType = cursor.getShort(4);
-        clickData.status = cursor.getShort(5);
+        clickData.networkType = cursor.getShort(5);
+        clickData.status = cursor.getShort(6);
         clickData.userName = cursor.getString(2);
         handOverMessage.handOverMessage(clickData);
     }

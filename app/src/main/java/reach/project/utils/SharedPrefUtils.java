@@ -158,10 +158,6 @@ public enum SharedPrefUtils {
         return sharedPreferences.getLong("serverId", 0);
     }
 
-    public synchronized static String getUserNumber(SharedPreferences sharedPreferences) {
-        return sharedPreferences.getString("phoneNumber", "");
-    }
-
     public synchronized static String getUserName(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("userName", "");
     }
