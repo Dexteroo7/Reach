@@ -41,9 +41,6 @@ public class CodeVerification extends Fragment {
     private static final String SMS_TEXT = "Your activation code is %s . Enter this in the Reach app to complete phone verification";
     private static final int MY_PERMISSIONS_RECEIVE_SMS = 33;
 
-    private SplashInterface mListener = null;
-    private EditText telephoneNumber = null;
-
     private static String phoneNumber;
     private static String finalAuthKey;
     private static WeakReference<CodeVerification> reference;
@@ -65,6 +62,9 @@ public class CodeVerification extends Fragment {
 
         return fragment;
     }
+
+    private SplashInterface mListener = null;
+    private EditText telephoneNumber = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -315,16 +315,30 @@ public class CodeVerification extends Fragment {
             @Override
             protected Boolean doInBackground(String... params) {
 
-                final SendSMS smsObj = new SendSMS();
-                //noinspection SpellCheckingInspection
-                smsObj.setparams("alerts.sinfini.com", "sms", "A6f5d83ea6aa5984be995761f221c8a9a", "REACHA");
+                final SendSMS smsObj = new SendSMS(
+                        "alerts.sinfini.com", //api_url
+                        "sms", //method
+                        "A6f5d83ea6aa5984be995761f221c8a9a", //api_key
+                        "REACHA", //sender_id
+                        "https://"); //start
+
+                String groupId;
                 try {
-                    //Toast.makeText(context,params[1],Toast.LENGTH_SHORT).show();
-                    smsObj.send_sms(params[0], params[1], "dlr_url");
+                    groupId = smsObj.send_sms(
+                            params[0], //number
+                            String.format(SMS_TEXT, params[1]), //message
+                            "dlr_url"); //web hook
                 } catch (Exception e) {
                     e.printStackTrace();
                     return false;
                 }
+
+                if (!TextUtils.isEmpty(groupId))
+                    try {
+                        smsObj.messagedelivery_status(groupId);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                   }
                 return true;
             }
 
