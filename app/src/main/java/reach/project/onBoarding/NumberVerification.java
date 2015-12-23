@@ -17,6 +17,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.telephony.SmsMessage;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
@@ -82,7 +83,9 @@ public class NumberVerification extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
 
-        rootView.findViewById(R.id.verifyRetry).setOnClickListener(LocalUtils.retryListener);
+        final TextView verifyRetry = (TextView) rootView.findViewById(R.id.verifyRetry);
+        verifyRetry.setText(Html.fromHtml("<b>Click here</b><br>to send the verification code again"));
+        verifyRetry.setOnClickListener(LocalUtils.retryListener);
         rootView.findViewById(R.id.verifyNext).setOnClickListener(LocalUtils.verifyCodeListener);
 
         //stuff that hides
@@ -448,7 +451,7 @@ public class NumberVerification extends Fragment {
                 phoneNumber = pair.second;
                 finalAuthKey = String.valueOf(1000 + random.nextInt(10000 - 1000 + 1));
                 Log.i("Verification", "" + finalAuthKey);
-//                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
+                new SendVerificationCodeAsync(onTaskCompleted).execute(pair.second, String.format(SMS_TEXT, finalAuthKey));
             }
         }
 

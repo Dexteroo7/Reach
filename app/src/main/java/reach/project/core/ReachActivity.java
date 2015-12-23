@@ -1160,6 +1160,27 @@ public class ReachActivity extends AppCompatActivity implements
                     if (slidingUpPanelLayout != null)
                         slidingUpPanelLayout.setPanelState(PanelState.EXPANDED);
                 }, 1500);
+
+            mTracker.send(new HitBuilders.EventBuilder("Player Opened", "User Name - " +
+                    SharedPrefUtils.getUserName(preferences)).build());
+
+            final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+            simpleParams.put(PostParams.USER_ID, serverId + "");
+            simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
+            simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+            simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+            simpleParams.put(PostParams.SCREEN_NAME, "player");
+            try {
+                simpleParams.put(PostParams.APP_VERSION,
+                        getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+            try {
+                UsageTracker.trackEvent(simpleParams, UsageTracker.PLAYER_OPENED);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         } else if (intent.getBooleanExtra("openFriendRequests", false)) {
 
             if (!mDrawerLayout.isDrawerOpen(Gravity.RIGHT))

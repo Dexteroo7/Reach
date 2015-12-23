@@ -43,6 +43,9 @@ public enum UsageTracker {
 
     APP_OPEN, //user opened the app
     BROWSE_LIBRARY, //user browsed friends library
+    NOTIFICATION_RECEIVED, //user received notification
+    DIALOG_OPENED, //user opened dialog
+    PLAYER_OPENED, //user opened player
 
     ////////////
 
