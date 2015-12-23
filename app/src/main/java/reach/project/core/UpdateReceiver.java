@@ -4,10 +4,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import reach.project.music.MySongsProvider;
+
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        //cleanse the songs table to remove songs of friends
+        context.getContentResolver().delete(MySongsProvider.CONTENT_URI, null, null);
 
 //        final Cursor cursor = context.getContentResolver().query(
 //                ReachDatabaseProvider.CONTENT_URI,

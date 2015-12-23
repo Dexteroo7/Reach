@@ -19,7 +19,7 @@ import reach.project.utils.viewHelpers.MoreQualifier;
 /**
  * Created by dexter on 18/11/15.
  */
-final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> implements MoreQualifier {
+final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHolder> implements MoreQualifier {
 
     public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
@@ -49,8 +49,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> i
         return count > 4 ? 4 : count;
     }
 
-    @Override
-    public void onBindViewHolder(FriendsViewHolder friendsViewHolder, Cursor cursor) {
+    public void onBindViewHolder(LockedFriendsViewHolder friendsViewHolder, Cursor cursor) {
 
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(6) + "");
@@ -60,8 +59,8 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> i
     }
 
     @Override
-    public FriendsViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new FriendsViewHolder(itemView, handOverMessage);
+    public LockedFriendsViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+        return new LockedFriendsViewHolder(itemView, handOverMessage);
     }
 
     @Override

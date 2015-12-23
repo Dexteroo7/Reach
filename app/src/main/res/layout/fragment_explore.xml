@@ -17,15 +17,15 @@
                 android:text="Explore"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:layout_gravity="center_vertical"
                 android:textColor="@color/reach_color"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <ImageView
                 android:layout_gravity="center_vertical"
-                android:src="@drawable/icon_download_pink"
-                android:layout_marginLeft="5dp"
-                android:layout_width="15dp"
-                android:layout_height="15dp" />
+                android:src="@drawable/arrow_down"
+                android:layout_width="25dp"
+                android:layout_height="25dp" />
         </LinearLayout>
     </android.support.v7.widget.Toolbar>
 

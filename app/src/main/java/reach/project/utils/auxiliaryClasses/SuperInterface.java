@@ -1,8 +1,5 @@
 package reach.project.utils.auxiliaryClasses;
 
-import com.firebase.client.Firebase;
-import com.google.common.base.Optional;
-
 /**
  * Created by Dexter on 13-04-2015.
  */
@@ -16,5 +13,4 @@ public interface SuperInterface {
                         String networkType, String artistName, long duration,
                         String albumName, String genre); //MusicListFragment
 
-    Optional<Firebase> getFireBase();
 }

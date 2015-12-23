@@ -25,7 +25,7 @@
                 app:tabMode="fixed"
                 app:tabSelectedTextColor="#f33b5b"
                 app:tabTextColor="#716e6f"
-                card_view:tabIndicatorHeight="0dp" />
+                app:tabIndicatorHeight="0dp" />
 
             <ImageView
                 android:layout_width="match_parent"

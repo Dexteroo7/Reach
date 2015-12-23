@@ -35,7 +35,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".core.SplashActivity"
+            android:name=".onBoarding.SplashActivity"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -129,6 +129,34 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
+        <activity
+            android:name=".coreViews.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".coreViews.friends.invite.InviteActivity"
+            android:label="@string/title_activity_invite"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".coreViews.yourProfile.ProfileActivity"
+            android:label="@string/title_activity_profile"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
         <activity
             android:name=".coreViews.yourProfile.YourProfileActivity"
             android:label="@string/title_activity_your_profile"

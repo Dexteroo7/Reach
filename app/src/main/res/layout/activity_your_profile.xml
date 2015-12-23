@@ -13,7 +13,7 @@
         app:viewpager_header="@layout/header_yourprofile"
         app:viewpager_pagerTitleStrip="@layout/tabstrip"
         app:viewpager_color="@color/colorPrimary"
-        app:viewpager_headerHeight="220dp"
+        app:viewpager_headerHeight="200dp"
         app:viewpager_headerAlpha="1.0"
         app:viewpager_imageHeaderDarkLayerAlpha="0.2"
         app:viewpager_hideToolbarAndTitle="true"

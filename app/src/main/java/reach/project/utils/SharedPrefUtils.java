@@ -104,6 +104,10 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("imageId", imageId).apply();
     }
 
+    public synchronized static void storeCoverImageId(SharedPreferences sharedPreferences, String coverImageId) {
+        sharedPreferences.edit().putString("coverImageId", coverImageId).apply();
+    }
+
     public synchronized static void setReachQueueSeen(SharedPreferences sharedPreferences) {
         sharedPreferences.edit().putBoolean("reachQueueSeen", true).apply();
     }
@@ -164,6 +168,10 @@ public enum SharedPrefUtils {
 
     public synchronized static String getImageId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("imageId", "");
+    }
+
+    public synchronized static String getCoverImageId(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("coverImageId", "");
     }
 
     public synchronized static boolean toggleShuffle(Context context) {

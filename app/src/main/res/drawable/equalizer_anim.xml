@@ -1,0 +1,27 @@
+<animation-list
+    android:id="@+id/selected"
+    android:oneshot="false"
+    
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/layer1" android:duration="100" />
+    <item android:drawable="@drawable/layer2" android:duration="100" />
+    <item android:drawable="@drawable/layer3" android:duration="100" />
+    <item android:drawable="@drawable/layer4" android:duration="100" />
+    <item android:drawable="@drawable/layer5" android:duration="100" />
+    <item android:drawable="@drawable/layer6" android:duration="100" />
+    <item android:drawable="@drawable/layer7" android:duration="100" />
+    <item android:drawable="@drawable/layer8" android:duration="100" />
+    <item android:drawable="@drawable/layer9" android:duration="100" />
+    <item android:drawable="@drawable/layer10" android:duration="100" />
+    <item android:drawable="@drawable/layer11" android:duration="100" />
+    <item android:drawable="@drawable/layer12" android:duration="100" />
+    <item android:drawable="@drawable/layer13" android:duration="100" />
+    <item android:drawable="@drawable/layer14" android:duration="100" />
+    <item android:drawable="@drawable/layer15" android:duration="100" />
+    <item android:drawable="@drawable/layer16" android:duration="100" />
+    <item android:drawable="@drawable/layer17" android:duration="100" />
+    <item android:drawable="@drawable/layer18" android:duration="100" />
+    <item android:drawable="@drawable/layer19" android:duration="100" />
+    <item android:drawable="@drawable/layer20" android:duration="100" />
+    <item android:drawable="@drawable/layer21" android:duration="100" />
+</animation-list>
