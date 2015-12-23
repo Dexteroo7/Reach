@@ -386,7 +386,7 @@ public class ReachActivity extends AppCompatActivity implements
 
         //fetch username and phoneNumber
         final String userName = SharedPrefUtils.getUserName(preferences);
-        final String phoneNumber = SharedPrefUtils.getUserNumber(preferences);
+        final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
 
         //initialize bug tracking
         //Crittercism.initialize(this, "552eac3c8172e25e67906922");

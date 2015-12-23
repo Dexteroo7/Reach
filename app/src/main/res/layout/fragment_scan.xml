@@ -47,35 +47,112 @@
                     <TextView
                         android:id="@+id/scanCount"
                         android:text="0"
+                        android:textColor="@color/reach_grey"
                         android:textSize="36sp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <TextView
                         android:text="FILES FOUND"
                         android:textSize="12sp"
+                        android:textColor="@color/reach_grey"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
             </RelativeLayout>
-            <TextView
-                android:id="@+id/text1"
-                android:text="SEARCHING YOUR PHONE"
-                android:textColor="#000"
-                android:gravity="center"
-                android:textSize="18sp"
-                android:layout_margin="15dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                android:id="@+id/text2"
-                android:text="Please wait while we search your phone for songs, apps and photos"
-                android:textColor="@color/reach_blue"
-                android:gravity="center"
-                android:layout_marginLeft="60dp"
-                android:layout_marginRight="60dp"
-                android:layout_marginBottom="20dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:id="@+id/scan1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/text1"
+                        android:text="SEARCHING YOUR PHONE"
+                        android:textColor="#000"
+                        android:gravity="center"
+                        android:textSize="18sp"
+                        android:layout_margin="15dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/text2"
+                        android:text="Please wait while we search your phone for songs, apps and photos"
+                        android:textColor="@color/reach_blue"
+                        android:gravity="center"
+                        android:layout_marginLeft="60dp"
+                        android:layout_marginRight="60dp"
+                        android:layout_marginBottom="20dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/scan2"
+                    android:visibility="gone"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/totalSongs"
+                            android:text="0"
+                            android:layout_centerHorizontal="true"
+                            android:textColor="@color/reach_grey"
+                            android:textSize="36sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <ImageView
+                            android:id="@+id/songIcon"
+                            android:layout_below="@id/totalSongs"
+                            android:src="@drawable/icon_song_indicator_gray"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:text="songs"
+                            android:layout_toRightOf="@id/songIcon"
+                            android:layout_alignBottom="@id/songIcon"
+                            android:textColor="@color/reach_grey"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </RelativeLayout>
+                    <View
+                        android:background="@color/reach_grey"
+                        android:layout_marginLeft="40dp"
+                        android:layout_marginRight="40dp"
+                        android:layout_width="0.1dp"
+                        android:layout_height="50dp" />
+                    <RelativeLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/totalApps"
+                            android:text="0"
+                            android:layout_centerHorizontal="true"
+                            android:textColor="@color/reach_grey"
+                            android:textSize="36sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <ImageView
+                            android:id="@+id/appIcon"
+                            android:layout_below="@id/totalApps"
+                            android:src="@drawable/icon_apps_indicator_gray"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_toRightOf="@id/appIcon"
+                            android:layout_alignBottom="@id/appIcon"
+                            android:text="apps"
+                            android:textColor="@color/reach_grey"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </RelativeLayout>
+                </LinearLayout>
+            </FrameLayout>
             <View
                 android:background="@color/reach_grey_light"
                 android:layout_marginLeft="20dp"

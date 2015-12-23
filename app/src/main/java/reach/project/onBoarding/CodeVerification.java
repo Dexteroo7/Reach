@@ -49,14 +49,21 @@ public class CodeVerification extends Fragment {
     private static WeakReference<CodeVerification> reference;
     private static OldUserContainerNew containerNew = null;
 
-    public static CodeVerification newInstance(String authKey) {
+    public static CodeVerification newInstance(String authKey, String phoneNum) {
 
-        final CodeVerification numberVerification = new CodeVerification();
-        Bundle bundle = new Bundle();
-        bundle.putString("authKey", authKey);
-        numberVerification.setArguments(bundle);
-        reference = new WeakReference<>(numberVerification);
-        return numberVerification;
+        final Bundle args;
+        CodeVerification fragment;
+        if (reference == null || (fragment = reference.get()) == null) {
+            reference = new WeakReference<>(fragment = new CodeVerification());
+            fragment.setArguments(args = new Bundle());
+        } else {
+            Log.i("Ayush", "Reusing CodeVerification object :)");
+            args = fragment.getArguments();
+        }
+        args.putString("authKey", authKey);
+        args.putString("phoneNumber", phoneNum);
+
+        return fragment;
     }
 
     @Override
@@ -66,6 +73,7 @@ public class CodeVerification extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_code_verification, container, false);
 
+        phoneNumber = getArguments().getString("phoneNumber");
         finalAuthKey = getArguments().getString("authKey");
         rootView.findViewById(R.id.whyAns).setOnClickListener(LocalUtils.retryListener);
 

@@ -9,6 +9,8 @@ import android.text.TextUtils;
 
 import com.google.common.base.Optional;
 
+import java.io.File;
+
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachActivity;
@@ -55,10 +57,10 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenCodeVerification(String key) {
+    public void onOpenCodeVerification(String key, String phoneNumber) {
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                 R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, CodeVerification.newInstance(key)).commit();
+                .replace(R.id.splashLayout, CodeVerification.newInstance(key, phoneNumber)).commit();
     }
 
     @Override
@@ -66,5 +68,11 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                 R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                 .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
+    }
+
+    @Override
+    public void onOpenScan(String name, String toUpload, String imageId) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
+                ScanFragment.newInstance(name, toUpload, imageId)).commit();
     }
 }

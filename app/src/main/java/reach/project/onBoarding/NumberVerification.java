@@ -137,7 +137,7 @@ public class NumberVerification extends Fragment {
                  */
                     Log.i("Verification", "Code sent");
                     MiscUtils.useFragment(reference, fragment -> {
-                        fragment.mListener.onOpenCodeVerification(key);
+                        fragment.mListener.onOpenCodeVerification(key, phoneNumber);
                     });
                 }
             }
