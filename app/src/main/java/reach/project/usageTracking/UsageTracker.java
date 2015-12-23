@@ -49,7 +49,6 @@ public enum UsageTracker {
     private static final Executor asyncTracker = Executors.newSingleThreadExecutor();
 
     private static final Calendar calendar = Calendar.getInstance();
-
     static {
         calendar.setTimeZone(TimeZone.getTimeZone("IST"));
     }

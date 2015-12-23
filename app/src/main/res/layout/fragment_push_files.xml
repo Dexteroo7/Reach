@@ -27,6 +27,12 @@
             android:background="@drawable/shadow_bottom" />
     </android.support.design.widget.AppBarLayout>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:text="Push"
+        android:id="@+id/proceed"/>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"

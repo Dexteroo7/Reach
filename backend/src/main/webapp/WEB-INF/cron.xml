@@ -5,4 +5,10 @@
         <description>Refreshing GCM</description>
         <schedule>every 10 minutes</schedule>
     </cron>
+
+    <cron>
+        <url>/backlogCron</url>
+        <description>Polling back logs</description>
+        <schedule>every 10 minutes</schedule>
+    </cron>
 </cronentries>

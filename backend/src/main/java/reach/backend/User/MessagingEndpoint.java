@@ -8,6 +8,8 @@ import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.appengine.api.ThreadManager;
+import com.google.appengine.api.datastore.Cursor;
+import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.log.InvalidRequestException;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
@@ -39,7 +41,6 @@ import reach.backend.Notifications.Push;
 import reach.backend.Notifications.Types;
 import reach.backend.ObjectWrappers.MyBoolean;
 import reach.backend.ObjectWrappers.MyString;
-import reach.backend.OfyService;
 import reach.backend.TextUtils;
 
 import static reach.backend.OfyService.ofy;
@@ -496,7 +497,7 @@ public class MessagingEndpoint {
      * Used for sending a push song to every user from Devika, with love :)
      */
 
-    public MyString devikaPushToAll(@Named("offset") int offset,
+    public MyString devikaPushToAll(@Named("cursor") String cursor,
                                     @Named("limit") int limit,
 
                                     @Named("container") String container,
@@ -506,19 +507,21 @@ public class MessagingEndpoint {
 
         log.info("Starting devika push to all");
 
-        final ReachUser devika = ofy().load().type(ReachUser.class).id(OfyService.devikaId).now();
-        final int reachSize = devika.getMyReach().size();
-
-        if (TextUtils.isEmpty(devika.getGcmId())) //meh... handle later TODO
-            throw new IllegalArgumentException("Illegal gcmId of devika exception");
-
-        if (offset >= reachSize)
-            return new MyString("-1");
+        final QueryResultIterator<ReachUser> usersToPushTo;
+        if (TextUtils.isEmpty(cursor))
+            usersToPushTo = ofy().load().type(ReachUser.class)
+                    .limit(limit)
+                    .project("id").iterator();
+        else
+            usersToPushTo = ofy().load().type(ReachUser.class)
+                    .limit(limit)
+                    .project("id")
+                    .startAt(Cursor.fromWebSafeString(cursor)).iterator();
 
         //create the push notification
         final Push push = new Push();
         push.setRead(NotificationBase.NEW);
-        push.setHostId(OfyService.devikaId); //sender is Devika
+        push.setHostId(reach.backend.Constants.devikaId); //sender is Devika
         push.setSystemTime(System.currentTimeMillis());
         push.setTypes(Types.PUSH);
 
@@ -528,13 +531,9 @@ public class MessagingEndpoint {
         push.setSize(size);
 
         final List<Notification> notificationToSave = new ArrayList<>(limit);
-        final ImmutableList<Long> myReach = ImmutableList.copyOf(devika.getMyReach());
         final List<Long> receiverIds = new ArrayList<>(limit);
-
-        //get current batch of receiver ids, starting from current offset unto size/limit
-        final int currentRequestLimit = offset + limit;
-        for (; offset < reachSize && offset < currentRequestLimit; offset++)
-            receiverIds.add(myReach.get(offset));
+        while (usersToPushTo.hasNext())
+            receiverIds.add(usersToPushTo.next().getId());
 
         if (receiverIds.isEmpty())
             return new MyString("-1");
@@ -557,12 +556,12 @@ public class MessagingEndpoint {
 
                 //add to save batch
                 notificationToSave.add(notification);
-                log.info("Adding push " + OfyService.devikaId + " " + firstSongName + " " + size);
+                log.info("Adding push " + reach.backend.Constants.devikaId + " " + firstSongName + " " + size);
             }
         }
 
         if (notificationToSave.isEmpty())
-            return new MyString(offset + "");
+            return new MyString(usersToPushTo.getCursor().toWebSafeString());
 
         log.info("Batch save of " + notificationToSave.size() + " notifications");
 
@@ -589,7 +588,7 @@ public class MessagingEndpoint {
 
         log.info("processed " + processCount);
 
-        return new MyString(offset + "");
+        return new MyString(usersToPushTo.getCursor().toWebSafeString());
     }
 
     private Notification getNotification(Notification notification, long id) {

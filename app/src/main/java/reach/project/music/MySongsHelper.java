@@ -151,13 +151,11 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
+
         Log.w(MySongsHelper.class.getName(),
                 "Upgrading database from version " + oldVersion + " to "
                         + newVersion + ", which will destroy all old data");
         database.execSQL("DROP TABLE IF EXISTS " + SONG_TABLE);
-//        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_ARTIST_MBID + " text");
-//        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_RELEASE_GROUP_MBID + " text");
-//        database.execSQL("ALTER TABLE " + SONG_TABLE + " ADD COLUMN " + COLUMN_IS_LIKED + " short");
         onCreate(database);
     }
 }

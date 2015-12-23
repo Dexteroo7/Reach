@@ -20,6 +20,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,8 +40,10 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
-import reach.project.music.TransferSong;
+import reach.project.push.PushActivity;
+import reach.project.push.PushContainer;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -49,6 +54,8 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
 
     private static WeakReference<PushFilesFragment> reference = null;
     private static long myUserId = 0;
+    private static String myUserName = "";
+    private static String myImageId = "";
 
     public static PushFilesFragment getInstance(String header) {
 
@@ -66,29 +73,51 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     //Initialize data sets
-    private final RecentAppsAdapter recentAppsAdapter;
-    private final RecentMusicAdapter recentMusicAdapter;
+    private final RecentAppsAdapter recentAppsAdapter = new RecentAppsAdapter(new ArrayList<>(100), this, R.layout.push_files_item);
+    private final RecentMusicAdapter recentMusicAdapter = new RecentMusicAdapter(new ArrayList<>(100), this, R.layout.push_files_item);
 
-    //TODO test
-    public final Set<TransferSong> selectedSongs = MiscUtils.getSet(5);
-    public final Set<String> selectedPackages = MiscUtils.getSet(5);
+    private final Set<Song> selectedSongs = MiscUtils.getSet(5);
+    private final Set<App> selectedApps = MiscUtils.getSet(5);
 
-    {
+    private final View.OnClickListener pushListener = view -> {
+        
+        final Context context = view.getContext();
+        
+        if (selectedSongs.isEmpty() || selectedApps.isEmpty())
+            Toast.makeText(context, "First select some songs", Toast.LENGTH_SHORT).show();
+        else {
 
-        final List<App> appList = new ArrayList<>(100);
-//        appList.add(new App.Builder().build());
+            final PushContainer pushContainer = new PushContainer.Builder()
+                    .senderId(myUserId)
+                    .userName(myUserName)
+                    .userImage(myImageId)
+                    .firstSongName(selectedSongs.iterator().next().displayName)
+                    .firstAppName(selectedApps.iterator().next().applicationName)
+                    .song(ImmutableList.copyOf(selectedSongs))
+                    .app(ImmutableList.copyOf(selectedApps))
+                    .songCount(selectedSongs.size())
+                    .appCount(selectedApps.size())
+                    .build();
 
-        final List<Song> songList = new ArrayList<>(100);
-//        songList.add(new Song.Builder().build());
-
-        recentAppsAdapter = new RecentAppsAdapter(appList, this, R.layout.push_files_item);
-        recentMusicAdapter = new RecentMusicAdapter(songList, this, R.layout.push_files_item);
-    }
-
-    @Override
+            try {
+                context.startActivity(PushActivity.getPushActivityIntent(pushContainer, context));
+            } catch (IOException e) {
+                
+                e.printStackTrace();
+                //TODO Track
+                Toast.makeText(context, "Could not push", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+    
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        final SharedPreferences sharedPreferences = getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        myUserId = SharedPrefUtils.getServerId(sharedPreferences);
+        myUserName = SharedPrefUtils.getUserName(sharedPreferences);
+        myImageId = SharedPrefUtils.getImageId(sharedPreferences);
+        
         final View rootView = inflater.inflate(R.layout.fragment_push_files, container, false);
         final RecyclerView parent = (RecyclerView) rootView.findViewById(R.id.recyclerView);
 
@@ -102,6 +131,9 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
 //            }
 //        });
 
+        final View proceed = rootView.findViewById(R.id.proceed);
+        proceed.setOnClickListener(pushListener);
+        
         final Activity activity = getActivity();
         parent.setLayoutManager(new CustomLinearLayoutManager(activity));
         parent.setAdapter(new ParentAdapter(recentAppsAdapter, recentMusicAdapter));
@@ -129,16 +161,16 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
 
             if (!isSelected) {
 
-                if (selectedPackages.size() < 5) {
+                if (selectedApps.size() < 5) {
 
                     recentAppsAdapter.selected.put(packageName, true);
-                    selectedPackages.add(packageName);
+                    selectedApps.add(app);
                 } else
                     Toast.makeText(getContext(), "Maximum 5 apps allowed", Toast.LENGTH_SHORT).show();
             } else {
 
                 recentAppsAdapter.selected.put(packageName, false);
-                selectedPackages.remove(packageName);
+                selectedApps.remove(app);
             }
 
             recentAppsAdapter.selectionChanged(packageName);
@@ -149,29 +181,18 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
             final boolean isSelected = recentMusicAdapter.selected.get(song.songId, false);
 
             //create transfer song object
-            final TransferSong transferSong = new TransferSong(
-                    song.size, //size of song
-                    song.songId, //songId
-                    song.duration, //duration
-                    song.displayName, //displayName
-                    song.actualName, //actualName
-                    song.artist, //artistName
-                    song.album, //album
-                    "bitch", //genre TODO
-                    new byte[]{}); //albumArtData
-
             if (!isSelected) {
 
                 if (selectedSongs.size() < 5) {
 
                     recentMusicAdapter.selected.append(song.songId, true);
-                    selectedSongs.add(transferSong);
+                    selectedSongs.add(song);
                 } else
                     Toast.makeText(getContext(), "Maximum 5 Songs allowed", Toast.LENGTH_SHORT).show();
             } else {
 
                 recentMusicAdapter.selected.append(song.songId, false);
-                selectedSongs.remove(transferSong);
+                selectedSongs.remove(song);
             }
 
             recentMusicAdapter.selectionChanged(song.songId);
@@ -223,11 +244,11 @@ public class PushFilesFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
-            //TODO
-        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
-            //TODO
-        }
+//        if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
+//            //TODO
+//        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
+//            //TODO
+//        }
     }
 
     private final String[] projectionMyLibrary =

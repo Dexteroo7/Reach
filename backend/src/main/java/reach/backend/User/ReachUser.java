@@ -8,6 +8,7 @@ import com.googlecode.objectify.annotation.OnSave;
 import com.googlecode.objectify.annotation.Unindex;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 
 /**
@@ -18,7 +19,7 @@ import java.util.HashSet;
 @Index
 public class ReachUser {
 
-    public static final int ONLINE_LIMIT = 90 * 1000; //60 seconds timeout
+    public static final int ONLINE_LIMIT = 90 * 1000; //90 seconds timeout
 
     @Id
     private Long id;
@@ -28,14 +29,20 @@ public class ReachUser {
     private int dirtyCheck = 0; //hashcode for checking dirty values
 
     private int numberOfSongs = 0;
+    private int numberOfApps = 0;
+
     private String userName = "hello_world";       //Custom Username, can be changed
     private String imageId = "hello_world";  //User Profile Image
-    private String gcmId = "hello_world"; //Gcm Cloud Message Id
+    private String coverPicId = "hello_world"; //Cover Pic
+
     private String statusSong = "hello_world"; //Status Song
+    private String emailId = "hello_world";
+    private Date birthday = new Date(0);
 
+    private String gcmId = "hello_world"; //Gcm Cloud Message Id
     private String chatToken = "hello_world"; //firebase token for devikaChat
-
     private String promoCode = "hello_world"; //promo code of User
+
     private long megaBytesSent;
     private long megaBytesReceived;
     private long timeCreated;
@@ -53,17 +60,14 @@ public class ReachUser {
         //faster probably
         return Arrays.hashCode(new Object[]{
                 numberOfSongs,
+                numberOfApps,
+
                 userName == null ? "" : userName,
                 imageId == null ? "" : imageId,
-                gcmId == null ? "" : gcmId,
-                statusSong == null ? "" : statusSong});
-//        return Hashing.adler32().newHasher()
-//                .putInt(numberOfSongs)
-//                .putString(userName == null ? "" : userName, Charsets.UTF_8)
-//                .putString(imageId == null ? "" : imageId, Charsets.UTF_8)
-//                .putString(gcmId == null ? "" : gcmId, Charsets.UTF_8)
-//                .putString(statusSong == null ? "" : statusSong, Charsets.UTF_8)
-//                .hash().asInt();
+                coverPicId == null ? "" : coverPicId,
+                statusSong == null ? "" : statusSong,
+
+                gcmId == null ? "" : gcmId});
     }
 
     public int getDirtyCheck() {
@@ -195,24 +199,6 @@ public class ReachUser {
         setDirtyCheck();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ReachUser reachUser = (ReachUser) o;
-
-        return !(deviceId != null ? !deviceId.equals(reachUser.deviceId) : reachUser.deviceId != null) &&
-                !(id != null ? !id.equals(reachUser.id) : reachUser.id != null);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (deviceId != null ? deviceId.hashCode() : 0);
-        return result;
-    }
-
     public long getTimeCreated() {
         return timeCreated;
     }
@@ -227,5 +213,61 @@ public class ReachUser {
 
     public void setChatToken(String chatToken) {
         this.chatToken = chatToken;
+    }
+
+    public int getNumberOfApps() {
+        return numberOfApps;
+    }
+
+    public void setNumberOfApps(int numberOfApps) {
+        this.numberOfApps = numberOfApps;
+    }
+
+    public String getCoverPicId() {
+        return coverPicId;
+    }
+
+    public void setCoverPicId(String coverPicId) {
+        this.coverPicId = coverPicId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ReachUser)) return false;
+
+        ReachUser user = (ReachUser) o;
+
+        if (dirtyCheck != user.dirtyCheck) return false;
+        if (id != null ? !id.equals(user.id) : user.id != null) return false;
+        if (phoneNumber != null ? !phoneNumber.equals(user.phoneNumber) : user.phoneNumber != null)
+            return false;
+        return !(deviceId != null ? !deviceId.equals(user.deviceId) : user.deviceId != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (phoneNumber != null ? phoneNumber.hashCode() : 0);
+        result = 31 * result + (deviceId != null ? deviceId.hashCode() : 0);
+        result = 31 * result + dirtyCheck;
+        return result;
+    }
+
+    public String getEmailId() {
+        return emailId;
+    }
+
+    public void setEmailId(String emailId) {
+        this.emailId = emailId;
+    }
+
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
     }
 }

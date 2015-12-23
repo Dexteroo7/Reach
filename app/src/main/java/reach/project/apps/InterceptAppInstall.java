@@ -30,6 +30,9 @@ import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
+/**
+ * TODO reduce frequency, only download filter, do not notify on hidden apps ?
+ */
 public class InterceptAppInstall extends BroadcastReceiver {
 
     private static final int FOUND_NEW_NOTIFICATION = 1;
@@ -44,7 +47,7 @@ public class InterceptAppInstall extends BroadcastReceiver {
         Log.i("Ayush", intent.getAction() + " ACTION");
 
         final PackageManager packageManager = context.getPackageManager();
-        final List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> applicationInfoList = MiscUtils.getInstalledApps(packageManager);
         if (applicationInfoList == null || applicationInfoList.isEmpty())
             return;
 

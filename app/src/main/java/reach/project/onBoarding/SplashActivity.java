@@ -9,8 +9,6 @@ import android.text.TextUtils;
 
 import com.google.common.base.Optional;
 
-import java.io.File;
-
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachActivity;
@@ -23,6 +21,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
@@ -31,7 +30,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         final long serverId = SharedPrefUtils.getServerId(preferences);
 
         new Handler().postDelayed(() -> {
+
             if (TextUtils.isEmpty(userName)) {
+
                 getWindow().setBackgroundDrawableResource(R.color.white);
                 setContentView(R.layout.activity_splash);
                 if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
@@ -39,8 +40,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                             WelcomeFragment.newInstance()).commit();
                 else
                     getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                            AccountCreation.newInstance(Optional.absent())).commit();
+                            AccountCreation.newInstance(Optional.absent())).commit(); //ignore oldContainer
             }
+
             else {
                 Intent intent = new Intent(this, ReachActivity.class);
                 startActivity(intent);

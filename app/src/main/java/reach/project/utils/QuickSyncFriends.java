@@ -70,6 +70,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                             ReachFriendsHelper.COLUMN_HASH, //int
                             ReachFriendsHelper.COLUMN_PHONE_NUMBER, //int
                             ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //old number of songs
+                            ReachFriendsHelper.COLUMN_NUMBER_OF_APPS //old number of apps
                     }, null, null, null);
         }).orNull();
 
@@ -83,6 +84,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final List<Long> ids = new ArrayList<>();
         final List<Integer> hashes = new ArrayList<>();
         final LongSparseArray<Integer> oldNumberOfSongs = new LongSparseArray<>();
+        final LongSparseArray<Integer> oldNumberOfApps = new LongSparseArray<>();
 
         while (currentIds.moveToNext()) {
 
@@ -91,6 +93,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             hashes.add(currentIds.getInt(1)); //hash
             numbers.remove(currentIds.getString(2)); //phoneNumber
             oldNumberOfSongs.append(id, currentIds.getInt(3)); //old numberOfSongs
+            oldNumberOfApps.append(id, currentIds.getInt(4)); //old oldNumberOfApps
         }
         currentIds.close();
 
@@ -145,7 +148,8 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                     newFriends,
                     toDelete,
                     quickSync != null ? quickSync.getNewStatus() : null,
-                    oldNumberOfSongs);
+                    oldNumberOfSongs,
+                    oldNumberOfApps);
             return null;
         });
 
@@ -159,7 +163,8 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
                             Iterable<Friend> toInsert,
                             Iterable<Long> toDelete,
                             JsonMap statusChange,
-                            LongSparseArray<Integer> oldNumberOfSongs) {
+                            LongSparseArray<Integer> oldNumberOfSongs,
+                            LongSparseArray<Integer> oldNumberOfApps) {
 
         final ReachFriendsHelper reachFriendsHelper = new ReachFriendsHelper(context);
         final SQLiteDatabase sqlDB = reachFriendsHelper.getWritableDatabase();
@@ -191,7 +196,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             for (Friend friend : toInsert) {
 
                 Log.i("Ayush", "Inserting " + friend.getUserName());
-                final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend, oldNumberOfSongs.get(friend.getId(), 0));
+                final ContentValues values = ReachFriendsHelper.contentValuesCreator(friend, oldNumberOfSongs.get(friend.getId(), 0), oldNumberOfApps.get(friend.getId(), 0));
                 sqlDB.insert(ReachFriendsHelper.FRIENDS_TABLE, null, values);
             }
             sqlDB.setTransactionSuccessful();

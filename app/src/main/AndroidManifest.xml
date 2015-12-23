@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    android:installLocation="auto"
-    package="reach.project">
+    package="reach.project"
+    android:installLocation="auto">
 
     <permission
         android:name="reach.project.permission.C2D_MESSAGE"
@@ -39,6 +39,7 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -120,16 +121,14 @@
             android:label="@string/title_activity_reach_notification"
             android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Light.Dialog" />
-
         <activity
             android:name=".coreViews.myProfile.EditProfileActivity"
             android:label="@string/title_activity_edit_profile"
-            android:parentActivityName=".core.ReachActivity" >
+            android:parentActivityName=".core.ReachActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-
         <activity
             android:name=".coreViews.SettingsActivity"
             android:label="@string/title_activity_settings"
@@ -161,13 +160,14 @@
         <activity
             android:name=".coreViews.yourProfile.YourProfileActivity"
             android:label="@string/title_activity_your_profile"
-            android:parentActivityName=".core.ReachActivity" >
+            android:parentActivityName=".core.ReachActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
 
-        <!--<activity
+        <!--
+        <activity
             android:name=".devikaChat.ChatActivity"
             android:label="@string/title_activity_chat"
             android:launchMode="singleTop"
@@ -177,7 +177,9 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
-        </activity>-->
+        </activity>
+        -->
+
 
         <!-- Things on process :remote -->
 
@@ -198,6 +200,15 @@
             android:label="@string/title_activity_player"
             android:parentActivityName=".core.ReachActivity"
             android:process=":remote">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+        <activity
+            android:name=".push.PushActivity"
+            android:label="@string/title_activity_push"
+            android:parentActivityName=".core.ReachActivity"
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />

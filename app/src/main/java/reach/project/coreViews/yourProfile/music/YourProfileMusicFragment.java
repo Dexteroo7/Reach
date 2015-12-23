@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -50,7 +51,6 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Full list loads from cache, and checks network for update, if update is found, whole data is reloaded.
@@ -84,50 +84,32 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
     private final SecureRandom secureRandom = new SecureRandom();
 
-    private HandOverMessage<ReachDatabase> addSongToQueue = null;
+    @Nullable
     private Cache fullListCache = null;
+    @Nullable
     private Cache smartListCache = null;
+    @Nullable
     private Cache recentMusicCache = null;
+    @Nullable
+    private View rootView = null;
 
     private int lastPosition = 0;
 
     @Override
-    public void onDestroyView() {
+    public void onDestroy() {
 
+        super.onDestroy();
         userId = 0;
 
         MiscUtils.closeQuietly(fullListCache, smartListCache, recentMusicCache);
         fullListCache = smartListCache = recentMusicCache = null;
-
         musicData.clear();
-
-        super.onDestroyView();
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
 
-        super.onAttach(context);
-        try {
-            //noinspection unchecked
-            addSongToQueue = (HandOverMessage<ReachDatabase>) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-
-        super.onDetach();
-        addSongToQueue = null;
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+        super.onCreate(savedInstanceState);
         userId = getArguments().getLong("userId", 0L);
 
         fullListCache = new Cache(this, CacheType.MUSIC_FULL_LIST, userId) {
@@ -166,8 +148,13 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 return new Wire(RecentSong.class).parseFrom(source, offset, count, RecentSong.class);
             }
         };
+    }
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         //mRecyclerView.setHasFixedSize(true);
 
@@ -195,8 +182,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         final int size = musicData.size();
         if (size == 0) {
-            recentMusicCache.loadMoreElements(true);
-            fullListCache.loadMoreElements(false);
+            if (recentMusicCache != null)
+                recentMusicCache.loadMoreElements(true);
+            if (fullListCache != null)
+                fullListCache.loadMoreElements(false);
         }
 
         return size;
@@ -211,7 +200,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         final int currentSize = musicData.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 5)
+        if (position > currentSize - 5 && fullListCache != null)
             //request a partial load
             fullListCache.loadMoreElements(false);
 
@@ -282,7 +271,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         reachDatabase.setVisibility((short) 1);
 
-        addSongToQueue.handOverMessage(reachDatabase); //genre
+        MiscUtils.startDownload(reachDatabase, getActivity(), rootView);
         senderCursor.close();
     }
 
@@ -320,7 +309,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
          * If loading has finished request a full injection of smart lists
          * Else request partial injection
          */
-        if (typeChecker == Song.class)
+        if (typeChecker == Song.class && smartListCache != null)
             smartListCache.loadMoreElements(true);
     }
 
@@ -357,17 +346,23 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         }
     }
 
-    private void painter(List<? extends Message> elements, Class typeChecker) {
+    /**
+     *
+     * @param elements
+     * @param typeChecker
+     * @return true if elements got added
+     */
+    private boolean painter(List<? extends Message> elements, Class typeChecker) {
 
         if (musicData.isEmpty())
             synchronized (musicData) {
-                musicData.addAll(elements);
+                return musicData.addAll(elements);
             }
 
         else if (typeChecker == RecentSong.class)
 
             synchronized (musicData) {
-                musicData.addAll(0, elements);
+                return musicData.addAll(0, elements);
             }
 
         else if (typeChecker == SmartSong.class) {
@@ -376,14 +371,16 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             if (lastPosition > size)
                 lastPosition = size;
             synchronized (musicData) {
-                musicData.addAll(lastPosition, elements);
+                return musicData.addAll(lastPosition, elements);
             }
 
         } else if (typeChecker == Song.class)
 
             synchronized (musicData) {
-                musicData.addAll(elements);
+                return musicData.addAll(elements);
             }
+
+        return false;
     }
 
     private static final Callable<List<? extends Message>> getSmartList = () -> {

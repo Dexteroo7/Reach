@@ -20,24 +20,30 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 
 /**
- * Created by dexter on 18/11/15.
+ * Created by dexter on 16/12/15.
  */
-public final class ListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     public final TextView headerText;
     public final RecyclerView listOfItems;
 
-    public ListHolder(ViewGroup parent, int layoutId) {
-        super(LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false));
-        headerText = (TextView) itemView.findViewById(R.id.headerText);
-        listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
-        itemView.findViewById(R.id.moreButton).setOnClickListener(this);
+    public MoreListHolder(ViewGroup parent,
+                          int itemViewResourceId,
+                          int headerTextResourceId,
+                          int listOfItemsResourceId,
+                          int moreButtonId) {
+
+        super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
+        this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
+        this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
+        itemView.findViewById(moreButtonId).setOnClickListener(this);
     }
 
-    public ListHolder(ViewGroup parent) {
+    public MoreListHolder(ViewGroup parent) {
+
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_with_more_button, parent, false));
-        headerText = (TextView) itemView.findViewById(R.id.headerText);
-        listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
+        this.headerText = (TextView) itemView.findViewById(R.id.headerText);
+        this.listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
         itemView.findViewById(R.id.moreButton).setOnClickListener(this);
     }
 
@@ -84,7 +90,8 @@ public final class ListHolder extends RecyclerView.ViewHolder implements View.On
             final ReachCursorAdapter<SingleItemViewHolder> reference = (ReachCursorAdapter) adapter;
             newAdapter = new ReachCursorAdapter<SingleItemViewHolder>(
                     reference.getHandOverMessage(),
-                    reference.getResourceId()) {
+                    reference.getResourceId(),
+                    reference.getCursor()) {
 
                 @Override
                 public SingleItemViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {

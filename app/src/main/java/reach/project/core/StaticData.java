@@ -91,6 +91,7 @@ public final class StaticData {
     public static final byte MY_LIBRARY_LOADER;
     public static final byte PUSH_MY_LIBRARY_LOADER;
     public static final byte PUSH_DOWNLOADED_LOADER;
+    public static final byte CONTACTS_CHOOSER_LOADER;
     public static final byte ALL_CONTACTS_LOADER;
 
     public static final byte FULL_LIST_LOADER;
@@ -109,6 +110,7 @@ public final class StaticData {
         PUSH_DOWNLOADED_LOADER = i++;
         FULL_LIST_LOADER = i++;
         RECENT_LIST_LOADER = i++;
+        CONTACTS_CHOOSER_LOADER = i++;
         ALL_CONTACTS_LOADER = i++;
     }
 

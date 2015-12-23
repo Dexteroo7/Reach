@@ -1,5 +1,11 @@
 package reach.project.utils;
 
+import android.util.Base64;
+import android.util.Base64InputStream;
+import android.util.Base64OutputStream;
+
+import com.squareup.wire.Message;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -8,23 +14,83 @@ import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-public enum StringCompress {;
+public enum StringCompress {
+    ;
 
-    public static byte[] compress(String text) throws IOException {
+//    public static byte[] compressString(String text) throws IOException {
+//
+//        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        final OutputStream out = new DeflaterOutputStream(baos);
+//        out.write(text.getBytes("UTF8"));
+//        out.close();
+//
+//        return baos.toByteArray();
+//    }
+//
+//    public static String decompressBytes(byte[] bytes) throws IOException {
+//
+//        final InputStream in = new InflaterInputStream(new ByteArrayInputStream(bytes));
+//        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        final byte[] buffer = new byte[8192];
+//        int len;
+//
+//        while ((len = in.read(buffer)) > 0)
+//            baos.write(buffer, 0, len);
+//
+//        return new String(baos.toByteArray(), "UTF8");
+//    }
 
-        final ByteArrayOutputStream baos =
-                new ByteArrayOutputStream();
-        final OutputStream out = new DeflaterOutputStream(baos);
-        out.write(text.getBytes("UTF8")); out.close();
-        return baos.toByteArray();
+    public static String compressBytesToString(byte[] unCompressed) throws IOException {
+
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        final OutputStream base64OutputStream = new Base64OutputStream(byteArrayOutputStream, Base64.DEFAULT);
+        final OutputStream outputStream = new DeflaterOutputStream(base64OutputStream);
+        outputStream.write(unCompressed);
+
+        MiscUtils.closeQuietly(outputStream, base64OutputStream);
+
+        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "US-ASCII");
+
+        byteArrayOutputStream.close();
+
+        return toReturn;
     }
 
-    public static String decompress(byte[] bytes) throws IOException {
+    public static <T extends Message> String compressBytesToString(T unCompressed) throws IOException {
 
-        final InputStream in = new InflaterInputStream(new ByteArrayInputStream(bytes));
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        final OutputStream base64OutputStream = new Base64OutputStream(byteArrayOutputStream, Base64.DEFAULT);
+        final OutputStream outputStream = new DeflaterOutputStream(base64OutputStream);
+        outputStream.write(unCompressed.toByteArray());
+
+        MiscUtils.closeQuietly(outputStream, base64OutputStream);
+
+        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "US-ASCII");
+
+        byteArrayOutputStream.close();
+
+        return toReturn;
+    }
+
+    public static byte[] deCompressStringToBytes(String compressed) throws IOException {
+
+        final byte[] bytes = Base64.decode(compressed, Base64.DEFAULT);
+
+        final InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+        final InputStream base64InputStream = new Base64InputStream(byteArrayInputStream, Base64.DEFAULT);
+        final InputStream inputStream = new InflaterInputStream(base64InputStream);
+
         final byte[] buffer = new byte[8192];
         int len;
-        while((len = in.read(buffer))>0) baos.write(buffer, 0, len);
-        return new String(baos.toByteArray(), "UTF8"); }
+
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        while ((len = inputStream.read(buffer)) > 0)
+            outputStream.write(buffer, 0, len);
+
+        final byte [] toReturn = outputStream.toByteArray();
+
+        MiscUtils.closeQuietly(byteArrayInputStream, base64InputStream, inputStream, outputStream);
+
+        return toReturn;
+    }
 }

@@ -8,22 +8,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import java.lang.ref.WeakReference;
-
 import reach.project.R;
 import tourguide.tourguide.Overlay;
 import tourguide.tourguide.TourGuide;
 
 public class WelcomeFragment extends Fragment {
 
-    private static WeakReference<WelcomeFragment> reference = null;
     private SplashInterface mListener;
 
     public static Fragment newInstance() {
-
-        final WelcomeFragment fragment = new WelcomeFragment();
-        reference = new WeakReference<>(fragment);
-        return fragment;
+        return new WelcomeFragment();
     }
 
     @Override
@@ -38,10 +32,9 @@ public class WelcomeFragment extends Fragment {
                 .setOverlay(new Overlay().setStyle(Overlay.Style.Rectangle))
                 .playOn(getStartedBtn);
         getStartedBtn.setOnClickListener(v -> mListener.onOpenNumberVerification());
+        getStartedBtn.setOnClickListener(v -> mListener.onOpenNumberVerification());
         return rootView;
     }
-
-
 
     @Override
     public void onAttach(Context context) {

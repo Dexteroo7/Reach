@@ -20,16 +20,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.PagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
@@ -38,7 +38,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.squareup.wire.Wire;
 
 import org.json.JSONException;
 
@@ -47,7 +47,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -69,14 +68,13 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushFilesFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
-import reach.project.music.PushContainer;
-import reach.project.music.TransferSong;
+import reach.project.music.Song;
 import reach.project.pacemaker.Pacemaker;
+import reach.project.push.PushContainer;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
-import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
@@ -86,8 +84,7 @@ import reach.project.utils.auxiliaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.PagerFragment;
 
-public class ReachActivity extends AppCompatActivity implements
-        SuperInterface {
+public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     public static String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
     public static String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
@@ -98,15 +95,83 @@ public class ReachActivity extends AppCompatActivity implements
     private static WeakReference<ReachActivity> reference = null;
     private static SecureRandom secureRandom = new SecureRandom();
 
-    /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
-
-    private SharedPreferences preferences;
-    private MenuItem liveHelpItem;
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
+
+    public static void openDownloading() {
+
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (activity.viewPager == null)
+                return;
+
+            activity.viewPager.setCurrentItem(3, true);
+            downloadPager.setItem(1);
+        });
+    }
+
     ////////////////////////////////////////
+
+    @SuppressWarnings("unchecked")
+    private static final PagerFragment downloadPager = PagerFragment.getNewInstance(
+            new PagerFragment.Pages(
+                    new Class[]{ApplicationFragment.class},
+                    new String[]{"My Applications"},
+                    "Apps"),
+            new PagerFragment.Pages(
+                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
+                    new String[]{"Downloading", "My Library"},
+                    "Songs"));
+
+    private static final int[] tabUnselectedIcons = new int[]{
+
+            R.drawable.icon_friends_gray,
+            R.drawable.icon_send_gray,
+            R.drawable.icon_reach_magnet_gray,
+            R.drawable.icon_download_gray,
+            R.drawable.icon_myprofile_gray,
+    };
+
+    private static final int[] tabSelectedIcons = new int[]{
+
+            R.drawable.icon_friends_pink,
+            R.drawable.icon_send_pink,
+            R.drawable.icon_reach_magnet_pink,
+            R.drawable.icon_download_pink,
+            R.drawable.icon_myprofile_pink,
+    };
+
+    @Nullable
+    private CustomViewPager viewPager = null;
+
+    private final PagerAdapter mainPager = new FragmentPagerAdapter(getSupportFragmentManager()) {
+        @Override
+        public Fragment getItem(int position) {
+
+            switch (position) {
+
+                case 0:
+                    return ContactsListFragment.newInstance();
+                case 1:
+                    return PushFilesFragment.getInstance("Bitch");
+                case 2:
+                    return ExploreFragment.newInstance(serverId);
+                case 3:
+                    return downloadPager;
+                case 4:
+                    return MyProfileFragment.newInstance();
+
+                default:
+                    throw new IllegalStateException("only 5 tabs expected");
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 5;
+        }
+    };
+
     ////////////////////////////////////////
 
     @Override
@@ -117,6 +182,7 @@ public class ReachActivity extends AppCompatActivity implements
         if (reference != null)
             reference.clear();
         reference = null;
+        viewPager = null;
     }
 
     @Override
@@ -147,34 +213,24 @@ public class ReachActivity extends AppCompatActivity implements
 
         if (Build.VERSION.SDK_INT >= 23) {
 
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.READ_CONTACTS) != 0) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
 
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.READ_CONTACTS))
-                    Toast.makeText(this,
-                            "Permission to access Contacts is required to use the App",
-                            Toast.LENGTH_SHORT).show();
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
+                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
                 ActivityCompat.requestPermissions(this,
                         new String[]{
                                 Manifest.permission.READ_CONTACTS
                         }, MY_PERMISSIONS_READ_CONTACTS);
-            } else if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
+            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
 
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                    Toast.makeText(this,
-                            "Permission to access Storage is required to use the App",
-                            Toast.LENGTH_SHORT).show();
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
                 ActivityCompat.requestPermissions(this,
                         new String[]{
                                 Manifest.permission.WRITE_EXTERNAL_STORAGE
                         }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
             }
         }
-
-        //TODO onResume is called twice sometimes
 
         super.onResume();
     }
@@ -183,39 +239,9 @@ public class ReachActivity extends AppCompatActivity implements
     protected void onPostResume() {
 
         super.onPostResume();
-        Log.i("Ayush", "Called onResume");
+        Log.i("Ayush", "Called onPostResume");
         processIntent(getIntent());
     }
-
-    /*@Override
-    public void onPrivacyDone() {
-
-        if (isFinishing())
-            return;
-        try {
-
-            serverId = SharedPrefUtils.getServerId(preferences);
-
-            //load fragment
-//            fragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-//                    .replace(R.id.mainContainer, MyReachFragment.newInstance(), "my_reach").commit();
-            //load adapters
-            //add chat listener as it was not added earlier
-            if (firebaseReference != null && serverId != 0) {
-                firebaseReference.child("chat").child(serverId + "").addChildEventListener(LocalUtils.listenerForUnReadChats);
-                //update time stamp
-                final Map<String, Object> userData = MiscUtils.getMap(3);
-                userData.put("uid", serverId);
-                userData.put("newMessage", true);
-                userData.put("lastActivated", System.currentTimeMillis());
-                firebaseReference.child("user").child(serverId + "").updateChildren(userData);
-            }
-
-        } catch (IllegalStateException ignored) {
-            finish();
-        }
-    }*/
 
     @Override
     public void onOpenLibrary(long userId) {
@@ -299,46 +325,26 @@ public class ReachActivity extends AppCompatActivity implements
     protected void onNewIntent(Intent intent) {
 
         Log.d("Ayush", "Received new Intent");
-        if (intent != null)
-            processIntent(intent);
+        processIntent(intent);
         super.onNewIntent(intent);
-    }
-
-    private CustomViewPager viewPager = null;
-    private final PagerFragment downloadPager = PagerFragment.getNewInstance(
-            new PagerFragment.Pages(
-                    new Class[]{ApplicationFragment.class},
-                    new String[]{"My Applications"},
-                    "Apps"),
-            new PagerFragment.Pages(
-                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
-                    new String[]{"Downloading", "My Library"},
-                    "Songs"));
-
-    public static void openDownloading() {
-
-        MiscUtils.useActivity(reference, activity -> {
-
-            if (activity.viewPager == null)
-                return;
-
-            activity.viewPager.setCurrentItem(3, true);
-            activity.downloadPager.setItem(1);
-        });
     }
 
     @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_reach);
+
+        reference = new WeakReference<>(this);
+
+        //gcm keep-alive
         Pacemaker.scheduleLinear(this, 5);
 
-        preferences = getSharedPreferences("Reach", MODE_PRIVATE);
-//        fragmentManager = getSupportFragmentManager();
-        reference = new WeakReference<>(this);
+        final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
-        //track app open event
 
+        //track app open event
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
         simpleParams.put(PostParams.USER_ID, serverId + "");
         simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
@@ -357,20 +363,73 @@ public class ReachActivity extends AppCompatActivity implements
         } catch (JSONException ignored) {
         }
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_reach);
-//        toggleDrawer(true);
-//
-//        //small
-//        toggleSliding(false);
+        //fetch username and phoneNumber
+        final String userName = SharedPrefUtils.getUserName(preferences);
+        final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
+
+        //initialize bug tracking
+        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        //Crittercism.setUsername(userName + " " + phoneNumber);
+
+        //track screen
+        final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
+        tracker.setScreenName("reach.project.core.ReachActivity");
+        tracker.set("&uid", serverId + "");
+        tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
+
+        //first check playServices
+        if (!LocalUtils.checkPlayServices(this)) {
+            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
+            return; //fail
+        }
+
+        ////////////////////////////////////////
+
         viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
+        viewPager.setPagingEnabled(false);
+        viewPager.setOffscreenPageLimit(5);
+        viewPager.setAdapter(mainPager);
 
-        //accountCreation ? numberVerification ? contactListFragment ? and other stuff
-        loadFragment();
-    }
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+        tabLayout.setupWithViewPager(viewPager);
+        tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
 
-    private void loadFragment() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
 
+                super.onTabSelected(tab);
+                tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+                super.onTabUnselected(tab);
+                tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+                super.onTabReselected(tab);
+                tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+            }
+        });
+
+        final int selectedTabPosition = tabLayout.getSelectedTabPosition();
+        final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
+        if (selectedTab != null)
+            selectedTab.setIcon(tabSelectedIcons[selectedTabPosition]);
+
+        for (int index = 1; index < tabLayout.getTabCount(); index++) {
+
+            final TabLayout.Tab tab = tabLayout.getTabAt(index);
+            if (tab != null) {
+                tab.setIcon(tabUnselectedIcons[index]);
+            }
+        }
+
+        //routine stuff
         final boolean networkPresent;
         final NetworkInfo networkInfo =
                 ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
@@ -384,146 +443,27 @@ public class ReachActivity extends AppCompatActivity implements
         if (networkPresent) //check for update
             new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.temporaryFix);
 
-        //fetch username and phoneNumber
-        final String userName = SharedPrefUtils.getUserName(preferences);
-        final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
+        if (networkPresent) {
 
-        //initialize bug tracking
-        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        //Crittercism.setUsername(userName + " " + phoneNumber);
+            //refresh gcm
+            StaticData.temporaryFix.submit(LocalUtils::checkGCM);
+            //refresh download ops
+            new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
+            //Music scanner TODO perm check
+            MiscUtils.useContextFromContext(reference, activity -> {
 
-        //initialize GA tracker
-        final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
-        tracker.setScreenName("reach.project.core.ReachActivity");
-
-        if (serverId != 0) {
-
-            tracker.set("&uid", serverId + "");
-            tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
-        } else
-            tracker.send(new HitBuilders.ScreenViewBuilder().build());
-
-        //first check playServices
-        if (!LocalUtils.checkPlayServices(this)) {
-            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
-            return; //fail
-        }
-
-        if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
-
-            //startNumberVerification();
-            //toggleSliding(false);
-        } else if (TextUtils.isEmpty(userName)) {
-
-            //startAccountCreation(Optional.absent());
-            //toggleSliding(false);
-        } else {
-
-            final CustomViewPager viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
-            viewPager.setPagingEnabled(false);
-            viewPager.setOffscreenPageLimit(5);
-
-            final Fragment[] fragments = new Fragment[]{
-
-                    ContactsListFragment.newInstance(),
-                    PushFilesFragment.getInstance("Bitch"),
-                    ExploreFragment.newInstance(serverId),
-                    PagerFragment.getNewInstance(
-                            new PagerFragment.Pages(
-                                    new Class[]{ApplicationFragment.class},
-                                    new String[]{"My Applications"},
-                                    "Apps"),
-                            new PagerFragment.Pages(
-                                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
-                                    new String[]{"Downloading", "My Library"},
-                                    "Songs")),
-                    MyProfileFragment.newInstance()
-            };
-
-            viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-                @Override
-                public Fragment getItem(int position) {
-                    return fragments[position];
-                }
-
-                @Override
-                public int getCount() {
-                    return fragments.length;
-                }
+                final Intent intent = new Intent(activity, MetaDataScanner.class);
+                intent.putExtra("first", false);
+                activity.startService(intent);
+                return null;
             });
-
-            final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
-            final int[] tabUnselectedIcons = new int[]{
-
-                    R.drawable.icon_friends_gray,
-                    R.drawable.icon_send_gray,
-                    R.drawable.icon_reach_magnet_gray,
-                    R.drawable.icon_download_gray,
-                    R.drawable.icon_myprofile_gray,
-            };
-            final int[] tabSelectedIcons = new int[]{
-
-                    R.drawable.icon_friends_pink,
-                    R.drawable.icon_send_pink,
-                    R.drawable.icon_reach_magnet_pink,
-                    R.drawable.icon_download_pink,
-                    R.drawable.icon_myprofile_pink,
-            };
-            tabLayout.setupWithViewPager(viewPager);
-
-            //LayoutInflater.from(this).inflate();
-
-            int sPos = tabLayout.getSelectedTabPosition();
-            TabLayout.Tab sTab = tabLayout.getTabAt(sPos);
-            if (sTab != null)
-                sTab.setIcon(tabSelectedIcons[sPos]);
-
-            for (int i = 1; i < tabLayout.getTabCount(); i++) {
-                final TabLayout.Tab tab = tabLayout.getTabAt(i);
-                if (tab != null) {
-                    tab.setIcon(tabUnselectedIcons[i]);
-                }
-            }
-            tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
-                @Override
-                public void onTabSelected(TabLayout.Tab tab) {
-                    super.onTabSelected(tab);
-                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
-                }
-
-                @Override
-                public void onTabUnselected(TabLayout.Tab tab) {
-                    super.onTabUnselected(tab);
-                    tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
-                }
-
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {
-                    super.onTabReselected(tab);
-                    tab.setIcon(tabSelectedIcons[tab.getPosition()]);
-                }
-            });
-
-            //some stuff
-            if (networkPresent)
-                AsyncTask.SERIAL_EXECUTOR.execute(LocalUtils.networkOps);
-
-//        if (serverId == 0 || TextUtils.isEmpty(phoneNumber)) {
-//
-//            startNumberVerification();
-//            toggleSliding(false);
-//        } else if (TextUtils.isEmpty(userName)) {
-//
-//            startAccountCreation(Optional.absent());
-//            toggleSliding(false);
-//        } else {
-//
-//
-//        }
         }
     }
 
     private synchronized void processIntent(Intent intent) {
+
+        if (intent == null)
+            return;
 
         Log.i("Ayush", "Processing Intent");
 
@@ -541,52 +481,47 @@ public class ReachActivity extends AppCompatActivity implements
             Log.i("Ayush", "FOUND PUSH DATA");
 
             final String compressed = intent.getStringExtra("data");
-            String unCompressed;
+
+            byte[] unCompressed;
             try {
-                unCompressed = StringCompress.decompress(Base64.decode(compressed, Base64.DEFAULT));
+                unCompressed = StringCompress.deCompressStringToBytes(compressed);
             } catch (IOException e) {
                 e.printStackTrace();
-                unCompressed = "";
+                unCompressed = null;
             }
 
-            Log.i("Ayush", "UNCOMPRESSED " + unCompressed);
+            if (unCompressed != null && unCompressed.length > 0) {
 
-            if (!TextUtils.isEmpty(unCompressed)) {
+                PushContainer pushContainer;
+                try {
+                    pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    pushContainer = null;
+                }
 
-                final PushContainer pushContainer = new Gson().fromJson(unCompressed, PushContainer.class);
+                if (pushContainer != null && pushContainer.song != null && !pushContainer.song.isEmpty()) {
 
-                Log.i("Ayush", "FOUND PUSH CONTAINER");
+                    for (Song song : pushContainer.song) {
 
-                if (pushContainer != null && !TextUtils.isEmpty(pushContainer.getSongData())) {
+                        if (song == null)
+                            continue;
 
-                    final HashSet<TransferSong> transferSongs = new Gson().fromJson(
-                            pushContainer.getSongData(),
-                            new TypeToken<HashSet<TransferSong>>() {
-                            }.getType());
-
-                    if (transferSongs != null && !transferSongs.isEmpty()) {
-
-                        for (TransferSong transferSong : transferSongs) {
-
-                            if (transferSong == null)
-                                continue;
-
-                            addSongToQueue(transferSong.getSongId(),
-                                    pushContainer.getSenderId(),
-                                    transferSong.getSize(),
-                                    transferSong.getDisplayName(),
-                                    transferSong.getActualName(),
-                                    true,
-                                    pushContainer.getUserName(),
-                                    ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                                    pushContainer.getNetworkType(),
-                                    transferSong.getArtistName(),
-                                    transferSong.getDuration(),
-                                    transferSong.getAlbumName(),
-                                    transferSong.getGenre());
-                        }
-                        new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
+                        addSongToQueue(song.songId,
+                                pushContainer.senderId,
+                                song.size,
+                                song.displayName,
+                                song.actualName,
+                                true,
+                                pushContainer.userName,
+                                ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                "0",
+                                song.artist,
+                                song.duration,
+                                song.album,
+                                song.genre);
                     }
+                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
                 }
                 ///////////
             }
@@ -718,66 +653,7 @@ public class ReachActivity extends AppCompatActivity implements
         reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
-        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
-        if (uri == null) {
-
-            ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                    .setCategory("Add song failed")
-                    .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                    .setValue(1)
-                    .build());
-            return;
-        }
-
-        final String[] splitter = uri.toString().split("/");
-        if (splitter.length == 0)
-            return;
-        reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
-        //start this operation
-        if (!multiple)
-            StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
-                    this,
-                    reachDatabase,
-                    reachDatabase.getReceiverId(), //myID
-                    reachDatabase.getSenderId(),   //the uploaded
-                    reachDatabase.getId()));
-
-        //tracing shit
-
-        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                .setCategory("Transaction - Add SongBrainz")
-                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
-                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
-                .setValue(1)
-                .build());
-
-        //usage tracking
-        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
-        simpleParams.put(PostParams.USER_ID, serverId + "");
-        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
-        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
-        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
-        try {
-            simpleParams.put(PostParams.APP_VERSION,
-                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
-
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
-        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
-        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
-        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
-        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
-        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
-
-        try {
-            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
-        } catch (JSONException ignored) {
-        }
+        MiscUtils.startDownload(reachDatabase, this, null);
     }
 
     private enum LocalUtils {
@@ -811,48 +687,26 @@ public class ReachActivity extends AppCompatActivity implements
             return false;
         }
 
-        public static Runnable networkOps = new Runnable() {
+        public static void checkGCM() {
 
-            private void checkGCM() {
+            if (serverId == 0)
+                return;
 
-                if (serverId == 0)
-                    return;
+            final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getGcmId(serverId).execute(), Optional.absent()).orNull();
 
-                final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getGcmId(serverId).execute(), Optional.absent()).orNull();
+            //check returned gcm
+            final String gcmId;
+            if (dataToReturn == null || //fetch failed
+                    TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
+                    gcmId.equals("hello_world")) { //bad gcm
 
-                //check returned gcm
-                final String gcmId;
-                if (dataToReturn == null || //fetch failed
-                        TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
-                        gcmId.equals("hello_world")) { //bad gcm
-
-                    //network operation
-                    if (MiscUtils.updateGCM(serverId, reference))
-                        Log.i("Ayush", "GCM updated !");
-                    else
-                        Log.i("Ayush", "GCM check failed");
-                }
+                //network operation
+                if (MiscUtils.updateGCM(serverId, reference))
+                    Log.i("Ayush", "GCM updated !");
+                else
+                    Log.i("Ayush", "GCM check failed");
             }
-
-            @Override
-            public void run() {
-
-                ////////////////////////////////////////
-                //refresh gcm
-                checkGCM();
-                //refresh download ops
-                new LocalUtils.RefreshOperations().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
-                //Music scanner
-                MiscUtils.useContextFromContext(reference, activity -> {
-
-                    final Intent intent = new Intent(activity, MetaDataScanner.class);
-                    intent.putExtra("first", false);
-                    activity.startService(intent);
-                    return null;
-                });
-                ////////////////////////////////////////
-            }
-        };
+        }
 
         private static class CheckUpdate extends AsyncTask<Void, Void, Integer> {
 

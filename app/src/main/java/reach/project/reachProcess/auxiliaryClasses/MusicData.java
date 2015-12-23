@@ -9,6 +9,9 @@ import android.os.Parcelable;
 
 public class MusicData implements Parcelable {
 
+    public static byte DOWNLOADED = 0;
+    public static byte MY_LIBRARY = 0;
+
     private final String displayName;
     private final String path;
     private final String artistName;

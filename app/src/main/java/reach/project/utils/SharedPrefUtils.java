@@ -259,4 +259,12 @@ public enum SharedPrefUtils {
                 }.getType())).apply();
         Log.i("Ayush", "Saving new application visibility " + visibilities.size());
     }
+
+    public static synchronized void storeLastRequestTime(SharedPreferences preferences) {
+        preferences.edit().putLong("lastRequestTime", System.currentTimeMillis()).apply();
+    }
+
+    public static long getLastRequestTime(SharedPreferences preferences) {
+        return preferences.getLong("lastRequestTime", 0);
+    }
 }

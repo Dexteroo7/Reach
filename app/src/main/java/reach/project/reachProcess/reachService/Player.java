@@ -40,7 +40,8 @@ public class Player {
     private enum WhichPlayer {
 
         AudioTrack, //we are streaming
-        MediaPlayer //static playBack (seek-able)
+        MediaPlayer, //static playBack (seek-able)
+        ExoPlayer //build type >=16
     }
 
     //Single threaded executor to avoid fuck ups
@@ -177,7 +178,8 @@ public class Player {
         Log.i("Downloader", "Seeking to " + i);
         if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
             mediaPlayer.seekTo(i);
-        else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
+        else
+            throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
     }
 
 //    /**
@@ -343,8 +345,9 @@ public class Player {
         private final short[] buffer;
         private final BitStream bitStream;
         private final boolean mono;
-        private Header frameHeader;
         private int limit = 0;
+
+        private Header frameHeader;
 
         public Decode(BitStream bitStream, Header frameHeader, boolean mono, int bufferSize) {
             this.bitStream = bitStream;

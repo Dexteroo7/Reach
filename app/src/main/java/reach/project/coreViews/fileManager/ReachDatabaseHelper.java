@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
+import android.util.Log;
 
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
@@ -258,15 +259,16 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-//        Log.w(ReachAlbumHelper.class.getName(),
-//                "Upgrading database from version " + oldVersion + " to "
-//                        + newVersion + ", which will destroy all old data");
-//        db.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM_ART_DATA + " blob");
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM + " text");
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_GENRE + " text");
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_VISIBILITY + " short");
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_UNIQUE_ID + " long");
-        //onCreate(database);
+
+        Log.w(ReachDatabaseHelper.class.getName(),
+                "Upgrading database from version " + oldVersion + " to "
+                        + newVersion + ", which will destroy all old data");
+        database.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
+//        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM_ART_DATA + " blob");
+//        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM + " text");
+//        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_GENRE + " text");
+//        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_VISIBILITY + " short");
+//        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_UNIQUE_ID + " long");
+        onCreate(database);
     }
 }

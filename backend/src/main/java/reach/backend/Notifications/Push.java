@@ -5,9 +5,9 @@ import com.googlecode.objectify.annotation.Subclass;
 /**
  * Created by dexter on 06/07/15.
  */
-@Subclass (name = "Push")
+@Subclass(name = "Push")
 
-public class Push extends NotificationBase{
+public class Push extends NotificationBase {
 
     private int size = 0;
     private String firstSongName = "";

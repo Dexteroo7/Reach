@@ -517,6 +517,7 @@ public class MetaDataScanner extends IntentService {
             if (applicationInfoList == null || applicationInfoList.isEmpty())
                 return Collections.emptyList();
 
+            //fetch local visibility
             final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(preferences);
             final List<String> newPackages = new ArrayList<>();
 
@@ -535,6 +536,7 @@ public class MetaDataScanner extends IntentService {
                 Log.i("Ayush", "Found " + newPackages.size() + " new packages");
                 final reach.backend.applications.appVisibilityApi.model.JsonMap visibilityMap = MiscUtils.autoRetry(() ->
                         StaticData.appVisibilityApi.get(userId).execute().getVisibility(), Optional.absent()).orNull();
+
                 if (visibilityMap != null && !visibilityMap.isEmpty()) {
 
                     final Set<Map.Entry<String, Object>> entrySet = visibilityMap.entrySet();
@@ -592,9 +594,12 @@ public class MetaDataScanner extends IntentService {
                 }
             }
 
+            /**
+             * Remaining packages will not have a visibility
+             */
             //any remaining packages in "newPackages" will be marked as visible
-            for (String newPackage : newPackages)
-                packageVisibility.put(newPackage, true);
+//            for (String newPackage : newPackages)
+//                packageVisibility.put(newPackage, true);
 
             final List<App> applicationsFound = new ArrayList<>();
             for (ApplicationInfo applicationInfo : applicationInfoList) {
@@ -685,12 +690,14 @@ public class MetaDataScanner extends IntentService {
     /**
      * Saves the music data to cloud and locally
      *
-     * @param songs  iterable of songs
+     * @param myLibrary  songs from myLibrary
+     * @param downloaded downloaded songs
      * @param apps   iterable of apps
      * @param genres all the genres
      * @param first  true, if this force local DB update is needed
      */
-    private static void saveMetaData(List<Song> songs,
+    private static void saveMetaData(List<Song> myLibrary,
+                                     List<Song> downloaded,
                                      List<App> apps,
                                      Iterable<String> genres,
                                      boolean first,
@@ -705,12 +712,14 @@ public class MetaDataScanner extends IntentService {
             return; // what to do ? this should probably not happen
         }
 
+        final List<Song> total = ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(myLibrary, downloaded))); //music
+
         ////////////////////Sync songs
         //TODO verify empty case being handled
         final byte[] musicBlob = new MusicList.Builder()
                 .clientId(serverId)
                 .genres(ImmutableList.copyOf(genres)) //list view of hash set
-                .song(songs) //concatenated list
+                .song(total) //concatenated list
                 .build().toByteArray();
 
         //return false if same Music found !
@@ -723,11 +732,11 @@ public class MetaDataScanner extends IntentService {
         if (newMusic || first) {
 
             //over-write music visibility
-            ScanMusic.createVisibilityMap(songs, serverId);
+            ScanMusic.createVisibilityMap(total, serverId);
 
             //over-write local db
             MiscUtils.bulkInsertSongs(
-                    songs,
+                    myLibrary, //sync up only myLibrary
                     context.getContentResolver(), serverId);
         }
 
@@ -771,7 +780,8 @@ public class MetaDataScanner extends IntentService {
         final List<App> appList = ScanApps.getPackages(serverId, this);
         ////////////////////Put into server
         saveMetaData(
-                ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(songs, downloaded))), //music
+                songs, //myLibrary music
+                downloaded, //downloaded music
                 appList, //apps
                 ScanMusic.genreHashSet, //genres
                 intent.getBooleanExtra("first", true),

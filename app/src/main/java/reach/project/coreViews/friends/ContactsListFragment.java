@@ -58,7 +58,6 @@ public class ContactsListFragment extends Fragment implements
 
     private View rootView;
 
-    private SharedPreferences sharedPreferences;
     private SuperInterface mListener;
 
     /*private TextView notificationCount;
@@ -139,10 +138,8 @@ public class ContactsListFragment extends Fragment implements
 
         getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
         getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
-        if (friendsAdapter != null) {
-            friendsAdapter.setHorizontalCursor(null);
-            friendsAdapter.setVerticalCursor(null);
-        }
+        friendsAdapter.setHorizontalCursor(null);
+        friendsAdapter.setVerticalCursor(null);
 
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();
@@ -162,7 +159,7 @@ public class ContactsListFragment extends Fragment implements
 
         /*if (getArguments().getBoolean("first", false))
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-        sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
         phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
 

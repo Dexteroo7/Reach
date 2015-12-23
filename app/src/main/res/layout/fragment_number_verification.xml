@@ -45,6 +45,8 @@
         android:textCursorDrawable="@null"
         android:layout_above="@id/whyAns"
         android:layout_centerHorizontal="true"
+        android:text="+91 "
+        android:hint="Enter phone number"
         android:textColor="@color/reach_grey_light"
         android:focusable="true"
         android:focusableInTouchMode="true"

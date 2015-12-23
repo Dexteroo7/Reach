@@ -19,12 +19,14 @@ import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.GridView;
@@ -34,12 +36,20 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import org.json.JSONException;
 
 import java.io.Closeable;
 import java.io.File;
@@ -59,6 +69,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -67,9 +78,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
+
 import reach.backend.entities.messaging.model.MyBoolean;
+import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -82,6 +98,9 @@ import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.SongMetadata;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.auxiliaryClasses.DoWork;
 import reach.project.utils.auxiliaryClasses.UseActivity;
 import reach.project.utils.auxiliaryClasses.UseContext;
@@ -89,6 +108,7 @@ import reach.project.utils.auxiliaryClasses.UseContext2;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment;
 import reach.project.utils.auxiliaryClasses.UseFragment2;
+import reach.project.utils.viewHelpers.RetryHook;
 
 /**
  * Created by dexter on 1/10/14.
@@ -169,7 +189,7 @@ public enum MiscUtils {
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
 
-        final List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> applicationInfoList = getInstalledApps(packageManager);
         if (applicationInfoList == null || applicationInfoList.isEmpty())
             return Collections.emptyList();
 
@@ -178,8 +198,8 @@ public enum MiscUtils {
 
         for (ApplicationInfo applicationInfo : applicationInfoList) {
 
-            if (applicationInfo.packageName.equals("reach.project"))
-                continue;
+//            if (applicationInfo.packageName.equals("reach.project"))
+//                continue;
 
             final App.Builder appBuilder = new App.Builder();
 
@@ -291,11 +311,8 @@ public enum MiscUtils {
 
     public static <T> Set<T> getSet(int capacity) {
 
-        if (capacity < 1000) //use lighter collection
-            if (Build.VERSION.SDK_INT >= 23)
-                return new ArraySet<>(capacity);
-            else
-                return new HashSet<>(capacity); //else use the support one
+        if (capacity < 1000 && Build.VERSION.SDK_INT >= 23) //use lighter collection
+            return new ArraySet<>(capacity);
         else
             return new HashSet<>(capacity);
     }
@@ -801,7 +818,8 @@ public enum MiscUtils {
                 } catch (NullPointerException ignored) {
                 }
                 e.printStackTrace();
-                return Optional.absent();
+                return Optional.absent(); //do not retry
+
             } catch (GoogleJsonResponseException e) {
 
                 try {
@@ -809,8 +827,71 @@ public enum MiscUtils {
                 } catch (NullPointerException ignored) {
                 }
                 if (e.getLocalizedMessage().contains("404"))
-                    return Optional.absent();
-            } catch (IOException e) {
+                    return Optional.absent(); //do not retry on 404
+
+            } catch (Exception e) {
+
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
+                e.printStackTrace();
+            }
+        }
+        return Optional.absent();
+    }
+
+    /**
+     * Performs a work, retries upon failure with exponential back-off.
+     * Kindly don't use on UI thread.
+     *
+     * @param <T>       the return type of work
+     * @param task      the work that needs to be performed
+     * @param predicate the extra condition for failure
+     * @return the result/output of performing the work
+     */
+    public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
+                                            @NonNull final Optional<Predicate<T>> predicate,
+                                            @NonNull final Optional<RetryHook> retryHookOptional) {
+
+        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
+
+            if (retryHookOptional.isPresent() && retry > 0)
+                retryHookOptional.get().retryCount(retry);
+
+            try {
+
+                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
+                final T resultAfterWork = task.doWork();
+                /**
+                 * If the result was not
+                 * desirable we RETRY.
+                 */
+                if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
+                    continue;
+                /**
+                 * Else we return
+                 */
+                return Optional.fromNullable(resultAfterWork);
+            } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
+
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
+                e.printStackTrace();
+                return Optional.absent(); //do not retry
+
+            } catch (GoogleJsonResponseException e) {
+
+                try {
+                    Log.i("Ayush", e.getLocalizedMessage());
+                } catch (NullPointerException ignored) {
+                }
+                if (e.getLocalizedMessage().contains("404"))
+                    return Optional.absent(); //do not retry on 404
+
+            } catch (Exception e) {
 
                 try {
                     Log.i("Ayush", e.getLocalizedMessage());
@@ -860,10 +941,30 @@ public enum MiscUtils {
                      * Else we return
                      */
                     return;
-                } catch (InterruptedException | UnknownHostException e) {
+                } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
+
+                    try {
+                        Log.i("Ayush", e.getLocalizedMessage());
+                    } catch (NullPointerException ignored) {
+                    }
                     e.printStackTrace();
-                    return;
-                } catch (IOException e) {
+                    return; //do not retry
+
+                } catch (GoogleJsonResponseException e) {
+
+                    try {
+                        Log.i("Ayush", e.getLocalizedMessage());
+                    } catch (NullPointerException ignored) {
+                    }
+                    if (e.getLocalizedMessage().contains("404"))
+                        return; //do not retry on 404
+
+                } catch (Exception e) {
+
+                    try {
+                        Log.i("Ayush", e.getLocalizedMessage());
+                    } catch (NullPointerException ignored) {
+                    }
                     e.printStackTrace();
                 }
             }
@@ -1063,13 +1164,20 @@ public enum MiscUtils {
     }
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
-        List<ApplicationInfo> applicationInfoList = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
-        /*for (ApplicationInfo applicationInfo : applicationInfoList) {
-            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM)== 0) {
-                applicationInfoList.remove(applicationInfo);
-            }
-        }*/
-        return applicationInfoList;
+
+        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final Iterator<ApplicationInfo> iterator = applications.iterator();
+
+        while (iterator.hasNext()) {
+
+            final ApplicationInfo applicationInfo = iterator.next();
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                    || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                    || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
+                iterator.remove();
+        }
+
+        return applications;
     }
 
     private static class StartDownloadOperation implements Runnable {
@@ -1179,4 +1287,242 @@ public enum MiscUtils {
         ////////
     }
 
+    public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
+                                                   WeakReference<Firebase> firebaseWeakReference,
+                                                   WeakReference<? extends Activity> toHelpTrack) {
+
+        final SharedPreferences preferences = preferencesWeakReference.get();
+        if (preferences == null)
+            return;
+
+        final String localToken = SharedPrefUtils.getChatToken(preferences);
+        final String localUUID = SharedPrefUtils.getChatUUID(preferences);
+        final long serverId = SharedPrefUtils.getServerId(preferences);
+
+        if (serverId == 0)
+            return; //shiz
+
+        //if not empty exit
+        if (!TextUtils.isEmpty(localToken) && !TextUtils.isEmpty(localUUID))
+            return;
+
+        //fetch from server
+        final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
+        if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString())) {
+
+            MiscUtils.useContextFromContext(toHelpTrack, activity -> {
+
+                ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("SEVERE ERROR, chat token failed")
+                        .setAction("User Id - " + serverId)
+                        .setValue(1)
+                        .build());
+            });
+            Log.i("Ayush", "Chat token check failed !");
+        } else {
+
+            final Firebase firebase = firebaseWeakReference.get();
+            if (firebase == null)
+                return;
+            firebase.authWithCustomToken(fetchTokenFromServer.getString(), new Firebase.AuthResultHandler() {
+
+                @Override
+                public void onAuthenticationError(FirebaseError error) {
+
+                    MiscUtils.useContextFromContext(toHelpTrack, activity -> {
+
+                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("SEVERE ERROR " + error.getDetails())
+                                .setAction("User Id - " + serverId)
+                                .setValue(1)
+                                .build());
+                    });
+                    Log.e("Ayush", "Login Failed! " + error.getMessage());
+                }
+
+                @Override
+                public void onAuthenticated(AuthData authData) {
+
+                    final String chatUUID = authData.getUid();
+                    //if found save
+                    SharedPrefUtils.storeChatUUID(preferences, chatUUID);
+                    SharedPrefUtils.storeChatToken(preferences, fetchTokenFromServer.getString());
+                    Log.i("Ayush", "Chat authenticated " + chatUUID);
+
+                    final Map<String, Object> userData = new HashMap<>();
+                    userData.put("uid", authData.getAuth().get("uid"));
+                    userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
+                    userData.put("userName", authData.getAuth().get("userName"));
+                    userData.put("imageId", authData.getAuth().get("imageId"));
+                    userData.put("lastActivated", 0);
+                    userData.put("newMessage", true);
+
+                    final Firebase firebase = firebaseWeakReference.get();
+                    if (firebase != null)
+                        firebase.child("user").child(chatUUID).setValue(userData);
+                }
+            });
+        }
+    }
+
+    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView) {
+
+//        final Activity activity = getActivity();
+        final ContentResolver contentResolver = activity.getContentResolver();
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
+        if (contentResolver == null)
+            return;
+
+        /**
+         * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
+         */
+
+        final Cursor cursor;
+
+        //this cursor can be used to play if entry exists
+        cursor = contentResolver.query(
+                ReachDatabaseProvider.CONTENT_URI,
+                new String[]{
+
+                        ReachDatabaseHelper.COLUMN_ID, //0
+                        ReachDatabaseHelper.COLUMN_PROCESSED, //1
+                        ReachDatabaseHelper.COLUMN_PATH, //2
+
+                        ReachDatabaseHelper.COLUMN_IS_LIKED, //3
+                        ReachDatabaseHelper.COLUMN_SENDER_ID,
+                        ReachDatabaseHelper.COLUMN_RECEIVER_ID,
+                        ReachDatabaseHelper.COLUMN_SIZE,
+
+                },
+
+                ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                new String[]{reachDatabase.getDisplayName(), reachDatabase.getActualName(),
+                        reachDatabase.getLength() + "", reachDatabase.getDuration() + ""},
+                null);
+
+        if (cursor != null) {
+
+            if (cursor.moveToFirst()) {
+
+                //if not multiple addition, play the song
+                final boolean liked;
+                final String temp = cursor.getString(3);
+                liked = !TextUtils.isEmpty(temp) && temp.equals("1");
+
+                final MusicData musicData = new MusicData(
+                        cursor.getLong(0), //id
+                        reachDatabase.getLength(),
+                        reachDatabase.getSenderId(),
+                        cursor.getLong(1),
+                        0,
+                        cursor.getString(2),
+                        reachDatabase.getDisplayName(),
+                        reachDatabase.getArtistName(),
+                        "",
+                        liked,
+                        reachDatabase.getDuration(),
+                        (byte) 0);
+                playSong(musicData, activity);
+                //in both cases close and continue
+                cursor.close();
+                return;
+            }
+            cursor.close();
+        }
+
+        final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
+
+        //new song
+        //We call bulk starter always
+        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
+                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
+        if (uri == null) {
+
+            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Add song failed")
+                    .setAction("User Name - " + clientName)
+                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setValue(1)
+                    .build());
+            return;
+        }
+
+        final String[] splitter = uri.toString().split("/");
+        if (splitter.length == 0)
+            return;
+        reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
+        //start this operation
+        StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
+                activity,
+                reachDatabase,
+                reachDatabase.getReceiverId(), //myID
+                reachDatabase.getSenderId(),   //the uploaded
+                reachDatabase.getId()));
+
+        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + clientName)
+                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                .setValue(1)
+                .build());
+
+        //usage tracking
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, reachDatabase.getReceiverId() + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(activity));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
+        complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
+        complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
+        complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
+        complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+
+        try {
+            UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
+        } catch (JSONException ignored) {
+        }
+
+        if (snackView != null)
+            Snackbar.make(snackView, "\"Song added, click to view\"", Snackbar.LENGTH_LONG)
+                    .setAction("VIEW", v -> {
+
+                        ReachActivity.openDownloading();
+                    })
+                    .show();
+
+    }
+
+    public static JsonElement get(JsonObject jsonObject, GetName getName) {
+        //noinspection unchecked
+        return jsonObject.get(getName.getName());
+    }
+
+    public static <T> List<T> convertToList(T[] array) {
+
+        final List<T> list = new ArrayList<>(array.length);
+        Collections.addAll(list, array);
+        return list;
+    }
+
+    public static List<Long> convertToList(long[] array) {
+
+        final List<Long> list = new ArrayList<>(array.length);
+        for (long item : array)
+            list.add(item);
+        return list;
+    }
 }
