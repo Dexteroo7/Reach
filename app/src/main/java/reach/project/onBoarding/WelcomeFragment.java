@@ -6,11 +6,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import reach.project.R;
-import tourguide.tourguide.Overlay;
-import tourguide.tourguide.TourGuide;
 
 public class WelcomeFragment extends Fragment {
 
@@ -25,14 +22,8 @@ public class WelcomeFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_welcome, container, false);
-        Button getStartedBtn = (Button) rootView.findViewById(R.id.getStartedBtn);
-        TourGuide.init(getActivity()).with(TourGuide.Technique.Click)
-                .setPointer(null)
-                .setToolTip(null)
-                .setOverlay(new Overlay().setStyle(Overlay.Style.Rectangle))
-                .playOn(getStartedBtn);
-        getStartedBtn.setOnClickListener(v -> mListener.onOpenNumberVerification());
-        getStartedBtn.setOnClickListener(v -> mListener.onOpenNumberVerification());
+        rootView.findViewById(R.id.getStartedBtn).setOnClickListener(v ->
+                mListener.onOpenNumberVerification());
         return rootView;
     }
 

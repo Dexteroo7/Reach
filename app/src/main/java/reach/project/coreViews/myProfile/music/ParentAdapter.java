@@ -1,6 +1,8 @@
 package reach.project.coreViews.myProfile.music;
 
+import android.app.Activity;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,6 +33,9 @@ import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
+import tourguide.tourguide.Overlay;
+import tourguide.tourguide.ToolTip;
+import tourguide.tourguide.TourGuide;
 
 /**
  * Created by dexter on 25/11/15.
@@ -149,6 +154,18 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         final Object object = getItem(position);
         if (object instanceof Cursor) {
 
+            if (position == 0) {
+                TourGuide tourGuide = TourGuide.init((Activity) holder.itemView.getContext())
+                        .setOverlay(new Overlay())
+                        .setToolTip(new ToolTip()
+                                .setTextColor(Color.WHITE)
+                                .setBackgroundColor(Color.TRANSPARENT)
+                                .setDescription("Make your songs,apps and photos\n" +
+                                        "visible to your friends or keep it hidden\n" +
+                                        "to yourself.")
+                                .setTitle("Start organizing"))
+                        .playOn(holder.itemView);
+            }
             final Cursor cursorExactType = (Cursor) object;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
             songItemHolder.bindPosition(position);
