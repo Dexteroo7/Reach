@@ -27,38 +27,28 @@
         android:paddingRight="35dp"
         android:layout_width="wrap_content"
         android:layout_height="35dp" />
-    <TextView
-        android:id="@+id/whyAns"
-        android:layout_above="@id/verify"
-        android:layout_centerHorizontal="true"
-        android:gravity="center"
-        android:layout_margin="30dp"
-        android:text="Didn’t receive the code ? Send it again"
-        android:textColor="@color/reach_color"
-        android:textSize="13sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
     <EditText
-        android:id="@+id/telephoneNumber"
+        android:id="@+id/verificationCode"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:textCursorDrawable="@null"
-        android:layout_above="@id/whyAns"
+        android:layout_above="@id/verify"
         android:layout_centerHorizontal="true"
         android:textColor="@color/reach_grey_light"
         android:focusable="true"
         android:focusableInTouchMode="true"
+        android:digits="0,1,2,3,4,5,6,7,8,9"
         android:inputType="numberSigned" />
     <ImageView
         android:src="@drawable/icon_tag_phone"
-        android:layout_toLeftOf="@id/telephoneNumber"
-        android:layout_alignTop="@id/telephoneNumber"
+        android:layout_toLeftOf="@id/verificationCode"
+        android:layout_alignTop="@id/verificationCode"
         android:layout_marginTop="5dp"
         android:layout_width="30dp"
         android:layout_height="30dp" />
     <TextView
         android:id="@+id/title"
-        android:layout_above="@id/telephoneNumber"
+        android:layout_above="@id/verificationCode"
         android:layout_centerHorizontal="true"
         android:gravity="center"
         android:layout_marginBottom="10dp"

@@ -254,7 +254,7 @@ public class AccountCreation extends Fragment {
         @Override
         protected void onPreExecute() {
 
-            super.onPreExecute();
+                super.onPreExecute();
             dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Context>) ProgressDialog::new).orNull();
             if (dialog != null) {
                 dialog.setCancelable(false);

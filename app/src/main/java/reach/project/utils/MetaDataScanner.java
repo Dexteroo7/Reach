@@ -791,5 +791,6 @@ public class MetaDataScanner extends IntentService {
         //locally store the genres
         SharedPrefUtils.storeGenres(sharedPreferences, ScanMusic.genreHashSet);
         sendMessage(FINISHED, -1); //send finished, so that UI can continue
+        messenger = null;
     }
 }

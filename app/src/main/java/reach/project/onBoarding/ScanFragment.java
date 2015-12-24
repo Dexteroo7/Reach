@@ -292,7 +292,7 @@ public class ScanFragment extends Fragment {
             }
         };
 
-        //TODO cant be made static :(
+        //TODO make static :(
         private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
 
             long songs = 0, playLists = 0;

@@ -76,6 +76,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -1524,5 +1526,17 @@ public enum MiscUtils {
         for (long item : array)
             list.add(item);
         return list;
+    }
+
+    public static ThreadPoolExecutor getRejectionExecutor() {
+
+        //an executor for getting stories from server
+        return new ThreadPoolExecutor(
+                1, //only 1 thread
+                1, //only 1 thread
+                0L, TimeUnit.MILLISECONDS, //no waiting
+                new SynchronousQueue<>(false), //only 1 thread
+                (r, executor) -> {//ignored
+                });
     }
 }

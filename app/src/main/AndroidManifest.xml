@@ -99,9 +99,11 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
+
         <service
             android:name=".utils.MetaDataScanner"
             android:exported="false" />
+
         <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
 
         <provider
@@ -132,31 +134,28 @@
         <activity
             android:name=".coreViews.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".core.ReachActivity" >
+            android:parentActivityName=".core.ReachActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-
         <activity
             android:name=".coreViews.friends.invite.InviteActivity"
             android:label="@string/title_activity_invite"
-            android:theme="@style/AppTheme"
-            android:parentActivityName=".core.ReachActivity" >
+            android:parentActivityName=".core.ReachActivity"
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-
         <activity
             android:name=".coreViews.yourProfile.ProfileActivity"
             android:label="@string/title_activity_profile"
-            android:parentActivityName=".core.ReachActivity" >
+            android:parentActivityName=".core.ReachActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-
         <activity
             android:name=".coreViews.yourProfile.YourProfileActivity"
             android:label="@string/title_activity_your_profile"
@@ -180,6 +179,19 @@
         </activity>
         -->
 
+        <activity
+            android:name=".push.PushActivity"
+            android:label="@string/title_activity_push"
+            android:parentActivityName=".core.ReachActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <service
+            android:name=".onBoarding.smsRelated.SmsListener"
+            android:exported="false"/>
 
         <!-- Things on process :remote -->
 
@@ -204,15 +216,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-        <activity
-            android:name=".push.PushActivity"
-            android:label="@string/title_activity_push"
-            android:parentActivityName=".core.ReachActivity"
-            android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
+
     </application>
 
 </manifest>

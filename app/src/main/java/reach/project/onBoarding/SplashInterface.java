@@ -9,7 +9,7 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
  */
 public interface SplashInterface {
     void onOpenNumberVerification();
-    void onOpenCodeVerification(String key, String phoneNumber);
+    void onOpenCodeVerification(String phoneNumber);
     void onOpenAccountCreation(Optional<OldUserContainerNew> container);
     void onOpenScan(String name, String toUpload, String imageId);
 }
