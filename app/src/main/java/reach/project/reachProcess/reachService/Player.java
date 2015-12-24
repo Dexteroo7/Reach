@@ -7,6 +7,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,9 +25,11 @@ import com.google.android.exoplayer.dash.DefaultDashTrackSelector;
 import com.google.android.exoplayer.extractor.ExtractorSampleSource;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.upstream.DataSource;
+import com.google.android.exoplayer.upstream.DataSpec;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultUriDataSource;
+import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.PlayerControl;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -199,6 +202,7 @@ public class Player {
         }
         else if(whichPlayer==WhichPlayer.Exoplayer)
         {
+            Log.i("EXOPLAYER PLAY","TRUE");
             exoplayer.setPlayWhenReady(true);
         }
         else
@@ -238,7 +242,7 @@ public class Player {
         if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
             mediaPlayer.seekTo(i);
         else if(whichPlayer==WhichPlayer.Exoplayer && exoplayer != null) {
-            if(i<exoplayer.getBufferedPercentage())
+            if(i<exoplayer.getBufferedPosition())
                 exoplayer.seekTo(i);
             else
                 exoplayer.seekTo(exoplayer.getBufferedPosition());
@@ -360,11 +364,9 @@ public class Player {
         {
             exoplayer=ProcessManager.exoplayer;
         }
-        //create source
-        playerSource = new PlayerSource(
-                handlerInterface,
-                path.get(),
-                contentLength);
+        Uri uri=Uri.parse(path.get());
+        DataSource dataSource=new myStreamingDataSource(handlerInterface);
+        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource(uri,dataSource,new DefaultAllocator(1000),5000);
 
         /*String pa=path.get();
         File file=new File(pa);
@@ -372,14 +374,18 @@ public class Player {
         FileDescriptor fd=fileInputStream.getFD();
         SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
         audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-        exoplayer.prepare(audio);*/
+        exoplayer.prepare(audio);
 
-        BandwidthMeter bandwidthMeter=new DefaultBandwidthMeter();
+        SampleSource sampleSource;
+        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource()
+        AssetDataSource
         DataSource audioDataSource=new DefaultUriDataSource(handlerInterface.getContext(),bandwidthMeter,"android");
         ChunkSource audioChunkSource=new DashChunkSource(playerSource.getSource(),DefaultDashTrackSelector.newAudioInstance(), audioDataSource, null, 30000,0, null, null);
-        //ChunkSampleSource audioSampleSource=new ChunkSampleSource(audioChunkSource,new DefaultLoadControl(new DefaultAllocator(64 * 1024)),54*64*1024);
-        //MediaCodecAudioTrackRenderer audioStream=new MediaCodecAudioTrackRenderer(audioSampleSource);
+        ChunkSampleSource audioSampleSource=new ChunkSampleSource(audioChunkSource,new DefaultLoadControl(new DefaultAllocator(64 * 1024)),54*64*1024);
+        MediaCodecAudioTrackRenderer audioStream=new MediaCodecAudioTrackRenderer(audioSampleSource);*/
 
+        audio = new MediaCodecAudioTrackRenderer(extractorSampleSource,null,true);
+        exoplayer.prepare(audio);
         exoplayer.seekTo(0);
         Log.i("Exoplayer bufffer","Done");
         return exoplayer.getDuration();
@@ -397,8 +403,8 @@ public class Player {
         //create source
         playerSource = new PlayerSource(
                 handlerInterface,
-                path.get(),
-                contentLength);
+                path.get()
+                );
 
         //start thread
         pipeFuture = decoderService.submit(playerSource);

@@ -3,6 +3,7 @@ package reach.project.reachProcess.reachService;
 import android.util.Log;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,14 +35,16 @@ public final class PlayerSource implements Runnable, Closeable {
     private final long contentLength;
 
     public PlayerSource(Player.DecoderHandler handler,
-                        String path,
-                        long contentLength) throws IOException {
+                        String path) throws IOException {
 
         final PipedOutputStream pipedOutputStream = new PipedOutputStream();
 
         this.handler = handler;
-        this.contentLength = contentLength;
-        this.source = new FileInputStream(path).getChannel();
+
+        File file=new File(path);
+        this.contentLength=file.length();
+ //       this.contentLength = contentLength;
+        this.source = new FileInputStream(file).getChannel();
         this.sourceStream = new PipedInputStream(pipedOutputStream, StaticData.PLAYER_BUFFER_DEFAULT);
         this.sinkChannel = Channels.newChannel(pipedOutputStream);
     }
