@@ -4,52 +4,76 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
 import com.google.common.base.Optional;
 
+import java.lang.ref.WeakReference;
+
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachActivity;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.auxiliaryClasses.UseActivity;
 
 /**
  * Created by ashish on 19/10/15.
  */
 public class SplashActivity extends AppCompatActivity implements SplashInterface {
 
+    private static String userName, phoneNumber;
+    private static long serverId;
+    private static WeakReference<SplashActivity> reference;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        reference = new WeakReference<>(this);
 
-        SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
-        final String userName = SharedPrefUtils.getUserName(preferences);
-        final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
-        final long serverId = SharedPrefUtils.getServerId(preferences);
+        final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
 
-        new Handler().postDelayed(() -> {
+        userName = SharedPrefUtils.getUserName(preferences);
+        phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
+        serverId = SharedPrefUtils.getServerId(preferences);
 
-            if (TextUtils.isEmpty(userName)) {
-
-                getWindow().setBackgroundDrawableResource(R.color.white);
-                setContentView(R.layout.activity_splash);
-                if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
-                    getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                            WelcomeFragment.newInstance()).commit();
-                else
-                    getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                            AccountCreation.newInstance(Optional.absent())).commit(); //ignore oldContainer
-            }
-
-            else {
-                Intent intent = new Intent(this, ReachActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        }, 2000);
+        new Handler().postDelayed(splashed, 2000);
     }
+
+    private static final Runnable splashed = new Runnable() {
+        @Override
+        public void run() {
+
+            MiscUtils.useActivity(reference, new UseActivity<SplashActivity>() {
+                @Override
+                public void work(SplashActivity activity) {
+
+                    if (TextUtils.isEmpty(userName)) {
+
+                        activity.getWindow().setBackgroundDrawableResource(R.color.white);
+                        activity.setContentView(R.layout.activity_splash);
+
+                        final FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                        if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
+                            fragmentManager.beginTransaction().replace(R.id.splashLayout,
+                                    WelcomeFragment.newInstance()).commit();
+                        else
+                            fragmentManager.beginTransaction().replace(R.id.splashLayout,
+                                    AccountCreation.newInstance(Optional.absent())).commit(); //ignore oldContainer
+                    } else {
+
+                        final Intent intent = new Intent(activity, ReachActivity.class);
+                        activity.startActivity(intent);
+                        activity.finish();
+                    }
+                }
+            });
+
+        }
+    };
 
     @Override
     public void onOpenNumberVerification() {
