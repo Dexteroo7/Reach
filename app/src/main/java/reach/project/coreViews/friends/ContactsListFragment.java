@@ -44,6 +44,8 @@ import reach.project.coreViews.SettingsActivity;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
+import reach.project.notificationCentre.NotificationActivity;
+import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
@@ -185,9 +187,13 @@ public class ContactsListFragment extends Fragment implements
         mToolbar.inflateMenu(R.menu.myreach_menu);
         final Menu menu = mToolbar.getMenu();
         mToolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.settings_button) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
+            switch (item.getItemId()) {
+                case  R.id.settings_button:
+                    startActivity(new Intent(getActivity(), SettingsActivity.class));
+                    return true;
+                case R.id.player_button:
+                    startActivity(new Intent(getContext(), PlayerActivity.class));
+                    return true;
             }
             return false;
         });
@@ -196,7 +202,7 @@ public class ContactsListFragment extends Fragment implements
         if (notificationButton != null) {
             MenuItemCompat.setActionView(notificationButton, R.layout.reach_queue_counter);
             final View notificationContainer = MenuItemCompat.getActionView(notificationButton).findViewById(R.id.counterContainer);
-//            notificationContainer.setOnClickListener(openNotification);
+            notificationContainer.setOnClickListener(v -> startActivity(new Intent(getContext(), NotificationActivity.class)));
 //            notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
         }
 

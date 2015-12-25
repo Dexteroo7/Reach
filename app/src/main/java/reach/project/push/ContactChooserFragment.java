@@ -10,6 +10,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +25,7 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
@@ -49,19 +50,7 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
         return fragment;
     }
 
-    private final ContactChooserAdapter contactChooserAdapter = new ContactChooserAdapter(this, R.layout.myreach_item);
-    private final View.OnClickListener clickListener = v -> {
-
-        final long [] serverIds = new long[contactChooserAdapter.selectedUsers.size()];
-        final Iterator<Long> longIterator = contactChooserAdapter.selectedUsers.iterator();
-
-        int index = 0;
-        while (longIterator.hasNext())
-            serverIds[index++] = longIterator.next();
-
-        if (chooserInterface != null)
-            chooserInterface.switchToMessageWriter(serverIds);
-    };
+    private final ContactChooserAdapter contactChooserAdapter = new ContactChooserAdapter(this, R.layout.push_contact_item);
 
     public void handOverMessage(@Nonnull Cursor message) {
 
@@ -88,11 +77,28 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
 
         final View rootView = inflater.inflate(R.layout.fragment_contact_chooser, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        final View proceed = rootView.findViewById(R.id.proceed);
         final Activity activity = getActivity();
+        final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.chooserToolbar);
+        toolbar.setTitle("Choose Friends");
+        toolbar.inflateMenu(R.menu.menu_push);
+        toolbar.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.push_button:
+                    final long [] serverIds = new long[contactChooserAdapter.selectedUsers.size()];
+                    final Iterator<Long> longIterator = contactChooserAdapter.selectedUsers.iterator();
 
-        proceed.setOnClickListener(clickListener);
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+                    int index = 0;
+                    while (longIterator.hasNext())
+                        serverIds[index++] = longIterator.next();
+
+                    if (chooserInterface != null)
+                        chooserInterface.switchToMessageWriter(serverIds);
+                    return true;
+            }
+            return false;
+        });
+
+        mRecyclerView.setLayoutManager(new CustomGridLayoutManager(activity, 2));
         mRecyclerView.setAdapter(contactChooserAdapter);
 
         getLoaderManager().initLoader(StaticData.CONTACTS_CHOOSER_LOADER, null, this);

@@ -66,7 +66,6 @@ import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
-import reach.project.coreViews.push.PushFilesFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.Song;
 import reach.project.pacemaker.Pacemaker;
@@ -113,7 +112,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     ////////////////////////////////////////
 
     @SuppressWarnings("unchecked")
-    private static final PagerFragment downloadPager = PagerFragment.getNewInstance(
+    private static final PagerFragment downloadPager = PagerFragment.getNewInstance("Manager",
             new PagerFragment.Pages(
                     new Class[]{ApplicationFragment.class},
                     new String[]{"My Applications"},
@@ -153,7 +152,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 case 0:
                     return ContactsListFragment.newInstance();
                 case 1:
-                    return PushFilesFragment.getInstance("Bitch");
+                    return PagerFragment.getNewInstance("Push",
+                            new PagerFragment.Pages(
+                                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
+                                    new String[]{"My Applications"},
+                                    "Apps"),
+                            new PagerFragment.Pages(
+                                    new Class[]{reach.project.coreViews.push.myLibrary.MyLibraryFragment.class},
+                                    new String[]{"My Library"},
+                                    "Songs"));
                 case 2:
                     return ExploreFragment.newInstance(serverId);
                 case 3:

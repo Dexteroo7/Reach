@@ -3,6 +3,7 @@ package reach.project.coreViews.explore;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -42,6 +43,8 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.notificationCentre.NotificationActivity;
+import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -134,8 +137,14 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     else
                         item.setChecked(true);
                     return true;
-                default:
+                case R.id.player_button:
+                    startActivity(new Intent(getContext(), PlayerActivity.class));
                     return true;
+                case R.id.notif_button:
+                    startActivity(new Intent(getContext(), NotificationActivity.class));
+                    return true;
+                default:
+                    return false;
             }
         });
 

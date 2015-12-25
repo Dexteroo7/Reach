@@ -1,7 +1,7 @@
 package reach.project.push;
 
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -16,7 +16,8 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 final class FriendsViewHolder extends SingleItemViewHolder {
 
     public final TextView userNameList, telephoneNumberList, newSongs;
-    public final ImageView lockIcon;
+    public final CheckBox checkBox;
+    public final View mask;
     public final SimpleDraweeView profilePhotoList, coverPic;
 
     protected FriendsViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
@@ -28,7 +29,8 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.newSongs = (TextView) itemView.findViewById(R.id.newSongs);
         this.profilePhotoList = (SimpleDraweeView) itemView.findViewById(R.id.profilePhotoList);
         this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
-        this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
+        this.checkBox = (CheckBox) itemView.findViewById(R.id.checkBox);
+        this.mask = itemView.findViewById(R.id.mask);
     }
 }
 

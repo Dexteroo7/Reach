@@ -1,5 +1,8 @@
 package reach.project.utils.viewHelpers;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,14 +14,26 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
+import com.google.common.collect.ImmutableList;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import reach.project.R;
+import reach.project.apps.App;
+import reach.project.music.Song;
+import reach.project.notificationCentre.NotificationActivity;
+import reach.project.player.PlayerActivity;
+import reach.project.push.PushActivity;
+import reach.project.push.PushContainer;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -79,7 +94,7 @@ public class PagerFragment extends Fragment {
         }
     }
 
-    public static PagerFragment getNewInstance(@NonNull Pages... pages) {
+    public static PagerFragment getNewInstance(String pageTitle, @NonNull Pages... pages) {
 
         //sanity check
         for (Pages page : pages) {
@@ -91,8 +106,9 @@ public class PagerFragment extends Fragment {
                 throw new IllegalArgumentException("Page title and fragment count mismatch");
         }
 
-        final Bundle bundle = new Bundle(1);
+        final Bundle bundle = new Bundle(2);
         bundle.putParcelableArray(PARCEL_PAGER, pages);
+        bundle.putString("pageTitle", pageTitle);
 
         final PagerFragment pagerFragment = new PagerFragment();
         pagerFragment.setArguments(bundle);
@@ -116,12 +132,68 @@ public class PagerFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_pager, container, false);
         viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         final PagerSlidingTabStrip tabLayout = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabLayoutPager);
-        final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
 
-        toolbar.setTitle("Manager");
-        toolbar.inflateMenu(R.menu.pager_menu);
 
         final Bundle arguments = getArguments();
+        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
+        final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
+        String title = arguments.getString("pageTitle");
+        toolbar.setTitle(title);
+        if (title != null) {
+            if (title.equals("Push")) {
+                toolbar.inflateMenu(R.menu.menu_push);
+                toolbar.setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case R.id.push_button:
+
+                            /*if (selectedSongs.isEmpty() || selectedApps.isEmpty())
+                                Toast.makeText(context, "First select some songs", Toast.LENGTH_SHORT).show();
+                            else {*/
+
+                                List <Song> selectedSongs = new ArrayList<>();
+                                List <App> selectedApps = new ArrayList<>();
+                                final PushContainer pushContainer = new PushContainer.Builder()
+                                        .senderId(SharedPrefUtils.getServerId(preferences))
+                                        .userName(SharedPrefUtils.getUserName(preferences))
+                                        .userImage(SharedPrefUtils.getImageId(preferences))
+                                        .firstSongName("")
+                                        .firstAppName("")
+                                        .song(ImmutableList.copyOf(selectedSongs))
+                                        .app(ImmutableList.copyOf(selectedApps))
+                                        .songCount(selectedSongs.size())
+                                        .appCount(selectedApps.size())
+                                        .build();
+
+                                try {
+                                    startActivity(PushActivity.getPushActivityIntent(pushContainer, getActivity()));
+                                } catch (IOException e) {
+
+                                    e.printStackTrace();
+                                    //TODO Track
+                                    Toast.makeText(getContext(), "Could not push", Toast.LENGTH_SHORT).show();
+                                }
+                            //}
+                            return true;
+                    }
+                    return false;
+                });
+            } else {
+                toolbar.inflateMenu(R.menu.pager_menu);
+                toolbar.setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case R.id.player_button:
+                            startActivity(new Intent(getContext(), PlayerActivity.class));
+                            return true;
+                        case R.id.notif_button:
+                            startActivity(new Intent(getContext(), NotificationActivity.class));
+                            return true;
+                    }
+                    return false;
+                });
+            }
+        }
+
         final Parcelable[] parcelables = arguments.getParcelableArray(PARCEL_PAGER);
         if (parcelables == null || parcelables.length == 0 || !(parcelables instanceof Pages[]))
             return null;

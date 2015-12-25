@@ -155,6 +155,17 @@
         </activity>
 
         <activity
+            android:name=".notificationCentre.NotificationActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/title_activity_notification"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".core.ReachActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
             android:name=".coreViews.yourProfile.ProfileActivity"
             android:screenOrientation="portrait"
             android:label="@string/title_activity_profile"

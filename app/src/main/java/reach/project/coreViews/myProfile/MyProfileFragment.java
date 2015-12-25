@@ -32,6 +32,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
 import reach.project.music.MySongsProvider;
+import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -84,6 +85,9 @@ public class MyProfileFragment extends Fragment {
                     check = !item.isChecked();
                     //TODO show invisible files
                     item.setChecked(check);
+                    return true;
+                case R.id.player_button:
+                    startActivity(new Intent(getContext(), PlayerActivity.class));
                     return true;
             }
             return false;
