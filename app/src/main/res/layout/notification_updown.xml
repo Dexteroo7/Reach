@@ -1,63 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    card_view:cardUseCompatPadding="true"
+    card_view:cardElevation="4dp"
+    card_view:cardCornerRadius="2dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/Nplayer"
-    android:background="@drawable/border_shadow_black">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:id="@+id/NsongNamePlaying"
-        android:text="Streaming songs"
-        android:textSize="16sp"
-        android:textColor="@color/white" />
+    android:layout_height="wrap_content">
     <RelativeLayout
-        android:id="@+id/Nprogress"
-        android:layout_alignParentRight="true"
-        android:layout_below="@id/NsongNamePlaying"
-        android:layout_alignParentBottom="true"
-        android:layout_marginRight="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/Nplayer"
+        android:background="@color/reach_grey_bg">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:textColor="@color/white"
-            android:text="4"
-            android:textSize="18sp"
-            android:id="@+id/NupCount"/>
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/up_icon"
-            android:layout_centerInParent="true"
-            android:layout_toRightOf="@id/NupCount"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="15dp"
-            android:id="@+id/NupIcon"/>
-        <TextView
-            android:layout_toRightOf="@id/NupIcon"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:id="@+id/NsongNamePlaying"
+            android:text="Streaming songs"
+            android:textSize="16sp" />
+        <RelativeLayout
+            android:id="@+id/Nprogress"
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/NsongNamePlaying"
+            android:layout_alignParentBottom="true"
+            android:layout_marginRight="10dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:textColor="@color/white"
-            android:text="2"
-            android:textSize="18sp"
-            android:id="@+id/NdownCount"/>
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/down_icon"
-            android:layout_centerInParent="true"
-            android:layout_toRightOf="@id/NdownCount"
-            android:layout_marginLeft="5dp"
-            android:id="@+id/NdownIcon"/>
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="4"
+                android:textSize="18sp"
+                android:id="@+id/NupCount"/>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/up_icon"
+                android:layout_centerInParent="true"
+                android:layout_toRightOf="@id/NupCount"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="15dp"
+                android:id="@+id/NupIcon"/>
+            <TextView
+                android:layout_toRightOf="@id/NupIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="2"
+                android:textSize="18sp"
+                android:id="@+id/NdownCount"/>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/down_icon"
+                android:layout_centerInParent="true"
+                android:layout_toRightOf="@id/NdownCount"
+                android:layout_marginLeft="5dp"
+                android:id="@+id/NdownIcon"/>
+        </RelativeLayout>
     </RelativeLayout>
-</RelativeLayout>
+</android.support.v7.widget.CardView>
