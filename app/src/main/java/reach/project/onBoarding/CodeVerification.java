@@ -1,5 +1,6 @@
 package reach.project.onBoarding;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.provider.Telephony;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.telephony.SmsMessage;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -90,6 +92,19 @@ public class CodeVerification extends Fragment {
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_code_verification, container, false);
+
+        Activity activity = getActivity();
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(activity,
+                    Manifest.permission.RECEIVE_SMS) != 0)
+                requestPermissions(
+                        new String[]{
+                                Manifest.permission.RECEIVE_SMS
+                        }, MY_PERMISSIONS_RECEIVE_SMS);
+            else
+                activity.registerReceiver(SMSReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+        } else
+            activity.registerReceiver(SMSReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 
         phoneNumber = getArguments().getString(PHONE_NUMBER);
         finalAuthKey = getArguments().getString(AUTH_KEY);

@@ -474,6 +474,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         Log.i("Ayush", "Processing Intent");
 
+        if (intent.getBooleanExtra("firstTime", false)) {
+            if (viewPager != null)
+                viewPager.setCurrentItem(5, true);
+        }
+
 //        if (intent.getBooleanExtra("openNotificationFragment", false))
 //            onOpenNotificationDrawer();
 //        else if (intent.getBooleanExtra("openFriendRequests", false)) {

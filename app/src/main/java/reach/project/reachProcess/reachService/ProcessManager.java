@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -436,15 +437,33 @@ public class ProcessManager extends Service implements
         startForeground(StaticData.MUSIC_PLAYER, note.build());
     }
 
-    @Nullable
-    private Bitmap fetchAlbumArt(Uri uri) {
-        Request request = new Request.Builder().url(uri.toString()).build();
-        try {
-            Response response = ReachApplication.okHttpClient.newCall(request).execute();
-            return BitmapFactory.decodeStream(response.body().byteStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    private static class SetAlbumArt extends AsyncTask<Uri,Void,Bitmap>{
+
+        private RemoteViews rViews;
+
+        public SetAlbumArt(RemoteViews remoteViews) {
+            rViews = remoteViews;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Uri... params) {
+            Request request = new Request.Builder().url(params[0].toString()).build();
+            try {
+                Response response = ReachApplication.okHttpClient.newCall(request).execute();
+                return BitmapFactory.decodeStream(response.body().byteStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            if (bitmap == null)
+                return;
+            rViews.setImageViewBitmap(R.id.NalbumArt, bitmap);
+            Log.d("Ashish", "Album art set");
         }
     }
 
@@ -462,11 +481,11 @@ public class ProcessManager extends Service implements
         remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
-        Bitmap albumArt = fetchAlbumArt(AlbumArtUri.getUri(currentSong.get().getAlbumName(),
-                currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
-                false).get());
-        if (albumArt != null)
-            remoteViews.setImageViewBitmap(R.id.NalbumArt, albumArt);
+        new SetAlbumArt(remoteViews).executeOnExecutor(StaticData.temporaryFix,
+                AlbumArtUri.getUri(currentSong.get().getAlbumName(),
+                        currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
+                        false).get());
+
         if (paused)
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.play_white_selector);
         else

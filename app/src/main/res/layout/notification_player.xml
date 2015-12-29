@@ -8,7 +8,6 @@
     <ImageView
         android:id="@+id/NalbumArt"
         android:background="@color/reach_color"
-        android:padding="10dp"
         android:layout_marginLeft="10dp"
         android:layout_centerVertical="true"
         android:src="@drawable/icon_song_indicator_gray"
