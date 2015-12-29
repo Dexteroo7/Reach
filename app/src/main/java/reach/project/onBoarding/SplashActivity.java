@@ -100,8 +100,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenScan(String name, String toUpload, String imageId) {
+    public void onOpenScan(String name, String imageFilePath, String imageId, String phoneNumber) {
         getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                ScanFragment.newInstance(name, toUpload, imageId)).commit();
+                ScanFragment.newInstance(name, imageFilePath, imageId, phoneNumber)).commit();
     }
 }

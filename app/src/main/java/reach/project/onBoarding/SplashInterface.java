@@ -11,5 +11,5 @@ public interface SplashInterface {
     void onOpenNumberVerification();
     void onOpenCodeVerification(String phoneNumber);
     void onOpenAccountCreation(Optional<OldUserContainerNew> container);
-    void onOpenScan(String name, String toUpload, String imageId);
+    void onOpenScan(String name, String imageFilePath, String imageId, String phoneNumber);
 }

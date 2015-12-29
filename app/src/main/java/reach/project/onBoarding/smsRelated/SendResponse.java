@@ -6,6 +6,6 @@ package reach.project.onBoarding.smsRelated;
 public class SendResponse {
 
     public boolean success = false;
-    public Status status = Status.INVALID_NUMBER;
+    public Status status = Status.ERROR;
     public String trackingId = "";
 }

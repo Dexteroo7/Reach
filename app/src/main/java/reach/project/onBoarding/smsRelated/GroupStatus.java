@@ -6,5 +6,5 @@ package reach.project.onBoarding.smsRelated;
 public class GroupStatus {
     
     public boolean success = false;
-    public Status status = Status.AWAITED_DLR;
+    public Status status = Status.ERROR;
 }

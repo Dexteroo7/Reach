@@ -44,12 +44,20 @@ import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 
 public class ScanFragment extends Fragment {
 
-    private static String toUpload = null;
+    private static String imageFilePath = null;
     private static String imageId = "hello_world";
+
     private static long serverId = 0;
+
+    private static final String USER_NAME = "USER_NAME";
+    private static final String IMAGE_ID = "IMAGE_ID";
+    private static final String IMAGE_FILE_PATH = "IMAGE_FILE_PATH";
+    private static final String PHONE_NUMBER = "PHONE_NUMBER";
+
     private static WeakReference<ScanFragment> reference = null;
 
-    public static ScanFragment newInstance(String name, String toUpload, String imageId) {
+    public static ScanFragment newInstance(String name, String imageFilePath,
+                                           String imageId, String phoneNumber) {
 
         final Bundle args;
         ScanFragment fragment;
@@ -60,9 +68,11 @@ public class ScanFragment extends Fragment {
             Log.i("Ayush", "Reusing ScanFragment object :)");
             args = fragment.getArguments();
         }
-        args.putString("name", name);
-        args.putString("imageId", imageId);
-        args.putString("toUpload", toUpload);
+
+        args.putString(USER_NAME, name);
+        args.putString(IMAGE_ID, imageId);
+        args.putString(IMAGE_FILE_PATH, imageFilePath);
+        args.putString(PHONE_NUMBER, phoneNumber);
         return fragment;
     }
 
@@ -73,16 +83,17 @@ public class ScanFragment extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_scan, container, false);
 
-        imageId = getArguments().getString("imageId");
-        toUpload = getArguments().getString("toUpload");
+        imageId = getArguments().getString(IMAGE_ID, null);
+        imageFilePath = getArguments().getString(IMAGE_FILE_PATH, null);
+
+        final String phoneNumber = getArguments().getString(PHONE_NUMBER);
+        final String userName = getArguments().getString(USER_NAME);
 
         new SaveUserData(rootView.findViewById(R.id.sendButton),
                 (TextView) rootView.findViewById(R.id.scanCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
-                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, getArguments().getString("name"),
-                        SharedPrefUtils.getPhoneNumber(getActivity()
-                                .getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userName, phoneNumber);
 
         return rootView;
     }
@@ -94,9 +105,9 @@ public class ScanFragment extends Fragment {
         final ProgressBar progress;
         final String deviceId;
 
-        private SaveUserData( View next,
-                              TextView scanCount, ProgressBar progress,
-                              String deviceId) {
+        private SaveUserData(View next,
+                             TextView scanCount, ProgressBar progress,
+                             String deviceId) {
             this.next = next;
             this.scanCount = scanCount;
             this.progress = progress;
@@ -109,7 +120,7 @@ public class ScanFragment extends Fragment {
             final ReachUser user = new ReachUser();
 
             //get the key
-            if (toUpload != null) {
+            if (imageFilePath != null) {
 
                 final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
                     try {
@@ -122,7 +133,8 @@ public class ScanFragment extends Fragment {
 
                 if (keyStream != null) {
                     //try upload
-                    CloudStorageUtils.uploadImage(new File(toUpload), keyStream, uploadProgress);
+                    Log.i("Ayush", "Image file path is " + imageFilePath);
+                    CloudStorageUtils.uploadImage(new File(imageFilePath), keyStream, uploadProgress);
                 }
             }
 
@@ -213,7 +225,7 @@ public class ScanFragment extends Fragment {
                 @Override
                 public void work(Activity activity, ScanFragment fragment) {
 
-                    if (toUpload != null && TextUtils.isEmpty(user.getImageId()))
+                    if (!TextUtils.isEmpty(imageFilePath) && TextUtils.isEmpty(user.getImageId()))
                         Toast.makeText(activity, "Profile photo could not be uploaded", Toast.LENGTH_SHORT).show();
 
                     if (user.getId() == 0) {
@@ -292,15 +304,17 @@ public class ScanFragment extends Fragment {
             }
         };
 
+        private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
+            //TODO onAccountCreated
+            //fragment.mListener.onAccountCreated();
+            return null;
+        });
+
+        private int totalFiles = 0;
+        private int totalExpected = 0;
+
         //TODO make static :(
         private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
-
-            long songs = 0, playLists = 0;
-            private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
-                //TODO onAccountCreated
-                //fragment.mListener.onAccountCreated();
-                return null;
-            });
 
             @Override
             public boolean handleMessage(Message message) {
@@ -309,13 +323,26 @@ public class ScanFragment extends Fragment {
                     return false;
 
                 if (message.what == MetaDataScanner.FINISHED) {
-                    scanCount.setText(songs+"");
-                    progress.setProgress(100);
+
                     next.setOnClickListener(proceed);
-                } else if (message.what == MetaDataScanner.SCANNING_SONGS) {
-                    scanCount.setText(message.arg1+"");
-                    progress.setProgress(message.arg1*10);
-                    songs = message.arg1 + 1;
+                    next.setVisibility(View.VISIBLE);
+                } else if (message.what == MetaDataScanner.SCANNING_FILES) {
+
+                    totalFiles = message.arg1;
+                    scanCount.setText(message.arg1 + "");
+
+                    if (totalExpected > totalFiles)
+                        progress.setProgress((totalFiles * 100) / totalExpected);
+                    else
+                        progress.setProgress(100); //error case
+
+                } else if (message.what == MetaDataScanner.UPLOADING) {
+
+                    scanCount.setText("Finishing up");
+                    progress.setProgress(100);
+                } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
+
+                    totalExpected = message.arg1;
                 }
 
                 return true;

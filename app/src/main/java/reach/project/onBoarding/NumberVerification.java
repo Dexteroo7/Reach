@@ -24,15 +24,6 @@ public class NumberVerification extends Fragment {
 
     private static final byte ENFORCED_LENGTH = 4;
 
-    private static WeakReference<NumberVerification> reference = null;
-    public static NumberVerification newInstance() {
-
-        NumberVerification numberVerification;
-        if (reference == null || (numberVerification = reference.get()) == null)
-            reference = new WeakReference<>(numberVerification = new NumberVerification());
-        return numberVerification;
-    }
-
     private static final InputFilter SEXY_FILTER = (source, start, end, dest, destinationStart, destinationEnd) -> {
         if (destinationStart < ENFORCED_LENGTH)
             if (destinationEnd < ENFORCED_LENGTH)
@@ -42,6 +33,15 @@ public class NumberVerification extends Fragment {
         else
             return null;
     };
+
+    private static WeakReference<NumberVerification> reference = null;
+    public static NumberVerification newInstance() {
+
+        NumberVerification numberVerification;
+        if (reference == null || (numberVerification = reference.get()) == null)
+            reference = new WeakReference<>(numberVerification = new NumberVerification());
+        return numberVerification;
+    }
 
     @Nullable
     private EditText telephoneNumber = null;
@@ -60,8 +60,7 @@ public class NumberVerification extends Fragment {
         Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
 
         //clear the shared pref
-        final Context context = rootView.getContext();
-        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final SharedPreferences preferences = rootView.getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE);
         preferences.edit().clear().apply();
 
         rootView.findViewById(R.id.verify).setOnClickListener(clickListener);

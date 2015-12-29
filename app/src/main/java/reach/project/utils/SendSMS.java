@@ -4,6 +4,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -74,7 +75,7 @@ public class SendSMS {
       @ Scheduled message : give time in 'ddmmyyyyhhmm' format
       return group_id to track
     */
-    public SendResponse process_sms(String mob_no, String message, String dlr_url, String unicode, String time) throws IOException, KeyManagementException, NoSuchAlgorithmException {
+    private SendResponse process_sms(String mob_no, String message, String dlr_url, String unicode, String time) throws IOException, KeyManagementException, NoSuchAlgorithmException {
 
         //addSslCertificate();
         message = URLEncoder.encode(message, "UTF-8");
@@ -121,7 +122,7 @@ public class SendSMS {
     }
 
     //function for checking message delivery status
-    public GroupStatus messagedelivery_status(String groupid) throws IOException {
+    private GroupStatus messagedelivery_status(String groupid) throws IOException {
 
         URL url = new URL("http://" + api_url + "/api/v3/?method=" + method + ".groupstatus&api_key=" + api_key + "&groupid=" + groupid + "&format=json");
 //				System.out.println("url look like " + url );		 
@@ -142,22 +143,40 @@ public class SendSMS {
         final JsonObject responseObject = receivedData.getAsJsonObject();
         final JsonElement dataAsElement = responseObject.get("data");
 
-        if (dataAsElement == null || !dataAsElement.isJsonObject())
+        if (dataAsElement == null || !dataAsElement.isJsonArray())
             return new GroupStatus(); //false status
 
-        final JsonObject dataAsObject = dataAsElement.getAsJsonObject();
+        final JsonArray dataAsObject = dataAsElement.getAsJsonArray();
 
         final GroupStatus groupStatus = new GroupStatus();
         try {
             groupStatus.success = responseObject.get("status").getAsString().equals("OK");
-            groupStatus.status = Status.parseStatus(dataAsObject.get("0").getAsJsonObject().get("status").getAsString());
+            groupStatus.status = Status.parseStatus(dataAsObject.get(0).getAsJsonObject().get("status").getAsString());
         } catch (Exception ignored) {
         }
 
         return groupStatus;
     }
 
-    public SendResponse send_sms(String mob_no, String message, String dlr_url) throws NoSuchAlgorithmException, IOException, KeyManagementException {
-        return process_sms(mob_no, message, dlr_url, unicode = null, time = null);
+    public GroupStatus check_status(String groupId) {
+
+        try {
+            return messagedelivery_status(groupId);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return new GroupStatus();
+    }
+
+    public SendResponse send_sms(String mob_no, String message, String dlr_url) {
+
+        try {
+            return process_sms(mob_no, message, dlr_url, unicode = null, time = null);
+        } catch (IOException | KeyManagementException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        return new SendResponse();
     }
 }

@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,7 +16,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.telephony.SmsMessage;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,8 +40,8 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.onBoarding.smsRelated.SmsListener;
+import reach.project.onBoarding.smsRelated.Status;
 import reach.project.utils.ForceSyncFriends;
-import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.auxiliaryClasses.UseContext2;
 
@@ -79,26 +77,7 @@ public class CodeVerification extends Fragment {
 
     private final ExecutorService oldAccountFetcher = MiscUtils.getRejectionExecutor();
 
-    private final TextWatcher verificationWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-        }
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-
-            if (finalAuthKey.equals(editable.toString()))
-                //TODO proceed to account creation
-
-        }
-    };
-
+    @Nullable
     private SplashInterface mListener = null;
     @Nullable
     private EditText verificationCode = null;
@@ -116,10 +95,12 @@ public class CodeVerification extends Fragment {
         finalAuthKey = getArguments().getString(AUTH_KEY);
 
         verificationCode = (EditText) rootView.findViewById(R.id.verificationCode);
+        verificationCode.addTextChangedListener(verificationWatcher);
         verificationCode.requestFocus();
         rootView.findViewById(R.id.verify).setOnClickListener(verifyCodeListener);
 
         //send sms and wait
+        SmsListener.forceQuit.set(true); //quit current
         SmsListener.sendSms(phoneNumber, finalAuthKey, messenger, getContext());
 
         //meanWhile fetch old account
@@ -154,18 +135,41 @@ public class CodeVerification extends Fragment {
 
         if (requestCode == MY_PERMISSIONS_RECEIVE_SMS)
             if (grantResults.length > 0 && grantResults[0] == 0)
-                getActivity().registerReceiver(SMSReceiver, intentFilter);
+                getActivity().registerReceiver(SMSReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
     }
 
     @Override
     public void onDestroyView() {
 
         super.onDestroyView();
-        getActivity().unregisterReceiver(SMSReceiver);
+        try {
+            getActivity().unregisterReceiver(SMSReceiver);
+        } catch (IllegalArgumentException ignored) {
+        }
         verificationCode = null;
     }
 
-    private static final IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
+    private final TextWatcher verificationWatcher = new TextWatcher() {
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable editable) {
+
+            if (finalAuthKey.equals(editable.toString()))
+                //start account creation
+                StaticData.temporaryFix.submit(proceedToAccountCreation);
+        }
+    };
+
     private static final BroadcastReceiver SMSReceiver = new BroadcastReceiver() {
 
         @SuppressWarnings("deprecation")
@@ -283,13 +287,6 @@ public class CodeVerification extends Fragment {
                 final String receivedCode = splitter[4];
                 Log.i("SmsReceiver", " message: " + message);
 
-                //TODO track
-                    /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
-                    simpleParams.put(PostParams.USER_NUMBER, phoneNumber);
-                    try {
-                        UsageTracker.trackLogEvent(simpleParams, UsageTracker.OTP_RECEIVED);
-                    } catch (JSONException ignored) {}*/
-
                 MiscUtils.useFragment(reference, fragment -> {
 
                     if (fragment.verificationCode != null) {
@@ -321,46 +318,41 @@ public class CodeVerification extends Fragment {
         }
     };
 
-    private static final Runnable proceedToAccountCreation = () -> {
+    private final Runnable proceedToAccountCreation = () -> {
 
-        final Future<OldUserContainerNew> containerFuture = MiscUtils.useFragment(reference, fragment -> fragment.containerNewFuture).orNull();
         OldUserContainerNew containerNew = null;
-        if (containerFuture == null)
+        if (containerNewFuture == null)
             containerNew = null;
         else
             try {
-                containerNew = containerFuture.get(5000L, TimeUnit.SECONDS);
+                containerNew = containerNewFuture.get(5000L, TimeUnit.SECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 e.printStackTrace();
             }
 
         if (containerNew != null) {
 
+            Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
+
             ContactsListFragment.synchronizeOnce.set(true);
-            StaticData.temporaryFix.submit(new ForceSyncFriends(
+            new ForceSyncFriends(
                     containerNew.getServerId(), //myServerId
                     phoneNumber, //myNumber
-                    reference)); //ref to context
+                    reference).sync(); //ref to context
         }
 
-        MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
-
-            //start account creation
-            fragment.mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
-        });
+        if (mListener != null)
+            mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
     };
 
-    private static final class ProceedToAccountCreation extends AsyncTask
-
-    private static final View.OnClickListener verifyCodeListener = new View.OnClickListener() {
+    private final View.OnClickListener verifyCodeListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
 
-            final String enteredCode = MiscUtils.useFragment(reference,
-                    fragment -> fragment.verificationCode != null ? fragment.verificationCode.getText().toString().trim() : null).orNull();
+            final String enteredCode = verificationCode != null ? verificationCode.getText().toString().trim() : null;
             final Context context = view.getContext();
 
-            if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
+            if (finalAuthKey.equals(enteredCode)) {
 
                 //start account creation
                 StaticData.temporaryFix.submit(proceedToAccountCreation);
@@ -372,27 +364,75 @@ public class CodeVerification extends Fragment {
 
     private static final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
 
-        long songs = 0, playLists = 0;
-        private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
-            //TODO onAccountCreated
-            //fragment.mListener.onAccountCreated();
-            return null;
-        });
-
         @Override
         public boolean handleMessage(Message message) {
 
             if (message == null)
                 return false;
 
-            if (message.what == MetaDataScanner.FINISHED) {
-                scanCount.setText(songs + "");
-                progress.setProgress(100);
-                next.setOnClickListener(proceed);
-            } else if (message.what == MetaDataScanner.SCANNING_SONGS) {
-                scanCount.setText(message.arg1 + "");
-                progress.setProgress(message.arg1 * 10);
-                songs = message.arg1 + 1;
+            final Object object = message.obj;
+            if (!(object instanceof Status))
+                throw new IllegalArgumentException("Sms listener expecting status");
+
+            final Status status = (Status) object;
+
+            switch (status) {
+
+                case AWAITED_DLR: {
+
+                    MiscUtils.useContextFromFragment(reference, context -> {
+                        Toast.makeText(context, "Waiting for code", Toast.LENGTH_SHORT).show();
+                    });
+                    break; //continue to poll
+                }
+
+                case DND_NUMBER: {
+
+                    SmsListener.forceQuit.set(true); //quit current
+                    MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
+                        Toast.makeText(context, "DND number", Toast.LENGTH_SHORT).show();
+                        if (fragment.mListener != null)
+                            fragment.mListener.onOpenNumberVerification(); //enter new number
+                        //track
+                    });
+                    return false; //failed
+                }
+                case OPT_OUT_REJECTION: {
+
+                    SmsListener.forceQuit.set(true); //quit current
+                    MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
+                        Toast.makeText(context, "OPT_OUT number", Toast.LENGTH_SHORT).show();
+                        if (fragment.mListener != null)
+                            fragment.mListener.onOpenNumberVerification(); //enter new number
+                        //track
+                    });
+                    return false; //failed do not poll
+                }
+
+                case DELIVERED: {
+
+                    SmsListener.forceQuit.set(true); //quit current
+                    MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
+                        Toast.makeText(context, "DELIVERED sms", Toast.LENGTH_SHORT).show();
+                        //track
+                    });
+                    return false; //failed do not poll
+                }
+
+                case INVALID_NUMBER: {
+
+                    SmsListener.forceQuit.set(true); //quit current
+                    MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
+                        @Override
+                        public void work(Context context) {
+
+                            Toast.makeText(context, "Network error, retrying", Toast.LENGTH_SHORT).show();
+                            //retry
+                            SmsListener.sendSms(phoneNumber, finalAuthKey, CodeVerification.messenger, context);
+                        }
+                    });
+                    return false; //failed
+                }
             }
 
             return true;

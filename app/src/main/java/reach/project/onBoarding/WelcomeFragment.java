@@ -7,14 +7,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.lang.ref.WeakReference;
+
 import reach.project.R;
 
 public class WelcomeFragment extends Fragment {
 
     private SplashInterface mListener;
 
+    private static WeakReference<WelcomeFragment> reference;
     public static Fragment newInstance() {
-        return new WelcomeFragment();
+
+        WelcomeFragment welcomeFragment;
+        if (reference == null || (welcomeFragment = reference.get()) == null)
+            reference = new WeakReference<>(welcomeFragment = new WelcomeFragment());
+
+        return welcomeFragment;
     }
 
     @Override
@@ -22,7 +30,7 @@ public class WelcomeFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_welcome, container, false);
-        rootView.findViewById(R.id.getStartedBtn).setOnClickListener(v -> mListener.onOpenNumberVerification());
+        rootView.findViewById(R.id.getStartedBtn).setOnClickListener(view -> mListener.onOpenNumberVerification());
         return rootView;
     }
 

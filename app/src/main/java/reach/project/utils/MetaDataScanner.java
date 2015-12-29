@@ -180,7 +180,6 @@ public class MetaDataScanner extends IntentService {
                 if (directory.exists())
                     verifiedMusicPaths.addAll(recurseDirectory(directory));
 
-            int songCountTotal = 0;
             while (musicCursor.moveToNext()) {
 
                 int music_column_name = musicCursor
@@ -334,7 +333,7 @@ public class MetaDataScanner extends IntentService {
                 }
 
                 toSend.add(builder.build());
-                sendMessage(SCANNING_SONGS, songCountTotal++);
+                sendMessage(SCANNING_FILES, files++);
             }
 
             musicCursor.close();
@@ -626,6 +625,7 @@ public class MetaDataScanner extends IntentService {
                     appBuilder.visible(visibility);
 
                 applicationsFound.add(appBuilder.build());
+                sendMessage(SCANNING_FILES, files++);
             }
 
             //update the package visibility
@@ -665,10 +665,12 @@ public class MetaDataScanner extends IntentService {
         super("MetaDataScanner");
     }
 
-    public static int SCANNING_SONGS = 0;
-    public static int SCANNING_APPLICATIONS = 1;
-    public static int UPLOADING = 2;
-    public static int FINISHED = 3;
+    public static int SCANNING_FILES = 0;
+    public static int UPLOADING = 1;
+    public static int FINISHED = 2;
+    public static int TOTAL_EXPECTED = 3;
+
+    private static int files = 0;
 
     @Nullable
     private static Messenger messenger = null;
@@ -692,9 +694,9 @@ public class MetaDataScanner extends IntentService {
      *
      * @param myLibrary  songs from myLibrary
      * @param downloaded downloaded songs
-     * @param apps   iterable of apps
-     * @param genres all the genres
-     * @param first  true, if this force local DB update is needed
+     * @param apps       iterable of apps
+     * @param genres     all the genres
+     * @param first      true, if this force local DB update is needed
      */
     private static void saveMetaData(List<Song> myLibrary,
                                      List<Song> downloaded,
@@ -771,14 +773,27 @@ public class MetaDataScanner extends IntentService {
             sendMessage(FINISHED, -1);
             return;
         }
+        
+        final ContentResolver resolver = getContentResolver();
+
+        final int expectedMusicCount = resolver.query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Audio.Media._ID}, null, null, null).getCount();
+
+        final int expectedAppCount = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA).size();
+
+        sendMessage(TOTAL_EXPECTED, expectedAppCount + expectedMusicCount);
 
         ////////////////////Get my library songs
-        final List<Song> songs = ScanMusic.getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getContentResolver(), serverId);
+        final List<Song> songs = ScanMusic.getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, resolver, serverId);
         ////////////////////Get downloaded songs
-        final List<Song> downloaded = ScanMusic.getDownloadedSongs(getContentResolver());
+        final List<Song> downloaded = ScanMusic.getDownloadedSongs(resolver);
         ////////////////////Get applications
         final List<App> appList = ScanApps.getPackages(serverId, this);
         ////////////////////Put into server
+
+        sendMessage(UPLOADING, -1); //start uploading
+
         saveMetaData(
                 songs, //myLibrary music
                 downloaded, //downloaded music

@@ -973,7 +973,8 @@ public enum MiscUtils {
         });
     }
 
-    public static File compressImage(File image) throws IOException {
+    @NonNull
+    public static File compressImage(@NonNull File image) throws IOException {
 
         // Decode just the boundaries
         final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
@@ -1065,7 +1066,7 @@ public enum MiscUtils {
         bitmap.recycle();
 
         //noinspection ResultOfMethodCallIgnored
-        image.delete();
+        image.delete(); //delete old image
         Log.i("Ayush", "Returning image");
         return tempFile;
     }
