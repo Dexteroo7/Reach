@@ -236,16 +236,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-        <activity
-            android:name=".push.PushActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_push"
-            android:parentActivityName=".core.ReachActivity"
-            android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
     </application>
 
 </manifest>
