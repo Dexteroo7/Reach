@@ -38,8 +38,8 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.UseContext;
-import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
+import reach.project.utils.ancillaryClasses.UseContext;
+import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

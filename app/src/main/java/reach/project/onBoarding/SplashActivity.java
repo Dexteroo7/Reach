@@ -18,7 +18,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.UseActivity;
+import reach.project.utils.ancillaryClasses.UseActivity;
 
 /**
  * Created by ashish on 19/10/15.

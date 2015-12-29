@@ -1,11 +1,13 @@
 package reach.project.coreViews.explore;
 
-import reach.project.utils.GetName;
+import android.support.annotation.NonNull;
+
+import reach.project.utils.EnumHelper;
 
 /**
  * Created by dexter on 17/12/15.
  */
-enum ExploreJSON implements GetName {
+enum ExploreJSON implements EnumHelper<String> {
 
     //story details
     ID("id"),
@@ -54,6 +56,7 @@ enum ExploreJSON implements GetName {
         return types;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return name;
@@ -77,7 +80,7 @@ enum ExploreJSON implements GetName {
         //empty
     }
 
-    enum MusicMetaInfo implements MetaInfo, GetName {
+    enum MusicMetaInfo implements MetaInfo, EnumHelper<String> {
 
         SONG_ID("songId"),
         URL("url"),
@@ -98,13 +101,14 @@ enum ExploreJSON implements GetName {
             this.name = name;
         }
 
+        @NonNull
         @Override
         public final String getName() {
             return name;
         }
     }
 
-    enum MusicViewInfo implements ViewInfo, GetName {
+    enum MusicViewInfo implements ViewInfo, EnumHelper<String> {
 
         TITLE("title"), //songName
         SUB_TITLE("subTitle"), //artist / album
@@ -120,13 +124,14 @@ enum ExploreJSON implements GetName {
             this.name = name;
         }
 
+        @NonNull
         @Override
         public final String getName() {
             return name;
         }
     }
 
-    enum AppMetaInfo implements MetaInfo, GetName {
+    enum AppMetaInfo implements MetaInfo, EnumHelper<String> {
 
         SENDER_ID("senderId"),
         PACKAGE_NAME("packageName");
@@ -137,13 +142,14 @@ enum ExploreJSON implements GetName {
             this.name = name;
         }
 
+        @NonNull
         @Override
         public final String getName() {
             return name;
         }
     }
 
-    enum AppViewInfo implements ViewInfo, GetName {
+    enum AppViewInfo implements ViewInfo, EnumHelper<String> {
 
         TITLE("title"), //appName
         SUB_TITLE("subTitle"), //senderName
@@ -165,16 +171,18 @@ enum ExploreJSON implements GetName {
             this.name = name;
         }
 
+        @NonNull
         @Override
         public final String getName() {
             return name;
         }
     }
 
-    enum MiscMetaInfo implements MetaInfo, GetName {
+    enum MiscMetaInfo implements MetaInfo, EnumHelper<String> {
 
         CLASS_NAME("className"),
-        URL("url");
+        URL("url"),
+        DATA("data");
 
         private final String name;
 
@@ -182,13 +190,14 @@ enum ExploreJSON implements GetName {
             this.name = name;
         }
 
+        @NonNull
         @Override
         public final String getName() {
             return name;
         }
     }
 
-    enum MiscViewInfo implements ViewInfo, GetName {
+    enum MiscViewInfo implements ViewInfo, EnumHelper<String> {
 
         TITLE("title"),
         SUB_TITLE("subTitle"),
@@ -202,6 +211,7 @@ enum ExploreJSON implements GetName {
             this.name = name;
         }
 
+        @NonNull
         @Override
         public final String getName() {
             return name;

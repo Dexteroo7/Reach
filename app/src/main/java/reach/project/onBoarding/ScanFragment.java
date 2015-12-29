@@ -38,9 +38,9 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.UploadProgress;
-import reach.project.utils.auxiliaryClasses.UseContext2;
-import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
+import reach.project.utils.ancillaryClasses.UploadProgress;
+import reach.project.utils.ancillaryClasses.UseContext2;
+import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 
 public class ScanFragment extends Fragment {
 
@@ -93,7 +93,7 @@ public class ScanFragment extends Fragment {
                 (TextView) rootView.findViewById(R.id.scanCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
-                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userName, phoneNumber);
+                .executeOnExecutor(StaticData.temporaryFix, userName, phoneNumber);
 
         return rootView;
     }

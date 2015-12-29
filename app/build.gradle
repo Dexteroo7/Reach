@@ -35,7 +35,7 @@ android {
         release {
             shrinkResources true
             minifyEnabled true
-            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+            proguardFile '/Users/dexter/AndroidStudioProjects/Reach/app/proguard-reach.txt'
         }
     }
 }

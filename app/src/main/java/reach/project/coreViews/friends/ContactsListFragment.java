@@ -40,14 +40,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.SettingsActivity;
+import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 

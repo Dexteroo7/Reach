@@ -48,6 +48,7 @@ import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import org.json.JSONException;
 
@@ -103,13 +104,13 @@ import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
-import reach.project.utils.auxiliaryClasses.DoWork;
-import reach.project.utils.auxiliaryClasses.UseActivity;
-import reach.project.utils.auxiliaryClasses.UseContext;
-import reach.project.utils.auxiliaryClasses.UseContext2;
-import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
-import reach.project.utils.auxiliaryClasses.UseFragment;
-import reach.project.utils.auxiliaryClasses.UseFragment2;
+import reach.project.utils.ancillaryClasses.DoWork;
+import reach.project.utils.ancillaryClasses.UseActivity;
+import reach.project.utils.ancillaryClasses.UseContext;
+import reach.project.utils.ancillaryClasses.UseContext2;
+import reach.project.utils.ancillaryClasses.UseContextAndFragment;
+import reach.project.utils.ancillaryClasses.UseFragment;
+import reach.project.utils.ancillaryClasses.UseFragment2;
 import reach.project.utils.viewHelpers.RetryHook;
 
 /**
@@ -1509,9 +1510,19 @@ public enum MiscUtils {
 
     }
 
-    public static JsonElement get(JsonObject jsonObject, GetName getName) {
-        //noinspection unchecked
-        return jsonObject.get(getName.getName());
+    @NonNull
+    public static JsonElement get(JsonObject jsonObject, EnumHelper<String> enumHelper, String defaultValue) {
+
+        final JsonElement jsonElement = jsonObject.get(enumHelper.getName());
+        if (jsonElement == null || jsonElement.isJsonNull()) //null check
+            return new JsonPrimitive(defaultValue); //return a default String value, parse later
+
+        return jsonElement;
+    }
+
+    @NonNull
+    public static JsonElement get(JsonObject jsonObject, EnumHelper<String> enumHelper) {
+        return jsonObject.get(enumHelper.getName());
     }
 
     public static <T> List<T> convertToList(T[] array) {

@@ -14,8 +14,8 @@
 //import java.nio.channels.SocketChannel;
 //
 //import reach.project.core.StaticData;
-//import reach.project.reachProcess.auxiliaryClasses.Connection;
-//import reach.project.reachProcess.auxiliaryClasses.ReachTask;
+//import reach.project.reachProcess.ancillaryClasses.Connection;
+//import reach.project.reachProcess.ancillaryClasses.ReachTask;
 //import reach.project.utils.MiscUtils;
 ///**
 // * Created by Dexter on 16-05-2015.

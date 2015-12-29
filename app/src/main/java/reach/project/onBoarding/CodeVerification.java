@@ -43,7 +43,7 @@ import reach.project.onBoarding.smsRelated.SmsListener;
 import reach.project.onBoarding.smsRelated.Status;
 import reach.project.utils.ForceSyncFriends;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.auxiliaryClasses.UseContext2;
+import reach.project.utils.ancillaryClasses.UseContext2;
 
 public class CodeVerification extends Fragment {
 

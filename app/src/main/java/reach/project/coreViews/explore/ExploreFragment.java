@@ -283,19 +283,27 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         if (exploreJson == null)
             return;
 
-        final String type = exploreJson.get(ExploreJSON.TYPE.getName()).getAsString();
+        final ExploreTypes type = ExploreTypes.valueOf(MiscUtils.get(exploreJson, ExploreJSON.TYPE).getAsString());
 
-        if (type.equals(ExploreTypes.MUSIC.name())) {
+        switch (type) {
 
-            addToDownload(exploreJson);
+            case MUSIC:
+                addToDownload(exploreJson);
+                break;
 
-        } else if (type.equals(ExploreTypes.APP.name())) {
+            case APP:
+                break;
 
+            case MISC:
+                break;
 
-        } else if (type.equals(ExploreTypes.MISC.name())) {
+            case LOADING:
+                break;
 
-
+            case DONE_FOR_TODAY:
+                break;
         }
+
     }
 
     public void addToDownload(JsonObject exploreJSON) {
@@ -340,10 +348,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setSenderName(userName);
         reachDatabase.setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "");
 
-        reachDatabase.setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST).getAsString());
-        reachDatabase.setIsLiked(false);
         reachDatabase.setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString());
         reachDatabase.setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME).getAsString());
+        reachDatabase.setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST, "").getAsString());
+        reachDatabase.setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM, "").getAsString());
+
+        reachDatabase.setIsLiked(false);
         reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
@@ -356,7 +366,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
 
-        reachDatabase.setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM).getAsString());
         reachDatabase.setGenre("hello_world");
 
         reachDatabase.setVisibility((short) 1);

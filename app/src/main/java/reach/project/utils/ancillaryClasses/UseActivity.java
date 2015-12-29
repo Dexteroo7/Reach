@@ -1,4 +1,4 @@
-package reach.project.utils.auxiliaryClasses;
+package reach.project.utils.ancillaryClasses;
 
 import android.app.Activity;
 
