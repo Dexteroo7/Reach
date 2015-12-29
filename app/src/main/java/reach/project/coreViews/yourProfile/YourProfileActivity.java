@@ -34,7 +34,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
         final Intent intent = new Intent(context, YourProfileActivity.class);
         intent.setAction(OPEN_PROFILE);
-        intent.putExtra("userId", userId);
+        intent.putExtra("userId", userId + "");
 
         context.startActivity(intent);
     }

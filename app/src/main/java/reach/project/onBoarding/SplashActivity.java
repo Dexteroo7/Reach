@@ -43,7 +43,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
         serverId = SharedPrefUtils.getServerId(preferences);
 
-        new Handler().postDelayed(splashed, 2000);
+        new Handler().postDelayed(splashed, 1000);
     }
 
     private static final Runnable splashed = new Runnable() {

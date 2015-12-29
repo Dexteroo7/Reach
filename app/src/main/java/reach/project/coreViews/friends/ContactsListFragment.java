@@ -203,12 +203,15 @@ public class ContactsListFragment extends Fragment implements
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
-        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+
+        final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
+        final GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                int itemType = friendsAdapter.getItemViewType(position);
+
+                final int itemType = friendsAdapter.getItemViewType(position);
                 if (itemType == FriendsAdapter.VIEW_TYPE_FRIEND_LARGE || itemType == FriendsAdapter.VIEW_TYPE_LOCKED)
                     return 2;
                 else
@@ -220,19 +223,25 @@ public class ContactsListFragment extends Fragment implements
 
         final boolean isOnline = MiscUtils.isOnline(getActivity());
         //we have not already synchronized !
-        if (!synchronizeOnce.get() && !synchronizing.get()) {
-            //contact sync will call send ping as well
 
-            if (isOnline) {
+        if (isOnline) {
+
+            if (!synchronizeOnce.get() && !synchronizing.get()) {
+                //contact sync will call send ping as well
+
                 synchronizing.set(true);
                 pinging.set(true);
+                Log.i("Ayush", "Syncing friends");
                 new LocalUtils.ContactsSync().executeOnExecutor(StaticData.temporaryFix);
-            }
 
-        } else if (!pinging.get() && isOnline) {
-            //if not pinging send a ping !
-            pinging.set(true);
-            new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
+            } else if (!pinging.get()) {
+
+                //if not pinging send a ping !
+                pinging.set(true);
+                Log.i("Ayush", "Syncing friends");
+
+                new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
+            }
         }
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
@@ -248,16 +257,13 @@ public class ContactsListFragment extends Fragment implements
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
-                            ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
         else
             return null;
     }

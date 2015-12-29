@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +39,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.handOverMessage = handOverMessage;
     }
 
-    public static String[] requiredProjection = new String[]{
+    public static final String[] requiredProjection = new String[]{
 
             ReachFriendsHelper.COLUMN_ID, //0
             ReachFriendsHelper.COLUMN_PHONE_NUMBER, //1
@@ -51,6 +52,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ReachFriendsHelper.COLUMN_NUMBER_OF_APPS, //8
             ReachFriendsHelper.COLUMN_NEW_SONGS, //9
             ReachFriendsHelper.COLUMN_NEW_APPS, //10
+            ReachFriendsHelper.COLUMN_HASH //11
     };
 
     public static final byte VIEW_TYPE_FRIEND = 0;
@@ -68,6 +70,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (this.verticalCursor != null)
             this.verticalCursor.close();
         this.verticalCursor = cursor;
+
+        Log.i("Ayush", "Setting vertical cursor " + (cursor != null ? cursor.getCount() : 0));
 
         if (cursor != null)
             notifyDataSetChanged();
@@ -90,11 +94,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
+
                 return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.myreach_item, parent, false), position -> {
 
                     if (verticalCursor == null || !verticalCursor.moveToPosition(position))
-                        throw new IllegalStateException("Resource cursor has been computed");
+                        throw new IllegalStateException("Resource cursor has been corrupted");
 
                     final ClickData clickData = new ClickData();
                     clickData.friendId = verticalCursor.getLong(0);
@@ -110,6 +115,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             case VIEW_TYPE_FRIEND_LARGE: {
+
                 return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.myreach_large_item, parent, false), position -> {
 
@@ -228,9 +234,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private Object getItem(int position) {
 
         if (position == 9 || verticalCursor == null)
-            return 1;
+            return 1; //invite
         else if (position == 10)
-            return false;
+            return false; //horizontal loader
 
         else if (position < 9) {
 
@@ -275,11 +281,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         final Object item = getItem(position);
         if (item instanceof Cursor)
-            return ((Cursor) item).getInt(0); //TODO shift to dirtyHash
-        else if (item instanceof Boolean)
-            return 0;
-        else
-            return 1;
+            return ((Cursor) item).getLong(11);
+        return super.getItemId(position);
     }
 
     @Override

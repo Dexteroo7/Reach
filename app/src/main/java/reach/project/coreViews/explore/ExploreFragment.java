@@ -38,7 +38,6 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
-import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
@@ -225,7 +224,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 return null;
 
             final JsonArray jsonArray = new JsonArray();
-            jsonArray.add(StaticData.devika);
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
             while (cursor.moveToNext()) {
