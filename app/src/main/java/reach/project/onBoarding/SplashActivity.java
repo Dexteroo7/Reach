@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
+import java.util.Random;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
@@ -27,6 +28,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     private static String userName, phoneNumber;
     private static long serverId;
     private static WeakReference<SplashActivity> reference;
+
+    private final Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +86,10 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenCodeVerification(String key, String phoneNumber) {
+    public void onOpenCodeVerification(String phoneNumber) {
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                 R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, CodeVerification.newInstance(key, phoneNumber)).commit();
+                .replace(R.id.splashLayout, CodeVerification.newInstance((1000 + random.nextInt(10000 - 1000 + 1)) + "", phoneNumber)).commit();
     }
 
     @Override
@@ -97,8 +100,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenScan(String name, String toUpload, String imageId) {
+    public void onOpenScan(String name, String imageFilePath, String imageId, String phoneNumber) {
         getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                ScanFragment.newInstance(name, toUpload, imageId)).commit();
+                ScanFragment.newInstance(name, imageFilePath, imageId, phoneNumber)).commit();
     }
 }

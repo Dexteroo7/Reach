@@ -2,6 +2,7 @@ package reach.project.utils;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.google.common.base.Optional;
@@ -10,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.StringList;
@@ -20,14 +22,29 @@ import reach.project.coreViews.friends.ReachFriendsProvider;
 /**
  * Created by dexter on 19/07/15.
  */
-public class ForceSyncFriends implements Runnable {
+public final class ForceSyncFriends implements Runnable {
 
     private final WeakReference<Context> reference;
     private final long serverId;
     private final String myNumber;
 
+    private final ExecutorService personalRejector = MiscUtils.getRejectionExecutor();
+
+    public void sync() {
+        personalRejector.submit(this);
+    }
+
     public ForceSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
         this.reference = reference;
+        this.serverId = serverId;
+        this.myNumber = myNumber;
+    }
+
+    public ForceSyncFriends(long serverId, String myNumber, WeakReference<? extends Fragment> reference) {
+
+        this.reference = MiscUtils.useFragment(reference, fragment -> {
+            return new WeakReference<>(fragment.getContext());
+        }).orNull();
         this.serverId = serverId;
         this.myNumber = myNumber;
     }

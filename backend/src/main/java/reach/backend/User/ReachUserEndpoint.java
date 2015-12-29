@@ -1438,4 +1438,65 @@ public class ReachUserEndpoint {
 
         return toReturn;
     }
+
+    @ApiMethod(
+            name = "insert",
+            path = "user/insert",
+            httpMethod = ApiMethod.HttpMethod.POST)
+    public InsertContainer insert(ReachUser user) {
+
+        final ReachUser oldUser = ofy().load().type(ReachUser.class)
+                .filter("phoneNumber in", Collections.singletonList(user.getPhoneNumber())).first().now();
+
+        if (oldUser != null) {
+
+            /**
+             * We re-use same accounts on the basis of phone numbers,
+             * we don't re-use same accounts on the basis of device ID
+             */
+            user.setId(oldUser.getId());
+
+            user.setStatusSong(oldUser.getStatusSong());
+            user.setEmailId(oldUser.getEmailId());
+            user.setBirthday(oldUser.getBirthday());
+
+            user.setPromoCode(oldUser.getPromoCode());
+            user.setChatToken(oldUser.getChatToken());
+
+            user.setMegaBytesReceived(oldUser.getMegaBytesReceived());
+            user.setMegaBytesSent(oldUser.getMegaBytesSent());
+            user.setTimeCreated(oldUser.getTimeCreated());
+
+            user.setReceivedRequests(oldUser.getReceivedRequests());
+            user.setSentRequests(oldUser.getSentRequests());
+            user.setMyReach(oldUser.getMyReach());
+
+            ofy().delete().entity(oldUser).now();
+        } else
+            user.setTimeCreated(System.currentTimeMillis());
+
+        ofy().save().entity(user).now();
+        logger.info("Created ReachUser with ID: " + user.getUserName() + " " + new MessagingEndpoint().sendMessage("hello_world", user));
+
+        //generate devikaChat token
+        if (user.getChatToken() == null || user.getChatToken().equals("hello_world") || user.getChatToken().equals("")) {
+
+            final Map<String, Object> authPayload = new HashMap<>(2);
+            authPayload.put("uid", user.getId() + "");
+            authPayload.put("phoneNumber", user.getPhoneNumber());
+            authPayload.put("userName", user.getUserName());
+            authPayload.put("imageId", user.getImageId());
+
+            final TokenOptions tokenOptions = new TokenOptions();
+            final TokenGenerator tokenGenerator = new TokenGenerator(FIRE_BASE_SECRET);
+            final String token = tokenGenerator.createToken(authPayload, tokenOptions);
+            if (token != null && !token.equals("")) {
+                //save if token was generated
+                user.setChatToken(token);
+                ofy().save().entities(user).now();
+            }
+        }
+
+        return new InsertContainer(user.getId(), user.getChatToken());
+    }
 }

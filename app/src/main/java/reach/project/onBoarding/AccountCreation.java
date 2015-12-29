@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
@@ -23,11 +24,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
-import com.google.common.io.ByteStreams;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -42,11 +41,12 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.auxiliaryClasses.UseContext;
 import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class AccountCreation extends Fragment {
 
-    private static String toUpload = null;
-    private static String phoneNumber = "";
-    private static String imageId = "hello_world";
+    private static String imageFilePath = null;
+
     private static WeakReference<AccountCreation> reference = null;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
@@ -78,41 +78,38 @@ public class AccountCreation extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_account_creation, container, false);
         final EditText userName = (EditText) rootView.findViewById(R.id.userName);
-        /*final TextView progress = (TextView) rootView.findViewById(R.id.syncStatus);
-        final TextView uploadText = (TextView) rootView.findViewById(R.id.uploadText);
-        final ProgressBar progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
-
-        //give reference to uploadProgress
-        progressBar.setIndeterminate(false);*/
 
         profilePhotoSelector = (ImageView) rootView.findViewById(R.id.displayPic);
         profilePhotoSelector.setOnClickListener(imagePicker);
         userName.requestFocus();
 
+        final String oldImageId;
         final FragmentActivity activity = getActivity();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final Bundle arguments;
         final String[] oldData;
         if ((arguments = getArguments()) != null && (oldData = arguments.getStringArray("oldData")) != null && oldData.length == 2) {
+
             /**
              * oldData[0] = name;
              * oldData[1] = imageId;
              */
             if (!TextUtils.isEmpty(oldData[0])) {
+
                 userName.setText(oldData[0]);
                 userName.setSelection(oldData[0].length());
             }
+
+            oldImageId = oldData[1];
+
             if (!TextUtils.isEmpty(oldData[1])) {
 
-                imageId = oldData[1];
-                //TODO replace picasso
-                /*Picasso.with(activity)
-                        .load(StaticData.cloudStorageImageBaseUrl + imageId)
-                        .fit()
-                        .centerCrop()
-                        .into(profilePhotoSelector);*/
+                Uri uriToDisplay = null;
+                if (!TextUtils.isEmpty(oldData[1]) && !oldData[1].equals("hello_world"))
+                    uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + oldData[1]);
+                profilePhotoSelector.setImageURI(uriToDisplay);
             }
-        }
+        } else
+            oldImageId = "";
 
         rootView.findViewById(R.id.verify).setOnClickListener(view -> {
 
@@ -122,23 +119,16 @@ public class AccountCreation extends Fragment {
                 return;
             }
 
-            phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
-
-            if (TextUtils.isEmpty(phoneNumber)) {
-                Log.i("Downloader", "Account creation could not find number");
-                //TODO startNumberVerification
-                //mListener.startNumberVerification();
-                return;
-            }
-
             //OK
             ((InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(userName.getWindowToken(), 0);
             view.setOnClickListener(null);
             view.setEnabled(false);
-            sharedPreferences.edit().clear().apply();
             Log.i("Ayush", "Cleared everything : AccountCreation underway");
             profilePhotoSelector.setOnClickListener(null);
-            mListener.onOpenScan(name, imageId, toUpload);
+
+            final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            final String phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
+            mListener.onOpenScan(name, imageFilePath, oldImageId, phoneNumber);
 
             //TODO track
             /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);
@@ -158,10 +148,9 @@ public class AccountCreation extends Fragment {
         intent.setAction(Intent.ACTION_GET_CONTENT);
         try {
             startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_PICKER_SELECT);
-        }
-        catch (ActivityNotFoundException e) {
+        } catch (ActivityNotFoundException e) {
             e.printStackTrace();
-            Toast.makeText(getContext(),"Sorry! Your device does not support this feature",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Sorry! Your device does not support this feature", Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -213,6 +202,27 @@ public class AccountCreation extends Fragment {
 
     private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
 
+        private static final int BUF_SIZE = 0x1000; // 4K
+
+        private long copy(InputStream from, RandomAccessFile to)
+                throws IOException {
+
+            checkNotNull(from);
+            checkNotNull(to);
+
+            byte[] buf = new byte[BUF_SIZE];
+            long total = 0;
+            while (true) {
+                int r = from.read(buf);
+                if (r == -1) {
+                    break;
+                }
+                to.write(buf, 0, r);
+                total += r;
+            }
+            return total;
+        }
+
         @Override
         protected File doInBackground(InputStream... params) {
 
@@ -220,28 +230,30 @@ public class AccountCreation extends Fragment {
                 return null;
 
             File tempFile = null;
-            FileOutputStream outputStream = null;
+            RandomAccessFile accessFile = null;
+
             try {
+
                 tempFile = File.createTempFile("profile_photo", ".tmp");
-                final RandomAccessFile accessFile = new RandomAccessFile(tempFile, "rws");
+                accessFile = new RandomAccessFile(tempFile, "rws");
                 accessFile.setLength(0);
-                accessFile.close();
-                outputStream = new FileOutputStream(tempFile);
-                ByteStreams.copy(params[0], outputStream);
-                outputStream.flush();
+                copy(params[0], accessFile);
             } catch (IOException e) {
 
                 e.printStackTrace();
-                if (tempFile != null)
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile.delete();
+                if (tempFile != null && !tempFile.delete() && accessFile != null)
+                    try {
+                        accessFile.setLength(0);
+                    } catch (IOException ignored) {
+                    }
                 return null;
+
             } finally {
-                MiscUtils.closeQuietly(outputStream, params[0]);
+                MiscUtils.closeQuietly(accessFile, params[0]);
             }
 
             try {
-                return MiscUtils.compressImage(tempFile);
+                return MiscUtils.compressImage(tempFile); //return compressed image
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -249,6 +261,7 @@ public class AccountCreation extends Fragment {
             return null;
         }
 
+        @Nullable
         private ProgressDialog dialog = null;
 
         @Override
@@ -270,27 +283,22 @@ public class AccountCreation extends Fragment {
                 @Override
                 public void work(Activity activity, AccountCreation fragment) {
 
-                    final Context context = fragment.getActivity();
-                    if (file == null) { //
+                    if (file == null) {
 
+                        //TODO
                         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Chat auth failed in account creation")
-                                //.setAction("User Id - " + serverId)
-                                .setLabel("Phone Number - " + phoneNumber)
+                                .setCategory("Failed to set profile photo")
+                                        //.setAction("User Id - " + serverId)
+//                                .setLabel("Phone Number - " + phoneNumber)
                                 .setValue(1)
                                 .build());
+                        Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
 
-                        toUpload = null;
-                        Toast.makeText(context, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
                     } else if (fragment.profilePhotoSelector != null) {
 
-                        toUpload = file.getAbsolutePath();
-                        //TODO replace picasso
-                        /*Picasso.with(context)
-                                .load(toUpload)
-                                .fit()
-                                .centerCrop()
-                                .centerCrop().into(fragment.profilePhotoSelector);*/
+                        //save profile photo path
+                        imageFilePath = file.getPath();
+                        fragment.profilePhotoSelector.setImageURI(Uri.parse("file://" + imageFilePath));
                     }
                 }
             });
@@ -299,53 +307,4 @@ public class AccountCreation extends Fragment {
                 dialog.dismiss();
         }
     }
-
-    //TODO firebase
-    /*private static final Firebase.AuthResultHandler authHandler = new Firebase.AuthResultHandler() {
-
-        @Override
-        public void onAuthenticationError(FirebaseError error) {
-
-            MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
-                @Override
-                public void work(Activity activity) {
-
-                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                            .setCategory("SEVERE ERROR " + error.getDetails())
-                            .setAction("User Id - " + serverId)
-                            .setAction("Label - " + phoneNumber)
-                            .setValue(1)
-                            .build());
-                }
-            });
-            Log.e("Ayush", "Login Failed! " + error.getMessage());
-        }
-
-        @Override
-        public void onAuthenticated(AuthData authData) {
-
-            final String chatUUID = authData.getUid();
-            MiscUtils.useContextFromFragment(reference, context -> {
-
-                Log.i("Ayush", "Login Succeeded! storing " + chatUUID);
-                SharedPrefUtils.storeChatUUID(context.getSharedPreferences("Reach", Context.MODE_PRIVATE), chatUUID);
-            });
-
-            Log.i("Ayush", "Chat authenticated " + chatUUID);
-            final Map<String, Object> userData = MiscUtils.getMap(6);
-            userData.put("uid", authData.getAuth().get("uid"));
-            userData.put("phoneNumber", authData.getAuth().get("phoneNumber"));
-            userData.put("userName", authData.getAuth().get("userName"));
-            userData.put("imageId", authData.getAuth().get("imageId"));
-            userData.put("lastActivated", 0);
-            userData.put("newMessage", true);
-
-            final Optional<Firebase> firebaseOptional = MiscUtils.useFragment(reference, fragment -> {
-                return fragment.mListener.getFireBase().orNull();
-            });
-
-            if (firebaseOptional.isPresent())
-                firebaseOptional.get().child("user").child(chatUUID).setValue(userData);
-        }
-    };*/
 }
