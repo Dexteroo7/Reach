@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.LoaderManager;
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentProviderOperation;
@@ -89,6 +90,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
+import layout.reachWidget;
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
@@ -1140,6 +1142,8 @@ public class ReachActivity extends AppCompatActivity implements
             songNameMaximized.setText(currentPlaying.getDisplayName());
             artistName.setText(currentPlaying.getArtistName());
             songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
+
+            reachWidget.state="play";
             pausePlayMaximized.setImageResource(R.drawable.play_white_selector);
             pausePlayMinimized.setImageResource(R.drawable.play_white_selector);
         }
@@ -2093,6 +2097,8 @@ public class ReachActivity extends AppCompatActivity implements
 
         private synchronized void togglePlayPause(final boolean pause, final ReachActivity activity) {
 
+
+
             activity.runOnUiThread(() -> {
 
                 if (activity.pausePlayMaximized != null) {
@@ -2208,11 +2214,15 @@ public class ReachActivity extends AppCompatActivity implements
                 }
                 case ProcessManager.REPLY_PAUSED: {
                     Log.i("Downloader", "REPLY_PAUSED received");
+                    reachWidget.state="play";
+                    reachWidget.changeUI(context);
                     togglePlayPause(true, activity);
                     break;
                 }
                 case ProcessManager.REPLY_UN_PAUSED: {
                     Log.i("Downloader", "REPLY_UN_PAUSED received");
+                    reachWidget.state="pause";
+                    reachWidget.changeUI(context);
                     togglePlayPause(false, activity);
                     break;
                 }

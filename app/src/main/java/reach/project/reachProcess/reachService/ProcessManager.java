@@ -43,6 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
+import layout.reachWidget;
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
@@ -647,7 +648,10 @@ public class ProcessManager extends Service implements
             notificationMusic();
         else if (notificationState == NotificationState.Both)
             notificationBoth();
+
         sendMessage(this, Optional.absent(), REPLY_PAUSED);
+        reachWidget.state="play";
+        reachWidget.changeUI(this);
     }
 
     @Override
@@ -658,6 +662,8 @@ public class ProcessManager extends Service implements
         else if (notificationState == NotificationState.Both)
             notificationBoth();
         sendMessage(this, Optional.absent(), REPLY_UN_PAUSED);
+        reachWidget.state="paused";
+        reachWidget.changeUI(this);
     }
 
     @Override
