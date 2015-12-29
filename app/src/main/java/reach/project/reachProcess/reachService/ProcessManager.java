@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -31,6 +33,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 
@@ -63,6 +67,7 @@ import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -431,6 +436,18 @@ public class ProcessManager extends Service implements
         startForeground(StaticData.MUSIC_PLAYER, note.build());
     }
 
+    @Nullable
+    private Bitmap fetchAlbumArt(Uri uri) {
+        Request request = new Request.Builder().url(uri.toString()).build();
+        try {
+            Response response = ReachApplication.okHttpClient.newCall(request).execute();
+            return BitmapFactory.decodeStream(response.body().byteStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void notificationMusic() {
 
         final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
@@ -445,6 +462,11 @@ public class ProcessManager extends Service implements
         remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
+        Bitmap albumArt = fetchAlbumArt(AlbumArtUri.getUri(currentSong.get().getAlbumName(),
+                currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
+                false).get());
+        if (albumArt != null)
+            remoteViews.setImageViewBitmap(R.id.NalbumArt, albumArt);
         if (paused)
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.play_white_selector);
         else
