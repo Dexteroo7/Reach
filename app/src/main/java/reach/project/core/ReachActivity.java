@@ -435,6 +435,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 tab.setIcon(tabUnselectedIcons[index]);
             }
         }
+        viewPager.setCurrentItem(2);
+
 
         //routine stuff
         final boolean networkPresent;
@@ -476,7 +478,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         if (intent.getBooleanExtra("firstTime", false)) {
             if (viewPager != null)
-                viewPager.setCurrentItem(5, true);
+                viewPager.setCurrentItem(5, false);
         }
 
 //        if (intent.getBooleanExtra("openNotificationFragment", false))

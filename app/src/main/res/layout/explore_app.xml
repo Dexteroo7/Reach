@@ -1,129 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/exploreApp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/exploreAppRoot" >
-    <FrameLayout
-        android:id="@+id/exploreApp"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingRight="12dp"
-        android:paddingLeft="12dp">
-        <android.support.v7.widget.CardView
-            xmlns:card_view="http://schemas.android.com/apk/res-auto"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:descendantFocusability="blocksDescendants"
-            android:id="@+id/card_view"
-            android:layout_marginBottom="-10dp"
-            card_view:cardUseCompatPadding="true"
-            card_view:cardElevation="4dp"
-            card_view:cardCornerRadius="2dp">
-            <android.support.percent.PercentRelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-                <com.facebook.drawee.view.SimpleDraweeView
-                    android:id="@+id/image"
-                    fresco:placeholderImage="@drawable/album_art_small_01"
-                    fresco:placeholderImageScaleType="centerCrop"
-                    android:layout_width="match_parent"
-                    app:layout_heightPercent="60%" />
-                <View
-                    android:background="@drawable/shadow_bottom"
-                    android:layout_width="match_parent"
-                    android:layout_below="@id/image"
-                    app:layout_heightPercent="1%" />
-                <ImageView
-                    android:id="@+id/downButton"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    app:layout_marginTopPercent="52%"
-                    android:layout_centerHorizontal="true"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/explore_download_btn" />
-                <LinearLayout
-                    android:id="@+id/type"
-                    android:gravity="center_vertical"
-                    android:layout_below="@id/downButton"
-                    android:layout_centerHorizontal="true"
-                    android:orientation="horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-                    <ImageView
-                        android:id="@+id/typeIcon"
-                        android:layout_marginRight="2dp"
-                        android:src="@drawable/icon_song_indicator_gray"
-                        android:layout_width="15dp"
-                        android:layout_height="15dp" />
-                    <TextView
-                        android:id="@+id/typeText"
-                        android:text="Type"
-                        android:textSize="17sp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-                <TextView
-                    android:id="@+id/title"
-                    android:gravity="center"
-                    android:lines="1"
-                    android:ellipsize="marquee"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:text="Title Title"
-                    android:layout_below="@id/type"
-                    app:layout_marginTopPercent="1%"
-                    android:layout_centerHorizontal="true"
-                    android:textColor="#000"
-                    android:textSize="20sp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <TextView
-                    android:id="@+id/subtitle"
-                    android:gravity="center"
-                    android:lines="1"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:ellipsize="marquee"
-                    android:layout_below="@id/title"
-                    android:text="Subtitle"
-                    android:layout_centerHorizontal="true"
-                    android:textSize="16sp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <LinearLayout
-                    android:id="@+id/handle"
-                    android:gravity="center_vertical"
-                    app:layout_marginTopPercent="2%"
-                    android:layout_centerHorizontal="true"
-                    android:layout_below="@id/subtitle"
-                    android:orientation="horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-                    <com.facebook.drawee.view.SimpleDraweeView
-                        android:id="@+id/userImage"
-                        fresco:roundAsCircle="true"
-                        android:layout_marginRight="2dp"
-                        android:layout_width="18dp"
-                        android:layout_height="18dp" />
-                    <TextView
-                        android:id="@+id/userHandle"
-                        android:text="handle"
-                        android:textSize="16sp"
-                        android:textColor="@color/reach_color"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </android.support.percent.PercentRelativeLayout>
-        </android.support.v7.widget.CardView>
-    </FrameLayout>
-    <FrameLayout
-    android:id="@+id/exploreApp2"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:visibility="gone"
     android:paddingRight="12dp"
     android:paddingLeft="12dp">
     <android.support.v7.widget.CardView
@@ -132,7 +13,7 @@
         android:layout_height="match_parent"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:descendantFocusability="blocksDescendants"
-        android:id="@+id/card_view2"
+        android:id="@+id/card_view"
         android:layout_marginBottom="-10dp"
         card_view:cardUseCompatPadding="true"
         card_view:cardElevation="4dp"
@@ -140,27 +21,37 @@
         <android.support.percent.PercentRelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <com.facebook.drawee.view.SimpleDraweeView
-                android:id="@+id/image2"
-                fresco:placeholderImage="@drawable/album_art_small_01"
-                fresco:placeholderImageScaleType="centerCrop"
+            <FrameLayout
+                android:id="@+id/imageContainer"
                 android:layout_width="match_parent"
-                app:layout_heightPercent="60%" />
+                app:layout_heightPercent="55%" >
+                <ImageView
+                    android:src="@drawable/explore_bg"
+                    android:scaleType="centerCrop"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+                <com.facebook.drawee.view.SimpleDraweeView
+                    android:id="@+id/image"
+                    android:layout_gravity="center"
+                    fresco:placeholderImage="@drawable/default_profile_circle"
+                    android:layout_height="110dp"
+                    android:layout_width="110dp"/>
+            </FrameLayout>
             <View
                 android:background="@drawable/shadow_bottom"
                 android:layout_width="match_parent"
-                android:layout_below="@id/image"
+                android:layout_below="@id/imageContainer"
                 app:layout_heightPercent="1%" />
             <ImageView
-                android:id="@+id/downButton2"
+                android:id="@+id/downButton"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                app:layout_marginTopPercent="52%"
+                app:layout_marginTopPercent="47%"
                 android:layout_centerHorizontal="true"
                 android:background="@android:color/transparent"
                 android:src="@drawable/explore_download_btn" />
             <LinearLayout
-                android:id="@+id/type2"
+                android:id="@+id/type"
                 android:gravity="center_vertical"
                 android:layout_below="@id/downButton"
                 android:layout_centerHorizontal="true"
@@ -168,20 +59,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <ImageView
-                    android:id="@+id/typeIcon2"
+                    android:id="@+id/typeIcon"
                     android:layout_marginRight="2dp"
-                    android:src="@drawable/icon_song_indicator_gray"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp" />
+                    android:src="@drawable/icon_apps_indicator_gray"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp" />
                 <TextView
-                    android:id="@+id/typeText2"
+                    android:id="@+id/typeText"
                     android:text="Type"
+                    android:textStyle="bold"
                     android:textSize="17sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
             <TextView
-                android:id="@+id/title2"
+                android:id="@+id/title"
                 android:gravity="center"
                 android:lines="1"
                 android:ellipsize="marquee"
@@ -196,7 +88,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <TextView
-                android:id="@+id/subtitle2"
+                android:id="@+id/subtitle"
                 android:gravity="center"
                 android:lines="1"
                 android:layout_marginLeft="10dp"
@@ -208,30 +100,40 @@
                 android:textSize="16sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/rating"
+                android:layout_marginTop="10dp"
+                android:text="Rating"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/reach_color"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
             <LinearLayout
-                android:id="@+id/handle2"
+                android:id="@+id/handle"
                 android:gravity="center_vertical"
                 app:layout_marginTopPercent="2%"
                 android:layout_centerHorizontal="true"
-                android:layout_below="@id/subtitle"
+                android:layout_below="@id/rating"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <com.facebook.drawee.view.SimpleDraweeView
-                    android:id="@+id/userImage2"
+                    android:id="@+id/userImage"
                     fresco:roundAsCircle="true"
                     android:layout_marginRight="2dp"
                     android:layout_width="18dp"
                     android:layout_height="18dp" />
                 <TextView
-                    android:id="@+id/userHandle2"
+                    android:id="@+id/userHandle"
                     android:text="handle"
                     android:textSize="16sp"
-                    android:textColor="@color/reach_color"
+                    android:textColor="@color/reach_blue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
         </android.support.percent.PercentRelativeLayout>
     </android.support.v7.widget.CardView>
 </FrameLayout>
-</RelativeLayout>

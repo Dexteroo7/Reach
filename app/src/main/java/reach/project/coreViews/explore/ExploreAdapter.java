@@ -28,7 +28,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicViewInfo;
 /**
  * Created by dexter on 16/10/15.
  */
-class ExploreAdapter extends PagerAdapter {
+class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     private final Explore explore;
     private final HandOverMessage<Integer> handOverMessage;
@@ -47,22 +47,27 @@ class ExploreAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup collection, int position) {
 
         final JsonObject exploreJSON = explore.getContainerForIndex(position);
+        Log.d("Ashish", exploreJSON.toString());
         final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
 
         final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);
         final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+        if (downButton != null) {
+            downButton.setOnClickListener(this);
+            downButton.setTag(position);
+        }
 
         final TextView title = (TextView) layout.findViewById(R.id.title);
         final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
         final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
         final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+        final TextView rating = (TextView) layout.findViewById(R.id.rating);
         final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
         final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
 
         switch (exploreTypes) {
 
             case MUSIC: {
-
 
                 final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                 final String userName = ExploreFragment.userNameSparseArray.get(userId);
@@ -79,16 +84,14 @@ class ExploreAdapter extends PagerAdapter {
                     userHandle.setText(originalUserName);
                 typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
-                final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL, "").getAsString();
+                /*final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(imageId))
-                    image.setImageURI(Uri.parse(imageId));
+                    userImage.setImageURI(Uri.parse(imageId));*/
 
                 final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(albumArt))
-                    userImage.setImageURI(Uri.parse(albumArt));
+                    image.setImageURI(Uri.parse(albumArt));
 
-                downButton.setOnClickListener(clickListener);
-                downButton.setTag(position);
                 layout.setTag(POSITION_UNCHANGED);
                 break;
             }
@@ -109,13 +112,17 @@ class ExploreAdapter extends PagerAdapter {
                     userHandle.setText(originalUserName);
                 typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
 
-                final String imageId = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL).getAsString();
-                if (!TextUtils.isEmpty(imageId))
-                    image.setImageURI(Uri.parse(imageId));
+                final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
+                if (!TextUtils.isEmpty(appIcon))
+                    image.setImageURI(Uri.parse(appIcon));
 
-                final String albumArt = MiscUtils.get(appViewInfo, AppViewInfo.LARGE_IMAGE_URL).getAsString();
+                final String appRating = MiscUtils.get(appViewInfo, AppViewInfo.RATING, "").getAsString();
+                if (!TextUtils.isEmpty(appRating))
+                    rating.setText(appRating + " Rating");
+
+                /*final String albumArt = MiscUtils.get(appViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(albumArt))
-                    userImage.setImageURI(Uri.parse(albumArt));
+                    userImage.setImageURI(Uri.parse(albumArt));*/
 
 //                container.getRating();
                 layout.setTag(POSITION_UNCHANGED);
@@ -176,16 +183,8 @@ class ExploreAdapter extends PagerAdapter {
         return POSITION_UNCHANGED; //default, should not happen
     }
 
-    interface Explore {
-
-        JsonObject getContainerForIndex(int index);
-
-        int getCount();
-    }
-
-    private static final View.OnClickListener clickListener = view -> {
-        //long id = (long) v.getTag();
-
+    @Override
+    public void onClick(View v) {
         if (adapterWeakReference == null)
             return;
 
@@ -193,15 +192,22 @@ class ExploreAdapter extends PagerAdapter {
         if (exploreAdapter == null)
             return;
 
-        exploreAdapter.handOverMessage.handOverMessage((int) view.getTag());
+        exploreAdapter.handOverMessage.handOverMessage((int) v.getTag());
 
         final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
         animator.setDuration(300);
         animator.addUpdateListener(animation -> {
             final int val = (int) animation.getAnimatedValue();
-            view.setPadding(val, val, val, val);
+            v.setPadding(val, val, val, val);
         });
         animator.setInterpolator(new AccelerateInterpolator());
         animator.start();
-    };
+    }
+
+    interface Explore {
+
+        JsonObject getContainerForIndex(int index);
+
+        int getCount();
+    }
 }

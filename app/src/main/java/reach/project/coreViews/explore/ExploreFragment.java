@@ -238,7 +238,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
             while (cursor.moveToNext()) {
-
                 final long onlineId = cursor.getLong(0);
                 final String userName = cursor.getString(1);
                 Log.i("Ayush", "Adding online friend id " + onlineId);
@@ -301,6 +300,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
+                final String packageName = MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                        .getAsString();
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
+                        + packageName)));
                 break;
 
             case MISC:
