@@ -7,7 +7,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -34,7 +34,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
         final Intent intent = new Intent(context, YourProfileActivity.class);
         intent.setAction(OPEN_PROFILE);
-        intent.putExtra("userId", userId + "");
+        intent.putExtra("userId", userId);
 
         context.startActivity(intent);
     }
@@ -87,13 +87,13 @@ public class YourProfileActivity extends AppCompatActivity {
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId));
+            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
 
             cursor.close();
         }
 
         final int finalNumberOfSongs = numberOfSongs;
-        viewPager.setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
+        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
 
             @Override
             public Fragment getItem(int position) {

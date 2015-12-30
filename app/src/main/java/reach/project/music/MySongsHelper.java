@@ -18,7 +18,6 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ID = "_id";
 
     public static final String COLUMN_SONG_ID = "songId";
-    public static final String COLUMN_USER_ID = "userId";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
     public static final String COLUMN_ACTUAL_NAME = "actualName";
@@ -35,7 +34,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IS_LIKED = "isLiked";
 
     private static final String DATABASE_NAME = "reach.database.sql.MySongsHelper";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
@@ -51,7 +50,6 @@ public class MySongsHelper extends SQLiteOpenHelper {
             COLUMN_ALBUM + " text" + "," +
             COLUMN_ALBUM_ART_DATA + " blob" + "," +
 
-            COLUMN_USER_ID + " long" + "," +
             COLUMN_SIZE + " long" + "," +
             COLUMN_YEAR + " long" + "," +
             COLUMN_DATE_ADDED + " long" + "," +
@@ -73,15 +71,13 @@ public class MySongsHelper extends SQLiteOpenHelper {
                     COLUMN_ALBUM,
                     COLUMN_ALBUM_ART_DATA,
 
-                    COLUMN_USER_ID,
                     COLUMN_SIZE,
                     COLUMN_YEAR,
                     COLUMN_DATE_ADDED,
                     COLUMN_VISIBILITY
             };
 
-    public static ContentValues contentValuesCreator(Song song,
-                                                     long serverId) {
+    public static ContentValues contentValuesCreator(Song song) {
 
         final ContentValues values = new ContentValues();
 
@@ -98,7 +94,6 @@ public class MySongsHelper extends SQLiteOpenHelper {
         if (song.albumArtData != null)
             values.put(COLUMN_ALBUM_ART_DATA, song.albumArtData.toByteArray());
 
-        values.put(COLUMN_USER_ID, serverId);
         values.put(COLUMN_SIZE, song.size);
         values.put(COLUMN_YEAR, song.year);
         values.put(COLUMN_DATE_ADDED, song.dateAdded);

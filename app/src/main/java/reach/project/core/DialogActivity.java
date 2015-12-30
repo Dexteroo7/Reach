@@ -29,7 +29,7 @@ public class DialogActivity extends Activity {
         final int type = getIntent().getIntExtra("type", 0);
 
         final SimpleDraweeView userImageView = (SimpleDraweeView) findViewById(R.id.userImage);
-        userImageView.setImageURI(Uri.parse(StaticData.dropBoxManager));
+        userImageView.setImageURI(Uri.parse(StaticData.DROP_BOX_MANAGER));
 
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);

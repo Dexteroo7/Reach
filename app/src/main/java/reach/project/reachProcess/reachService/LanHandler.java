@@ -63,7 +63,7 @@
 //        }
 //        while (!kill.get() && lanSupplier.isOpen()) {
 //            try {
-//                StaticData.temporaryFix.execute(new HandleLAN(lanSupplier.accept()));
+//                StaticData.TEMPORARY_FIX.execute(new HandleLAN(lanSupplier.accept()));
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
@@ -71,7 +71,7 @@
 //    }
 //
 //    /**
-//     * Being part of StaticData.temporaryFix, this Runnable gets accounted for
+//     * Being part of StaticData.TEMPORARY_FIX, this Runnable gets accounted for
 //     * in out controller kill check automatically
 //     */
 //    private final class HandleLAN implements Runnable {

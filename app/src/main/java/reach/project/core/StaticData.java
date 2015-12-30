@@ -22,7 +22,6 @@ import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
-import reach.project.music.Song;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -30,14 +29,14 @@ import reach.project.utils.CloudEndPointsUtils;
  */
 public final class StaticData {
 
-    public static final UserApi userEndpoint;
-    public static final FeedBackApi feedBackApi;
-    public static final Messaging.MessagingEndpoint messagingEndpoint;
-    public static final MusicVisibilityApi musicVisibility;
-    public static final NotificationApi notificationApi;
+    public static final UserApi USER_API;
+    public static final FeedBackApi FEED_BACK_API;
+    public static final Messaging.MessagingEndpoint MESSAGING_API;
+    public static final MusicVisibilityApi MUSIC_VISIBILITY_API;
+    public static final NotificationApi NOTIFICATION_API;
 
-    public static final AppVisibilityApi appVisibilityApi;
-    public static final ClassifiedAppsApi classifiedAppsApi;
+    public static final AppVisibilityApi APP_VISIBILITY_API;
+    public static final ClassifiedAppsApi CLASSIFIED_APPS_API;
 
     static {
 
@@ -49,14 +48,14 @@ public final class StaticData {
             request.setReadTimeout(request.getReadTimeout() * 2);
         };
 
-        userEndpoint = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
-        messagingEndpoint = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
-        feedBackApi = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
-        notificationApi = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
-        musicVisibility = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
+        USER_API = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, initialize)).build();
+        MESSAGING_API = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
+        FEED_BACK_API = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
+        NOTIFICATION_API = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
+        MUSIC_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
 
-        appVisibilityApi = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
-        classifiedAppsApi = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
+        APP_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
+        CLASSIFIED_APPS_API = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
     }
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{
@@ -130,26 +129,11 @@ public final class StaticData {
         return a.compareTo(b);
     };
 
-    public static final Comparator<Song> primaryMusic = (left, right) -> {
-
-        final Long lhs = left == null || left.dateAdded == null ? 0 : left.dateAdded;
-        final Long rhs = right == null || right.dateAdded == null ? 0 : right.dateAdded;
-
-        return lhs.compareTo(rhs);
-    };
-
-    public static final Comparator<Song> secondaryMusic = (left, right) -> {
-        final String lhs = left == null || left.displayName == null ? "" : left.displayName;
-        final String rhs = right == null || right.displayName == null ? "" : right.displayName;
-
-        return lhs.compareTo(rhs);
-    };
-
     public static final int PLAYER_BUFFER_DEFAULT = 4096;
     public static final long LUCKY_DELAY = 4000;
 
-    public static final long devika = 5666668701286400L;
-    public static final String devikaPhoneNumber = "8860872102";
+    public static final long DEVIKA = 5666668701286400L;
+    public static final String DEVIKA_PHONE_NUMBER = "8860872102";
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout
@@ -160,12 +144,12 @@ public final class StaticData {
     public static final long MINIMUM_PONG_GAP = 18 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
-    public static final String dropBox = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
-    public static final String cloudStorageImageBaseUrl = "http://storage.googleapis.com/able-door-616-images/";
-    public static final String dropBoxPromo = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
-    public static final String dropBoxManager = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
-    public static final LongSparseArray<String> networkCache = new LongSparseArray<>();
+    public static final String DROP_BOX = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
+    public static final String CLOUD_STORAGE_IMAGE_BASE_URL = "http://storage.googleapis.com/able-door-616-images/";
+    public static final String DROP_BOX_PROMO = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
+    public static final String DROP_BOX_MANAGER = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
+    public static final LongSparseArray<String> NETWORK_CACHE = new LongSparseArray<>();
 
     //TODO remove
-    public static final ExecutorService temporaryFix = Executors.unconfigurableExecutorService(Executors.newCachedThreadPool());
+    public static final ExecutorService TEMPORARY_FIX = Executors.unconfigurableExecutorService(Executors.newCachedThreadPool());
 }

@@ -1,29 +1,39 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     tools:context="reach.project.push.MessageWriterFragment">
-
-    <EditText
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter message"
+        android:background="#fff" >
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/writerToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:titleTextColor="@color/reach_color"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:navigationIcon="@drawable/abc_ic_ab_back_mtrl_am_alpha"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+    </android.support.design.widget.AppBarLayout>
+    <TextView
+        android:text="TO:"
+        android:textColor="@color/reach_color"
+        android:layout_margin="10dp"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="40dp"
+        android:gravity="start"
+        android:background="@drawable/border_shadow4"
+        android:hint="Enter your message here"
         android:id="@+id/message"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Back"
-        android:id="@+id/back"
-        android:layout_below="@id/message"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send push"
-        android:id="@+id/sendPush"
-        android:layout_below="@id/message"
-        android:layout_toRightOf="@id/back"/>
-
-</RelativeLayout>
+</LinearLayout>

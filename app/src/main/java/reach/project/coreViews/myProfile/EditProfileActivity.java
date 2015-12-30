@@ -71,8 +71,8 @@ public class EditProfileActivity extends AppCompatActivity {
 
             final String name = firstName.getText().toString();
 
-            new UpdateProfile(PROFILE_PIC).executeOnExecutor(StaticData.temporaryFix, name);
-            new UpdateProfile(COVER_PIC).executeOnExecutor(StaticData.temporaryFix, name);
+            new UpdateProfile(PROFILE_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, name);
+            new UpdateProfile(COVER_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, name);
             //save to cache
             SharedPrefUtils.storeUserName(sharedPreferences, name);
             SharedPrefUtils.storeImageId(sharedPreferences, imageId);
@@ -111,13 +111,13 @@ public class EditProfileActivity extends AppCompatActivity {
 
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
             profile.setImageBitmap(null);
-        profile.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId));
+        profile.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
         profile.setTag(IMAGE_PICKER_SELECT);
         profile.setOnClickListener(imagePicker);
 
         if (!TextUtils.isEmpty(coverImageId) && !coverImageId.equals("hello_world"))
             cover.setImageBitmap(null);
-        cover.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + coverImageId));
+        cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverImageId));
         cover.setTag(COVER_PICKER_SELECT);
         cover.setOnClickListener(imagePicker);
     }
@@ -156,9 +156,9 @@ public class EditProfileActivity extends AppCompatActivity {
         }
 
         if (requestCode == IMAGE_PICKER_SELECT)
-            new ProcessImage(PROFILE_PIC).executeOnExecutor(StaticData.temporaryFix, imageStream);
+            new ProcessImage(PROFILE_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, imageStream);
         else if (requestCode == COVER_PICKER_SELECT)
-            new ProcessImage(COVER_PIC).executeOnExecutor(StaticData.temporaryFix, imageStream);
+            new ProcessImage(COVER_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, imageStream);
     }
 
     private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
@@ -297,13 +297,13 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (TextUtils.isEmpty(imageId))
                     return false;
                 Log.i("Ayush", "Pushing " + userId + " " + name[0] + " " + imageId);
-                MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.absent());
+                MiscUtils.autoRetry(() -> StaticData.USER_API.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.absent());
             }
             else if (type == COVER_PIC) {
                 if (TextUtils.isEmpty(coverImageId))
                     return false;
                 Log.i("Ayush", "Pushing " + userId + " " + name[0] + " " + coverImageId);
-                MiscUtils.autoRetry(() -> StaticData.userEndpoint.updateUserDetails(userId, ImmutableList.of(name[0], coverImageId)).execute(), Optional.absent());
+                MiscUtils.autoRetry(() -> StaticData.USER_API.updateUserDetails(userId, ImmutableList.of(name[0], coverImageId)).execute(), Optional.absent());
             }
 
             return true;

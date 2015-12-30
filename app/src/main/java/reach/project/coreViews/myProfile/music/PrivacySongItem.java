@@ -13,13 +13,12 @@ final class PrivacySongItem {
     long size;
     long duration;
     long dateAdded;
-    long userId;
     long songId;
 
     boolean visible;
 
     public PrivacySongItem(String displayName, String actualName, String artistName, String albumName,
-                           long size, long duration, long dateAdded, long userId, long songId, boolean visible) {
+                           long size, long duration, long dateAdded, long songId, boolean visible) {
 
         this.displayName = displayName;
         this.actualName = actualName;
@@ -28,7 +27,6 @@ final class PrivacySongItem {
         this.size = size;
         this.duration = duration;
         this.dateAdded = dateAdded;
-        this.userId = userId;
         this.songId = songId;
         this.visible = visible;
     }
@@ -42,7 +40,6 @@ final class PrivacySongItem {
         this.size = 0;
         this.duration = 0;
         this.dateAdded = 0;
-        this.userId = 0;
         this.songId = 0;
         this.visible = false;
     }
@@ -57,7 +54,6 @@ final class PrivacySongItem {
         if (size != songItem.size) return false;
         if (duration != songItem.duration) return false;
         if (dateAdded != songItem.dateAdded) return false;
-        if (userId != songItem.userId) return false;
         if (songId != songItem.songId) return false;
         if (displayName != null ? !displayName.equals(songItem.displayName) : songItem.displayName != null)
             return false;
@@ -78,7 +74,6 @@ final class PrivacySongItem {
         result = 31 * result + (int) (size ^ (size >>> 32));
         result = 31 * result + (int) (duration ^ (duration >>> 32));
         result = 31 * result + (int) (dateAdded ^ (dateAdded >>> 32));
-        result = 31 * result + (int) (userId ^ (userId >>> 32));
         result = 31 * result + (int) (songId ^ (songId >>> 32));
         return result;
     }

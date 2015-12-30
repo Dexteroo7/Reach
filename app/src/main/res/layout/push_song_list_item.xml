@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:background="@drawable/border_shadow1">
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/albumArt"
+        android:layout_marginLeft="10dp"
+        android:layout_centerVertical="true"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        fresco:placeholderImage="@color/reach_color" />
+
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:clickable="false"
+        android:layout_marginRight="10dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/songName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_toLeftOf="@id/checkBox"
+        android:layout_toRightOf="@id/albumArt"
+        android:ellipsize="marquee"
+        android:layout_marginTop="15dp"
+        android:lines="1"
+        android:text="Test"
+        android:textColor="#f33b5b"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/artistName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/songName"
+        android:layout_below="@id/songName"
+        android:layout_marginTop="5dp"
+        android:layout_toLeftOf="@id/checkBox"
+        android:ellipsize="marquee"
+        android:lines="1"
+        android:text="Test"
+        android:textColor="@color/reach_grey" />
+    <View
+        android:id="@+id/mask"
+        android:visibility="gone"
+        android:background="#30f33b5b"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</RelativeLayout>

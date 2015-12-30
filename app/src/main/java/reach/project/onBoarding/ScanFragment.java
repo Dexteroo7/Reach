@@ -32,6 +32,7 @@ import java.lang.ref.WeakReference;
 import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
@@ -93,7 +94,7 @@ public class ScanFragment extends Fragment {
                 (TextView) rootView.findViewById(R.id.scanCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
-                .executeOnExecutor(StaticData.temporaryFix, userName, phoneNumber);
+                .executeOnExecutor(StaticData.TEMPORARY_FIX, userName, phoneNumber);
 
         return rootView;
     }
@@ -169,7 +170,7 @@ public class ScanFragment extends Fragment {
             user.setImageId(imageId);
 
             //insert User-object and get the userID
-            final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insertNew(user).execute(), Optional.absent()).orNull();
+            final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.USER_API.insertNew(user).execute(), Optional.absent()).orNull();
 
             if (dataAfterWork == null || dataAfterWork.getUserId() == null) {
 
@@ -305,9 +306,11 @@ public class ScanFragment extends Fragment {
         };
 
         private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
-            //TODO onAccountCreated
-            //fragment.mListener.onAccountCreated();
-            return null;
+            Activity activity = fragment.getActivity();
+            Intent intent = new Intent(activity, ReachActivity.class);
+            intent.putExtra("firstTime",true);
+            activity.startActivity(intent);
+            activity.finish();
         });
 
         private int totalFiles = 0;

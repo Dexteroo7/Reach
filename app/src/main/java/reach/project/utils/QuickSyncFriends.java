@@ -101,7 +101,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final HashSet<Friend> newFriends = new HashSet<>();
         final HashSet<Long> toDelete = new HashSet<>();
         Log.i("Ayush", "Prepared callData quickSync" + ids.size() + " " + hashes.size());
-        final QuickSync quickSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.quickSync(serverId, hashes, ids).execute(), Optional.absent()).orNull();
+        final QuickSync quickSync = MiscUtils.autoRetry(() -> StaticData.USER_API.quickSync(serverId, hashes, ids).execute(), Optional.absent()).orNull();
         if (quickSync != null) {
 
             Log.i("Ayush", "Found quick sync");
@@ -137,7 +137,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             final StringList stringList = new StringList();
             stringList.setStringList(ImmutableList.copyOf(numbers));
             stringList.setUserId(serverId);
-            newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).or(new ArrayList<>()));
+            newFriends.addAll(MiscUtils.autoRetry(() -> StaticData.USER_API.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).or(new ArrayList<>()));
         }
 
         //START DB COMMITS

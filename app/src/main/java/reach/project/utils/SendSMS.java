@@ -94,7 +94,7 @@ public class SendSMS {
                 .cacheControl(CacheControl.FORCE_NETWORK)
                 .post(null).build(); //just make it post
 
-        final Response response = ReachApplication.okHttpClient.newCall(request).execute();
+        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
         final String responseString = response.body().string();
         Log.i("Ayush", "SMS send response : " + responseString);
         final JsonElement receivedData = new JsonParser().parse(responseString);
@@ -132,7 +132,7 @@ public class SendSMS {
                 .cacheControl(CacheControl.FORCE_NETWORK)
                 .post(null).build(); //just make it post
 
-        final Response response = ReachApplication.okHttpClient.newCall(request).execute();
+        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
         final String statusResponseString = response.body().string();
         Log.i("Ayush", "Status response string " + statusResponseString);
         final JsonElement receivedData = new JsonParser().parse(statusResponseString);

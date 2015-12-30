@@ -30,7 +30,8 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
 
             ReachFriendsHelper.COLUMN_ID, //0
             ReachFriendsHelper.COLUMN_USER_NAME, //1
-            ReachFriendsHelper.COLUMN_IMAGE_ID //2
+            ReachFriendsHelper.COLUMN_IMAGE_ID, //2
+            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS //3
     };
 
     @Override
@@ -46,17 +47,22 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
         final String imageId = item.getString(2);
 
         holder.userNameList.setText(userName);
+        holder.telephoneNumberList.setText(item.getInt(3)+"");
 
         Uri uriToDisplay = null;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-            uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
+            uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
         holder.profilePhotoList.setImageURI(uriToDisplay);
 
         //use this
-        if (selectedUsers.contains(userId))
-            holder.profilePhotoList.setAlpha(1.0f);
-        else
-            holder.profilePhotoList.setAlpha(0.5f);
+        if (selectedUsers.contains(userId)) {
+            holder.mask.setVisibility(View.VISIBLE);
+            holder.checkBox.setChecked(true);
+        }
+        else {
+            holder.mask.setVisibility(View.GONE);
+            holder.checkBox.setChecked(false);
+        }
     }
 
     private final Object [] reUse = new Object[3];

@@ -36,6 +36,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
+    @Nullable
     private static WeakReference<ApplicationFragment> reference = null;
     private static long userId = 0;
 
@@ -74,7 +75,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(StaticData.temporaryFix, activity);
+        new GetApplications().executeOnExecutor(StaticData.TEMPORARY_FIX, activity);
 
         return rootView;
     }

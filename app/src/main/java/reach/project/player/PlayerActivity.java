@@ -368,7 +368,7 @@ public class PlayerActivity extends AppCompatActivity {
                     } catch (JSONException ignored) {
                     }
 
-                    MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.addLike(
+                    MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.addLike(
                             currentPlaying.getSenderId(),
                             serverId,
                             currentPlaying.getDisplayName()).execute(), Optional.absent());

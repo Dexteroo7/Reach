@@ -30,7 +30,8 @@ public class WelcomeFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_welcome, container, false);
-        rootView.findViewById(R.id.getStartedBtn).setOnClickListener(view -> mListener.onOpenNumberVerification());
+        rootView.findViewById(R.id.getStartedBtn).setOnClickListener(v ->
+                mListener.onOpenNumberVerification());
         return rootView;
     }
 

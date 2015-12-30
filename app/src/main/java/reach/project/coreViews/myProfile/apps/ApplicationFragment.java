@@ -81,7 +81,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         //update in disk
         SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
         //update on server
-        new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix, userId, packageName, newVisibility);
+        new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX, userId, packageName, newVisibility);
 
         //notify that visibility has changed
         parentAdapter.visibilityChanged(packageName);
@@ -102,7 +102,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(StaticData.temporaryFix, activity);
+        new GetApplications().executeOnExecutor(StaticData.TEMPORARY_FIX, activity);
 
         //update the package visibilities
         ParentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
@@ -169,7 +169,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             boolean failed = false;
             try {
-                final MyString response = StaticData.appVisibilityApi.update(
+                final MyString response = StaticData.APP_VISIBILITY_API.update(
                         serverId, //serverId
                         packageName, //packageName
                         visibility).execute(); //if 0 (false) make it true and vice-versa

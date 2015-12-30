@@ -2,6 +2,7 @@ package reach.project.core;
 
 import android.app.Application;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
@@ -29,7 +30,7 @@ import reach.project.R;
  */
 public class ReachApplication extends Application {
 
-    public static final OkHttpClient okHttpClient;
+    public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
     static {
 
@@ -52,8 +53,6 @@ public class ReachApplication extends Application {
                 }
         };
 
-        okHttpClient = new OkHttpClient();
-
         /////////////////ignore ssl errors
         try {
             // Install the all-trusting trust manager
@@ -61,35 +60,35 @@ public class ReachApplication extends Application {
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             // Create an ssl socket factory with our all-trusting manager
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-            okHttpClient.setSslSocketFactory(sslSocketFactory);
+            OK_HTTP_CLIENT.setSslSocketFactory(sslSocketFactory);
         } catch (NoSuchAlgorithmException | KeyManagementException ignored) {
             //ignore !!
         }
 
-        okHttpClient.setHostnameVerifier((hostname, session) -> true);
+        OK_HTTP_CLIENT.setHostnameVerifier((hostname, session) -> true);
         /////////////////no http response cache
-        okHttpClient.setCache(null);
+        OK_HTTP_CLIENT.setCache(null);
         /////////////////redirects and retries
-        okHttpClient.setFollowRedirects(true);
-        okHttpClient.setRetryOnConnectionFailure(true);
-        okHttpClient.setFollowSslRedirects(true);
+        OK_HTTP_CLIENT.setFollowRedirects(true);
+        OK_HTTP_CLIENT.setRetryOnConnectionFailure(true);
+        OK_HTTP_CLIENT.setFollowSslRedirects(true);
         /////////////////double the timeouts
-        final long connectionTimeOut = okHttpClient.getConnectTimeout();
-        final long readTimeOut = okHttpClient.getReadTimeout();
-        final long writeTimeOut = okHttpClient.getWriteTimeout();
-        okHttpClient.setConnectTimeout(connectionTimeOut * 2, TimeUnit.MILLISECONDS);
-        okHttpClient.setReadTimeout(readTimeOut * 2, TimeUnit.MILLISECONDS);
-        okHttpClient.setWriteTimeout(writeTimeOut * 2, TimeUnit.MILLISECONDS);
+        final long connectionTimeOut = OK_HTTP_CLIENT.getConnectTimeout();
+        final long readTimeOut = OK_HTTP_CLIENT.getReadTimeout();
+        final long writeTimeOut = OK_HTTP_CLIENT.getWriteTimeout();
+        OK_HTTP_CLIENT.setConnectTimeout(connectionTimeOut * 2, TimeUnit.MILLISECONDS);
+        OK_HTTP_CLIENT.setReadTimeout(readTimeOut * 2, TimeUnit.MILLISECONDS);
+        OK_HTTP_CLIENT.setWriteTimeout(writeTimeOut * 2, TimeUnit.MILLISECONDS);
     }
 
-    private Tracker mTracker;
-    private static final HitBuilders.EventBuilder builder = new HitBuilders.EventBuilder();
-    private static final HitBuilders.ScreenViewBuilder screenViewBuilder = new HitBuilders.ScreenViewBuilder();
+    private static final HitBuilders.EventBuilder EVENT_BUILDER = new HitBuilders.EventBuilder();
+    private static final HitBuilders.ScreenViewBuilder SCREEN_VIEW_BUILDER = new HitBuilders.ScreenViewBuilder();
 
-    synchronized public void sendScreenView(Optional<String> screenName) {
-        Tracker tracker = getTracker();
+    public synchronized void sendScreenView(Optional<String> screenName) {
+
+        final Tracker tracker = getTracker();
         tracker.setScreenName(screenName.isPresent() ? screenName.get() : "");
-        tracker.send(screenViewBuilder.build());
+        tracker.send(SCREEN_VIEW_BUILDER.build());
     }
 
     public synchronized void track(@NonNull Optional<String> category,
@@ -99,26 +98,29 @@ public class ReachApplication extends Application {
 
         //set values
         if (category.isPresent())
-            builder.setCategory(category.get());
+            EVENT_BUILDER.setCategory(category.get());
 
         if (action.isPresent())
-            builder.setAction(action.get());
+            EVENT_BUILDER.setAction(action.get());
 
         if (label.isPresent())
-            builder.setLabel(label.get());
+            EVENT_BUILDER.setLabel(label.get());
 
         if (value > 0)
-            builder.setValue(value);
+            EVENT_BUILDER.setValue(value);
 
         //send track
-        getTracker().send(builder.build());
+        getTracker().send(EVENT_BUILDER.build());
 
         //reset
-        builder.setCategory(null);
-        builder.setAction(null);
-        builder.setLabel(null);
+        EVENT_BUILDER.setCategory(null);
+        EVENT_BUILDER.setAction(null);
+        EVENT_BUILDER.setLabel(null);
     }
 
+    @Nullable
+    private Tracker mTracker = null;
+    @NonNull
     synchronized public Tracker getTracker() {
 
         if (mTracker == null) {
@@ -134,17 +136,11 @@ public class ReachApplication extends Application {
 
         super.onCreate();
         //initialize fresco
-        final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, okHttpClient)
+        final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
                 .setDownsampleEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
                 .build();
 
         Fresco.initialize(this, config);
     }
-
-//    @Override
-//    protected void attachBaseContext(Context base) {
-//        super.attachBaseContext(base);
-//        MultiDex.install(base);
-//    }
 }

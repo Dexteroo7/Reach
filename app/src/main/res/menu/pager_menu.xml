@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/player_button"
+        android:title="Player"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_equalizer_pink"
+        />
+    <item
         android:id="@+id/search_button"
         android:title="Search"
         android:icon="@drawable/abc_ic_search_api_mtrl_alpha"

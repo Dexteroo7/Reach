@@ -66,7 +66,6 @@ import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
-import reach.project.coreViews.push.PushFilesFragment;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.Song;
 import reach.project.pacemaker.Pacemaker;
@@ -86,34 +85,21 @@ import reach.project.utils.viewHelpers.PagerFragment;
 
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
-    public static String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
-    public static String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
-    public static String OPEN_MY_PROFILE_MUSIC = "OPEN_MY_PROFILE_MUSIC";
-    public static String OPEN_PUSH = "OPEN_PUSH";
+    ////////////////////////////////////////public static final
 
-    public static long serverId = 0;
-    private static WeakReference<ReachActivity> reference = null;
-    private static SecureRandom secureRandom = new SecureRandom();
+    public static final String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
+    public static final String OPEN_PUSH = "OPEN_PUSH";
+    public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
+    public static final String OPEN_MY_PROFILE_MUSIC = "OPEN_MY_PROFILE_MUSIC";
 
+    ////////////////////////////////////////private static final
+
+    private static final SecureRandom ID_GENERATOR = new SecureRandom();
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
 
-    public static void openDownloading() {
-
-        MiscUtils.useActivity(reference, activity -> {
-
-            if (activity.viewPager == null)
-                return;
-
-            activity.viewPager.setCurrentItem(3, true);
-            downloadPager.setItem(1);
-        });
-    }
-
-    ////////////////////////////////////////
-
     @SuppressWarnings("unchecked")
-    private static final PagerFragment downloadPager = PagerFragment.getNewInstance(
+    private static final PagerFragment DOWNLOAD_PAGER = PagerFragment.getNewInstance("Manager",
             new PagerFragment.Pages(
                     new Class[]{ApplicationFragment.class},
                     new String[]{"My Applications"},
@@ -123,7 +109,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     new String[]{"Downloading", "My Library"},
                     "Songs"));
 
-    private static final int[] tabUnselectedIcons = new int[]{
+    private static final int[] UNSELECTED_ICONS = new int[]{
 
             R.drawable.icon_friends_gray,
             R.drawable.icon_send_gray,
@@ -132,7 +118,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             R.drawable.icon_myprofile_gray,
     };
 
-    private static final int[] tabSelectedIcons = new int[]{
+    private static final int[] SELECTED_ICONS = new int[]{
 
             R.drawable.icon_friends_pink,
             R.drawable.icon_send_pink,
@@ -141,8 +127,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             R.drawable.icon_myprofile_pink,
     };
 
-    @Nullable
-    private CustomViewPager viewPager = null;
+    ////////////////////////////////////////
 
     private final PagerAdapter mainPager = new FragmentPagerAdapter(getSupportFragmentManager()) {
         @Override
@@ -153,11 +138,19 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 case 0:
                     return ContactsListFragment.newInstance();
                 case 1:
-                    return PushFilesFragment.getInstance("Bitch");
+                    return PagerFragment.getNewInstance("Push",
+                            new PagerFragment.Pages(
+                                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
+                                    new String[]{"My Applications"},
+                                    "Apps"),
+                            new PagerFragment.Pages(
+                                    new Class[]{reach.project.coreViews.push.myLibrary.MyLibraryFragment.class},
+                                    new String[]{"My Library"},
+                                    "Songs"));
                 case 2:
                     return ExploreFragment.newInstance(serverId);
                 case 3:
-                    return downloadPager;
+                    return DOWNLOAD_PAGER;
                 case 4:
                     return MyProfileFragment.newInstance();
 
@@ -172,7 +165,26 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         }
     };
 
-    ////////////////////////////////////////
+    public static long serverId = 0;
+
+    public static void openDownloading() {
+
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (activity.viewPager == null)
+                return;
+
+            activity.viewPager.setCurrentItem(3, true);
+            DOWNLOAD_PAGER.setItem(1);
+        });
+    }
+
+
+    @Nullable
+    private CustomViewPager viewPager = null;
+    @Nullable
+    private static WeakReference<ReachActivity> reference = null;
+
 
     @Override
     protected void onDestroy() {
@@ -249,77 +261,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         if (!isFinishing())
             YourProfileActivity.openProfile(userId, this);
     }
-
-//    @Override
-//    public boolean onClose() {
-//
-//        if (searchView != null) {
-//            searchView.setQuery(null, true);
-//            searchView.clearFocus();
-//        }
-////
-////        selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-////        selectionArgumentsDownloader = new String[]{0 + ""};
-////        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
-////
-////        selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
-////        selectionArgumentsMyLibrary = new String[]{serverId + ""};
-////        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
-//        onQueryTextChange(null);
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onQueryTextSubmit(String query) {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onQueryTextChange(String newText) {
-//        if (searchView == null)
-//            return false;
-//
-//        // Called when the action bar search text has changed.  Update
-//        // the search filter, and restart the loader to do a new query
-//        // with this filter.
-//        final String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
-//        // Don't do anything if the filter hasn't actually changed.
-//        // Prevents restarting the loader when restoring state.
-//        if (mCurFilter == null && newFilter == null) {
-//            return true;
-//        }
-//        if (mCurFilter != null && mCurFilter.equals(newFilter)) {
-//            return true;
-//        }
-//        mCurFilter = newFilter;
-//
-//        if (TextUtils.isEmpty(newText)) {
-//
-//            selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?";
-//            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ?";
-//            selectionArgumentsDownloader = new String[]{"0"};
-//            selectionArgumentsMyLibrary = new String[]{serverId + ""};
-//        } else {
-//
-//            selectionDownloader = ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and (" +
-//                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
-//                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
-//            selectionMyLibrary = MySongsHelper.COLUMN_USER_ID + " = ? and (" +
-//                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " LIKE ? or " +
-//                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " LIKE ?)";
-//            selectionArgumentsDownloader = new String[]{"0",
-//                    "%" + mCurFilter + "%",
-//                    "%" + mCurFilter + "%"};
-//            selectionArgumentsMyLibrary = new String[]{serverId + "",
-//                    "%" + mCurFilter + "%",
-//                    "%" + mCurFilter + "%"};
-//        }
-//
-//        getLoaderManager().restartLoader(StaticData.DOWNLOAD_LOADER, null, this);
-//        getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER, null, this);
-//        Log.i("Downloader", "SEARCH SUBMITTED !");
-//        return true;
-//    }
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -398,58 +339,52 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             public void onTabSelected(TabLayout.Tab tab) {
 
                 super.onTabSelected(tab);
-                tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+                tab.setIcon(SELECTED_ICONS[tab.getPosition()]);
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
 
                 super.onTabUnselected(tab);
-                tab.setIcon(tabUnselectedIcons[tab.getPosition()]);
+                tab.setIcon(UNSELECTED_ICONS[tab.getPosition()]);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
 
                 super.onTabReselected(tab);
-                tab.setIcon(tabSelectedIcons[tab.getPosition()]);
+                tab.setIcon(SELECTED_ICONS[tab.getPosition()]);
             }
         });
 
         final int selectedTabPosition = tabLayout.getSelectedTabPosition();
         final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
         if (selectedTab != null)
-            selectedTab.setIcon(tabSelectedIcons[selectedTabPosition]);
+            selectedTab.setIcon(SELECTED_ICONS[selectedTabPosition]);
 
         for (int index = 1; index < tabLayout.getTabCount(); index++) {
 
             final TabLayout.Tab tab = tabLayout.getTabAt(index);
             if (tab != null) {
-                tab.setIcon(tabUnselectedIcons[index]);
+                tab.setIcon(UNSELECTED_ICONS[index]);
             }
         }
 
         //routine stuff
-        final boolean networkPresent;
         final NetworkInfo networkInfo =
                 ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         if (networkInfo == null || !networkInfo.isConnected()) {
             // There are no active networks.
             Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();
-            networkPresent = false;
-        } else
-            networkPresent = true;
+        } else {
 
-        if (networkPresent) //check for update
-            new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.temporaryFix);
-
-        if (networkPresent) {
-
+            //check for update
+            new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.TEMPORARY_FIX);
             //refresh gcm
-            StaticData.temporaryFix.submit(LocalUtils::checkGCM);
+            StaticData.TEMPORARY_FIX.submit(LocalUtils::checkGCM);
             //refresh download ops
-            new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
-            //Music scanner TODO perm check
+            new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.TEMPORARY_FIX);
+            //Music scanner
             MiscUtils.useContextFromContext(reference, activity -> {
 
                 final Intent intent = new Intent(activity, MetaDataScanner.class);
@@ -466,6 +401,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             return;
 
         Log.i("Ayush", "Processing Intent");
+
+        if (intent.getBooleanExtra("firstTime", false)) {
+            if (viewPager != null)
+                viewPager.setCurrentItem(5, true);
+        }
 
 //        if (intent.getBooleanExtra("openNotificationFragment", false))
 //            onOpenNotificationDrawer();
@@ -521,7 +461,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 song.album,
                                 song.genre);
                     }
-                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.temporaryFix);
+                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.TEMPORARY_FIX);
                 }
                 ///////////
             }
@@ -638,7 +578,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(secureRandom.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ID_GENERATOR.nextInt(Integer.MAX_VALUE));
 
         reachDatabase.setDuration(duration);
         reachDatabase.setLogicalClock((short) 0);
@@ -692,7 +632,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             if (serverId == 0)
                 return;
 
-            final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getGcmId(serverId).execute(), Optional.absent()).orNull();
+            final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.USER_API.getGcmId(serverId).execute(), Optional.absent()).orNull();
 
             //check returned gcm
             final String gcmId;
@@ -715,7 +655,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
                 Scanner reader = null;
                 try {
-                    reader = new Scanner(new URL(StaticData.dropBox).openStream());
+                    reader = new Scanner(new URL(StaticData.DROP_BOX).openStream());
                     return reader.nextInt();
                 } catch (Exception ignored) {
                 } finally {
@@ -835,11 +775,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
             private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
 
-                //TODO maintain list of global profiles
-                //if global do not send REQ, fetch URL first, try that
-
-                final ArrayList<ContentProviderOperation> operations =
-                        new ArrayList<>();
+                final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
                 for (ReachDatabase reachDatabase : reachDatabases) {
 
@@ -857,7 +793,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     }
 
                     final MyBoolean myBoolean;
-                    if (reachDatabase.getSenderId() == StaticData.devika) {
+                    if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
 
                         //hit cloud
                         MiscUtils.useContextFromContext(reference, context -> {
@@ -909,11 +845,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                     ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
                 }).orNull();
 
-                if (cursor == null) {
-                    if (params != null && params.length == 1)
-                        return params[0];
+                if (cursor == null)
                     return null;
-                }
 
                 final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
                 while (cursor.moveToNext())
@@ -933,19 +866,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             } catch (RemoteException | OperationApplicationException e) {
                                 e.printStackTrace();
                             }
-                            return null;
                         });
                     }
                 }
 
-                if (params != null && params.length == 1)
-                    return params[0];
                 return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void gg) {
-                super.onPostExecute(gg);
             }
         }
 

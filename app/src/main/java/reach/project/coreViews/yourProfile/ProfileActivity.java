@@ -73,7 +73,7 @@ public class ProfileActivity extends AppCompatActivity {
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId));
+            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
             if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
                 setRequestSent();
             else
@@ -83,6 +83,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setRequestSent() {
+
         ImageView profileIcon = (ImageView) findViewById(R.id.profileIcon);
         TextView  text1 = (TextView) findViewById(R.id.text1);
         TextView text2 = (TextView) findViewById(R.id.text2);

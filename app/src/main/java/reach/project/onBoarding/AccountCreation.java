@@ -105,7 +105,7 @@ public class AccountCreation extends Fragment {
 
                 Uri uriToDisplay = null;
                 if (!TextUtils.isEmpty(oldData[1]) && !oldData[1].equals("hello_world"))
-                    uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + oldData[1]);
+                    uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldData[1]);
                 profilePhotoSelector.setImageURI(uriToDisplay);
             }
         } else
@@ -179,7 +179,7 @@ public class AccountCreation extends Fragment {
             imageStream = null;
         }
 
-        new ProcessImage().executeOnExecutor(StaticData.temporaryFix, imageStream);
+        new ProcessImage().executeOnExecutor(StaticData.TEMPORARY_FIX, imageStream);
     }
 
     @Override

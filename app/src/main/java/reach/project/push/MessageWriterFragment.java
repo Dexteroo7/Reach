@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -71,36 +72,6 @@ public class MessageWriterFragment extends Fragment {
         }
     };
 
-    private final View.OnClickListener sendPushListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-
-            final long[] serverIds = getArguments().getLongArray(USER_IDS);
-            final String pushContainer = getArguments().getString(PUSH_CONTAINER);
-            final String firstContentName = getArguments().getString(FIRST_CONTENT_NAME);
-            final int contentCount = getArguments().getInt(PUSH_SIZE, 0);
-
-            if (serverIds == null || serverIds.length == 0 || TextUtils.isEmpty(pushContainer)) {
-                getActivity().finish(); //should not happen
-                return;
-            }
-            final PushContainerJSON pushJSON = new PushContainerJSON();
-            pushJSON.setContainer(pushContainer);
-            pushJSON.setCustomMessage(editText != null ? editText.getText().toString() : "");
-            pushJSON.setFirstContentName(firstContentName);
-            pushJSON.setReceiverId(MiscUtils.convertToList(serverIds));
-            pushJSON.setSize(contentCount);
-            pushJSON.setSenderId(myUserId);
-
-            if (sendPush != null) {
-
-                sendPush.setAlpha(0.1f);
-                sendPush.setClickable(false);
-            }
-            new SendPush().execute(pushJSON);
-        }
-    };
-
     private static final class SendPush extends AsyncTask<PushContainerJSON, Void, Boolean> {
 
         @NonNull
@@ -108,7 +79,7 @@ public class MessageWriterFragment extends Fragment {
         protected Boolean doInBackground(PushContainerJSON... params) {
 
             try {
-                StaticData.notificationApi.addPushMultiple(params[0]).execute();
+                StaticData.NOTIFICATION_API.addPushMultiple(params[0]).execute();
                 return true;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -152,11 +123,39 @@ public class MessageWriterFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_message_writer, container, false);
         editText = (EditText) rootView.findViewById(R.id.message);
 
-        sendPush = rootView.findViewById(R.id.sendPush);
-        sendPush.setOnClickListener(sendPushListener);
+        final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.writerToolbar);
+        toolbar.setTitle("Send push");
+        toolbar.inflateMenu(R.menu.menu_push);
+        toolbar.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.push_button:
+                    final long[] serverIds = getArguments().getLongArray(USER_IDS);
+                    final String pushContainer = getArguments().getString(PUSH_CONTAINER);
+                    final String firstContentName = getArguments().getString(FIRST_CONTENT_NAME);
+                    final int contentCount = getArguments().getInt(PUSH_SIZE, 0);
 
-        final View back = rootView.findViewById(R.id.back);
-        back.setOnClickListener(goBackListener);
+                    if (serverIds == null || serverIds.length == 0 || TextUtils.isEmpty(pushContainer)) {
+                        getActivity().finish(); //should not happen
+                        return true;
+                    }
+                    final PushContainerJSON pushJSON = new PushContainerJSON();
+                    pushJSON.setContainer(pushContainer);
+                    pushJSON.setCustomMessage(editText != null ? editText.getText().toString() : "");
+                    pushJSON.setFirstContentName(firstContentName);
+                    pushJSON.setReceiverId(MiscUtils.convertToList(serverIds));
+                    pushJSON.setSize(contentCount);
+                    pushJSON.setSenderId(myUserId);
+
+                    if (sendPush != null) {
+
+                        sendPush.setAlpha(0.1f);
+                        sendPush.setClickable(false);
+                    }
+                    new SendPush().execute(pushJSON);
+                    return true;
+            }
+            return false;
+        });
 
         return rootView;
     }

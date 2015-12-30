@@ -389,7 +389,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
         Log.i("Downloader", "File creation completed");
 
         final boolean connectSuccess;
-        if (reachDatabase.getSenderId() == StaticData.devika)
+        if (reachDatabase.getSenderId() == StaticData.DEVIKA)
             //try cloud if Devika
             connectSuccess = LocalUtils.connectCloud(reachDatabase, networkManager, handlerInterface);
         else
@@ -469,7 +469,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             connection.setMessageType("404");
             MiscUtils.sendGCM("CONNECT" + new Gson().toJson(connection, Connection.class),
                     connection.getReceiverId(), connection.getSenderId());
-            Log.i("Downloader", "File Channel could not be created");
+            Log.i("Downloader", "Requested song path invalid");
             LocalUtils.removeReachDatabase(handlerInterface, reachDatabase.getId(), true);
             return false;
         }
@@ -709,7 +709,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
 
                 LocalUtils.forceUpdateReachDatabase(contentValues, handlerInterface, database.getId());
                 //Sync upload success to server
-                MiscUtils.autoRetryAsync(() -> StaticData.userEndpoint.updateCompletedOperations(
+                MiscUtils.autoRetryAsync(() -> StaticData.USER_API.updateCompletedOperations(
                         database.getReceiverId(),
                         database.getSenderId(),
                         database.getDisplayName(),
@@ -1179,10 +1179,11 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                             MySongsHelper.COLUMN_VISIBILITY, //4
                             MySongsHelper.COLUMN_ALBUM_ART_DATA}, //5
 
-                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
-                            MySongsHelper.COLUMN_SONG_ID + " = ? and " +
+                    MySongsHelper.COLUMN_SONG_ID + " = ? and " +
                             MySongsHelper.COLUMN_SIZE + " = ?",
-                    new String[]{myId + "", songId + "", length + ""}, null);
+                    new String[]{songId + "", length + ""}, null);
+
+            Log.i("Downloader", myId + " " + songId + " " + length);
 
             if (cursor == null || !cursor.moveToFirst()) {
 
@@ -1207,8 +1208,15 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
             }
 
             if (cursor == null || !cursor.moveToFirst() || cursor.getShort(4) == 0) {
+
                 //TODO tell invisible
                 Log.i("Downloader", "Requested song path invalid");
+                if (cursor == null)
+                    Log.i("Downloader", "Song not found cursor null");
+                else if (!cursor.moveToFirst())
+                    Log.i("Downloader", "Cursor could not be moved");
+                else
+                    Log.i("Downloader", cursor.getShort(4) + " visibility");
                 return Optional.absent();
             }
 
@@ -1389,7 +1397,7 @@ public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInter
                     receiverName.close();
 
                 //look up from net
-                final Friend friend = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getFriendFromId(myId, id).execute(), Optional.absent()).orNull();
+                final Friend friend = MiscUtils.autoRetry(() -> StaticData.USER_API.getFriendFromId(myId, id).execute(), Optional.absent()).orNull();
                 if (friend == null)
                     return null;
                 handlerInterface.getContentResolver().insert(

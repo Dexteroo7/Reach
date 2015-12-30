@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#cccccc"
+    android:background="@color/reach_grey_bg"
     tools:context="reach.project.player.PlayerActivity">
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
@@ -35,11 +35,14 @@
         android:background="@drawable/shadow_bottom" />
     <ImageView
         android:id="@+id/likeBtn"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        app:layout_marginTopPercent="63%"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:elevation="4dp"
+        app:layout_marginTopPercent="64%"
         app:layout_marginRightPercent="5%"
         android:layout_alignParentRight="true"
+        android:padding="10dp"
+        android:background="@drawable/circular_background"
         android:src="@drawable/icon_heart_dark_gray"
         android:visibility="visible" />
     <TextView

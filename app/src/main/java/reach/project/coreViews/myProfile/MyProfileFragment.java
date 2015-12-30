@@ -9,7 +9,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
@@ -32,6 +32,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
 import reach.project.music.MySongsProvider;
+import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -85,6 +86,9 @@ public class MyProfileFragment extends Fragment {
                     //TODO show invisible files
                     item.setChecked(check);
                     return true;
+                case R.id.player_button:
+                    startActivity(new Intent(getContext(), PlayerActivity.class));
+                    return true;
             }
             return false;
         });
@@ -107,10 +111,10 @@ public class MyProfileFragment extends Fragment {
         }
         musicCount.setText(songCount+"");
         userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-        profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + SharedPrefUtils.getImageId(preferences)));
+        profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)));
 
         ViewPager viewPager = materialViewPager.getViewPager();
-        viewPager.setAdapter(new FragmentStatePagerAdapter(getChildFragmentManager()) {
+        viewPager.setAdapter(new FragmentPagerAdapter(getChildFragmentManager()) {
 
             @Override
             public Fragment getItem(int position) {

@@ -53,7 +53,7 @@ public final class ForceSyncFriends implements Runnable {
     public void run() {
 
         //First we fetch the list of 'KNOWN' friends
-        final List<Friend> fullSync = serverId == 0 ? null : MiscUtils.autoRetry(() -> StaticData.userEndpoint.longSync(serverId).execute().getItems(), Optional.absent()).orNull();
+        final List<Friend> fullSync = serverId == 0 ? null : MiscUtils.autoRetry(() -> StaticData.USER_API.longSync(serverId).execute().getItems(), Optional.absent()).orNull();
 
         //Now we collect the phoneNumbers on device
         final HashSet<String> numbers = new HashSet<>();
@@ -80,7 +80,7 @@ public final class ForceSyncFriends implements Runnable {
             final StringList stringList = new StringList();
             stringList.setStringList(ImmutableList.copyOf(numbers));
             stringList.setUserId(serverId);
-            phoneBookSync = MiscUtils.autoRetry(() -> StaticData.userEndpoint.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).orNull();
+            phoneBookSync = MiscUtils.autoRetry(() -> StaticData.USER_API.phoneBookSyncEvenNew(stringList).execute().getItems(), Optional.absent()).orNull();
         }
 
         //Finally we insert the received contacts

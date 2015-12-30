@@ -27,9 +27,9 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
@@ -156,11 +156,11 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             final String displayName, artist, album, actualName;
             final boolean visible;
 
-            displayName = cursorExactType.getString(3);
-            artist = cursorExactType.getString(5);
-            album = cursorExactType.getString(6);
-            actualName = cursorExactType.getString(4);
-            visible = cursorExactType.getShort(9) == 1;
+            displayName = cursorExactType.getString(2);
+            actualName = cursorExactType.getString(3);
+            artist = cursorExactType.getString(4);
+            album = cursorExactType.getString(5);
+            visible = cursorExactType.getShort(8) == 1;
 
             if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);

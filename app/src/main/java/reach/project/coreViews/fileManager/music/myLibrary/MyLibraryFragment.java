@@ -200,8 +200,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
                 MySongsHelper.DISK_LIST,
-                MySongsHelper.COLUMN_USER_ID + " = ?"
-                , new String[]{userId + ""},
+                null, null,
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
                         MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20");
 

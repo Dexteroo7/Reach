@@ -36,6 +36,7 @@
 
         <activity
             android:name=".onBoarding.SplashActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,10 +44,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".core.ReachActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="process_multiple" />
@@ -57,8 +60,6 @@
 
         <receiver
             android:name=".core.GcmBroadcastReceiver"
-            android:enabled="true"
-            android:exported="false"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
@@ -67,13 +68,13 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name=".pacemaker.HeartbeatReceiver"
-            android:enabled="true"
             android:exported="false" />
+
         <receiver
             android:name=".core.UpdateReceiver"
-            android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
@@ -82,9 +83,9 @@
                 <category android:name="reach.project" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name=".apps.InterceptAppInstall"
-            android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
@@ -104,13 +105,16 @@
             android:name=".utils.MetaDataScanner"
             android:exported="false" />
 
-        <service android:name="com.google.android.gms.analytics.CampaignTrackingService" />
+        <service
+            android:name="com.google.android.gms.analytics.CampaignTrackingService"
+            android:exported="false" />
 
         <provider
             android:name=".coreViews.friends.ReachFriendsProvider"
             android:authorities="reach.project.coreViews.friends.ReachFriendsProvider"
             android:exported="false"
             android:multiprocess="true" />
+
         <provider
             android:name=".music.MySongsProvider"
             android:authorities="reach.project.music.MySongsProvider"
@@ -122,19 +126,24 @@
             android:excludeFromRecents="true"
             android:label="@string/title_activity_reach_notification"
             android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.Dialog" />
+
         <activity
             android:name=".coreViews.myProfile.EditProfileActivity"
             android:label="@string/title_activity_edit_profile"
-            android:parentActivityName=".core.ReachActivity">
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
+
         <activity
             android:name=".ancillaryViews.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".core.ReachActivity">
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -143,15 +152,28 @@
             android:name=".coreViews.friends.invite.InviteActivity"
             android:label="@string/title_activity_invite"
             android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
         <activity
+            android:name=".notificationCentre.NotificationActivity"
+            android:label="@string/title_activity_notification"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
             android:name=".coreViews.yourProfile.ProfileActivity"
             android:label="@string/title_activity_profile"
-            android:parentActivityName=".core.ReachActivity">
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -159,7 +181,8 @@
         <activity
             android:name=".coreViews.yourProfile.YourProfileActivity"
             android:label="@string/title_activity_your_profile"
-            android:parentActivityName=".core.ReachActivity">
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -191,7 +214,7 @@
 
         <service
             android:name=".onBoarding.smsRelated.SmsListener"
-            android:exported="false"/>
+            android:exported="false" />
 
         <!-- Things on process :remote -->
 
@@ -211,12 +234,12 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_player"
             android:parentActivityName=".core.ReachActivity"
-            android:process=":remote">
+            android:process=":remote"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
-
     </application>
 
 </manifest>

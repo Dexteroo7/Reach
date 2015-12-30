@@ -8,8 +8,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -31,6 +34,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 
@@ -63,6 +68,7 @@ import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -253,9 +259,8 @@ public class ProcessManager extends Service implements
             cursor = getContentResolver().query(
                     MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
-                            MySongsHelper.COLUMN_SONG_ID + " = ?",
-                    new String[]{serverId + "", lastSong.id + ""}, null);
+                    MySongsHelper.COLUMN_SONG_ID + " = ?",
+                    new String[]{lastSong.id + ""}, null);
         if (cursor != null)
             cursor.moveToFirst();
         return playFromCursor(Optional.fromNullable(cursor), lastSong.type);
@@ -277,9 +282,8 @@ public class ProcessManager extends Service implements
             myLibraryCursor = getContentResolver().query(
                     MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
-                            MySongsHelper.COLUMN_SONG_ID + " != ?",
-                    new String[]{serverId + "", id + ""}, null);
+                    MySongsHelper.COLUMN_SONG_ID + " != ?",
+                    new String[]{id + ""}, null);
         }
 
         if (reachSongCursor == null || !reachSongCursor.moveToFirst()) {
@@ -431,6 +435,36 @@ public class ProcessManager extends Service implements
         startForeground(StaticData.MUSIC_PLAYER, note.build());
     }
 
+    private static class SetAlbumArt extends AsyncTask<Uri, Void, Bitmap> {
+
+        private RemoteViews rViews;
+
+        public SetAlbumArt(RemoteViews remoteViews) {
+            rViews = remoteViews;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Uri... params) {
+            Request request = new Request.Builder().url(params[0].toString()).build();
+            try {
+                Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
+                return BitmapFactory.decodeStream(response.body().byteStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            if (bitmap == null)
+                return;
+            rViews.setImageViewBitmap(R.id.NalbumArt, bitmap);
+            Log.d("Ashish", "Album art set");
+        }
+    }
+
     private void notificationMusic() {
 
         final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
@@ -445,6 +479,11 @@ public class ProcessManager extends Service implements
         remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
+        new SetAlbumArt(remoteViews).executeOnExecutor(StaticData.TEMPORARY_FIX,
+                AlbumArtUri.getUri(currentSong.get().getAlbumName(),
+                        currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
+                        false).get());
+
         if (paused)
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.play_white_selector);
         else
@@ -884,8 +923,7 @@ public class ProcessManager extends Service implements
         return getContentResolver().query(
                 MySongsProvider.CONTENT_URI,
                 StaticData.DISK_PARTIAL,
-                MySongsHelper.COLUMN_USER_ID + " = ?",
-                new String[]{serverId + ""},
+                null, null,
                 MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
     }
 

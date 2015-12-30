@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="reach.project.push.PushActivity">
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="Settings"
-        app:showAsAction="never" />
+        android:id="@+id/push_button"
+        android:title="Push"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_send_pink"
+        />
 </menu>

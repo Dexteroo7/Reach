@@ -33,6 +33,7 @@ import java.lang.ref.WeakReference;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -390,8 +391,16 @@ public enum CloudStorageUtils {
         if (songList == null || songList.isEmpty())
             return Collections.emptyList();
 
+        final Comparator<Song> primaryMusic = (left, right) -> {
+
+            final Long lhs = left == null || left.dateAdded == null ? 0 : left.dateAdded;
+            final Long rhs = right == null || right.dateAdded == null ? 0 : right.dateAdded;
+
+            return lhs.compareTo(rhs);
+        };
+
         //sort and return
-        return Ordering.from(StaticData.primaryMusic).sortedCopy(songList);
+        return Ordering.from(primaryMusic).sortedCopy(songList);
     }
 
     public static List<App> fetchApps(long userId, WeakReference<Context> reference) {
