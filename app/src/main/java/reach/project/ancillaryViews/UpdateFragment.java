@@ -1,4 +1,4 @@
-package reach.project.coreViews;
+package reach.project.ancillaryViews;
 
 import android.content.Intent;
 import android.net.Uri;

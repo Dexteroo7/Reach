@@ -42,9 +42,9 @@ import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.UploadProgress;
-import reach.project.utils.auxiliaryClasses.UseContext2;
-import reach.project.utils.auxiliaryClasses.UseContextAndFragment;
+import reach.project.utils.ancillaryClasses.UploadProgress;
+import reach.project.utils.ancillaryClasses.UseContext2;
+import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 
 public class ScanFragment extends Fragment {
 

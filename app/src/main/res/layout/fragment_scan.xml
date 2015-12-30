@@ -166,7 +166,7 @@
                 android:gravity="center"
                 android:textSize="16sp"
                 android:visibility="invisible"
-                android:text="CONTINUE"
+                android:text="CLICK TO PROCEED"
                 android:textColor="@color/reach_color"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />

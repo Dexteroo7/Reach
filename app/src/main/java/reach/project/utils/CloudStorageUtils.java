@@ -42,8 +42,8 @@ import reach.project.apps.AppList;
 import reach.project.core.StaticData;
 import reach.project.music.MusicList;
 import reach.project.music.Song;
-import reach.project.utils.auxiliaryClasses.UploadProgress;
-import reach.project.utils.auxiliaryClasses.UseContext;
+import reach.project.utils.ancillaryClasses.UploadProgress;
+import reach.project.utils.ancillaryClasses.UseContext;
 
 /**
  * Created by Dexter on 28-03-2015.

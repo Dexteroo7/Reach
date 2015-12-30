@@ -1,12 +1,14 @@
 package reach.project.coreViews.explore;
 
+import android.support.annotation.NonNull;
+
 import reach.project.R;
-import reach.project.utils.GetName;
+import reach.project.utils.EnumHelper;
 
 /**
  * Created by dexter on 15/10/15.
  */
-enum ExploreTypes implements GetName {
+enum ExploreTypes implements EnumHelper<String> {
 
     MUSIC(R.layout.explore_music),
     APP(android.R.layout.simple_list_item_1),
@@ -26,6 +28,7 @@ enum ExploreTypes implements GetName {
         return layoutResId;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return name();

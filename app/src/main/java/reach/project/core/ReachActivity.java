@@ -55,7 +55,7 @@ import java.util.UUID;
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
-import reach.project.coreViews.UpdateFragment;
+import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -79,7 +79,7 @@ import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
-import reach.project.utils.auxiliaryClasses.SuperInterface;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.PagerFragment;
 

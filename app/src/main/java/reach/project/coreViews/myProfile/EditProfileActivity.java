@@ -40,7 +40,7 @@ import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.auxiliaryClasses.UploadProgress;
+import reach.project.utils.ancillaryClasses.UploadProgress;
 
 public class EditProfileActivity extends AppCompatActivity {
 

@@ -71,19 +71,19 @@ class ExploreAdapter extends PagerAdapter {
                 final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
 
                 title.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
-                subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE).getAsString());
-                final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME).getAsString();
+                subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE, "").getAsString());
+                final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME, "").getAsString();
                 if (TextUtils.isEmpty(originalUserName))
                     userHandle.setText(userName);
                 else
                     userHandle.setText(originalUserName);
                 typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
-                final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL).getAsString();
+                final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(imageId))
                     image.setImageURI(Uri.parse(imageId));
 
-                final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL).getAsString();
+                final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(albumArt))
                     userImage.setImageURI(Uri.parse(albumArt));
 
@@ -101,8 +101,8 @@ class ExploreAdapter extends PagerAdapter {
                 final JsonObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
 
                 title.setText(MiscUtils.get(appViewInfo, AppViewInfo.TITLE).getAsString());
-                subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE).getAsString());
-                final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME).getAsString();
+                subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE, "").getAsString());
+                final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME, "").getAsString();
                 if (TextUtils.isEmpty(originalUserName))
                     userHandle.setText(userName);
                 else
@@ -127,6 +127,11 @@ class ExploreAdapter extends PagerAdapter {
 
                 //title.setText("No more stories for today");
                 layout.setTag(POSITION_NONE);
+                break;
+
+            case MISC:
+
+
                 break;
         }
 

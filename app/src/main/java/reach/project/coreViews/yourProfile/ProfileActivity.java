@@ -37,9 +37,7 @@ public class ProfileActivity extends AppCompatActivity {
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
 
         mToolbar.setTitle("");
-        mToolbar.setNavigationOnClickListener(v -> {
-            NavUtils.navigateUpFromSameTask(ProfileActivity.this);
-        });
+        mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(ProfileActivity.this));
 
         final RelativeLayout headerRoot = (RelativeLayout) findViewById(R.id.headerRoot);
         final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
