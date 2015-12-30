@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.telephony.SmsMessage;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -113,6 +114,7 @@ public class CodeVerification extends Fragment {
         verificationCode.addTextChangedListener(verificationWatcher);
         verificationCode.requestFocus();
         rootView.findViewById(R.id.verify).setOnClickListener(verifyCodeListener);
+        rootView.findViewById(R.id.sendAgain).setOnClickListener(retryListener);
 
         //send sms and wait
         SmsListener.forceQuit.set(true); //quit current
@@ -360,6 +362,17 @@ public class CodeVerification extends Fragment {
             mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
     };
 
+    private static final View.OnClickListener retryListener = view -> new AlertDialog.Builder(view.getContext())
+            .setMessage("Send verification code again?")
+            .setPositiveButton("Yes", (dialog, which) -> {
+                //TODO send code again
+                dialog.dismiss();
+            })
+            .setNegativeButton("No", (dialog, which) -> {
+                dialog.dismiss();
+            })
+            .show();
+
     private final View.OnClickListener verifyCodeListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -437,14 +450,11 @@ public class CodeVerification extends Fragment {
                 case INVALID_NUMBER: {
 
                     SmsListener.forceQuit.set(true); //quit current
-                    MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
-                        @Override
-                        public void work(Context context) {
-
-                            Toast.makeText(context, "Network error, retrying", Toast.LENGTH_SHORT).show();
-                            //retry
-                            SmsListener.sendSms(phoneNumber, finalAuthKey, CodeVerification.messenger, context);
-                        }
+                    MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
+                        Toast.makeText(context, "INVALID number", Toast.LENGTH_SHORT).show();
+                        if (fragment.mListener != null)
+                            fragment.mListener.onOpenNumberVerification(); //enter new number
+                        //track
                     });
                     return false; //failed
                 }

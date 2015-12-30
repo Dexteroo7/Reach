@@ -27,15 +27,29 @@
         android:paddingRight="35dp"
         android:layout_width="wrap_content"
         android:layout_height="35dp" />
+    <TextView
+        android:id="@+id/sendAgain"
+        android:layout_above="@id/verify"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="20dp"
+        android:text="Did not receive the code?\nSend it again"
+        android:textColor="@color/reach_color"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
     <EditText
         android:id="@+id/verificationCode"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:textCursorDrawable="@null"
-        android:layout_above="@id/verify"
+        android:layout_above="@id/sendAgain"
         android:layout_centerHorizontal="true"
         android:textColor="@color/reach_grey_light"
         android:focusable="true"
+        android:gravity="center"
         android:focusableInTouchMode="true"
         android:digits="0,1,2,3,4,5,6,7,8,9"
         android:inputType="numberSigned" />
