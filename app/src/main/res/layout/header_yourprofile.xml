@@ -45,6 +45,7 @@
         android:textSize="15sp" />
 
     <LinearLayout
+        android:id="@+id/countContainer"
         android:orientation="horizontal"
         android:layout_below="@id/userHandle"
         android:layout_centerHorizontal="true"

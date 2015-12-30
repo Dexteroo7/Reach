@@ -79,7 +79,7 @@
                         android:layout_height="wrap_content" />
                     <TextView
                         android:id="@+id/text2"
-                        android:text="Please wait while we search your phone for songs, apps and photos"
+                        android:text="Please wait while we search your phone for songs and apps"
                         android:textColor="@color/reach_blue"
                         android:gravity="center"
                         android:layout_marginLeft="60dp"
@@ -166,7 +166,7 @@
                 android:gravity="center"
                 android:textSize="16sp"
                 android:visibility="invisible"
-                android:text="ORGANIZE"
+                android:text="CLICK TO PROCEED"
                 android:textColor="@color/reach_color"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />

@@ -3,6 +3,7 @@ package reach.project.onBoarding;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,10 +15,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -90,7 +93,20 @@ public class ScanFragment extends Fragment {
         final String phoneNumber = getArguments().getString(PHONE_NUMBER);
         final String userName = getArguments().getString(USER_NAME);
 
-        new SaveUserData(rootView.findViewById(R.id.sendButton),
+        rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
+        TextView userNameTV = (TextView) rootView.findViewById(R.id.userName);
+        userNameTV.setText(userName);
+        SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
+        SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
+        if (imageFilePath == null)
+            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+        else
+            profilePic.setImageURI(Uri.parse("file://" + imageFilePath));
+        rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
+
+        new SaveUserData((LinearLayout) rootView.findViewById(R.id.scan1),
+                (LinearLayout) rootView.findViewById(R.id.scan2),
+                rootView.findViewById(R.id.sendButton),
                 (TextView) rootView.findViewById(R.id.scanCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
@@ -105,10 +121,13 @@ public class ScanFragment extends Fragment {
         final TextView scanCount;
         final ProgressBar progress;
         final String deviceId;
+        final LinearLayout scan1, scan2;
 
-        private SaveUserData(View next,
+        private SaveUserData(LinearLayout scan1, LinearLayout scan2, View next,
                              TextView scanCount, ProgressBar progress,
                              String deviceId) {
+            this.scan1 = scan1;
+            this.scan2 = scan2;
             this.next = next;
             this.scanCount = scanCount;
             this.progress = progress;
@@ -332,7 +351,7 @@ public class ScanFragment extends Fragment {
                 } else if (message.what == MetaDataScanner.SCANNING_FILES) {
 
                     totalFiles = message.arg1;
-                    scanCount.setText(message.arg1 + "");
+                    scanCount.setText(totalFiles + "");
 
                     if (totalExpected > totalFiles)
                         progress.setProgress((totalFiles * 100) / totalExpected);
@@ -341,7 +360,11 @@ public class ScanFragment extends Fragment {
 
                 } else if (message.what == MetaDataScanner.UPLOADING) {
 
-                    scanCount.setText("Finishing up");
+                    scanCount.setText(totalFiles + "");
+                    TextView total = (TextView) scan2.findViewById(R.id.totalSongs);
+                    total.setText(totalFiles+ "");
+                    scan1.setVisibility(View.INVISIBLE);
+                    scan2.setVisibility(View.VISIBLE);
                     progress.setProgress(100);
                 } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
 

@@ -141,9 +141,9 @@
 
         <activity
             android:name=".ancillaryViews.SettingsActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait">
+            android:parentActivityName=".core.ReachActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
