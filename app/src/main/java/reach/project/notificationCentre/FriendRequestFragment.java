@@ -157,7 +157,7 @@ public class FriendRequestFragment extends Fragment {
             if (serverId == 0)
                 return null;
 
-            return MiscUtils.autoRetry(() -> StaticData.userEndpoint.getReceivedRequests(serverId).execute().getItems(), Optional.absent()).orNull();
+            return MiscUtils.autoRetry(() -> StaticData.USER_API.getReceivedRequests(serverId).execute().getItems(), Optional.absent()).orNull();
         }
 
         @Override

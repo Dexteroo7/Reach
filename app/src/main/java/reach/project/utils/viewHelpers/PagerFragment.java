@@ -238,7 +238,7 @@ public class PagerFragment extends Fragment {
         });
 
         viewPager.setOffscreenPageLimit(1); //there is 1 page on either side
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(50)));
+        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
         viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {

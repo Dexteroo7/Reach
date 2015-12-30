@@ -97,7 +97,7 @@ public class AllContactsFragment extends Fragment implements
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(inviteAdapter);
         getLoaderManager().initLoader(StaticData.ALL_CONTACTS_LOADER, null, this);
-        //new LocalUtils.InitializeData(recyclerView).executeOnExecutor(StaticData.temporaryFix);
+        //new LocalUtils.InitializeData(recyclerView).executeOnExecutor(StaticData.TEMPORARY_FIX);
 
         return rootView;
     }
@@ -218,7 +218,7 @@ public class AllContactsFragment extends Fragment implements
                                 contact.setInviteSent(true);
                                 listToggle.setImageResource(R.drawable.icon_organize_tick_white);
                                 adapter.notifyDataSetChanged();
-                                new SendInvite().executeOnExecutor(StaticData.temporaryFix, contact.getPhoneNumber(), txt);
+                                new SendInvite().executeOnExecutor(StaticData.TEMPORARY_FIX, contact.getPhoneNumber(), txt);
                             } else
                                 Toast.makeText(context, "Please enter an invite message", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();

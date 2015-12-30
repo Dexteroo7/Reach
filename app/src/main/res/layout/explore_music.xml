@@ -21,8 +21,7 @@
             android:layout_height="match_parent">
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/image"
-                fresco:placeholderImage="@drawable/album_art_small_01"
-                fresco:placeholderImageScaleType="centerCrop"
+                fresco:placeholderImage="@drawable/logo_latest"
                 android:layout_width="match_parent"
                 app:layout_heightPercent="60%" />
             <View

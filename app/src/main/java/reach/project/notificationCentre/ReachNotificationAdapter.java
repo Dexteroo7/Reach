@@ -155,7 +155,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText(" likes " + like.getSongName());
-                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl
+                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                         + like.getImageId()));
                 break;
 
@@ -165,7 +165,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
-                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl
+                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                         + push.getImageId()));
 
                 if (accepted.get(notificationBaseLocal.getNotificationId(), false)) {
@@ -233,7 +233,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                             txt = txt + "s";
                         viewHolder.notifType.setText(" shared " + push.getSize() + txt + " with you");
 
-                        MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.pushAccepted(
+                        MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.pushAccepted(
                                 push.getFirstSongName(),
                                 push.getNotificationId(),
                                 serverID,
@@ -245,7 +245,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                     viewHolder.reject.setOnClickListener(v -> {
 
-                        MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(push.getNotificationId(), serverID).execute(), Optional.absent());
+                        MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(push.getNotificationId(), serverID).execute(), Optional.absent());
                         remove(push);
                         accepted.delete(notificationBaseLocal.getNotificationId());
                     });
@@ -262,7 +262,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
-                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl
+                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                         +becameFriends.getImageId()));
                 break;
 
@@ -281,7 +281,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                     builder.append("s ");
                 builder.append(" with you");
                 viewHolder.notifType.setText(builder.toString());
-                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl
+                viewHolder.profilePhoto.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                         +pushAccepted.getImageId()));
                 break;
         }

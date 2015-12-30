@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +39,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.handOverMessage = handOverMessage;
     }
 
-    public static String[] requiredProjection = new String[]{
+    public static final String[] requiredProjection = new String[]{
 
             ReachFriendsHelper.COLUMN_ID, //0
             ReachFriendsHelper.COLUMN_PHONE_NUMBER, //1
@@ -51,6 +52,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             ReachFriendsHelper.COLUMN_NUMBER_OF_APPS, //8
             ReachFriendsHelper.COLUMN_NEW_SONGS, //9
             ReachFriendsHelper.COLUMN_NEW_APPS, //10
+            ReachFriendsHelper.COLUMN_HASH //11
     };
 
     public static final byte VIEW_TYPE_FRIEND = 0;
@@ -68,6 +70,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (this.verticalCursor != null)
             this.verticalCursor.close();
         this.verticalCursor = cursor;
+
+        Log.i("Ayush", "Setting vertical cursor " + (cursor != null ? cursor.getCount() : 0));
 
         if (cursor != null)
             notifyDataSetChanged();
@@ -90,17 +94,21 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
+
                 return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.myreach_item, parent, false), position -> {
 
-                    if (verticalCursor == null || !verticalCursor.moveToPosition(position))
-                        throw new IllegalStateException("Resource cursor has been computed");
+                    final Object object = getItem(position);
+                    if (!(object instanceof Cursor))
+                        throw new IllegalStateException("Resource cursor has been corrupted");
 
+                    final Cursor cursor = (Cursor) object;
                     final ClickData clickData = new ClickData();
-                    clickData.friendId = verticalCursor.getLong(0);
-                    clickData.networkType = verticalCursor.getShort(4);
-                    clickData.status = verticalCursor.getShort(5);
-                    clickData.userName = verticalCursor.getString(2);
+                    clickData.friendId = cursor.getLong(0);
+                    clickData.networkType = cursor.getShort(5);
+                    clickData.status = cursor.getShort(6);
+                    clickData.userName = cursor.getString(2);
+
                     handOverMessage.handOverMessage(clickData);
                 });
             }
@@ -110,29 +118,34 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             case VIEW_TYPE_FRIEND_LARGE: {
+
                 return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.myreach_large_item, parent, false), position -> {
 
-                            if (verticalCursor == null || !verticalCursor.moveToPosition(position))
-                                throw new IllegalStateException("Resource cursor has been computed");
+                    final Object object = getItem(position);
+                    if (!(object instanceof Cursor))
+                        throw new IllegalStateException("Resource cursor has been corrupted");
 
-                            final ClickData clickData = new ClickData();
-                            clickData.friendId = verticalCursor.getLong(0);
-                            clickData.networkType = verticalCursor.getShort(4);
-                            clickData.status = verticalCursor.getShort(5);
-                            clickData.userName = verticalCursor.getString(2);
-                            handOverMessage.handOverMessage(clickData);
-                        });
+                    final Cursor cursor = (Cursor) object;
+                    final ClickData clickData = new ClickData();
+                    clickData.friendId = cursor.getLong(0);
+                    clickData.networkType = cursor.getShort(5);
+                    clickData.status = cursor.getShort(6);
+                    clickData.userName = cursor.getString(2);
+
+                    handOverMessage.handOverMessage(clickData);
+                });
             }
 
             case VIEW_TYPE_INVITE:
                 return new SingleItemViewHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.myreach_invite, parent, false), position -> {
-                            parent.getContext().startActivity(new Intent(parent.getContext(),
-                                    InviteActivity.class));
-                        });
+                    parent.getContext().startActivity(new Intent(parent.getContext(),
+                            InviteActivity.class));
+                });
 
-            default:return null;
+            default:
+                return null;
         }
     }
 
@@ -177,7 +190,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             Uri uriToDisplay = null;
 
             if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-                uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
+                uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
             /*else {
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile01);
@@ -203,8 +216,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             //use
-        }
-        else if (friend instanceof Boolean){
+        } else if (friend instanceof Boolean) {
 
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             horizontalViewHolder.headerText.setText("Newly added");
@@ -212,8 +224,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     new CustomLinearLayoutManager(holder.itemView.getContext(),
                             LinearLayoutManager.HORIZONTAL, false));
             horizontalViewHolder.listOfItems.setAdapter(lockedFriendsAdapter);
-        }
-        else {
+        } else {
             //
         }
     }
@@ -228,9 +239,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private Object getItem(int position) {
 
         if (position == 9 || verticalCursor == null)
-            return 1;
+            return 1; //invite
         else if (position == 10)
-            return false;
+            return false; //horizontal loader
 
         else if (position < 9) {
 
@@ -263,8 +274,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (position == 0)
                 return VIEW_TYPE_FRIEND_LARGE;
             return VIEW_TYPE_FRIEND;
-        }
-        else if (item instanceof Boolean)
+        } else if (item instanceof Boolean)
             return VIEW_TYPE_LOCKED;
         else
             return VIEW_TYPE_INVITE;
@@ -275,11 +285,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         final Object item = getItem(position);
         if (item instanceof Cursor)
-            return ((Cursor) item).getInt(0); //TODO shift to dirtyHash
-        else if (item instanceof Boolean)
-            return 0;
-        else
-            return 1;
+            return ((Cursor) item).getLong(11);
+        return super.getItemId(position);
     }
 
     @Override
@@ -298,6 +305,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         clickData.networkType = cursor.getShort(5);
         clickData.status = cursor.getShort(6);
         clickData.userName = cursor.getString(2);
+
+        Log.i("Ayush", "Detected status" + clickData.status);
         handOverMessage.handOverMessage(clickData);
     }
 

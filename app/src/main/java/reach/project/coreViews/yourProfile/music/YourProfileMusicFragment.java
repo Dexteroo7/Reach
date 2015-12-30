@@ -391,7 +391,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         Log.i("Ayush", "Fetching smart lists " + request.urlString());
 
-        final Response response = ReachApplication.okHttpClient.newCall(request).execute();
+        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
         final JSONArray receivedData = new JSONArray(response.body().string());
         final List<Song> songs = new ArrayList<>();
 
@@ -432,7 +432,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
         final List<SimpleSong> simpleSongs = MiscUtils.autoRetry(
-                () -> StaticData.userEndpoint.fetchRecentSongs(userId).execute().getItems(), Optional.absent()
+                () -> StaticData.USER_API.fetchRecentSongs(userId).execute().getItems(), Optional.absent()
         ).or(Collections.emptyList());
 
         if (simpleSongs == null || simpleSongs.isEmpty())

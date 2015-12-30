@@ -64,9 +64,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             Log.i("Ayush", "Found recent apps with size " + recentApp.appList.size() + " ");
             if (recentApp.appList.size() < 4)
-                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
             else
-                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_grid_item));
 
         } else if (message instanceof SmartApps && holder instanceof MoreListHolder) {
 
@@ -77,9 +77,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             Log.i("Ayush", "Found smart apps with size " + smartApp.appList.size() + " ");
             if (smartApp.appList.size() < 4)
-                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
             else
-                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_grid_item));
         }
     }
 

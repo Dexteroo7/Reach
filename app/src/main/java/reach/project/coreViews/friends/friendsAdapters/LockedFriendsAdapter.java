@@ -54,7 +54,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(6) + "");
         friendsViewHolder.coverPic.setImageURI(Uri.parse("res:///" + MiscUtils.getRandomPic()));
-        friendsViewHolder.profilePhotoList.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + cursor.getString(3)));
+        friendsViewHolder.profilePhotoList.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(3)));
         friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
     }
 

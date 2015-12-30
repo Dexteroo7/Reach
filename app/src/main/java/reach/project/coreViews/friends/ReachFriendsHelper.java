@@ -148,7 +148,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * THis is to be used when adding new friend from notificationApi
+     * THis is to be used when adding new friend from NOTIFICATION_API
      *
      * @param reachFriend the friend to add
      * @return content values
@@ -185,7 +185,8 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(DATABASE_CREATE);
-        db.execSQL("create index value_index on " + FRIENDS_TABLE + " (" + COLUMN_USER_NAME + " COLLATE NOCASE ASC)");
+//        db.execSQL("create index value_index on " + FRIENDS_TABLE + " (" + COLUMN_USER_NAME + " COLLATE NOCASE ASC, " + COLUMN_STATUS +  " ASC)");
+        db.execSQL("create index value_index on " + FRIENDS_TABLE + " (" + COLUMN_STATUS + " ASC, " + COLUMN_USER_NAME + " COLLATE NOCASE ASC)");
     }
 
     @Override

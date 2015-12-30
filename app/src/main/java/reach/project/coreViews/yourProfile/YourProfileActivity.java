@@ -7,7 +7,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -66,7 +66,8 @@ public class YourProfileActivity extends AppCompatActivity {
                         ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS,
                         ReachFriendsHelper.COLUMN_IMAGE_ID,
                         ReachFriendsHelper.COLUMN_NETWORK_TYPE,
-                        ReachFriendsHelper.COLUMN_STATUS},
+                        ReachFriendsHelper.COLUMN_STATUS,
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
         int numberOfSongs = 0;
@@ -76,24 +77,27 @@ public class YourProfileActivity extends AppCompatActivity {
             cursor.moveToFirst();
             final String uName = cursor.getString(1);
             numberOfSongs = cursor.getInt(2);
+            final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
 
             final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
             final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
+            final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
             final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
             final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
 
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
+            appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId));
+            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
 
             cursor.close();
         }
 
         final int finalNumberOfSongs = numberOfSongs;
-        viewPager.setAdapter(new FragmentStatePagerAdapter(getSupportFragmentManager()) {
+        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
 
             @Override
             public Fragment getItem(int position) {

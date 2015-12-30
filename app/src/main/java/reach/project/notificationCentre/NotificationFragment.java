@@ -150,7 +150,7 @@ public class NotificationFragment extends Fragment {
 
                     if (cursor == null || !cursor.moveToFirst()) {
 
-                        MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(),
+                        MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(),
                                 Optional.absent());
 
                         if (cursor != null)
@@ -168,7 +168,7 @@ public class NotificationFragment extends Fragment {
             }
 
             adapter.remove(notificationBaseLocal);
-            MiscUtils.autoRetryAsync(() -> StaticData.notificationApi.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.absent());
+            MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.absent());
         }
     };
 
@@ -180,7 +180,7 @@ public class NotificationFragment extends Fragment {
             if (serverId == 0)
                 return null;
 
-            return MiscUtils.autoRetry(() -> StaticData.notificationApi.getNotifications(serverId, (int) NotificationBaseLocal.GET_UN_READ).execute().getItems(),
+            return MiscUtils.autoRetry(() -> StaticData.NOTIFICATION_API.getNotifications(serverId, (int) NotificationBaseLocal.GET_UN_READ).execute().getItems(),
                     Optional.absent()).orNull();
         }
 

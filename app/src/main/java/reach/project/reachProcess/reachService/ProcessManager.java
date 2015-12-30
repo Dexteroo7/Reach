@@ -259,9 +259,8 @@ public class ProcessManager extends Service implements
             cursor = getContentResolver().query(
                     MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
-                            MySongsHelper.COLUMN_SONG_ID + " = ?",
-                    new String[]{serverId + "", lastSong.id + ""}, null);
+                    MySongsHelper.COLUMN_SONG_ID + " = ?",
+                    new String[]{lastSong.id + ""}, null);
         if (cursor != null)
             cursor.moveToFirst();
         return playFromCursor(Optional.fromNullable(cursor), lastSong.type);
@@ -283,9 +282,8 @@ public class ProcessManager extends Service implements
             myLibraryCursor = getContentResolver().query(
                     MySongsProvider.CONTENT_URI,
                     StaticData.DISK_PARTIAL,
-                    MySongsHelper.COLUMN_USER_ID + " = ? and " +
-                            MySongsHelper.COLUMN_SONG_ID + " != ?",
-                    new String[]{serverId + "", id + ""}, null);
+                    MySongsHelper.COLUMN_SONG_ID + " != ?",
+                    new String[]{id + ""}, null);
         }
 
         if (reachSongCursor == null || !reachSongCursor.moveToFirst()) {
@@ -437,7 +435,7 @@ public class ProcessManager extends Service implements
         startForeground(StaticData.MUSIC_PLAYER, note.build());
     }
 
-    private static class SetAlbumArt extends AsyncTask<Uri,Void,Bitmap>{
+    private static class SetAlbumArt extends AsyncTask<Uri, Void, Bitmap> {
 
         private RemoteViews rViews;
 
@@ -449,7 +447,7 @@ public class ProcessManager extends Service implements
         protected Bitmap doInBackground(Uri... params) {
             Request request = new Request.Builder().url(params[0].toString()).build();
             try {
-                Response response = ReachApplication.okHttpClient.newCall(request).execute();
+                Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
                 return BitmapFactory.decodeStream(response.body().byteStream());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -481,7 +479,7 @@ public class ProcessManager extends Service implements
         remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
-        new SetAlbumArt(remoteViews).executeOnExecutor(StaticData.temporaryFix,
+        new SetAlbumArt(remoteViews).executeOnExecutor(StaticData.TEMPORARY_FIX,
                 AlbumArtUri.getUri(currentSong.get().getAlbumName(),
                         currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
                         false).get());
@@ -925,8 +923,7 @@ public class ProcessManager extends Service implements
         return getContentResolver().query(
                 MySongsProvider.CONTENT_URI,
                 StaticData.DISK_PARTIAL,
-                MySongsHelper.COLUMN_USER_ID + " = ?",
-                new String[]{serverId + ""},
+                null, null,
                 MySongsHelper.COLUMN_DISPLAY_NAME + " ASC");
     }
 

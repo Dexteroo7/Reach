@@ -134,7 +134,7 @@ public class InterceptAppInstall extends BroadcastReceiver {
                  *first try from online persistence
                  */
                 final JsonMap visibilityMap = MiscUtils.autoRetry(() ->
-                        StaticData.appVisibilityApi.get(serverId).execute().getVisibility(), Optional.absent()).orNull();
+                        StaticData.APP_VISIBILITY_API.get(serverId).execute().getVisibility(), Optional.absent()).orNull();
 
                 if (visibilityMap != null && visibilityMap.containsKey(packageName))
                     visibility = (boolean) visibilityMap.get(packageName);
@@ -148,7 +148,7 @@ public class InterceptAppInstall extends BroadcastReceiver {
                     stringList.setStringList(Collections.singletonList(appBuilder.packageName));
 
                     final List<String> hiddenPackageList;
-                    final StringList hiddenPackages = MiscUtils.autoRetry(() -> StaticData.classifiedAppsApi.getDefaultState(
+                    final StringList hiddenPackages = MiscUtils.autoRetry(() -> StaticData.CLASSIFIED_APPS_API.getDefaultState(
                             stringList).execute(), Optional.absent()).orNull();
                     visibility = !(hiddenPackages != null &&
                             (hiddenPackageList = hiddenPackages.getStringList()) != null &&
@@ -168,7 +168,7 @@ public class InterceptAppInstall extends BroadcastReceiver {
 
             appBuilder.visible(visibility);
 
-            MiscUtils.autoRetry(() -> StaticData.appVisibilityApi.update(
+            MiscUtils.autoRetry(() -> StaticData.APP_VISIBILITY_API.update(
                     serverId,
                     appBuilder.packageName,
                     appBuilder.visible).execute(), Optional.absent());

@@ -30,7 +30,7 @@
 //            actionBar.setDisplayHomeAsUpEnabled(true);
 //            actionBar.setTitle("Devika");
 //            actionBar.setSubtitle("Reach Manager");
-//            new SetManagerIcon().executeOnExecutor(StaticData.temporaryFix);
+//            new SetManagerIcon().executeOnExecutor(StaticData.TEMPORARY_FIX);
 //        }
 //    }
 //
@@ -41,7 +41,7 @@
 //        @Override
 //        protected Bitmap doInBackground(Void... params) {
 ////            try {
-////                return Picasso.with(ChatActivity.this).load(StaticData.dropBoxManager)
+////                return Picasso.with(ChatActivity.this).load(StaticData.DROP_BOX_MANAGER)
 ////                        .resize(margin, margin)
 ////                        .centerCrop()
 ////                        .transform(new CircleTransform()).get();

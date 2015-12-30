@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -31,6 +32,7 @@ import com.squareup.okhttp.Response;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -39,7 +41,6 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
-import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
@@ -58,10 +59,6 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
  */
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.Exploration<JsonObject>, HandOverMessage<Integer> {
-
-    private static final Random random = new Random();
-
-    static final LongSparseArray<String> userNameSparseArray = new LongSparseArray<>();
 
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
@@ -82,10 +79,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return fragment;
     }
 
-    private final ExploreBuffer<JsonObject> buffer = ExploreBuffer.getInstance(this);
-    private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
+    private static final Random ID_GENERATOR = new Random();
+    static final LongSparseArray<String> USER_NAME_SPARSE_ARRAY = new LongSparseArray<>();
+    static final LongSparseArray<String> IMAGE_ID_SPARSE_ARRAY = new LongSparseArray<>();
 
-    private final ViewPager.PageTransformer transformer = (page, position) -> {
+    private static final ViewPager.PageTransformer PAGE_TRANSFORMER = (page, position) -> {
 
         if (position <= 1) {
 
@@ -103,6 +101,83 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             page.setScaleY(scaleFactor);
         }
     };
+
+    private static final Callable<Collection<JsonObject>> FETCH_NEXT_BATCH = () -> {
+
+        final JsonObject jsonObject = MiscUtils.useContextFromFragment(reference, context -> {
+
+            //retrieve list of online friends
+            final Cursor cursor = context.getContentResolver().query(
+                    ReachFriendsProvider.CONTENT_URI,
+                    new String[]{
+                            ReachFriendsHelper.COLUMN_ID,
+                            ReachFriendsHelper.COLUMN_USER_NAME,
+                            ReachFriendsHelper.COLUMN_IMAGE_ID
+                    },
+                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                    new String[]{
+                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""
+                    }, null);
+
+            if (cursor == null)
+                return null;
+
+            final JsonArray jsonArray = new JsonArray();
+
+            while (cursor.moveToNext()) {
+
+                final long onlineId = cursor.getLong(0);
+                final String userName = cursor.getString(1);
+                final String imageId = cursor.getString(2);
+
+                Log.i("Ayush", "Adding online friend id " + onlineId);
+                jsonArray.add(onlineId);
+
+                USER_NAME_SPARSE_ARRAY.append(onlineId, userName); //cache userName
+                IMAGE_ID_SPARSE_ARRAY.append(onlineId, imageId); //cache imageId
+            }
+            cursor.close();
+
+            final JsonObject toReturn = new JsonObject();
+            toReturn.addProperty("userId", myServerId);
+            toReturn.add("friends", jsonArray);
+//            requestMap.put("lastRequestTime", SharedPrefUtils.getLastRequestTime(preferences));
+
+            return toReturn;
+
+        }).or(new JsonObject());
+
+        Log.i("Ayush", jsonObject.toString());
+
+        final RequestBody body = RequestBody
+                .create(MediaType.parse("application/json; charset=utf-8"), jsonObject.toString());
+        final Request request = new Request.Builder()
+                .url("http://52.74.175.56:8080/explore/getObjects")
+                .post(body)
+                .build();
+        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
+        if (response.code() != HttpStatusCodes.STATUS_CODE_OK)
+            return Collections.emptyList();
+
+        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray()
+                ;
+
+        final List<JsonObject> containers = new ArrayList<>();
+        for (int index = 0; index < receivedData.size(); index++)
+            containers.add(receivedData.get(index).getAsJsonObject());
+
+        if (containers.size() > 0)
+            MiscUtils.useContextFromFragment(reference, context -> {
+                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                SharedPrefUtils.storeLastRequestTime(preferences);
+            });
+
+        Log.i("Ayush", "Explore has " + containers.size() + " stories");
+        return containers;
+    };
+
+    private final ExploreBuffer<JsonObject> buffer = ExploreBuffer.getInstance(this);
+    private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
 
     @Nullable
     private View rootView = null;
@@ -152,7 +227,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager.setAdapter(exploreAdapter);
         explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
-        explorePager.setPageTransformer(true, transformer);
+        explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
 
         return rootView;
     }
@@ -167,7 +242,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Override
     public synchronized Callable<Collection<JsonObject>> fetchNextBatch() {
 //        Toast.makeText(activity, "Server Fetching next batch of 10", Toast.LENGTH_SHORT).show();
-        return fetchNextBatch;
+        return FETCH_NEXT_BATCH;
     }
 
     @Override
@@ -192,7 +267,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         final JsonObject loading = new JsonObject();
         loading.addProperty(ExploreJSON.TYPE.getName(), ExploreTypes.LOADING.getName());
-        loading.addProperty(ExploreJSON.ID.getName(), random.nextLong());
+        loading.addProperty(ExploreJSON.ID.getName(), ID_GENERATOR.nextInt(Integer.MAX_VALUE));
         return loading;
     }
 
@@ -208,79 +283,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         Log.i("Ayush", "Notifying data set changed on explore adapter");
         exploreAdapter.notifyDataSetChanged();
     }
-
-    private static short count = 0;
-
-    private static final Callable<Collection<JsonObject>> fetchNextBatch = () -> {
-
-//        if (count > 8)
-//            return Collections.singletonList(new ExploreContainer(ExploreTypes.DONE_FOR_TODAY, random.nextInt()));
-
-        final JsonObject jsonObject = MiscUtils.useContextFromFragment(reference, context -> {
-
-            //retrieve list of online friends
-            final Cursor cursor = context.getContentResolver().query(
-                    ReachFriendsProvider.CONTENT_URI,
-                    new String[]{
-                            ReachFriendsHelper.COLUMN_ID,
-                            ReachFriendsHelper.COLUMN_USER_NAME
-                    },
-                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{
-                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""
-                    }, null);
-
-            if (cursor == null)
-                return null;
-
-            final JsonArray jsonArray = new JsonArray();
-            jsonArray.add(StaticData.devika);
-            final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
-            while (cursor.moveToNext()) {
-                final long onlineId = cursor.getLong(0);
-                final String userName = cursor.getString(1);
-                Log.i("Ayush", "Adding online friend id " + onlineId);
-                jsonArray.add(onlineId);
-                userNameSparseArray.append(onlineId, userName); //save userName
-            }
-            cursor.close();
-
-            final JsonObject toReturn = new JsonObject();
-            toReturn.addProperty("userId", myServerId);
-            toReturn.add("friends", jsonArray);
-//            requestMap.put("lastRequestTime", SharedPrefUtils.getLastRequestTime(preferences));
-
-            return toReturn;
-
-        }).or(new JsonObject());
-
-        Log.i("Ayush", jsonObject.toString());
-
-        final RequestBody body = RequestBody
-                .create(MediaType.parse("application/json; charset=utf-8"), jsonObject.toString());
-        final Request request = new Request.Builder()
-                .url("http://52.74.175.56:8080/explore/getObjects")
-                .post(body)
-                .build();
-        final Response response = ReachApplication.okHttpClient.newCall(request).execute();
-        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
-
-        final List<JsonObject> containers = new ArrayList<>();
-        for (int index = 0; index < receivedData.size(); index++)
-            containers.add(receivedData.get(index).getAsJsonObject());
-
-        count += containers.size();
-
-        if (containers.size() > 0)
-            MiscUtils.useContextFromFragment(reference, context -> {
-                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                SharedPrefUtils.storeLastRequestTime(preferences);
-            });
-
-        Log.i("Ayush", "Explore has " + containers.size() + " stories");
-        return containers;
-    };
 
     @Override
     public void handOverMessage(@Nonnull Integer position) {
@@ -300,10 +302,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
-                final String packageName = MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
-                        .getAsString();
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
-                        + packageName)));
+                MiscUtils.openApp(getContext(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                        .getAsString());
                 break;
 
             case MISC:
@@ -369,7 +369,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(random.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ID_GENERATOR.nextInt(Integer.MAX_VALUE));
 
         reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
         reachDatabase.setLogicalClock((short) 0);

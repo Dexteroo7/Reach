@@ -507,17 +507,8 @@ public enum MiscUtils {
         return gridView;
     }
 
-    public static void deleteSongs(long userId, ContentResolver contentResolver) {
-
-        contentResolver.delete(
-                MySongsProvider.CONTENT_URI,
-                MySongsHelper.COLUMN_USER_ID + " = ?",
-                new String[]{userId + ""});
-    }
-
     public static void bulkInsertSongs(Collection<Song> reachSongs,
-                                       ContentResolver contentResolver,
-                                       long serverId) {
+                                       ContentResolver contentResolver) {
 
         //Add all songs
         final ContentValues[] songs = new ContentValues[reachSongs.size()];
@@ -526,20 +517,18 @@ public enum MiscUtils {
         if (reachSongs.size() > 0) {
 
             for (Song song : reachSongs)
-                songs[i++] = MySongsHelper.contentValuesCreator(song, serverId);
+                songs[i++] = MySongsHelper.contentValuesCreator(song);
             i = 0; //reset counter
             Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
         } else
-            contentResolver.delete(MySongsProvider.CONTENT_URI,
-                    MySongsHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""});
+            contentResolver.delete(MySongsProvider.CONTENT_URI, null, null);
     }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
 
         return MiscUtils.autoRetry(() -> {
             Log.i("Downloader", "Sending message " + message);
-            return StaticData.messagingEndpoint.sendMessage(message, hostId, clientId).execute();
+            return StaticData.MESSAGING_API.sendMessage(message, hostId, clientId).execute();
         }, Optional.of(input -> input == null)).orNull();
     }
 
@@ -748,7 +737,7 @@ public enum MiscUtils {
         Log.i("Ayush", "Uploading newGcmId to server");
         final Boolean result = autoRetry(() -> {
 
-            StaticData.userEndpoint.setGCMId(id, regId).execute();
+            StaticData.USER_API.setGCMId(id, regId).execute();
             Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
             return true;
         }, Optional.absent()).orNull();
@@ -926,7 +915,7 @@ public enum MiscUtils {
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
 
-        StaticData.temporaryFix.execute(() -> {
+        StaticData.TEMPORARY_FIX.execute(() -> {
 
             for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
 
@@ -1184,6 +1173,11 @@ public enum MiscUtils {
         return applications;
     }
 
+    public static void openApp(Context context, String packageName) {
+        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
+                + packageName)));
+    }
+
     private static class StartDownloadOperation implements Runnable {
 
         private final ReachDatabase reachDatabase;
@@ -1239,7 +1233,7 @@ public enum MiscUtils {
         public void run() {
 
             final MyBoolean myBoolean;
-            if (reachDatabase.getSenderId() == StaticData.devika) {
+            if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
 
                 //hit cloud
                 ProcessManager.submitNetworkRequest(contextReference.get(), fakeResponse(reachDatabase));
@@ -1311,7 +1305,7 @@ public enum MiscUtils {
             return;
 
         //fetch from server
-        final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.userEndpoint.getChatToken(serverId).execute(), Optional.absent()).orNull();
+        final MyString fetchTokenFromServer = MiscUtils.autoRetry(() -> StaticData.USER_API.getChatToken(serverId).execute(), Optional.absent()).orNull();
         if (fetchTokenFromServer == null || TextUtils.isEmpty(fetchTokenFromServer.getString())) {
 
             MiscUtils.useContextFromContext(toHelpTrack, activity -> {
@@ -1460,7 +1454,7 @@ public enum MiscUtils {
             return;
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
         //start this operation
-        StaticData.temporaryFix.execute(MiscUtils.startDownloadOperation(
+        StaticData.TEMPORARY_FIX.execute(MiscUtils.startDownloadOperation(
                 activity,
                 reachDatabase,
                 reachDatabase.getReceiverId(), //myID

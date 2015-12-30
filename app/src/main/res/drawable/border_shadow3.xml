@@ -71,7 +71,7 @@
     <!-- Background -->
     <item>
         <shape>
-            <solid android:color="@android:color/white" />
+            <solid android:color="#f5f5f5" />
 
             
         </shape>

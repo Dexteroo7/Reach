@@ -2,7 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:padding="10dp"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingBottom="10dp"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
     <android.support.v7.widget.CardView
@@ -17,13 +19,15 @@
             android:layout_height="wrap_content">
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="130dp">
+                android:layout_height="120dp">
                 <com.facebook.drawee.view.SimpleDraweeView
                     android:id="@+id/albumArt"
+                    fresco:placeholderImage="@drawable/default_music_icon"
+                    card_view:placeholderImageScaleType="centerCrop"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
                 <View
-                    android:background="#40000000"
+                    android:background="@drawable/gradient_bg"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
                 <TextView
@@ -53,7 +57,6 @@
                 <ImageView
                     android:id="@+id/toggleButton2"
                     android:layout_alignParentRight="true"
-                    android:src="@drawable/icon_locked"
                     android:layout_margin="5dp"
                     android:layout_width="25dp"
                     android:layout_height="25dp" />
@@ -62,8 +65,8 @@
                 android:layout_gravity="bottom"
                 android:background="#f1f1f1"
                 android:paddingLeft="5dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <ImageView

@@ -3,6 +3,7 @@ package reach.project.onBoarding;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.InputFilter;
@@ -35,6 +36,7 @@ public class NumberVerification extends Fragment {
     };
 
     private static WeakReference<NumberVerification> reference = null;
+
     public static NumberVerification newInstance() {
 
         NumberVerification numberVerification;
@@ -93,7 +95,7 @@ public class NumberVerification extends Fragment {
 
         final String parsed;
         //replace every non-digit, will retain a minimum of 2 digits (91)
-        if (TextUtils.isEmpty(phoneNumber) || (parsed = phoneNumber.replaceAll("[^0-9]", "")).substring(2).length() < 10) {
+        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) || parsed.length() < 10) {
 
             Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
             return;
@@ -111,7 +113,15 @@ public class NumberVerification extends Fragment {
         Log.i("Verification", "Code sent");
         final Context context = view.getContext();
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        SharedPrefUtils.storePhoneNumber(preferences, phoneNumber); //store the phoneNumber
-        mListener.onOpenCodeVerification(phoneNumber);
+        SharedPrefUtils.storePhoneNumber(preferences, parsed); //store the phoneNumber
+        mListener.onOpenCodeVerification(parsed);
     };
+
+    @Nullable
+    public static String parsePhoneNumber(@NonNull String enteredPhoneNumber) {
+
+        final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
+        final int length = cleansedNumber.length();
+        return cleansedNumber.substring(length - 10, length);
+    }
 }

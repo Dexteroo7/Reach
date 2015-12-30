@@ -51,7 +51,7 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
 
         Uri uriToDisplay = null;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-            uriToDisplay = Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId);
+            uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
         holder.profilePhotoList.setImageURI(uriToDisplay);
 
         //use this

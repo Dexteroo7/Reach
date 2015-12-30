@@ -99,7 +99,7 @@ public class ScanFragment extends Fragment {
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
         if (imageFilePath == null)
-            profilePic.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl + imageId));
+            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
         else
             profilePic.setImageURI(Uri.parse("file://" + imageFilePath));
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
@@ -110,7 +110,7 @@ public class ScanFragment extends Fragment {
                 (TextView) rootView.findViewById(R.id.scanCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
-                .executeOnExecutor(StaticData.temporaryFix, userName, phoneNumber);
+                .executeOnExecutor(StaticData.TEMPORARY_FIX, userName, phoneNumber);
 
         return rootView;
     }
@@ -189,7 +189,7 @@ public class ScanFragment extends Fragment {
             user.setImageId(imageId);
 
             //insert User-object and get the userID
-            final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.userEndpoint.insertNew(user).execute(), Optional.absent()).orNull();
+            final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.USER_API.insertNew(user).execute(), Optional.absent()).orNull();
 
             if (dataAfterWork == null || dataAfterWork.getUserId() == null) {
 

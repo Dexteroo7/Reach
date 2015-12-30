@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Environment;
 import android.os.Message;
 import android.os.Messenger;
@@ -53,22 +52,22 @@ import reach.project.music.Song;
 
 public class MetaDataScanner extends IntentService {
 
+    private static final String[] projection = {
+            MediaStore.Audio.Media._ID, //0
+            MediaStore.Audio.Media.IS_MUSIC, //1
+            MediaStore.Audio.Media.DATA, //2
+            MediaStore.Audio.Media.TITLE, //3
+            MediaStore.Audio.Media.DISPLAY_NAME, //4
+            MediaStore.Audio.Media.SIZE, //5
+            MediaStore.Audio.Media.ARTIST, //6
+            MediaStore.Audio.Media.DURATION, //7
+            MediaStore.Audio.Media.ALBUM, //8
+            MediaStore.Audio.Media.YEAR, //9
+            MediaStore.Audio.Media.DATE_ADDED}; //10
+
     private enum ScanMusic {
 
         ;
-        private static final String[] projection = {
-                MediaStore.Audio.Media._ID, //0
-                MediaStore.Audio.Media.IS_MUSIC, //1
-                MediaStore.Audio.Media.DATA, //2
-                MediaStore.Audio.Media.TITLE, //3
-                MediaStore.Audio.Media.DISPLAY_NAME, //4
-                MediaStore.Audio.Media.SIZE, //5
-                MediaStore.Audio.Media.ARTIST, //6
-                MediaStore.Audio.Media.DURATION, //7
-                MediaStore.Audio.Media.ALBUM, //8
-                MediaStore.Audio.Media.YEAR, //9
-                MediaStore.Audio.Media.DATE_ADDED}; //10
-
         private static final String[] reachDatabaseProjection = {
                 ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
                 ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, //1
@@ -88,19 +87,20 @@ public class MetaDataScanner extends IntentService {
         private static final HashSet<String> genreHashSet = new HashSet<>(50);
 
         @NonNull
-        private static List<Song> getSongListing(Uri uri, ContentResolver resolver, long serverId) {
+        private static List<Song> getSongListing(ContentResolver resolver, Cursor musicCursor, long serverId) {
 
+            if (musicCursor == null)
+                return Collections.emptyList();
             ////////////////////persistence holder use songId as key !
-            ////////////////////Loading old song data
+
             final Cursor reachSongInitialCursor = resolver.query(
                     MySongsProvider.CONTENT_URI,
                     new String[]{
                             MySongsHelper.COLUMN_SONG_ID, //0
                             MySongsHelper.COLUMN_VISIBILITY, //1
                             MySongsHelper.COLUMN_IS_LIKED},
-                    MySongsHelper.COLUMN_USER_ID + " = ?",
-                    new String[]{serverId + ""},
-                    null);
+                    null, null, null);
+
 
             LongSparseArray<SongPersist> songPersist = null;
             //try local first
@@ -125,7 +125,7 @@ public class MetaDataScanner extends IntentService {
 
                 Log.i("Ayush", "Fetching visibility data");
                 //fetch visibility data
-                final MusicData visibility = MiscUtils.autoRetry(() -> StaticData.musicVisibility.get(serverId).execute(), Optional.absent()).orNull();
+                final MusicData visibility = MiscUtils.autoRetry(() -> StaticData.MUSIC_VISIBILITY_API.get(serverId).execute(), Optional.absent()).orNull();
                 final JsonMap visibilityMap;
                 if (visibility == null || (visibilityMap = visibility.getVisibility()) == null || visibilityMap.isEmpty())
                     Log.i("Ayush", "no visibility data found on cloud");
@@ -164,10 +164,6 @@ public class MetaDataScanner extends IntentService {
             }
 
             ////////////////////Loading new songs
-            final Cursor musicCursor = resolver.query(uri, projection, null, null, null);
-            if (musicCursor == null)
-                return Collections.emptyList();
-
             final List<Song> toSend = new ArrayList<>(musicCursor.getCount());
             final HashSet<String> verifiedMusicPaths = new HashSet<>();
             final File[] directories = new File[]{
@@ -474,7 +470,7 @@ public class MetaDataScanner extends IntentService {
             final int finalVisibleSongs = visibleSongs;
             MiscUtils.autoRetry(() -> {
 
-                StaticData.musicVisibility.insert(finalVisibleSongs, musicData).execute();
+                StaticData.MUSIC_VISIBILITY_API.insert(finalVisibleSongs, musicData).execute();
                 return null;
             }, Optional.absent());
         }
@@ -507,12 +503,11 @@ public class MetaDataScanner extends IntentService {
         ;
 
         @NonNull
-        public static List<App> getPackages(long userId, Context context) {
+        public static List<App> getPackages(long userId,
+                                            SharedPreferences preferences,
+                                            PackageManager packageManager,
+                                            List<ApplicationInfo> applicationInfoList) {
 
-            final PackageManager packageManager = context.getPackageManager();
-            final SharedPreferences preferences = context.getSharedPreferences("Reach", MODE_PRIVATE);
-
-            final List<ApplicationInfo> applicationInfoList = MiscUtils.getInstalledApps(packageManager);
             if (applicationInfoList == null || applicationInfoList.isEmpty())
                 return Collections.emptyList();
 
@@ -534,7 +529,7 @@ public class MetaDataScanner extends IntentService {
 
                 Log.i("Ayush", "Found " + newPackages.size() + " new packages");
                 final reach.backend.applications.appVisibilityApi.model.JsonMap visibilityMap = MiscUtils.autoRetry(() ->
-                        StaticData.appVisibilityApi.get(userId).execute().getVisibility(), Optional.absent()).orNull();
+                        StaticData.APP_VISIBILITY_API.get(userId).execute().getVisibility(), Optional.absent()).orNull();
 
                 if (visibilityMap != null && !visibilityMap.isEmpty()) {
 
@@ -580,7 +575,7 @@ public class MetaDataScanner extends IntentService {
                 request.setStringList(newPackages);
 
                 final StringList defaultHidden = MiscUtils.autoRetry(() ->
-                        StaticData.classifiedAppsApi.getDefaultState(request).execute(), Optional.absent()).orNull();
+                        StaticData.CLASSIFIED_APPS_API.getDefaultState(request).execute(), Optional.absent()).orNull();
 
                 final List<String> hiddenPackages;
                 if (defaultHidden != null && (hiddenPackages = defaultHidden.getStringList()) != null && !hiddenPackages.isEmpty()) {
@@ -655,7 +650,7 @@ public class MetaDataScanner extends IntentService {
             //update music visibility data
             MiscUtils.autoRetry(() -> {
 
-                StaticData.appVisibilityApi.insert(appVisibility).execute();
+                StaticData.APP_VISIBILITY_API.insert(appVisibility).execute();
                 return null;
             }, Optional.absent());
         }
@@ -716,6 +711,9 @@ public class MetaDataScanner extends IntentService {
 
         final List<Song> total = ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(myLibrary, downloaded))); //music
 
+        for (Song song : total)
+            Log.i("Downloader", "Found " + song.displayName + " " + song.songId);
+
         ////////////////////Sync songs
         //TODO verify empty case being handled
         final byte[] musicBlob = new MusicList.Builder()
@@ -739,7 +737,7 @@ public class MetaDataScanner extends IntentService {
             //over-write local db
             MiscUtils.bulkInsertSongs(
                     myLibrary, //sync up only myLibrary
-                    context.getContentResolver(), serverId);
+                    context.getContentResolver());
         }
 
         ////////////////////Sync Apps
@@ -766,30 +764,30 @@ public class MetaDataScanner extends IntentService {
 
         messenger = intent.getParcelableExtra("messenger");
         Log.i("Ayush", "Starting Scan");
+
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);
+        final ContentResolver resolver = getContentResolver();
+        final PackageManager packageManager = getPackageManager();
+
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         if (serverId == 0) {
             sendMessage(FINISHED, -1);
             return;
         }
-        
-        final ContentResolver resolver = getContentResolver();
 
-        final int expectedMusicCount = resolver.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[]{MediaStore.Audio.Media._ID}, null, null, null).getCount();
+        final List<ApplicationInfo> applications = MiscUtils.getInstalledApps(packageManager);
+        final Cursor musicCursor = resolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                projection, null, null, null);
 
-        final int expectedAppCount = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA).size();
-
-        sendMessage(TOTAL_EXPECTED, expectedAppCount + expectedMusicCount);
+        sendMessage(TOTAL_EXPECTED, applications.size() + (musicCursor != null ? musicCursor.getCount() : 0));
 
         ////////////////////Get my library songs
-        final List<Song> songs = ScanMusic.getSongListing(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, resolver, serverId);
+        final List<Song> songs = ScanMusic.getSongListing(resolver, musicCursor, serverId);
         ////////////////////Get downloaded songs
         final List<Song> downloaded = ScanMusic.getDownloadedSongs(resolver);
         ////////////////////Get applications
-        final List<App> appList = ScanApps.getPackages(serverId, this);
+        final List<App> appList = ScanApps.getPackages(serverId, sharedPreferences, packageManager, applications);
         ////////////////////Put into server
 
         sendMessage(UPLOADING, -1); //start uploading

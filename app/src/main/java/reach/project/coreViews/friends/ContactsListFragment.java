@@ -39,8 +39,8 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.R;
-import reach.project.core.StaticData;
 import reach.project.ancillaryViews.SettingsActivity;
+import reach.project.core.StaticData;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
@@ -49,43 +49,11 @@ import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 
 public class ContactsListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
-
-    private final FriendsAdapter friendsAdapter = new FriendsAdapter(this);
-
-    private View rootView;
-
-    private SuperInterface mListener;
-
-    /*private TextView notificationCount;
-      public static void checkNewNotifications() {
-
-        final ContactsListFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || fragment.notificationCount == null)
-            return;
-
-        final int friendRequestCount = FriendRequestFragment.receivedRequests.size();
-        final int notificationsCount = NotificationFragment.notifications.size();
-
-        if (friendRequestCount == 0 && notificationsCount == 0)
-            fragment.notificationCount.setVisibility(View.GONE);
-        else {
-            fragment.notificationCount.setVisibility(View.VISIBLE);
-            fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
-        }
-    }
-
-    private final View.OnClickListener openNotification = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            mListener.onOpenNotificationDrawer();
-        }
-    };*/
 
     public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false);//have we already synchronized ?
     private static final AtomicBoolean
@@ -99,26 +67,6 @@ public class ContactsListFragment extends Fragment implements
 
     private static long serverId;
 
-//    public static void checkNewNotifications() {
-//
-//        MiscUtils.useFragment(reference, fragment -> {
-//
-//            if (fragment.notificationCount == null)
-//                return null;
-//
-//            final int friendRequestCount = FriendRequestFragment.receivedRequests.size();
-//            final int notificationsCount = NotificationFragment.notifications.size();
-//
-//            if (friendRequestCount == 0 && notificationsCount == 0)
-//                fragment.notificationCount.setVisibility(View.GONE);
-//            else {
-//                fragment.notificationCount.setVisibility(View.VISIBLE);
-//                fragment.notificationCount.setText(String.valueOf(friendRequestCount + notificationsCount));
-//            }
-//            return null;
-//        });
-//    }
-
     public static ContactsListFragment newInstance() {
 
         ContactsListFragment fragment;
@@ -130,6 +78,10 @@ public class ContactsListFragment extends Fragment implements
 
         return fragment;
     }
+
+    private final FriendsAdapter friendsAdapter = new FriendsAdapter(this);
+
+    private View rootView;
 
     @Override
     public void onDestroyView() {
@@ -209,12 +161,15 @@ public class ContactsListFragment extends Fragment implements
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
-        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+
+        final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
+        final GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                int itemType = friendsAdapter.getItemViewType(position);
+
+                final int itemType = friendsAdapter.getItemViewType(position);
                 if (itemType == FriendsAdapter.VIEW_TYPE_FRIEND_LARGE || itemType == FriendsAdapter.VIEW_TYPE_LOCKED)
                     return 2;
                 else
@@ -226,19 +181,25 @@ public class ContactsListFragment extends Fragment implements
 
         final boolean isOnline = MiscUtils.isOnline(getActivity());
         //we have not already synchronized !
-        if (!synchronizeOnce.get() && !synchronizing.get()) {
-            //contact sync will call send ping as well
 
-            if (isOnline) {
+        if (isOnline) {
+
+            if (!synchronizeOnce.get() && !synchronizing.get()) {
+                //contact sync will call send ping as well
+
                 synchronizing.set(true);
                 pinging.set(true);
-                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.temporaryFix);
-            }
+                Log.i("Ayush", "Syncing friends");
+                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.TEMPORARY_FIX);
 
-        } else if (!pinging.get() && isOnline) {
-            //if not pinging send a ping !
-            pinging.set(true);
-            new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
+            } else if (!pinging.get()) {
+
+                //if not pinging send a ping !
+                pinging.set(true);
+                Log.i("Ayush", "Syncing friends");
+
+                new LocalUtils.SendPing().executeOnExecutor(StaticData.TEMPORARY_FIX);
+            }
         }
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
@@ -255,15 +216,13 @@ public class ContactsListFragment extends Fragment implements
                     FriendsAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " +
-                            ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
         else
             return null;
     }
@@ -329,42 +288,21 @@ public class ContactsListFragment extends Fragment implements
     }
 
     @Override
-    public void onAttach(Context context) {
-
-        super.onAttach(context);
-        try {
-            mListener = (SuperInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    @Override
     public void handOverMessage(@NonNull FriendsAdapter.ClickData clickData) {
 
         if (rootView == null)
             return;
 
-        if (clickData.status < 2) {
+        if (clickData.status < ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
 
+            Log.i("Ayush", "Detected status" + clickData.status);
+            YourProfileActivity.openProfile(clickData.friendId, getActivity());
             if (clickData.networkType == 5)
                 Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
-            MiscUtils.useFragment(reference, fragment -> {
-
-                YourProfileActivity.openProfile(clickData.friendId, getActivity());
-            });
 
         } else {
 
             ProfileActivity.openProfile(clickData.friendId, getActivity());
-
         }
         /*else if (clickData.status == 3) {
 
@@ -422,7 +360,7 @@ public class ContactsListFragment extends Fragment implements
                         new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
                                 (System.currentTimeMillis() - (60 * 1000)) + ""});
                 contentValues.clear();
-                StaticData.networkCache.clear();
+                StaticData.NETWORK_CACHE.clear();
 
                 try {
                     new QuickSyncFriends(reference.get().getActivity(), serverId, phoneNumber).call();
@@ -438,7 +376,7 @@ public class ContactsListFragment extends Fragment implements
                 synchronizeOnce.set(true);
                 //we are still refreshing !
                 pinging.set(true);
-                new SendPing().executeOnExecutor(StaticData.temporaryFix);
+                new SendPing().executeOnExecutor(StaticData.TEMPORARY_FIX);
             }
         }
 
@@ -447,8 +385,8 @@ public class ContactsListFragment extends Fragment implements
             @Override
             protected Void doInBackground(Void... params) {
 
-                StaticData.networkCache.clear();
-                MiscUtils.autoRetry(() -> StaticData.userEndpoint.pingMyReach(serverId).execute(), Optional.absent()).orNull();
+                StaticData.NETWORK_CACHE.clear();
+                MiscUtils.autoRetry(() -> StaticData.USER_API.pingMyReach(serverId).execute(), Optional.absent()).orNull();
 
                 /**
                  * Invalidate those who were online 30 secs ago
@@ -470,7 +408,7 @@ public class ContactsListFragment extends Fragment implements
                         ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                                 ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
                                 ReachFriendsHelper.COLUMN_ID + " != ?",
-                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 60 * 1000) + "", StaticData.devika + ""});
+                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 60 * 1000) + "", StaticData.DEVIKA + ""});
                 contentValues.clear();
                 return null;
             }
@@ -491,7 +429,7 @@ public class ContactsListFragment extends Fragment implements
 
                 Log.i("Ayush", "Starting refresh !");
                 pinging.set(true);
-                new LocalUtils.SendPing().executeOnExecutor(StaticData.temporaryFix);
+                new LocalUtils.SendPing().executeOnExecutor(StaticData.TEMPORARY_FIX);
             }
         };
 
@@ -514,7 +452,7 @@ public class ContactsListFragment extends Fragment implements
             }
 
             new SendRequest().executeOnExecutor(
-                    StaticData.temporaryFix,
+                    StaticData.TEMPORARY_FIX,
                     clientId, serverId, (long) status);
 
             //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
@@ -540,7 +478,7 @@ public class ContactsListFragment extends Fragment implements
                  */
 
                 final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
-                        () -> StaticData.messagingEndpoint.requestAccess(params[1], params[0]).execute(),
+                        () -> StaticData.MESSAGING_API.requestAccess(params[1], params[0]).execute(),
                         Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
                 final String toParse;

@@ -251,7 +251,7 @@ public class GcmIntentService extends IntentService {
             final String[] splitter = message.split(" ");
             final long hostId = Long.parseLong(splitter[1]);
 
-            if (hostId == StaticData.devika) {
+            if (hostId == StaticData.DEVIKA) {
 
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
@@ -259,7 +259,7 @@ public class GcmIntentService extends IntentService {
 
             final ContentValues friend = new ContentValues();
             final ContentValues database = new ContentValues();
-            StaticData.networkCache.put(hostId, splitter[2]);
+            StaticData.NETWORK_CACHE.put(hostId, splitter[2]);
 
             Log.i("Ayush", hostId + " Got PONG");
 
@@ -309,7 +309,7 @@ public class GcmIntentService extends IntentService {
                 return;
             }
             lastPong = currentTime;
-            MiscUtils.autoRetry(() -> StaticData.messagingEndpoint
+            MiscUtils.autoRetry(() -> StaticData.MESSAGING_API
                     .handleAnnounce(id, networkType[0] + "")
                     .execute(), Optional.absent()).orNull();
         }

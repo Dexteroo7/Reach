@@ -14,7 +14,6 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.google.common.collect.Ordering;
 
@@ -36,6 +35,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
+    @Nullable
     private static WeakReference<ApplicationFragment> reference = null;
     private static long userId = 0;
 
@@ -58,7 +58,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     @Override
     public void handOverMessage(@Nonnull App message) {
-        Toast.makeText(getContext(), "Clicked on " + message.applicationName, Toast.LENGTH_SHORT).show();
+        MiscUtils.openApp(getContext(), message.packageName);
     }
 
     @Nullable
@@ -74,7 +74,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(StaticData.temporaryFix, activity);
+        new GetApplications().executeOnExecutor(StaticData.TEMPORARY_FIX, activity);
 
         return rootView;
     }

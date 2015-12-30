@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
@@ -52,7 +53,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
         serverId = SharedPrefUtils.getServerId(preferences);
 
-        new Handler().postDelayed(splashed, 2000);
+        new Handler().postDelayed(splashed, 1000);
     }
 
     private static final Runnable splashed = new Runnable() {
@@ -85,8 +86,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                                         new String[]{
                                                 Manifest.permission.READ_CONTACTS
                                         }, MY_PERMISSIONS_READ_CONTACTS);
-                            }
-                            else if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
+                            } else if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
 
                                 if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE))
                                     Toast.makeText(activity, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
@@ -118,9 +118,12 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     @Override
     public void onOpenCodeVerification(String phoneNumber) {
+
+        final String randomCode = (1000 + random.nextInt(10000 - 1000 + 1)) + "";
+        Log.i("Ayush", randomCode + " code");
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                 R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, CodeVerification.newInstance((1000 + random.nextInt(10000 - 1000 + 1)) + "", phoneNumber)).commit();
+                .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
     }
 
     @Override
@@ -147,8 +150,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                         "Permission to access Contacts is required to use the App",
                         Toast.LENGTH_LONG).show();
                 finish();
-            }
-            else {
+            } else {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
 
                     if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
@@ -166,8 +168,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                         "Permission to access Storage is required to use the App",
                         Toast.LENGTH_LONG).show();
                 finish();
-            }
-            else {
+            } else {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
 
                     if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))

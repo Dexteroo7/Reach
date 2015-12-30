@@ -3,7 +3,6 @@ package reach.project.utils;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,7 +101,7 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Nonnull
     public Optional<Cursor> getItem(int position) {
 
-        Log.i("Ayush", "Moving cursor to " + position);
+//        Log.i("Ayush", "Moving cursor to " + position);
         if (cursor != null && cursor.moveToPosition(position))
             return Optional.of(cursor);
         return Optional.absent();
@@ -111,9 +110,9 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Override
     public int getItemCount() {
 
-        final int count = oldCount = cursor != null ? cursor.getCount() : 1;
-        Log.i("Ayush", "New Count " + count);
-        return count;
+//        final int count = oldCount = cursor != null ? cursor.getCount() : 1;
+//        Log.i("Ayush", "New Count " + count);
+        return oldCount = cursor != null ? cursor.getCount() : 1;
     }
 
     @Override

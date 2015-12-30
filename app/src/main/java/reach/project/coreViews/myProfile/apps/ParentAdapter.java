@@ -129,7 +129,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
 
             //assume its recent
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
             horizontalViewHolder.headerText.setText("Recently Installed");
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomGridLayoutManager(holder.itemView.getContext(), 2));

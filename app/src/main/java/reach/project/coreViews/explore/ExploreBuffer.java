@@ -27,7 +27,6 @@ import reach.project.utils.MiscUtils;
  */
 class ExploreBuffer<T> implements Closeable {
 
-    private static final AtomicBoolean isDoneForToday = new AtomicBoolean(false);
     private static WeakReference<ExploreBuffer> bufferWeakReference;
 
     public static <T> ExploreBuffer<T> getInstance(Exploration<T> exploration) {
@@ -49,6 +48,8 @@ class ExploreBuffer<T> implements Closeable {
         this.exploration = exploration;
         storyBuffer.add(exploration.getLoadingResponse());
     }
+
+    private final AtomicBoolean isDoneForToday = new AtomicBoolean(false);
 
     //holds a buffer of network objects
     private final List<T> storyBuffer = new ArrayList<>(100);
@@ -160,7 +161,7 @@ class ExploreBuffer<T> implements Closeable {
             for (T item : stories)
                 if (buffer.exploration.isDoneForDay(item)) {
 
-                    isDoneForToday.set(true);
+                    buffer.isDoneForToday.set(true);
                     Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
                     buffer.executorService.shutdown(); //shut down this shit
                     break;
@@ -173,7 +174,7 @@ class ExploreBuffer<T> implements Closeable {
 
             if (buffer.exploration.isDoneForDay(lastItem) || buffer.exploration.isLoading(lastItem)) {
 
-                if (isDoneForToday.get()) {
+                if (buffer.isDoneForToday.get()) {
                     insertFrom = currentSize - 1;
                     synchronized (buffer.storyBuffer) {
                         buffer.storyBuffer.remove(currentSize - 1);

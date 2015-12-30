@@ -79,7 +79,7 @@ public class MessageWriterFragment extends Fragment {
         protected Boolean doInBackground(PushContainerJSON... params) {
 
             try {
-                StaticData.notificationApi.addPushMultiple(params[0]).execute();
+                StaticData.NOTIFICATION_API.addPushMultiple(params[0]).execute();
                 return true;
             } catch (IOException e) {
                 e.printStackTrace();

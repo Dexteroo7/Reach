@@ -2,7 +2,6 @@ package reach.project.coreViews.explore;
 
 import android.animation.ValueAnimator;
 import android.net.Uri;
-import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -16,14 +15,12 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.gson.JsonObject;
 
-import java.lang.ref.WeakReference;
-
 import reach.project.R;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
-import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MusicViewInfo;
+import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
 
 /**
  * Created by dexter on 16/10/15.
@@ -33,14 +30,10 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
     private final Explore explore;
     private final HandOverMessage<Integer> handOverMessage;
 
-    @Nullable
-    private static WeakReference<ExploreAdapter> adapterWeakReference = null;
-
     public ExploreAdapter(Explore explore,
                           HandOverMessage<Integer> handOverId) {
         this.explore = explore;
         this.handOverMessage = handOverId;
-        adapterWeakReference = new WeakReference<>(this);
     }
 
     @Override
@@ -70,7 +63,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             case MUSIC: {
 
                 final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
-                final String userName = ExploreFragment.userNameSparseArray.get(userId);
+                final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
 
                 //take out view info from this object
                 final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
@@ -98,7 +91,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             case APP:
 
                 final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
-                final String userName = ExploreFragment.userNameSparseArray.get(userId);
+                final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
 
                 //take out view info from this object
                 final JsonObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
@@ -184,21 +177,15 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
     }
 
     @Override
-    public void onClick(View v) {
-        if (adapterWeakReference == null)
-            return;
+    public void onClick(View view) {
+        handOverMessage.handOverMessage((int) view.getTag());
 
-        final ExploreAdapter exploreAdapter = adapterWeakReference.get();
-        if (exploreAdapter == null)
-            return;
-
-        exploreAdapter.handOverMessage.handOverMessage((int) v.getTag());
-
+        ((ImageView) view).setImageResource(R.drawable.icon_downloading_active);
         final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
         animator.setDuration(300);
         animator.addUpdateListener(animation -> {
             final int val = (int) animation.getAnimatedValue();
-            v.setPadding(val, val, val, val);
+            view.setPadding(val, val, val, val);
         });
         animator.setInterpolator(new AccelerateInterpolator());
         animator.start();

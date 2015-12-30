@@ -4,8 +4,6 @@
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:paddingRight="10dp"
     android:paddingLeft="10dp"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
     android:background="@drawable/border_shadow1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -20,11 +18,11 @@
             android:layout_height="match_parent" >
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/appIcon"
-                android:layout_marginLeft="15dp"
-                android:layout_marginTop="15dp"
-                android:layout_marginBottom="15dp"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 fresco:placeholderImage="@color/reach_color" />
             <TextView
                 android:id="@+id/downButton"
@@ -63,7 +61,6 @@
                 android:layout_toLeftOf="@id/downButton"
                 android:ellipsize="marquee"
                 android:lines="1"
-                android:text="Test"
                 android:textColor="@color/reach_grey" />
             <ImageView
                 android:id="@+id/extraButton"

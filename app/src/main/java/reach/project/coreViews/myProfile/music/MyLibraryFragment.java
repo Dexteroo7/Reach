@@ -117,7 +117,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                 values.put(MySongsHelper.COLUMN_VISIBILITY, 1); //flip
 
             updateDatabase(values, songId, userId, getContext());
-            new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix,
+            new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX,
                     (long) (visible ? 0 : 1), //flip
                     songId,
                     userId);
@@ -134,11 +134,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             else
                 values.put(MySongsHelper.COLUMN_VISIBILITY, 1); //flip
 
-            updateDatabase(values, song.songId, song.userId, getContext());
-            new ToggleVisibility().executeOnExecutor(StaticData.temporaryFix,
+            updateDatabase(values, song.songId, myUserId, getContext());
+            new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX,
                     (long) (song.visible ? 0 : 1), //flip
                     song.songId,
-                    song.userId);
+                    myUserId);
 
             parentAdapter.updateVisibility(song.songId, !song.visible);
 
@@ -202,19 +202,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     MySongsHelper.COLUMN_ID, //0
 
                     MySongsHelper.COLUMN_SONG_ID, //1
-                    MySongsHelper.COLUMN_USER_ID, //2
 
-                    MySongsHelper.COLUMN_DISPLAY_NAME, //3
-                    MySongsHelper.COLUMN_ACTUAL_NAME, //4
+                    MySongsHelper.COLUMN_DISPLAY_NAME, //2
+                    MySongsHelper.COLUMN_ACTUAL_NAME, //3
 
-                    MySongsHelper.COLUMN_ARTIST, //5
-                    MySongsHelper.COLUMN_ALBUM, //6
+                    MySongsHelper.COLUMN_ARTIST, //4
+                    MySongsHelper.COLUMN_ALBUM, //5
 
-                    MySongsHelper.COLUMN_DURATION, //7
-                    MySongsHelper.COLUMN_SIZE, //8
+                    MySongsHelper.COLUMN_DURATION, //6
+                    MySongsHelper.COLUMN_SIZE, //7
 
-                    MySongsHelper.COLUMN_VISIBILITY, //9
-                    MySongsHelper.COLUMN_GENRE //10
+                    MySongsHelper.COLUMN_VISIBILITY, //8
+                    MySongsHelper.COLUMN_GENRE //9
             };
 
     private final String[] projectionDownloaded =
@@ -222,19 +221,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     ReachDatabaseHelper.COLUMN_ID, //0
 
                     ReachDatabaseHelper.COLUMN_UNIQUE_ID, //1
-                    ReachDatabaseHelper.COLUMN_RECEIVER_ID, //2
 
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //3
-                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //4
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
+                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
 
-                    ReachDatabaseHelper.COLUMN_ARTIST, //5
-                    ReachDatabaseHelper.COLUMN_ALBUM, //6
+                    ReachDatabaseHelper.COLUMN_ARTIST, //4
+                    ReachDatabaseHelper.COLUMN_ALBUM, //5
 
-                    ReachDatabaseHelper.COLUMN_DURATION, //7
-                    ReachDatabaseHelper.COLUMN_SIZE, //8
+                    ReachDatabaseHelper.COLUMN_DURATION, //6
+                    ReachDatabaseHelper.COLUMN_SIZE, //7
 
-                    ReachDatabaseHelper.COLUMN_VISIBILITY, //9
-                    ReachDatabaseHelper.COLUMN_GENRE //10
+                    ReachDatabaseHelper.COLUMN_VISIBILITY, //8
+                    ReachDatabaseHelper.COLUMN_GENRE, //9
             };
 
     @NonNull
@@ -256,14 +254,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
             final PrivacySongItem songItem = new PrivacySongItem();
             songItem.songId = cursor.getLong(1);
-            songItem.userId = cursor.getLong(2);
-            songItem.displayName = cursor.getString(3);
-            songItem.actualName = cursor.getString(4);
-            songItem.artistName = cursor.getString(5);
-            songItem.albumName = cursor.getString(6);
-            songItem.duration = cursor.getLong(7);
-            songItem.size = cursor.getLong(8);
-            songItem.visible = cursor.getShort(9) == 1;
+            songItem.displayName = cursor.getString(2);
+            songItem.actualName = cursor.getString(3);
+            songItem.artistName = cursor.getString(4);
+            songItem.albumName = cursor.getString(5);
+            songItem.duration = cursor.getLong(6);
+            songItem.size = cursor.getLong(7);
+            songItem.visible = cursor.getShort(8) == 1;
 
             latestDownloaded.add(songItem);
         }
@@ -290,14 +287,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
             final PrivacySongItem songItem = new PrivacySongItem();
             songItem.songId = cursor.getLong(1);
-            songItem.userId = cursor.getLong(2);
-            songItem.displayName = cursor.getString(3);
-            songItem.actualName = cursor.getString(4);
-            songItem.artistName = cursor.getString(5);
-            songItem.albumName = cursor.getString(6);
-            songItem.duration = cursor.getLong(7);
-            songItem.size = cursor.getLong(8);
-            songItem.visible = cursor.getShort(9) == 1;
+            songItem.displayName = cursor.getString(2);
+            songItem.actualName = cursor.getString(3);
+            songItem.artistName = cursor.getString(4);
+            songItem.albumName = cursor.getString(5);
+            songItem.duration = cursor.getLong(6);
+            songItem.size = cursor.getLong(7);
+            songItem.visible = cursor.getShort(8) == 1;
 
             latestMyLibrary.add(songItem);
         }
@@ -320,7 +316,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
             boolean failed = false;
             try {
-                final MyString response = StaticData.musicVisibility.update(
+                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
                         params[2], //serverId
                         params[1], //songId
                         params[0] == 0).execute(); //if 0 (false) make it true and vice-versa
@@ -365,8 +361,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         int updated = resolver.update(
                 MySongsProvider.CONTENT_URI,
                 contentValues,
-                MySongsHelper.COLUMN_SONG_ID + " = ? and " + MySongsHelper.COLUMN_USER_ID + " = ?",
-                new String[]{songId + "", userId + ""});
+                MySongsHelper.COLUMN_SONG_ID + " = ?",
+                new String[]{songId + ""});
 
         Log.i("Ayush", "Toggle Visibility " + updated + " " + songId);
 

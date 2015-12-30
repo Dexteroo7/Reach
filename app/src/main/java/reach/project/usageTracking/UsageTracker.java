@@ -65,7 +65,7 @@ public enum UsageTracker {
 
         Log.i("Ayush", "Trying to track ! " + toProcess.body().toString());
 
-        final Optional<Integer> statusCode = MiscUtils.autoRetry(() -> ReachApplication.okHttpClient.newCall(toProcess).execute().code(), //perform the post
+        final Optional<Integer> statusCode = MiscUtils.autoRetry(() -> ReachApplication.OK_HTTP_CLIENT.newCall(toProcess).execute().code(), //perform the post
                 Optional.of(input -> input == null || !(input == 200 || input == 204))); //check for invalid response
 
         if (!statusCode.isPresent()) {

@@ -105,9 +105,7 @@ public class MySongsProvider extends ContentProvider {
                 sqlDB.beginTransaction();
                 try {
                     //delete everything
-                    sqlDB.delete(MySongsHelper.SONG_TABLE,
-                            MySongsHelper.COLUMN_USER_ID + " = ?",
-                            new String[]{values[0].get(MySongsHelper.COLUMN_USER_ID)+""});
+                    sqlDB.delete(MySongsHelper.SONG_TABLE, null, null);
                     //bulk insert
                     for(ContentValues contentValues : values) {
                         sqlDB.insert(MySongsHelper.SONG_TABLE, null, contentValues);

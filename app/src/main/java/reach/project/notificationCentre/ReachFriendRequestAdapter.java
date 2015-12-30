@@ -72,7 +72,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         final View reject = convertView.findViewById(R.id.rejectBlock);
         final ReceivedRequest receivedRequest = getItem(position);
 
-        profilePhoto.setImageURI(Uri.parse(StaticData.cloudStorageImageBaseUrl
+        profilePhoto.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                 +receivedRequest.getImageId()));
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
@@ -118,7 +118,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             reject.setOnClickListener(v -> {
 
                 MiscUtils.autoRetryAsync(() -> {
-                    StaticData.notificationApi.addBecameFriends(false, serverId, receivedRequest.getId()).execute();
+                    StaticData.NOTIFICATION_API.addBecameFriends(false, serverId, receivedRequest.getId()).execute();
                     return null;
                 }, Optional.absent());
 
@@ -195,7 +195,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
             return new Object[]{
                     params[1], //un-cast-reference
-                    MiscUtils.autoRetry(() -> StaticData.notificationApi.addBecameFriends(true, serverId, (long) params[0]).execute(), Optional.absent()).orNull(),
+                    MiscUtils.autoRetry(() -> StaticData.NOTIFICATION_API.addBecameFriends(true, serverId, (long) params[0]).execute(), Optional.absent()).orNull(),
                     params[2]}; //view to enable
         }
 

@@ -122,7 +122,7 @@ public class CodeVerification extends Fragment {
 
         //meanWhile fetch old account
         containerNewFuture = oldAccountFetcher.submit(() -> MiscUtils.autoRetry(() ->
-                StaticData.userEndpoint.isAccountPresentNew(phoneNumber).execute(), Optional.absent()).orNull());
+                StaticData.USER_API.isAccountPresentNew(phoneNumber).execute(), Optional.absent()).orNull());
 
         return rootView;
     }
@@ -183,7 +183,7 @@ public class CodeVerification extends Fragment {
 
             if (finalAuthKey.equals(editable.toString()))
                 //start account creation
-                StaticData.temporaryFix.submit(proceedToAccountCreation);
+                StaticData.TEMPORARY_FIX.submit(proceedToAccountCreation);
         }
     };
 
@@ -383,7 +383,7 @@ public class CodeVerification extends Fragment {
             if (finalAuthKey.equals(enteredCode)) {
 
                 //start account creation
-                StaticData.temporaryFix.submit(proceedToAccountCreation);
+                StaticData.TEMPORARY_FIX.submit(proceedToAccountCreation);
 
             } else
                 Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();

@@ -282,7 +282,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
         final List<SimpleApp> simpleApps = MiscUtils.autoRetry(
-                () -> StaticData.userEndpoint.fetchRecentApps(userId).execute().getItems(), Optional.absent()
+                () -> StaticData.USER_API.fetchRecentApps(userId).execute().getItems(), Optional.absent()
         ).or(Collections.emptyList());
 
         if (simpleApps == null || simpleApps.isEmpty())

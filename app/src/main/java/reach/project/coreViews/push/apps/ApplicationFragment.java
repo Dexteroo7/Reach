@@ -73,7 +73,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(StaticData.temporaryFix, activity);
+        new GetApplications().executeOnExecutor(StaticData.TEMPORARY_FIX, activity);
 
         return rootView;
     }
