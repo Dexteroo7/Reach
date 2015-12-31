@@ -243,6 +243,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             final int currentPosition = player.getCurrentPosition();
 //            Log.i("Downloader", player.getCurrentPosition() + " sending current position !!");
             if (currentPosition != lastPositionUpdate) {
+
                 lastPositionUpdate = currentPosition;
                 final short primaryProgress = (short) ((currentPosition * 100) / duration);
 //                currentSong.setCurrentPosition(currentPosition); //un-necessary ?

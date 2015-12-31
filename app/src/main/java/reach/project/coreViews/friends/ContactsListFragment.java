@@ -36,8 +36,8 @@ import android.widget.Toast;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
@@ -46,20 +46,14 @@ import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
+import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.QuickSyncFriends;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 
 public class ContactsListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
-
-    public static final AtomicBoolean synchronizeOnce = new AtomicBoolean(false);//have we already synchronized ?
-    private static final AtomicBoolean
-            pinging = new AtomicBoolean(false),        //are we pinging ?
-            synchronizing = new AtomicBoolean(false),  //are we synchronizing ?
-            firstTimeLoad = new AtomicBoolean(true);   //is this first time load ?
 
     private static String phoneNumber = "";
 
@@ -85,10 +79,6 @@ public class ContactsListFragment extends Fragment implements
 
     @Override
     public void onDestroyView() {
-
-        //clean up
-        pinging.set(false);
-        synchronizing.set(false);
 
         getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
         getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
@@ -116,12 +106,6 @@ public class ContactsListFragment extends Fragment implements
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
         phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
-
-        //clean up
-        pinging.set(false);
-        synchronizing.set(false);
-        synchronizeOnce.set(false);
-        firstTimeLoad.set(SharedPrefUtils.getFirstIntroSeen(sharedPreferences));
     }
 
     @Override
@@ -134,6 +118,8 @@ public class ContactsListFragment extends Fragment implements
         if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
             return null;
 
+        final Activity activity = getActivity();
+
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.myreach_menu);
@@ -141,10 +127,10 @@ public class ContactsListFragment extends Fragment implements
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case  R.id.settings_button:
-                    startActivity(new Intent(getActivity(), SettingsActivity.class));
+                    startActivity(new Intent(activity, SettingsActivity.class));
                     return true;
                 case R.id.player_button:
-                    startActivity(new Intent(getContext(), PlayerActivity.class));
+                    startActivity(new Intent(activity, PlayerActivity.class));
                     return true;
             }
             return false;
@@ -152,9 +138,10 @@ public class ContactsListFragment extends Fragment implements
 
         final MenuItem notificationButton = menu.findItem(R.id.notif_button);
         if (notificationButton != null) {
+
             MenuItemCompat.setActionView(notificationButton, R.layout.reach_queue_counter);
             final View notificationContainer = MenuItemCompat.getActionView(notificationButton).findViewById(R.id.counterContainer);
-            notificationContainer.setOnClickListener(v -> startActivity(new Intent(getContext(), NotificationActivity.class)));
+            notificationContainer.setOnClickListener(v -> startActivity(new Intent(activity, NotificationActivity.class)));
 //            notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
         }
 
@@ -163,7 +150,7 @@ public class ContactsListFragment extends Fragment implements
         //gridView.setOnScrollListener(scrollListener);
 
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        final GridLayoutManager manager = new GridLayoutManager(getActivity(), 2);
+        final GridLayoutManager manager = new GridLayoutManager(activity, 2);
 
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
@@ -179,28 +166,11 @@ public class ContactsListFragment extends Fragment implements
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(friendsAdapter);
 
-        final boolean isOnline = MiscUtils.isOnline(getActivity());
-        //we have not already synchronized !
-
-        if (isOnline) {
-
-            if (!synchronizeOnce.get() && !synchronizing.get()) {
-                //contact sync will call send ping as well
-
-                synchronizing.set(true);
-                pinging.set(true);
-                Log.i("Ayush", "Syncing friends");
-                new LocalUtils.ContactsSync().executeOnExecutor(StaticData.TEMPORARY_FIX);
-
-            } else if (!pinging.get()) {
-
-                //if not pinging send a ping !
-                pinging.set(true);
-                Log.i("Ayush", "Syncing friends");
-
-                new LocalUtils.SendPing().executeOnExecutor(StaticData.TEMPORARY_FIX);
-            }
-        }
+        if (MiscUtils.isOnline(activity))
+            FireOnce.sendPing(
+                    null,
+                    new WeakReference<>(getActivity().getContentResolver()),
+                    serverId);
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, null, this);
@@ -238,44 +208,6 @@ public class ContactsListFragment extends Fragment implements
 
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(data);
-
-        final int count = data.getCount();
-        //TODO handle empty view
-
-        /*if (count != 0) {
-
-            if (firstTimeLoad.get()) {
-
-                SharedPrefUtils.setFirstIntroSeen(sharedPreferences);
-                firstTimeLoad.set(false);
-
-                final Activity activity = getActivity();
-                final Chat chat = new Chat();
-                chat.setMessage("Hey! I am Devika. I handle customer relations at Reach. I will help you with any problems you face inside the app. So ping me here if you face any difficulties :)");
-                chat.setTimestamp(0);
-                chat.setAdmin(Chat.ADMIN);
-
-                final Optional<Firebase> firebaseOptional = mListener.getFireBase();
-                if (firebaseOptional.isPresent()) {
-
-                    firebaseOptional.get().child("chat").child(
-                            SharedPrefUtils.getChatUUID(sharedPreferences)).push().setValue(chat);
-                    final Intent viewIntent = new Intent(activity, ChatActivity.class);
-                    final PendingIntent viewPendingIntent = PendingIntent.getActivity(activity, GcmIntentService.NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-                    final NotificationCompat.Builder notificationBuilder =
-                            new NotificationCompat.Builder(activity)
-                                    .setAutoCancel(true)
-                                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
-                                    .setSmallIcon(R.drawable.ic_icon_notif)
-                                    .setContentTitle("Devika sent you a message")
-                                    .setContentIntent(viewPendingIntent)
-                                    .setPriority(NotificationCompat.PRIORITY_MAX)
-                                    .setWhen(System.currentTimeMillis());
-                    final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(activity);
-                    notificationManager.notify(GcmIntentService.NOTIFICATION_ID_CHAT, notificationBuilder.build());
-                }
-            }
-        }*/
     }
 
     @Override
@@ -335,102 +267,14 @@ public class ContactsListFragment extends Fragment implements
             return Optional.fromNullable(activity.getContentResolver());
         }
 
-        public static final class ContactsSync extends AsyncTask<Void, Void, Void> {
-
-            @Override
-            protected Void doInBackground(Void... params) {
-
-                /**
-                 * Invalidate everyone
-                 */
-                final ContentValues contentValues = new ContentValues();
-                contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis() + 31 * 1000);
-                contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-                contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-
-                final Optional<ContentResolver> optional = getResolver();
-                if (!optional.isPresent())
-                    return null;
-
-                optional.get().update(
-                        ReachFriendsProvider.CONTENT_URI,
-                        contentValues,
-                        ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
-                                ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                                (System.currentTimeMillis() - (60 * 1000)) + ""});
-                contentValues.clear();
-                StaticData.NETWORK_CACHE.clear();
-
-                try {
-                    new QuickSyncFriends(reference.get().getActivity(), serverId, phoneNumber).call();
-                } catch (NullPointerException ignored) {
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-
-                super.onPostExecute(aVoid);
-                synchronizeOnce.set(true);
-                //we are still refreshing !
-                pinging.set(true);
-                new SendPing().executeOnExecutor(StaticData.TEMPORARY_FIX);
-            }
-        }
-
-        public static final class SendPing extends AsyncTask<Void, String, Void> {
-
-            @Override
-            protected Void doInBackground(Void... params) {
-
-                StaticData.NETWORK_CACHE.clear();
-                MiscUtils.autoRetry(() -> StaticData.USER_API.pingMyReach(serverId).execute(), Optional.absent()).orNull();
-
-                /**
-                 * Invalidate those who were online 30 secs ago
-                 * and send PING
-                 */
-                final long currentTime = System.currentTimeMillis();
-                final ContentValues contentValues = new ContentValues();
-                contentValues.put(ReachFriendsHelper.COLUMN_LAST_SEEN, currentTime + 31 * 1000);
-                contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-                contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-
-                final Optional<ContentResolver> optional = getResolver();
-                if (!optional.isPresent())
-                    return null;
-
-                optional.get().update(
-                        ReachFriendsProvider.CONTENT_URI,
-                        contentValues,
-                        ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
-                                ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
-                                ReachFriendsHelper.COLUMN_ID + " != ?",
-                        new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 60 * 1000) + "", StaticData.DEVIKA + ""});
-                contentValues.clear();
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-
-                super.onPostExecute(aVoid);
-                //finally relax !
-                synchronizing.set(false);
-                pinging.set(false);
-            }
-        }
-
         public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
 
-            if (!pinging.get()) {
-
-                Log.i("Ayush", "Starting refresh !");
-                pinging.set(true);
-                new LocalUtils.SendPing().executeOnExecutor(StaticData.TEMPORARY_FIX);
-            }
+            //TODO
+//            if (MiscUtils.isOnline(activity))
+//                FireOnce.sendPing(
+//                        null,
+//                        new WeakReference<>(getActivity().getContentResolver()),
+//                        serverId);
         };
 
         private static final Dialog.OnClickListener positiveButton = (dialog, which) -> {
@@ -477,8 +321,7 @@ public class ContactsListFragment extends Fragment implements
                  * params[2] = status
                  */
 
-                final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
-                        () -> StaticData.MESSAGING_API.requestAccess(params[1], params[0]).execute(),
+                final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.MESSAGING_API.requestAccess(params[1], params[0]).execute(),
                         Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
                 final String toParse;

@@ -23,6 +23,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ACTUAL_NAME = "actualName";
     public static final String COLUMN_ARTIST = "artist"; //artist
     public static final String COLUMN_ALBUM = "album"; //album
+
     public static final String COLUMN_DURATION = "duration"; //duration
     public static final String COLUMN_SIZE = "size";
     public static final String COLUMN_GENRE = "genre";
@@ -114,7 +115,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
             MySongsHelper.COLUMN_ALBUM_ART_DATA, //8
             MySongsHelper.COLUMN_ACTUAL_NAME, //9
             MySongsHelper.COLUMN_DATE_ADDED, //9
-            MySongsHelper.COLUMN_VISIBILITY //10
+            MySongsHelper.COLUMN_VISIBILITY, //10
+            MySongsHelper.COLUMN_IS_LIKED //11
     };
 
     //DISK_LIST specific !
@@ -130,7 +132,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 cursor.getString(3), //displayName
                 cursor.getString(4), //artistName
                 cursor.getString(6),
-                false, //liked
+                cursor.getShort(11) == 1, //liked
                 cursor.getLong(5), //duration
                 (byte) 1); //type
     }

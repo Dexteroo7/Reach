@@ -335,8 +335,9 @@ public class MessagingEndpoint {
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
 
         final ReachUser clientUser = ofy().load().type(ReachUser.class).id(clientId).now();
-        if (clientUser == null || clientUser.getMyReach() == null || clientUser.getMyReach().size() == 0)
+        if (clientUser == null || clientUser.getMyReach() == null || clientUser.getMyReach().isEmpty())
             return;
+
         log.info(clientUser.getUserName() + " sending PONG");
         final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
         for (Long id : clientUser.getMyReach())

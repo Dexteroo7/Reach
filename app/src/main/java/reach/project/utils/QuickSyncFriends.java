@@ -1,6 +1,5 @@
 package reach.project.utils;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -42,8 +41,14 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
     private final long serverId;
     private final String myNumber;
 
-    public QuickSyncFriends(Activity activity, long serverId, String myNumber) {
-        this.reference = new WeakReference<>(activity);
+    public QuickSyncFriends(Context context, long serverId, String myNumber) {
+        this.reference = new WeakReference<>(context);
+        this.serverId = serverId;
+        this.myNumber = myNumber;
+    }
+
+    public QuickSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
+        this.reference = reference;
         this.serverId = serverId;
         this.myNumber = myNumber;
     }

@@ -1,61 +1,34 @@
 package reach.project.core;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.common.base.Optional;
-import com.google.gson.Gson;
 import com.squareup.wire.Wire;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.UUID;
 
-import reach.backend.entities.messaging.model.MyBoolean;
-import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
-import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -70,12 +43,10 @@ import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.Song;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.push.PushContainer;
-import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
-import reach.project.utils.MetaDataScanner;
+import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
@@ -221,38 +192,32 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
     @Override
-    protected void onResume() {
-
-        if (Build.VERSION.SDK_INT >= 23) {
-
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
-                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_CONTACTS
-                        }, MY_PERMISSIONS_READ_CONTACTS);
-            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-            }
-        }
-
-        super.onResume();
-    }
-
-    @Override
     protected void onPostResume() {
 
         super.onPostResume();
         Log.i("Ayush", "Called onPostResume");
         processIntent(getIntent());
+
+//        if (Build.VERSION.SDK_INT >= 23) {
+//
+//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
+//
+//                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
+//                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
+//                ActivityCompat.requestPermissions(this,
+//                        new String[]{
+//                                Manifest.permission.READ_CONTACTS
+//                        }, MY_PERMISSIONS_READ_CONTACTS);
+//            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
+//
+//                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+//                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
+//                ActivityCompat.requestPermissions(this,
+//                        new String[]{
+//                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+//                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+//            }
+//        }
     }
 
     @Override
@@ -304,25 +269,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         } catch (JSONException ignored) {
         }
 
-        //fetch username and phoneNumber
-        final String userName = SharedPrefUtils.getUserName(preferences);
-        final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
-
         //initialize bug tracking
         //Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //Crittercism.setUsername(userName + " " + phoneNumber);
-
-        //track screen
-        final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
-        tracker.setScreenName("reach.project.core.ReachActivity");
-        tracker.set("&uid", serverId + "");
-        tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
-
-        //first check playServices
-        if (!LocalUtils.checkPlayServices(this)) {
-            tracker.send(new HitBuilders.EventBuilder("Play Services screwup", userName + " " + phoneNumber + " screwed up").build());
-            return; //fail
-        }
 
         ////////////////////////////////////////
 
@@ -368,30 +317,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             if (tab != null) {
                 tab.setIcon(UNSELECTED_ICONS[index]);
             }
-        }
-
-        //routine stuff
-        final NetworkInfo networkInfo =
-                ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        if (networkInfo == null || !networkInfo.isConnected()) {
-            // There are no active networks.
-            Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();
-        } else {
-
-            //check for update
-            new LocalUtils.CheckUpdate().executeOnExecutor(StaticData.TEMPORARY_FIX);
-            //refresh gcm
-            StaticData.TEMPORARY_FIX.submit(LocalUtils::checkGCM);
-            //refresh download ops
-            new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.TEMPORARY_FIX);
-            //Music scanner
-            MiscUtils.useContextFromContext(reference, activity -> {
-
-                final Intent intent = new Intent(activity, MetaDataScanner.class);
-                intent.putExtra("first", false);
-                activity.startService(intent);
-                return null;
-            });
         }
     }
 
@@ -461,7 +386,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 song.album,
                                 song.genre);
                     }
-                    new LocalUtils.RefreshOperations().executeOnExecutor(StaticData.TEMPORARY_FIX);
+                    FireOnce.refreshOperations(reference);
                 }
                 ///////////
             }
@@ -594,285 +519,5 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         //We call bulk starter always
         MiscUtils.startDownload(reachDatabase, this, null);
-    }
-
-    private enum LocalUtils {
-        ;
-
-        /**
-         * Check the device to make sure it has the Google Play Services APK. If
-         * it doesn't, display a dialog that allows users to download the APK from
-         * the Google Play Store or enable it in the device's system settings.
-         *
-         * @param activity to use
-         * @return true : continue, false : fail
-         */
-        public static boolean checkPlayServices(Activity activity) {
-
-            final int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
-            if (resultCode == ConnectionResult.SUCCESS)
-                return true;
-
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-
-                GooglePlayServicesUtil.getErrorDialog(resultCode, activity,
-                        StaticData.PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            } else {
-
-                Toast.makeText(activity, "This device is not supported", Toast.LENGTH_LONG).show();
-                Log.i("GCM_UTILS", "This device is not supported.");
-                activity.finish();
-            }
-
-            return false;
-        }
-
-        public static void checkGCM() {
-
-            if (serverId == 0)
-                return;
-
-            final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.USER_API.getGcmId(serverId).execute(), Optional.absent()).orNull();
-
-            //check returned gcm
-            final String gcmId;
-            if (dataToReturn == null || //fetch failed
-                    TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
-                    gcmId.equals("hello_world")) { //bad gcm
-
-                //network operation
-                if (MiscUtils.updateGCM(serverId, reference))
-                    Log.i("Ayush", "GCM updated !");
-                else
-                    Log.i("Ayush", "GCM check failed");
-            }
-        }
-
-        private static class CheckUpdate extends AsyncTask<Void, Void, Integer> {
-
-            @Override
-            protected Integer doInBackground(Void... params) {
-
-                Scanner reader = null;
-                try {
-                    reader = new Scanner(new URL(StaticData.DROP_BOX).openStream());
-                    return reader.nextInt();
-                } catch (Exception ignored) {
-                } finally {
-
-                    if (reader != null) {
-                        reader.close();
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Integer result) {
-
-                super.onPostExecute(result);
-
-                if (result == null)
-                    return;
-
-                Log.i("Ayush", "LATEST VERSION " + result);
-
-                MiscUtils.useContextFromContext(reference, activity -> {
-
-                    final int version;
-                    try {
-                        version = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
-
-                    if (version < result) {
-
-                        final UpdateFragment updateFragment = new UpdateFragment();
-                        updateFragment.setCancelable(false);
-//                        try {
-//                            updateFragment.show(activity.fragmentManager, "update");
-//                        } catch (IllegalStateException | WindowManager.BadTokenException ignored) {
-//                            activity.finish();
-//                        }
-                    }
-                    return null;
-                });
-            }
-        }
-
-        //TODO optimize database fetch !
-        public static class RefreshOperations extends AsyncTask<Void, Void, Void> {
-
-            /**
-             * Create a contentProviderOperation, we do not update
-             * if the operation is paused.
-             * We do not mess with the status if it was paused, working, relay or finished !
-             *
-             * @param contentValues the values to use
-             * @param id            the id of the entry
-             * @return the contentProviderOperation
-             */
-            private ContentProviderOperation getUpdateOperation(ContentValues contentValues, long id) {
-                return ContentProviderOperation
-                        .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
-                        .withValues(contentValues)
-                        .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                                new String[]{
-                                        id + "",
-                                        ReachDatabase.PAUSED_BY_USER + "",
-                                        ReachDatabase.WORKING + "",
-                                        ReachDatabase.RELAY + "",
-                                        ReachDatabase.FINISHED + ""})
-                        .build();
-            }
-
-            private ContentProviderOperation getForceUpdateOperation(ContentValues contentValues, long id) {
-                return ContentProviderOperation
-                        .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
-                        .withValues(contentValues)
-                        .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?",
-                                new String[]{id + ""})
-                        .build();
-            }
-
-            private String generateRequest(ReachDatabase reachDatabase) {
-
-                return "CONNECT" + new Gson().toJson
-                        (new Connection(
-                                ////Constructing connection object
-                                "REQ",
-                                reachDatabase.getSenderId(),
-                                reachDatabase.getReceiverId(),
-                                reachDatabase.getSongId(),
-                                reachDatabase.getProcessed(),
-                                reachDatabase.getLength(),
-                                UUID.randomUUID().getMostSignificantBits(),
-                                UUID.randomUUID().getMostSignificantBits(),
-                                reachDatabase.getLogicalClock(), ""));
-            }
-
-            private String fakeResponse(ReachDatabase reachDatabase) {
-
-                return new Gson().toJson
-                        (new Connection(
-                                ////Constructing connection object
-                                "RELAY",
-                                reachDatabase.getSenderId(),
-                                reachDatabase.getReceiverId(),
-                                reachDatabase.getSongId(),
-                                reachDatabase.getProcessed(),
-                                reachDatabase.getLength(),
-                                UUID.randomUUID().getMostSignificantBits(),
-                                UUID.randomUUID().getMostSignificantBits(),
-                                reachDatabase.getLogicalClock(), ""));
-            }
-
-            private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
-
-                final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-
-                for (ReachDatabase reachDatabase : reachDatabases) {
-
-                    final ContentValues values = new ContentValues();
-                    if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
-
-                        //mark finished
-                        if (reachDatabase.getStatus() != ReachDatabase.FINISHED) {
-
-                            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                            values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getLength());
-                            operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
-                        }
-                        continue;
-                    }
-
-                    final MyBoolean myBoolean;
-                    if (reachDatabase.getSenderId() == StaticData.DEVIKA) {
-
-                        //hit cloud
-                        MiscUtils.useContextFromContext(reference, context -> {
-                            ProcessManager.submitNetworkRequest(context, fakeResponse(reachDatabase));
-                            return null;
-                        });
-
-                        myBoolean = new MyBoolean();
-                        myBoolean.setGcmexpired(false);
-                        myBoolean.setOtherGCMExpired(false);
-                    } else {
-                        //sending REQ to senderId
-                        myBoolean = MiscUtils.sendGCM(
-                                generateRequest(reachDatabase),
-                                reachDatabase.getSenderId(),
-                                reachDatabase.getReceiverId());
-                    }
-
-                    if (myBoolean == null) {
-                        Log.i("Ayush", "GCM sending resulted in shit");
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                    } else if (myBoolean.getGcmexpired()) {
-                        Log.i("Ayush", "GCM re-registry needed");
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                    } else if (myBoolean.getOtherGCMExpired()) {
-                        Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
-                    } else {
-                        Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-                    }
-                    operations.add(getUpdateOperation(values, reachDatabase.getId()));
-                }
-                return operations;
-            }
-
-            @Override
-            protected Void doInBackground(Void... params) {
-
-                final Cursor cursor = MiscUtils.useContextFromContext(reference, activity -> {
-
-                    return activity.getContentResolver().query(
-                            ReachDatabaseProvider.CONTENT_URI,
-                            ReachDatabaseHelper.projection,
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                            new String[]{
-                                    "0", //only downloads
-                                    ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
-                }).orNull();
-
-                if (cursor == null)
-                    return null;
-
-                final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
-                while (cursor.moveToNext())
-                    reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
-                cursor.close();
-
-                if (reachDatabaseList.size() > 0) {
-
-                    final ArrayList<ContentProviderOperation> operations = bulkStartDownloads(reachDatabaseList);
-                    if (operations.size() > 0) {
-
-                        MiscUtils.useContextFromContext(reference, activity -> {
-
-                            try {
-                                Log.i("Downloader", "Starting Download op " + operations.size());
-                                activity.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
-                            } catch (RemoteException | OperationApplicationException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                    }
-                }
-
-                return null;
-            }
-        }
-
     }
 }

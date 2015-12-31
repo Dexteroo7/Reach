@@ -106,35 +106,23 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (message instanceof Cursor) {
 
             final Cursor cursor = (Cursor) message;
-            final boolean visible = cursor.getShort(9) == 1;
+            final boolean visible = cursor.getShort(8) == 1;
             final long songId = cursor.getLong(1);
-            final long userId = cursor.getLong(2);
 
-            final ContentValues values = new ContentValues();
-            if (visible)
-                values.put(MySongsHelper.COLUMN_VISIBILITY, 0); //flip
-            else
-                values.put(MySongsHelper.COLUMN_VISIBILITY, 1); //flip
+            updateDatabase(!visible, songId, myUserId, getContext());
 
-            updateDatabase(values, songId, userId, getContext());
             new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX,
                     (long) (visible ? 0 : 1), //flip
                     songId,
-                    userId);
+                    myUserId);
 
             parentAdapter.updateVisibility(songId, !visible);
 
         } else if (message instanceof PrivacySongItem) {
 
             final PrivacySongItem song = (PrivacySongItem) message;
+            updateDatabase(!song.visible, song.songId, myUserId, getContext());
 
-            final ContentValues values = new ContentValues();
-            if (song.visible)
-                values.put(MySongsHelper.COLUMN_VISIBILITY, 0); //flip
-            else
-                values.put(MySongsHelper.COLUMN_VISIBILITY, 1); //flip
-
-            updateDatabase(values, song.songId, myUserId, getContext());
             new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX,
                     (long) (song.visible ? 0 : 1), //flip
                     song.songId,
@@ -328,11 +316,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             }
 
             if (failed) {
-                //reset if failed
-                final ContentValues values = new ContentValues(1);
-                values.put(MySongsHelper.COLUMN_VISIBILITY, params[0] == 1 ? 0 : 1); //flip
                 MiscUtils.useContextFromFragment(reference, context -> {
-                    updateDatabase(values, params[1], params[2], context);
+                    //reset if failed
+                    updateDatabase(params[0] != 1, params[1], params[2], context);
                 });
             }
 
@@ -350,29 +336,36 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         }
     }
 
-    public static synchronized void updateDatabase(ContentValues contentValues, long songId, long userId, Context context) {
+    public static synchronized void updateDatabase(boolean visibility, long songId, long userId, Context context) {
 
         //sanity check
-        if (context == null || contentValues == null || userId == 0)
+        if (context == null || userId == 0)
             return;
 
         final ContentResolver resolver = context.getContentResolver();
 
+        ContentValues values = new ContentValues();
+        values.put(MySongsHelper.COLUMN_VISIBILITY, visibility); //flip
+
         int updated = resolver.update(
                 MySongsProvider.CONTENT_URI,
-                contentValues,
+                values,
                 MySongsHelper.COLUMN_SONG_ID + " = ?",
                 new String[]{songId + ""});
 
-        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId);
+        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
 
-        if (updated == 0)
+        if (updated == 0) {
+
+            values = new ContentValues();
+            values.put(ReachDatabaseHelper.COLUMN_VISIBILITY, visibility); //flip
             updated = resolver.update(
                     ReachDatabaseProvider.CONTENT_URI,
-                    contentValues,
+                    values,
                     ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " + ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?",
                     new String[]{songId + "", userId + ""});
+        }
 
-        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId);
+        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
     }
 }

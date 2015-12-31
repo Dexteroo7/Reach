@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.Friend;
 import reach.backend.entities.userApi.model.StringList;
@@ -27,12 +26,6 @@ public final class ForceSyncFriends implements Runnable {
     private final WeakReference<Context> reference;
     private final long serverId;
     private final String myNumber;
-
-    private final ExecutorService personalRejector = MiscUtils.getRejectionExecutor();
-
-    public void sync() {
-        personalRejector.submit(this);
-    }
 
     public ForceSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
         this.reference = reference;

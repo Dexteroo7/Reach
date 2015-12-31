@@ -229,9 +229,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
     public static MusicData getMusicData(final Cursor cursor) {
 
-        final boolean liked;
         final String temp = cursor.getString(7);
-        liked = !TextUtils.isEmpty(temp) && temp.equals("1");
 
         return new MusicData(
                 cursor.getLong(0), //id
@@ -243,7 +241,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                 cursor.getString(5), //displayName
                 cursor.getString(6), //artistName
                 cursor.getString(15), //album
-                liked, //liked
+                !TextUtils.isEmpty(temp) && temp.equals("1"), //liked
                 cursor.getLong(8), //duration
                 (byte) 0); //type
     }

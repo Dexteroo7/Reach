@@ -253,7 +253,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             return VIEW_TYPE_RECENT;
     }
 
-    private final Object[] reUsable = new Object[6];
+    private final Object[] reUsable = new Object[7];
 
     @Override
     protected long newGetItemId(int position) {
@@ -263,14 +263,14 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
             final Cursor cursor = (Cursor) item;
             reUsable[0] = cursor.getLong(1); //songId
-            reUsable[1] = cursor.getLong(2); //userId
-            reUsable[2] = cursor.getString(3);//displayName
-            reUsable[3] = cursor.getString(4);//actualName
-            reUsable[4] = cursor.getString(5); //artist
-            reUsable[5] = cursor.getString(6); //album
+            reUsable[1] = cursor.getString(2); //displayName
+            reUsable[2] = cursor.getString(3);//actualName
+            reUsable[3] = cursor.getString(4);//artist
+            reUsable[4] = cursor.getString(5); //album
+            reUsable[5] = cursor.getShort(8); //visibility
             return Arrays.hashCode(reUsable);
         } else
-            return super.getItemId(position);
+            return item.hashCode();
     }
 
     @Override

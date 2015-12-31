@@ -77,7 +77,8 @@ public final class StaticData {
             MySongsHelper.COLUMN_PATH, //3
             MySongsHelper.COLUMN_DISPLAY_NAME, //4
             MySongsHelper.COLUMN_ID, //5
-            MySongsHelper.COLUMN_DURATION}; //6
+            MySongsHelper.COLUMN_DURATION, //6
+            MySongsHelper.COLUMN_IS_LIKED}; //7
 
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;

@@ -120,6 +120,7 @@ import reach.project.utils.viewHelpers.RetryHook;
 public enum MiscUtils {
     ;
 
+    @NonNull
     public static String combinationFormatter(final long millis) {
 
         final long seconds = TimeUnit.MILLISECONDS.toSeconds(millis)

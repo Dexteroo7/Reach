@@ -32,6 +32,8 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
@@ -44,22 +46,22 @@ import reach.project.utils.SharedPrefUtils;
 
 public class PlayerActivity extends AppCompatActivity {
 
+    public static final String ACTION = "reach.project.player.PlayerActivity.ACTION";
+    public static final String MUSIC_PARCEL = "reach.project.player.PlayerActivity.MUSIC_PARCEL";
+    public static final String DURATION = "reach.project.player.PlayerActivity.DURATION";
+    public static final String PRIMARY_PROGRESS = "reach.project.player.PlayerActivity.PRIMARY_PROGRESS";
+    public static final String SECONDARY_PROGRESS = "reach.project.player.PlayerActivity.SECONDARY_PROGRESS";
+    public static final String PLAYER_POSITION = "reach.project.player.PlayerActivity.PLAYER_POSITION";
+
     @Nullable
     private static WeakReference<PlayerActivity> reference = null;
+    @Nullable
+    private static MusicData currentPlaying = null;
+
     @Nullable
     private SimpleDraweeView albumArt = null;
     @Nullable
     private ImageView pause_play = null;
-    @Nullable
-    private ImageView shuffleBtn = null;
-    @Nullable
-    private ImageView rwdBtn = null;
-    @Nullable
-    private ImageView fwdBtn = null;
-    @Nullable
-    private ImageView repeatBtn = null;
-    @Nullable
-    private ImageView likeBtn = null;
     @Nullable
     private TextView songNamePlaying = null;
     @Nullable
@@ -71,52 +73,46 @@ public class PlayerActivity extends AppCompatActivity {
     @Nullable
     private SeekBar seekBar = null;
     @Nullable
-    private static MusicData currentPlaying = null;
+    private View likeButton = null;
+
     private static long serverId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        reference = new WeakReference<>(this);
         setContentView(R.layout.activity_player);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
-        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
+        reference = new WeakReference<>(this);
+        currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
 
-        albumArt = (SimpleDraweeView) findViewById(R.id.albumArt);
-        pause_play = (ImageView) findViewById(R.id.pause_play);
-        shuffleBtn = (ImageView) findViewById(R.id.shuffleBtn);
-        rwdBtn = (ImageView) findViewById(R.id.rwdBtn);
-        fwdBtn = (ImageView) findViewById(R.id.fwdBtn);
-        repeatBtn = (ImageView) findViewById(R.id.repeatBtn);
-        likeBtn = (ImageView) findViewById(R.id.likeBtn);
+        final String duration = currentPlaying == null ? "" : MiscUtils.combinationFormatter(currentPlaying.getDuration());
+        final Uri albumArtUri = currentPlaying == null ? null : AlbumArtUri.getUri(currentPlaying.getAlbumName(),
+                currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true).orNull();
 
-        songNamePlaying = (TextView) findViewById(R.id.songNamePlaying);
-        artistName = (TextView) findViewById(R.id.artistName);
         playerPos = (TextView) findViewById(R.id.playerPos);
-        songDuration = (TextView) findViewById(R.id.songDuration);
 
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
-        LocalUtils.lastSong(songNamePlaying, artistName, songDuration,
-                pause_play, shuffleBtn,repeatBtn); //load last song details
+        ((Toolbar) findViewById(R.id.playerToolbar)).setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
+        (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.likeButtonClick);
+        (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
+        (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.pauseClick);
+        (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
+        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "" : currentPlaying.getArtistName());
+        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setImageURI(albumArtUri);
+        (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
-        if (pause_play != null)
-            pause_play.setOnClickListener(LocalUtils.pauseClick);
-        if (shuffleBtn != null)
-            shuffleBtn.setOnClickListener(LocalUtils.shuffleClick);
-        if (repeatBtn != null)
-            repeatBtn.setOnClickListener(LocalUtils.repeatClick);
-        if (rwdBtn != null)
-            rwdBtn.setOnClickListener(LocalUtils.previousClick);
-        if (fwdBtn != null)
-            fwdBtn.setOnClickListener(LocalUtils.nextClick);
-        if (likeBtn != null)
-            likeBtn.setOnClickListener(LocalUtils.likeButtonClick);
+        if (currentPlaying != null)
+            pause_play.setImageResource(R.drawable.play_white_selector);
 
-        if (seekBar != null)
-            seekBar.setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
+        findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
+        findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
 
+        final View shuffle = findViewById(R.id.shuffleBtn);
+        final View repeat = findViewById(R.id.repeatBtn);
+        shuffle.setOnClickListener(LocalUtils.shuffleClick);
+        repeat.setOnClickListener(LocalUtils.repeatClick);
+        shuffle.setSelected(SharedPrefUtils.getShuffle(this));
+        repeat.setSelected(SharedPrefUtils.getRepeat(this));
     }
 
     @Override
@@ -143,11 +139,12 @@ public class PlayerActivity extends AppCompatActivity {
 
     private synchronized void updateMusic(boolean paused) {
 
-        Log.d("Ashish", "updateMusic called");
+        Log.d("Ayush", "updateMusic called");
         if (currentPlaying == null)
             return;
 
         if (songNamePlaying != null) {
+
             songNamePlaying.setText(currentPlaying.getDisplayName());
             updatePrimaryProgress(currentPlaying.getPrimaryProgress(), currentPlaying.getCurrentPosition());
             updateSecondaryProgress(currentPlaying.getSecondaryProgress());
@@ -157,31 +154,31 @@ public class PlayerActivity extends AppCompatActivity {
             songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
         if (artistName != null)
             artistName.setText(currentPlaying.getArtistName());
-        if (likeBtn != null) {
+        if (likeButton != null) {
 
-            if (currentPlaying.getType() == 0) {
-                likeBtn.setVisibility(View.VISIBLE);
-                if (currentPlaying.isLiked())
-                    likeBtn.setImageResource(R.drawable.explore_download_btn);
-                else
-                    likeBtn.setImageResource(R.drawable.explore_download_btn);
-            } else
-                likeBtn.setVisibility(View.GONE);
+            if (currentPlaying.isLiked())
+                likeButton.setSelected(true);
+            else
+                likeButton.setSelected(false);
         }
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(currentPlaying.getAlbumName(),
-                    currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true);
+                currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true);
         if (albumArt != null && uriOptional != null) {
-            if (uriOptional.isPresent()) {
+            if (uriOptional.isPresent())
                 albumArt.setImageURI(uriOptional.get());
-            } else
-                albumArt.setImageBitmap(null);
+            else
+                albumArt.setImageURI(null);
         }
     }
 
-    private synchronized void updatePrimaryProgress(final int progress, final int position) {
-        if (playerPos != null)
+    private synchronized void updatePrimaryProgress(final int progress, final long position) {
+
+        if (playerPos != null) {
+
+            Log.i("Ayush", "Player got position " + position + " " + MiscUtils.combinationFormatter(position));
             playerPos.setText(MiscUtils.combinationFormatter(position));
+        }
         if (seekBar != null)
             seekBar.setProgress(progress);
     }
@@ -196,13 +193,6 @@ public class PlayerActivity extends AppCompatActivity {
             songDuration.setText(durationsongNamePlaying);
     }
 
-    public static String ACTION = "reach.project.player.PlayerActivity.ACTION";
-    public static String MUSIC_PARCEL = "reach.project.player.PlayerActivity.MUSIC_PARCEL";
-    public static String DURATION = "reach.project.player.PlayerActivity.DURATION";
-    public static String PRIMARY_PROGRESS = "reach.project.player.PlayerActivity.PRIMARY_PROGRESS";
-    public static String SECONDARY_PROGRESS = "reach.project.player.PlayerActivity.SECONDARY_PROGRESS";
-    public static String PLAYER_POSITION = "reach.project.player.PlayerActivity.PLAYER_POSITION";
-
     private final Handler handler = new Handler(msg -> {
 
         final Bundle bundle;
@@ -214,10 +204,7 @@ public class PlayerActivity extends AppCompatActivity {
             case ProcessManager.REPLY_LATEST_MUSIC: {
 
                 currentPlaying = bundle.getParcelable(MUSIC_PARCEL);
-                MiscUtils.useActivity(reference, activity -> {
-                    activity.updateMusic(false);
-                });
-
+                MiscUtils.useActivity(reference, activity -> activity.updateMusic(false));
                 break;
             }
 
@@ -258,9 +245,8 @@ public class PlayerActivity extends AppCompatActivity {
             case ProcessManager.REPLY_PRIMARY_PROGRESS: {
 
                 final short primaryProgress = bundle.getShort(PRIMARY_PROGRESS);
-                final int playerPosition = bundle.getShort(PLAYER_POSITION);
-                MiscUtils.useActivity(reference, activity ->
-                        activity.updatePrimaryProgress(primaryProgress, playerPosition));
+                final int playerPosition = bundle.getInt(PLAYER_POSITION);
+                MiscUtils.useActivity(reference, activity -> activity.updatePrimaryProgress(primaryProgress, playerPosition));
                 break;
             }
 
@@ -315,72 +301,85 @@ public class PlayerActivity extends AppCompatActivity {
                 Optional.absent(),
                 MusicHandler.ACTION_PREVIOUS);
 
-        public static final AdapterView.OnClickListener likeButtonClick = new View.OnClickListener() {
+        private static boolean toggleLiked(Context context) {
 
-            private boolean toggleLiked(Context context) {
+            if (currentPlaying == null)
+                return false;
 
-                if (currentPlaying == null)
-                    return false;
+            final ContentValues values = new ContentValues();
+            //CARE WE USE SQL TABLE ID HERE
+            if (currentPlaying.getType() == MusicData.DOWNLOADED) {
 
-                final ContentValues values = new ContentValues();
                 values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
-
                 return context.getContentResolver().update(
                         Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
                         values,
                         ReachDatabaseHelper.COLUMN_ID + " = ?",
                         new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
-            }
+            } else if (currentPlaying.getType() == MusicData.MY_LIBRARY) {
 
-            @Override
-            public void onClick(View view) {
+                values.put(MySongsHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
+                return context.getContentResolver().update(
+                        MySongsProvider.CONTENT_URI,
+                        values,
+                        MySongsHelper.COLUMN_SONG_ID + " = ?",
+                        new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
+            } else
+                throw new IllegalStateException("current playing has invalid type " + currentPlaying.getType());
+        }
 
-                if (currentPlaying == null || currentPlaying.getType() == 1)
-                    return;
+        public static final AdapterView.OnClickListener likeButtonClick = view -> {
 
-                final Context context = view.getContext();
+            if (currentPlaying == null)
+                return;
 
-                if (toggleLiked(context)) {
+            final Context context = view.getContext();
 
-                    //usage tracking
-                    final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
-                    simpleParams.put(PostParams.USER_ID, serverId + "");
-                    simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(context));
-                    simpleParams.put(PostParams.OS, MiscUtils.getOsName());
-                    simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
-                    try {
-                        simpleParams.put(PostParams.APP_VERSION,
-                                context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+            if (toggleLiked(context)) {
 
-                    final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
-                    complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
-                    complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
-                    complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
-                    complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
-                    complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
-
-                    try {
-                        UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
-                    } catch (JSONException ignored) {
-                    }
-
-                    MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.addLike(
-                            currentPlaying.getSenderId(),
-                            serverId,
-                            currentPlaying.getDisplayName()).execute(), Optional.absent());
-                    currentPlaying.setIsLiked(true);
-
-                    //((ImageView) view).setImageResource(R.drawable.like_pink);
-                } else {
-
-                    //((ImageView) view).setImageResource(R.drawable.like_white);
-                    currentPlaying.setIsLiked(false);
+                //usage tracking
+                final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+                simpleParams.put(PostParams.USER_ID, serverId + "");
+                simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(context));
+                simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+                simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+                try {
+                    simpleParams.put(PostParams.APP_VERSION,
+                            context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
                 }
+                simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+                complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
+                complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
+                complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
+                complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
+                complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
+
+                try {
+                    UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
+                } catch (JSONException ignored) {
+                }
+
+                MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.addLike(
+                        currentPlaying.getSenderId(),
+                        serverId,
+                        currentPlaying.getDisplayName()).execute(), Optional.absent());
+                currentPlaying.setIsLiked(true);
+
+                //((ImageView) view).setImageResource(R.drawable.like_pink);
+            } else {
+
+                //((ImageView) view).setImageResource(R.drawable.like_white);
+                currentPlaying.setIsLiked(false);
             }
+
+            if (currentPlaying.isLiked())
+                view.setSelected(true);
+            else
+                view.setSelected(false);
         };
 
         public static final View.OnClickListener pauseClick = v -> {
@@ -404,31 +403,5 @@ public class PlayerActivity extends AppCompatActivity {
             else
                 view.setSelected(false);
         };
-
-        private static void lastSong(TextView songNamePlaying,TextView artistName,
-                                     TextView songDuration, ImageView pause_play,
-                                     ImageView shuffleBtn, ImageView repeatBtn) {
-
-            final Boolean[] toSend = new Boolean[]{false, false, false};
-            final Context context = songNamePlaying.getContext();
-
-            currentPlaying = SharedPrefUtils.getLastPlayed(context).orNull();
-
-            toSend[0] = (currentPlaying != null);
-            toSend[1] = SharedPrefUtils.getShuffle(context);
-            toSend[2] = SharedPrefUtils.getRepeat(context);
-
-            if (toSend[0]) {
-                //last song is present
-                songNamePlaying.setText(currentPlaying.getDisplayName());
-                artistName.setText(currentPlaying.getArtistName());
-                songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
-                pause_play.setImageResource(R.drawable.play_white_selector);
-            }
-
-            //TODO
-            shuffleBtn.setSelected(toSend[1]);
-            repeatBtn.setSelected(toSend[2]);
-        }
     }
 }

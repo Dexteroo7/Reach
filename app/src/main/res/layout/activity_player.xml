@@ -43,7 +43,7 @@
         android:layout_alignParentRight="true"
         android:padding="10dp"
         android:background="@drawable/circular_background"
-        android:src="@drawable/icon_heart_dark_gray"
+        android:src="@drawable/like_selector"
         android:visibility="visible" />
     <TextView
         android:id="@+id/songNamePlaying"

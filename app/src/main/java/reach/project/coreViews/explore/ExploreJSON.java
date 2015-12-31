@@ -37,6 +37,7 @@ enum ExploreJSON implements EnumHelper<String> {
 
     //not allowed to call
     private ExploreJSON(String name) {
+
         this.name = name;
         this.metaInfo = null;
         this.viewInfo = null;

@@ -67,6 +67,7 @@ import reach.backend.MiscUtils;
 import reach.backend.ObjectWrappers.App;
 import reach.backend.ObjectWrappers.AppList;
 import reach.backend.ObjectWrappers.LongArray;
+import reach.backend.ObjectWrappers.LongList;
 import reach.backend.ObjectWrappers.MusicList;
 import reach.backend.ObjectWrappers.MyString;
 import reach.backend.ObjectWrappers.SimpleApp;
@@ -1440,63 +1441,29 @@ public class ReachUserEndpoint {
     }
 
     @ApiMethod(
-            name = "insert",
-            path = "user/insert",
-            httpMethod = ApiMethod.HttpMethod.POST)
-    public InsertContainer insert(ReachUser user) {
+            name = "getOnlineFriends",
+            path = "user/getOnlineFriends/{clientId}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public LongList getOnlineFriends(@Named("clientId") long clientId) {
 
-        final ReachUser oldUser = ofy().load().type(ReachUser.class)
-                .filter("phoneNumber in", Collections.singletonList(user.getPhoneNumber())).first().now();
+        if (clientId == 0)
+            throw new IllegalArgumentException("Invalid client id 0");
 
-        if (oldUser != null) {
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (client == null || client.getMyReach() == null || client.getMyReach().isEmpty())
+            return new LongList(); //no friends
 
-            /**
-             * We re-use same accounts on the basis of phone numbers,
-             * we don't re-use same accounts on the basis of device ID
-             */
-            user.setId(oldUser.getId());
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        final List<Long> onlineIds = new ArrayList<>();
 
-            user.setStatusSong(oldUser.getStatusSong());
-            user.setEmailId(oldUser.getEmailId());
-            user.setBirthday(oldUser.getBirthday());
+        for (long hostId : client.getMyReach())
+            if (MiscUtils.computeLastSeen(syncCache, hostId) < ReachUser.ONLINE_LIMIT)
+                onlineIds.add(hostId);
 
-            user.setPromoCode(oldUser.getPromoCode());
-            user.setChatToken(oldUser.getChatToken());
+        if (client.getMyReach().contains(Constants.devikaId) && !onlineIds.contains(Constants.devikaId))
+            onlineIds.add(Constants.devikaId);
 
-            user.setMegaBytesReceived(oldUser.getMegaBytesReceived());
-            user.setMegaBytesSent(oldUser.getMegaBytesSent());
-            user.setTimeCreated(oldUser.getTimeCreated());
-
-            user.setReceivedRequests(oldUser.getReceivedRequests());
-            user.setSentRequests(oldUser.getSentRequests());
-            user.setMyReach(oldUser.getMyReach());
-
-            ofy().delete().entity(oldUser).now();
-        } else
-            user.setTimeCreated(System.currentTimeMillis());
-
-        ofy().save().entity(user).now();
-        logger.info("Created ReachUser with ID: " + user.getUserName() + " " + new MessagingEndpoint().sendMessage("hello_world", user));
-
-        //generate devikaChat token
-        if (user.getChatToken() == null || user.getChatToken().equals("hello_world") || user.getChatToken().equals("")) {
-
-            final Map<String, Object> authPayload = new HashMap<>(2);
-            authPayload.put("uid", user.getId() + "");
-            authPayload.put("phoneNumber", user.getPhoneNumber());
-            authPayload.put("userName", user.getUserName());
-            authPayload.put("imageId", user.getImageId());
-
-            final TokenOptions tokenOptions = new TokenOptions();
-            final TokenGenerator tokenGenerator = new TokenGenerator(FIRE_BASE_SECRET);
-            final String token = tokenGenerator.createToken(authPayload, tokenOptions);
-            if (token != null && !token.equals("")) {
-                //save if token was generated
-                user.setChatToken(token);
-                ofy().save().entities(user).now();
-            }
-        }
-
-        return new InsertContainer(user.getId(), user.getChatToken());
+        return new LongList(onlineIds);
     }
 }

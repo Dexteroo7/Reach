@@ -248,7 +248,7 @@ public class ProcessManager extends Service implements
 
         final MusicId lastSong = musicStack.pop();
         final Cursor cursor;
-        if (lastSong.type == 0)
+        if (lastSong.type == MusicData.DOWNLOADED)
             cursor = getContentResolver().query(
                     Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + lastSong.id),
                     StaticData.DOWNLOADED_PARTIAL,
@@ -269,7 +269,7 @@ public class ProcessManager extends Service implements
     private Optional<MusicData> shuffleNext(long id, byte type) {
 
         final Cursor reachSongCursor, myLibraryCursor;
-        if (type == 0) {
+        if (type == MusicData.DOWNLOADED) {
             reachSongCursor = getContentResolver().query(
                     ReachDatabaseProvider.CONTENT_URI,
                     StaticData.DOWNLOADED_PARTIAL,
@@ -939,7 +939,7 @@ public class ProcessManager extends Service implements
 
         final MusicData musicData;
 
-        if (type == 0) {
+        if (type == MusicData.DOWNLOADED) {
 
             //if not multiple addition, play the song
             final boolean liked;
@@ -963,7 +963,7 @@ public class ProcessManager extends Service implements
         } else {
 
             musicData = new MusicData(
-                    cursor.getLong(1), //id
+                    cursor.getLong(1), //songId
                     cursor.getLong(2), //length
                     serverId, //senderId
                     cursor.getLong(2), //processed = length
@@ -972,7 +972,7 @@ public class ProcessManager extends Service implements
                     cursor.getString(4), //displayName
                     cursor.getString(0), //artistName
                     "",
-                    false, //liked
+                    cursor.getShort(6) == 1, //liked
                     cursor.getLong(6), //duration
                     (byte) 1); //type
         }
@@ -1131,9 +1131,9 @@ public class ProcessManager extends Service implements
     @Override
     public void updatePrimaryProgress(short percent, int position) {
 
-        bundle.putString(PlayerActivity.ACTION, REPLY_ERROR);
+        bundle.putString(PlayerActivity.ACTION, REPLY_PRIMARY_PROGRESS);
         bundle.putShort(PlayerActivity.PRIMARY_PROGRESS, percent);
-        bundle.putInt(PlayerActivity.PLAYER_POSITION, position);
+        bundle.putInt(PlayerActivity.PLAYER_POSITION, position * 1000); //convert to millisecond
         sendMessage(bundle);
     }
 

@@ -41,11 +41,11 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.onBoarding.smsRelated.SmsListener;
 import reach.project.onBoarding.smsRelated.Status;
-import reach.project.utils.ForceSyncFriends;
+import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.ancillaryClasses.UseContext2;
 
 public class CodeVerification extends Fragment {
@@ -350,12 +350,10 @@ public class CodeVerification extends Fragment {
         if (containerNew != null) {
 
             Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
-
-            ContactsListFragment.synchronizeOnce.set(true);
-            new ForceSyncFriends(
-                    containerNew.getServerId(), //myServerId
-                    phoneNumber, //myNumber
-                    reference).sync(); //ref to context
+            FireOnce.contactSync(
+                    MiscUtils.useContextFromFragment(reference, (UseContext<WeakReference<Context>, Context>) WeakReference::new).orNull(),
+                    containerNew.getServerId(),
+                    phoneNumber);
         }
 
         if (mListener != null)
