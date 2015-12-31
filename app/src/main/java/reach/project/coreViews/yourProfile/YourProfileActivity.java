@@ -146,7 +146,7 @@ public class YourProfileActivity extends AppCompatActivity {
         });
 
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(50)));
+        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
         viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {

@@ -162,9 +162,9 @@ public class PlayerActivity extends AppCompatActivity {
             if (currentPlaying.getType() == 0) {
                 likeBtn.setVisibility(View.VISIBLE);
                 if (currentPlaying.isLiked())
-                    likeBtn.setImageResource(R.drawable.explore_download_btn);
+                    likeBtn.setImageResource(R.drawable.icon_heart_pink);
                 else
-                    likeBtn.setImageResource(R.drawable.explore_download_btn);
+                    likeBtn.setImageResource(R.drawable.icon_heart_dark_gray);
             } else
                 likeBtn.setVisibility(View.GONE);
         }
@@ -374,10 +374,10 @@ public class PlayerActivity extends AppCompatActivity {
                             currentPlaying.getDisplayName()).execute(), Optional.absent());
                     currentPlaying.setIsLiked(true);
 
-                    //((ImageView) view).setImageResource(R.drawable.like_pink);
+                    ((ImageView) view).setImageResource(R.drawable.icon_heart_pink);
                 } else {
 
-                    //((ImageView) view).setImageResource(R.drawable.like_white);
+                    ((ImageView) view).setImageResource(R.drawable.icon_heart_dark_gray);
                     currentPlaying.setIsLiked(false);
                 }
             }

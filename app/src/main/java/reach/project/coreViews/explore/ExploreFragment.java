@@ -302,7 +302,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
-                MiscUtils.openApp(getContext(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                MiscUtils.openAppinPlayStore(getContext(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
                         .getAsString());
                 break;
 

@@ -99,7 +99,11 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         throw new IllegalArgumentException("App item holder passed on an illegal value type");
                 });
             case RECENT_LIST_TYPE:
-                return new MoreListHolder(parent);
+                return new MoreListHolder(parent,
+                        R.layout.list_with_more_button_padding, //Main resource id
+                        R.id.headerText, //id for header text
+                        R.id.listOfItems, //id for list (recycler view)
+                        R.id.moreButton); //id of more button
             case SMART_LIST_TYPE:
                 return new MoreListHolder(parent);
             default:

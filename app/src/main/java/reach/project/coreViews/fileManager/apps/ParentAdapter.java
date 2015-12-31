@@ -70,7 +70,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 return new AppItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.app_list_item, parent, false), position -> {
 
-                    position++; //adjust for recent
                     final Object object= getItem(position);
                     if (object instanceof App)
                         handOverApp.handOverMessage((App) object);
