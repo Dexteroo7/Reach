@@ -159,7 +159,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         if (response.code() != HttpStatusCodes.STATUS_CODE_OK)
             return Collections.emptyList();
 
-        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
+        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray()
+                ;
 
         final List<JsonObject> containers = new ArrayList<>();
         for (int index = 0; index < receivedData.size(); index++)
@@ -301,6 +302,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
+                MiscUtils.openAppinPlayStore(getContext(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                        .getAsString());
                 break;
 
             case MISC:

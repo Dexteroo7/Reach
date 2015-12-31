@@ -88,7 +88,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             final SmartSong smartSong = (SmartSong) message;
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
-            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow3);
+            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
             simpleListHolder.headerText.setText(smartSong.title);
             simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
             simpleListHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
@@ -111,8 +111,13 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                 });
             case RECENT_LIST_TYPE:
                 return new MoreListHolder(parent);
+
             case SMART_LIST_TYPE:
-                return new MoreListHolder(parent);
+                return new MoreListHolder(parent,
+                        R.layout.list_with_more_button_padding, //Main resource id
+                        R.id.headerText, //id for header text
+                        R.id.listOfItems, //id for list (recycler view)
+                        R.id.moreButton); //id of more button
             default:
                 throw new IllegalArgumentException("Unknown view type found");
         }

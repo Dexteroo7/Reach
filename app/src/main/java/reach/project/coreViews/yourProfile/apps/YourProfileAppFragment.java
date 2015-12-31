@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.google.common.base.Optional;
@@ -161,10 +160,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     public void handOverMessage(@NonNull App item) {
 
         //TODO
-        Toast.makeText(getContext(), item.applicationName, Toast.LENGTH_SHORT).show();
-        /**
-         * OPEN PLAY STORE HERE
-         */
+        MiscUtils.openAppinPlayStore(getContext(), item.packageName);
     }
 
     @Override

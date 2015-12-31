@@ -96,6 +96,7 @@ public class MyProfileFragment extends Fragment {
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
         final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
         final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
+        final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
         final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
         final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
 
@@ -111,7 +112,12 @@ public class MyProfileFragment extends Fragment {
         }
         musicCount.setText(songCount+"");
         userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-        profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)));
+
+        StaticData.TEMPORARY_FIX.execute(() -> appCount.setText(MiscUtils
+                .getInstalledApps(activity.getPackageManager()).size()+""));
+
+        profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
+                + SharedPrefUtils.getImageId(preferences)));
 
         ViewPager viewPager = materialViewPager.getViewPager();
         viewPager.setAdapter(new FragmentPagerAdapter(getChildFragmentManager()) {
@@ -163,7 +169,7 @@ public class MyProfileFragment extends Fragment {
         });
 
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(50)));
+        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {

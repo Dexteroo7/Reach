@@ -82,20 +82,20 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     private static final int[] UNSELECTED_ICONS = new int[]{
 
-            R.drawable.icon_friends_gray,
-            R.drawable.icon_send_gray,
-            R.drawable.icon_reach_magnet_gray,
-            R.drawable.icon_download_gray,
-            R.drawable.icon_myprofile_gray,
+            R.layout.tab_icon,
+            R.layout.tab_icon2,
+            R.layout.tab_icon3,
+            R.layout.tab_icon4,
+            R.layout.tab_icon5
     };
 
     private static final int[] SELECTED_ICONS = new int[]{
 
-            R.drawable.icon_friends_pink,
-            R.drawable.icon_send_pink,
-            R.drawable.icon_reach_magnet_pink,
-            R.drawable.icon_download_pink,
-            R.drawable.icon_myprofile_pink,
+            R.layout.tab_icon6,
+            R.layout.tab_icon7,
+            R.layout.tab_icon8,
+            R.layout.tab_icon9,
+            R.layout.tab_icon10
     };
 
     ////////////////////////////////////////
@@ -282,42 +282,43 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.setupWithViewPager(viewPager);
-        tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
+        for (int index = 1; index < tabLayout.getTabCount(); index++) {
+            final TabLayout.Tab tab = tabLayout.getTabAt(index);
+            if (tab != null) {
+                tab.setCustomView(UNSELECTED_ICONS[index]);
+            }
+        }
 
+        final int selectedTabPosition = tabLayout.getSelectedTabPosition();
+        final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
+        if (selectedTab != null) {
+            selectedTab.setCustomView(SELECTED_ICONS[selectedTabPosition]);
+        }
+
+        tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-
                 super.onTabSelected(tab);
-                tab.setIcon(SELECTED_ICONS[tab.getPosition()]);
+                tab.setCustomView(null);
+                tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
                 super.onTabUnselected(tab);
-                tab.setIcon(UNSELECTED_ICONS[tab.getPosition()]);
+                tab.setCustomView(null);
+                tab.setCustomView(UNSELECTED_ICONS[tab.getPosition()]);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
                 super.onTabReselected(tab);
-                tab.setIcon(SELECTED_ICONS[tab.getPosition()]);
+                tab.setCustomView(null);
+                tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
             }
         });
 
-        final int selectedTabPosition = tabLayout.getSelectedTabPosition();
-        final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
-        if (selectedTab != null)
-            selectedTab.setIcon(SELECTED_ICONS[selectedTabPosition]);
-
-        for (int index = 1; index < tabLayout.getTabCount(); index++) {
-
-            final TabLayout.Tab tab = tabLayout.getTabAt(index);
-            if (tab != null) {
-                tab.setIcon(UNSELECTED_ICONS[index]);
-            }
-        }
+        viewPager.setCurrentItem(2);
     }
 
     private synchronized void processIntent(Intent intent) {
@@ -329,7 +330,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         if (intent.getBooleanExtra("firstTime", false)) {
             if (viewPager != null)
-                viewPager.setCurrentItem(5, true);
+                viewPager.setCurrentItem(5, false);
         }
 
 //        if (intent.getBooleanExtra("openNotificationFragment", false))

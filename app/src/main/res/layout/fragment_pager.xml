@@ -20,12 +20,11 @@
             android:id="@+id/tabLayoutPager"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-
             app:layout_scrollFlags="scroll|enterAlways"
-            app:pstsIndicatorHeight="0dp"
             app:pstsPaddingMiddle="true"
+            app:pstsIndicatorColor="@color/reach_grey"
             app:pstsShouldExpand="true"
-            app:pstsTabTextAllCaps="false"
+            app:pstsTabTextAllCaps="true"
             app:pstsTabTextColor="@color/reach_grey" />
     </android.support.design.widget.AppBarLayout>
 

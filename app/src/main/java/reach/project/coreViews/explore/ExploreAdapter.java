@@ -20,56 +20,47 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.MusicViewInfo;
+import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
 
 /**
  * Created by dexter on 16/10/15.
  */
-class ExploreAdapter extends PagerAdapter {
+class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     private final Explore explore;
     private final HandOverMessage<Integer> handOverMessage;
-    private final View.OnClickListener onClickListener;
 
     public ExploreAdapter(Explore explore,
                           HandOverMessage<Integer> handOverId) {
-
         this.explore = explore;
         this.handOverMessage = handOverId;
-        this.onClickListener = view -> {
-
-            handOverMessage.handOverMessage((int) view.getTag());
-
-            final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
-            animator.setDuration(300);
-            animator.addUpdateListener(animation -> {
-                final int val = (int) animation.getAnimatedValue();
-                view.setPadding(val, val, val, val);
-            });
-            animator.setInterpolator(new AccelerateInterpolator());
-            animator.start();
-        };
     }
 
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
 
         final JsonObject exploreJSON = explore.getContainerForIndex(position);
+        Log.d("Ashish", exploreJSON.toString());
         final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
 
         final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);
         final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+        if (downButton != null) {
+            downButton.setOnClickListener(this);
+            downButton.setTag(position);
+        }
 
         final TextView title = (TextView) layout.findViewById(R.id.title);
         final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
         final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
         final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+        final TextView rating = (TextView) layout.findViewById(R.id.rating);
         final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
         final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
 
         switch (exploreTypes) {
 
             case MUSIC: {
-
 
                 final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                 final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
@@ -86,46 +77,48 @@ class ExploreAdapter extends PagerAdapter {
                     userHandle.setText(originalUserName);
                 typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
-                final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL, "").getAsString();
+                /*final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(imageId))
-                    image.setImageURI(Uri.parse(imageId));
+                    userImage.setImageURI(Uri.parse(imageId));*/
 
                 final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(albumArt))
-                    userImage.setImageURI(Uri.parse(albumArt));
+                    image.setImageURI(Uri.parse(albumArt));
 
-                downButton.setOnClickListener(onClickListener);
-                downButton.setTag(position);
                 layout.setTag(POSITION_UNCHANGED);
                 break;
             }
             case APP:
 
-//                final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
-//                final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
-//
-//                //take out view info from this object
-//                final JsonObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
-//
-//                title.setText(MiscUtils.get(appViewInfo, AppViewInfo.TITLE, "").getAsString());
-//                subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE, "").getAsString());
-//                final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME, "").getAsString();
-//                if (TextUtils.isEmpty(originalUserName))
-//                    userHandle.setText(userName);
-//                else
-//                    userHandle.setText(originalUserName);
-//                typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
-//
-//                final String imageId = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
-//                if (!TextUtils.isEmpty(imageId))
-//                    image.setImageURI(Uri.parse(imageId));
-//
-//                final String albumArt = MiscUtils.get(appViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
-//                if (!TextUtils.isEmpty(albumArt))
-//                    userImage.setImageURI(Uri.parse(albumArt));
-//
-////                container.getRating();
-//                layout.setTag(POSITION_UNCHANGED);
+                final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
+                final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
+
+                //take out view info from this object
+                final JsonObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
+
+                title.setText(MiscUtils.get(appViewInfo, AppViewInfo.TITLE).getAsString());
+                subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE, "").getAsString());
+                final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME, "").getAsString();
+                if (TextUtils.isEmpty(originalUserName))
+                    userHandle.setText(userName);
+                else
+                    userHandle.setText(originalUserName);
+                typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
+
+                final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
+                if (!TextUtils.isEmpty(appIcon))
+                    image.setImageURI(Uri.parse(appIcon));
+
+                final String appRating = MiscUtils.get(appViewInfo, AppViewInfo.RATING, "").getAsString();
+                if (!TextUtils.isEmpty(appRating))
+                    rating.setText(appRating + " Rating");
+
+                /*final String albumArt = MiscUtils.get(appViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                if (!TextUtils.isEmpty(albumArt))
+                    userImage.setImageURI(Uri.parse(albumArt));*/
+
+//                container.getRating();
+                layout.setTag(POSITION_UNCHANGED);
                 break;
             case LOADING:
                 layout.setTag(POSITION_NONE);
@@ -181,6 +174,21 @@ class ExploreAdapter extends PagerAdapter {
             Log.i("Ayush", "Fail of first order");
 
         return POSITION_UNCHANGED; //default, should not happen
+    }
+
+    @Override
+    public void onClick(View view) {
+        handOverMessage.handOverMessage((int) view.getTag());
+
+        ((ImageView) view).setImageResource(R.drawable.icon_downloading_active);
+        final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
+        animator.setDuration(300);
+        animator.addUpdateListener(animation -> {
+            final int val = (int) animation.getAnimatedValue();
+            view.setPadding(val, val, val, val);
+        });
+        animator.setInterpolator(new AccelerateInterpolator());
+        animator.start();
     }
 
     interface Explore {

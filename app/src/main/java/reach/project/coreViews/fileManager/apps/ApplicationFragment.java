@@ -14,7 +14,6 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.google.common.collect.Ordering;
 
@@ -59,7 +58,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     @Override
     public void handOverMessage(@Nonnull App message) {
-        Toast.makeText(getContext(), "Clicked on " + message.applicationName, Toast.LENGTH_SHORT).show();
+        MiscUtils.openApp(getContext(), message.packageName);
     }
 
     @Nullable

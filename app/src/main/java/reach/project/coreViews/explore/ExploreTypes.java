@@ -11,7 +11,7 @@ import reach.project.utils.EnumHelper;
 enum ExploreTypes implements EnumHelper<String> {
 
     MUSIC(R.layout.explore_music),
-    APP(android.R.layout.simple_list_item_1),
+    APP(R.layout.explore_app),
 
     MISC(R.layout.explore_music),
 

@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/border_shadow1"
-    android:padding="20dp">
+    android:padding="15dp">
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        fresco:placeholderImage="@color/reach_color" />
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        fresco:placeholderImage="@drawable/default_music_icon" />
 
     <ImageView
         android:id="@+id/downButton"
@@ -25,6 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:layout_toLeftOf="@id/downButton"
         android:layout_toRightOf="@id/albumArt"
         android:ellipsize="marquee"
@@ -39,7 +40,7 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/songName"
         android:layout_below="@id/songName"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="10dp"
         android:layout_toLeftOf="@id/downButton"
         android:ellipsize="marquee"
         android:lines="1"

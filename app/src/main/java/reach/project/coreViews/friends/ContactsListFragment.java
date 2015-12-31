@@ -31,6 +31,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
@@ -42,6 +43,7 @@ import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
+import reach.project.coreViews.friends.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.notificationCentre.NotificationActivity;
@@ -149,6 +151,8 @@ public class ContactsListFragment extends Fragment implements
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
         //gridView.setOnScrollListener(scrollListener);
 
+        final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
+        inviteContainer.setOnClickListener(LocalUtils.inviteListener);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
         final GridLayoutManager manager = new GridLayoutManager(activity, 2);
 
@@ -276,6 +280,11 @@ public class ContactsListFragment extends Fragment implements
 //                        new WeakReference<>(getActivity().getContentResolver()),
 //                        serverId);
         };
+
+        public static final View.OnClickListener inviteListener = v ->
+                MiscUtils.useContextFromFragment(reference, context -> {
+            context.startActivity(new Intent(context, InviteActivity.class));
+        });
 
         private static final Dialog.OnClickListener positiveButton = (dialog, which) -> {
 

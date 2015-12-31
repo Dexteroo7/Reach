@@ -154,6 +154,7 @@ public class PlayerActivity extends AppCompatActivity {
             songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
         if (artistName != null)
             artistName.setText(currentPlaying.getArtistName());
+
         if (likeButton != null) {
 
             if (currentPlaying.isLiked())
@@ -372,11 +373,7 @@ public class PlayerActivity extends AppCompatActivity {
                         serverId,
                         currentPlaying.getDisplayName()).execute(), Optional.absent());
                 currentPlaying.setIsLiked(true);
-
-                //((ImageView) view).setImageResource(R.drawable.like_pink);
             } else {
-
-                //((ImageView) view).setImageResource(R.drawable.like_white);
                 currentPlaying.setIsLiked(false);
             }
 

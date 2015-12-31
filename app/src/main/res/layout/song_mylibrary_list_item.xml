@@ -4,8 +4,6 @@
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:paddingRight="10dp"
     android:paddingLeft="10dp"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
     android:background="@drawable/border_shadow1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -21,11 +19,12 @@
             android:layout_height="wrap_content">
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/albumArt"
-                android:layout_marginLeft="15dp"
-                android:layout_marginTop="15dp"
-                android:layout_marginBottom="15dp"
-                android:layout_width="50dp"
-                android:layout_height="50dp" />
+                fresco:placeholderImage="@drawable/default_music_icon"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp" />
             <TextView
                 android:id="@+id/toggleText"
                 android:text="Only Me"
@@ -57,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="15dp"
                 android:layout_toLeftOf="@id/extraButton"
                 android:layout_toRightOf="@id/albumArt"
                 android:ellipsize="marquee"
@@ -69,7 +68,7 @@
                 android:id="@+id/artistName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="10dp"
                 android:layout_below="@id/songName"
                 android:layout_alignLeft="@id/songName"
                 android:layout_toLeftOf="@id/toggleButton"

@@ -64,9 +64,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             Log.i("Ayush", "Found recent apps with size " + recentApp.appList.size() + " ");
             if (recentApp.appList.size() < 4)
-                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
             else
-                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_grid_item));
 
         } else if (message instanceof SmartApps && holder instanceof MoreListHolder) {
 
@@ -77,9 +77,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             Log.i("Ayush", "Found smart apps with size " + smartApp.appList.size() + " ");
             if (smartApp.appList.size() < 4)
-                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
             else
-                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_list_item));
+                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_grid_item));
         }
     }
 
@@ -99,7 +99,11 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         throw new IllegalArgumentException("App item holder passed on an illegal value type");
                 });
             case RECENT_LIST_TYPE:
-                return new MoreListHolder(parent);
+                return new MoreListHolder(parent,
+                        R.layout.list_with_more_button_padding, //Main resource id
+                        R.id.headerText, //id for header text
+                        R.id.listOfItems, //id for list (recycler view)
+                        R.id.moreButton); //id of more button
             case SMART_LIST_TYPE:
                 return new MoreListHolder(parent);
             default:

@@ -66,7 +66,8 @@ public class YourProfileActivity extends AppCompatActivity {
                         ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS,
                         ReachFriendsHelper.COLUMN_IMAGE_ID,
                         ReachFriendsHelper.COLUMN_NETWORK_TYPE,
-                        ReachFriendsHelper.COLUMN_STATUS},
+                        ReachFriendsHelper.COLUMN_STATUS,
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
         int numberOfSongs = 0;
@@ -76,16 +77,19 @@ public class YourProfileActivity extends AppCompatActivity {
             cursor.moveToFirst();
             final String uName = cursor.getString(1);
             numberOfSongs = cursor.getInt(2);
+            final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
 
             final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
             final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
+            final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
             final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
             final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
 
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
+            appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
 
@@ -142,7 +146,7 @@ public class YourProfileActivity extends AppCompatActivity {
         });
 
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(50)));
+        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
         viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {

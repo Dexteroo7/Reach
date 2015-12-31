@@ -1174,6 +1174,15 @@ public enum MiscUtils {
         return applications;
     }
 
+    public static void openAppinPlayStore(Context context, String packageName) {
+        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
+                + packageName)));
+    }
+
+    public static void openApp(Context context, String packageName) {
+        context.startActivity(context.getPackageManager().getLaunchIntentForPackage(packageName));
+    }
+
     private static class StartDownloadOperation implements Runnable {
 
         private final ReachDatabase reachDatabase;
