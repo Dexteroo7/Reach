@@ -2,6 +2,7 @@ package reach.project.onBoarding;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -48,7 +49,8 @@ import reach.project.utils.SharedPrefUtils;
  */
 public class SplashActivity extends AppCompatActivity implements SplashInterface {
 
-    private static WeakReference<SplashActivity> reference;
+    private static WeakReference<SplashActivity> activityWeakReference;
+    private static WeakReference<Context> contextWeakReference;
 
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
@@ -62,7 +64,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        reference = new WeakReference<>(this);
+        activityWeakReference = new WeakReference<>(this);
+        contextWeakReference = new WeakReference<>(getApplication());
     }
 
     @Override
@@ -200,9 +203,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         if (TextUtils.isEmpty(userName)) {
 
             if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
-                handler.postDelayed(welcomeSplash, 700L);
+                handler.postDelayed(WELCOME_SPLASH, 700L);
             else
-                handler.postDelayed(accountCreationSplash, 700L);
+                handler.postDelayed(ACCOUNT_CREATION_SPLASH, 700L);
         } else {
 
             //perform other ops
@@ -215,70 +218,18 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 //refresh gcm
                 checkGCMService.submit(() -> checkGCM(serverId));
                 //refresh download ops
-                FireOnce.refreshOperations(reference);
+                FireOnce.refreshOperations(contextWeakReference);
                 //Music scanner
-                MiscUtils.useContextFromContext(reference, activity -> {
-
-                    final Intent intent = new Intent(activity, MetaDataScanner.class);
-                    intent.putExtra("first", false);
-                    activity.startService(intent);
-                    return null;
-                });
+                final Intent intent = new Intent(this, MetaDataScanner.class);
+                intent.putExtra("first", false);
+                startService(intent);
 
             } else
                 Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();
 
-            handler.postDelayed(openAppSplash, 2000L);
+            handler.postDelayed(OPEN_APP_SPLASH, 2000L);
         }
     }
-
-    private final Runnable accountCreationSplash = new Runnable() {
-        @Override
-        public void run() {
-
-            MiscUtils.useActivity(reference, activity -> {
-
-                activity.getWindow().setBackgroundDrawableResource(R.color.white);
-                activity.setContentView(R.layout.activity_splash);
-
-                final FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.splashLayout,
-                        AccountCreation.newInstance(Optional.absent())).commit(); //ignore oldContainer
-            });
-        }
-    };
-
-    private final Runnable openAppSplash = new Runnable() {
-        @Override
-        public void run() {
-
-            MiscUtils.useActivity(reference, activity -> {
-
-                activity.getWindow().setBackgroundDrawableResource(R.color.white);
-                activity.setContentView(R.layout.activity_splash);
-
-                final Intent intent = new Intent(activity, ReachActivity.class);
-                activity.startActivity(intent);
-                activity.finish();
-            });
-        }
-    };
-
-    private final Runnable welcomeSplash = new Runnable() {
-        @Override
-        public void run() {
-
-            MiscUtils.useActivity(reference, activity -> {
-
-                activity.getWindow().setBackgroundDrawableResource(R.color.white);
-                activity.setContentView(R.layout.activity_splash);
-
-                final FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.splashLayout,
-                        WelcomeFragment.newInstance()).commit();
-            });
-        }
-    };
 
     /**
      * Check the device to make sure it has the Google Play Services APK. If
@@ -322,7 +273,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 gcmId.equals("hello_world")) { //bad gcm
 
             //network operation
-            if (MiscUtils.updateGCM(serverId, reference))
+            if (MiscUtils.updateGCM(serverId, contextWeakReference))
                 Log.i("Ayush", "GCM updated !");
             else
                 Log.i("Ayush", "GCM check failed");
@@ -358,7 +309,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
             Log.i("Ayush", "LATEST VERSION " + result);
 
-            MiscUtils.useContextFromContext(reference, activity -> {
+            MiscUtils.useContextFromContext(activityWeakReference, activity -> {
 
                 final int version;
                 try {
@@ -381,4 +332,34 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             });
         }
     }
+
+    private static final Runnable ACCOUNT_CREATION_SPLASH = () -> MiscUtils.useActivity(activityWeakReference, activity -> {
+
+        activity.getWindow().setBackgroundDrawableResource(R.color.white);
+        activity.setContentView(R.layout.activity_splash);
+
+        final FragmentManager fragmentManager = activity.getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.splashLayout,
+                AccountCreation.newInstance(Optional.absent())).commit(); //ignore oldContainer
+    });
+
+    private static final Runnable OPEN_APP_SPLASH = () -> MiscUtils.useActivity(activityWeakReference, activity -> {
+
+        activity.getWindow().setBackgroundDrawableResource(R.color.white);
+        activity.setContentView(R.layout.activity_splash);
+
+        final Intent intent = new Intent(activity, ReachActivity.class);
+        activity.startActivity(intent);
+        activity.finish();
+    });
+
+    private static final Runnable WELCOME_SPLASH = () -> MiscUtils.useActivity(activityWeakReference, activity -> {
+
+        activity.getWindow().setBackgroundDrawableResource(R.color.white);
+        activity.setContentView(R.layout.activity_splash);
+
+        final FragmentManager fragmentManager = activity.getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.splashLayout,
+                WelcomeFragment.newInstance()).commit();
+    });
 }

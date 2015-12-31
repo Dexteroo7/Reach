@@ -30,7 +30,7 @@ public final class PlayerSource implements Runnable, Closeable {
     private final Player.DecoderHandler handler;
     private final InputStream sourceStream;
     private final WritableByteChannel sinkChannel;
-    private final FileChannel source;
+    private final FileChannel sourceChannel;
     private final long contentLength;
 
     public PlayerSource(Player.DecoderHandler handler,
@@ -41,7 +41,7 @@ public final class PlayerSource implements Runnable, Closeable {
 
         this.handler = handler;
         this.contentLength = contentLength;
-        this.source = new FileInputStream(path).getChannel();
+        this.sourceChannel = new FileInputStream(path).getChannel();
         this.sourceStream = new PipedInputStream(pipedOutputStream, StaticData.PLAYER_BUFFER_DEFAULT);
         this.sinkChannel = Channels.newChannel(pipedOutputStream);
     }
@@ -49,7 +49,7 @@ public final class PlayerSource implements Runnable, Closeable {
     @Override
     public void close() {
         kill.set(true);
-        MiscUtils.closeQuietly(sinkChannel, sourceStream, source);
+        MiscUtils.closeQuietly(sinkChannel, sourceStream, sourceChannel);
     }
 
     @Override
@@ -58,13 +58,13 @@ public final class PlayerSource implements Runnable, Closeable {
         kill.set(false);
 
         short lastSecondaryProgress = 0;
-        long transferred = 0, count;
+        long transferred = 0, downloaded;
 
-        while (!kill.get() && (count = handler.getProcessed()) > 0 && sinkChannel.isOpen()) {
+        while (!kill.get() && (downloaded = handler.getProcessed()) > 0 && sinkChannel.isOpen()) {
 
             if (transferred >= contentLength)
                 break;
-            if (transferred >= count)
+            if (transferred >= downloaded)
                 try {
                     Thread.sleep(StaticData.LUCKY_DELAY);
                 } catch (InterruptedException e) {
@@ -73,21 +73,31 @@ public final class PlayerSource implements Runnable, Closeable {
                 }
 
             else {
+
+                //estimate secondary progress
+                final short estimatedProgress = (short) ((downloaded * 100) / contentLength);
+                if (estimatedProgress > lastSecondaryProgress)
+                    handler.updateSecondaryProgress(estimatedProgress);
+                Log.i("Downloader", "Estimated transfer " + estimatedProgress);
+
+                //perform transfer
                 try {
-                    transferred += source.transferTo(transferred, count - transferred, sinkChannel);
+                    transferred += sourceChannel.transferTo(transferred, downloaded - transferred, sinkChannel);
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;
                 }
-                final short progress = (short) ((transferred * 100) / contentLength);
-                if (progress > lastSecondaryProgress)
-                    handler.updateSecondaryProgress(progress);
-                lastSecondaryProgress = progress;
-                Log.i("Downloader", "Transferred " + progress);
+
+                //actual progress
+                final short actualProgress = (short) ((transferred * 100) / contentLength);
+                if (actualProgress > lastSecondaryProgress)
+                    handler.updateSecondaryProgress(actualProgress);
+                lastSecondaryProgress = actualProgress;
+                Log.i("Downloader", "Transferred " + actualProgress);
             }
         }
 
-        MiscUtils.closeQuietly(sinkChannel, sourceStream, source);
+        MiscUtils.closeQuietly(sinkChannel, sourceStream, sourceChannel);
         /////////////////////////
     }
 }

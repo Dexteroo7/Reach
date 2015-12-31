@@ -1123,6 +1123,7 @@ public class ProcessManager extends Service implements
     @Override
     public void updateSecondaryProgress(short percent) {
 
+        Log.i("Ayush", "Sending secondary progress " + percent);
         bundle.putString(PlayerActivity.ACTION, REPLY_SECONDARY_PROGRESS);
         bundle.putShort(PlayerActivity.SECONDARY_PROGRESS, percent);
         sendMessage(bundle);

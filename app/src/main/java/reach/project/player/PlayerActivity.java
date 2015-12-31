@@ -147,7 +147,7 @@ public class PlayerActivity extends AppCompatActivity {
 
             songNamePlaying.setText(currentPlaying.getDisplayName());
             updatePrimaryProgress(currentPlaying.getPrimaryProgress(), currentPlaying.getCurrentPosition());
-            updateSecondaryProgress(currentPlaying.getSecondaryProgress());
+            updateSecondaryProgress((short) currentPlaying.getSecondaryProgress());
             togglePlayPause(paused);
         }
         if (songDuration != null)
@@ -176,21 +176,24 @@ public class PlayerActivity extends AppCompatActivity {
 
         if (playerPos != null) {
 
-            Log.i("Ayush", "Player got position " + position + " " + MiscUtils.combinationFormatter(position));
+//            Log.i("Ayush", "Player got position " + position + " " + MiscUtils.combinationFormatter(position));
             playerPos.setText(MiscUtils.combinationFormatter(position));
         }
         if (seekBar != null)
             seekBar.setProgress(progress);
     }
 
-    private synchronized void updateSecondaryProgress(final int progress) {
-        if (seekBar != null)
+    private synchronized void updateSecondaryProgress(final short progress) {
+        if (seekBar != null) {
+
+            Log.i("Ayush", "Setting secondary progress " + progress);
             seekBar.setSecondaryProgress(progress);
+        }
     }
 
-    private synchronized void updateDuration(final String durationsongNamePlaying) {
+    private synchronized void updateDuration(final String songNamePlaying) {
         if (songDuration != null)
-            songDuration.setText(durationsongNamePlaying);
+            songDuration.setText(songNamePlaying);
     }
 
     private final Handler handler = new Handler(msg -> {
@@ -226,7 +229,7 @@ public class PlayerActivity extends AppCompatActivity {
 
                     activity.togglePlayPause(false);
                     activity.updatePrimaryProgress(0, 0);
-                    activity.updateSecondaryProgress(0);
+                    activity.updateSecondaryProgress((short) 0);
                 });
                 break;
             }
@@ -253,6 +256,7 @@ public class PlayerActivity extends AppCompatActivity {
             case ProcessManager.REPLY_SECONDARY_PROGRESS: {
 
                 final short secondaryProgress = bundle.getShort(SECONDARY_PROGRESS);
+                Log.i("Ayush", "Porting secondary progress " + secondaryProgress);
                 MiscUtils.useActivity(reference, activity -> activity.updateSecondaryProgress(secondaryProgress));
                 break;
             }

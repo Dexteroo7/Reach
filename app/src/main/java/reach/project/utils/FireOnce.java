@@ -391,11 +391,11 @@ public enum FireOnce {
                 final ArrayList<ContentProviderOperation> operations = bulkStartDownloads(reachDatabaseList);
                 if (operations.size() > 0) {
 
-                    MiscUtils.useContextFromContext(reference, activity -> {
+                    MiscUtils.useContextFromContext(reference, context -> {
 
                         try {
                             Log.i("Downloader", "Starting Download op " + operations.size());
-                            activity.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+                            context.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
                         } catch (RemoteException | OperationApplicationException e) {
                             e.printStackTrace();
                         }
