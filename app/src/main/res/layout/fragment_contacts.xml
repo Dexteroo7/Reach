@@ -5,6 +5,8 @@
     android:layout_height="match_parent">
 
     <android.support.design.widget.AppBarLayout
+        android:background="#fff"
+        app:elevation="0dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -12,12 +14,41 @@
             android:id="@+id/myReachToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#fff"
             app:titleTextColor="@color/reach_color"
             android:minHeight="?attr/actionBarSize"
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+        <RelativeLayout
+            android:id="@+id/inviteContainer"
+            app:layout_scrollFlags="scroll|enterAlways"
+            android:background="#f5f5f5"
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+            <View
+                android:background="@drawable/shadow_top"
+                android:layout_width="match_parent"
+                android:layout_height="2dp" />
+            <TextView
+                android:text="Not able to find friends?"
+                android:layout_marginLeft="20dp"
+                android:textSize="15sp"
+                android:textColor="@color/reach_grey"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:text="Invite"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:clickable="false"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="20dp"
+                android:background="@color/reach_color"
+                android:layout_width="100dp"
+                android:layout_height="30dp" />
+        </RelativeLayout>
     </android.support.design.widget.AppBarLayout>
 
     <FrameLayout
@@ -35,8 +66,8 @@
         <View
             android:id="@+id/mainShadow"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
+            android:layout_height="1dp"
             android:layout_gravity="top"
-            android:background="@drawable/shadow_toolbar" />
+            android:background="@drawable/shadow_top" />
     </FrameLayout>
 </android.support.design.widget.CoordinatorLayout>

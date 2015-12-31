@@ -62,7 +62,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_push_songs, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
