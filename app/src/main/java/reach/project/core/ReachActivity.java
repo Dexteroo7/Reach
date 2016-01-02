@@ -2,6 +2,7 @@ package reach.project.core;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,10 +16,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.widget.Toast;
 
+import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
 import org.json.JSONException;
@@ -27,8 +31,10 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Set;
 
 import reach.project.R;
+import reach.project.apps.App;
 import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -39,9 +45,11 @@ import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
-import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.music.Song;
+import reach.project.notificationCentre.NotificationActivity;
 import reach.project.pacemaker.Pacemaker;
+import reach.project.player.PlayerActivity;
+import reach.project.push.PushActivity;
 import reach.project.push.PushContainer;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
@@ -63,6 +71,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     public static final String OPEN_MY_PROFILE_MUSIC = "OPEN_MY_PROFILE_MUSIC";
 
+    public static final Set<Song> selectedSongs = MiscUtils.getSet(5);
+    public static final Set<App> selectedApps = MiscUtils.getSet(5);
+    public static final LongSparseArray<Boolean> selectedSongIds = new LongSparseArray<>(5);
+
     ////////////////////////////////////////private static final
 
     private static final SecureRandom ID_GENERATOR = new SecureRandom();
@@ -78,6 +90,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             new PagerFragment.Pages(
                     new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
                     new String[]{"Downloading", "My Library"},
+                    "Songs"));
+
+    @SuppressWarnings("unchecked")
+    private static final PagerFragment PUSH_PAGER = PagerFragment.getNewInstance("Push",
+//            new PagerFragment.Pages(
+//                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
+//                    new String[]{"My Applications"},
+//                    "Apps"),
+            new PagerFragment.Pages(
+                    new Class[]{reach.project.coreViews.push.myLibrary.MyLibraryFragment.class},
+                    new String[]{"My Library"},
                     "Songs"));
 
     private static final int[] UNSELECTED_ICONS = new int[]{
@@ -109,15 +132,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 case 0:
                     return ContactsListFragment.newInstance();
                 case 1:
-                    return PagerFragment.getNewInstance("Push",
-                            new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
-                                    new String[]{"My Applications"},
-                                    "Apps"),
-                            new PagerFragment.Pages(
-                                    new Class[]{reach.project.coreViews.push.myLibrary.MyLibraryFragment.class},
-                                    new String[]{"My Library"},
-                                    "Songs"));
+                    return PUSH_PAGER;
                 case 2:
                     return ExploreFragment.newInstance(serverId);
                 case 3:
@@ -134,6 +149,51 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         public int getCount() {
             return 5;
         }
+    };
+
+    private final Toolbar.OnMenuItemClickListener menuClickListener = item -> {
+
+        switch (item.getItemId()) {
+
+            case R.id.push_button: {
+
+                if (selectedSongs.isEmpty() || selectedApps.isEmpty()) {
+                    Toast.makeText(ReachActivity.this, "First select some songs", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+
+                final SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                final PushContainer pushContainer = new PushContainer.Builder()
+                        .senderId(SharedPrefUtils.getServerId(preferences))
+                        .userName(SharedPrefUtils.getUserName(preferences))
+                        .userImage(SharedPrefUtils.getImageId(preferences))
+                        .firstSongName("")
+                        .firstAppName("")
+                        .song(ImmutableList.copyOf(selectedSongs))
+                        .app(ImmutableList.copyOf(selectedApps))
+                        .songCount(selectedSongs.size())
+                        .appCount(selectedApps.size())
+                        .build();
+
+                try {
+                    startActivity(PushActivity.getPushActivityIntent(pushContainer, ReachActivity.this));
+                } catch (IOException e) {
+
+                    e.printStackTrace();
+                    //TODO Track
+                    Toast.makeText(ReachActivity.this, "Could not push", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+            case R.id.player_button:
+                startActivity(new Intent(ReachActivity.this, PlayerActivity.class));
+                return true;
+            case R.id.notif_button:
+                startActivity(new Intent(ReachActivity.this, NotificationActivity.class));
+                return true;
+        }
+
+        return false;
     };
 
     public static long serverId = 0;
@@ -218,13 +278,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 //                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
 //            }
 //        }
-    }
-
-    @Override
-    public void onOpenLibrary(long userId) {
-
-        if (!isFinishing())
-            YourProfileActivity.openProfile(userId, this);
     }
 
     @Override
@@ -397,6 +450,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         intent.removeExtra("openPlayer");
         intent.removeExtra("openFriendRequests");
         intent.removeExtra("openNotifications");
+    }
+
+    @Override
+    public Toolbar.OnMenuItemClickListener getMenuClickListener() {
+        return menuClickListener;
     }
 
     @Override

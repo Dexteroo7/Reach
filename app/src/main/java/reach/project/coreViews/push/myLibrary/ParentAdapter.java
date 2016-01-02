@@ -23,6 +23,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
 import reach.project.music.Song;
@@ -127,6 +128,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
+        //TODO reduce cursor overhead
         final Object friend = getItem(position);
         if (friend instanceof Cursor) {
 
@@ -136,23 +138,31 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
+            final boolean selected;
+
             if (cursorExactType.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
 
                 displayName = cursorExactType.getString(5);
                 artist = cursorExactType.getString(6);
                 album = cursorExactType.getString(16);
                 actualName = cursorExactType.getString(17);
+                selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
+
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
                 displayName = cursorExactType.getString(3);
                 artist = cursorExactType.getString(4);
                 album = cursorExactType.getString(6);
                 actualName = cursorExactType.getString(9);
+                selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
+
             } else
                 throw new IllegalArgumentException("Unknown cursor type found");
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);
+
+
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
             if (uriOptional.isPresent()) {

@@ -17,6 +17,7 @@ import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
+import reach.project.core.ReachActivity;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -86,6 +87,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         holder.songName.setText(item.displayName);
         holder.artistName.setText(item.artist);
+
+        holder.checkBox.setSelected(ReachActivity.selectedSongs.contains(item));
+
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.album,
                 item.artist,

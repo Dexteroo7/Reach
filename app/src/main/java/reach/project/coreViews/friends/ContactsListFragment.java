@@ -2,7 +2,6 @@ package reach.project.coreViews.friends;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -259,17 +258,6 @@ public class ContactsListFragment extends Fragment implements
 
     private enum LocalUtils {
         ;
-
-        private static Optional<ContentResolver> getResolver() {
-
-            final Fragment fragment;
-            if (reference == null || (fragment = reference.get()) == null)
-                return Optional.absent();
-            final Activity activity = fragment.getActivity();
-            if (activity == null || activity.isFinishing())
-                return Optional.absent();
-            return Optional.fromNullable(activity.getContentResolver());
-        }
 
         public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
 

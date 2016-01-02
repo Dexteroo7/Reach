@@ -1,12 +1,11 @@
 package reach.project.utils.viewHelpers;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -14,26 +13,15 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
-import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 import reach.project.R;
-import reach.project.apps.App;
-import reach.project.music.Song;
-import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
-import reach.project.push.PushActivity;
-import reach.project.push.PushContainer;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -124,73 +112,31 @@ public class PagerFragment extends Fragment {
     }
 
     private ViewPager viewPager;
+    @Nullable
+    private SuperInterface mListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_pager, container, false);
-        viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         final PagerSlidingTabStrip tabLayout = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabLayoutPager);
 
 
         final Bundle arguments = getArguments();
-        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
         String title = arguments.getString("pageTitle");
         toolbar.setTitle(title);
         if (title != null) {
+
             if (title.equals("Push")) {
+
                 toolbar.inflateMenu(R.menu.menu_push);
-                toolbar.setOnMenuItemClickListener(item -> {
-                    switch (item.getItemId()) {
-                        case R.id.push_button:
-
-                            /*if (selectedSongs.isEmpty() || selectedApps.isEmpty())
-                                Toast.makeText(context, "First select some songs", Toast.LENGTH_SHORT).show();
-                            else {*/
-
-                                List <Song> selectedSongs = new ArrayList<>();
-                                List <App> selectedApps = new ArrayList<>();
-                                final PushContainer pushContainer = new PushContainer.Builder()
-                                        .senderId(SharedPrefUtils.getServerId(preferences))
-                                        .userName(SharedPrefUtils.getUserName(preferences))
-                                        .userImage(SharedPrefUtils.getImageId(preferences))
-                                        .firstSongName("")
-                                        .firstAppName("")
-                                        .song(ImmutableList.copyOf(selectedSongs))
-                                        .app(ImmutableList.copyOf(selectedApps))
-                                        .songCount(selectedSongs.size())
-                                        .appCount(selectedApps.size())
-                                        .build();
-
-                                try {
-                                    startActivity(PushActivity.getPushActivityIntent(pushContainer, getActivity()));
-                                } catch (IOException e) {
-
-                                    e.printStackTrace();
-                                    //TODO Track
-                                    Toast.makeText(getContext(), "Could not push", Toast.LENGTH_SHORT).show();
-                                }
-                            //}
-                            return true;
-                    }
-                    return false;
-                });
+                toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
             } else {
+
                 toolbar.inflateMenu(R.menu.pager_menu);
-                toolbar.setOnMenuItemClickListener(item -> {
-                    switch (item.getItemId()) {
-                        case R.id.player_button:
-                            startActivity(new Intent(getContext(), PlayerActivity.class));
-                            return true;
-                        case R.id.notif_button:
-                            startActivity(new Intent(getContext(), NotificationActivity.class));
-                            return true;
-                    }
-                    return false;
-                });
+                toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
             }
         }
 
@@ -220,6 +166,7 @@ public class PagerFragment extends Fragment {
             }
         }
 
+        viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         viewPager.setAdapter(new FragmentPagerAdapter(getChildFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
@@ -237,7 +184,6 @@ public class PagerFragment extends Fragment {
             }
         });
 
-        viewPager.setOffscreenPageLimit(1); //there is 1 page on either side
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
         viewPager.setPageTransformer(true, (view, position) -> {
 
@@ -260,4 +206,23 @@ public class PagerFragment extends Fragment {
         tabLayout.setViewPager(viewPager);
         return rootView;
     }
+
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
 }

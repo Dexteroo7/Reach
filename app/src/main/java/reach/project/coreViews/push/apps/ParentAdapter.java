@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.ReachActivity;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -99,6 +100,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             final PackageManager packageManager = appItemHolder.appName.getContext().getPackageManager();
 
             appItemHolder.bindPosition(position);
+            appItemHolder.checkBox.setSelected(ReachActivity.selectedApps.contains(appExactType));
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
                 appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));

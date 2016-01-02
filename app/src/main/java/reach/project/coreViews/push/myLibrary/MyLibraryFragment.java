@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -17,10 +18,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -28,6 +33,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -91,6 +97,27 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     public void handOverMessage(@Nonnull Object message) {
 
         if (message instanceof Cursor) {
+
+            final Cursor cursorExactType = (Cursor) message;
+            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+
+                displayName = cursorExactType.getString(5);
+                artist = cursorExactType.getString(6);
+                album = cursorExactType.getString(16);
+                actualName = cursorExactType.getString(17);
+                selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
+
+            } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+
+                displayName = cursorExactType.getString(3);
+                artist = cursorExactType.getString(4);
+                album = cursorExactType.getString(6);
+                actualName = cursorExactType.getString(9);
+                selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
+
+            } else
+                throw new IllegalArgumentException("Unknown cursor type found");
+
             //TODO toggle Recent Song visibility
         } else if (message instanceof Song) {
             //TODO toggle Song visibility
@@ -129,15 +156,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
 
             parentAdapter.setNewMyLibraryCursor(data);
-            /*if (count != parentAdapter.myLibraryCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentMyLibrary());*/
+            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
 
         } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
 
             parentAdapter.setNewDownLoadCursor(data);
-            /*if (count != parentAdapter.downloadedCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentDownloaded());*/
+            if (count != parentAdapter.downloadedCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
     }
@@ -151,7 +178,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             parentAdapter.setNewDownLoadCursor(null);
     }
 
-    /*@NonNull
+    @NonNull
     private List<Song> getRecentDownloaded() {
 
         final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
@@ -200,5 +227,5 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         cursor.close();
 
         return latestMyLibrary;
-    }*/
+    }
 }
