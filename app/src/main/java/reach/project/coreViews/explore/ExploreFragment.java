@@ -40,6 +40,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.ReachApplication;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
@@ -51,6 +52,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
+import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -191,6 +193,21 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
+        toolbar.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.player_button:
+                    startActivity(new Intent(getContext(), PlayerActivity.class));
+                    return true;
+                case R.id.notif_button:
+                    startActivity(new Intent(getContext(), NotificationActivity.class));
+                    return true;
+                case R.id.settings_button:
+                    startActivity(new Intent(getContext(), SettingsActivity.class));
+                    return true;
+                default:
+                    return false;
+            }
+        });
         final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
         final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
 
@@ -212,12 +229,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     else
                         item.setChecked(true);
                     return true;
-                case R.id.player_button:
-                    startActivity(new Intent(getContext(), PlayerActivity.class));
-                    return true;
-                case R.id.notif_button:
-                    startActivity(new Intent(getContext(), NotificationActivity.class));
-                    return true;
                 default:
                     return false;
             }
@@ -235,7 +246,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onDestroyView() {
 
         super.onDestroyView();
-        buffer.close();
         rootView = null;
     }
 
@@ -307,6 +317,18 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case MISC:
+                final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
+                final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
+                Class<?> mClass = null;
+                if(activityClass != null) {
+                    try {
+                        mClass = Class.forName(activityClass);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Intent intent = new Intent(getActivity(), mClass);
+                startActivity(intent);
                 break;
 
             case LOADING:

@@ -1500,9 +1500,8 @@ public enum MiscUtils {
         }
 
         if (snackView != null)
-            Snackbar.make(snackView, "\"Song added, click to view\"", Snackbar.LENGTH_LONG)
-                    .setAction("VIEW", v -> {
-
+            Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_LONG)
+                    .setAction("Open manager", v -> {
                         ReachActivity.openDownloading();
                     })
                     .show();
