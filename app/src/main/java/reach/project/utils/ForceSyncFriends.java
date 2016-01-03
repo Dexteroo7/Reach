@@ -2,7 +2,6 @@ package reach.project.utils;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.google.common.base.Optional;
@@ -21,23 +20,14 @@ import reach.project.coreViews.friends.ReachFriendsProvider;
 /**
  * Created by dexter on 19/07/15.
  */
-public final class ForceSyncFriends implements Runnable {
+final class ForceSyncFriends implements Runnable {
 
     private final WeakReference<Context> reference;
     private final long serverId;
     private final String myNumber;
 
-    public ForceSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
+    ForceSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
         this.reference = reference;
-        this.serverId = serverId;
-        this.myNumber = myNumber;
-    }
-
-    public ForceSyncFriends(long serverId, String myNumber, WeakReference<? extends Fragment> reference) {
-
-        this.reference = MiscUtils.useFragment(reference, fragment -> {
-            return new WeakReference<>(fragment.getContext());
-        }).orNull();
         this.serverId = serverId;
         this.myNumber = myNumber;
     }

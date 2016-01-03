@@ -64,6 +64,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                 final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                 final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
+                final String imageId = ExploreFragment.IMAGE_ID_SPARSE_ARRAY.get(userId);
 
                 //take out view info from this object
                 final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
@@ -76,10 +77,6 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                 else
                     userHandle.setText(originalUserName);
                 typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
-
-                /*final String imageId = MiscUtils.get(musicViewInfo, MusicViewInfo.SMALL_IMAGE_URL, "").getAsString();
-                if (!TextUtils.isEmpty(imageId))
-                    userImage.setImageURI(Uri.parse(imageId));*/
 
                 final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                 if (!TextUtils.isEmpty(albumArt))

@@ -29,9 +29,9 @@ import reach.project.coreViews.friends.ReachFriendsProvider;
 /**
  * Created by dexter on 19/07/15.
  */
-public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
+class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
 
-    public enum Status {
+    enum Status {
         DEAD,
         OK,
         FULL_SYNC
@@ -41,13 +41,7 @@ public class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
     private final long serverId;
     private final String myNumber;
 
-    public QuickSyncFriends(Context context, long serverId, String myNumber) {
-        this.reference = new WeakReference<>(context);
-        this.serverId = serverId;
-        this.myNumber = myNumber;
-    }
-
-    public QuickSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
+    QuickSyncFriends(WeakReference<Context> reference, long serverId, String myNumber) {
         this.reference = reference;
         this.serverId = serverId;
         this.myNumber = myNumber;

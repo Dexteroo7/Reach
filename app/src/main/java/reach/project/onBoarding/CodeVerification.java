@@ -45,7 +45,6 @@ import reach.project.onBoarding.smsRelated.SmsListener;
 import reach.project.onBoarding.smsRelated.Status;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.ancillaryClasses.UseContext2;
 
 public class CodeVerification extends Fragment {
@@ -351,7 +350,7 @@ public class CodeVerification extends Fragment {
 
             Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
             FireOnce.contactSync(
-                    MiscUtils.useContextFromFragment(reference, (UseContext<WeakReference<Context>, Context>) WeakReference::new).orNull(),
+                    new WeakReference<>(getActivity()),
                     containerNew.getServerId(),
                     phoneNumber);
         }

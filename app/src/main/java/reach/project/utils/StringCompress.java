@@ -17,29 +17,6 @@ import java.util.zip.InflaterInputStream;
 public enum StringCompress {
     ;
 
-//    public static byte[] compressString(String text) throws IOException {
-//
-//        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        final OutputStream out = new DeflaterOutputStream(baos);
-//        out.write(text.getBytes("UTF8"));
-//        out.close();
-//
-//        return baos.toByteArray();
-//    }
-//
-//    public static String decompressBytes(byte[] bytes) throws IOException {
-//
-//        final InputStream in = new InflaterInputStream(new ByteArrayInputStream(bytes));
-//        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        final byte[] buffer = new byte[8192];
-//        int len;
-//
-//        while ((len = in.read(buffer)) > 0)
-//            baos.write(buffer, 0, len);
-//
-//        return new String(baos.toByteArray(), "UTF8");
-//    }
-
     public static String compressBytesToString(byte[] unCompressed) throws IOException {
 
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

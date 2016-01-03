@@ -24,8 +24,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.core.StaticData;
-import reach.project.reachProcess.decoder.BitStream;
-import reach.project.reachProcess.decoder.BitStreamException;
+import reach.project.reachProcess.decoder.Bitstream;
+import reach.project.reachProcess.decoder.BitstreamException;
 import reach.project.reachProcess.decoder.Decoder;
 import reach.project.reachProcess.decoder.DecoderException;
 import reach.project.reachProcess.decoder.Header;
@@ -281,7 +281,7 @@ public class Player {
         //start thread
         pipeFuture = decoderService.submit(playerSource);
 
-        final BitStream bitStream = new BitStream(playerSource.getSource(), StaticData.PLAYER_BUFFER_DEFAULT);
+        final Bitstream bitStream = new Bitstream(playerSource.getSource(), StaticData.PLAYER_BUFFER_DEFAULT);
         final Header frameHeader;
 
         //do like this to prevent blocking
@@ -294,7 +294,7 @@ public class Player {
 
             try {
                 bitStream.close();
-            } catch (BitStreamException ignored) {
+            } catch (BitstreamException ignored) {
             }
 //            playerSource.close();
 //            pipeFuture.cancel(true);
@@ -343,13 +343,13 @@ public class Player {
     private final class Decode implements Runnable {
 
         private final short[] buffer;
-        private final BitStream bitStream;
+        private final Bitstream bitStream;
         private final boolean mono;
         private int limit = 0;
 
         private Header frameHeader;
 
-        public Decode(BitStream bitStream, Header frameHeader, boolean mono, int bufferSize) {
+        public Decode(Bitstream bitStream, Header frameHeader, boolean mono, int bufferSize) {
             this.bitStream = bitStream;
             this.frameHeader = frameHeader;
             this.mono = mono;
@@ -436,7 +436,7 @@ public class Player {
 
             try {
                 bitStream.close();
-            } catch (BitStreamException ignored) {
+            } catch (BitstreamException ignored) {
             } finally {
                 playerSource.close();
                 pipeFuture.cancel(true);

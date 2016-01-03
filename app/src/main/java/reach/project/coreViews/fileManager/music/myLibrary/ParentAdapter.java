@@ -136,7 +136,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
-            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
                 displayName = cursorExactType.getString(5);
                 artist = cursorExactType.getString(6);
@@ -234,7 +234,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             final Cursor cursor = (Cursor) item;
 
-            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+            if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
                 reUsable[0] = cursor.getString(5);
                 reUsable[1] = cursor.getString(6);

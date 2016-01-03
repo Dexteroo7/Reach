@@ -157,7 +157,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
             case R.id.push_button: {
 
-                if (selectedSongs.isEmpty() || selectedApps.isEmpty()) {
+                if (selectedSongs.isEmpty() && selectedApps.isEmpty()) {
                     Toast.makeText(ReachActivity.this, "First select some songs", Toast.LENGTH_SHORT).show();
                     return false;
                 }

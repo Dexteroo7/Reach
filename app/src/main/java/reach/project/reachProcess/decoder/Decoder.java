@@ -119,7 +119,7 @@ public class Decoder implements DecoderErrors {
      * @param stream The bistream that provides the bits for te body of the frame.
      * @return A SampleBuffer containing the decoded samples.
      */
-    public Obuffer decodeFrame(Header header, BitStream stream)
+    public Obuffer decodeFrame(Header header, Bitstream stream)
             throws DecoderException {
         if (!initialized) {
             initialize(header);
@@ -191,7 +191,7 @@ public class Decoder implements DecoderErrors {
         return new DecoderException(errorcode, throwable);
     }
 
-    protected FrameDecoder retrieveDecoder(Header header, BitStream stream, int layer)
+    protected FrameDecoder retrieveDecoder(Header header, Bitstream stream, int layer)
             throws DecoderException {
         FrameDecoder decoder = null;
 

@@ -52,7 +52,7 @@ import reach.project.core.StaticData;
  * various decoders. This should be moved into this class and associated
  * inner classes.
  */
-public final class BitStream implements BitstreamErrors {
+public final class Bitstream implements BitstreamErrors {
     /**
      * Synchronization control constant for the initial
      * synchronization to the start of a frame.
@@ -140,7 +140,7 @@ public final class BitStream implements BitstreamErrors {
      *
      * @param stream The Input stream to read from
      */
-    public BitStream(InputStream stream,
+    public Bitstream(InputStream stream,
                      int bufferSize) throws IOException {
 
         if (stream == null)
@@ -236,9 +236,9 @@ public final class BitStream implements BitstreamErrors {
     /**
      * Close the BitStream.
      *
-     * @throws BitStreamException
+     * @throws BitstreamException
      */
-    public void close() throws BitStreamException {
+    public void close() throws BitstreamException {
         try {
             source.close();
         } catch (IOException ex) {
@@ -252,7 +252,7 @@ public final class BitStream implements BitstreamErrors {
      * @return the Header describing details of the frame read,
      * or null if the end of the stream has been reached.
      */
-    public Header readFrame() throws BitStreamException {
+    public Header readFrame() throws BitstreamException {
         Header result = null;
         try {
             result = readNextFrame();
@@ -261,14 +261,14 @@ public final class BitStream implements BitstreamErrors {
                 result.parseVBR(frame_bytes);
                 firstframe = false;
             }
-        } catch (BitStreamException ex) {
+        } catch (BitstreamException ex) {
             if ((ex.getErrorCode() == INVALIDFRAME)) {
                 // Try to skip this frame.
                 //System.out.println("INVALIDFRAME");
                 try {
                     closeFrame();
                     result = readNextFrame();
-                } catch (BitStreamException e) {
+                } catch (BitstreamException e) {
                     if ((e.getErrorCode() != STREAM_EOF)) {
                         // wrap original exception so stack trace is maintained.
                         throw newBitstreamException(e.getErrorCode(), e);
@@ -286,9 +286,9 @@ public final class BitStream implements BitstreamErrors {
      * Read next MP3 frame.
      *
      * @return MP3 frame header.
-     * @throws BitStreamException
+     * @throws BitstreamException
      */
-    private Header readNextFrame() throws BitStreamException {
+    private Header readNextFrame() throws BitstreamException {
         if (framesize == -1) {
             nextFrame();
         }
@@ -299,9 +299,9 @@ public final class BitStream implements BitstreamErrors {
     /**
      * Read next MP3 frame.
      *
-     * @throws BitStreamException
+     * @throws BitstreamException
      */
-    private void nextFrame() throws BitStreamException {
+    private void nextFrame() throws BitstreamException {
         // entire frame is read by the header class.
         header.read_header(this, crc);
     }
@@ -309,10 +309,10 @@ public final class BitStream implements BitstreamErrors {
     /**
      * Unreads the bytes read from the frame.
      *
-     * @throws BitStreamException
+     * @throws BitstreamException
      */
     // REVIEW: add new error codes for this.
-    public void unreadFrame() throws BitStreamException {
+    public void unreadFrame() throws BitstreamException {
         if (wordpointer == -1 && bitindex == -1 && (framesize > 0)) {
             try {
                 source.unread(frame_bytes, 0, framesize);
@@ -335,7 +335,7 @@ public final class BitStream implements BitstreamErrors {
      * Determines if the next 4 bytes of the stream represent a
      * frame header.
      */
-    public boolean isSyncCurrentPosition(int syncmode) throws BitStreamException {
+    public boolean isSyncCurrentPosition(int syncmode) throws BitstreamException {
         int read = readBytes(syncbuf, 0, 4);
         int headerstring = ((syncbuf[0] << 24) & 0xFF000000) | ((syncbuf[1] << 16) & 0x00FF0000) | ((syncbuf[2] << 8) & 0x0000FF00) | ((syncbuf[3]) & 0x000000FF);
 
@@ -370,12 +370,12 @@ public final class BitStream implements BitstreamErrors {
         return get_bits(n);
     }
 
-    protected BitStreamException newBitstreamException(int errorcode) {
-        return new BitStreamException(errorcode, null);
+    protected BitstreamException newBitstreamException(int errorcode) {
+        return new BitstreamException(errorcode, null);
     }
 
-    protected BitStreamException newBitstreamException(int errorcode, Throwable throwable) {
-        return new BitStreamException(errorcode, throwable);
+    protected BitstreamException newBitstreamException(int errorcode, Throwable throwable) {
+        return new BitstreamException(errorcode, throwable);
     }
 
     /**
@@ -385,7 +385,7 @@ public final class BitStream implements BitstreamErrors {
      * The returned value is False at the end of stream.
      */
 
-    int syncHeader(byte syncmode) throws BitStreamException {
+    int syncHeader(byte syncmode) throws BitstreamException {
         boolean sync;
         int headerstring;
         // read additional 2 bytes
@@ -441,7 +441,7 @@ public final class BitStream implements BitstreamErrors {
      * Reads the data for the next frame. The frame is not parsed
      * until parse frame is called.
      */
-    int read_frame_data(int bytesize) throws BitStreamException {
+    int read_frame_data(int bytesize) throws BitstreamException {
         int numread;
         numread = readFully(frame_bytes, 0, bytesize);
         framesize = bytesize;
@@ -453,7 +453,7 @@ public final class BitStream implements BitstreamErrors {
     /**
      * Parses the data previously read with read_frame_data().
      */
-    void parse_frame() throws BitStreamException {
+    void parse_frame() throws BitstreamException {
         // Convert Bytes read to int
         int b = 0;
         byte[] byteread = frame_bytes;
@@ -542,11 +542,11 @@ public final class BitStream implements BitstreamErrors {
      * @param offs The index in the array where the first byte
      *             read should be stored.
      * @param len  the number of bytes to read.
-     * @throws BitStreamException is thrown if the specified
+     * @throws BitstreamException is thrown if the specified
      *                            number of bytes could not be read from the stream.
      */
     private int readFully(byte[] b, int offs, int len)
-            throws BitStreamException {
+            throws BitstreamException {
         int nRead = 0;
         try {
             while (len > 0) {
@@ -573,7 +573,7 @@ public final class BitStream implements BitstreamErrors {
      * EOF is reached.
      */
     private int readBytes(byte[] b, int offs, int len)
-            throws BitStreamException {
+            throws BitstreamException {
         int totalBytesRead = 0;
         try {
             while (len > 0) {

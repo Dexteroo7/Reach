@@ -37,15 +37,15 @@ package reach.project.reachProcess.decoder;
  * @since 0.0.6
  */
 
-public class BitStreamException extends JavaLayerException
+public class BitstreamException extends JavaLayerException
         implements BitstreamErrors {
     private int errorcode = UNKNOWN_ERROR;
 
-    public BitStreamException(String msg, Throwable t) {
+    public BitstreamException(String msg, Throwable t) {
         super(msg, t);
     }
 
-    public BitStreamException(int errorcode, Throwable t) {
+    public BitstreamException(int errorcode, Throwable t) {
         this(getErrorString(errorcode), t);
         this.errorcode = errorcode;
     }

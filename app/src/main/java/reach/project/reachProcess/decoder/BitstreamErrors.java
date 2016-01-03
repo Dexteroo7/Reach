@@ -26,7 +26,7 @@ package reach.project.reachProcess.decoder;
  * in <code>BistreamException</code>s.
  *
  * @author MDM        12/12/99
- * @see BitStreamException
+ * @see BitstreamException
  * @since 0.0.6
  */
 

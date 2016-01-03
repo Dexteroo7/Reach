@@ -3,6 +3,7 @@ package reach.project.coreViews.push.myLibrary;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -16,6 +17,7 @@ import com.google.common.collect.Ordering;
 import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import reach.project.core.ReachActivity;
 import reach.project.music.Song;
@@ -77,6 +79,24 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             adapterWeakReference.get().notifyDataSetChanged();
     }
 
+    public void toggleSelected(long songId) {
+
+        int position = 0;
+        for (Song song : getMessageList()) {
+
+            position++;
+            if (Objects.equals(song.songId, songId))
+                break;
+        }
+
+        if (position < getItemCount())
+            notifyItemChanged(position);
+
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyItemChanged(position);
+    }
+
     @Override
     public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         return new SongItemHolder(itemView, handOverMessage);
@@ -87,8 +107,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         holder.songName.setText(item.displayName);
         holder.artistName.setText(item.artist);
+        holder.checkBox.setSelected(ReachActivity.selectedSongIds.get(item.songId, false));
 
-        holder.checkBox.setSelected(ReachActivity.selectedSongs.contains(item));
+        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.selectedSongIds.get(item.songId, false));
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.album,

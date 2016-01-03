@@ -92,7 +92,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         if (id == StaticData.DOWNLOADING_LOADER)
             return new CursorLoader(getActivity(),
                     ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.ADAPTER_LIST,
+                    ReachDatabaseHelper.MUSIC_DATA_LIST,
                     ReachDatabaseHelper.COLUMN_STATUS + " != ? and " + //show only non finished
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "0"},

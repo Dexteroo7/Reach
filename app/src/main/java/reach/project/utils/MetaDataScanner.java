@@ -65,23 +65,24 @@ public class MetaDataScanner extends IntentService {
             MediaStore.Audio.Media.YEAR, //9
             MediaStore.Audio.Media.DATE_ADDED}; //10
 
+    private static final String[] reachDatabaseProjection = {
+            ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
+            ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, //1
+            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
+            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
+            ReachDatabaseHelper.COLUMN_ARTIST, //4
+            ReachDatabaseHelper.COLUMN_ALBUM, //5
+            ReachDatabaseHelper.COLUMN_DURATION,//6
+            ReachDatabaseHelper.COLUMN_SIZE, //7
+            ReachDatabaseHelper.COLUMN_GENRE, //8
+            ReachDatabaseHelper.COLUMN_PATH, //9
+            ReachDatabaseHelper.COLUMN_DATE_ADDED, //10
+            ReachDatabaseHelper.COLUMN_VISIBILITY //11
+    };
+
     private enum ScanMusic {
 
         ;
-        private static final String[] reachDatabaseProjection = {
-                ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
-                ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, //1
-                ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
-                ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
-                ReachDatabaseHelper.COLUMN_ARTIST, //4
-                ReachDatabaseHelper.COLUMN_ALBUM, //5
-                ReachDatabaseHelper.COLUMN_DURATION,//6
-                ReachDatabaseHelper.COLUMN_SIZE, //7
-                ReachDatabaseHelper.COLUMN_GENRE, //8
-                ReachDatabaseHelper.COLUMN_PATH, //9
-                ReachDatabaseHelper.COLUMN_DATE_ADDED, //10
-                ReachDatabaseHelper.COLUMN_VISIBILITY //11
-        };
 
         //genre collection holder
         private static final HashSet<String> genreHashSet = new HashSet<>(50);
