@@ -203,7 +203,7 @@
         -->
 
         <activity
-            android:name=".push.PushActivity"
+            android:name=".coreViews.push.PushActivity"
             android:label="@string/title_activity_push"
             android:parentActivityName=".core.ReachActivity"
             android:theme="@style/AppTheme">

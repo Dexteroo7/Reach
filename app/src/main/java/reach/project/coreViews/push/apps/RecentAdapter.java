@@ -11,6 +11,7 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 import reach.project.apps.App;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -73,6 +74,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         final PackageManager packageManager = holder.appName.getContext().getPackageManager();
 
         holder.appName.setText(item.applicationName);
+        holder.checkBox.setSelected(ReachActivity.selectedApps.contains(item));
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
         } catch (PackageManager.NameNotFoundException e) {

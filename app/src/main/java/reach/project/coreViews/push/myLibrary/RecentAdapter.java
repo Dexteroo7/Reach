@@ -3,6 +3,7 @@ package reach.project.coreViews.push.myLibrary;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -16,7 +17,9 @@ import com.google.common.collect.Ordering;
 import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
+import reach.project.core.ReachActivity;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -76,6 +79,24 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             adapterWeakReference.get().notifyDataSetChanged();
     }
 
+    public void toggleSelected(long songId) {
+
+        int position = 0;
+        for (Song song : getMessageList()) {
+
+            position++;
+            if (Objects.equals(song.songId, songId))
+                break;
+        }
+
+        if (position < getItemCount())
+            notifyItemChanged(position);
+
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyItemChanged(position);
+    }
+
     @Override
     public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         return new SongItemHolder(itemView, handOverMessage);
@@ -86,6 +107,12 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         holder.songName.setText(item.displayName);
         holder.artistName.setText(item.artist);
+        final boolean selected = ReachActivity.selectedSongIds.get(item.songId, false);
+        holder.mask.setVisibility(selected ? View.VISIBLE : View.GONE);
+        holder.checkBox.setChecked(selected);
+
+        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.selectedSongIds.get(item.songId, false));
+
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.album,
                 item.artist,

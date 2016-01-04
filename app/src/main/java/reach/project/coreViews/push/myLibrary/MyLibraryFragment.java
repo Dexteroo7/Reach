@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -17,10 +18,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -90,12 +95,34 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void handOverMessage(@Nonnull Object message) {
 
-        if (message instanceof Cursor) {
-            //TODO toggle Recent Song visibility
-        } else if (message instanceof Song) {
-            //TODO toggle Song visibility
-        } else
+        final Song song;
+
+        if (message instanceof Cursor)
+            song = MySongsHelper.getSong((Cursor) message);
+        else if (message instanceof Song)
+            song = (Song) message;
+        else
             throw new IllegalArgumentException("Unknown type handed over");
+
+        if (ReachActivity.selectedSongIds.get(song.songId, false)) {
+
+            ReachActivity.selectedSongs.remove(song);
+            ReachActivity.selectedSongIds.remove(song.songId);
+            Log.i("Ayush", "Removing " + song.displayName);
+        } else {
+
+            ReachActivity.selectedSongs.add(song);
+            ReachActivity.selectedSongIds.append(song.songId, true);
+            Log.i("Ayush", "Adding " + song.displayName);
+        }
+
+        if (message instanceof Cursor) {
+            parentAdapter.notifyItemChanged(((Cursor) message).getPosition());
+            parentAdapter.toggleSelected(((Cursor) message).getLong(0)); //songId
+        } else {
+            parentAdapter.notifyDataSetChanged();
+            parentAdapter.toggleSelected(((Song) message).songId);
+        }
     }
 
     @Override
@@ -104,15 +131,17 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (id == StaticData.MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
                     MySongsProvider.CONTENT_URI,
-                    MySongsHelper.DISK_LIST,
-                    null, null, null); //show all songs !
+                    MySongsHelper.SONG_LIST,
+                    MySongsHelper.COLUMN_VISIBILITY + " = ?",
+                    new String[]{"1"}, null); //show all songs !
         else if (id == StaticData.DOWNLOAD_LOADER)
             return new CursorLoader(getActivity(),
                     ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.ADAPTER_LIST,
+                    ReachDatabaseHelper.SONG_LIST,
                     ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                            ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"}, null);
+                    new String[]{ReachDatabase.FINISHED + "", "1", "0"}, null);
 
         return null;
     }
@@ -127,17 +156,16 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
-
             parentAdapter.setNewMyLibraryCursor(data);
-            /*if (count != parentAdapter.myLibraryCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentMyLibrary());*/
+            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
 
         } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
 
             parentAdapter.setNewDownLoadCursor(data);
-            /*if (count != parentAdapter.downloadedCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentDownloaded());*/
+            if (count != parentAdapter.downloadedCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
     }
@@ -151,14 +179,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             parentAdapter.setNewDownLoadCursor(null);
     }
 
-    /*@NonNull
+    @NonNull
     private List<Song> getRecentDownloaded() {
 
         final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.ADAPTER_LIST,
+                ReachDatabaseHelper.SONG_LIST,
                 ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                        ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                new String[]{ReachDatabase.FINISHED + "", "0"},
+                new String[]{ReachDatabase.FINISHED + "", "1", "0"},
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
                         ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
 
@@ -168,7 +197,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final List<Song> latestDownloaded = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
 
-            final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
+            final Song musicData = ReachDatabaseHelper.getSong(cursor);
             latestDownloaded.add(musicData);
         }
 
@@ -181,9 +210,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     private List<Song> getRecentMyLibrary() {
 
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
-                MySongsHelper.DISK_LIST,
-                MySongsHelper.COLUMN_USER_ID + " = ?"
-                , new String[]{userId + ""},
+                MySongsHelper.SONG_LIST,
+                MySongsHelper.COLUMN_VISIBILITY + " = ?"
+                , new String[]{"1"},
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
                         MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20");
 
@@ -193,12 +222,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
 
-            final Song musicData = MySongsHelper.getMusicData(cursor, userId);
+            final Song musicData = MySongsHelper.getSong(cursor);
             latestMyLibrary.add(musicData);
         }
 
         cursor.close();
 
         return latestMyLibrary;
-    }*/
+    }
 }

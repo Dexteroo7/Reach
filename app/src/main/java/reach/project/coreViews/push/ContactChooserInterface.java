@@ -1,4 +1,4 @@
-package reach.project.push;
+package reach.project.coreViews.push;
 
 /**
  * Created by dexter on 22/12/15.

@@ -103,7 +103,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
                 final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
                 MiscUtils.playSong(musicData, getContext());
-            } else if (count == ReachDatabaseHelper.ADAPTER_LIST.length) {
+            } else if (count == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
                 final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
                 MiscUtils.playSong(musicData, getContext());
@@ -127,7 +127,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         else if (id == StaticData.DOWNLOAD_LOADER)
             return new CursorLoader(getActivity(),
                     ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.ADAPTER_LIST,
+                    ReachDatabaseHelper.MUSIC_DATA_LIST,
                     ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "0"}, null);
@@ -173,7 +173,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     private List<MusicData> getRecentDownloaded() {
 
         final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.ADAPTER_LIST,
+                ReachDatabaseHelper.MUSIC_DATA_LIST,
                 ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "0"},

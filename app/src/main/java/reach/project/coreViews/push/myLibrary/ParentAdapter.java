@@ -5,7 +5,9 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -23,8 +25,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.music.MySongsHelper;
+import reach.project.core.ReachActivity;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -88,6 +89,10 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         recentAdapter.updateRecent(newRecent);
     }
 
+    public void toggleSelected(long songId) {
+        recentAdapter.toggleSelected(songId);
+    }
+
     @Override
     public void close() {
 
@@ -127,6 +132,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
+        //TODO reduce cursor overhead
         final Object friend = getItem(position);
         if (friend instanceof Cursor) {
 
@@ -136,23 +142,21 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
-            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+            final boolean selected;
 
-                displayName = cursorExactType.getString(5);
-                artist = cursorExactType.getString(6);
-                album = cursorExactType.getString(16);
-                actualName = cursorExactType.getString(17);
-            } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+            displayName = cursorExactType.getString(1);
+            artist = cursorExactType.getString(4);
+            album = cursorExactType.getString(3);
+            actualName = cursorExactType.getString(2);
+            selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
 
-                displayName = cursorExactType.getString(3);
-                artist = cursorExactType.getString(4);
-                album = cursorExactType.getString(6);
-                actualName = cursorExactType.getString(9);
-            } else
-                throw new IllegalArgumentException("Unknown cursor type found");
+            Log.i("Ayush", "Selected state " + displayName + " " + selected);
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);
+            songItemHolder.checkBox.setChecked(selected);
+            songItemHolder.mask.setVisibility(selected ? View.VISIBLE : View.GONE);
+
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
             if (uriOptional.isPresent()) {
@@ -225,7 +229,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             return VIEW_TYPE_RECENT;
     }
 
-    final Object [] reUsable = new Object[4];
+    final Object[] reUsable = new Object[4];
+
     @Override
     public long getItemId(int position) {
 
@@ -234,20 +239,12 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             final Cursor cursor = (Cursor) item;
 
-            if (cursor.getColumnCount() == ReachDatabaseHelper.ADAPTER_LIST.length) {
+            final long songId = cursor.getLong(0);
 
-                reUsable[0] = cursor.getString(5);
-                reUsable[1] = cursor.getString(6);
-                reUsable[2] = cursor.getString(16);
-                reUsable[3] = cursor.getString(17);
-            } else if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-
-                reUsable[0] = cursor.getString(3);
-                reUsable[1] = cursor.getString(4);
-                reUsable[2] = cursor.getString(6);
-                reUsable[3] = cursor.getString(9);
-            } else
-                throw new IllegalArgumentException("Unknown cursor type found");
+            reUsable[0] = songId;
+            reUsable[1] = ReachActivity.selectedSongIds.get(songId, false);
+            reUsable[2] = cursor.getShort(7); //visibility
+            reUsable[3] = cursor.getString(1); //displayName
 
             return Arrays.hashCode(reUsable);
         } else

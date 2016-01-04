@@ -74,7 +74,7 @@ public final class Header {
     private int h_vbr_bytes;
     private byte[] h_vbr_toc;
 
-    private byte syncmode = BitStream.INITIAL_SYNC;
+    private byte syncmode = Bitstream.INITIAL_SYNC;
     private Crc16 crc;
 
     public short checksum;
@@ -109,22 +109,22 @@ public final class Header {
     /**
      * Read a 32-bit header from the bitstream.
      */
-    void read_header(BitStream stream, Crc16[] crcp) throws BitStreamException {
+    void read_header(Bitstream stream, Crc16[] crcp) throws BitstreamException {
         int headerstring;
         int channel_bitrate;
         boolean sync = false;
         do {
             headerstring = stream.syncHeader(syncmode);
             _headerstring = headerstring; // E.B
-            if (syncmode == BitStream.INITIAL_SYNC) {
+            if (syncmode == Bitstream.INITIAL_SYNC) {
                 h_version = ((headerstring >>> 19) & 1);
                 if (((headerstring >>> 20) & 1) == 0) // SZD: MPEG2.5 detection
                     if (h_version == MPEG2_LSF)
                         h_version = MPEG25_LSF;
                     else
-                        throw stream.newBitstreamException(BitStream.UNKNOWN_ERROR);
+                        throw stream.newBitstreamException(Bitstream.UNKNOWN_ERROR);
                 if ((h_sample_frequency = ((headerstring >>> 10) & 3)) == 3) {
-                    throw stream.newBitstreamException(BitStream.UNKNOWN_ERROR);
+                    throw stream.newBitstreamException(Bitstream.UNKNOWN_ERROR);
                 }
             }
             h_layer = 4 - (headerstring >>> 17) & 3;
@@ -171,11 +171,11 @@ public final class Header {
             if ((framesize >= 0) && (framesizeloaded != framesize)) {
                 // Data loaded does not match to expected framesize,
                 // it might be an ID3v1 TAG. (Fix 11/17/04).
-                throw stream.newBitstreamException(BitStream.INVALIDFRAME);
+                throw stream.newBitstreamException(Bitstream.INVALIDFRAME);
             }
             if (stream.isSyncCurrentPosition(syncmode)) {
-                if (syncmode == BitStream.INITIAL_SYNC) {
-                    syncmode = BitStream.STRICT_SYNC;
+                if (syncmode == Bitstream.INITIAL_SYNC) {
+                    syncmode = Bitstream.STRICT_SYNC;
                     stream.set_syncword(headerstring & 0xFFF80CC0);
                 }
                 sync = true;
@@ -223,7 +223,7 @@ public final class Header {
      * @param firstframe
      * @author E.B (javalayer@javazoom.net)
      */
-    void parseVBR(byte[] firstframe) throws BitStreamException {
+    void parseVBR(byte[] firstframe) throws BitstreamException {
         // Trying Xing header.
         String xing = "Xing";
         byte tmp[] = new byte[4];
@@ -277,7 +277,7 @@ public final class Header {
                 //System.out.println("VBR:"+xing+" Frames:"+ h_vbr_frames +" Size:"+h_vbr_bytes);
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            throw new BitStreamException("XingVBRHeader Corrupted", e);
+            throw new BitstreamException("XingVBRHeader Corrupted", e);
         }
 
         // Trying VBRI header.
@@ -306,7 +306,7 @@ public final class Header {
                 // TODO
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            throw new BitStreamException("VBRIVBRHeader Corrupted", e);
+            throw new BitstreamException("VBRIVBRHeader Corrupted", e);
         }
     }
 

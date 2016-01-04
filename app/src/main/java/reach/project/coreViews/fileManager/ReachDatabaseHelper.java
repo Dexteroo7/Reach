@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import reach.project.music.AlbumArtData;
+import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
 /**
@@ -201,30 +203,48 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         return values;
     }
 
-    public static final String[] ADAPTER_LIST = new String[]{ //count = 14
+    public static final String[] MUSIC_DATA_LIST = new String[]{ //count = 14
 
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_SIZE, //1
-            ReachDatabaseHelper.COLUMN_SENDER_ID, //2
-            ReachDatabaseHelper.COLUMN_PROCESSED, //3
-            ReachDatabaseHelper.COLUMN_PATH, //4
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
-            ReachDatabaseHelper.COLUMN_ARTIST, //6
-            ReachDatabaseHelper.COLUMN_IS_LIKED, //7
-            ReachDatabaseHelper.COLUMN_DURATION, //8
+            COLUMN_ID, //0
+            COLUMN_SIZE, //1
+            COLUMN_SENDER_ID, //2
+            COLUMN_PROCESSED, //3
+            COLUMN_PATH, //4
+            COLUMN_DISPLAY_NAME, //5
+            COLUMN_ARTIST, //6
+            COLUMN_IS_LIKED, //7
+            COLUMN_DURATION, //8
 
             ///////////////
 
-            ReachDatabaseHelper.COLUMN_STATUS, //9
-            ReachDatabaseHelper.COLUMN_OPERATION_KIND, //10
-            ReachDatabaseHelper.COLUMN_SENDER_NAME, //11
-            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //12
-            ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, //13
-            ReachDatabaseHelper.COLUMN_SONG_ID, //14
-            ReachDatabaseHelper.COLUMN_ALBUM, //15
-            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //16
-            ReachDatabaseHelper.COLUMN_DATE_ADDED, //17
-            ReachDatabaseHelper.COLUMN_VISIBILITY //18
+            COLUMN_STATUS, //9
+            COLUMN_OPERATION_KIND, //10
+            COLUMN_SENDER_NAME, //11
+            COLUMN_RECEIVER_ID, //12
+            COLUMN_LOGICAL_CLOCK, //13
+            COLUMN_SONG_ID, //14
+            COLUMN_ALBUM, //15
+            COLUMN_ACTUAL_NAME, //16
+            COLUMN_DATE_ADDED, //17
+            COLUMN_VISIBILITY //18
+    };
+
+    public static final String[] SONG_LIST = new String[]{
+
+            COLUMN_UNIQUE_ID, //0
+
+            COLUMN_DISPLAY_NAME, //1
+            COLUMN_ACTUAL_NAME, //2
+            COLUMN_ALBUM, //3
+            COLUMN_ARTIST, //4
+
+            COLUMN_SIZE, //5
+            COLUMN_DURATION, //6
+            COLUMN_VISIBILITY, //7
+            COLUMN_PATH, //8
+            COLUMN_DATE_ADDED, //9
+            COLUMN_GENRE, //10
+            COLUMN_IS_LIKED, //11
     };
 
     public static MusicData getMusicData(final Cursor cursor) {
@@ -244,6 +264,31 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                 !TextUtils.isEmpty(temp) && temp.equals("1"), //liked
                 cursor.getLong(8), //duration
                 (byte) 0); //type
+    }
+
+    public static Song getSong(final Cursor cursor) {
+
+        if (cursor.getColumnCount() != SONG_LIST.length)
+            throw new IllegalArgumentException("Provided cursor of invalid length");
+        
+        final String liked = cursor.getString(11);
+        final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
+
+        return new Song.Builder()
+                .size(cursor.getLong(5))
+                .visibility(cursor.getShort(7) == 1)
+                .path(cursor.getString(8))
+                .duration(cursor.getLong(6))
+                .actualName(cursor.getString(2))
+                .album(cursor.getString(3))
+                .albumArtData(new AlbumArtData.Builder().build())
+                .artist(cursor.getString(4))
+                .dateAdded(cursor.getLong(9))
+                .displayName(cursor.getString(1))
+                .fileHash("")
+                .genre(cursor.getString(10))
+                .isLiked(isLiked)
+                .songId(cursor.getLong(0)).build();
     }
 
     public ReachDatabaseHelper(Context context) {

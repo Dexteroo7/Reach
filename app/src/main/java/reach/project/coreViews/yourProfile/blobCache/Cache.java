@@ -102,7 +102,7 @@ public abstract class Cache implements Closeable {
 
         //cache invalidator MUST BE OPEN
 
-        Log.i("Ayush", "Calling load more elements");
+//        Log.i("Ayush", "Calling load more elements");
 
         if (loadingDone.get() || executorService.getActiveCount() > 0)
             return; //do not load if done

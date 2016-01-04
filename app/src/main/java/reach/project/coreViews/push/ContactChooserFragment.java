@@ -1,4 +1,4 @@
-package reach.project.push;
+package reach.project.coreViews.push;
 
 import android.app.Activity;
 import android.content.Context;

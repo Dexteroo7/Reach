@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 import android.util.Log;
 
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -118,6 +119,49 @@ public class MySongsHelper extends SQLiteOpenHelper {
             MySongsHelper.COLUMN_VISIBILITY, //10
             MySongsHelper.COLUMN_IS_LIKED //11
     };
+
+    public static final String[] SONG_LIST = new String[]{
+
+            COLUMN_SONG_ID, //0
+
+            COLUMN_DISPLAY_NAME, //1
+            COLUMN_ACTUAL_NAME, //2
+            COLUMN_ALBUM, //3
+            COLUMN_ARTIST, //4
+
+            COLUMN_SIZE, //5
+            COLUMN_DURATION, //6
+            COLUMN_VISIBILITY, //7
+            COLUMN_PATH, //8
+            COLUMN_DATE_ADDED, //9
+            COLUMN_GENRE, //10
+            COLUMN_IS_LIKED, //11
+    };
+
+    public static Song getSong(final Cursor cursor) {
+
+        if (cursor.getColumnCount() != SONG_LIST.length)
+            throw new IllegalArgumentException("Provided cursor of invalid length");
+
+        final String liked = cursor.getString(11);
+        final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
+
+        return new Song.Builder()
+                .size(cursor.getLong(5))
+                .visibility(cursor.getShort(7) == 1)
+                .path(cursor.getString(8))
+                .duration(cursor.getLong(6))
+                .actualName(cursor.getString(2))
+                .album(cursor.getString(3))
+                .albumArtData(new AlbumArtData.Builder().build())
+                .artist(cursor.getString(4))
+                .dateAdded(cursor.getLong(9))
+                .displayName(cursor.getString(1))
+                .fileHash("")
+                .genre(cursor.getString(10))
+                .isLiked(isLiked)
+                .songId(cursor.getLong(0)).build();
+    }
 
     //DISK_LIST specific !
     public static MusicData getMusicData(final Cursor cursor, final long serverId) {
