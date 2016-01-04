@@ -362,7 +362,7 @@ public class ScanFragment extends Fragment {
                     next.setVisibility(View.VISIBLE);
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
-                    totalApps = message.arg1;
+                    totalMusic = message.arg1;
                     scanCount.setText(totalMusic + totalApps + "");
                     musicCount.setText(musicCount + "");
 
