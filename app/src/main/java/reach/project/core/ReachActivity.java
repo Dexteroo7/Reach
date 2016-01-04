@@ -130,7 +130,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             switch (position) {
 
                 case 0:
-                    return ContactsListFragment.newInstance();
+                    return ContactsListFragment.getInstance();
                 case 1:
                     return PUSH_PAGER;
                 case 2:

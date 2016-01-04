@@ -3,7 +3,6 @@ package reach.project.coreViews.push.myLibrary;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -109,7 +108,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         holder.artistName.setText(item.artist);
         holder.checkBox.setSelected(ReachActivity.selectedSongIds.get(item.songId, false));
 
-        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.selectedSongIds.get(item.songId, false));
+//        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.selectedSongIds.get(item.songId, false));
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.album,

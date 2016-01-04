@@ -9,10 +9,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -27,6 +25,10 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.facebook.common.references.CloseableReference;
+import com.facebook.datasource.DataSource;
+import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
+import com.facebook.imagepipeline.image.CloseableImage;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -34,8 +36,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 
@@ -435,36 +435,6 @@ public class ProcessManager extends Service implements
         startForeground(StaticData.MUSIC_PLAYER, note.build());
     }
 
-    private static class SetAlbumArt extends AsyncTask<Uri, Void, Bitmap> {
-
-        private RemoteViews rViews;
-
-        public SetAlbumArt(RemoteViews remoteViews) {
-            rViews = remoteViews;
-        }
-
-        @Override
-        protected Bitmap doInBackground(Uri... params) {
-            Request request = new Request.Builder().url(params[0].toString()).build();
-            try {
-                Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
-                return BitmapFactory.decodeStream(response.body().byteStream());
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            if (bitmap == null)
-                return;
-            rViews.setImageViewBitmap(R.id.NalbumArt, bitmap);
-            Log.d("Ashish", "Album art set");
-        }
-    }
-
     private void notificationMusic() {
 
         final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
@@ -473,27 +443,26 @@ public class ProcessManager extends Service implements
             return;
 
         final RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_player);
+        final Intent foreGround = new Intent(this, ReachActivity.class);
+        final NotificationCompat.Builder note = new NotificationCompat.Builder(this);
+        final Notification notification;
+
         remoteViews.setOnClickPendingIntent(R.id.Npause_play, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_PLAY_PAUSE, null, this, ProcessManager.class), 0));
         remoteViews.setOnClickPendingIntent(R.id.NcloseButton, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_KILL, null, this, ProcessManager.class), 0));
         remoteViews.setOnClickPendingIntent(R.id.NprevTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_PREVIOUS, null, this, ProcessManager.class), 0));
         remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
-        new SetAlbumArt(remoteViews).executeOnExecutor(StaticData.TEMPORARY_FIX,
-                AlbumArtUri.getUri(currentSong.get().getAlbumName(),
-                        currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
-                        false).get());
+        remoteViews.setImageViewResource(R.id.NalbumArt, R.drawable.default_music_icon); //default icon
 
         if (paused)
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.play_white_selector);
         else
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.pause_white_selector);
 
-        final Intent foreGround = new Intent(this, ReachActivity.class);
         foreGround.putExtra("openPlayer", true);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        final NotificationCompat.Builder note = new NotificationCompat.Builder(this);
-        Notification notification = note
+        notification = note
                 .setSmallIcon(R.drawable.ic_icon_notif)
                 .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -502,6 +471,27 @@ public class ProcessManager extends Service implements
                 .setContentIntent(PendingIntent.getActivity(this, 0, foreGround, PendingIntent.FLAG_CANCEL_CURRENT))
                 .build();
         startForeground(StaticData.MUSIC_PLAYER, notification);
+
+        final Optional<Uri> uri = AlbumArtUri.getUri(currentSong.get().getAlbumName(),
+                currentSong.get().getArtistName(), currentSong.get().getDisplayName(),
+                false);
+
+        final BaseBitmapDataSubscriber dataSubscriber = new BaseBitmapDataSubscriber() {
+            @Override
+            protected void onNewResultImpl(@Nullable Bitmap bitmap) {
+
+                remoteViews.setImageViewBitmap(R.id.NalbumArt, bitmap);
+                startForeground(StaticData.MUSIC_PLAYER, notification); //reload to show notification
+            }
+
+            @Override
+            protected void onFailureImpl(DataSource<CloseableReference<CloseableImage>> dataSource) {
+                //ignore
+            }
+        };
+
+        if (uri.isPresent())
+            MiscUtils.imageForRemoteViewRequest(uri.get(), dataSubscriber);
     }
 
     private void notificationBoth() {

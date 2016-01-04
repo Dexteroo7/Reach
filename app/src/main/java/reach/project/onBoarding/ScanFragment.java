@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.ReachUser;
@@ -80,7 +81,8 @@ public class ScanFragment extends Fragment {
         return fragment;
     }
 
-    @Override
+    private final ExecutorService accountUploader = MiscUtils.getRejectionExecutor();
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -110,7 +112,7 @@ public class ScanFragment extends Fragment {
                 (TextView) rootView.findViewById(R.id.scanCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
-                .executeOnExecutor(StaticData.TEMPORARY_FIX, userName, phoneNumber);
+                .executeOnExecutor(accountUploader, userName, phoneNumber);
 
         return rootView;
     }

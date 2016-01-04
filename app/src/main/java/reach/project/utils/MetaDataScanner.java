@@ -297,14 +297,13 @@ public class MetaDataScanner extends IntentService {
                 //load visibility
                 if (persist == null) {
 
-                    if (filter(builder.actualName) ||
-                            filter(builder.displayName) ||
+                    if (filter(builder.displayName) ||
                             filter(builder.album) ||
                             filter(builder.artist) ||
-                            builder.size > 100 * 1024 * 1024 || //100mb
-                            builder.duration > 60 * 60 * 1000 || //1hour
-                            builder.size < 400 * 1024 || //400kb
-                            builder.duration < 40 * 1000) //40 seconds
+                            builder.size > 100 * 1024 * 1024 || //100mb big file
+                            builder.duration > 60 * 60 * 1000 || //1hour big file
+                            builder.size < 400 * 1024 || //400kb very small file
+                            builder.duration < 40 * 1000) //40 seconds very small file
 
                         builder.visibility(false);
                     else

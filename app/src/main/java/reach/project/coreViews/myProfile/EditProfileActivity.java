@@ -22,8 +22,6 @@ import android.widget.Toast;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 import java.io.File;
@@ -33,6 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
@@ -46,84 +48,67 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private static final int IMAGE_PICKER_SELECT = 999;
     private static final int COVER_PICKER_SELECT = 888;
-    private static final int PROFILE_PIC = 0;
-    private static final int COVER_PIC = 1;
 
-    private EditText firstName = null;
-    private SimpleDraweeView profile = null;
-    private SimpleDraweeView cover = null;
-    private SharedPreferences sharedPreferences = null;
+    @Nullable
+    private static File toUploadProfilePhoto = null;
+    @Nullable
+    private static File toUploadCoverPhoto = null;
 
-    private static File toUpload = null;
-    private static String imageId = null;
-    private static String coverImageId = null;
+    @Nullable
+    private static String profilePhotoId = null;
+    @Nullable
+    private static String coverPhotoId = null;
+
     private static long userId = 0;
     private static WeakReference<EditProfileActivity> reference;
 
-    private void doUpdate() {
+    @Nullable
+    private EditText firstName = null;
+    @Nullable
+    private SimpleDraweeView profile = null;
+    @Nullable
+    private SimpleDraweeView cover = null;
 
-        if (firstName.length() == 0)
-            Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show();
-        else {
+    private final ExecutorService profileEditor = Executors.newSingleThreadExecutor();
 
-            ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);
-            firstName.setEnabled(false);
-
-            final String name = firstName.getText().toString();
-
-            new UpdateProfile(PROFILE_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, name);
-            new UpdateProfile(COVER_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, name);
-            //save to cache
-            SharedPrefUtils.storeUserName(sharedPreferences, name);
-            SharedPrefUtils.storeImageId(sharedPreferences, imageId);
-            SharedPrefUtils.storeCoverImageId(sharedPreferences, coverImageId);
-        }
-    }
-
-
-    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
         reference = new WeakReference<>(this);
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
-
         mToolbar.setTitle("Edit Profile");
-        mToolbar.setNavigationOnClickListener(v -> {
-            doUpdate();
-            NavUtils.navigateUpFromSameTask(EditProfileActivity.this);
-        });
+        mToolbar.setNavigationOnClickListener(v -> doUpdate());
 
-        sharedPreferences = getSharedPreferences("Reach", Context.MODE_APPEND);
-        profile = (SimpleDraweeView) findViewById(R.id.profilePic);
-        cover = (SimpleDraweeView) findViewById(R.id.coverPic);
-        firstName = (EditText) findViewById(R.id.name);
-
+        final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_APPEND);
         final String imageId = SharedPrefUtils.getImageId(sharedPreferences);
         final String coverImageId = SharedPrefUtils.getCoverImageId(sharedPreferences);
         final String uName = SharedPrefUtils.getUserName(sharedPreferences);
         userId = SharedPrefUtils.getServerId(sharedPreferences);
 
+        firstName = (EditText) findViewById(R.id.name);
         firstName.setText(uName);
         firstName.setSelection(uName.length());
 
-        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-            profile.setImageBitmap(null);
-        profile.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+        profile = (SimpleDraweeView) findViewById(R.id.profilePic);
         profile.setTag(IMAGE_PICKER_SELECT);
         profile.setOnClickListener(imagePicker);
 
-        if (!TextUtils.isEmpty(coverImageId) && !coverImageId.equals("hello_world"))
-            cover.setImageBitmap(null);
-        cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverImageId));
+        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
+            profile.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+
+        cover = (SimpleDraweeView) findViewById(R.id.coverPic);
         cover.setTag(COVER_PICKER_SELECT);
         cover.setOnClickListener(imagePicker);
+        if (!TextUtils.isEmpty(coverImageId) && !coverImageId.equals("hello_world"))
+            cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverImageId));
     }
 
     private final View.OnClickListener imagePicker = view -> {
-        Object tag= view.getTag();
+
+        final Object tag = view.getTag();
         if (!(tag instanceof Integer))
             return;
         final Intent intent = new Intent();
@@ -147,26 +132,22 @@ public class EditProfileActivity extends AppCompatActivity {
             return;
         }
 
-        InputStream imageStream;
+        final InputStream imageStream;
         try {
             imageStream = getContentResolver().openInputStream(imageUri);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            imageStream = null;
+            Toast.makeText(this, "Photo not found, try again", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         if (requestCode == IMAGE_PICKER_SELECT)
-            new ProcessImage(PROFILE_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, imageStream);
+            new ProcessProfilePhoto().executeOnExecutor(profileEditor, imageStream);
         else if (requestCode == COVER_PICKER_SELECT)
-            new ProcessImage(COVER_PIC).executeOnExecutor(StaticData.TEMPORARY_FIX, imageStream);
+            new ProcessCoverPhoto().executeOnExecutor(profileEditor, imageStream);
     }
 
-    private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
-
-        private int type;
-        private ProcessImage(int type) {
-            this.type = type;
-        }
+    private static final class ProcessProfilePhoto extends AsyncTask<InputStream, Void, File> {
 
         @Override
         protected File doInBackground(InputStream... params) {
@@ -176,11 +157,12 @@ public class EditProfileActivity extends AppCompatActivity {
 
             File tempFile = null;
             FileOutputStream outputStream = null;
+            RandomAccessFile randomAccessFile = null;
+
             try {
                 tempFile = File.createTempFile("profile_photo", ".tmp");
-                new RandomAccessFile(tempFile, "rws").setLength(0);
-                outputStream = new FileOutputStream(tempFile);
-                ByteStreams.copy(params[0], outputStream);
+                (randomAccessFile = new RandomAccessFile(tempFile, "rws")).setLength(0);
+                ByteStreams.copy(params[0], outputStream = new FileOutputStream(tempFile));
                 outputStream.flush();
             } catch (IOException e) {
 
@@ -190,7 +172,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     tempFile.delete();
                 return null;
             } finally {
-                MiscUtils.closeQuietly(outputStream, params[0]);
+                MiscUtils.closeQuietly(outputStream, params[0], randomAccessFile);
             }
 
             try {
@@ -202,6 +184,7 @@ public class EditProfileActivity extends AppCompatActivity {
             return null;
         }
 
+        @Nullable
         private ProgressDialog dialog = null;
 
         @Override
@@ -221,37 +204,21 @@ public class EditProfileActivity extends AppCompatActivity {
             super.onPostExecute(file);
 
             MiscUtils.useActivity(reference, activity -> {
-                if (type == PROFILE_PIC) {
-                    if (file == null) {
 
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Profile photo failed")
-                                .setAction("User Id - " + userId)
-                                .setValue(1)
-                                .build());
+                if (file == null) {
 
-                        toUpload = null;
-                        Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
-                    } else if (activity.profile != null) {
-                        toUpload = file;
-                        activity.profile.setImageURI(Uri.parse("file://" + toUpload.getAbsolutePath()));
-                    }
-                }
-                else if (type == COVER_PIC) {
-                    if (file == null) {
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Profile photo failed")
+                            .setAction("User Id - " + userId)
+                            .setValue(1)
+                            .build());
 
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Cover photo failed")
-                                .setAction("User Id - " + userId)
-                                .setValue(1)
-                                .build());
+                    toUploadProfilePhoto = null;
+                    Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
+                } else if (activity.profile != null) {
 
-                        toUpload = null;
-                        Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
-                    } else if (activity.cover != null) {
-                        toUpload = file;
-                        activity.cover.setImageURI(Uri.parse("file://" + toUpload.getAbsolutePath()));
-                    }
+                    toUploadProfilePhoto = file;
+                    activity.profile.setImageURI(Uri.parse("file://" + file.getAbsolutePath()));
                 }
             });
 
@@ -260,53 +227,169 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
-    private static final class UpdateProfile extends AsyncTask<String, Void, Boolean> {
+    private static final class ProcessCoverPhoto extends AsyncTask<InputStream, Void, File> {
 
-        private InputStream keyStream;
-        private static int type;
+        @Override
+        protected File doInBackground(InputStream... params) {
 
-        public UpdateProfile(int mType) {
-            type = mType;
+            if (params[0] == null)
+                return null;
+
+            File tempFile = null;
+            FileOutputStream outputStream = null;
+            RandomAccessFile randomAccessFile = null;
+
+            try {
+                tempFile = File.createTempFile("cover_photo", ".tmp");
+                (randomAccessFile = new RandomAccessFile(tempFile, "rws")).setLength(0);
+                ByteStreams.copy(params[0], outputStream = new FileOutputStream(tempFile));
+                outputStream.flush();
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                if (tempFile != null)
+                    //noinspection ResultOfMethodCallIgnored
+                    tempFile.delete();
+                return null;
+            } finally {
+                MiscUtils.closeQuietly(outputStream, params[0], randomAccessFile);
+            }
+
+            try {
+                return MiscUtils.compressImage(tempFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Nullable
+        private ProgressDialog dialog = null;
+
+        @Override
+        protected void onPreExecute() {
+
+            super.onPreExecute();
+            MiscUtils.useActivity(reference, activity -> dialog = new ProgressDialog(activity));
+            if (dialog != null) {
+                dialog.setCancelable(false);
+                dialog.show();
+            }
         }
 
         @Override
-        protected Boolean doInBackground(final String... name) {
+        protected void onPostExecute(File file) {
 
-            //get the key
-            if (toUpload == null)
-                return false;
+            super.onPostExecute(file);
 
             MiscUtils.useActivity(reference, activity -> {
-                try {
-                    keyStream =  activity.getAssets().open("key.p12");
-                } catch (IOException e) {
-                    e.printStackTrace();
+
+                if (file == null) {
+
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("Cover photo failed")
+                            .setAction("User Id - " + userId)
+                            .setValue(1)
+                            .build());
+
+                    toUploadCoverPhoto = null;
+                    Toast.makeText(activity, "Failed to set Cover Photo, try again", Toast.LENGTH_LONG).show();
+                } else if (activity.cover != null) {
+
+                    toUploadCoverPhoto = file;
+                    activity.cover.setImageURI(Uri.parse("file://" + file.getAbsolutePath()));
                 }
             });
 
-            if (keyStream == null) {
-                uploadProgress.error();
+            if (dialog != null)
+                dialog.dismiss();
+        }
+    }
+
+    private void doUpdate() {
+
+        if (firstName.length() == 0) //let it throw, should never happen
+            Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show();
+        else if (!MiscUtils.isOnline(this)) {
+            Toast.makeText(this, "No internet found", Toast.LENGTH_SHORT).show();
+            NavUtils.navigateUpFromSameTask(this); //move back
+        }
+        else {
+
+            ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);
+            firstName.setEnabled(false);
+            new UpdateProfile().executeOnExecutor(profileEditor, firstName.getText().toString());
+        }
+    }
+
+    private static final class UpdateProfile extends AsyncTask<String, Void, Boolean> {
+
+        @Nullable
+        private ProgressDialog dialog = null;
+
+        @Override
+        protected void onPreExecute() {
+
+            super.onPreExecute();
+            MiscUtils.useActivity(reference, activity -> dialog = new ProgressDialog(activity));
+            if (dialog != null) {
+                dialog.setCancelable(false);
+                dialog.show();
+            }
+        }
+
+        /**
+         * When sending list of info to update
+         * 0 : userName
+         * 1 : imageId
+         * 2 : coverPicId
+         * 3 : statusSong
+         * 4 : emailId
+         * 5 : birthday
+         */
+        @Override
+        protected Boolean doInBackground(final String... name) {
+
+            //upload Profile photo
+            InputStream keyStream = MiscUtils.useContextFromContext(reference, activity -> {
+                try {
+                    return activity.getAssets().open("key.p12");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }).orNull();
+
+            if (keyStream != null)
+                CloudStorageUtils.uploadImage(toUploadProfilePhoto, keyStream, PROFILE_PIC_PROGRESS);
+            else
+                PROFILE_PIC_PROGRESS.error();
+
+            //upload Cover photo
+            keyStream = MiscUtils.useContextFromContext(reference, activity -> {
+                try {
+                    return activity.getAssets().open("key.p12");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }).orNull();
+
+            if (keyStream != null)
+                CloudStorageUtils.uploadImage(toUploadCoverPhoto, keyStream, COVER_PIC_PROGRESS);
+            else
+                COVER_PIC_PROGRESS.error();
+
+            //upload user data
+            final List<String> toPush = Arrays.asList(name[0], profilePhotoId, coverPhotoId);
+            Log.i("Ayush", "Pushing " + userId + " " + MiscUtils.seqToString(toPush));
+            try {
+                return StaticData.USER_API.updateUserDetails(userId, toPush).execute() == null;
+            } catch (IOException e) {
+                e.printStackTrace();
                 return false;
             }
-
-            //try upload
-            CloudStorageUtils.uploadImage(toUpload, keyStream, uploadProgress);
-
-            //uploadProgress will set the file name
-            if (type == PROFILE_PIC) {
-                if (TextUtils.isEmpty(imageId))
-                    return false;
-                Log.i("Ayush", "Pushing " + userId + " " + name[0] + " " + imageId);
-                MiscUtils.autoRetry(() -> StaticData.USER_API.updateUserDetails(userId, ImmutableList.of(name[0], imageId)).execute(), Optional.absent());
-            }
-            else if (type == COVER_PIC) {
-                if (TextUtils.isEmpty(coverImageId))
-                    return false;
-                Log.i("Ayush", "Pushing " + userId + " " + name[0] + " " + coverImageId);
-                MiscUtils.autoRetry(() -> StaticData.USER_API.updateUserDetails(userId, ImmutableList.of(name[0], coverImageId)).execute(), Optional.absent());
-            }
-
-            return true;
         }
 
         @Override
@@ -317,55 +400,43 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (activity.firstName == null)
                     return;
 
-                if (type == PROFILE_PIC) {
-                    if (imageId == null) {
-                        if (activity.profile != null)
-                            activity.profile.setImageBitmap(null);
-                        return;
-                    }
-                }
-                else if (type == COVER_PIC) {
-                    if (coverImageId == null) {
-                        if (activity.cover != null)
-                            activity.cover.setImageBitmap(null);
-                        return;
-                    }
-                }
+                if (TextUtils.isEmpty(profilePhotoId) && activity.profile != null)
+                    activity.profile.setImageBitmap(null);
+
+                if (TextUtils.isEmpty(coverPhotoId) && activity.cover != null)
+                    activity.cover.setImageBitmap(null);
 
                 if (success != null && success) {
 
                     Toast.makeText(activity, "Changes saved successfully!!", Toast.LENGTH_SHORT).show();
-                    if (type == PROFILE_PIC)
-                        SharedPrefUtils.storeImageId(activity.sharedPreferences, imageId);
-                    else if (type == COVER_PIC)
-                        SharedPrefUtils.storeCoverImageId(activity.sharedPreferences, coverImageId);
-                    //TODO
-                    //if (fragment.mListener != null && activity.firstName != null)
-                    //    fragment.mListener.updateDetails(toUpload, activity.firstName.getText().toString());
-                } else {
-                    Toast.makeText(activity, "Failed, try again", Toast.LENGTH_SHORT).show();
-                    if (type == PROFILE_PIC)
-                        activity.profile.setImageBitmap(null);
-                    else if (type == COVER_PIC)
-                        activity.cover.setImageBitmap(null);
+                    final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_APPEND);
+                    SharedPrefUtils.storeImageId(sharedPreferences, profilePhotoId);
+                    SharedPrefUtils.storeCoverImageId(sharedPreferences, coverPhotoId);
+                    SharedPrefUtils.storeUserName(sharedPreferences, activity.firstName.getText().toString());
 
+                } else {
+
+                    Toast.makeText(activity, "Failed, try again", Toast.LENGTH_SHORT).show();
+                    if (activity.profile != null)
+                        activity.profile.setImageBitmap(null);
+                    if (activity.cover != null)
+                        activity.cover.setImageBitmap(null);
                 }
 
                 activity.firstName.setEnabled(true);
                 activity.firstName.requestFocus();
-
             });
+
+            if (dialog != null)
+                dialog.dismiss();
         }
 
-        private static final UploadProgress uploadProgress = new UploadProgress() {
+        private static final UploadProgress PROFILE_PIC_PROGRESS = new UploadProgress() {
 
             @Override
             public void success(String fileName) {
                 //save fileName
-                if (type == PROFILE_PIC)
-                    imageId = fileName;
-                else if (type == COVER_PIC)
-                    coverImageId = fileName;
+                profilePhotoId = fileName;
             }
 
             @Override
@@ -376,10 +447,7 @@ public class EditProfileActivity extends AppCompatActivity {
 //                final ProgressBar progressBar = dialogWeakReference.get();
 //                if (progressBar == null)
 //                    return;
-                if (type == PROFILE_PIC)
-                    imageId = null;
-                else if (type == COVER_PIC)
-                    coverImageId = null;
+                profilePhotoId = null;
             }
 
             @Override
@@ -405,6 +473,24 @@ public class EditProfileActivity extends AppCompatActivity {
 //                    case MEDIA_COMPLETE:
 //                        break;
 //                }
+            }
+        };
+
+        private static final UploadProgress COVER_PIC_PROGRESS = new UploadProgress() {
+            @Override
+            public void success(String fileName) {
+                //save fileName
+                coverPhotoId = fileName;
+            }
+
+            @Override
+            public void error() {
+                coverPhotoId = null;
+            }
+
+            @Override
+            public void progressChanged(MediaHttpUploader uploader) throws IOException {
+                //ignored
             }
         };
     }

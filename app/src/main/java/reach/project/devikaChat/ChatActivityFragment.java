@@ -45,7 +45,7 @@
 //
 //    private static WeakReference<ChatActivityFragment> reference = null;
 //
-//    public static ChatActivityFragment newInstance() {
+//    public static ChatActivityFragment getInstance() {
 //
 //        ChatActivityFragment fragment;
 //        if (reference == null || (fragment = reference.get()) == null) {

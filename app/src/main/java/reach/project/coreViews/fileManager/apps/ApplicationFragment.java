@@ -19,6 +19,8 @@ import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
@@ -55,8 +57,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     }
 
     private final ParentAdapter parentAdapter = new ParentAdapter(this);
+    private final ExecutorService applicationsFetcher = Executors.newSingleThreadExecutor();
 
-    @Override
     public void handOverMessage(@Nonnull App message) {
         MiscUtils.openApp(getContext(), message.packageName);
     }
@@ -74,7 +76,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(StaticData.TEMPORARY_FIX, activity);
+        new GetApplications().executeOnExecutor(applicationsFetcher, activity);
 
         return rootView;
     }

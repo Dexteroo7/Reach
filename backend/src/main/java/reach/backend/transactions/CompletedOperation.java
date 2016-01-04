@@ -1,4 +1,4 @@
-package reach.backend.Transactions;
+package reach.backend.transactions;
 
 import java.util.HashSet;
 

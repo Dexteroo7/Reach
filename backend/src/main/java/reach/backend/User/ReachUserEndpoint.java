@@ -75,12 +75,12 @@ import reach.backend.ObjectWrappers.SimpleSong;
 import reach.backend.ObjectWrappers.Song;
 import reach.backend.ObjectWrappers.StringList;
 import reach.backend.TextUtils;
-import reach.backend.Transactions.CompletedOperation;
-import reach.backend.Transactions.CompletedOperations;
 import reach.backend.User.FriendContainers.Friend;
 import reach.backend.User.FriendContainers.QuickSync;
 import reach.backend.User.FriendContainers.ReceivedRequest;
 import reach.backend.campaign.BackLog;
+import reach.backend.transactions.CompletedOperation;
+import reach.backend.transactions.CompletedOperations;
 
 import static reach.backend.OfyService.ofy;
 

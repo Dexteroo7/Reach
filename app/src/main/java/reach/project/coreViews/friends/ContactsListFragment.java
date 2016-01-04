@@ -36,6 +36,8 @@ import android.widget.Toast;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
@@ -56,13 +58,11 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class ContactsListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
 
-    private static String phoneNumber = "";
+    private static long serverId;
 
     private static WeakReference<ContactsListFragment> reference = null;
 
-    private static long serverId;
-
-    public static ContactsListFragment newInstance() {
+    public static ContactsListFragment getInstance() {
 
         ContactsListFragment fragment;
         if (reference == null || (fragment = reference.get()) == null) {
@@ -106,7 +106,6 @@ public class ContactsListFragment extends Fragment implements
             new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(sharedPreferences);
-        phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
     }
 
     @Override
@@ -116,9 +115,6 @@ public class ContactsListFragment extends Fragment implements
 
         rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
 
-        if (serverId == 0 || TextUtils.isEmpty(phoneNumber))
-            return null;
-
         final Activity activity = getActivity();
 
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
@@ -127,7 +123,7 @@ public class ContactsListFragment extends Fragment implements
         final Menu menu = mToolbar.getMenu();
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
-                case  R.id.settings_button:
+                case R.id.settings_button:
                     startActivity(new Intent(activity, SettingsActivity.class));
                     return true;
                 case R.id.player_button:
@@ -259,6 +255,8 @@ public class ContactsListFragment extends Fragment implements
     private enum LocalUtils {
         ;
 
+        private static final ExecutorService friendRequestSender = Executors.newSingleThreadExecutor();
+
         public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
 
             //TODO
@@ -271,8 +269,8 @@ public class ContactsListFragment extends Fragment implements
 
         public static final View.OnClickListener inviteListener = v ->
                 MiscUtils.useContextFromFragment(reference, context -> {
-            context.startActivity(new Intent(context, InviteActivity.class));
-        });
+                    context.startActivity(new Intent(context, InviteActivity.class));
+                });
 
         private static final Dialog.OnClickListener positiveButton = (dialog, which) -> {
 
@@ -292,9 +290,7 @@ public class ContactsListFragment extends Fragment implements
                     Snackbar.make((View) object, "Access Request sent", Snackbar.LENGTH_SHORT).show();
             }
 
-            new SendRequest().executeOnExecutor(
-                    StaticData.TEMPORARY_FIX,
-                    clientId, serverId, (long) status);
+            new SendRequest().executeOnExecutor(friendRequestSender, clientId, serverId, (long) status); //cant have rejection here
 
             //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
             final ContentValues values = new ContentValues();

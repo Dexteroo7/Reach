@@ -24,7 +24,7 @@
                 reach.backend.User.ReachUserEndpoint,
 
                 reach.backend.Feedback.FeedBackEndpoint,
-                reach.backend.Transactions.CompletedOperationsEndpoint,
+                reach.backend.transactions.CompletedOperationsEndpoint,
                 reach.backend.ActiveCountLog.ActiveCountLogEndpoint,
 
                 reach.backend.Notifications.NotificationEndpoint,

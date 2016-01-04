@@ -211,6 +211,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             //perform other ops
             if (MiscUtils.isOnline(this)) {
 
+                //TODO chat check
                 //perform contact sync
                 FireOnce.contactSync(this);
                 //check for update

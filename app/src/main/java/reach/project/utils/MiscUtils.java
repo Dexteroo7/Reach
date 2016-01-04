@@ -36,6 +36,15 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.common.executors.UiThreadImmediateExecutorService;
+import com.facebook.common.references.CloseableReference;
+import com.facebook.datasource.DataSource;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
+import com.facebook.imagepipeline.image.CloseableImage;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -916,7 +925,7 @@ public enum MiscUtils {
     public static <T> void autoRetryAsync(@NonNull final DoWork<T> task,
                                           @NonNull final Optional<Predicate<T>> predicate) {
 
-        StaticData.TEMPORARY_FIX.execute(() -> {
+        new Thread(() -> {
 
             for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
 
@@ -961,7 +970,7 @@ public enum MiscUtils {
                     e.printStackTrace();
                 }
             }
-        });
+        }).start();
     }
 
     @NonNull
@@ -1459,12 +1468,12 @@ public enum MiscUtils {
             return;
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
         //start this operation
-        StaticData.TEMPORARY_FIX.execute(MiscUtils.startDownloadOperation(
+        new Thread(MiscUtils.startDownloadOperation(
                 activity,
                 reachDatabase,
                 reachDatabase.getReceiverId(), //myID
                 reachDatabase.getSenderId(),   //the uploaded
-                reachDatabase.getId()));
+                reachDatabase.getId())).start();
 
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
@@ -1550,4 +1559,146 @@ public enum MiscUtils {
                 (r, executor) -> {//ignored
                 });
     }
+
+    public static <T> String seqToString(Iterable<T> items) {
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        boolean needSeparator = false;
+        for (T x : items) {
+            if (needSeparator)
+                sb.append(' ');
+            sb.append(x.toString());
+            needSeparator = true;
+        }
+        sb.append(']');
+        return sb.toString();
+    }
+
+    public static void imageForRemoteViewRequest(Uri uri, BaseBitmapDataSubscriber baseBitmapDataSubscriber) {
+
+        final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
+                .setResizeOptions(new ResizeOptions(200, 200))
+                .build();
+
+        final DataSource<CloseableReference<CloseableImage>> dataSource =
+                Fresco.getImagePipeline().fetchDecodedImage(request, null);
+
+        dataSource.subscribe(baseBitmapDataSubscriber, UiThreadImmediateExecutorService.getInstance());
+    }
+
+//    public static String cleanseName(String name, StringBuilder stringBuilder) {
+//
+//        name = name.replaceAll("^0[1-9]", "");
+//        name = replace(name, "-", "", -1, stringBuilder);
+//        name = replace(name, "+", "", -1, stringBuilder);
+//        name = replace(name, "www.", "", -1, stringBuilder);
+//        name = replace(name, ".com", "", -1, stringBuilder);
+//        name = replace(name, ".in", "", -1, stringBuilder);
+//        name = replace(name, ".pk", "", -1, stringBuilder);
+//        name = replace(name, ".name", "", -1, stringBuilder);
+//        name = replace(name, ".link", "", -1, stringBuilder);
+//        name = replace(name, ".fm", "", -1, stringBuilder);
+//        name = replace(name, ".net", "", -1, stringBuilder);
+//        name = replace(name, ".", "", -1, stringBuilder);
+//        name = replace(name, ":", "", -1, stringBuilder);
+//        name = replace(name, "pagalworld", "", -1, stringBuilder);
+//        name = replace(name, "DownloadMing", "", -1, stringBuilder);
+//        name = replace(name, "skymaza", "", -1, stringBuilder);
+//        name = replace(name, "DjGol", "", -1, stringBuilder);
+//        name = replace(name, "DJBoss", "", -1, stringBuilder);
+//        name = replace(name, "iPendu", "", -1, stringBuilder);
+//        name = replace(name, "Songspk", "", -1, stringBuilder);
+//        name = replace(name, "  ", "", -1, stringBuilder);
+//        name = replace(name, "DjPunjab", "", -1, stringBuilder);
+//        name = replace(name, "MyMp3Song", "", -1, stringBuilder);
+//        name = replace(name, "iPendu", "", -1, stringBuilder);
+//        name = replace(name, "iPendu", "", -1, stringBuilder);
+//        name = replace(name, "iPendu", "", -1, stringBuilder);
+//        "".toLowerCase()
+//
+//
+////
+////                .replace("downloadming", "").replace("DjPunjab", "").replace("MyMp3Song", "").replace("PagalWorld", "")
+////
+////                .replace("lebewafa", "").replace("Mp3Singer", "").replace("Mr-Jatt", "").replace("MastiCity", "")
+////
+////                .replace("DJJOhAL", "").replace("RoyalJatt", "").replace("hotmentos", "")
+////
+////                .replace("BDLovE24", "MP3Khan").replace("DJMaza", "").replace("songsweb", "").replace("MobMaza", "")
+////
+////                .replace("wapking", "").replace("Mixmp3", "").replace("SongsLover", "").replace(".songs", "");
+////
+////        field.replace("<unknown>", "");
+////
+////        field.replace("  ", "");
+////
+////        field.replace("[]", "");
+////
+////        field.replace("()", "");
+//    }
+//
+//    /**
+//     * <p>Replaces a String with another String inside a larger String,
+//     * for the first <code>max</code> values of the search String.</p>
+//     * <p>
+//     * <p>A <code>null</code> reference passed to this method is a no-op.</p>
+//     * <p>
+//     * <pre>
+//     * StringUtils.replace(null, *, *, *)         = null
+//     * StringUtils.replace("", *, *, *)           = ""
+//     * StringUtils.replace("any", null, *, *)     = "any"
+//     * 3784         * StringUtils.replace("any", *, null, *)     = "any"
+//     * 3785         * StringUtils.replace("any", "", *, *)       = "any"
+//     * 3786         * StringUtils.replace("any", *, *, 0)        = "any"
+//     * 3787         * StringUtils.replace("abaa", "a", null, -1) = "abaa"
+//     * 3788         * StringUtils.replace("abaa", "a", "", -1)   = "b"
+//     * 3789         * StringUtils.replace("abaa", "a", "z", 0)   = "abaa"
+//     * 3790         * StringUtils.replace("abaa", "a", "z", 1)   = "zbaa"
+//     * 3791         * StringUtils.replace("abaa", "a", "z", 2)   = "zbza"
+//     * 3792         * StringUtils.replace("abaa", "a", "z", -1)  = "zbzz"
+//     * 3793         * </pre>
+//     * 3794         *
+//     * 3795         * @param text  text to search and replace in, may be null
+//     * 3796         * @param searchString  the String to search for, may be null
+//     * 3797         * @param replacement  the String to replace it with, may be null
+//     * 3798         * @param max  maximum number of values to replace, or <code>-1</code> if no maximum
+//     * 3799         * @return the text with any replacements processed,
+//     * 3800         *  <code>null</code> if null String input
+//     * 3801
+//     */
+//    public static String replace(String text, String searchString, String replacement, int max, StringBuilder stringBuilder) {
+//
+//        if (TextUtils.isEmpty(text) || TextUtils.isEmpty(searchString) || replacement == null || max == 0)
+//            return text;
+//
+//        final int INDEX_NOT_FOUND = -1;
+//
+//        int start = 0;
+//        int end = text.indexOf(searchString, start);
+//
+//        if (end == INDEX_NOT_FOUND) {
+//            return text;
+//        }
+//
+//        int replaceLength = searchString.length();
+//        int increase = replacement.length() - replaceLength;
+//        increase = (increase < 0 ? 0 : increase);
+//        increase *= (max < 0 ? 16 : (max > 64 ? 64 : max));
+//
+//        stringBuilder.setLength(0);
+//        stringBuilder.ensureCapacity(increase);
+//
+//        while (end != INDEX_NOT_FOUND) {
+//
+//            stringBuilder.append(text.substring(start, end)).append(replacement);
+//            start = end + replaceLength;
+//            if (--max == 0) {
+//                break;
+//            }
+//            end = text.indexOf(searchString, start);
+//        }
+//        stringBuilder.append(text.substring(start));
+//        return stringBuilder.toString();
+//    }
 }
