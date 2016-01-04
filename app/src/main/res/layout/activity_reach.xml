@@ -18,7 +18,7 @@
             app:tabGravity="center"
             android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
-            android:layout_height="60dp" />
+            android:layout_height="55dp" />
         <FrameLayout
             android:layout_above="@id/mainTabLayout"
             android:layout_width="match_parent"

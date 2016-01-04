@@ -31,7 +31,8 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
             ReachFriendsHelper.COLUMN_ID, //0
             ReachFriendsHelper.COLUMN_USER_NAME, //1
             ReachFriendsHelper.COLUMN_IMAGE_ID, //2
-            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS //3
+            ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //3
+            ReachFriendsHelper.COLUMN_NUMBER_OF_APPS //4
     };
 
     @Override
@@ -48,6 +49,7 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
 
         holder.userNameList.setText(userName);
         holder.telephoneNumberList.setText(item.getInt(3)+"");
+        holder.appCount.setText(item.getInt(4)+"");
 
         Uri uriToDisplay = null;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))

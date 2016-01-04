@@ -66,6 +66,18 @@
                     android:layout_height="wrap_content"
                     android:text="100"
                     android:textColor="@color/reach_grey_light" />
+                <ImageView
+                    android:id="@+id/appIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/icon_apps_indicator_gray" />
+                <TextView
+                    android:id="@+id/appCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="2dp"
+                    android:text="999"
+                    android:textColor="@color/reach_grey_light" />
             </LinearLayout>
             <CheckBox
                 android:id="@+id/checkBox"

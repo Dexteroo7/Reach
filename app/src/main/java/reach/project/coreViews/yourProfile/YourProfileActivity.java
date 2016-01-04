@@ -19,11 +19,14 @@ import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
 import reach.project.R;
+import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.apps.YourProfileAppFragment;
 import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
+import reach.project.notificationCentre.NotificationActivity;
+import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 
 public class YourProfileActivity extends AppCompatActivity {
@@ -51,6 +54,23 @@ public class YourProfileActivity extends AppCompatActivity {
 
         toolbar.setTitle("Profile");
         toolbar.setTitleTextColor(Color.WHITE);
+
+        toolbar.inflateMenu(R.menu.yourprofile_menu);
+        toolbar.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.player_button:
+                    startActivity(new Intent(this, PlayerActivity.class));
+                    return true;
+                case R.id.notif_button:
+                    startActivity(new Intent(this, NotificationActivity.class));
+                    return true;
+                case R.id.settings_button:
+                    startActivity(new Intent(this, SettingsActivity.class));
+                    return true;
+                default:
+                    return false;
+            }
+        });
 
         final Intent intent = getIntent();
         final long userId = intent.getLongExtra("userId", 0L);
@@ -124,7 +144,7 @@ public class YourProfileActivity extends AppCompatActivity {
                     case 0:
                         return "Apps";
                     case 1:
-                        return "Songs (" + finalNumberOfSongs + ")";
+                        return "Songs";
                     default:
                         throw new IllegalStateException("Count and size clash");
                 }
@@ -135,7 +155,7 @@ public class YourProfileActivity extends AppCompatActivity {
             switch (page) {
                 case 0:
                     return HeaderDesign.fromColorResAndUrl(
-                            R.color.reach_grey,
+                            R.color.reach_color,
                             "");
                 case 1:
                     return HeaderDesign.fromColorResAndUrl(

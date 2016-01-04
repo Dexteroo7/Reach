@@ -174,11 +174,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
+            viewHolder.appCount.setText(numberOfApps + "");
             if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
 
                 //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
-                viewHolder.newSongs.setText("+" + newSongs);
+                viewHolder.newSongs.setText("+" + newSongs + newApps);
             } else {
                 viewHolder.newSongs.setVisibility(View.INVISIBLE);
                 viewHolder.newSongs.setText("");

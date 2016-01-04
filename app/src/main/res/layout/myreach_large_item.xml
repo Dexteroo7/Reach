@@ -68,6 +68,19 @@
                     android:textSize="16sp"
                     android:text="100"
                     android:textColor="@color/reach_grey_light" />
+                <ImageView
+                    android:id="@+id/appIcon"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/icon_apps_indicator_gray" />
+                <TextView
+                    android:id="@+id/appCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="2dp"
+                    android:text="999"
+                    android:textColor="@color/reach_grey_light"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <ImageView

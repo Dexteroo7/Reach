@@ -15,7 +15,7 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
  */
 final class FriendsViewHolder extends SingleItemViewHolder {
 
-    public final TextView userNameList, telephoneNumberList, newSongs;
+    public final TextView userNameList, telephoneNumberList, newSongs, appCount;
     public final CheckBox checkBox;
     public final View mask;
     public final SimpleDraweeView profilePhotoList, coverPic;
@@ -26,6 +26,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
 
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);
         this.telephoneNumberList = (TextView) itemView.findViewById(R.id.telephoneNumberList);
+        this.appCount = (TextView) itemView.findViewById(R.id.appCount);
         this.newSongs = (TextView) itemView.findViewById(R.id.newSongs);
         this.profilePhotoList = (SimpleDraweeView) itemView.findViewById(R.id.profilePhotoList);
         this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
