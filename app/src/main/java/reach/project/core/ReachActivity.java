@@ -70,6 +70,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_PUSH = "OPEN_PUSH";
     public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     public static final String OPEN_MY_PROFILE_MUSIC = "OPEN_MY_PROFILE_MUSIC";
+    public static final String ADD_PUSH_SONG = "ADD_PUSH_SONG";
 
     public static final Set<Song> selectedSongs = MiscUtils.getSet(5);
     public static final Set<App> selectedApps = MiscUtils.getSet(5);
@@ -395,7 +396,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 //            if (viewPager != null)
 //                viewPager.setCurrentItem(1);
 //        else
-        if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals("process_multiple")) {
+        if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals(ADD_PUSH_SONG)) {
 
             Log.i("Ayush", "FOUND PUSH DATA");
 
@@ -441,6 +442,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 song.genre);
                     }
                     FireOnce.refreshOperations(reference);
+                    openDownloading();
                 }
                 ///////////
             }

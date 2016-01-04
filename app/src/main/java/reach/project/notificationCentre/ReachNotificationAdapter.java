@@ -212,7 +212,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                         final Intent pushAddSong = new Intent(activity, ReachActivity.class);
                         pushAddSong.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        pushAddSong.setAction("process_multiple");
+                        pushAddSong.setAction(ReachActivity.ADD_PUSH_SONG);
                         pushAddSong.putExtra("data", push.getPushContainer());
                         //start the Activity
                         activity.startActivity(pushAddSong);
