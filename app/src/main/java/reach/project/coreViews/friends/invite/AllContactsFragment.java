@@ -104,21 +104,31 @@ public class AllContactsFragment extends Fragment implements
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        if (id == StaticData.ALL_CONTACTS_LOADER)
+
+        if (id == StaticData.ALL_CONTACTS_LOADER) {
+
+            final String selection = ContactsContract.CommonDataKinds.Phone.IN_VISIBLE_GROUP + " = '"
+                    + ("1") + "'" + " AND " + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
+            final String sortOrder = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                    + " COLLATE LOCALIZED ASC";
+
+            final String[] projection = new String[]{
+                    ContactsContract.CommonDataKinds.Phone.NUMBER,
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID};
+
             return new CursorLoader(getActivity(),
                     ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    new String[]{
-                            ContactsContract.CommonDataKinds.Phone.NUMBER,
-                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID},
-                    ContactsContract.CommonDataKinds.Phone.NUMBER + " != ?", new String[]{""},
-                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
-        else
+                    projection,
+                    selection, null,
+                    sortOrder);
+        } else
             return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
         if (data == null || data.isClosed() || loader.getId() != StaticData.ALL_CONTACTS_LOADER)
             return;
 
@@ -128,6 +138,7 @@ public class AllContactsFragment extends Fragment implements
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+
         if (loader.getId() != StaticData.ALL_CONTACTS_LOADER)
             return;
         Log.i("Ayush", "Invalidating downloading cursor");

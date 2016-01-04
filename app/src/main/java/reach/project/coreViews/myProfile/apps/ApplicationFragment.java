@@ -23,6 +23,8 @@ import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
@@ -64,8 +66,9 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     private SharedPreferences preferences = null;
 
     private final ParentAdapter parentAdapter = new ParentAdapter(this);
+    //handle 2 at a time
+    private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
-    @Override
     public void handOverMessage(@Nonnull App message) {
 
         if (preferences == null)
@@ -81,7 +84,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         //update in disk
         SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
         //update on server
-        new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX, userId, packageName, newVisibility);
+        new ToggleVisibility().executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
 
         //notify that visibility has changed
         parentAdapter.visibilityChanged(packageName);
@@ -102,7 +105,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(StaticData.TEMPORARY_FIX, activity);
+        new GetApplications().executeOnExecutor(visibilityHandler, activity);
 
         //update the package visibilities
         ParentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));

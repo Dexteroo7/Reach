@@ -12,6 +12,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -21,7 +22,9 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
 
+import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
@@ -31,6 +34,8 @@ import reach.project.utils.SharedPrefUtils;
 
 public class ProfileActivity extends AppCompatActivity {
 
+    private static long userId = 0;
+
     private static WeakReference<ProfileActivity> reference = null;
 
     public static void openProfile(long userId, Context context) {
@@ -38,80 +43,97 @@ public class ProfileActivity extends AppCompatActivity {
         intent.putExtra("userId", userId);
         context.startActivity(intent);
     }
+
+    @Nullable
     private TextView sendButton;
+    @Nullable
+    private ImageView requestIcon;
+    @Nullable
+    private TextView text1, text2;
+
+    private final ExecutorService requestSender = MiscUtils.getRejectionExecutor();
+
+    private final View.OnClickListener sendRequest = view -> {
+
+        //send friend request
+        new SendRequest().executeOnExecutor(
+                requestSender,
+                userId,
+                SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE)));
+
+        //update locally
+        final ContentValues values = new ContentValues();
+        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+        getContentResolver().update(
+                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                values,
+                ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{userId + ""});
+
+        //show in view
+        setRequestSent();
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
         reference = new WeakReference<>(this);
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
-
         mToolbar.setTitle("");
         mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(ProfileActivity.this));
 
-        final RelativeLayout headerRoot = (RelativeLayout) findViewById(R.id.headerRoot);
-        final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
-        final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
-        final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
-        final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
-        final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
-        sendButton = (TextView) findViewById(R.id.sendButton);
-
         final Intent intent = getIntent();
-        final long userId = intent.getLongExtra("userId", 0L);
-        if (userId == 0) {
+        if (intent == null || (userId = intent.getLongExtra("userId", 0L)) == 0) {
             finish();
             return;
         }
 
         final Cursor cursor = getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
-                new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
-                        ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS,
-                        ReachFriendsHelper.COLUMN_IMAGE_ID,
-                        ReachFriendsHelper.COLUMN_STATUS,
-                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS},
-                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{
+                        ReachFriendsHelper.COLUMN_USER_NAME, //0
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //1
+                        ReachFriendsHelper.COLUMN_IMAGE_ID, //2
+                        ReachFriendsHelper.COLUMN_STATUS, //3
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS}, //4
+                ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
 
-        if (cursor != null) {
-
-            cursor.moveToFirst();
-            final String uName = cursor.getString(0);
-            final int numberOfSongs = cursor.getInt(1);
-            final int status = cursor.getInt(3);
-            final String imageId = cursor.getString(2);
-            final int numberOfApps = cursor.getInt(4);
-
-            userName.setText(uName);
-            musicCount.setText(numberOfSongs + "");
-            appCount.setText(numberOfApps + "");
-            userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
-            if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
-                setRequestSent();
-            else
-                sendButton.setOnClickListener(v -> {
-                    ProfileActivity.this.setRequestSent();
-                    new SendRequest().executeOnExecutor(
-                            StaticData.TEMPORARY_FIX,
-                            userId, SharedPrefUtils.getServerId(getSharedPreferences("Reach",
-                                    MODE_PRIVATE)), (long) status);
-
-                    //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
-                    final ContentValues values = new ContentValues();
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-                    getContentResolver().update(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
-                            values,
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{userId + ""});
-                });
-            cursor.close();
+        if (cursor == null) {
+            finish();
+            return;
         }
+
+        if (!cursor.moveToFirst()) {
+            cursor.close();
+            finish();
+            return;
+        }
+
+        final RelativeLayout headerRoot = (RelativeLayout) findViewById(R.id.headerRoot);
+
+        ((TextView) headerRoot.findViewById(R.id.userName)).setText(cursor.getString(0));
+        ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + cursor.getString(0).toLowerCase().split(" ")[0]);
+        ((TextView) headerRoot.findViewById(R.id.musicCount)).setText(cursor.getInt(1) + "");
+        ((SimpleDraweeView) headerRoot.findViewById(R.id.profilePic)).setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(2)));
+        ((TextView) headerRoot.findViewById(R.id.appCount)).setText(cursor.getInt(4) + "");
+
+        final int status = cursor.getInt(3);
+        cursor.close();
+
+        requestIcon = (ImageView) findViewById(R.id.profileIcon);
+        text1 = (TextView) findViewById(R.id.text1);
+        text2 = (TextView) findViewById(R.id.text2);
+        sendButton = (TextView) findViewById(R.id.sendButton);
+
+        if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
+            setRequestSent();
+        else
+            sendButton.setOnClickListener(sendRequest);
     }
 
     @Override
@@ -126,14 +148,26 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void setRequestSent() {
 
-        ImageView profileIcon = (ImageView) findViewById(R.id.profileIcon);
-        TextView  text1 = (TextView) findViewById(R.id.text1);
-        TextView text2 = (TextView) findViewById(R.id.text2);
+        if (requestIcon != null)
+            requestIcon.setImageResource(R.drawable.icon_pending_invite);
+        if (text1 != null)
+            text1.setText("Looks like the user has not accepted your request yet");
+        if (text2 != null)
+            text2.setText("Friend request pending");
+        if (sendButton != null)
+            sendButton.setText("CANCEL FRIEND REQUEST");
+    }
 
-        profileIcon.setImageResource(R.drawable.icon_pending_invite);
-        text1.setText("Looks like the user has not accepted your request yet");
-        text2.setText("Friend request pending");
-        sendButton.setText("CANCEL FRIEND REQUEST");
+    private void setRequestNotSent() {
+
+        if (requestIcon != null)
+            requestIcon.setImageResource(R.drawable.icon_friends_gray);
+        if (text1 != null)
+            text1.setText("You need to be friends before you can access their collections");
+        if (text2 != null)
+            text2.setText("Do you wish to send a request to this user?");
+        if (sendButton != null)
+            sendButton.setText("SEND FRIEND REQUEST");
     }
 
     private static final class SendRequest extends AsyncTask<Long, Void, Long> {
@@ -147,7 +181,7 @@ public class ProfileActivity extends AppCompatActivity {
              * params[2] = status
              */
 
-            final reach.backend.entities.messaging.model.MyString dataAfterWork = MiscUtils.autoRetry(
+            final MyString dataAfterWork = MiscUtils.autoRetry(
                     () -> StaticData.MESSAGING_API.requestAccess(params[1], params[0]).execute(),
                     Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
 
@@ -164,17 +198,20 @@ public class ProfileActivity extends AppCompatActivity {
 
             if (response != null && response > 0) {
 
-                //response becomes the id of failed person
-                MiscUtils.useActivity(reference, context -> {
+                final ContentValues values = new ContentValues();
+                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
 
-                    Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                    final ContentValues values = new ContentValues();
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                    context.getContentResolver().update(
+                //response becomes the id of failed person
+                MiscUtils.useActivity(reference, activity -> {
+
+                    Toast.makeText(activity, "Request Failed", Toast.LENGTH_SHORT).show();
+
+                    activity.getContentResolver().update(
                             Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
                             values,
                             ReachFriendsHelper.COLUMN_ID + " = ?",
                             new String[]{response + ""});
+                    activity.setRequestNotSent();
                 });
             }
 

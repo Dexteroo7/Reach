@@ -189,6 +189,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
+
         handOverMessage.handOverMessage((int) view.getTag());
 
         if (view instanceof ImageView) {

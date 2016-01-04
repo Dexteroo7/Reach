@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
@@ -68,10 +69,14 @@ public class AccountCreation extends Fragment {
     }
 
     private final int IMAGE_PICKER_SELECT = 999;
+
+    @Nullable
     private SplashInterface mListener = null;
+    @Nullable
     private ImageView profilePhotoSelector = null;
 
-    @Override
+    private final ExecutorService profilePhotoService = MiscUtils.getRejectionExecutor();
+
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -171,15 +176,16 @@ public class AccountCreation extends Fragment {
             return;
         }
 
-        InputStream imageStream;
+        final InputStream imageStream;
         try {
             imageStream = activity.getContentResolver().openInputStream(imageUri);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            imageStream = null;
+            Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        new ProcessImage().executeOnExecutor(StaticData.TEMPORARY_FIX, imageStream);
+        new ProcessImage().executeOnExecutor(profilePhotoService, imageStream);
     }
 
     @Override

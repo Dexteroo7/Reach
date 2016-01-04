@@ -26,7 +26,6 @@ import com.squareup.wire.Wire;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -92,7 +91,7 @@ public class MetaDataScanner extends IntentService {
 
             if (musicCursor == null)
                 return Collections.emptyList();
-            ////////////////////persistence holder use songId as key !
+            ////////////////////handling old visibility
 
             final Cursor reachSongInitialCursor = resolver.query(
                     MySongsProvider.CONTENT_URI,
@@ -177,6 +176,7 @@ public class MetaDataScanner extends IntentService {
                 if (directory.exists())
                     verifiedMusicPaths.addAll(recurseDirectory(directory));
 
+            int musicFiles = 0;
             while (musicCursor.moveToNext()) {
 
                 int music_column_name = musicCursor
@@ -224,15 +224,15 @@ public class MetaDataScanner extends IntentService {
                 builder.size(size);
                 builder.duration(duration);
 
-                String unverifiedPath = musicCursor.getString(music_column_file);
+                final String unverifiedPath = musicCursor.getString(music_column_file);
                 if (TextUtils.isEmpty(unverifiedPath)) {
                     continue;
                 }
-                String displayName = musicCursor.getString(music_column_name);
+                final String displayName = musicCursor.getString(music_column_name);
                 if (TextUtils.isEmpty(displayName)) {
                     continue;
                 }
-                String actualName = musicCursor.getString(music_column_actual_name);
+                final String actualName = musicCursor.getString(music_column_actual_name);
                 if (TextUtils.isEmpty(actualName)) {
                     continue;
                 }
@@ -297,14 +297,13 @@ public class MetaDataScanner extends IntentService {
                 //load visibility
                 if (persist == null) {
 
-                    if (filter(builder.actualName) ||
-                            filter(builder.displayName) ||
+                    if (filter(builder.displayName) ||
                             filter(builder.album) ||
                             filter(builder.artist) ||
-                            builder.size > 100 * 1024 * 1024 || //100mb
-                            builder.duration > 60 * 60 * 1000 || //1hour
-                            builder.size < 400 * 1024 || //400kb
-                            builder.duration < 40 * 1000) //40 seconds
+                            builder.size > 100 * 1024 * 1024 || //100mb big file
+                            builder.duration > 60 * 60 * 1000 || //1hour big file
+                            builder.size < 400 * 1024 || //400kb very small file
+                            builder.duration < 40 * 1000) //40 seconds very small file
 
                         builder.visibility(false);
                     else
@@ -330,7 +329,7 @@ public class MetaDataScanner extends IntentService {
                 }
 
                 toSend.add(builder.build());
-                sendMessage(SCANNING_FILES, files++);
+                sendMessage(SCANNING_MUSIC, musicFiles++);
             }
 
             musicCursor.close();
@@ -597,6 +596,7 @@ public class MetaDataScanner extends IntentService {
 //                packageVisibility.put(newPackage, true);
 
             final List<App> applicationsFound = new ArrayList<>();
+            int appCount = 0;
             for (ApplicationInfo applicationInfo : applicationInfoList) {
 
                 final App.Builder appBuilder = new App.Builder();
@@ -621,7 +621,7 @@ public class MetaDataScanner extends IntentService {
                     appBuilder.visible(visibility);
 
                 applicationsFound.add(appBuilder.build());
-                sendMessage(SCANNING_FILES, files++);
+                sendMessage(SCANNING_APPS, appCount++);
             }
 
             //update the package visibility
@@ -661,12 +661,11 @@ public class MetaDataScanner extends IntentService {
         super("MetaDataScanner");
     }
 
-    public static int SCANNING_FILES = 0;
-    public static int UPLOADING = 1;
-    public static int FINISHED = 2;
-    public static int TOTAL_EXPECTED = 3;
-
-    private static int files = 0;
+    public static int SCANNING_MUSIC = 0;
+    public static int SCANNING_APPS = 1;
+    public static int UPLOADING = 2;
+    public static int FINISHED = 3;
+    public static int TOTAL_EXPECTED = 4;
 
     @Nullable
     private static Messenger messenger = null;
@@ -702,14 +701,6 @@ public class MetaDataScanner extends IntentService {
                                      long serverId,
                                      Context context) {
 
-        final InputStream key;
-        try {
-            key = context.getAssets().open("key.p12");
-        } catch (IOException | NullPointerException e) {
-            e.printStackTrace();
-            return; // what to do ? this should probably not happen
-        }
-
         final List<Song> total = ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(myLibrary, downloaded))); //music
 
         for (Song song : total)
@@ -724,13 +715,26 @@ public class MetaDataScanner extends IntentService {
                 .build().toByteArray();
 
         //return false if same Music found !
-        final boolean newMusic = CloudStorageUtils.uploadMetaData(
-                musicBlob,
-                MiscUtils.getMusicStorageKey(serverId),
-                key,
-                CloudStorageUtils.MUSIC);
+        boolean newMusic = true;
+        try {
+            newMusic = CloudStorageUtils.uploadMetaData(
+                    musicBlob,
+                    MiscUtils.getMusicStorageKey(serverId),
+                    context.getAssets().open("key.p12"),
+                    CloudStorageUtils.MUSIC);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        if (newMusic || first) {
+        final Cursor localChecker = context.getContentResolver().query(
+                MySongsProvider.CONTENT_URI,
+                new String[]{MySongsHelper.COLUMN_ID}, null, null, null);
+
+        final boolean noOldMusic = localChecker == null || localChecker.getCount() == 0;
+        if (localChecker != null)
+            localChecker.close();
+
+        if (newMusic || first || noOldMusic) {
 
             //over-write music visibility
             ScanMusic.createVisibilityMap(total, serverId);
@@ -747,11 +751,16 @@ public class MetaDataScanner extends IntentService {
                 .app(apps).build().toByteArray();
 
         //return false if same app found !
-        final boolean newApps = CloudStorageUtils.uploadMetaData(
-                appBlob,
-                MiscUtils.getAppStorageKey(serverId),
-                key,
-                CloudStorageUtils.APP);
+        boolean newApps = true;
+        try {
+            newApps = CloudStorageUtils.uploadMetaData(
+                    appBlob,
+                    MiscUtils.getAppStorageKey(serverId),
+                    context.getAssets().open("key.p12"),
+                    CloudStorageUtils.APP);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (newApps || first) {
 

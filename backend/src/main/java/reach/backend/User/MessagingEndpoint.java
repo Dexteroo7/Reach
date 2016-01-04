@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Named;
 
+import reach.backend.MiscUtils;
 import reach.backend.Notifications.Notification;
 import reach.backend.Notifications.NotificationBase;
 import reach.backend.Notifications.NotificationEndpoint;
@@ -512,11 +513,13 @@ public class MessagingEndpoint {
         if (TextUtils.isEmpty(cursor))
             usersToPushTo = ofy().load().type(ReachUser.class)
                     .limit(limit)
-                    .project("id").iterator();
+                    .filter("gcmId !=", "")
+                    .project("gcmId").iterator();
         else
             usersToPushTo = ofy().load().type(ReachUser.class)
                     .limit(limit)
-                    .project("id")
+                    .filter("gcmId !=", "")
+                    .project("gcmId")
                     .startAt(Cursor.fromWebSafeString(cursor)).iterator();
 
         //create the push notification
@@ -539,7 +542,7 @@ public class MessagingEndpoint {
         if (receiverIds.isEmpty())
             return new MyString("-1");
 
-        log.info("Adding push to " + receiverIds.size() + " users");
+        log.info("Adding push to " + MiscUtils.seqToString(receiverIds) + " users");
 
         int processCount = 0;
         //load all notifications and add push to each

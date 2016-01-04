@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -150,7 +149,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             actualName = cursorExactType.getString(2);
             selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
 
-            Log.i("Ayush", "Selected state " + displayName + " " + selected);
+//            Log.i("Ayush", "Selected state " + displayName + " " + selected);
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);

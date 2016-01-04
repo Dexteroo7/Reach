@@ -29,6 +29,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
@@ -69,7 +71,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     }
 
     private ParentAdapter parentAdapter = new ParentAdapter(this, this);
-
+    //handle 2 at a time
+    private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
+    
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -111,7 +115,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
             updateDatabase(!visible, songId, myUserId, getContext());
 
-            new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX,
+            new ToggleVisibility().executeOnExecutor(visibilityHandler,
                     (long) (visible ? 0 : 1), //flip
                     songId,
                     myUserId);
@@ -123,7 +127,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             final PrivacySongItem song = (PrivacySongItem) message;
             updateDatabase(!song.visible, song.songId, myUserId, getContext());
 
-            new ToggleVisibility().executeOnExecutor(StaticData.TEMPORARY_FIX,
+            new ToggleVisibility().executeOnExecutor(visibilityHandler,
                     (long) (song.visible ? 0 : 1), //flip
                     song.songId,
                     myUserId);

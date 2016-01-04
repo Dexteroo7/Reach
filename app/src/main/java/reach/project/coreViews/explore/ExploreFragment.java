@@ -40,19 +40,17 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.ReachApplication;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
-import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
+import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -161,8 +159,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         if (response.code() != HttpStatusCodes.STATUS_CODE_OK)
             return Collections.emptyList();
 
-        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray()
-                ;
+        final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
 
         final List<JsonObject> containers = new ArrayList<>();
         for (int index = 0; index < receivedData.size(); index++)
@@ -193,21 +190,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
-        toolbar.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.player_button:
-                    startActivity(new Intent(getContext(), PlayerActivity.class));
-                    return true;
-                case R.id.notif_button:
-                    startActivity(new Intent(getContext(), NotificationActivity.class));
-                    return true;
-                case R.id.settings_button:
-                    startActivity(new Intent(getContext(), SettingsActivity.class));
-                    return true;
-                default:
-                    return false;
-            }
-        });
+        toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
+
         final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
         final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
 
@@ -327,7 +311,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                         e.printStackTrace();
                     }
                 }
-                Intent intent = new Intent(getActivity(), mClass);
+                final Intent intent = new Intent(getActivity(), mClass);
                 startActivity(intent);
                 break;
 
@@ -405,5 +389,26 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setVisibility((short) 1);
 
         MiscUtils.startDownload(reachDatabase, getActivity(), rootView);
+    }
+
+    @Nullable
+    private SuperInterface mListener;
+
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 }

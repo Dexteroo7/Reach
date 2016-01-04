@@ -63,7 +63,7 @@ public enum MiscUtils {
 
     public static long computeLastSeen(MemcacheService syncCache, long userId) {
 
-        final byte [] value = (byte[]) syncCache.get(userId);
+        final byte[] value = (byte[]) syncCache.get(userId);
 
         final long currentTime = System.currentTimeMillis();
         final long lastSeen;
@@ -77,5 +77,20 @@ public enum MiscUtils {
                 lastSeen = currentTime - Long.parseLong(val);
         }
         return lastSeen;
+    }
+
+    public static <T> String seqToString(Iterable<T> items) {
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        boolean needSeparator = false;
+        for (T x : items) {
+            if (needSeparator)
+                sb.append(' ');
+            sb.append(x.toString());
+            needSeparator = true;
+        }
+        sb.append(']');
+        return sb.toString();
     }
 }

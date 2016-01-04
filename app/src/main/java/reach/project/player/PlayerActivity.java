@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
@@ -236,7 +237,14 @@ public class PlayerActivity extends AppCompatActivity {
             }
 
             case ProcessManager.REPLY_ERROR: {
-                //TODO clear views
+
+                MiscUtils.useActivity(reference, activity -> {
+
+                    activity.togglePlayPause(false);
+                    activity.updatePrimaryProgress(0, 0);
+                    activity.updateSecondaryProgress((short) 0);
+                    Toast.makeText(activity, "Play when download completes", Toast.LENGTH_SHORT).show();
+                });
                 break;
             }
 

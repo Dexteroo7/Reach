@@ -78,6 +78,7 @@ public class CodeVerification extends Fragment {
     }
 
     private final ExecutorService oldAccountFetcher = MiscUtils.getRejectionExecutor();
+    private final ExecutorService accountCreator = MiscUtils.getRejectionExecutor();
 
     @Nullable
     private SplashInterface mListener = null;
@@ -182,7 +183,7 @@ public class CodeVerification extends Fragment {
 
             if (finalAuthKey.equals(editable.toString()))
                 //start account creation
-                StaticData.TEMPORARY_FIX.submit(proceedToAccountCreation);
+                accountCreator.submit(proceedToAccountCreation);
         }
     };
 
@@ -380,7 +381,7 @@ public class CodeVerification extends Fragment {
             if (finalAuthKey.equals(enteredCode)) {
 
                 //start account creation
-                StaticData.TEMPORARY_FIX.submit(proceedToAccountCreation);
+                accountCreator.submit(proceedToAccountCreation);
 
             } else
                 Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();

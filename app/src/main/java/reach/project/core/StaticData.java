@@ -9,8 +9,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
 import java.util.Comparator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
 import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
@@ -150,7 +148,4 @@ public final class StaticData {
     public static final String DROP_BOX_PROMO = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
     public static final String DROP_BOX_MANAGER = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
     public static final LongSparseArray<String> NETWORK_CACHE = new LongSparseArray<>();
-
-    //TODO remove
-    public static final ExecutorService TEMPORARY_FIX = Executors.unconfigurableExecutorService(Executors.newCachedThreadPool());
 }

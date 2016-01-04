@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.InsertContainer;
 import reach.backend.entities.userApi.model.ReachUser;
@@ -58,6 +60,7 @@ public class ScanFragment extends Fragment {
     private static final String IMAGE_FILE_PATH = "IMAGE_FILE_PATH";
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
 
+    @Nullable
     private static WeakReference<ScanFragment> reference = null;
 
     public static ScanFragment newInstance(String name, String imageFilePath,
@@ -80,7 +83,8 @@ public class ScanFragment extends Fragment {
         return fragment;
     }
 
-    @Override
+    private final ExecutorService accountUploader = MiscUtils.getRejectionExecutor();
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -108,9 +112,11 @@ public class ScanFragment extends Fragment {
                 (LinearLayout) rootView.findViewById(R.id.scan2),
                 rootView.findViewById(R.id.sendButton),
                 (TextView) rootView.findViewById(R.id.scanCount),
+                (TextView) rootView.findViewById(R.id.musicCount),
+                (TextView) rootView.findViewById(R.id.appCount),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
-                .executeOnExecutor(StaticData.TEMPORARY_FIX, userName, phoneNumber);
+                .executeOnExecutor(accountUploader, userName, phoneNumber);
 
         return rootView;
     }
@@ -119,17 +125,22 @@ public class ScanFragment extends Fragment {
 
         final View next;
         final TextView scanCount;
+        final TextView musicCount;
+        final TextView appCount;
         final ProgressBar progress;
         final String deviceId;
         final LinearLayout scan1, scan2;
 
-        private SaveUserData(LinearLayout scan1, LinearLayout scan2, View next,
-                             TextView scanCount, ProgressBar progress,
+        private SaveUserData(LinearLayout scan1, LinearLayout scan2, View next, TextView scanCount,
+                             TextView musicCount, TextView appCount, ProgressBar progress,
                              String deviceId) {
+
             this.scan1 = scan1;
             this.scan2 = scan2;
             this.next = next;
             this.scanCount = scanCount;
+            this.musicCount = musicCount;
+            this.appCount = appCount;
             this.progress = progress;
             this.deviceId = deviceId;
         }
@@ -327,12 +338,13 @@ public class ScanFragment extends Fragment {
         private final View.OnClickListener proceed = v -> MiscUtils.useFragment(reference, fragment -> {
             Activity activity = fragment.getActivity();
             Intent intent = new Intent(activity, ReachActivity.class);
-            intent.putExtra("firstTime",true);
+            intent.putExtra("firstTime", true);
             activity.startActivity(intent);
             activity.finish();
         });
 
-        private int totalFiles = 0;
+        private int totalMusic = 0;
+        private int totalApps = 0;
         private int totalExpected = 0;
 
         //TODO make static :(
@@ -348,24 +360,38 @@ public class ScanFragment extends Fragment {
 
                     next.setOnClickListener(proceed);
                     next.setVisibility(View.VISIBLE);
-                } else if (message.what == MetaDataScanner.SCANNING_FILES) {
+                } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
-                    totalFiles = message.arg1;
-                    scanCount.setText(totalFiles + "");
+                    totalMusic = message.arg1;
+                    scanCount.setText(totalMusic + totalApps + "");
+                    musicCount.setText(musicCount + "");
 
-                    if (totalExpected > totalFiles)
-                        progress.setProgress((totalFiles * 100) / totalExpected);
+                    if (totalExpected > totalMusic + totalApps)
+                        progress.setProgress((totalMusic + totalApps * 100) / totalExpected);
+                    else
+                        progress.setProgress(100); //error case
+
+                } else if (message.what == MetaDataScanner.SCANNING_APPS) {
+
+                    totalApps = message.arg1;
+                    scanCount.setText(totalMusic + totalApps + "");
+                    appCount.setText(totalApps + "");
+
+                    if (totalExpected > totalMusic + totalApps)
+                        progress.setProgress((totalMusic + totalApps * 100) / totalExpected);
                     else
                         progress.setProgress(100); //error case
 
                 } else if (message.what == MetaDataScanner.UPLOADING) {
 
-                    scanCount.setText(totalFiles + "");
-                    TextView total = (TextView) scan2.findViewById(R.id.totalSongs);
-                    total.setText(totalFiles+ "");
+                    scanCount.setText(totalMusic + totalApps + "");
+                    musicCount.setText(totalMusic + "");
+                    appCount.setText(totalApps + "");
+
                     scan1.setVisibility(View.INVISIBLE);
                     scan2.setVisibility(View.VISIBLE);
                     progress.setProgress(100);
+
                 } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
 
                     totalExpected = message.arg1;

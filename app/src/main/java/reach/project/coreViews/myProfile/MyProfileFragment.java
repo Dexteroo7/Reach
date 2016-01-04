@@ -53,9 +53,6 @@ public class MyProfileFragment extends Fragment {
         return fragment;
     }
 
-    private Activity activity;
-    private int songCount;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -63,7 +60,7 @@ public class MyProfileFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.activity_your_profile, container, false);
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
         final Toolbar toolbar = materialViewPager.getToolbar();
-        activity = getActivity();
+        final Activity activity = getActivity();
 
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setTitle("My Profile");
@@ -94,29 +91,26 @@ public class MyProfileFragment extends Fragment {
         });
 
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
-        final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
-        final TextView musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
-        final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
-        final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
-        final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
+        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final String userName = SharedPrefUtils.getUserName(preferences);
 
-        SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
-        final String uName = SharedPrefUtils.getUserName(preferences);
-        userName.setText(uName);
-        Cursor cursor = activity.getContentResolver().query(MySongsProvider.CONTENT_URI,
+        final Cursor cursor = activity.getContentResolver().query(MySongsProvider.CONTENT_URI,
                 null, null, null, null);
+        final int songCount;
         if (cursor != null) {
             songCount = cursor.getCount();
             cursor.close();
-        }
-        musicCount.setText(songCount+"");
-        userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
+        } else
+            songCount = 0;
 
-        StaticData.TEMPORARY_FIX.execute(() -> appCount.setText(MiscUtils
-                .getInstalledApps(activity.getPackageManager()).size()+""));
+        ((TextView) headerRoot.findViewById(R.id.userName)).setText(userName);
+        ((TextView) headerRoot.findViewById(R.id.musicCount)).setText(songCount + "");
+        ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + userName.toLowerCase().split(" ")[0]);
 
-        profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
+        new Thread(() -> ((TextView) headerRoot.findViewById(R.id.appCount)).setText(MiscUtils
+                .getInstalledApps(activity.getPackageManager()).size() + "")).start();
+
+        ((SimpleDraweeView) headerRoot.findViewById(R.id.profilePic)).setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                 + SharedPrefUtils.getImageId(preferences)));
 
         ViewPager viewPager = materialViewPager.getViewPager();
