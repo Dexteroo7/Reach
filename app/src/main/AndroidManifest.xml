@@ -157,7 +157,7 @@
         -->
 
         <activity
-            android:name=".push.PushActivity"
+            android:name=".coreViews.push.PushActivity"
             android:label="@string/title_activity_push"
             android:launchMode="singleInstance"
             android:parentActivityName=".core.ReachActivity"

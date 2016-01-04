@@ -13,7 +13,7 @@ enum ExploreTypes implements EnumHelper<String> {
     MUSIC(R.layout.explore_music),
     APP(R.layout.explore_app),
 
-    MISC(R.layout.explore_music),
+    MISC(R.layout.explore_misc),
 
     LOADING(R.layout.explore_loading),
     DONE_FOR_TODAY(android.R.layout.simple_list_item_1);

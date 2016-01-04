@@ -132,6 +132,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             final Cursor cursorExactType = (Cursor) friend;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
+            songItemHolder.downButton.setImageResource(R.drawable.icon_play_circle_pink);
             holder.itemView.setBackgroundResource(0);
             songItemHolder.bindPosition(position);
 

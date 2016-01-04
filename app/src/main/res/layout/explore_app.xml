@@ -33,7 +33,8 @@
                 <com.facebook.drawee.view.SimpleDraweeView
                     android:id="@+id/image"
                     android:layout_gravity="center"
-                    fresco:placeholderImage="@drawable/default_profile_circle"
+                    fresco:placeholderImage="@android:drawable/sym_def_app_icon"
+                    fresco:placeholderImageScaleType="fitXY"
                     android:layout_height="110dp"
                     android:layout_width="110dp"/>
             </FrameLayout>
@@ -100,17 +101,16 @@
                 android:textSize="16sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-            <TextView
+            <RatingBar
                 android:id="@+id/rating"
-                android:layout_marginTop="10dp"
-                android:text="Rating"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="@color/reach_color"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/subtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_marginTop="10dp"
+                style="?android:attr/ratingBarStyleSmall"
+                android:numStars="5"
+                android:stepSize="0.1" />
             <LinearLayout
                 android:id="@+id/handle"
                 android:gravity="center_vertical"
@@ -124,14 +124,14 @@
                     android:id="@+id/userImage"
                     fresco:roundAsCircle="true"
                     card_view:placeholderImage="@drawable/default_profile_circle"
-                    android:layout_marginRight="2dp"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp" />
+                    android:layout_marginRight="5dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp" />
                 <TextView
                     android:id="@+id/userHandle"
                     android:text="handle"
                     android:textSize="16sp"
-                    android:textColor="@color/reach_blue"
+                    android:textColor="@color/reach_color"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>

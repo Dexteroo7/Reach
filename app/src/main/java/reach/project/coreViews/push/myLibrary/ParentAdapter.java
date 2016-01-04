@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -152,7 +153,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);
-            songItemHolder.checkBox.setSelected(selected);
+            songItemHolder.checkBox.setChecked(selected);
+            songItemHolder.mask.setVisibility(selected ? View.VISIBLE : View.GONE);
 
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 

@@ -17,6 +17,7 @@ import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
+import reach.project.R;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -84,6 +85,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     @Override
     public void onBindViewHolder(SongItemHolder holder, MusicData item) {
 
+        holder.downButton.setImageResource(R.drawable.icon_play_circle_pink);
         holder.songName.setText(item.getDisplayName());
         holder.artistName.setText(item.getArtistName());
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(

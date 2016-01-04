@@ -11,7 +11,7 @@
         android:id="@+id/notif_button"
         android:title="Notifications"
         app:showAsAction="always"
-        android:icon="@drawable/icon_notification_new_pink"
+        android:icon="@drawable/icon_notification_pink"
         />
     <item
         android:id="@+id/settings_button"

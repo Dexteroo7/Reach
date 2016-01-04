@@ -106,7 +106,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         holder.songName.setText(item.displayName);
         holder.artistName.setText(item.artist);
-        holder.checkBox.setSelected(ReachActivity.selectedSongIds.get(item.songId, false));
+        final boolean selected = ReachActivity.selectedSongIds.get(item.songId, false);
+        holder.mask.setVisibility(selected ? View.VISIBLE : View.GONE);
+        holder.checkBox.setChecked(selected);
 
 //        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.selectedSongIds.get(item.songId, false));
 

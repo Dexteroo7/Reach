@@ -3,6 +3,7 @@ package reach.project.coreViews.explore;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -48,6 +49,7 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
+import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
 /**
@@ -228,7 +230,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onDestroyView() {
 
         super.onDestroyView();
-        buffer.close();
         rootView = null;
     }
 
@@ -300,6 +301,18 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case MISC:
+                final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
+                final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
+                Class<?> mClass = null;
+                if(activityClass != null) {
+                    try {
+                        mClass = Class.forName(activityClass);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                final Intent intent = new Intent(getActivity(), mClass);
+                startActivity(intent);
                 break;
 
             case LOADING:

@@ -7,11 +7,12 @@
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
-        android:layout_marginLeft="10dp"
         android:layout_centerVertical="true"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        fresco:placeholderImage="@color/reach_color" />
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        fresco:placeholderImage="@drawable/default_music_icon" />
 
     <CheckBox
         android:id="@+id/checkBox"
@@ -29,8 +30,8 @@
         android:layout_marginLeft="10dp"
         android:layout_toLeftOf="@id/checkBox"
         android:layout_toRightOf="@id/albumArt"
-        android:ellipsize="marquee"
         android:layout_marginTop="15dp"
+        android:ellipsize="marquee"
         android:lines="1"
         android:text="Test"
         android:textColor="#f33b5b"
@@ -42,7 +43,7 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/songName"
         android:layout_below="@id/songName"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="10dp"
         android:layout_toLeftOf="@id/checkBox"
         android:ellipsize="marquee"
         android:lines="1"
@@ -53,5 +54,5 @@
         android:visibility="gone"
         android:background="#30f33b5b"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent" />
 </RelativeLayout>

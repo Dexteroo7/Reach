@@ -1,4 +1,4 @@
-package reach.project.push;
+package reach.project.coreViews.push;
 
 import android.view.View;
 import android.widget.CheckBox;
