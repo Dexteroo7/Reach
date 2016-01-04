@@ -112,8 +112,8 @@ public class ScanFragment extends Fragment {
                 (LinearLayout) rootView.findViewById(R.id.scan2),
                 rootView.findViewById(R.id.sendButton),
                 (TextView) rootView.findViewById(R.id.scanCount),
-                (TextView) rootView.findViewById(R.id.musicCount),
-                (TextView) rootView.findViewById(R.id.appCount),
+                (TextView) rootView.findViewById(R.id.totalSongs),
+                (TextView) rootView.findViewById(R.id.totalApps),
                 (ProgressBar) rootView.findViewById(R.id.scanProgress),
                 MiscUtils.getDeviceId(getActivity()).trim().replace(" ", "-"))
                 .executeOnExecutor(accountUploader, userName, phoneNumber);
@@ -343,6 +343,7 @@ public class ScanFragment extends Fragment {
             activity.finish();
         });
 
+        private int totalFiles = 0;
         private int totalMusic = 0;
         private int totalApps = 0;
         private int totalExpected = 0;
@@ -363,28 +364,34 @@ public class ScanFragment extends Fragment {
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
                     totalMusic = message.arg1;
-                    scanCount.setText(totalMusic + totalApps + "");
-                    musicCount.setText(musicCount + "");
+                    Log.d("Ashish", totalMusic + "," + totalApps);
 
-                    if (totalExpected > totalMusic + totalApps)
-                        progress.setProgress((totalMusic + totalApps * 100) / totalExpected);
+                    totalFiles = totalMusic + totalApps;
+                    scanCount.setText(totalFiles + "");
+
+                    if (totalExpected > totalFiles)
+                        progress.setProgress((totalFiles * 100) / totalExpected);
                     else
                         progress.setProgress(100); //error case
 
                 } else if (message.what == MetaDataScanner.SCANNING_APPS) {
 
                     totalApps = message.arg1;
-                    scanCount.setText(totalMusic + totalApps + "");
-                    appCount.setText(totalApps + "");
+                    Log.d("Ashish", totalMusic + "," + totalApps);
 
-                    if (totalExpected > totalMusic + totalApps)
-                        progress.setProgress((totalMusic + totalApps * 100) / totalExpected);
+                    totalFiles = totalMusic + totalApps;
+                    scanCount.setText(totalFiles + "");
+
+                    if (totalExpected > totalFiles)
+                        progress.setProgress((totalFiles * 100) / totalExpected);
                     else
                         progress.setProgress(100); //error case
 
                 } else if (message.what == MetaDataScanner.UPLOADING) {
 
-                    scanCount.setText(totalMusic + totalApps + "");
+                    Log.d("Ashish", totalMusic + "," + totalApps);
+                    totalFiles = totalMusic + totalApps;
+                    scanCount.setText(totalFiles + "");
                     musicCount.setText(totalMusic + "");
                     appCount.setText(totalApps + "");
 

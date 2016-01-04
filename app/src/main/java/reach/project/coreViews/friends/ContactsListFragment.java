@@ -114,7 +114,7 @@ public class ContactsListFragment extends Fragment implements
 
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Friends");
-        mToolbar.inflateMenu(R.menu.myreach_menu);
+        mToolbar.inflateMenu(R.menu.pager_menu);
         mToolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));

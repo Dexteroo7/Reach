@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -34,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import reach.project.R;
+import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.apps.App;
 import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
@@ -45,12 +45,12 @@ import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.ContactsListFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
+import reach.project.coreViews.push.PushActivity;
+import reach.project.coreViews.push.PushContainer;
 import reach.project.music.Song;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.player.PlayerActivity;
-import reach.project.coreViews.push.PushActivity;
-import reach.project.coreViews.push.PushContainer;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
@@ -79,8 +79,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     ////////////////////////////////////////private static final
 
     private static final SecureRandom ID_GENERATOR = new SecureRandom();
-    private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
-    private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
+//    private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
+//    private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
 
     @SuppressWarnings("unchecked")
     private static final PagerFragment DOWNLOAD_PAGER = PagerFragment.getNewInstance("Manager",
@@ -197,6 +197,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(notificationIntent);
                 return true;
+            case R.id.settings_button:
+                final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
+                settingsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(settingsIntent);
+                return true;
         }
 
         return false;
@@ -234,7 +239,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         viewPager = null;
     }
 
-    @Override
+    /*@Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -255,7 +260,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         } else
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
+    }*/
 
     @Override
     protected void onPostResume() {
@@ -264,26 +269,26 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         Log.i("Ayush", "Called onPostResume");
         processIntent(getIntent());
 
-//        if (Build.VERSION.SDK_INT >= 23) {
-//
-//            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
-//
-//                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
-//                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
-//                ActivityCompat.requestPermissions(this,
-//                        new String[]{
-//                                Manifest.permission.READ_CONTACTS
-//                        }, MY_PERMISSIONS_READ_CONTACTS);
-//            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
-//
-//                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
-//                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
-//                ActivityCompat.requestPermissions(this,
-//                        new String[]{
-//                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-//                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-//            }
-//        }
+        /*if (Build.VERSION.SDK_INT >= 23) {
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
+                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.READ_CONTACTS
+                        }, MY_PERMISSIONS_READ_CONTACTS);
+            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+            }
+        }*/
     }
 
     @Override

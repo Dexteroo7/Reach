@@ -66,12 +66,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         super.onCreate(savedInstanceState);
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
-    }
-
-    @Override
-    protected void onPostResume() {
-
-        super.onPostResume();
 
         if (Build.VERSION.SDK_INT >= 23) {
 
@@ -158,7 +152,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             if (!(grantResults.length > 0 && grantResults[0] == 0)) {
 
                 Toast.makeText(this,
-                        "Permission to access Storage is required to use the App",
+                        "Storage permission is required to use the App",
                         Toast.LENGTH_LONG).show();
                 //TODO track
                 finish();
