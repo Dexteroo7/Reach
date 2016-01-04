@@ -105,10 +105,8 @@ public class PagerFragment extends Fragment {
 
     public void setItem(int position) {
 
-        if (viewPager == null)
-            return;
-
-        viewPager.setCurrentItem(position, true);
+        if (viewPager != null)
+            viewPager.setCurrentItem(position, true);
     }
 
     private ViewPager viewPager;
@@ -127,17 +125,14 @@ public class PagerFragment extends Fragment {
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
         String title = arguments.getString("pageTitle");
         toolbar.setTitle(title);
+        toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
+
         if (title != null) {
 
-            if (title.equals("Push")) {
-
+            if (title.equals("Push"))
                 toolbar.inflateMenu(R.menu.menu_push);
-                toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-            } else {
-
+            else
                 toolbar.inflateMenu(R.menu.pager_menu);
-                toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-            }
         }
 
         final Parcelable[] parcelables = arguments.getParcelableArray(PARCEL_PAGER);

@@ -15,8 +15,6 @@ import reach.project.R;
 
 public class NotificationActivity extends AppCompatActivity {
 
-    //private static WeakReference<InviteActivity> reference;
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 
@@ -30,13 +28,10 @@ public class NotificationActivity extends AppCompatActivity {
         mToolbar.setTitle("Notifications");
         mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(NotificationActivity.this));
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.invitePager);
+        final ViewPager viewPager = (ViewPager) findViewById(R.id.invitePager);
         viewPager.setAdapter(new InvitePagerAdapter(getSupportFragmentManager()));
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.inviteTabLayout);
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.inviteTabLayout);
         tabLayout.setupWithViewPager(viewPager);
-
-        //sharedPreferences = getSharedPreferences("Reach", Context.MODE_APPEND);
-
     }
 
     private class InvitePagerAdapter extends FragmentPagerAdapter {

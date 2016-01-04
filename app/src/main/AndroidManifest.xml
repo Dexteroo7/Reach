@@ -30,13 +30,31 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".onBoarding.SplashActivity"
+            android:name=".core.ReachActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustPan">
+            <intent-filter>
+                <action android:name="process_multiple" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".onBoarding.SplashActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,16 +64,108 @@
         </activity>
 
         <activity
-            android:name=".core.ReachActivity"
-            android:label="@string/app_name"
+            android:name=".core.DialogActivity"
+            android:label="@string/title_activity_reach_notification"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:parentActivityName=".core.ReachActivity"
+            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+
+        <activity
+            android:name=".coreViews.myProfile.EditProfileActivity"
+            android:label="@string/title_activity_edit_profile"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:parentActivityName=".core.ReachActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".ancillaryViews.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:parentActivityName=".core.ReachActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".coreViews.friends.invite.InviteActivity"
+            android:label="@string/title_activity_invite"
+            android:launchMode="singleInstance"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".notificationCentre.NotificationActivity"
+            android:label="@string/title_activity_notification"
+            android:launchMode="singleInstance"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".coreViews.yourProfile.ProfileActivity"
+            android:label="@string/title_activity_profile"
+            android:launchMode="singleInstance"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <activity
+            android:name=".coreViews.yourProfile.YourProfileActivity"
+            android:label="@string/title_activity_your_profile"
+            android:launchMode="singleInstance"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+
+        <!--
+        <activity
+            android:name=".devikaChat.ChatActivity"
+            android:label="@string/title_activity_chat"
             android:launchMode="singleTop"
+            android:parentActivityName=".core.ReachActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan">
-            <intent-filter>
-                <action android:name="process_multiple" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+        -->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <activity
+            android:name=".push.PushActivity"
+            android:label="@string/title_activity_push"
+            android:launchMode="singleInstance"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
         </activity>
 
         <receiver
@@ -109,6 +219,10 @@
             android:name="com.google.android.gms.analytics.CampaignTrackingService"
             android:exported="false" />
 
+        <service
+            android:name=".onBoarding.smsRelated.SmsListener"
+            android:exported="false" />
+
         <provider
             android:name=".coreViews.friends.ReachFriendsProvider"
             android:authorities="reach.project.coreViews.friends.ReachFriendsProvider"
@@ -120,101 +234,6 @@
             android:authorities="reach.project.music.MySongsProvider"
             android:exported="false"
             android:multiprocess="true" />
-
-        <activity
-            android:name=".core.DialogActivity"
-            android:excludeFromRecents="true"
-            android:label="@string/title_activity_reach_notification"
-            android:launchMode="singleTop"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.Dialog" />
-
-        <activity
-            android:name=".coreViews.myProfile.EditProfileActivity"
-            android:label="@string/title_activity_edit_profile"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-
-        <activity
-            android:name=".ancillaryViews.SettingsActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".core.ReachActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-        <activity
-            android:name=".coreViews.friends.invite.InviteActivity"
-            android:label="@string/title_activity_invite"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-        <activity
-            android:name=".notificationCentre.NotificationActivity"
-            android:label="@string/title_activity_notification"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-
-        <activity
-            android:name=".coreViews.yourProfile.ProfileActivity"
-            android:label="@string/title_activity_profile"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-        <activity
-            android:name=".coreViews.yourProfile.YourProfileActivity"
-            android:label="@string/title_activity_your_profile"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-
-        <!--
-        <activity
-            android:name=".devikaChat.ChatActivity"
-            android:label="@string/title_activity_chat"
-            android:launchMode="singleTop"
-            android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-        -->
-
-        <activity
-            android:name=".push.PushActivity"
-            android:label="@string/title_activity_push"
-            android:parentActivityName=".core.ReachActivity"
-            android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="reach.project.core.ReachActivity" />
-        </activity>
-
-        <service
-            android:name=".onBoarding.smsRelated.SmsListener"
-            android:exported="false" />
 
         <!-- Things on process :remote -->
 
@@ -233,6 +252,7 @@
             android:name=".player.PlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_player"
+            android:launchMode="singleInstance"
             android:parentActivityName=".core.ReachActivity"
             android:process=":remote"
             android:screenOrientation="portrait">

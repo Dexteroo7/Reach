@@ -17,7 +17,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
@@ -26,8 +25,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -41,17 +38,15 @@ import java.util.concurrent.Executors;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
-import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
 import reach.project.coreViews.friends.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
-import reach.project.notificationCentre.NotificationActivity;
-import reach.project.player.PlayerActivity;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 
@@ -120,27 +115,7 @@ public class ContactsListFragment extends Fragment implements
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.myreach_menu);
-        final Menu menu = mToolbar.getMenu();
-        mToolbar.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.settings_button:
-                    startActivity(new Intent(activity, SettingsActivity.class));
-                    return true;
-                case R.id.player_button:
-                    startActivity(new Intent(activity, PlayerActivity.class));
-                    return true;
-            }
-            return false;
-        });
-
-        final MenuItem notificationButton = menu.findItem(R.id.notif_button);
-        if (notificationButton != null) {
-
-            MenuItemCompat.setActionView(notificationButton, R.layout.reach_queue_counter);
-            final View notificationContainer = MenuItemCompat.getActionView(notificationButton).findViewById(R.id.counterContainer);
-            notificationContainer.setOnClickListener(v -> startActivity(new Intent(activity, NotificationActivity.class)));
-//            notificationCount = (TextView) notificationContainer.findViewById(R.id.reach_q_count);
-        }
+        mToolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
@@ -348,5 +323,26 @@ public class ContactsListFragment extends Fragment implements
             }
         }
         ///////
+    }
+
+    @Nullable
+    private SuperInterface mListener;
+
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SuperInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 }

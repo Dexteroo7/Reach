@@ -90,19 +90,8 @@ class ExploreBuffer<T> implements Closeable {
         final int currentSize = storyBuffer.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 3 && !isDoneForToday.get()) {
-
-//            final T lastItem = storyBuffer.get(currentSize - 1);
-//            if (!exploration.isDoneForDay(lastItem) && !exploration.isLoading(lastItem)) {
-//
-//                //if indication is absent
-//                Log.i("Ayush", "Adding a loading response");
-//                storyBuffer.add(exploration.getLoadingResponse());
-//                exploration.notifyDataAvailable();
-//            }
-
+        if (position > currentSize - 3 && !isDoneForToday.get())
             new FetchNextBatch<>().executeOnExecutor(executorService, exploration.fetchNextBatch());
-        }
 
         if (position > currentSize)
             return null;
@@ -116,7 +105,11 @@ class ExploreBuffer<T> implements Closeable {
      * @return size in int
      */
     public int currentBufferSize() {
-        return storyBuffer.size();
+
+        final int currentSize = storyBuffer.size();
+        if (currentSize == 0)
+            new FetchNextBatch<>().executeOnExecutor(executorService, exploration.fetchNextBatch());
+        return currentSize;
     }
 
     @Override

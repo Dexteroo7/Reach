@@ -21,6 +21,8 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
     public static Intent getPushActivityIntent(PushContainer pushContainer, Context context) throws IOException {
 
         final Intent intent = new Intent(context, PushActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
         final String compressedString = StringCompress.compressBytesToString(pushContainer.toByteArray());
 
         intent.putExtra(PUSH_CONTAINER, compressedString);

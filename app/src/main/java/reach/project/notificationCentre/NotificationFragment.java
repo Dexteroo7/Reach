@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,10 +22,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import reach.backend.notifications.notificationApi.model.NotificationBase;
 import reach.project.R;
@@ -43,11 +40,8 @@ import reach.project.utils.SharedPrefUtils;
 public class NotificationFragment extends Fragment {
 
 
-    public static final List<NotificationBaseLocal> notifications = new ArrayList<>();
-    private static WeakReference<NotificationFragment> reference = null;
-    private ExecutorService notificationRefresher = null;
-    private ListView listView = null;
     private static long serverId = 0;
+    private static WeakReference<NotificationFragment> reference = null;
 
     public static NotificationFragment newInstance() {
 
@@ -62,11 +56,17 @@ public class NotificationFragment extends Fragment {
         return reference;
     }
 
-    public void refresh() {
+//    public void refresh() {
+//
+//        if (listView != null)
+//            new NotificationSync().executeOnExecutor(notificationRefresher);
+//    }
 
-        if (notificationRefresher != null && listView != null)
-            new NotificationSync().executeOnExecutor(notificationRefresher);
-    }
+    private final List<NotificationBaseLocal> notifications = new ArrayList<>();
+    private final ExecutorService notificationRefresher = MiscUtils.getRejectionExecutor();
+
+    @Nullable
+    private ListView listView = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -76,100 +76,69 @@ public class NotificationFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_notification, container, false);
 
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
-        listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
+        listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0); //ignore cant be null
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE));
         listView.setAdapter(new ReachNotificationAdapter(getActivity(), R.layout.notification_item, notifications, serverId));
         listView.setOnItemClickListener(itemClickListener);
 
-        notificationRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
-                0L, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<>(),
-                (r, executor) -> {/**ignored**/}));
-
         reference = new WeakReference<>(this);
-
-        refresh();
         return rootView;
     }
 
     @Override
-    public void onDestroyView() {
+    public void onResume() {
 
-        if (notificationRefresher != null)
-            notificationRefresher.shutdownNow();
-
-        notificationRefresher = null;
-        listView = null;
-        super.onDestroyView();
+        super.onResume();
+        new NotificationSync().executeOnExecutor(notificationRefresher);
     }
 
-    /*@Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        try {
-            mListener = (SuperInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement SuperInterface");
+    private AdapterView.OnItemClickListener itemClickListener = (parent, view, position, id) -> {
+
+        final ReachNotificationAdapter adapter = (ReachNotificationAdapter) parent.getAdapter();
+        final NotificationBaseLocal notificationBaseLocal = adapter.getItem(position);
+        final Types type = notificationBaseLocal.getTypes();
+        final long hostID = notificationBaseLocal.getHostId();
+
+        switch (type) {
+
+            case DEFAULT:
+                throw new IllegalArgumentException("Default notification in list !");
+            case PUSH:
+                if (ReachNotificationAdapter.accepted.get(notificationBaseLocal.getNotificationId())) {
+                    ReachNotificationAdapter.accepted.delete(notificationBaseLocal.getNotificationId());
+                } else return; //TODO fix this hack
+                break;
+            case LIKE:
+                break;
+            case BECAME_FRIENDS:
+                //check validity
+                final Cursor cursor = view.getContext().getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostID),
+                        new String[]{ReachFriendsHelper.COLUMN_ID},
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                        new String[]{hostID + ""}, null);
+
+                if (cursor == null || !cursor.moveToFirst()) {
+
+                    MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(),
+                            Optional.absent());
+
+                    if (cursor != null)
+                        cursor.close();
+                    //fail
+                    adapter.remove(notificationBaseLocal);
+                    Toast.makeText(view.getContext(), "404", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                cursor.close();
+                //mListener.onOpenLibrary(hostID);
+                break;
+            case PUSH_ACCEPTED:
+                break;
         }
-    }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }*/
-
-    private AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-
-            final ReachNotificationAdapter adapter = (ReachNotificationAdapter) parent.getAdapter();
-            final NotificationBaseLocal notificationBaseLocal = adapter.getItem(position);
-            final Types type = notificationBaseLocal.getTypes();
-            final long hostID = notificationBaseLocal.getHostId();
-
-            switch (type) {
-
-                case DEFAULT:
-                    throw new IllegalArgumentException("Default notification in list !");
-                case PUSH:
-                    if (ReachNotificationAdapter.accepted.get(notificationBaseLocal.getNotificationId())) {
-                        ReachNotificationAdapter.accepted.delete(notificationBaseLocal.getNotificationId());
-                    } else return; //TODO fix this hack
-                    break;
-                case LIKE:
-                    break;
-                case BECAME_FRIENDS:
-                    //check validity
-                    final Cursor cursor = view.getContext().getContentResolver().query(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostID),
-                            new String[]{ReachFriendsHelper.COLUMN_ID},
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{hostID + ""}, null);
-
-                    if (cursor == null || !cursor.moveToFirst()) {
-
-                        MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(),
-                                Optional.absent());
-
-                        if (cursor != null)
-                            cursor.close();
-                        //fail
-                        adapter.remove(notificationBaseLocal);
-                        Toast.makeText(view.getContext(), "404", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    cursor.close();
-                    //mListener.onOpenLibrary(hostID);
-                    break;
-                case PUSH_ACCEPTED:
-                    break;
-            }
-
-            adapter.remove(notificationBaseLocal);
-            MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.absent());
-        }
+        adapter.remove(notificationBaseLocal);
+        MiscUtils.autoRetryAsync(() -> StaticData.NOTIFICATION_API.removeNotification(notificationBaseLocal.getNotificationId(), serverId).execute(), Optional.absent());
     };
 
     private static final class NotificationSync extends AsyncTask<Void, Void, List<NotificationBase>> {
@@ -206,7 +175,7 @@ public class NotificationFragment extends Fragment {
                     /**
                      * Clear all Notifications and add latest ones
                      */
-                    notifications.clear();
+                    fragment.notifications.clear();
 
                     for (NotificationBase base : notificationBaseList) {
 
@@ -214,7 +183,7 @@ public class NotificationFragment extends Fragment {
 
                             final BecameFriends becameFriends = new BecameFriends();
                             becameFriends.portData(base);
-                            notifications.add(becameFriends);
+                            fragment.notifications.add(becameFriends);
 
                         } else if (base.getTypes().equals(Types.LIKE.name())) {
 
@@ -222,7 +191,7 @@ public class NotificationFragment extends Fragment {
                             like.portData(base);
 
                             like.setSongName((String) base.get("songName"));
-                            notifications.add(like);
+                            fragment.notifications.add(like);
 
                         } else if (base.getTypes().equals(Types.PUSH.name())) {
 
@@ -233,7 +202,7 @@ public class NotificationFragment extends Fragment {
                             push.setFirstSongName((String) base.get("firstSongName"));
                             push.setCustomMessage((String) base.get("customMessage"));
                             push.setSize(Integer.parseInt(base.get("size").toString()));
-                            notifications.add(push);
+                            fragment.notifications.add(push);
 
                         } else if (base.getTypes().equals(Types.PUSH_ACCEPTED.name())) {
 
@@ -242,7 +211,7 @@ public class NotificationFragment extends Fragment {
 
                             pushAccepted.setFirstSongName((String) base.get("firstSongName"));
                             pushAccepted.setSize(Integer.parseInt(base.get("size").toString()));
-                            notifications.add(pushAccepted);
+                            fragment.notifications.add(pushAccepted);
 
                         } else
                             throw new IllegalArgumentException("Wrong notification type received " + base.getTypes());
