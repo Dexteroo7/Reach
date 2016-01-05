@@ -33,7 +33,7 @@ import reach.project.utils.MiscUtils;
  * R.d) Receives musicData : when newSong() is called, musicData object is updated and observer is exited
  * Music player is reinitialized, started, and observer started again.
  */
-public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
+class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         implements Player.DecoderHandler,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener,
@@ -55,7 +55,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     public MusicHandler(MusicHandlerInterface handlerInterface) {
-        super(handlerInterface);
+        super(handlerInterface, Type.MUSIC);
     }
 
     public void passNewSong(MusicData musicData) {
@@ -72,13 +72,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         return Optional.fromNullable(currentSong);
     }
 
-    public static final String ACTION_NEW_SONG = "reach.project.reachProcess.reachService.MusicHandler.NEW_SONG";
-    public static final String ACTION_NEXT = "reach.project.reachProcess.reachService.MusicHandler.NEXT";
-    public static final String ACTION_PREVIOUS = "reach.project.reachProcess.reachService.MusicHandler.PREVIOUS";
-    //the ones below are directly linked with the player
-    public static final String ACTION_PLAY_PAUSE = "reach.project.reachProcess.reachService.MusicHandler.PLAY_PAUSE";
-    public static final String ACTION_SEEK = "reach.project.reachProcess.reachService.MusicHandler.SEEK";
-    public static final String ACTION_KILL = "reach.project.reachProcess.reachService.MusicHandler.KILL";
+
 
     /**
      * The volume we set the media player to when we lose audio focus, but are allowed to reduce

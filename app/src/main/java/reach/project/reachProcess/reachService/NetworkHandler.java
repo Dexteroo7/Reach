@@ -76,10 +76,10 @@ import reach.project.utils.SharedPrefUtils;
  * b) process current network operations
  * c) kill sleeping operations and sync up with database
  */
-public class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
+class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
     public NetworkHandler(NetworkHandlerInterface handlerInterface) {
-        super(handlerInterface);
+        super(handlerInterface, Type.NETWORK);
     }
 
     public boolean submitMessage(String message) {
