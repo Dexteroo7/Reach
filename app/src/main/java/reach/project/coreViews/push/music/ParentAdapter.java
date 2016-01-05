@@ -1,4 +1,4 @@
-package reach.project.coreViews.push.myLibrary;
+package reach.project.coreViews.push.music;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -88,10 +88,15 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         recentAdapter.updateRecent(newRecent);
     }
 
-    public void toggleSelected(long songId) {
+    public void setItemSelected(int position, long songId) {
+
+        if (position == -1)
+            notifyDataSetChanged();
+        else
+            notifyItemChanged(position);
+
         recentAdapter.toggleSelected(songId);
     }
-
     @Override
     public void close() {
 
@@ -147,7 +152,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             artist = cursorExactType.getString(4);
             album = cursorExactType.getString(3);
             actualName = cursorExactType.getString(2);
-            selected = ReachActivity.selectedSongIds.get(cursorExactType.getLong(0), false);
+            selected = ReachActivity.SELECTED_SONG_IDS.get(cursorExactType.getLong(0), false);
 
 //            Log.i("Ayush", "Selected state " + displayName + " " + selected);
 
@@ -241,7 +246,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             final long songId = cursor.getLong(0);
 
             reUsable[0] = songId;
-            reUsable[1] = ReachActivity.selectedSongIds.get(songId, false);
+            reUsable[1] = ReachActivity.SELECTED_SONG_IDS.get(songId, false);
             reUsable[2] = cursor.getShort(7); //visibility
             reUsable[3] = cursor.getString(1); //displayName
 

@@ -1,4 +1,4 @@
-package reach.project.coreViews.push.myLibrary;
+package reach.project.coreViews.push.music;
 
 import android.view.View;
 import android.widget.CheckBox;

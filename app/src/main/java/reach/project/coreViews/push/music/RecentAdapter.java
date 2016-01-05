@@ -1,4 +1,4 @@
-package reach.project.coreViews.push.myLibrary;
+package reach.project.coreViews.push.music;
 
 import android.net.Uri;
 import android.support.annotation.Nullable;
@@ -16,7 +16,6 @@ import com.google.common.collect.Ordering;
 import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 import reach.project.core.ReachActivity;
 import reach.project.music.Song;
@@ -74,8 +73,10 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         recentMusic.addAll(newSortedList);
 
         notifyDataSetChanged();
-        if (adapterWeakReference != null)
-            adapterWeakReference.get().notifyDataSetChanged();
+
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     public void toggleSelected(long songId) {
@@ -83,9 +84,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         int position = 0;
         for (Song song : getMessageList()) {
 
-            position++;
-            if (Objects.equals(song.songId, songId))
+            if (song.songId != null && song.songId == songId)
                 break;
+            position++;
         }
 
         if (position < getItemCount())
@@ -106,11 +107,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         holder.songName.setText(item.displayName);
         holder.artistName.setText(item.artist);
-        final boolean selected = ReachActivity.selectedSongIds.get(item.songId, false);
+        final boolean selected = ReachActivity.SELECTED_SONG_IDS.get(item.songId, false);
         holder.mask.setVisibility(selected ? View.VISIBLE : View.GONE);
         holder.checkBox.setChecked(selected);
 
-//        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.selectedSongIds.get(item.songId, false));
+//        Log.i("Ayush", "Selected state " + item.displayName + " " + ReachActivity.SELECTED_SONG_IDS.get(item.songId, false));
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.album,

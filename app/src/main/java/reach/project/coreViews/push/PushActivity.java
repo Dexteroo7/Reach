@@ -10,6 +10,8 @@ import android.text.TextUtils;
 import java.io.IOException;
 
 import reach.project.R;
+import reach.project.coreViews.push.friends.ContactChooserFragment;
+import reach.project.coreViews.push.friends.MessageWriterFragment;
 import reach.project.utils.StringCompress;
 
 public class PushActivity extends AppCompatActivity implements ContactChooserInterface {
@@ -18,7 +20,7 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
     public static final String FIRST_CONTENT_NAME = "FIRST_CONTENT_NAME";
     public static final String PUSH_SIZE = "PUSH_SIZE";
 
-    public static Intent getPushActivityIntent(PushContainer pushContainer, Context context) throws IOException {
+    public static void startPushActivity(PushContainer pushContainer, Context context) throws IOException {
 
         final Intent intent = new Intent(context, PushActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -34,7 +36,7 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
 
         intent.putExtra(PUSH_SIZE, pushContainer.songCount + pushContainer.appCount);
 
-        return intent;
+        context.startActivity(intent);
     }
 
     @Nullable
@@ -53,10 +55,10 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
         contentCount = getIntent().getIntExtra(PUSH_SIZE, 0);
 
         //sanity check
-        /*if (TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstContentName) || contentCount == 0) {
+        if (TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstContentName) || contentCount == 0) {
             finish();
             return;
-        }*/
+        }
         switchToContactChooser();
     }
 
@@ -73,9 +75,9 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
     @Override
     public void switchToMessageWriter(long[] serverIds) {
 
-        /*if (serverIds == null || serverIds.length == 0 || TextUtils.isEmpty(pushContainer) || TextUtils.isEmpty(firstContentName) || contentCount == 0)
+        if (serverIds == null || serverIds.length == 0)
             finish(); //sanity check
-        else*/
+        else
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.container, MessageWriterFragment.getInstance(serverIds, pushContainer, firstContentName, contentCount), "message_writer").commit();
     }

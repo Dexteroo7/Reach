@@ -13,12 +13,12 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.util.LongSparseArray;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.LongSparseArray;
 import android.widget.Toast;
 
 import com.google.common.collect.ImmutableList;
@@ -64,6 +64,32 @@ import reach.project.utils.viewHelpers.PagerFragment;
 
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
+    public static void openActivity(Context context) {
+
+        final Intent intent = new Intent(context, ReachActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent);
+    }
+
+    public static Intent getIntent(Context context) {
+
+        final Intent intent = new Intent(context, ReachActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        return intent;
+    }
+
+    public static void openDownloading() {
+
+        MiscUtils.useActivity(reference, activity -> {
+
+            if (activity.viewPager == null)
+                return;
+
+            activity.viewPager.setCurrentItem(3, true);
+            DOWNLOAD_PAGER.setItem(1);
+        });
+    }
+
     ////////////////////////////////////////public static final
 
     public static final String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
@@ -72,9 +98,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_MY_PROFILE_MUSIC = "OPEN_MY_PROFILE_MUSIC";
     public static final String ADD_PUSH_SONG = "ADD_PUSH_SONG";
 
-    public static final Set<Song> selectedSongs = MiscUtils.getSet(5);
-    public static final Set<App> selectedApps = MiscUtils.getSet(5);
-    public static final LongSparseArray<Boolean> selectedSongIds = new LongSparseArray<>(5);
+    public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
+    public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
+    public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
 
     ////////////////////////////////////////private static final
 
@@ -100,7 +126,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 //                    new String[]{"My Applications"},
 //                    "Apps"),
             new PagerFragment.Pages(
-                    new Class[]{reach.project.coreViews.push.myLibrary.MyLibraryFragment.class},
+                    new Class[]{reach.project.coreViews.push.music.MyLibraryFragment.class},
                     new String[]{"My Library"},
                     "Songs"));
 
@@ -158,8 +184,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
             case R.id.push_button: {
 
-                if (selectedSongs.isEmpty() && selectedApps.isEmpty()) {
-                    Toast.makeText(ReachActivity.this, "First select some songs", Toast.LENGTH_SHORT).show();
+                if (SELECTED_SONGS.isEmpty() && SELECTED_APPS.isEmpty()) {
+                    Toast.makeText(this, "First select some songs", Toast.LENGTH_SHORT).show();
                     return false;
                 }
 
@@ -170,30 +196,30 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         .userImage(SharedPrefUtils.getImageId(preferences))
                         .firstSongName("")
                         .firstAppName("")
-                        .song(ImmutableList.copyOf(selectedSongs))
-                        .app(ImmutableList.copyOf(selectedApps))
-                        .songCount(selectedSongs.size())
-                        .appCount(selectedApps.size())
+                        .song(ImmutableList.copyOf(SELECTED_SONGS))
+                        .app(ImmutableList.copyOf(SELECTED_APPS))
+                        .songCount(SELECTED_SONGS.size())
+                        .appCount(SELECTED_APPS.size())
                         .build();
 
                 try {
-                    startActivity(PushActivity.getPushActivityIntent(pushContainer, ReachActivity.this));
+                    PushActivity.startPushActivity(pushContainer, this);
                 } catch (IOException e) {
 
                     e.printStackTrace();
                     //TODO Track
-                    Toast.makeText(ReachActivity.this, "Could not push", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Could not push", Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
 
             case R.id.player_button:
-                final Intent playerIntent = new Intent(ReachActivity.this, PlayerActivity.class);
+                final Intent playerIntent = new Intent(this, PlayerActivity.class);
                 playerIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                final Intent notificationIntent = new Intent(ReachActivity.this, NotificationActivity.class);
+                final Intent notificationIntent = new Intent(this, NotificationActivity.class);
                 notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(notificationIntent);
                 return true;
@@ -207,26 +233,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return false;
     };
 
-    public static long serverId = 0;
-
-    public static void openDownloading() {
-
-        MiscUtils.useActivity(reference, activity -> {
-
-            if (activity.viewPager == null)
-                return;
-
-            activity.viewPager.setCurrentItem(3, true);
-            DOWNLOAD_PAGER.setItem(1);
-        });
-    }
-
-
     @Nullable
     private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
-
+    private static long serverId = 0;
 
     @Override
     protected void onDestroy() {
@@ -458,10 +469,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         }
 
-        intent.removeExtra("openNotificationFragment");
-        intent.removeExtra("openPlayer");
-        intent.removeExtra("openFriendRequests");
-        intent.removeExtra("openNotifications");
+//        intent.removeExtra("openNotificationFragment");
+//        intent.removeExtra("openPlayer");
+//        intent.removeExtra("openFriendRequests");
+//        intent.removeExtra("openNotifications");
     }
 
     @Override

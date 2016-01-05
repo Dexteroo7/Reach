@@ -100,7 +100,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             final PackageManager packageManager = appItemHolder.appName.getContext().getPackageManager();
 
             appItemHolder.bindPosition(position);
-            appItemHolder.checkBox.setSelected(ReachActivity.selectedApps.contains(appExactType));
+            appItemHolder.checkBox.setSelected(ReachActivity.SELECTED_APPS.contains(appExactType));
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
                 appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));

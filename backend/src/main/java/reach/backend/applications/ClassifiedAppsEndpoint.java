@@ -116,9 +116,9 @@ public class ClassifiedAppsEndpoint {
 
         logger.info("Getting ClassifiedApps with ID: " + packageName);
         ClassifiedApps classifiedApps = ofy().load().type(ClassifiedApps.class).id(packageName).now();
-        if (classifiedApps == null) {
+        if (classifiedApps == null)
             throw new NotFoundException("Could not find ClassifiedApps with ID: " + packageName);
-        }
+
         return classifiedApps;
     }
 

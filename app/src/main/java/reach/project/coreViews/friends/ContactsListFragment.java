@@ -1,14 +1,10 @@
 package reach.project.coreViews.friends;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,25 +14,17 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
-
-import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
@@ -76,10 +64,10 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onDestroyView() {
 
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
         friendsAdapter.setHorizontalCursor(null);
         friendsAdapter.setVerticalCursor(null);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
 
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();
@@ -122,7 +110,7 @@ public class ContactsListFragment extends Fragment implements
         //gridView.setOnScrollListener(scrollListener);
 
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
-        inviteContainer.setOnClickListener(LocalUtils.inviteListener);
+        inviteContainer.setOnClickListener(inviteListener);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
         final GridLayoutManager manager = new GridLayoutManager(activity, 2);
 
@@ -227,103 +215,22 @@ public class ContactsListFragment extends Fragment implements
         }*/
     }
 
-    private enum LocalUtils {
-        ;
+    public final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
 
-        private static final ExecutorService friendRequestSender = Executors.newSingleThreadExecutor();
-
-        public static final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
-
-            //TODO
+        //TODO
 //            if (MiscUtils.isOnline(activity))
 //                FireOnce.sendPing(
 //                        null,
 //                        new WeakReference<>(getActivity().getContentResolver()),
 //                        serverId);
-        };
+    };
 
-        public static final View.OnClickListener inviteListener = v ->
-                MiscUtils.useContextFromFragment(reference, context -> {
-                    context.startActivity(new Intent(context, InviteActivity.class));
-                });
-
-        private static final Dialog.OnClickListener positiveButton = (dialog, which) -> {
-
-            final AlertDialog alertDialog = (AlertDialog) dialog;
-
-            final Object[] tag = (Object[]) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-
-            if (tag == null || tag.length != 3)
-                return;
-
-            final long clientId = (long) tag[0];
-            final short status = (short) tag[1];
-            if (tag[2] != null && tag[2] instanceof WeakReference) {
-
-                final Object object = ((WeakReference) tag[2]).get();
-                if (object != null && object instanceof View)
-                    Snackbar.make((View) object, "Access Request sent", Snackbar.LENGTH_SHORT).show();
-            }
-
-            new SendRequest().executeOnExecutor(friendRequestSender, clientId, serverId, (long) status); //cant have rejection here
-
-            //Toast.makeText(getActivity(), "Access Request sent", Toast.LENGTH_SHORT).show();
-            final ContentValues values = new ContentValues();
-            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
-            alertDialog.getContext().getContentResolver().update(
-                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + clientId),
-                    values,
-                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                    new String[]{clientId + ""});
-            dialog.dismiss();
-        };
-
-        private static final class SendRequest extends AsyncTask<Long, Void, Long> {
-
-            @Override
-            protected Long doInBackground(final Long... params) {
-
-                /**
-                 * params[0] = other id
-                 * params[1] = my id
-                 * params[2] = status
-                 */
-
-                final MyString dataAfterWork = MiscUtils.autoRetry(() -> StaticData.MESSAGING_API.requestAccess(params[1], params[0]).execute(),
-                        Optional.of(input -> (input == null || TextUtils.isEmpty(input.getString()) || input.getString().equals("false")))).orNull();
-
-                final String toParse;
-                if (dataAfterWork == null || TextUtils.isEmpty(toParse = dataAfterWork.getString()) || toParse.equals("false"))
-                    return params[0];
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(final Long response) {
-
-                super.onPostExecute(response);
-
-                if (response != null && response > 0) {
-
-                    //response becomes the id of failed person
-                    MiscUtils.useContextFromFragment(reference, context -> {
-
-                        Toast.makeText(context, "Request Failed", Toast.LENGTH_SHORT).show();
-                        final ContentValues values = new ContentValues();
-                        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-                        context.getContentResolver().update(
-                                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + response),
-                                values,
-                                ReachFriendsHelper.COLUMN_ID + " = ?",
-                                new String[]{response + ""});
-                        return null;
-                    });
-                }
-
-            }
+    public final View.OnClickListener inviteListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
         }
-        ///////
-    }
+    };
 
     @Nullable
     private SuperInterface mListener;

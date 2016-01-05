@@ -8,5 +8,5 @@ public interface ContactChooserInterface {
     void switchToContactChooser();
 
     //users to make the push to
-    void switchToMessageWriter(long [] serverIds);
+    void switchToMessageWriter(long[] serverIds);
 }

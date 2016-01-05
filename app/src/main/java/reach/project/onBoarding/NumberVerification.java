@@ -16,8 +16,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.lang.ref.WeakReference;
-
 import reach.project.R;
 import reach.project.utils.SharedPrefUtils;
 
@@ -35,14 +33,17 @@ public class NumberVerification extends Fragment {
             return null;
     };
 
-    private static WeakReference<NumberVerification> reference = null;
+    private static final InputFilter LENGTH_FILTER = new InputFilter.LengthFilter(14);
+
+//    private static WeakReference<NumberVerification> reference = null;
 
     public static NumberVerification newInstance() {
 
-        NumberVerification numberVerification;
-        if (reference == null || (numberVerification = reference.get()) == null)
-            reference = new WeakReference<>(numberVerification = new NumberVerification());
-        return numberVerification;
+//        NumberVerification numberVerification;
+//        if (reference == null || (numberVerification = reference.get()) == null)
+//            reference = new WeakReference<>(numberVerification = new NumberVerification());
+//        return numberVerification;
+        return new NumberVerification();
     }
 
     @Nullable
@@ -57,7 +58,8 @@ public class NumberVerification extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
 
         telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber);
-        telephoneNumber.setFilters(new InputFilter[]{SEXY_FILTER});
+        telephoneNumber.setText("+91-");
+        telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
         telephoneNumber.requestFocus();
         Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
 
@@ -67,6 +69,12 @@ public class NumberVerification extends Fragment {
 
         rootView.findViewById(R.id.verify).setOnClickListener(clickListener);
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        telephoneNumber = null;
     }
 
     @Override
@@ -95,7 +103,10 @@ public class NumberVerification extends Fragment {
 
         final String parsed;
         //replace every non-digit, will retain a minimum of 2 digits (91)
-        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) || parsed.length() < 10) {
+        if (TextUtils.isEmpty(phoneNumber) ||
+                phoneNumber.length() < 14 ||
+                TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) ||
+                parsed.length() < 10) {
 
             Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
             return;

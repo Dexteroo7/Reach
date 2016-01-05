@@ -50,16 +50,6 @@ class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
     @Override
     public QuickSyncFriends.Status call() {
 
-        //Now we collect the phoneNumbers on device
-        final HashSet<String> numbers = new HashSet<>();
-        numbers.add("8860872102"); //Devika
-        //scan phoneBook, add if found
-        MiscUtils.useContextFromContext(reference, context -> {
-            numbers.addAll(MiscUtils.scanPhoneBook(context.getContentResolver()));
-            return null;
-        });
-        Log.i("Ayush", "Prepared numbers" + numbers.size());
-
         //prepare data for quickSync call
         final Cursor currentIds = MiscUtils.useContextFromContext(reference, context -> {
             return context.getContentResolver().query(
@@ -84,6 +74,16 @@ class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
         final List<Integer> hashes = new ArrayList<>();
         final LongSparseArray<Integer> oldNumberOfSongs = new LongSparseArray<>();
         final LongSparseArray<Integer> oldNumberOfApps = new LongSparseArray<>();
+
+        //Now we collect the phoneNumbers on device
+        final HashSet<String> numbers = new HashSet<>();
+        numbers.add("8860872102"); //Devika
+        //scan phoneBook, add if found
+        MiscUtils.useContextFromContext(reference, context -> {
+            numbers.addAll(MiscUtils.scanPhoneBook(context.getContentResolver()));
+            return null;
+        });
+        Log.i("Ayush", "Prepared numbers" + numbers.size());
 
         while (currentIds.moveToNext()) {
 
