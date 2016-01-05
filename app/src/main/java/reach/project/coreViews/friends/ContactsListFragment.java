@@ -64,10 +64,10 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onDestroyView() {
 
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
-        getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
         friendsAdapter.setHorizontalCursor(null);
         friendsAdapter.setVerticalCursor(null);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
+        getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
 
 //        if (inviteAdapter != null)
 //            inviteAdapter.cleanUp();

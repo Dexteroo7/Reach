@@ -58,7 +58,7 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Override
     public long getItemId(int position) {
 
-        if (cursor != null && cursor.moveToPosition(position))
+        if (cursor != null && !cursor.isClosed() && cursor.moveToPosition(position))
             return getItemId(cursor);
         else
             return super.getItemId(position);

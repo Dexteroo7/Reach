@@ -126,7 +126,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 //                    new String[]{"My Applications"},
 //                    "Apps"),
             new PagerFragment.Pages(
-                    new Class[]{reach.project.coreViews.push.myLibrary.MyLibraryFragment.class},
+                    new Class[]{reach.project.coreViews.push.music.MyLibraryFragment.class},
                     new String[]{"My Library"},
                     "Songs"));
 
@@ -203,7 +203,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         .build();
 
                 try {
-                    startActivity(PushActivity.getPushActivityIntent(pushContainer, this));
+                    PushActivity.startPushActivity(pushContainer, this);
                 } catch (IOException e) {
 
                     e.printStackTrace();

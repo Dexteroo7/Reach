@@ -1,4 +1,4 @@
-package reach.project.coreViews.push;
+package reach.project.coreViews.push.friends;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -25,6 +26,7 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.push.ContactChooserInterface;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -83,7 +85,15 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
         toolbar.inflateMenu(R.menu.menu_push);
         toolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
+
                 case R.id.push_button:
+
+                    if (contactChooserAdapter.selectedUsers.size() == 0) {
+
+                        Toast.makeText(activity, "Select some friends", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+
                     final long [] serverIds = new long[contactChooserAdapter.selectedUsers.size()];
                     final Iterator<Long> longIterator = contactChooserAdapter.selectedUsers.iterator();
 

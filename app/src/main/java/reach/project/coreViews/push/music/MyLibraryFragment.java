@@ -1,4 +1,4 @@
-package reach.project.coreViews.push.myLibrary;
+package reach.project.coreViews.push.music;
 
 import android.app.Activity;
 import android.content.Context;
@@ -116,13 +116,10 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             Log.i("Ayush", "Adding " + song.displayName);
         }
 
-        if (message instanceof Cursor) {
-            parentAdapter.notifyItemChanged(((Cursor) message).getPosition());
-            parentAdapter.toggleSelected(((Cursor) message).getLong(0)); //songId
-        } else {
-            parentAdapter.notifyDataSetChanged();
-            parentAdapter.toggleSelected(((Song) message).songId);
-        }
+        if (message instanceof Cursor)
+            parentAdapter.setItemSelected(((Cursor) message).getPosition(), song.songId);
+        else
+            parentAdapter.setItemSelected(-1, song.songId); //position not known
     }
 
     @Override
@@ -133,7 +130,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                     MySongsProvider.CONTENT_URI,
                     MySongsHelper.SONG_LIST,
                     MySongsHelper.COLUMN_VISIBILITY + " = ?",
-                    new String[]{"1"}, null); //show all songs !
+                    new String[]{"1"},
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"); //show all songs !
         else if (id == StaticData.DOWNLOAD_LOADER)
             return new CursorLoader(getActivity(),
                     ReachDatabaseProvider.CONTENT_URI,
@@ -141,7 +139,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                     ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
                             ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "1", "0"}, null);
+                    new String[]{ReachDatabase.FINISHED + "", "1", "0"},
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
     }
@@ -189,7 +188,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "1", "0"},
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
+                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
 
         if (cursor == null)
             return Collections.emptyList();
@@ -212,9 +211,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
                 MySongsHelper.SONG_LIST,
                 MySongsHelper.COLUMN_VISIBILITY + " = ?"
-                , new String[]{"1"},
+                , new String[]{"1"}, //show only visible
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20");
+                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
 
         if (cursor == null)
             return Collections.emptyList();

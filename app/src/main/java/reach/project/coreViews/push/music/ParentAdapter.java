@@ -1,4 +1,4 @@
-package reach.project.coreViews.push.myLibrary;
+package reach.project.coreViews.push.music;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -88,10 +88,15 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         recentAdapter.updateRecent(newRecent);
     }
 
-    public void toggleSelected(long songId) {
+    public void setItemSelected(int position, long songId) {
+
+        if (position == -1)
+            notifyDataSetChanged();
+        else
+            notifyItemChanged(position);
+
         recentAdapter.toggleSelected(songId);
     }
-
     @Override
     public void close() {
 

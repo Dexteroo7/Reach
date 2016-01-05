@@ -8,6 +8,7 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.CollectionResponse;
+import com.google.api.server.spi.response.NotFoundException;
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
@@ -1465,5 +1466,43 @@ public class ReachUserEndpoint {
             onlineIds.add(Constants.devikaId);
 
         return new LongList(onlineIds);
+    }
+
+    @ApiMethod(
+            name = "removeFriend",
+            path = "user/removeFriend/{clientId}/{hostId}",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public MyString removeFriend(@Named("clientId") long clientId,
+                                 @Named("hostId") long hostId) throws NotFoundException {
+
+        if (clientId == 0 || hostId == 0)
+            throw new IllegalArgumentException("Invalid id 0");
+
+        final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+        if (client == null)
+            throw new NotFoundException("Could not find ReachUser with ID: " + clientId);
+
+        if (client.getMyReach() != null)
+            client.getMyReach().remove(hostId);
+        if (client.getSentRequests() != null)
+            client.getSentRequests().remove(hostId);
+        if (client.getReceivedRequests() != null)
+            client.getReceivedRequests().remove(hostId);
+
+        final ReachUser host = ofy().load().type(ReachUser.class).id(hostId).now();
+        if (host == null) {
+            ofy().save().entity(client);
+            return new MyString("true");
+        }
+
+        if (host.getMyReach() != null)
+            host.getMyReach().remove(clientId);
+        if (host.getSentRequests() != null)
+            host.getSentRequests().remove(clientId);
+        if (host.getReceivedRequests() != null)
+            host.getReceivedRequests().remove(clientId);
+
+        ofy().save().entities(client, host);
+        return new MyString("true");
     }
 }

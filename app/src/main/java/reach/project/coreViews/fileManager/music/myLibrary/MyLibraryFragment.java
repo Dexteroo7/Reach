@@ -123,14 +123,16 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return new CursorLoader(getActivity(),
                     MySongsProvider.CONTENT_URI,
                     MySongsHelper.DISK_LIST,
-                    null, null, null); //show all songs !
+                    null, null,
+                    MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"); //show all songs !
         else if (id == StaticData.DOWNLOAD_LOADER)
             return new CursorLoader(getActivity(),
                     ReachDatabaseProvider.CONTENT_URI,
                     ReachDatabaseHelper.MUSIC_DATA_LIST,
                     ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"}, null);
+                    new String[]{ReachDatabase.FINISHED + "", "0"},
+                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
     }
@@ -178,7 +180,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                         ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "0"},
                 ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20"); //top 20
+                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
 
         if (cursor == null)
             return Collections.emptyList();
@@ -202,7 +204,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 MySongsHelper.DISK_LIST,
                 null, null,
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        MySongsHelper.COLUMN_DISPLAY_NAME + " ASC LIMIT 20");
+                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
 
         if (cursor == null)
             return Collections.emptyList();

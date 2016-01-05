@@ -1,4 +1,4 @@
-package reach.project.coreViews.push;
+package reach.project.coreViews.push.friends;
 
 import android.database.Cursor;
 import android.net.Uri;
