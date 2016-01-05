@@ -21,12 +21,9 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
  */
 class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
 
-    private final List<App> recentApps;
 
     public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId) {
         super(messageList, handOverMessage, resourceId);
-        this.recentApps = messageList;
-
     }
 
     @Override
@@ -45,21 +42,24 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
      */
     public void updateRecent(List<App> newMessages) {
 
-        recentApps.removeAll(newMessages);
+        getMessageList().removeAll(newMessages);
 
         final List<App> newSortedList;
-        synchronized (recentApps) {
+        synchronized (getMessageList()) {
 
-            recentApps.addAll(newMessages);
-            newSortedList = Ordering.from(StaticData.primaryApps).compound(StaticData.secondaryApps).greatestOf(recentApps, 20);
-            recentApps.clear();
-            recentApps.addAll(newSortedList);
+            getMessageList().addAll(newMessages);
+            newSortedList = Ordering.from(StaticData.byInstallDate).compound(StaticData.byName).greatestOf(getMessageList(), 20);
+            getMessageList().clear();
+            getMessageList().addAll(newSortedList);
         }
 
         notifyDataSetChanged();
         final RecyclerView.Adapter adapter;
-        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null) {
+
+
             adapter.notifyDataSetChanged();
+        }
     }
 
     @Override

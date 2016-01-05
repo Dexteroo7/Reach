@@ -33,8 +33,12 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         super.setCursor(newCursor);
 
         final RecyclerView.Adapter adapter;
-        if (reference != null && (adapter = reference.get()) != null)
+        if (reference != null && (adapter = reference.get()) != null) {
+
+            //must set the new cursor
+            ((ReachCursorAdapter)adapter).setCursor(newCursor);
             adapter.notifyDataSetChanged();
+        }
     }
 
     @Override

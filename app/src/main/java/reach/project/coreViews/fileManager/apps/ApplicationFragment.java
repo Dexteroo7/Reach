@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,13 +90,12 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
             final SharedPreferences preferences = params[0].getSharedPreferences("Reach", Context.MODE_PRIVATE);
             final PackageManager packageManager = params[0].getPackageManager();
 
-//            final long currentTime = System.currentTimeMillis();
             final List<App> apps = MiscUtils.getApplications(packageManager, preferences);
-//            final long retrieveTime = System.currentTimeMillis();
-            final List<App> recentApps = Ordering.from(StaticData.primaryApps).greatestOf(apps, 20);
-//            final long sortTime = System.currentTimeMillis();
-//            Log.i("Ayush", "Retrieve time = " + (retrieveTime - currentTime) + " Sort time = " + (sortTime - retrieveTime));
-
+            final List<App> recentApps = Ordering
+                    .from(StaticData.byInstallDate)
+                    .compound(StaticData.byName)
+                    .greatestOf(apps, 20);
+            Collections.sort(apps, StaticData.byName);
             return new Pair<>(apps, recentApps);
         }
 

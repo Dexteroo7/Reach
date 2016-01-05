@@ -46,7 +46,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
         final List<App> newSortedList;
         recentApps.addAll(newMessages);
-        newSortedList = Ordering.from(StaticData.primaryApps).compound(StaticData.secondaryApps).greatestOf(recentApps, 20);
+        newSortedList = Ordering.from(StaticData.byInstallDate).compound(StaticData.byName).greatestOf(recentApps, 20);
         recentApps.clear();
         recentApps.addAll(newSortedList);
         notifyDataSetChanged();

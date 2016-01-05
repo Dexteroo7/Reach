@@ -19,6 +19,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.repackaged.com.google.common.collect.Iterables;
 import com.google.appengine.repackaged.com.google.common.hash.HashCode;
 import com.google.appengine.repackaged.com.google.common.hash.HashFunction;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
@@ -323,7 +324,7 @@ public class ReachUserEndpoint {
 
         //sanity checks
         if (clientId == 0)
-            return null;
+            return Collections.emptySet();
 
         final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
         syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
@@ -331,36 +332,25 @@ public class ReachUserEndpoint {
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
 
         final ReachUser client = ofy().load().type(ReachUser.class).id(clientId).now();
+
         if (client == null)
-            return null;
+            return Collections.emptySet();
         logger.info(client.getUserName());
 
-        final boolean myReachCheck = (client.getMyReach() != null &&
-                client.getMyReach().size() > 0);
-        final boolean sentRequestsCheck = (client.getSentRequests() != null &&
-                client.getSentRequests().size() > 0);
+        final Set<Long> myReach = client.getMyReach() == null ? new HashSet<Long>() : client.getMyReach();
+        final Set<Long> sentRequests = client.getMyReach() == null ? new HashSet<Long>() : client.getMyReach();
 
         //no known friends
-        if (!(myReachCheck || sentRequestsCheck))
-            return null;
+        if (myReach.isEmpty() && sentRequests.isEmpty())
+            return Collections.emptySet();
+
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        final Iterable<Long> combinedView = Iterables.concat(myReach, sentRequests);
+        for (long id : combinedView)
+            if (id != Constants.devikaId)
+                keysBuilder.add(Key.create(ReachUser.class, id));
 
         final HashSet<Friend> friends = new HashSet<>();
-        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
-
-        if (myReachCheck) {
-
-            keysBuilder.add(Key.create(ReachUser.class, Constants.devikaId));
-            for (long id : client.getMyReach())
-                keysBuilder.add(Key.create(ReachUser.class, id));
-        }
-
-        if (sentRequestsCheck) {
-
-            keysBuilder.add(Key.create(ReachUser.class, Constants.devikaId));
-            for (long id : client.getSentRequests())
-                keysBuilder.add(Key.create(ReachUser.class, id));
-        }
-
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filterKey("in", keysBuilder.build())
                 .filter("gcmId !=", "")
@@ -374,9 +364,15 @@ public class ReachUserEndpoint {
 
             friends.add(new Friend(
                     user,
-                    client.getMyReach(),
-                    client.getSentRequests(),
+                    myReach,
+                    sentRequests,
                     lastSeen));
+        }
+
+        if (myReach.contains(Constants.devikaId) ||
+                sentRequests.contains(Constants.devikaId)) {
+            final ReachUser devika = ofy().load().type(ReachUser.class).id(Constants.devikaId).now();
+            friends.add(new Friend(devika, myReach, sentRequests, 0));
         }
 
         return friends;

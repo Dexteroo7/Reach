@@ -76,11 +76,11 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("chatUUID", chatUUID).apply();
     }
 
-    public synchronized static String getMusicHash(SharedPreferences sharedPreferences, String fileName) {
+    public synchronized static String getCloudStorageFileHash(SharedPreferences sharedPreferences, String fileName) {
         return sharedPreferences.getString(fileName, "");
     }
 
-    public synchronized static void storeMusicHash(SharedPreferences sharedPreferences, String fileName, String hash) {
+    public synchronized static void storeCloudStorageFileHash(SharedPreferences sharedPreferences, String fileName, String hash) {
         sharedPreferences.edit().putString(fileName, hash).apply();
     }
 

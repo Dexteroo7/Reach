@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -1176,6 +1177,6 @@ public class ProcessManager extends Service implements
         if (reference == null || (manager = reference.get()) == null)
             return null;
 
-        return manager.getAssets().open(name);
+        return manager.getAssets().open(name, AssetManager.ACCESS_RANDOM);
     }
 }

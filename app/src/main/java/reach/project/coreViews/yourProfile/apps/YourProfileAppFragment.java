@@ -1,10 +1,12 @@
 package reach.project.coreViews.yourProfile.apps;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,12 +19,15 @@ import com.squareup.wire.Wire;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.SimpleApp;
 import reach.project.R;
@@ -34,6 +39,7 @@ import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.coreViews.yourProfile.blobCache.CacheType;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 
 /**
@@ -43,9 +49,9 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Nullable
     private static WeakReference<YourProfileAppFragment> reference = null;
-    private static long userId = 0;
+    private static long hostId = 0;
 
-    public static YourProfileAppFragment newInstance(long userId) {
+    public static YourProfileAppFragment newInstance(long hostId) {
 
         final Bundle args;
         YourProfileAppFragment fragment;
@@ -56,33 +62,40 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             Log.i("Ayush", "Reusing YourProfileAppFragment object :)");
             args = fragment.getArguments();
         }
-        args.putLong("userId", userId);
+        args.putLong("hostId", hostId);
         return fragment;
     }
 
     private final List<Message> appData = new ArrayList<>(100);
     private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
+    private final ExecutorService appUpdaterService = MiscUtils.getRejectionExecutor();
 
     @Nullable
-    private Cache fullListCache = null;
-    @Nullable
-    private Cache smartListCache = null;
-    @Nullable
-    private Cache recentAppCache = null;
-
+    private Cache fullListCache = null, smartListCache = null, recentAppCache = null;
     private int lastPosition = 0;
 
+    @Override
+    public void onDestroyView() {
+        
+        super.onDestroyView();
+        hostId = 0;
+
+        MiscUtils.closeQuietly(fullListCache, smartListCache, recentAppCache);
+        fullListCache = smartListCache = recentAppCache = null;
+        appData.clear();
+    }
+    
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        userId = getArguments().getLong("userId", 0L);
+        hostId = getArguments().getLong("hostId", 0L);
 
-        fullListCache = new Cache(this, CacheType.APPLICATIONS_FULL_LIST, userId) {
+        fullListCache = new Cache(this, CacheType.APPLICATIONS_FULL_LIST, hostId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
 
-                return () -> CloudStorageUtils.fetchApps(userId, new WeakReference<>(getContext()));
+                return () -> CloudStorageUtils.fetchApps(hostId, new WeakReference<>(getContext()));
             }
 
             @Override
@@ -91,7 +104,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-        recentAppCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, userId) {
+        recentAppCache = new Cache(this, CacheType.APPLICATIONS_RECENT_LIST, hostId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getRecent;
@@ -103,7 +116,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-        smartListCache = new Cache(this, CacheType.APPLICATIONS_SMART_LIST, userId) {
+        smartListCache = new Cache(this, CacheType.APPLICATIONS_SMART_LIST, hostId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getSmart;
@@ -123,6 +136,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
 
+        //update music
+        appUpdaterService.submit(appUpdater);
         return rootView;
     }
 
@@ -278,7 +293,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
         final List<SimpleApp> simpleApps = MiscUtils.autoRetry(
-                () -> StaticData.USER_API.fetchRecentApps(userId).execute().getItems(), Optional.absent()
+                () -> StaticData.USER_API.fetchRecentApps(hostId).execute().getItems(), Optional.absent()
         ).or(Collections.emptyList());
 
         if (simpleApps == null || simpleApps.isEmpty())
@@ -303,8 +318,49 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         recentBuilder.title("Recently Added");
         recentBuilder.appList(toReturn);
 
-        return Collections.singletonList(recentBuilder.build());
+        return Arrays.asList(recentBuilder.build());
     };
 
     private static final Callable<List<? extends Message>> getSmart = Collections::emptyList;
+
+    private static final Runnable appUpdater = () -> {
+
+        final String localHash = MiscUtils.useContextFromFragment(reference, context -> {
+            return SharedPrefUtils.getCloudStorageFileHash(
+                    context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
+                    MiscUtils.getAppStorageKey(hostId));
+        }).or("");
+
+        final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
+            try {
+                return context.getAssets().open("key.p12");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).orNull();
+
+        if (TextUtils.isEmpty(localHash) || keyStream == null)
+            return; //dead
+
+        if (CloudStorageUtils.isNewAppAvailable(hostId, keyStream, localHash)) {
+
+            //new music available, invalidate everything
+            MiscUtils.useFragment(reference, fragment -> {
+
+                if (fragment.fullListCache != null) {
+                    fragment.fullListCache.invalidateCache();
+                    fragment.fullListCache.loadMoreElements(true);
+                }
+                if (fragment.smartListCache != null) {
+                    fragment.smartListCache.invalidateCache();
+                    fragment.smartListCache.loadMoreElements(true);
+                }
+                if (fragment.recentAppCache != null) {
+                    fragment.recentAppCache.invalidateCache();
+                    fragment.recentAppCache.loadMoreElements(true);
+                }
+            });
+        }
+    };
 }

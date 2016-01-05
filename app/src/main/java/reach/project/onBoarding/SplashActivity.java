@@ -5,19 +5,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
@@ -27,18 +25,14 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.util.Random;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
 
-import reach.backend.entities.userApi.model.MyString;
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
-import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.pacemaker.Pacemaker;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
@@ -49,14 +43,13 @@ import reach.project.utils.SharedPrefUtils;
  */
 public class SplashActivity extends AppCompatActivity implements SplashInterface {
 
-    private static WeakReference<SplashActivity> activityWeakReference;
-    private static WeakReference<Context> contextWeakReference;
+    @Nullable
+    private static WeakReference<SplashActivity> activityWeakReference = null;
+    @Nullable
+    private static WeakReference<Context> contextWeakReference = null;
 
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
-
-    private static final ExecutorService checkUpdateService = MiscUtils.getRejectionExecutor();
-    private static final ExecutorService checkGCMService = MiscUtils.getRejectionExecutor();
 
     private final Random random = new Random();
 
@@ -64,6 +57,10 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
+        //gcm keep-alive
+        Pacemaker.scheduleLinear(this, 5);
+
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
 
@@ -207,11 +204,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
                 //TODO chat check
                 //perform contact sync
-                FireOnce.contactSync(this);
-                //check for update
-                new CheckUpdate().executeOnExecutor(checkUpdateService);
+                FireOnce.contactSync(getApplicationContext());
                 //refresh gcm
-                checkGCMService.submit(() -> checkGCM(serverId));
+                FireOnce.checkGCM(contextWeakReference, serverId);
                 //refresh download ops
                 FireOnce.refreshOperations(contextWeakReference);
                 //Music scanner
@@ -252,80 +247,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         }
 
         return false;
-    }
-
-    public static void checkGCM(long serverId) {
-
-        if (serverId == 0)
-            return;
-
-        final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.USER_API.getGcmId(serverId).execute(), Optional.absent()).orNull();
-
-        //check returned gcm
-        final String gcmId;
-        if (dataToReturn == null || //fetch failed
-                TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
-                gcmId.equals("hello_world")) { //bad gcm
-
-            //network operation
-            if (MiscUtils.updateGCM(serverId, contextWeakReference))
-                Log.i("Ayush", "GCM updated !");
-            else
-                Log.i("Ayush", "GCM check failed");
-        }
-    }
-
-    private static class CheckUpdate extends AsyncTask<Void, Void, Integer> {
-
-        @Override
-        protected Integer doInBackground(Void... params) {
-
-            Scanner reader = null;
-            try {
-                reader = new Scanner(new URL(StaticData.DROP_BOX).openStream());
-                return reader.nextInt();
-            } catch (Exception ignored) {
-            } finally {
-
-                if (reader != null) {
-                    reader.close();
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Integer result) {
-
-            super.onPostExecute(result);
-
-            if (result == null)
-                return;
-
-            Log.i("Ayush", "LATEST VERSION " + result);
-
-            MiscUtils.useContextFromContext(activityWeakReference, activity -> {
-
-                final int version;
-                try {
-                    version = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                    return;
-                }
-
-                if (version < result) {
-
-                    final UpdateFragment updateFragment = new UpdateFragment();
-                    updateFragment.setCancelable(false);
-                        try {
-                            updateFragment.show(activity.getSupportFragmentManager(), "update");
-                        } catch (IllegalStateException | WindowManager.BadTokenException ignored) {
-                            activity.finish();
-                        }
-                }
-            });
-        }
     }
 
     private static final Runnable ACCOUNT_CREATION_SPLASH = () -> MiscUtils.useActivity(activityWeakReference, activity -> {

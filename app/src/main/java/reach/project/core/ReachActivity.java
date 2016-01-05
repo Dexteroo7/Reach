@@ -49,7 +49,6 @@ import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
 import reach.project.music.Song;
 import reach.project.notificationCentre.NotificationActivity;
-import reach.project.pacemaker.Pacemaker;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
@@ -319,9 +318,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         reference = new WeakReference<>(this);
 
-        //gcm keep-alive
-        Pacemaker.scheduleLinear(this, 5);
-
         final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
 
@@ -394,6 +390,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         });
 
         viewPager.setCurrentItem(2);
+
+        //check for update, need activity to check
+        FireOnce.checkUpdate(reference);
     }
 
     private synchronized void processIntent(Intent intent) {

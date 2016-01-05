@@ -72,11 +72,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.verticalCursor = cursor;
 
         Log.i("Ayush", "Setting vertical cursor " + (cursor != null ? cursor.getCount() : 0));
-
-        if (cursor != null)
-            notifyDataSetChanged();
-        else
-            notifyItemRangeRemoved(0, oldParentCount);
+        notifyDataSetChanged();
     }
     ///////////Vertical Cursor (parent)
 
@@ -84,6 +80,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.myreach_item);
 
     public void setHorizontalCursor(@Nullable Cursor cursor) {
+
+        Log.i("Ayush", "Setting horizontal cursor " + (cursor != null ? cursor.getCount() : 0));
         lockedFriendsAdapter.setCursor(cursor);
     }
     ///////////Horizontal Cursor

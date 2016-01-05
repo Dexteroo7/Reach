@@ -11,7 +11,9 @@ public final class AlbumArtData extends Message {
 
   public static final String DEFAULT_ARTISTMBID = "hello_world";
   public static final String DEFAULT_RELEASEGROUPMBID = "hello_world";
+
   public static final String DEFAULT_ALBUMARTURL = "hello_world";
+
   public static final String DEFAULT_TITLE = "hello_world";
   public static final String DEFAULT_RELEASE = "hello_world";
   public static final String DEFAULT_ARTIST = "hello_world";
