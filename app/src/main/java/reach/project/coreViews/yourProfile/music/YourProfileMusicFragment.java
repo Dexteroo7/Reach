@@ -1,5 +1,6 @@
 package reach.project.coreViews.yourProfile.music;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,13 +29,16 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
@@ -63,9 +68,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         CacheAdapterInterface<Message, Song> {
 
     private static WeakReference<YourProfileMusicFragment> reference = null;
-    private static long userId = 0;
+    private static long hostId = 0;
+    private static long myId = 0;
 
-    public static YourProfileMusicFragment newInstance(long userId) {
+    public static YourProfileMusicFragment newInstance(long hostId) {
 
         final Bundle args;
         YourProfileMusicFragment fragment;
@@ -76,30 +82,27 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             Log.i("Ayush", "Reusing YourProfileMusicFragment object :)");
             args = fragment.getArguments();
         }
-        args.putLong("userId", userId);
+        args.putLong("hostId", hostId);
         return fragment;
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
     private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
     private final SecureRandom secureRandom = new SecureRandom();
+    private final ExecutorService musicUpdaterService = MiscUtils.getRejectionExecutor();
 
     @Nullable
-    private Cache fullListCache = null;
-    @Nullable
-    private Cache smartListCache = null;
-    @Nullable
-    private Cache recentMusicCache = null;
+    private Cache fullListCache = null, smartListCache = null, recentMusicCache = null;
     @Nullable
     private View rootView = null;
 
     private int lastPosition = 0;
 
     @Override
-    public void onDestroy() {
+    public void onDestroyView() {
 
         super.onDestroy();
-        userId = 0;
+        hostId = 0;
 
         MiscUtils.closeQuietly(fullListCache, smartListCache, recentMusicCache);
         fullListCache = smartListCache = recentMusicCache = null;
@@ -107,16 +110,26 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
 
-        super.onCreate(savedInstanceState);
-        userId = getArguments().getLong("userId", 0L);
+        rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final Activity activity = getActivity();
+        //mRecyclerView.setHasFixedSize(true);
 
-        fullListCache = new Cache(this, CacheType.MUSIC_FULL_LIST, userId) {
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+        mRecyclerView.setAdapter(parentAdapter);
+        MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
+
+        hostId = getArguments().getLong("hostId", 0L);
+
+        //get the caches
+        fullListCache = new Cache(this, CacheType.MUSIC_FULL_LIST, hostId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
 
-                return () -> CloudStorageUtils.fetchSongs(userId, new WeakReference<>(getContext()));
+                return () -> CloudStorageUtils.fetchSongs(hostId, new WeakReference<>(getContext()));
             }
 
             @Override
@@ -125,7 +138,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             }
         };
 
-        smartListCache = new Cache(this, CacheType.MUSIC_SMART_LIST, userId) {
+        smartListCache = new Cache(this, CacheType.MUSIC_SMART_LIST, hostId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getSmartList;
@@ -137,7 +150,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             }
         };
 
-        recentMusicCache = new Cache(this, CacheType.MUSIC_RECENT_LIST, userId) {
+        recentMusicCache = new Cache(this, CacheType.MUSIC_RECENT_LIST, hostId) {
             @Override
             protected Callable<List<? extends Message>> fetchFromNetwork() {
                 return getRecent;
@@ -148,24 +161,16 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 return new Wire(RecentSong.class).parseFrom(source, offset, count, RecentSong.class);
             }
         };
-    }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        myId = SharedPrefUtils.getServerId(sharedPreferences);
 
-        rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        //mRecyclerView.setHasFixedSize(true);
-
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
-        mRecyclerView.setAdapter(parentAdapter);
-        MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
+        //update music
+        musicUpdaterService.submit(musicUpdater);
         return rootView;
     }
 
     /////////////////////////
-
     @Override
     public File getCacheDirectory() {
         return getContext().getExternalCacheDir();
@@ -210,13 +215,14 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void handOverMessage(@NonNull Song song) {
 
-        final Cursor senderCursor = getActivity().getContentResolver().query(
-                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+        final Activity activity = getActivity();
+        final Cursor senderCursor = activity.getContentResolver().query(
+                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                 new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
                         ReachFriendsHelper.COLUMN_STATUS,
                         ReachFriendsHelper.COLUMN_NETWORK_TYPE},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
-                new String[]{userId + ""}, null);
+                new String[]{hostId + ""}, null);
 
         if (senderCursor == null)
             return;
@@ -225,25 +231,13 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             return;
         }
 
-        final SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
-//        if (SharedPrefUtils.getReachQueueSeen(sharedPreferences)) {
-//
-//            Snackbar.make(rootView, song.displayName + " added to your Queue", Snackbar.LENGTH_LONG)
-//                    .setAction("VIEW", v -> {
-//                        mListener.anchorFooter();
-//                    })
-//                    .show();
-//        } else {
-//            SharedPrefUtils.setReachQueueSeen(sharedPreferences);
-//            mListener.anchorFooter();
-//        }
 
         final ReachDatabase reachDatabase = new ReachDatabase();
 
         reachDatabase.setId(-1);
         reachDatabase.setSongId(song.songId);
-        reachDatabase.setReceiverId(SharedPrefUtils.getServerId(sharedPreferences));
-        reachDatabase.setSenderId(userId);
+        reachDatabase.setReceiverId(myId);
+        reachDatabase.setSenderId(hostId);
 
         reachDatabase.setOperationKind((short) 0);
         reachDatabase.setPath("hello_world");
@@ -271,7 +265,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         reachDatabase.setVisibility((short) 1);
 
-        MiscUtils.startDownload(reachDatabase, getActivity(), rootView);
+        MiscUtils.startDownload(reachDatabase, activity, rootView);
         senderCursor.close();
     }
 
@@ -310,7 +304,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
          * Else request partial injection
          */
         if (typeChecker == Song.class && smartListCache != null)
-            smartListCache.loadMoreElements(true);
+            smartListCache.loadMoreElements(fullListCache == null || fullListCache.isLoadingDone());
     }
 
     private void intelligentOverwrite(List<? extends Message> elements, Class typeChecker) {
@@ -323,33 +317,34 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         int updatedSize = musicData.size();
         int index;
 
-        synchronized (musicData) {
+        for (index = 0; index < updatedSize; index++) {
 
-            for (index = 0; index < updatedSize; index++) {
+            //ignore if element is not of same class type
+            if (!musicData.get(index).getClass().equals(typeChecker))
+                continue;
 
-                //ignore if element is not of same class type
-                if (!musicData.get(index).getClass().equals(typeChecker))
-                    continue;
+            //get the next message to overwrite if present
+            if (messageIterator.hasNext()) {
 
-                //get the next message to overwrite if present
-                if (messageIterator.hasNext()) {
-
-                    //we have a message to overwrite, do it
+                //we have a message to overwrite, do it
+                synchronized (musicData) {
                     musicData.set(index, messageIterator.next());
-                    messageIterator.remove(); //must remove
-
-                } else {
-                    musicData.remove(index);  //remove as this item is no longer valid
-                    updatedSize--;
                 }
+                messageIterator.remove(); //must remove
+
+            } else {
+
+                synchronized (musicData) {
+                    musicData.remove(index);  //remove as this item is no longer valid
+                }
+                updatedSize--;
             }
         }
     }
 
     /**
-     *
-     * @param elements
-     * @param typeChecker
+     * @param elements    the items to insert
+     * @param typeChecker the type of item to help in overwriting
      * @return true if elements got added
      */
     private boolean painter(List<? extends Message> elements, Class typeChecker) {
@@ -386,7 +381,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private static final Callable<List<? extends Message>> getSmartList = () -> {
 
         final Request request = new Request.Builder()
-                .url("http://52.74.175.56:8080/explore/getRecentlyPlayed?userId=" + userId)
+                .url("http://52.74.175.56:8080/explore/getRecentlyPlayed?hostId=" + hostId)
                 .build();
 
         Log.i("Ayush", "Fetching smart lists " + request.urlString());
@@ -426,13 +421,13 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         if (songs.isEmpty())
             return Collections.emptyList();
 
-        return Collections.singletonList(new SmartSong.Builder().songList(songs).title("Recently Played").build());
+        return Arrays.asList(new SmartSong.Builder().songList(songs).title("Recently Played").build());
     };
 
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
         final List<SimpleSong> simpleSongs = MiscUtils.autoRetry(
-                () -> StaticData.USER_API.fetchRecentSongs(userId).execute().getItems(), Optional.absent()
+                () -> StaticData.USER_API.fetchRecentSongs(hostId).execute().getItems(), Optional.absent()
         ).or(Collections.emptyList());
 
         if (simpleSongs == null || simpleSongs.isEmpty())
@@ -464,6 +459,47 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         recentBuilder.title("Recently Added");
         recentBuilder.songList(toReturn);
 
-        return Collections.singletonList(recentBuilder.build());
+        return Arrays.asList(recentBuilder.build());
+    };
+
+    private static final Runnable musicUpdater = () -> {
+
+        final String localHash = MiscUtils.useContextFromFragment(reference, context -> {
+            return SharedPrefUtils.getCloudStorageFileHash(
+                    context.getSharedPreferences("Reach", Context.MODE_PRIVATE),
+                    MiscUtils.getMusicStorageKey(hostId));
+        }).or("");
+
+        final InputStream keyStream = MiscUtils.useContextFromFragment(reference, context -> {
+            try {
+                return context.getAssets().open("key.p12");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).orNull();
+
+        if (TextUtils.isEmpty(localHash) || keyStream == null)
+            return; //dead
+
+        if (CloudStorageUtils.isNewMusicAvailable(hostId, keyStream, localHash)) {
+
+            //new music available, invalidate everything
+            MiscUtils.useFragment(reference, fragment -> {
+
+                if (fragment.fullListCache != null) {
+                    fragment.fullListCache.invalidateCache();
+                    fragment.fullListCache.loadMoreElements(true);
+                }
+                if (fragment.smartListCache != null) {
+                    fragment.smartListCache.invalidateCache();
+                    fragment.smartListCache.loadMoreElements(true);
+                }
+                if (fragment.recentMusicCache != null) {
+                    fragment.recentMusicCache.invalidateCache();
+                    fragment.recentMusicCache.loadMoreElements(true);
+                }
+            });
+        }
     };
 }

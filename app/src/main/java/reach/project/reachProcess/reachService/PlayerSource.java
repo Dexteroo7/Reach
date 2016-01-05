@@ -87,10 +87,11 @@ final class PlayerSource implements Runnable, Closeable {
 
                 //actual progress
                 final short actualProgress = (short) ((downloaded * 100) / contentLength);
-                if (actualProgress > lastSecondaryProgress)
+                if (actualProgress > lastSecondaryProgress) {
                     handler.updateSecondaryProgress(actualProgress);
+                    Log.i("Downloader", "Downloaded " + actualProgress);
+                }
                 lastSecondaryProgress = actualProgress;
-                Log.i("Downloader", "Downloaded " + actualProgress);
 
                 //perform transfer
                 try {

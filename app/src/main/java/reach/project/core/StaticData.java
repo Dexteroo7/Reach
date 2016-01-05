@@ -112,7 +112,7 @@ public final class StaticData {
         ALL_CONTACTS_LOADER = i++;
     }
 
-    public static Comparator<App> primaryApps = (left, right) -> {
+    public static Comparator<App> byInstallDate = (left, right) -> {
 
         final Long a = left == null || left.installDate == null ? 0 : left.installDate;
         final Long b = right == null || right.installDate == null ? 0 : right.installDate;
@@ -120,7 +120,7 @@ public final class StaticData {
         return a.compareTo(b);
     };
 
-    public static Comparator<App> secondaryApps = (left, right) -> {
+    public static Comparator<App> byName = (left, right) -> {
 
         final String a = left == null || left.applicationName == null ? "" : left.applicationName;
         final String b = right == null || right.applicationName == null ? "" : right.applicationName;

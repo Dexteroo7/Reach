@@ -37,7 +37,9 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Override
     public void close() {
         MiscUtils.closeQuietly(cursor);
-        notifyItemRangeRemoved(0, oldCount);
+        cursor = null;
+        oldCount = 0;
+        notifyDataSetChanged();
     }
 
     public ReachCursorAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
@@ -58,7 +60,7 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Override
     public long getItemId(int position) {
 
-        if (cursor != null && !cursor.isClosed() && cursor.moveToPosition(position))
+        if (cursor != null && cursor.moveToPosition(position))
             return getItemId(cursor);
         else
             return super.getItemId(position);

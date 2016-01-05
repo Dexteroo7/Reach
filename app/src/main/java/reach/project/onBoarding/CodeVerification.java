@@ -350,7 +350,7 @@ public class CodeVerification extends Fragment {
 
             Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
             FireOnce.contactSync(
-                    new WeakReference<>(getActivity()),
+                    new WeakReference<>(getActivity().getApplicationContext()),
                     containerNew.getServerId(),
                     phoneNumber);
         }

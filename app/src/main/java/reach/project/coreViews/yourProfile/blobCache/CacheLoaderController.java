@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
 /**
  * Created by dexter on 05/11/15.
  */
-public interface CacheLoaderController<T extends Message> {
+interface CacheLoaderController<T extends Message> {
 
     /**
      * Return a cache stream from given file

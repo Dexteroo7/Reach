@@ -13,14 +13,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
@@ -56,8 +53,8 @@ public abstract class Cache implements Closeable {
                  long userId) {
 
         this.cacheInjectorCallbacks = cacheInjectorCallbacks;
-        Log.i("Ayush", "Hashing " + cacheType.name() + " " + userId);
-        this.fileName = Arrays.hashCode(new Object[]{cacheType.name(), userId}) + "";
+//        Log.i("Ayush", "Hashing " + cacheType.name() + " " + userId);
+        this.fileName = cacheType.name() + userId;
 
         //custom thread pool
         final ThreadFactory threadFactory = new ThreadFactoryBuilder() //specify the name
@@ -66,17 +63,7 @@ public abstract class Cache implements Closeable {
                 .setDaemon(false)
                 .build();
 
-        this.executorService = new ThreadPoolExecutor(
-                1, //only 1 thread
-                1, //only 1 thread
-                0L, TimeUnit.MILLISECONDS, //no waiting
-                new SynchronousQueue<>(false), //only 1 thread
-                threadFactory,
-                (r, executor) -> {
-                    //TODO track and ignore
-                    Log.i("Ayush", "Rejected execution");
-                });
-
+        this.executorService = MiscUtils.getRejectionExecutor();
         cacheWeakReference = new WeakReference<>(this);
     }
 
@@ -88,14 +75,17 @@ public abstract class Cache implements Closeable {
     private final AtomicBoolean loadingDone = new AtomicBoolean(false);
     //marker for cache invalidation
     private final CacheInvalidator cacheInvalidator = new CacheInvalidator();
-
     //an executor for getting stories from server
     private final ThreadPoolExecutor executorService;
 
     ///////////////Public interaction
 
+    //check if cache has fully loaded
+    public boolean isLoadingDone() {
+        return loadingDone.get();
+    }
+
     /**
-     * TODO
      * Hook for loading next batch
      */
     public void loadMoreElements(boolean complete) {
@@ -110,20 +100,33 @@ public abstract class Cache implements Closeable {
         new CacheLoader().executeOnExecutor(executorService,
                 fetchFromNetwork(), //network fetcher object
                 cacheAccess, //local cache file
-                cacheInvalidator.cacheInvalidated.get() && cacheInvalidator.invalidatorOpen.get(), //flag for cache invalidation
+                cacheInvalidator.invalidatorOpen.get() && cacheInvalidator.cacheInvalidated.get(), //flag for cache invalidation
                 complete, //should load fully or partially
                 cacheWeakReference); //cache reference
     }
 
     /**
-     * TODO
      * Hook for cache updater
      */
     public void invalidateCache() {
 
         //set only if invalidator is open
-        if (cacheInvalidator.invalidatorOpen.get())
+        if (cacheInvalidator.invalidatorOpen.get()) {
+
+            //mark invalidated
             cacheInvalidator.cacheInvalidated.set(true);
+            //clear cache
+            if (cacheAccess != null) {
+
+                try {
+                    cacheAccess.setLength(0);
+                    cacheAccess.close();
+                } catch (IOException ignored) {
+                }
+            }
+            //load fresh
+            loadingDone.set(false);
+        }
     }
 
     ///////////////
@@ -214,7 +217,6 @@ public abstract class Cache implements Closeable {
 
                 Log.i("Ayush", "Fetching from network");
                 itemsToReturn = fetchFromNetwork(networkFetcher);
-                Log.i("Ayush", "Fetched " + itemsToReturn.size());
                 networkLoad = true;
 
                 final Cache cache;
@@ -223,6 +225,8 @@ public abstract class Cache implements Closeable {
                     MiscUtils.closeQuietly(randomAccessFile);
                     return null; //buffer destroyed
                 }
+
+                Log.i("Ayush", "Fetched " + itemsToReturn.size() + " " + cache.fileName);
 
                 //display as is, set true for this turn irrespective of failure
                 cache.loadingDone.set(true);

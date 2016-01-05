@@ -64,6 +64,8 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onDestroyView() {
 
+        Log.i("Ayush", "Destroying contacts view");
+
         friendsAdapter.setHorizontalCursor(null);
         friendsAdapter.setVerticalCursor(null);
         getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
@@ -77,21 +79,6 @@ public class ContactsListFragment extends Fragment implements
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-
-        final Activity activity = getActivity();
-        if (activity == null || activity.isFinishing())
-            return;
-
-        /*if (getArguments().getBoolean("first", false))
-            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        serverId = SharedPrefUtils.getServerId(sharedPreferences);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -99,6 +86,11 @@ public class ContactsListFragment extends Fragment implements
         rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
 
         final Activity activity = getActivity();
+
+                /*if (getArguments().getBoolean("first", false))
+            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Friends");

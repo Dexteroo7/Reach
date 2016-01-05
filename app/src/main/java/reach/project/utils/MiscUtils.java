@@ -53,7 +53,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -108,7 +107,6 @@ import reach.project.music.Song;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
@@ -237,10 +235,7 @@ public enum MiscUtils {
             applicationsFound.add(appBuilder.build());
         }
 
-        return Ordering
-                .from(StaticData.primaryApps)
-                .compound(StaticData.secondaryApps)
-                .sortedCopy(applicationsFound);
+        return applicationsFound;
     }
 
     /**

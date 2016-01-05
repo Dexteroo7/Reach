@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.os.Environment;
 import android.os.Message;
@@ -707,7 +708,6 @@ public class MetaDataScanner extends IntentService {
             Log.i("Downloader", "Found " + song.displayName + " " + song.songId);
 
         ////////////////////Sync songs
-        //TODO verify empty case being handled
         final byte[] musicBlob = new MusicList.Builder()
                 .clientId(serverId)
                 .genres(ImmutableList.copyOf(genres)) //list view of hash set
@@ -720,7 +720,7 @@ public class MetaDataScanner extends IntentService {
             newMusic = CloudStorageUtils.uploadMetaData(
                     musicBlob,
                     MiscUtils.getMusicStorageKey(serverId),
-                    context.getAssets().open("key.p12"),
+                    context.getAssets().open("key.p12", AssetManager.ACCESS_RANDOM),
                     CloudStorageUtils.MUSIC);
         } catch (IOException e) {
             e.printStackTrace();

@@ -40,7 +40,7 @@ final class ForceSyncFriends implements Runnable {
 
         //Now we collect the phoneNumbers on device
         final HashSet<String> numbers = new HashSet<>();
-        numbers.add("8860872102"); //Devika
+        numbers.add(StaticData.DEVIKA_PHONE_NUMBER); //Devika
         //scan phoneBook, add if found
         MiscUtils.useContextFromContext(reference, context -> {
             numbers.addAll(MiscUtils.scanPhoneBook(context.getContentResolver()));

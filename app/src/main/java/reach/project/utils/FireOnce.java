@@ -6,17 +6,23 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.WindowManager;
 
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
+import java.io.DataInputStream;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +31,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import reach.backend.entities.messaging.model.MyBoolean;
+import reach.backend.entities.userApi.model.MyString;
+import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
@@ -44,6 +52,8 @@ public enum FireOnce {
     private static final ExecutorService contactSyncService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService pingService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService refreshDownloadOpsService = MiscUtils.getRejectionExecutor();
+    private static final ExecutorService checkGCMService = MiscUtils.getRejectionExecutor();
+    private static final ExecutorService checkUpdateService = MiscUtils.getRejectionExecutor();
 
     @Nullable
     private static Future syncingContacts = null;
@@ -162,7 +172,105 @@ public enum FireOnce {
                 serverId));
     }
 
+    public static void refreshOperations(WeakReference<? extends Context> reference) {
+        new RefreshOperations(reference).executeOnExecutor(refreshDownloadOpsService);
+    }
 
+    public static void checkGCM(WeakReference<? extends Context> reference, long serverId) {
+        checkGCMService.submit(new CheckGCM(serverId, reference));
+    }
+
+    public static void checkUpdate(WeakReference<? extends AppCompatActivity> activityWeakReference) {
+        new CheckUpdate().executeOnExecutor(checkUpdateService, activityWeakReference);
+    }
+
+    //////////////////////////////
+
+    private static class CheckUpdate extends AsyncTask<WeakReference, Void, WeakReference<AppCompatActivity>> {
+
+        @Override
+        protected WeakReference<AppCompatActivity> doInBackground(WeakReference... params) {
+
+            int latestVersion = 0;
+            DataInputStream inputStream = null;
+            try {
+                inputStream = new DataInputStream(new URL(StaticData.DROP_BOX).openStream());
+                latestVersion = inputStream.readInt();
+            } catch (Exception ignored) {
+            } finally {
+                MiscUtils.closeQuietly(inputStream);
+            }
+
+            //noinspection unchecked
+            final WeakReference<AppCompatActivity> reference = params[0];
+
+            final Integer currentVersion = MiscUtils.useContextFromContext(reference, activity -> {
+                try {
+                    return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+                return Integer.MAX_VALUE; //prevent accidental update dialog
+            }).or(Integer.MAX_VALUE); //prevent accidental update dialog
+
+            if (latestVersion > currentVersion)
+                return reference;
+            return null; //don't show dialog
+        }
+
+        @Override
+        protected void onPostExecute(WeakReference<AppCompatActivity> activityWeakReference) {
+
+            super.onPostExecute(activityWeakReference);
+
+            if (activityWeakReference == null) //no need to show dialog
+                return;
+
+            MiscUtils.useContextFromContext(activityWeakReference, activity -> {
+
+                final UpdateFragment updateFragment = new UpdateFragment();
+                updateFragment.setCancelable(false);
+                try {
+                    updateFragment.show(activity.getSupportFragmentManager(), "update");
+                } catch (IllegalStateException | WindowManager.BadTokenException ignored) {
+                    activity.finish();
+                }
+            });
+        }
+    }
+
+    private static final class CheckGCM implements Runnable {
+
+        private final long serverId;
+        private final WeakReference<? extends Context> contextWeakReference;
+
+        private CheckGCM(long serverId, WeakReference<? extends Context> contextWeakReference) {
+            this.serverId = serverId;
+            this.contextWeakReference = contextWeakReference;
+        }
+
+        @Override
+        public void run() {
+
+            if (serverId == 0)
+                return;
+
+            final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.USER_API.getGcmId(serverId).execute(), Optional.absent()).orNull();
+
+            //check returned gcm
+            final String gcmId;
+            if (dataToReturn == null || //fetch failed
+                    TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
+                    gcmId.equals("hello_world")) { //bad gcm
+
+                //network operation
+                if (MiscUtils.updateGCM(serverId, contextWeakReference))
+                    Log.i("Ayush", "GCM updated !");
+                else
+                    Log.i("Ayush", "GCM check failed");
+            }
+        }
+    }
 
     private static final class SendPing implements Runnable {
 
@@ -223,10 +331,6 @@ public enum FireOnce {
             if (handOverMessageWeakReference != null && (handOverMessage = handOverMessageWeakReference.get()) != null)
                 handOverMessage.handOverMessage(true); //done
         }
-    }
-
-    public static void refreshOperations(WeakReference<? extends Context> reference) {
-        new RefreshOperations(reference).executeOnExecutor(refreshDownloadOpsService);
     }
 
     //TODO optimize database fetch !

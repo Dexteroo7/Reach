@@ -1,6 +1,6 @@
 package reach.backend.User.FriendContainers;
 
-import java.util.HashSet;
+import java.util.Set;
 
 import reach.backend.User.ReachUser;
 
@@ -103,8 +103,8 @@ public class Friend {
      * @param lastSeen     lastSeen parameter (decides status 01)
      */
     public Friend(ReachUser host,
-                  HashSet<Long> myReach,
-                  HashSet<Long> sentRequests,
+                  Set<Long> myReach,
+                  Set<Long> sentRequests,
                   long lastSeen) {
 
         this.id = host.getId();
