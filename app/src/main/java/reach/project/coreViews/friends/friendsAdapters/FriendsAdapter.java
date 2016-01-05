@@ -171,6 +171,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             final int numberOfApps = cursorExactType.getInt(8);
             final int newSongs = cursorExactType.getInt(9);
             final int newApps = cursorExactType.getInt(10);
+            //final int newFiles = newSongs + newApps;
 
             viewHolder.userNameList.setText(MiscUtils.capitalizeFirst(userName));
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
@@ -179,8 +180,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                 //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
-                viewHolder.newSongs.setText("+" + newSongs + newApps);
+                viewHolder.newSongs.setText("+" + newSongs);
             } else {
+
                 viewHolder.newSongs.setVisibility(View.INVISIBLE);
                 viewHolder.newSongs.setText("");
             }
