@@ -104,15 +104,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         else
             throw new IllegalArgumentException("Unknown type handed over");
 
-        if (ReachActivity.selectedSongIds.get(song.songId, false)) {
+        if (ReachActivity.SELECTED_SONG_IDS.get(song.songId, false)) {
 
-            ReachActivity.selectedSongs.remove(song);
-            ReachActivity.selectedSongIds.remove(song.songId);
+            ReachActivity.SELECTED_SONGS.remove(song);
+            ReachActivity.SELECTED_SONG_IDS.remove(song.songId);
             Log.i("Ayush", "Removing " + song.displayName);
         } else {
 
-            ReachActivity.selectedSongs.add(song);
-            ReachActivity.selectedSongIds.append(song.songId, true);
+            ReachActivity.SELECTED_SONGS.add(song);
+            ReachActivity.SELECTED_SONG_IDS.append(song.songId, true);
             Log.i("Ayush", "Adding " + song.displayName);
         }
 

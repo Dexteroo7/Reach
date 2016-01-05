@@ -74,7 +74,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         final PackageManager packageManager = holder.appName.getContext().getPackageManager();
 
         holder.appName.setText(item.applicationName);
-        holder.checkBox.setSelected(ReachActivity.selectedApps.contains(item));
+        holder.checkBox.setSelected(ReachActivity.SELECTED_APPS.contains(item));
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
         } catch (PackageManager.NameNotFoundException e) {

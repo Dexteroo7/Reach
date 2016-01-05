@@ -40,7 +40,6 @@
             android:label="@string/app_name"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
-            android:excludeFromRecents="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="process_multiple" />

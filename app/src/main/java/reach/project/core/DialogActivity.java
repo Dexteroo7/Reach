@@ -2,7 +2,6 @@ package reach.project.core;
 
 import android.app.Activity;
 import android.net.Uri;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -36,10 +35,8 @@ public class DialogActivity extends Activity {
         exit.setVisibility(View.VISIBLE);
 
         exit.setOnClickListener(v -> {
-            Intent viewIntent = new Intent(v.getContext(), ReachActivity.class);
-            viewIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            startActivity(viewIntent);
-            DialogActivity.this.finish();
+            ReachActivity.openActivity(v.getContext());
+            finish();
         });
 
         if (type == 1) {

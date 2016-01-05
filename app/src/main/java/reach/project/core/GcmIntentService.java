@@ -25,6 +25,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.notificationCentre.NotificationActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.MiscUtils;
@@ -78,15 +79,12 @@ public class GcmIntentService extends IntentService {
             final String[] splitter = message.split("`");
             final String userName = splitter[2].trim();
 
-            final Intent viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.putExtra("openFriendRequests", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_FRIEND, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(
+                    this,
+                    NOTIFICATION_ID_FRIEND,
+                    NotificationActivity.getIntent(this),
+                    PendingIntent.FLAG_CANCEL_CURRENT);
 
-            /*MiscUtils.useFragment(FriendRequestFragment.getReference(), fragment -> {
-                fragment.refresh();
-                GcmBroadcastReceiver.completeWakefulIntent(intent);
-                return null;
-            });*/
             final NotificationCompat.Builder notificationBuilder =
                     new NotificationCompat.Builder(this)
                             .setAutoCancel(true)
@@ -113,9 +111,11 @@ public class GcmIntentService extends IntentService {
             final String hostId = splitter[1];
             final String hostName = splitter[2];
 
-            final Intent viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.putExtra("openNotifications", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_FRIEND, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(
+                    this,
+                    NOTIFICATION_ID_FRIEND,
+                    NotificationActivity.getIntent(this),
+                    PendingIntent.FLAG_CANCEL_CURRENT);
 
             /*MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();
@@ -161,9 +161,11 @@ public class GcmIntentService extends IntentService {
         else if (message.startsWith("SYNC")) {
 
             final String count = message.substring(4);
-            final Intent viewIntent = new Intent(this, ReachActivity.class);
-            viewIntent.putExtra("openNotifications", true);
-            final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_SYNC, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            final PendingIntent viewPendingIntent = PendingIntent.getActivity(
+                    this,
+                    NOTIFICATION_ID_SYNC,
+                    NotificationActivity.getIntent(this),
+                    PendingIntent.FLAG_CANCEL_CURRENT);
 
             /*MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
                 fragment.refresh();

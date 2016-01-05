@@ -2,6 +2,7 @@ package reach.project.player;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -47,12 +48,28 @@ import reach.project.utils.SharedPrefUtils;
 
 public class PlayerActivity extends AppCompatActivity {
 
+    public static void openActivity(Context context) {
+
+        final Intent intent = new Intent(context, PlayerActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent);
+    }
+
+    public static Intent getIntent(Context context) {
+
+        final Intent intent = new Intent(context, PlayerActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        return intent;
+    }
+
     public static final String ACTION = "reach.project.player.PlayerActivity.ACTION";
     public static final String MUSIC_PARCEL = "reach.project.player.PlayerActivity.MUSIC_PARCEL";
     public static final String DURATION = "reach.project.player.PlayerActivity.DURATION";
     public static final String PRIMARY_PROGRESS = "reach.project.player.PlayerActivity.PRIMARY_PROGRESS";
     public static final String SECONDARY_PROGRESS = "reach.project.player.PlayerActivity.SECONDARY_PROGRESS";
     public static final String PLAYER_POSITION = "reach.project.player.PlayerActivity.PLAYER_POSITION";
+
+    public static final String PLAY_SONG = "reach.project.player.PlayerActivity.PLAY_SONG";
 
     @Nullable
     private static WeakReference<PlayerActivity> reference = null;

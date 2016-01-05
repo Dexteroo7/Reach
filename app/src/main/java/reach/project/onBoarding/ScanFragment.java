@@ -364,10 +364,10 @@ public class ScanFragment extends Fragment {
 
                     totalMusic = message.arg1;
                     scanCount.setText(totalMusic + totalApps + "");
-                    musicCount.setText(musicCount + "");
+                    musicCount.setText(totalMusic + "");
 
                     if (totalExpected > totalMusic + totalApps)
-                        progress.setProgress((totalMusic + totalApps * 100) / totalExpected);
+                        progress.setProgress(((totalMusic + totalApps) * 100) / totalExpected);
                     else
                         progress.setProgress(100); //error case
 
@@ -378,7 +378,7 @@ public class ScanFragment extends Fragment {
                     appCount.setText(totalApps + "");
 
                     if (totalExpected > totalMusic + totalApps)
-                        progress.setProgress((totalMusic + totalApps * 100) / totalExpected);
+                        progress.setProgress(((totalMusic + totalApps) * 100) / totalExpected);
                     else
                         progress.setProgress(100); //error case
 
