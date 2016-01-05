@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -99,6 +100,9 @@ public class YourProfileActivity extends AppCompatActivity {
             numberOfSongs = cursor.getInt(2);
             final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
+            final short status = cursor.getShort(5);
+            if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED)
+                Snackbar.make(findViewById(R.id.root_layout), uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
 
             final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
