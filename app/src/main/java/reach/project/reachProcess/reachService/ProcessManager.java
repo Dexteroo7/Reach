@@ -100,7 +100,13 @@ public class ProcessManager extends Service implements
     public static final String REPLY_MUSIC_DEAD = "reach.project.reachProcess.reachService.ProcessManager.REPLY_MUSIC_DEAD";
     public static final String REPLY_ERROR = "reach.project.reachProcess.reachService.ProcessManager.REPLY_ERROR";
 
-    private final Bundle bundle = new Bundle();
+    public static final String ACTION_NEW_SONG = "reach.project.reachProcess.reachService.MusicHandler.NEW_SONG";
+    public static final String ACTION_NEXT = "reach.project.reachProcess.reachService.MusicHandler.NEXT";
+    public static final String ACTION_PREVIOUS = "reach.project.reachProcess.reachService.MusicHandler.PREVIOUS";
+    //the ones below are directly linked with the player
+    public static final String ACTION_PLAY_PAUSE = "reach.project.reachProcess.reachService.MusicHandler.PLAY_PAUSE";
+    public static final String ACTION_SEEK = "reach.project.reachProcess.reachService.MusicHandler.SEEK";
+    public static final String ACTION_KILL = "reach.project.reachProcess.reachService.MusicHandler.KILL";
 
     private static synchronized void sendMessage(@NonNull Bundle data) {
 
@@ -447,10 +453,10 @@ public class ProcessManager extends Service implements
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this);
         final Notification notification;
 
-        remoteViews.setOnClickPendingIntent(R.id.Npause_play, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_PLAY_PAUSE, null, this, ProcessManager.class), 0));
-        remoteViews.setOnClickPendingIntent(R.id.NcloseButton, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_KILL, null, this, ProcessManager.class), 0));
-        remoteViews.setOnClickPendingIntent(R.id.NprevTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_PREVIOUS, null, this, ProcessManager.class), 0));
-        remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.Npause_play, PendingIntent.getService(this, 0, new Intent(ACTION_PLAY_PAUSE, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.NcloseButton, PendingIntent.getService(this, 0, new Intent(ACTION_KILL, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.NprevTrack, PendingIntent.getService(this, 0, new Intent(ACTION_PREVIOUS, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
         remoteViews.setImageViewResource(R.id.NalbumArt, R.drawable.default_music_icon); //default icon
@@ -511,10 +517,10 @@ public class ProcessManager extends Service implements
 
         final boolean paused = musicHandler.isPaused();
         final RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_both);
-        remoteViews.setOnClickPendingIntent(R.id.Npause_play, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_PLAY_PAUSE, null, this, ProcessManager.class), 0));
-        remoteViews.setOnClickPendingIntent(R.id.NcloseButton, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_KILL, null, this, ProcessManager.class), 0));
-        remoteViews.setOnClickPendingIntent(R.id.NprevTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_PREVIOUS, null, this, ProcessManager.class), 0));
-        remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(MusicHandler.ACTION_NEXT, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.Npause_play, PendingIntent.getService(this, 0, new Intent(ACTION_PLAY_PAUSE, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.NcloseButton, PendingIntent.getService(this, 0, new Intent(ACTION_KILL, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.NprevTrack, PendingIntent.getService(this, 0, new Intent(ACTION_PREVIOUS, null, this, ProcessManager.class), 0));
+        remoteViews.setOnClickPendingIntent(R.id.NnextTrack, PendingIntent.getService(this, 0, new Intent(ACTION_NEXT, null, this, ProcessManager.class), 0));
         remoteViews.setTextViewText(R.id.NsongNamePlaying, currentSong.get().getDisplayName());
         remoteViews.setTextViewText(R.id.NartistName, currentSong.get().getArtistName());
         remoteViews.setTextViewText(R.id.NupCount, totalUploads + "");
@@ -565,6 +571,7 @@ public class ProcessManager extends Service implements
 
         //insert Music player into notification
         Log.i("Downloader", "UPDATING SONG DETAILS");
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_LATEST_MUSIC);
         bundle.putParcelable(PlayerActivity.MUSIC_PARCEL, musicData);
         sendMessage(bundle);
@@ -628,6 +635,7 @@ public class ProcessManager extends Service implements
     @Override
     public void updateDuration(String formattedDuration) {
 
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_DURATION);
         bundle.putString(PlayerActivity.DURATION, formattedDuration);
         sendMessage(bundle);
@@ -676,6 +684,7 @@ public class ProcessManager extends Service implements
         else if (notificationState == NotificationState.Both)
             notificationBoth();
 
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_PAUSED);
         sendMessage(bundle);
     }
@@ -687,6 +696,7 @@ public class ProcessManager extends Service implements
         else if (notificationState == NotificationState.Both)
             notificationBoth();
 
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_UN_PAUSED);
         sendMessage(bundle);
     }
@@ -696,6 +706,7 @@ public class ProcessManager extends Service implements
 
         musicHandler.close();
 
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_MUSIC_DEAD);
         sendMessage(bundle);
 
@@ -774,6 +785,24 @@ public class ProcessManager extends Service implements
                 Log.i("Downloader", "INTERRUPTED EXCEPTION IN REACH TASK");
                 close(); //shut down process
             } catch (Throwable e) {
+
+                switch (task.getType()) {
+
+                    case MUSIC:
+                        musicHandler.close();
+                        musicStack.clear();
+                        if (musicFuture != null)
+                            musicFuture.cancel(true);
+                        musicFuture = null;
+                        break;
+                    case NETWORK:
+                        networkHandler.close();
+                        if (networkFuture != null)
+                            networkFuture.cancel(true);
+                        networkFuture = null;
+                        break;
+                }
+
                 e.printStackTrace();
                 Log.i("Downloader", "EXCEPTION IN REACH TASK " + e.getLocalizedMessage());
             } finally {
@@ -815,7 +844,7 @@ public class ProcessManager extends Service implements
                 networkHandler.close(); //kill the network handler
                 break;
             }
-            case MusicHandler.ACTION_NEW_SONG: {
+            case ACTION_NEW_SONG: {
                 Log.i("Downloader", "ACTION_NEW_SONG");
                 musicHandler.userUnPause();
                 MusicData data;
@@ -828,7 +857,7 @@ public class ProcessManager extends Service implements
                 pushNextSong(Optional.fromNullable(data));
                 break;
             }
-            case MusicHandler.ACTION_NEXT: {
+            case ACTION_NEXT: {
                 Log.i("Downloader", "ACTION_NEXT");
                 musicHandler.userUnPause();
                 final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
@@ -838,7 +867,7 @@ public class ProcessManager extends Service implements
                 else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
                 break;
             }
-            case MusicHandler.ACTION_PREVIOUS: {
+            case ACTION_PREVIOUS: {
                 Log.i("Downloader", "ACTION_PREVIOUS");
                 musicHandler.userUnPause();
                 final boolean shuffle = SharedPrefUtils.getShuffle(this);
@@ -847,7 +876,7 @@ public class ProcessManager extends Service implements
                 else pushNextSong(previousSong(musicHandler.getCurrentSong()));
                 break;
             }
-            case MusicHandler.ACTION_PLAY_PAUSE: {
+            case ACTION_PLAY_PAUSE: {
                 Log.i("Downloader", "ACTION_PLAY_PAUSE");
                 if (!musicHandler.processPlayPause())
                     break;
@@ -866,7 +895,7 @@ public class ProcessManager extends Service implements
                 }
                 break;
             }
-            case MusicHandler.ACTION_SEEK: {
+            case ACTION_SEEK: {
                 Log.i("Downloader", "ACTION_SEEK");
                 //if returned true means seek is ok
                 if (musicHandler.processSeek(Short.parseShort(intent.getStringExtra("message"))))
@@ -881,7 +910,7 @@ public class ProcessManager extends Service implements
                 else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
                 break;
             }
-            case MusicHandler.ACTION_KILL: {
+            case ACTION_KILL: {
 
                 musicStack.clear();
                 musicHandler.close();
@@ -1093,6 +1122,7 @@ public class ProcessManager extends Service implements
     public void errorReport(String songName, String missType) {
 
 //        pushNextSong(nextSong(Optional.absent(), false));
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_ERROR);
         sendMessage(bundle);
 
@@ -1114,6 +1144,7 @@ public class ProcessManager extends Service implements
     public void updateSecondaryProgress(short percent) {
 
         Log.i("Ayush", "Sending secondary progress " + percent);
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_SECONDARY_PROGRESS);
         bundle.putShort(PlayerActivity.SECONDARY_PROGRESS, percent);
         sendMessage(bundle);
@@ -1122,6 +1153,7 @@ public class ProcessManager extends Service implements
     @Override
     public void updatePrimaryProgress(short percent, int position) {
 
+        final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_PRIMARY_PROGRESS);
         bundle.putShort(PlayerActivity.PRIMARY_PROGRESS, percent);
         bundle.putInt(PlayerActivity.PLAYER_POSITION, position * 1000); //convert to millisecond

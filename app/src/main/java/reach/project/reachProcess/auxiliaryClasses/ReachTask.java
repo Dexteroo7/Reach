@@ -7,13 +7,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class ReachTask<T> implements Runnable {
 
+    public enum Type {
+        MUSIC,
+        NETWORK
+    }
+
     //kill switch for parent
     protected final AtomicBoolean kill = new AtomicBoolean(true);
     //call-back interface
     protected final T handlerInterface;
 
-    public ReachTask(T handlerInterface) {
+    public Type getType() {
+        return type;
+    }
+
+    //type of reach task
+    protected final Type type;
+
+    public ReachTask(T handlerInterface, Type type) {
         this.handlerInterface = handlerInterface;
+        this.type = type;
     }
     public void close() {
         kill.set(true);

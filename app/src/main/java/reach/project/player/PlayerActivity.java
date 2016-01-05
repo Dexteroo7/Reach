@@ -37,7 +37,6 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.reachProcess.reachService.MusicHandler;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
@@ -301,7 +300,7 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser)
-                    ProcessManager.submitMusicRequest(seekBar.getContext(), Optional.of(progress + ""), MusicHandler.ACTION_SEEK);
+                    ProcessManager.submitMusicRequest(seekBar.getContext(), Optional.of(progress + ""), ProcessManager.ACTION_SEEK);
             }
 
             @Override
@@ -324,12 +323,12 @@ public class PlayerActivity extends AppCompatActivity {
         public static final View.OnClickListener nextClick = v -> ProcessManager.submitMusicRequest(
                 v.getContext(),
                 Optional.absent(),
-                MusicHandler.ACTION_NEXT);
+                ProcessManager.ACTION_NEXT);
 
         public static final View.OnClickListener previousClick = v -> ProcessManager.submitMusicRequest(
                 v.getContext(),
                 Optional.absent(),
-                MusicHandler.ACTION_PREVIOUS);
+                ProcessManager.ACTION_PREVIOUS);
 
         private static boolean toggleLiked(Context context) {
 
@@ -414,12 +413,12 @@ public class PlayerActivity extends AppCompatActivity {
                 ProcessManager.submitMusicRequest(
                         v.getContext(),
                         Optional.of(new Gson().toJson(currentPlaying, MusicData.class)),
-                        MusicHandler.ACTION_PLAY_PAUSE);
+                        ProcessManager.ACTION_PLAY_PAUSE);
             else
                 ProcessManager.submitMusicRequest(
                         v.getContext(),
                         Optional.absent(),
-                        MusicHandler.ACTION_PLAY_PAUSE);
+                        ProcessManager.ACTION_PLAY_PAUSE);
         };
 
         public static final View.OnClickListener shuffleClick = view -> {

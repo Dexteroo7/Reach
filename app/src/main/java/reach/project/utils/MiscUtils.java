@@ -108,7 +108,7 @@ import reach.project.music.Song;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
-import reach.project.reachProcess.reachService.MusicHandler;
+import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
@@ -401,7 +401,7 @@ public enum MiscUtils {
 
         ProcessManager.submitMusicRequest(context,
                 Optional.of(musicData),
-                MusicHandler.ACTION_NEW_SONG);
+                ProcessManager.ACTION_NEW_SONG);
 
         final Intent intent = new Intent(context, PlayerActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);

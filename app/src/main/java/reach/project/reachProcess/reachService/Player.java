@@ -34,7 +34,7 @@ import reach.project.reachProcess.decoder.SampleBuffer;
 /**
  * Created by Dexter on 22-06-2015.
  */
-public class Player {
+class Player {
 
     //which player is playing
     private enum WhichPlayer {

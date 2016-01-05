@@ -83,8 +83,8 @@ public class EditProfileActivity extends AppCompatActivity {
         mToolbar.setNavigationOnClickListener(v -> doUpdate());
 
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_APPEND);
-        final String imageId = SharedPrefUtils.getImageId(sharedPreferences);
-        final String coverImageId = SharedPrefUtils.getCoverImageId(sharedPreferences);
+        profilePhotoId = SharedPrefUtils.getImageId(sharedPreferences);
+        coverPhotoId = SharedPrefUtils.getCoverImageId(sharedPreferences);
         final String uName = SharedPrefUtils.getUserName(sharedPreferences);
         userId = SharedPrefUtils.getServerId(sharedPreferences);
 
@@ -96,14 +96,14 @@ public class EditProfileActivity extends AppCompatActivity {
         profile.setTag(IMAGE_PICKER_SELECT);
         profile.setOnClickListener(imagePicker);
 
-        if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-            profile.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+        if (!TextUtils.isEmpty(profilePhotoId) && !profilePhotoId.equals("hello_world"))
+            profile.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + profilePhotoId));
 
         cover = (SimpleDraweeView) findViewById(R.id.coverPic);
         cover.setTag(COVER_PICKER_SELECT);
         cover.setOnClickListener(imagePicker);
-        if (!TextUtils.isEmpty(coverImageId) && !coverImageId.equals("hello_world"))
-            cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverImageId));
+        if (!TextUtils.isEmpty(coverPhotoId) && !coverPhotoId.equals("hello_world"))
+            cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPhotoId));
     }
 
     private final View.OnClickListener imagePicker = view -> {
@@ -361,7 +361,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 }
             }).orNull();
 
-            if (keyStream != null)
+            if (keyStream != null && toUploadProfilePhoto != null && toUploadProfilePhoto.length() > 0)
                 CloudStorageUtils.uploadImage(toUploadProfilePhoto, keyStream, PROFILE_PIC_PROGRESS);
             else
                 PROFILE_PIC_PROGRESS.error();
@@ -376,13 +376,16 @@ public class EditProfileActivity extends AppCompatActivity {
                 }
             }).orNull();
 
-            if (keyStream != null)
+            if (keyStream != null && toUploadCoverPhoto != null && toUploadCoverPhoto.length() > 0)
                 CloudStorageUtils.uploadImage(toUploadCoverPhoto, keyStream, COVER_PIC_PROGRESS);
             else
                 COVER_PIC_PROGRESS.error();
 
             //upload user data
-            final List<String> toPush = Arrays.asList(name[0], profilePhotoId, coverPhotoId);
+            final List<String> toPush = Arrays.asList(
+                    name[0],
+                    profilePhotoId == null ? "" : profilePhotoId,
+                    coverPhotoId == null ? "" : coverPhotoId);
             Log.i("Ayush", "Pushing " + userId + " " + MiscUtils.seqToString(toPush));
             try {
                 return StaticData.USER_API.updateUserDetails(userId, toPush).execute() == null;
