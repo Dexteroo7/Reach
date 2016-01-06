@@ -33,6 +33,7 @@ import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -69,6 +70,8 @@ public class EditProfileActivity extends AppCompatActivity {
     @Nullable
     private SimpleDraweeView cover = null;
 
+    private final Random random = new Random();
+
     private final ExecutorService profileEditor = Executors.newSingleThreadExecutor();
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -104,6 +107,8 @@ public class EditProfileActivity extends AppCompatActivity {
         cover.setOnClickListener(imagePicker);
         if (!TextUtils.isEmpty(coverPhotoId) && !coverPhotoId.equals("hello_world"))
             cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPhotoId));
+        else
+            cover.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
     }
 
     private final View.OnClickListener imagePicker = view -> {

@@ -93,7 +93,6 @@ import javax.annotation.Nonnull;
 
 import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
-import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
@@ -186,16 +185,14 @@ public enum MiscUtils {
             }
     }
 
-    private static int[] randomPics = new int[]{
-            R.drawable.album_art_small_01,
-            R.drawable.album_art_small_02,
-            R.drawable.album_art_small_03,
-            R.drawable.album_art_small_04,
-            R.drawable.album_art_small_05
+    private static String[] randomPics = new String[]{
+            "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240",
+            "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240",
+            "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240"
     };
 
-    public static int getRandomPic() {
-        return randomPics[new Random().nextInt(5)];
+    public static String getRandomPic(Random random) {
+        return randomPics[random.nextInt(3)];
     }
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {

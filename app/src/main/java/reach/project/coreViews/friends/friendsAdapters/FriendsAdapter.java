@@ -13,6 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.Random;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -34,6 +36,7 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<Cursor> {
 
     private final HandOverMessage<ClickData> handOverMessage;
+    private final Random random = new Random();
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
         this.handOverMessage = handOverMessage;
@@ -199,7 +202,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
             }*/
 
-            viewHolder.coverPic.setImageURI(Uri.parse("res:///" + MiscUtils.getRandomPic()));
+            viewHolder.coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
             viewHolder.profilePhotoList.setImageURI(uriToDisplay);
             viewHolder.lockIcon.setVisibility(View.GONE);
 
