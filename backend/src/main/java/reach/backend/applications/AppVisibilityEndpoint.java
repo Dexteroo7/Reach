@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import reach.backend.ObjectWrappers.MyString;
+import reach.backend.TextUtils;
 import reach.backend.User.ReachUser;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
@@ -67,7 +68,37 @@ public class AppVisibilityEndpoint {
     }
 
     /**
+     * Returns the {@link AppVisibility} with the corresponding ID
+     * if given hash has changed
+     *
+     * @param id                 the ID of the entity to be retrieved
+     * @param clientSideHashCode the hashCode according to client
+     * @return the entity with the corresponding ID, if response is empty ignore
+     */
+    @ApiMethod(
+            name = "getIfChanged",
+            path = "appVisibility/getIfChanged/{id}/{clientSideHashCode}",
+            httpMethod = ApiMethod.HttpMethod.GET)
+    public VisibilityChangeResponse getIfChanged(@Named("id") long id,
+                                                 @Named("clientSideHashCode") int clientSideHashCode) {
+
+        final AppVisibility appVisibility = ofy().load().type(AppVisibility.class).id(id).now();
+
+        if (appVisibility == null || appVisibility.getVisibility() == null || appVisibility.getVisibility().isEmpty())
+            return new VisibilityChangeResponse(); //empty response, ignore
+
+        final int hashCode = appVisibility.getVisibility().hashCode();
+
+        if (hashCode != clientSideHashCode)
+            return new VisibilityChangeResponse(appVisibility.getVisibility(), hashCode);
+        else
+            return new VisibilityChangeResponse(); //empty response, ignore
+    }
+
+    /**
      * Inserts a new {@code AppVisibility}.
+     * Overwrites new values into old, preserving
+     * old values if not found in new container
      */
     @ApiMethod(
             name = "insert",
@@ -75,20 +106,29 @@ public class AppVisibilityEndpoint {
             httpMethod = ApiMethod.HttpMethod.PUT)
     public AppVisibility insert(AppVisibility appVisibility) {
 
-        if (appVisibility.getId() == null || appVisibility.getId() == 0)
+        final long id;
+        if (appVisibility.getId() == null || (id = appVisibility.getId()) == 0)
             throw new IllegalArgumentException("Please specific the item id");
 
+        AppVisibility oldData = ofy().load().type(AppVisibility.class).id(id).now();
+        if (oldData == null || oldData.getVisibility() == null || oldData.getId() == null || oldData.getId() == 0)
+            //no previous data found
+            oldData = appVisibility;
+        else
+            //old data found, overwrite new values
+            oldData.getVisibility().putAll(appVisibility.getVisibility());
+
         int visibleApps = 0;
-        for (Boolean aBoolean : appVisibility.getVisibility().values())
+        for (Boolean aBoolean : oldData.getVisibility().values())
             if (aBoolean != null && aBoolean)
                 visibleApps++;
 
-        final ReachUser user = ofy().load().type(ReachUser.class).id(appVisibility.getId()).now();
+        final ReachUser user = ofy().load().type(ReachUser.class).id(id).now();
         user.setNumberOfApps(visibleApps);
-        ofy().save().entities(appVisibility, user).now();
+        ofy().save().entities(oldData, user).now();
 
-        logger.info("Created AppVisibility with ID: " + appVisibility.getId());
-        return ofy().load().entity(appVisibility).now();
+        logger.info("Created AppVisibility with ID: " + id);
+        return ofy().load().entity(oldData).now();
     }
 
     /**
@@ -107,6 +147,10 @@ public class AppVisibilityEndpoint {
                            @Named("packageName") String packageName,
                            @Named("visibility") boolean visibility) {
 
+        if (id == 0 || TextUtils.isEmpty(packageName))
+            throw new IllegalArgumentException("Insufficient parameters");
+
+        //get visibility map
         AppVisibility appVisibility = ofy().load().type(AppVisibility.class).id(id).now();
         if (appVisibility == null || appVisibility.getVisibility() == null) {
 
@@ -114,9 +158,18 @@ public class AppVisibilityEndpoint {
             appVisibility.setId(id);
             appVisibility.setVisibility(new HashMap<String, Boolean>(500));
         }
-
         appVisibility.getVisibility().put(packageName, visibility);
-        ofy().save().entity(appVisibility).now();
+
+        //update new visible apps count
+        final ReachUser user = ofy().load().type(ReachUser.class).id(id).now();
+        final int oldNumberOfApps = user.getNumberOfApps();
+        if (visibility)
+            user.setNumberOfApps(oldNumberOfApps + 1); //if visible increment
+        else
+            user.setNumberOfApps(oldNumberOfApps - 1); // else decrement
+
+        //save latest info
+        ofy().save().entities(appVisibility, user).now();
         logger.info("Updated appVisibility: " + id + " " + visibility + " " + packageName);
         return new MyString("true");
     }

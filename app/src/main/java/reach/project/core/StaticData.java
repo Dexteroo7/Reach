@@ -32,7 +32,6 @@ public final class StaticData {
     public static final Messaging.MessagingEndpoint MESSAGING_API;
     public static final MusicVisibilityApi MUSIC_VISIBILITY_API;
     public static final NotificationApi NOTIFICATION_API;
-
     public static final AppVisibilityApi APP_VISIBILITY_API;
     public static final ClassifiedAppsApi CLASSIFIED_APPS_API;
 
@@ -51,7 +50,6 @@ public final class StaticData {
         FEED_BACK_API = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         NOTIFICATION_API = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
         MUSIC_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
-
         APP_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
         CLASSIFIED_APPS_API = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
     }

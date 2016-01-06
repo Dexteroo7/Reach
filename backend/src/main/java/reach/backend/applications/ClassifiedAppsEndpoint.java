@@ -153,7 +153,8 @@ public class ClassifiedAppsEndpoint {
             name = "update",
             path = "classifiedApps/{packageName}",
             httpMethod = ApiMethod.HttpMethod.PUT)
-    public ClassifiedApps update(@Named("packageName") String packageName, ClassifiedApps classifiedApps) throws NotFoundException {
+    public ClassifiedApps update(@Named("packageName") String packageName,
+                                 ClassifiedApps classifiedApps) throws NotFoundException {
 
         if (TextUtils.isEmpty(classifiedApps.getPackageName()))
             throw new IllegalArgumentException("Please specific package name");

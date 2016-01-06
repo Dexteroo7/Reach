@@ -19,7 +19,8 @@ import com.google.api.client.util.SecurityUtils;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
 import com.google.common.base.Optional;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import com.squareup.wire.Wire;
@@ -35,7 +36,6 @@ import java.lang.ref.WeakReference;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -430,24 +430,24 @@ public enum CloudStorageUtils {
 
             //first update the hash
             SharedPrefUtils.storeCloudStorageFileHash(preferences, fileName, serverHash);
-            return musicList.song;
+            //song must not be null and must be visible
+            return Lists.newArrayList(Iterables.filter(musicList.song, song -> song != null && song.visibility));
 
         }).or(Collections.emptyList());
 
-        //if dead return empty
+        //if dead/empty return empty
         if (songList == null || songList.isEmpty())
             return Collections.emptyList();
 
-        final Comparator<Song> primaryMusic = (left, right) -> {
-
-            final String lhs = left == null || left.displayName == null ? "" : left.displayName;
-            final String rhs = right == null || right.displayName == null ? "" : right.displayName;
-
-            return lhs.compareTo(rhs);
-        };
-
         //sort by name and return
-        return Ordering.from(primaryMusic).sortedCopy(songList);
+        Collections.sort(songList, (lhs, rhs) -> {
+
+            final String d1 = TextUtils.isEmpty(lhs.displayName) ? "" : lhs.displayName;
+            final String d2 = TextUtils.isEmpty(rhs.displayName) ? "" : rhs.displayName;
+            return d1.compareToIgnoreCase(d2);
+        });
+
+        return songList;
     }
 
     public static boolean isNewAppAvailable(long userId, InputStream key, String localHash) {
@@ -538,7 +538,8 @@ public enum CloudStorageUtils {
 
             //first update the hash
             SharedPrefUtils.storeCloudStorageFileHash(preferences, fileName, serverHash);
-            return appList.app;
+            //app must not be null and must be visible
+            return Lists.newArrayList(Iterables.filter(appList.app, input -> input != null && input.visible));
 
         }).or(Collections.emptyList());
 
@@ -547,7 +548,8 @@ public enum CloudStorageUtils {
             return Collections.emptyList();
 
         //sort by name and return
-        return Ordering.from(StaticData.byName).sortedCopy(apps);
+        Collections.sort(apps, StaticData.byName);
+        return apps;
     }
 
     @Nullable

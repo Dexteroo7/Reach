@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * User defined visibility list, over-rides default hidden list
  * Created by dexter on 19/11/15.
  */
@@ -21,7 +20,7 @@ public class AppVisibility {
 
     //will be same as ReachUser id
     @Id
-    private Long id = 0L; //auto-gen
+    private Long id = 0L;
     //visibility of songs
     @Unindex
     @Serialize(zip = true)

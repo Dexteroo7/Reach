@@ -469,11 +469,7 @@ public class MetaDataScanner extends IntentService {
 
             //update music visibility data
             final int finalVisibleSongs = visibleSongs;
-            MiscUtils.autoRetry(() -> {
-
-                StaticData.MUSIC_VISIBILITY_API.insert(finalVisibleSongs, musicData).execute();
-                return null;
-            }, Optional.absent());
+            MiscUtils.autoRetry(() -> StaticData.MUSIC_VISIBILITY_API.insert(finalVisibleSongs, musicData).execute(), Optional.absent());
         }
 
         private static final class SongPersist {
@@ -650,11 +646,7 @@ public class MetaDataScanner extends IntentService {
             appVisibility.setId(serverId);
 
             //update music visibility data
-            MiscUtils.autoRetry(() -> {
-
-                StaticData.APP_VISIBILITY_API.insert(appVisibility).execute();
-                return null;
-            }, Optional.absent());
+            MiscUtils.autoRetry(() -> StaticData.APP_VISIBILITY_API.insert(appVisibility).execute(), Optional.absent());
         }
     }
 

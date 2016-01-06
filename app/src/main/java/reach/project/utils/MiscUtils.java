@@ -86,6 +86,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -1550,9 +1551,21 @@ public enum MiscUtils {
                 1, //only 1 thread
                 0L, TimeUnit.MILLISECONDS, //no waiting
                 new SynchronousQueue<>(false), //only 1 thread
-                (r, executor) -> {//ignored
-                });
+                new ThreadPoolExecutor.DiscardPolicy()); //ignored
     }
+
+    public static ThreadPoolExecutor getRejectionExecutor(ThreadFactory threadFactory) {
+
+        //an executor for getting stories from server
+        return new ThreadPoolExecutor(
+                1, //only 1 thread
+                1, //only 1 thread
+                0L, TimeUnit.MILLISECONDS, //no waiting
+                new SynchronousQueue<>(false), //only 1 thread
+                threadFactory,
+                new ThreadPoolExecutor.DiscardPolicy()); //ignored
+    }
+
 
     public static <T> String seqToString(Iterable<T> items) {
 
