@@ -5,10 +5,13 @@ import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -16,24 +19,31 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
+import org.json.JSONException;
+
+import java.util.Map;
+
 import reach.project.R;
 import reach.project.devikaChat.ChatActivity;
 import reach.project.devikaChat.ChatActivityFragment;
+import reach.project.friends.ReachFriendsHelper;
+import reach.project.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.FriendRequestFragment;
 import reach.project.notificationCentre.NotificationFragment;
-import reach.project.uploadDownload.ReachDatabaseProvider;
-import reach.project.friends.ReachFriendsProvider;
-import reach.project.uploadDownload.ReachDatabaseHelper;
-import reach.project.friends.ReachFriendsHelper;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
+import reach.project.uploadDownload.ReachDatabase;
+import reach.project.uploadDownload.ReachDatabaseHelper;
+import reach.project.uploadDownload.ReachDatabaseProvider;
+import reach.project.usageTracking.PostParams;
+import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.uploadDownload.ReachDatabase;
 
 /**
  * Created by dexter on 21/6/14.
@@ -51,6 +61,7 @@ public class GcmIntentService extends IntentService {
     public static final int NOTIFICATION_ID_SYNC = 565128993;
     public static final int NOTIFICATION_ID_CHAT = 865910077;
     public static final int NOTIFICATION_ID_MANUAL = 884587848;
+    private SharedPreferences sharedPreferences;
 
     /**
      * Handle GCM receipt intent
@@ -61,6 +72,7 @@ public class GcmIntentService extends IntentService {
     protected void onHandleIntent(final Intent intent) {
 
         final Bundle extras = intent.getExtras();
+        sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);
         final String messageType = GoogleCloudMessaging.getInstance(this).getMessageType(intent);
         final String message;
 
@@ -78,6 +90,8 @@ public class GcmIntentService extends IntentService {
          * Service a permission request
          */
         if (message.startsWith("PERMISSION_REQUEST")) {
+
+            trackNotifReceived(message);
 
             final String[] splitter = message.split("`");
             final String userName = splitter[2].trim();
@@ -112,6 +126,7 @@ public class GcmIntentService extends IntentService {
         if (message.contains("PERMISSION_GRANTED") ||
                 message.contains("PERMISSION_REJECTED")) {
 
+            trackNotifReceived(message);
             final String[] splitter = message.split("`");
             final String type = splitter[0];
             final String hostId = splitter[1];
@@ -164,6 +179,7 @@ public class GcmIntentService extends IntentService {
          */
         else if (message.startsWith("SYNC")) {
 
+            trackNotifReceived(message);
             final String count = message.substring(4);
             final Intent viewIntent = new Intent(this, ReachActivity.class);
             viewIntent.putExtra("openNotifications", true);
@@ -191,6 +207,7 @@ public class GcmIntentService extends IntentService {
          */
         else if (message.startsWith("MANUAL")) {
 
+            trackNotifReceived(message);
             final String[] splitter = message.split("`");
 
             final Intent viewIntent;
@@ -228,6 +245,7 @@ public class GcmIntentService extends IntentService {
          */
         else if (message.startsWith("CHAT") && !ChatActivityFragment.connected.get()) {
 
+            trackNotifReceived(message);
             final Intent viewIntent = new Intent(this, ChatActivity.class);
             final PendingIntent viewPendingIntent = PendingIntent.getActivity(this, NOTIFICATION_ID_CHAT, viewIntent, PendingIntent.FLAG_CANCEL_CURRENT);
             final NotificationCompat.Builder notificationBuilder =
@@ -295,14 +313,14 @@ public class GcmIntentService extends IntentService {
         else if (message.startsWith("PING")) {
 
             //Handle announce
-            final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE));
+            final long id = SharedPrefUtils.getServerId(sharedPreferences);
             if (id == 0) {
 
                 GcmBroadcastReceiver.completeWakefulIntent(intent);
                 return;
             }
             final short[] networkType = new short[]{getNetworkType(this)};
-            if (networkType[0] > 1 && !SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)))
+            if (networkType[0] > 1 && !SharedPrefUtils.getMobileData(sharedPreferences))
                 networkType[0] = 5;
 
             final long currentTime = System.currentTimeMillis();
@@ -323,6 +341,12 @@ public class GcmIntentService extends IntentService {
          */
         else if (message.startsWith("CONNECT")) {
 
+            ((ReachApplication)getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Notification Received")
+                    .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
+                    .setLabel("Message - " + message)
+                    .setValue(1)
+                    .build());
             //Verify
             final String actualMessage = message.substring(7);
             final Connection connection = new Gson().fromJson(actualMessage, Connection.class);
@@ -350,7 +374,7 @@ public class GcmIntentService extends IntentService {
                 isPaused.close();
 
             Log.i("Downloader", message + " Received");
-            if (!SharedPrefUtils.getMobileData(getSharedPreferences("Reach", MODE_PRIVATE)) && getNetworkType(this) != 1 && message.contains("REQ"))
+            if (!SharedPrefUtils.getMobileData(sharedPreferences) && getNetworkType(this) != 1 && message.contains("REQ"))
                 Log.i("Downloader", "Dropping request on mobile network");
             else
                 ProcessManager.submitNetworkRequest(this, actualMessage);
@@ -358,6 +382,33 @@ public class GcmIntentService extends IntentService {
             Log.i("Downloader", "Received unexpected GCM " + message);
 
         GcmBroadcastReceiver.completeWakefulIntent(intent);
+    }
+
+    private void trackNotifReceived(String message) {
+        ((ReachApplication)getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Notification Received")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
+                .setLabel("Message - " + message)
+                .setValue(1)
+                .build());
+        final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
+        simpleParams.put(PostParams.USER_ID, SharedPrefUtils.getServerId(sharedPreferences) + "");
+        simpleParams.put(PostParams.DEVICE_ID, MiscUtils.getDeviceId(this));
+        simpleParams.put(PostParams.OS, MiscUtils.getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        simpleParams.put(PostParams.SCREEN_NAME, "notification");
+        simpleParams.put(PostParams.MESSAGE, message);
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            UsageTracker.trackEvent(simpleParams, UsageTracker.NOTIFICATION_RECEIVED);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private short getNetworkType(Context context) {

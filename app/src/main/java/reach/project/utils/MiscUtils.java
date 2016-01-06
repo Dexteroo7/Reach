@@ -373,18 +373,15 @@ public enum MiscUtils {
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
         final List<ApplicationInfo> applicationInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
-
-        Log.i("Ayush", "Old size " + applicationInfos.size());
-
         final Iterator<ApplicationInfo> applicationInfoIterator = applicationInfos.iterator();
 
         while (applicationInfoIterator.hasNext()) {
 
             final ApplicationInfo applicationInfo = applicationInfoIterator.next();
-            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0)
+            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                    || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0)
                 applicationInfoIterator.remove();
         }
-        Log.i("Ayush", "New size " + applicationInfos.size());
 
         return applicationInfos;
     }

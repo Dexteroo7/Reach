@@ -163,7 +163,6 @@
                     android:layout_marginBottom="5dp"
                     android:layout_above="@id/verifyNext"
                     android:gravity="center"
-                    android:text="Didn't receive any code?\nClick to send verification code again"
                     android:textColor="@color/white"
                     android:textSize="14sp"
                     android:layout_width="wrap_content"

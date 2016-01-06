@@ -16,7 +16,8 @@ public enum PostParams {
     OS_VERSION("osVersion"), //fixed
     APP_VERSION("appVersion"), //fixed
     USER_NAME("userName"),
-    USER_NUMBER("phoneNumber")
+    USER_NUMBER("phoneNumber"),
+    MESSAGE("]message")
     ;
 
     private final String value;
