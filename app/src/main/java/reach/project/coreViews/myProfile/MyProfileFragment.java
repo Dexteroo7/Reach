@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -46,14 +47,67 @@ public class MyProfileFragment extends Fragment {
     public static MyProfileFragment newInstance() {
 
         MyProfileFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment))
             reference = new WeakReference<>(fragment = new MyProfileFragment());
         else
             Log.i("Ayush", "Reusing YourProfileAppFragment object :)");
         return fragment;
     }
 
-    @Override
+    private final Toolbar.OnMenuItemClickListener menuItemClickListener = item -> {
+
+        boolean check;
+        switch (item.getItemId()) {
+            case R.id.show_visible:
+                check = !item.isChecked();
+                //TODO show visible files
+                item.setChecked(check);
+                return true;
+            case R.id.show_invisible:
+                check = !item.isChecked();
+                //TODO show invisible files
+                item.setChecked(check);
+                return true;
+            case R.id.player_button:
+                PlayerActivity.openActivity(getContext());
+                return true;
+        }
+        return false;
+    };
+
+    private static final ViewPager.PageTransformer PAGE_TRANSFORMER = (view, position) -> {
+
+        if (position <= 1) {
+            // Modify the default slide transition to shrink the page as well
+            float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
+            float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
+            float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
+            if (position < 0)
+                view.setTranslationX(horzMargin - vertMargin / 2);
+            else
+                view.setTranslationX(-horzMargin + vertMargin / 2);
+
+            // Scale the page down (between MIN_SCALE and 1)
+            view.setScaleX(scaleFactor);
+            view.setScaleY(scaleFactor);
+        }
+    };
+
+    private final MaterialViewPager.Listener materialListener = page -> {
+
+        switch (page) {
+            case 0:
+                return HeaderDesign.fromColorResAndUrl(
+                        R.color.reach_color,
+                        "");
+            case 1:
+                return HeaderDesign.fromColorResAndUrl(
+                        R.color.reach_color,
+                        "");
+            default:throw new IllegalStateException("Size of 2 expected");
+        }
+    };
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -65,30 +119,13 @@ public class MyProfileFragment extends Fragment {
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setTitle("My Profile");
         toolbar.inflateMenu(R.menu.myprofile_menu);
-        MenuItem menuItem = toolbar.getMenu().findItem(R.id.edit_button);
+
+        final MenuItem menuItem = toolbar.getMenu().findItem(R.id.edit_button);
         MenuItemCompat.setActionView(menuItem, R.layout.edit_profile_button);
         final View editProfileContainer = MenuItemCompat.getActionView(menuItem).findViewById(R.id.editProfileLayout);
         editProfileContainer.setOnClickListener(v -> startActivity(new Intent(activity, EditProfileActivity.class)));
         toolbar.setNavigationIcon(null);
-        toolbar.setOnMenuItemClickListener(item -> {
-            boolean check;
-            switch (item.getItemId()) {
-                case R.id.show_visible:
-                    check = !item.isChecked();
-                    //TODO show visible files
-                    item.setChecked(check);
-                    return true;
-                case R.id.show_invisible:
-                    check = !item.isChecked();
-                    //TODO show invisible files
-                    item.setChecked(check);
-                    return true;
-                case R.id.player_button:
-                    startActivity(new Intent(getContext(), PlayerActivity.class));
-                    return true;
-            }
-            return false;
-        });
+        toolbar.setOnMenuItemClickListener(menuItemClickListener);
 
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -113,8 +150,7 @@ public class MyProfileFragment extends Fragment {
         ((SimpleDraweeView) headerRoot.findViewById(R.id.profilePic)).setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
                 + SharedPrefUtils.getImageId(preferences)));
 
-        ViewPager viewPager = materialViewPager.getViewPager();
-        viewPager.setAdapter(new FragmentPagerAdapter(getChildFragmentManager()) {
+        final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 
             @Override
             public Fragment getItem(int position) {
@@ -146,41 +182,15 @@ public class MyProfileFragment extends Fragment {
                         throw new IllegalStateException("Count and size clash");
                 }
             }
-        });
+        };
 
-        materialViewPager.setMaterialViewPagerListener(page -> {
-            switch (page) {
-                case 0:
-                    return HeaderDesign.fromColorResAndUrl(
-                            R.color.reach_color,
-                            "");
-                case 1:
-                    return HeaderDesign.fromColorResAndUrl(
-                            R.color.reach_color,
-                            "");
-            }
-            return null;
-        });
-
+        final ViewPager viewPager = materialViewPager.getViewPager();
+        viewPager.setAdapter(pagerAdapter);
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
-        viewPager.setPageTransformer(true, (view, position) -> {
+        viewPager.setPageTransformer(true, PAGE_TRANSFORMER);
 
-            if (position <= 1) {
-                // Modify the default slide transition to shrink the page as well
-                float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
-                float vertMargin = view.getHeight() * (1 - scaleFactor) / 2;
-                float horzMargin = view.getWidth() * (1 - scaleFactor) / 2;
-                if (position < 0)
-                    view.setTranslationX(horzMargin - vertMargin / 2);
-                else
-                    view.setTranslationX(-horzMargin + vertMargin / 2);
-
-                // Scale the page down (between MIN_SCALE and 1)
-                view.setScaleX(scaleFactor);
-                view.setScaleY(scaleFactor);
-            }
-        });
+        materialViewPager.setMaterialViewPagerListener(materialListener);
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
         materialViewPager.getPagerTitleStrip().setOnTouchListener((v, event) -> true);
 

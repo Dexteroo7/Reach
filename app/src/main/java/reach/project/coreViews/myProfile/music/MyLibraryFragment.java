@@ -59,7 +59,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         final Bundle args;
         MyLibraryFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new MyLibraryFragment());
             fragment.setArguments(args = new Bundle());
         } else {
@@ -73,7 +73,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     private ParentAdapter parentAdapter = new ParentAdapter(this, this);
     //handle 2 at a time
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
-    
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -113,6 +113,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             final boolean visible = cursor.getShort(8) == 1;
             final long songId = cursor.getLong(1);
 
+            //flip
             updateDatabase(!visible, songId, myUserId, getContext());
 
             new ToggleVisibility().executeOnExecutor(visibilityHandler,
@@ -120,11 +121,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     songId,
                     myUserId);
 
+            //flip
             parentAdapter.updateVisibility(songId, !visible);
 
         } else if (message instanceof PrivacySongItem) {
 
             final PrivacySongItem song = (PrivacySongItem) message;
+            //flip
             updateDatabase(!song.visible, song.songId, myUserId, getContext());
 
             new ToggleVisibility().executeOnExecutor(visibilityHandler,
@@ -132,6 +135,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     song.songId,
                     myUserId);
 
+            //flip
             parentAdapter.updateVisibility(song.songId, !song.visible);
 
         } else
@@ -313,7 +317,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                 final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
                         params[2], //serverId
                         params[1], //songId
-                        params[0] == 0).execute(); //if 0 (false) make it true and vice-versa
+                        params[0] == 1).execute(); //preserve visibility, do not flip
                 if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
                     failed = true; //mark failed
             } catch (IOException e) {
@@ -323,7 +327,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
             if (failed) {
                 MiscUtils.useContextFromFragment(reference, context -> {
-                    //reset if failed
+                    //reset if failed, flip visibility
                     updateDatabase(params[0] != 1, params[1], params[2], context);
                 });
             }

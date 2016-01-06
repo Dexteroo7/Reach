@@ -63,7 +63,7 @@ public abstract class Cache implements Closeable {
                 .setDaemon(false)
                 .build();
 
-        this.executorService = MiscUtils.getRejectionExecutor();
+        this.executorService = MiscUtils.getRejectionExecutor(threadFactory);
         cacheWeakReference = new WeakReference<>(this);
     }
 
@@ -236,7 +236,7 @@ public abstract class Cache implements Closeable {
                 //store in cache
                 final boolean result = storeInCache(cache.cacheInjectorCallbacks.getCacheDirectory(), cache.fileName, itemsToReturn);
                 Log.i("Ayush", "Storing in cache " + result);
-                //no need to check for visibilityMap here
+                //no need to check for visibilityMap here ?
 
             } else {
 
@@ -246,7 +246,7 @@ public abstract class Cache implements Closeable {
                  */
 
                 Log.i("Ayush", "Streaming from cache");
-                itemsToReturn = new ArrayList<>(500);
+                itemsToReturn = new ArrayList<>(BATCH_SIZE);
                 networkLoad = false;
 
                 for (int index = 0; index < BATCH_SIZE || loadFully; index++) {

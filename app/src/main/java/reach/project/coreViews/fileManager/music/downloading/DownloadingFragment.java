@@ -41,7 +41,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         final Bundle args;
         DownloadingFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new DownloadingFragment());
             fragment.setArguments(args = new Bundle());
         } else {
@@ -119,7 +119,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
 
-            Log.i("Ayush", "Invalidating downloading cursor");
+//            Log.i("Ayush", "Invalidating downloading cursor");
             downloadingAdapter.setCursor(null);
         }
     }

@@ -33,6 +33,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -50,7 +51,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final Bundle args;
         MyLibraryFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new MyLibraryFragment());
             fragment.setArguments(args = new Bundle());
         } else {

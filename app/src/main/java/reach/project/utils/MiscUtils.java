@@ -19,6 +19,7 @@ import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
@@ -86,6 +87,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -587,6 +589,10 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
+        //checks on the fragment
+        if (isFragmentDead(fragment))
+            return Optional.absent();
+
         final Activity activity = fragment.getActivity();
         if (activity == null || activity.isFinishing())
             return Optional.absent();
@@ -601,8 +607,12 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
+        //checks on the fragment
+        if (isFragmentDead(fragment))
+            return;
+
         final Activity activity = fragment.getActivity();
-        if (activity != null)
+        if (activity != null && !activity.isFinishing())
             task.work((Param1) activity);
     }
 
@@ -611,6 +621,10 @@ public enum MiscUtils {
 
         final Param2 fragment;
         if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        //checks on the fragment
+        if (isFragmentDead(fragment))
             return;
 
         final Activity activity = fragment.getActivity();
@@ -625,6 +639,10 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
+        //checks on the fragment
+        if (isFragmentDead(fragment))
+            return Optional.absent();
+
         final Activity activity = fragment.getActivity();
         if (activity == null || activity.isFinishing())
             return Optional.absent();
@@ -637,6 +655,10 @@ public enum MiscUtils {
 
         final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        //checks on the fragment
+        if (isFragmentDead(fragment))
             return;
 
         final Activity activity = fragment.getActivity();
@@ -671,6 +693,10 @@ public enum MiscUtils {
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
+        //checks on the fragment
+        if (isFragmentDead(fragment))
+            return;
+
         final Activity activity = fragment.getActivity();
         if (activity == null || activity.isFinishing())
             return;
@@ -683,6 +709,10 @@ public enum MiscUtils {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        //checks on the fragment
+        if (isFragmentDead(fragment))
             return;
 
         final Activity activity = fragment.getActivity();
@@ -708,6 +738,9 @@ public enum MiscUtils {
 //        final T fragment;
 //        if (reference == null || (fragment = reference.get()) == null)
 //            return;
+//    //checks on the fragment
+//    if (isFragmentDead(fragment))
+//            return Optional.absent();
 //
 //        final Activity activity = fragment.getActivity();
 //        if (activity == null || activity.isFinishing())
@@ -764,11 +797,11 @@ public enum MiscUtils {
 
     public static <T extends Fragment> boolean isOnline(T stuff) {
 
-        if (stuff == null)
+        if (stuff == null || isFragmentDead(stuff))
             return false;
 
         final Activity activity = stuff.getActivity();
-        if (activity.isFinishing())
+        if (activity == null || activity.isFinishing())
             return false;
 
         final NetworkInfo networkInfo =
@@ -1547,9 +1580,21 @@ public enum MiscUtils {
                 1, //only 1 thread
                 0L, TimeUnit.MILLISECONDS, //no waiting
                 new SynchronousQueue<>(false), //only 1 thread
-                (r, executor) -> {//ignored
-                });
+                new ThreadPoolExecutor.DiscardPolicy()); //ignored
     }
+
+    public static ThreadPoolExecutor getRejectionExecutor(ThreadFactory threadFactory) {
+
+        //an executor for getting stories from server
+        return new ThreadPoolExecutor(
+                1, //only 1 thread
+                1, //only 1 thread
+                0L, TimeUnit.MILLISECONDS, //no waiting
+                new SynchronousQueue<>(false), //only 1 thread
+                threadFactory,
+                new ThreadPoolExecutor.DiscardPolicy()); //ignored
+    }
+
 
     public static <T> String seqToString(Iterable<T> items) {
 
@@ -1576,6 +1621,10 @@ public enum MiscUtils {
                 Fresco.getImagePipeline().fetchDecodedImage(request, null);
 
         dataSource.subscribe(baseBitmapDataSubscriber, UiThreadImmediateExecutorService.getInstance());
+    }
+    
+    public static <T extends Fragment> boolean isFragmentDead(@Nullable T fragment) {
+        return fragment == null || fragment.isDetached() || fragment.isRemoving() || !fragment.isAdded();
     }
 
 //    public static String cleanseName(String name, StringBuilder stringBuilder) {

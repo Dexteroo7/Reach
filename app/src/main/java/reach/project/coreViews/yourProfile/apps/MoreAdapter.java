@@ -34,8 +34,7 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
 
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+        } catch (PackageManager.NameNotFoundException ignored) {
         }
     }
 

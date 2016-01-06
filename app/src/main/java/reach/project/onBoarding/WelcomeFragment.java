@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 
 public class WelcomeFragment extends Fragment {
 
@@ -19,7 +20,7 @@ public class WelcomeFragment extends Fragment {
     public static Fragment newInstance() {
 
         WelcomeFragment welcomeFragment;
-        if (reference == null || (welcomeFragment = reference.get()) == null)
+        if (reference == null || (welcomeFragment = reference.get()) == null || MiscUtils.isFragmentDead(welcomeFragment))
             reference = new WeakReference<>(welcomeFragment = new WelcomeFragment());
 
         return welcomeFragment;

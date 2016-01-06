@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * User defined visibility list, over-rides default hidden list
  * Created by dexter on 06/07/15.
  */
 

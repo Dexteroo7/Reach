@@ -46,7 +46,7 @@ public class NotificationFragment extends Fragment {
     public static NotificationFragment newInstance() {
 
         NotificationFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null)
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment))
             reference = new WeakReference<>(fragment = new NotificationFragment());
 
         return fragment;
