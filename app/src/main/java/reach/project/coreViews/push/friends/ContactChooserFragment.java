@@ -27,6 +27,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.push.ContactChooserInterface;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -43,7 +44,7 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
     public static ContactChooserFragment getInstance() {
 
         ContactChooserFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             Log.i("Ayush", "Creating new instance of contacts list fragment");
             reference = new WeakReference<>(fragment = new ContactChooserFragment());
         } else

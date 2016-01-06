@@ -43,7 +43,6 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
     public Object instantiateItem(ViewGroup collection, int position) {
 
         final JsonObject exploreJSON = explore.getContainerForIndex(position);
-        Log.d("Ashish", exploreJSON.toString());
         final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
 
         final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);

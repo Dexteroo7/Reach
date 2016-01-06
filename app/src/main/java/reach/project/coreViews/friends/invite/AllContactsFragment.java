@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class AllContactsFragment extends Fragment implements
@@ -53,7 +54,7 @@ public class AllContactsFragment extends Fragment implements
     public static AllContactsFragment newInstance() {
 
         AllContactsFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             Log.i("Ayush", "Creating new instance of all contacts fragment");
             reference = new WeakReference<>(fragment = new AllContactsFragment());
         } else
@@ -141,7 +142,6 @@ public class AllContactsFragment extends Fragment implements
 
         if (loader.getId() != StaticData.ALL_CONTACTS_LOADER)
             return;
-        Log.i("Ayush", "Invalidating downloading cursor");
         inviteAdapter.setCursor(null);
     }
 

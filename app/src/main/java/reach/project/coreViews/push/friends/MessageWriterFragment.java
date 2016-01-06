@@ -41,7 +41,7 @@ public class MessageWriterFragment extends Fragment {
 
         final Bundle args;
         MessageWriterFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new MessageWriterFragment());
             fragment.setArguments(args = new Bundle());
         } else {

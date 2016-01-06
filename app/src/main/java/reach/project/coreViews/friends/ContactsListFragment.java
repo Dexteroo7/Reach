@@ -48,7 +48,7 @@ public class ContactsListFragment extends Fragment implements
     public static ContactsListFragment getInstance() {
 
         ContactsListFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             Log.i("Ayush", "Creating new instance of contacts list fragment");
             reference = new WeakReference<>(fragment = new ContactsListFragment());
         } else

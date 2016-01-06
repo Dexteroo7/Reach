@@ -62,7 +62,7 @@ public class CodeVerification extends Fragment {
         final Bundle args;
         CodeVerification fragment;
 
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new CodeVerification());
             fragment.setArguments(args = new Bundle());
         } else {

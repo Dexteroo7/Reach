@@ -68,7 +68,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         final Bundle args;
         ExploreFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new ExploreFragment());
             fragment.setArguments(args = new Bundle());
         } else {
@@ -178,6 +178,26 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private final ExploreBuffer<JsonObject> buffer = ExploreBuffer.getInstance(this);
     private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
 
+    private final PopupMenu.OnMenuItemClickListener popMenuClick = item -> {
+        switch (item.getItemId()) {
+
+            case R.id.explore_menu_1:
+                if (item.isChecked())
+                    item.setChecked(false);
+                else
+                    item.setChecked(true);
+                return true;
+            case R.id.explore_menu_2:
+                if (item.isChecked())
+                    item.setChecked(false);
+                else
+                    item.setChecked(true);
+                return true;
+            default:
+                return false;
+        }
+    };
+
     @Nullable
     private View rootView = null;
 
@@ -197,26 +217,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         popupMenu.inflate(R.menu.explore_popup_menu);
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
-        popupMenu.setOnMenuItemClickListener(item -> {
-
-            switch (item.getItemId()) {
-
-                case R.id.explore_menu_1:
-                    if (item.isChecked())
-                        item.setChecked(false);
-                    else
-                        item.setChecked(true);
-                    return true;
-                case R.id.explore_menu_2:
-                    if (item.isChecked())
-                        item.setChecked(false);
-                    else
-                        item.setChecked(true);
-                    return true;
-                default:
-                    return false;
-            }
-        });
+        popupMenu.setOnMenuItemClickListener(popMenuClick);
 
         final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);

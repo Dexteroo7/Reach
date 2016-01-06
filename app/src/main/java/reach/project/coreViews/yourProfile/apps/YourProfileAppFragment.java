@@ -55,7 +55,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         final Bundle args;
         YourProfileAppFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new YourProfileAppFragment());
             fragment.setArguments(args = new Bundle());
         } else {

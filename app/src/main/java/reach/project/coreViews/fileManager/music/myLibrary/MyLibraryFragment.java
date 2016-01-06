@@ -50,7 +50,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final Bundle args;
         MyLibraryFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null) {
+        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new MyLibraryFragment());
             fragment.setArguments(args = new Bundle());
         } else {

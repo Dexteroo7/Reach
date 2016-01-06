@@ -22,14 +22,16 @@ import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 public class InviteFragment extends Fragment {
 
     private static WeakReference<InviteFragment> reference = null;
     public static InviteFragment newInstance() {
+
         InviteFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null) {
+        if(reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             reference = new WeakReference<>(fragment = new InviteFragment());
         }
         else {
