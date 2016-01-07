@@ -12,9 +12,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.util.LongSparseArray;
-import android.support.v4.view.PagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -100,6 +100,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
+    private FragmentManager fragmentManager;
 
     ////////////////////////////////////////private static final
 
@@ -148,34 +149,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     };
 
     ////////////////////////////////////////
-
-    private final PagerAdapter mainPager = new FragmentPagerAdapter(getSupportFragmentManager()) {
-        @Override
-        public Fragment getItem(int position) {
-
-            switch (position) {
-
-                case 0:
-                    return ContactsListFragment.getInstance();
-                case 1:
-                    return PUSH_PAGER;
-                case 2:
-                    return ExploreFragment.newInstance(serverId);
-                case 3:
-                    return DOWNLOAD_PAGER;
-                case 4:
-                    return MyProfileFragment.newInstance();
-
-                default:
-                    throw new IllegalStateException("only 5 tabs expected");
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return 5;
-        }
-    };
 
     private final Toolbar.OnMenuItemClickListener menuClickListener = item -> {
 
@@ -320,6 +293,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
+        fragmentManager = getSupportFragmentManager();
 
         //track app open event
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
@@ -349,7 +323,33 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
         viewPager.setPagingEnabled(false);
         viewPager.setOffscreenPageLimit(5);
-        viewPager.setAdapter(mainPager);
+        viewPager.setAdapter(new FragmentPagerAdapter(fragmentManager) {
+            @Override
+            public Fragment getItem(int position) {
+
+                switch (position) {
+
+                    case 0:
+                        return ContactsListFragment.getInstance();
+                    case 1:
+                        return PUSH_PAGER;
+                    case 2:
+                        return ExploreFragment.newInstance(serverId);
+                    case 3:
+                        return DOWNLOAD_PAGER;
+                    case 4:
+                        return MyProfileFragment.newInstance();
+
+                    default:
+                        throw new IllegalStateException("only 5 tabs expected");
+                }
+            }
+
+            @Override
+            public int getCount() {
+                return 5;
+            }
+        });
 
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.setupWithViewPager(viewPager);

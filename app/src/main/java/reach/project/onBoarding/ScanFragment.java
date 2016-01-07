@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.InsertContainer;
@@ -59,6 +60,8 @@ public class ScanFragment extends Fragment {
     private static final String IMAGE_ID = "IMAGE_ID";
     private static final String IMAGE_FILE_PATH = "IMAGE_FILE_PATH";
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
+
+    private final Random random = new Random();
 
     @Nullable
     private static WeakReference<ScanFragment> reference = null;
@@ -102,6 +105,7 @@ public class ScanFragment extends Fragment {
         userNameTV.setText(userName);
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
+        coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
         if (imageFilePath == null)
             profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
         else

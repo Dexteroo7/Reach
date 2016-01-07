@@ -41,6 +41,8 @@ import com.facebook.common.executors.UiThreadImmediateExecutorService;
 import com.facebook.common.references.CloseableReference;
 import com.facebook.datasource.DataSource;
 import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.drawee.controller.AbstractDraweeController;
+import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
 import com.facebook.imagepipeline.image.CloseableImage;
@@ -303,6 +305,16 @@ public enum MiscUtils {
             default:
                 return "A";
         }
+    }
+
+    public static AbstractDraweeController getControllerwithResize(DraweeController oldController,
+                                                                   Uri uri, int width, int height) {
+        return Fresco.newDraweeControllerBuilder()
+                .setOldController(oldController)
+                .setImageRequest(ImageRequestBuilder.newBuilderWithSource(uri)
+                        .setResizeOptions(new ResizeOptions(width, height))
+                        .build())
+                .build();
     }
 
     public static <T, E> Map<T, E> getMap(int capacity) {

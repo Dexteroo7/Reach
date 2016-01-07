@@ -19,6 +19,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
+import java.util.Random;
+
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
@@ -33,6 +35,8 @@ import reach.project.utils.MiscUtils;
 public class YourProfileActivity extends AppCompatActivity {
 
     private static final String OPEN_PROFILE = "OPEN_PROFILE";
+
+    private final Random random = new Random();
 
     public static void openProfile(long userId, Context context) {
 
@@ -110,12 +114,14 @@ public class YourProfileActivity extends AppCompatActivity {
             final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
             final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
             final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
+            final SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
 
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
             appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+            coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
 
             cursor.close();
         }

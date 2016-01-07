@@ -27,6 +27,7 @@ import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
 import java.lang.ref.WeakReference;
+import java.util.Random;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -43,6 +44,8 @@ import reach.project.utils.SharedPrefUtils;
 public class MyProfileFragment extends Fragment {
 
     private static WeakReference<MyProfileFragment> reference = null;
+
+    private final Random random = new Random();
 
     public static MyProfileFragment newInstance() {
 
@@ -147,8 +150,11 @@ public class MyProfileFragment extends Fragment {
         new Thread(() -> ((TextView) headerRoot.findViewById(R.id.appCount)).setText(MiscUtils
                 .getInstalledApps(activity.getPackageManager()).size() + "")).start();
 
-        ((SimpleDraweeView) headerRoot.findViewById(R.id.profilePic)).setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL
-                + SharedPrefUtils.getImageId(preferences)));
+        ((SimpleDraweeView) headerRoot.findViewById(R.id.profilePic)).setImageURI(Uri.parse(
+                StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)));
+
+        ((SimpleDraweeView) headerRoot.findViewById(R.id.coverPic)).setImageURI(Uri.parse(
+                MiscUtils.getRandomPic(random)));
 
         final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 
