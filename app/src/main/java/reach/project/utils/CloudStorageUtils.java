@@ -11,6 +11,7 @@ import android.util.Log;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.AbstractInputStreamContent;
 import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -404,11 +405,24 @@ public enum CloudStorageUtils {
             get.getRequestHeaders().setCacheControl("no-cache");
             get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
 
-            serverHash = get.execute().getMd5Hash();
+            final HttpResponse httpResponse = get.executeMedia();
+            final String x_goog_hash = httpResponse.getHeaders().get("x-goog-hash").toString().replaceAll("\\s+","");
+            if (TextUtils.isEmpty(x_goog_hash))
+                throw new IOException("Response x-goog-hash was null");
+
+            final int start = x_goog_hash.indexOf("md5=");
+            final int end = x_goog_hash.indexOf("==", start);
+
+            if (start == -1 || end == -1 || end <= start)
+                throw new IOException("Response x-goog-hash of unexpected type " + x_goog_hash);
+
+            serverHash = x_goog_hash.substring(start + 4, end + 2);
             if (TextUtils.isEmpty(serverHash))
                 throw new IOException("Response md5 was null");
 
-            final BufferedInputStream bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+            Log.i("Ayush", "Md5 hash = ? " + serverHash);
+
+            final BufferedInputStream bufferedInputStream = new BufferedInputStream(httpResponse.getContent());
             final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
             musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
             MiscUtils.closeQuietly(bufferedInputStream, compressedData);
@@ -512,11 +526,24 @@ public enum CloudStorageUtils {
             get.getRequestHeaders().setCacheControl("no-cache");
             get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
 
-            serverHash = get.execute().getMd5Hash();
+            final HttpResponse httpResponse = get.executeMedia();
+            final String x_goog_hash = httpResponse.getHeaders().get("x-goog-hash").toString().replaceAll("\\s+", "");
+            if (TextUtils.isEmpty(x_goog_hash))
+                throw new IOException("Response x-goog-hash was null");
+
+            final int start = x_goog_hash.indexOf("md5=");
+            final int end = x_goog_hash.indexOf("==", start);
+
+            if (start == -1 || end == -1 || end <= start)
+                throw new IOException("Response x-goog-hash of unexpected type " + x_goog_hash);
+
+            serverHash = x_goog_hash.substring(start + 4, end + 2);
             if (TextUtils.isEmpty(serverHash))
                 throw new IOException("Response md5 was null");
 
-            final BufferedInputStream bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+            Log.i("Ayush", "Md5 hash = ? " + serverHash);
+
+            final BufferedInputStream bufferedInputStream = new BufferedInputStream(httpResponse.getContent());
             final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
             appList = new Wire(AppList.class).parseFrom(compressedData, AppList.class);
             MiscUtils.closeQuietly(bufferedInputStream, compressedData);

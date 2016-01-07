@@ -18,6 +18,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String SONG_TABLE = "songs";
     public static final String COLUMN_ID = "_id";
 
+    //identity of the song (meta-data hash ?)
     public static final String COLUMN_SONG_ID = "songId";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
@@ -32,6 +33,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_PATH = "path";
     public static final String COLUMN_YEAR = "year";
     public static final String COLUMN_DATE_ADDED = "dateAdded";
+
     public static final String COLUMN_VISIBILITY = "visibility";
     public static final String COLUMN_IS_LIKED = "isLiked";
 

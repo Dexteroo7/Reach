@@ -391,7 +391,6 @@ public class MetaDataScanner extends IntentService {
                             MiscUtils.containsIgnoreCase(name, "AudioTrack") ||
                             MiscUtils.containsIgnoreCase(name, "WhatsApp") ||
                             MiscUtils.containsIgnoreCase(name, "Recording"));
-
         }
 
         @NonNull
