@@ -180,36 +180,37 @@ public class MetaDataScanner extends IntentService {
             int musicFiles = 0;
             while (musicCursor.moveToNext()) {
 
-                int music_column_name = musicCursor
+                final int music_column_name = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.TITLE);
-                int music_column_actual_name = musicCursor
+                final int music_column_actual_name = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME);
-                int music_column_id = musicCursor
+                final int music_column_id = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media._ID);
-                int is_music = musicCursor
+                final int is_music = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC);
-                int music_column_size = musicCursor
+                final int music_column_size = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.SIZE);
-                int music_column_duration = musicCursor
+                final int music_column_duration = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.DURATION);
-                int music_column_file = musicCursor
+                final int music_column_file = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.DATA);
 
                 if (music_column_name == -1 || is_music == -1 ||
                         music_column_id == -1 || music_column_actual_name == -1 ||
                         music_column_size == -1 || music_column_duration == -1 || music_column_file == -1)
                     continue;
-                int isMusic = musicCursor.getInt(is_music);
+
+                final int isMusic = musicCursor.getInt(is_music);
                 if (isMusic == 0)
                     continue; //skip non-music files
 
-                int music_column_artist = musicCursor
+                final int music_column_artist = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.ARTIST);
-                int music_column_album = musicCursor
+                final int music_column_album = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.ALBUM);
-                int music_column_year = musicCursor
+                final int music_column_year = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.YEAR);
-                int music_date_added = musicCursor
+                final int music_date_added = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.DATE_ADDED);
 
                 final Song.Builder builder = new Song.Builder();
@@ -250,7 +251,7 @@ public class MetaDataScanner extends IntentService {
 
                 if (music_column_artist != -1) {
 
-                    String artist = musicCursor.getString(music_column_artist);
+                    final String artist = musicCursor.getString(music_column_artist);
                     if (artist != null && !artist.equals("")) {
                         builder.artist(artist);
                     }
@@ -258,7 +259,7 @@ public class MetaDataScanner extends IntentService {
 
                 if (music_column_album != -1) {
 
-                    String album = musicCursor.getString(music_column_album);
+                    final String album = musicCursor.getString(music_column_album);
                     if (album != null && !album.equals("")) {
                         builder.album(album);
                     }
@@ -300,6 +301,7 @@ public class MetaDataScanner extends IntentService {
 
                     if (filter(builder.displayName) ||
                             filter(builder.album) ||
+                            filter(builder.actualName) ||
                             filter(builder.artist) ||
                             builder.size > 100 * 1024 * 1024 || //100mb big file
                             builder.duration > 60 * 60 * 1000 || //1hour big file
@@ -389,8 +391,7 @@ public class MetaDataScanner extends IntentService {
                     (name.startsWith("AUD") ||
                             MiscUtils.containsIgnoreCase(name, "AudioRecording") ||
                             MiscUtils.containsIgnoreCase(name, "AudioTrack") ||
-                            MiscUtils.containsIgnoreCase(name, "WhatsApp") ||
-                            MiscUtils.containsIgnoreCase(name, "Recording"));
+                            MiscUtils.containsIgnoreCase(name, "WhatsApp"));
         }
 
         @NonNull

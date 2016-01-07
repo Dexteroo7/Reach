@@ -19,7 +19,9 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.RetryOptions;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.repackaged.com.google.common.base.Predicate;
 import com.google.appengine.repackaged.com.google.common.collect.Iterables;
+import com.google.appengine.repackaged.com.google.common.collect.Ordering;
 import com.google.appengine.repackaged.com.google.common.hash.HashCode;
 import com.google.appengine.repackaged.com.google.common.hash.HashFunction;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
@@ -49,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1301,38 +1302,28 @@ public class ReachUserEndpoint {
 
         MiscUtils.closeQuietly(bufferedInputStream, inputChannel, compressedData, inputStream);
 
-        final List<Song> songs;
-        //sanity checks
-        if (musicList == null || (songs = musicList.song) == null || songs.isEmpty())
+        //check for empty
+        if (musicList.song == null || musicList.song.isEmpty())
             return Collections.emptyList();
 
-        logger.info("Copying to array before sort");
+        //filter nulls and not visible
+        final Iterable<Song> songIterable = Iterables.filter(
+                musicList.song, new Predicate<Song>() {
+                    @Override
+                    public boolean apply(@Nullable Song song) {
+                        return song != null && song.visibility;
+                    }
+                }
+        );
 
-        final int totalSongs = songs.size();
-        final Song[] songArray = new Song[totalSongs];
+        //sort and pick top 20
+        List<Song> sortedTop20 = Ordering.from(Constants.dateAddedComparatorMusic).greatestOf(songIterable, 20);
 
-        int index = 0;
-        for (Song song : songs)
-            songArray[index++] = song;
-
-        logger.info("Sorting");
-        //sort the song array
-        Arrays.sort(songArray, new Comparator<Song>() {
-            @Override
-            public int compare(Song lhs, Song rhs) {
-
-                final Long a = lhs.dateAdded == null ? 0 : lhs.dateAdded;
-                final Long b = rhs.dateAdded == null ? 0 : rhs.dateAdded;
-                return a.compareTo(b);
-            }
-        });
-
-        final List<SimpleSong> toReturn = new ArrayList<>();
+        final List<SimpleSong> toReturn = new ArrayList<>(20);
         //generate return list of max 20 songs
-        for (index = 0; index < 20 && index < totalSongs; index++) {
+        for (Song song : sortedTop20) {
 
             final SimpleSong simpleSong = new SimpleSong();
-            final Song song = songArray[index];
 
             simpleSong.actualName = song.actualName;
             simpleSong.album = song.album;
@@ -1390,39 +1381,28 @@ public class ReachUserEndpoint {
 
         MiscUtils.closeQuietly(bufferedInputStream, inputChannel, compressedData, inputStream);
 
-        final List<App> apps;
-        //sanity checks
-        if (appList == null || (apps = appList.app) == null || apps.isEmpty())
+        //check for empty
+        if (appList.app == null || appList.app.isEmpty())
             return Collections.emptyList();
 
-        logger.info("Copying to array before sort");
+        //filter nulls and not visible
+        final Iterable<App> appIterable = Iterables.filter(
+                appList.app, new Predicate<App>() {
+                    @Override
+                    public boolean apply(@Nullable App app) {
+                        return app != null && app.visible;
+                    }
+                }
+        );
 
-        final int totalApps = apps.size();
-        final App[] appArray = new App[totalApps];
+        //sort and pick top 20
+        List<App> sortedTop20 = Ordering.from(Constants.dateAddedComparatorApps).greatestOf(appIterable, 20);
 
-        int index = 0;
-        for (App app : apps)
-            appArray[index++] = app;
-
-        logger.info("Sorting");
-        //sort the app array
-        Arrays.sort(appArray, new Comparator<App>() {
-            @Override
-            public int compare(App lhs, App rhs) {
-
-                final Long a = lhs.installDate == null ? 0 : lhs.installDate;
-                final Long b = rhs.installDate == null ? 0 : rhs.installDate;
-                return a.compareTo(b);
-            }
-        });
-
-        final List<SimpleApp> toReturn = new ArrayList<>();
+        final List<SimpleApp> toReturn = new ArrayList<>(20);
         //generate return list of max 20 apps
-        for (index = 0; index < 20 && index < totalApps; index++) {
+        for (App app : sortedTop20) {
 
             final SimpleApp simpleApp = new SimpleApp();
-            final App app = appArray[index];
-
             simpleApp.applicationName = app.applicationName;
             simpleApp.description = app.description;
             simpleApp.installDate = app.installDate;
