@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -17,6 +18,8 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
+
+import java.util.Random;
 
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
@@ -32,6 +35,8 @@ import reach.project.utils.MiscUtils;
 public class YourProfileActivity extends AppCompatActivity {
 
     private static final String OPEN_PROFILE = "OPEN_PROFILE";
+
+    private final Random random = new Random();
 
     public static void openProfile(long userId, Context context) {
 
@@ -99,6 +104,9 @@ public class YourProfileActivity extends AppCompatActivity {
             numberOfSongs = cursor.getInt(2);
             final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
+            final short status = cursor.getShort(5);
+            if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED)
+                Snackbar.make(findViewById(R.id.root_layout), uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
 
             final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
@@ -106,12 +114,14 @@ public class YourProfileActivity extends AppCompatActivity {
             final TextView appCount = (TextView) headerRoot.findViewById(R.id.appCount);
             final TextView userHandle = (TextView) headerRoot.findViewById(R.id.userHandle);
             final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
+            final SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
 
             userName.setText(uName);
             musicCount.setText(numberOfSongs + "");
             appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+            coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
 
             cursor.close();
         }

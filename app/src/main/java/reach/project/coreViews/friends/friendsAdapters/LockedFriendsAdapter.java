@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import java.lang.ref.WeakReference;
+import java.util.Random;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,6 +21,8 @@ import reach.project.utils.viewHelpers.MoreQualifier;
  * Created by dexter on 18/11/15.
  */
 final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHolder> implements MoreQualifier {
+
+    private final Random random = new Random();
 
     public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
@@ -58,7 +61,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(7) + "");
         friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
-        friendsViewHolder.coverPic.setImageURI(Uri.parse("res:///" + MiscUtils.getRandomPic()));
+        friendsViewHolder.coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
         friendsViewHolder.profilePhotoList.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(3)));
         friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
     }

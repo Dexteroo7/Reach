@@ -9,8 +9,11 @@
         android:id="@+id/coverPic"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        fresco:placeholderImageScaleType="centerCrop"
-        fresco:placeholderImage="@drawable/album_art_small_03" />
+        fresco:placeholderImage="@color/reach_color" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#70000000" />
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/profilePic"
