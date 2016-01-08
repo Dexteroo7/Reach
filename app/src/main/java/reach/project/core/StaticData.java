@@ -136,7 +136,7 @@ public final class StaticData {
     public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout
     public static final short NETWORK_CALL_WAIT = 300;
     public static final short NETWORK_RETRY = 5;
-    public static final int MINIMUM_FREE_SPACE = 100 * 1024 * 1024; //100mb
+    public static final int MINIMUM_FREE_SPACE = 50 * 1024 * 1024; //50mb
 
     public static final long MINIMUM_PONG_GAP = 18 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;

@@ -83,8 +83,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
 
     public void updateRecentMusic(@NonNull List<MusicData> newRecent) {
-        if (newRecent.isEmpty())
-            return;
         recentAdapter.updateRecent(newRecent);
     }
 

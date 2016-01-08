@@ -1201,10 +1201,31 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                                 ReachDatabaseHelper.COLUMN_VISIBILITY, //4
                                 ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA}, //5
 
-                        ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " +
+                        ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " +
                                 ReachDatabaseHelper.COLUMN_SIZE + " = ?",
-                        new String[]{myId + "", songId + "", length + ""}, null);
+                        new String[]{songId + "", length + ""}, null);
+            }
+
+            if (cursor == null || !cursor.moveToFirst()) {
+
+                //TODO temporary // FIXME: 08/01/16
+                Log.i("Ayush", "Hacking from reachDatabase table");
+
+                if (cursor != null)
+                    cursor.close();
+                cursor = handlerInterface.getContentResolver().query(
+                        ReachDatabaseProvider.CONTENT_URI,
+                        new String[]{
+                                ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
+                                ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //1
+                                ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //2
+                                ReachDatabaseHelper.COLUMN_PATH, //3
+                                ReachDatabaseHelper.COLUMN_VISIBILITY, //4
+                                ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA}, //5
+
+                        ReachDatabaseHelper.COLUMN_SONG_ID + " = ? and " +
+                                ReachDatabaseHelper.COLUMN_SIZE + " = ?",
+                        new String[]{songId + "", length + ""}, null);
             }
 
             if (cursor == null || !cursor.moveToFirst() || cursor.getShort(4) == 0) {

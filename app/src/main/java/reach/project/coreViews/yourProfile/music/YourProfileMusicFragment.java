@@ -18,14 +18,8 @@ import android.view.ViewGroup;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.google.common.base.Optional;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +36,6 @@ import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
-import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
@@ -378,51 +371,53 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         return false;
     }
 
-    private static final Callable<List<? extends Message>> getSmartList = () -> {
+    private static final Callable<List<? extends Message>> getSmartList = Collections::emptyList;
 
-        final Request request = new Request.Builder()
-                .url("http://52.74.175.56:8080/explore/getRecentlyPlayed?hostId=" + hostId)
-                .build();
-
-        Log.i("Ayush", "Fetching smart lists " + request.urlString());
-
-        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
-        final JSONArray receivedData = new JSONArray(response.body().string());
-        final List<Song> songs = new ArrayList<>();
-
-        JSONObject smartData;
-        for (int index = 0; index < receivedData.length(); index++) {
-
-            smartData = receivedData.getJSONObject(index);
-
-            final Song.Builder songBuilder = new Song.Builder();
-            songBuilder.songId(smartData.getLong("songId"));
-            songBuilder.size(smartData.getLong("size"));
-            songBuilder.dateAdded(smartData.getLong("timeAdded"));
-            songBuilder.duration(smartData.getLong("duration"));
-
-            songBuilder.actualName(smartData.getString("actualName"));
-            songBuilder.displayName(smartData.getString("displayName"));
-            songBuilder.artist(smartData.getString("artistName"));
-
-            //userName fetch else where
-            try {
-                songBuilder.album(smartData.getString("albumName"));
-                songBuilder.genre(smartData.getString("genre"));
-            } catch (JSONException | NullPointerException ignored) {
-            }
-
-            songBuilder.isLiked(smartData.getBoolean("isLiked"));
-
-            songBuilder.visibility(true);
-            songs.add(songBuilder.build());
-        }
-
-        if (songs.isEmpty())
-            return Collections.emptyList();
-
-        return Arrays.asList(new SmartSong.Builder().songList(songs).title("Recently Played").build());
-    };
+//    private static final Callable<List<? extends Message>> getSmartList = () -> {
+//
+//        final Request request = new Request.Builder()
+//                .url("http://52.74.175.56:8080/explore/getRecentlyPlayed?hostId=" + hostId)
+//                .build();
+//
+//        Log.i("Ayush", "Fetching smart lists " + request.urlString());
+//
+//        final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
+//        final JSONArray receivedData = new JSONArray(response.body().string());
+//        final List<Song> songs = new ArrayList<>();
+//
+//        JSONObject smartData;
+//        for (int index = 0; index < receivedData.length(); index++) {
+//
+//            smartData = receivedData.getJSONObject(index);
+//
+//            final Song.Builder songBuilder = new Song.Builder();
+//            songBuilder.songId(smartData.getLong("songId"));
+//            songBuilder.size(smartData.getLong("size"));
+//            songBuilder.dateAdded(smartData.getLong("timeAdded"));
+//            songBuilder.duration(smartData.getLong("duration"));
+//
+//            songBuilder.actualName(smartData.getString("actualName"));
+//            songBuilder.displayName(smartData.getString("displayName"));
+//            songBuilder.artist(smartData.getString("artistName"));
+//
+//            //userName fetch else where
+//            try {
+//                songBuilder.album(smartData.getString("albumName"));
+//                songBuilder.genre(smartData.getString("genre"));
+//            } catch (JSONException | NullPointerException ignored) {
+//            }
+//
+//            songBuilder.isLiked(smartData.getBoolean("isLiked"));
+//
+//            songBuilder.visibility(true);
+//            songs.add(songBuilder.build());
+//        }
+//
+//        if (songs.isEmpty())
+//            return Collections.emptyList();
+//
+//        return Arrays.asList(new SmartSong.Builder().songList(songs).title("Recently Played").build());
+//    };
 
     private static final Callable<List<? extends Message>> getRecent = () -> {
 

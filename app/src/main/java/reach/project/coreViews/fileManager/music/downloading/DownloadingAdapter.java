@@ -112,6 +112,39 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //            viewHolder.songSize.setText(String.format("%.1f", (float) (length / 1024000.0f)) + " MB");
         } else {
 
+            switch (status) {
+
+                case ReachDatabase.FILE_NOT_CREATED: {
+
+                    //The file for this song was moved / deleted from local storage
+                }
+
+                case ReachDatabase.GCM_FAILED: {
+
+                    //Sender could not be notified to initiate upload
+                }
+
+                case ReachDatabase.PAUSED_BY_USER: {
+
+                    //The download has been paused
+                }
+
+                case ReachDatabase.FILE_NOT_FOUND: {
+
+                    //The file could not be found on sender's side
+                }
+
+                case ReachDatabase.NOT_WORKING: {
+
+                    //Download has not started yet
+                }
+
+                case ReachDatabase.RELAY: {
+
+                    //Download is working
+                }
+            }
+
 //            viewHolder.pauseQueue.setVisibility(View.VISIBLE);
 //            viewHolder.pauseQueue.setTag(id);
 //            viewHolder.pauseQueue.setOnClickListener(LocalUtils.pauseListener);

@@ -52,9 +52,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final Bundle args;
         MyLibraryFragment fragment;
         if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
+
             reference = new WeakReference<>(fragment = new MyLibraryFragment());
             fragment.setArguments(args = new Bundle());
         } else {
+
             Log.i("Ayush", "Reusing MyLibraryFragment object :)");
             args = fragment.getArguments();
         }
@@ -62,7 +64,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return fragment;
     }
 
-    private ParentAdapter parentAdapter = new ParentAdapter(this, this);
+    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
 
     @Nullable
     @Override
@@ -78,8 +80,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
-        getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
 
         return rootView;
     }
@@ -88,8 +90,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     public void onDestroyView() {
 
         super.onDestroyView();
-        getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
-        getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
+        getLoaderManager().destroyLoader(StaticData.PUSH_DOWNLOADED_LOADER);
+        getLoaderManager().destroyLoader(StaticData.PUSH_MY_LIBRARY_LOADER);
         parentAdapter.close();
     }
 
@@ -126,14 +128,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        if (id == StaticData.MY_LIBRARY_LOADER)
+        if (id == StaticData.PUSH_MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
                     MySongsProvider.CONTENT_URI,
                     MySongsHelper.SONG_LIST,
                     MySongsHelper.COLUMN_VISIBILITY + " = ?",
                     new String[]{"1"},
                     MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"); //show all songs !
-        else if (id == StaticData.DOWNLOAD_LOADER)
+        else if (id == StaticData.PUSH_DOWNLOADED_LOADER)
             return new CursorLoader(getActivity(),
                     ReachDatabaseProvider.CONTENT_URI,
                     ReachDatabaseHelper.SONG_LIST,
@@ -154,14 +156,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final int count = data.getCount();
 
-        if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
+        if (loader.getId() == StaticData.PUSH_MY_LIBRARY_LOADER) {
 
             parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
 
-        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
+        } else if (loader.getId() == StaticData.PUSH_DOWNLOADED_LOADER) {
 
             parentAdapter.setNewDownLoadCursor(data);
             if (count != parentAdapter.downloadedCount) //update only if count has changed
@@ -173,9 +175,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.MY_LIBRARY_LOADER)
+        if (loader.getId() == StaticData.PUSH_MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
-        else if (loader.getId() == StaticData.DOWNLOAD_LOADER)
+        else if (loader.getId() == StaticData.PUSH_DOWNLOADED_LOADER)
             parentAdapter.setNewDownLoadCursor(null);
     }
 

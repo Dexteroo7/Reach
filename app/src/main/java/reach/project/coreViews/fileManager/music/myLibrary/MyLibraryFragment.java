@@ -61,7 +61,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return fragment;
     }
 
-    private ParentAdapter parentAdapter = new ParentAdapter(this, this);
+    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
 
     @Nullable
     @Override
@@ -144,9 +144,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return;
 
         final int count = data.getCount();
-
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
+//            Log.i("Ayush", "MyLibrary file manager " + count);
 
             parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
@@ -154,6 +154,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
 
         } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
+
+//            Log.i("Ayush", "Downloaded file manager " + count);
 
             parentAdapter.setNewDownLoadCursor(data);
             if (count != parentAdapter.downloadedCount) //update only if count has changed

@@ -33,7 +33,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         super(recentMusic, handOverMessage, resourceId);
     }
 
-    private final Comparator<MusicData> primary = (left, right) -> {
+    private final Comparator<MusicData> PRIMARY = (left, right) -> {
 
         final Long lhs = left == null ? 0 : left.getDateAdded();
         final Long rhs = right == null ? 0 : right.getDateAdded();
@@ -41,7 +41,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         return lhs.compareTo(rhs);
     };
 
-    private final Comparator<MusicData> secondary = (left, right) -> {
+    private final Comparator<MusicData> SECONDARY = (left, right) -> {
         final String lhs = left == null ? "" : left.getDisplayName();
         final String rhs = right == null ? "" : right.getDisplayName();
 
@@ -58,6 +58,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
      */
     public void updateRecent(List<MusicData> newMessages) {
 
+        if (newMessages.isEmpty()) {
+
+            notifyItemRangeRemoved(0, getItemCount());
+            final RecyclerView.Adapter adapter;
+            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+                adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
+        }
+
         final List<MusicData> recentMusic = getMessageList();
         //remove to prevent duplicates
         recentMusic.removeAll(newMessages);
@@ -65,7 +73,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         recentMusic.addAll(newMessages);
 
         //pick top 20
-        final List<MusicData> newSortedList = Ordering.from(primary).compound(secondary).greatestOf(recentMusic, 20);
+        final List<MusicData> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(recentMusic, 20);
 
         //remove all
         recentMusic.clear();
@@ -73,8 +81,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         recentMusic.addAll(newSortedList);
 
         notifyDataSetChanged();
-        if (adapterWeakReference != null)
-            adapterWeakReference.get().notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     @Override

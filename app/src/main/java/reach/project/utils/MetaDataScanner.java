@@ -9,7 +9,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
-import android.os.Environment;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -166,16 +165,6 @@ public class MetaDataScanner extends IntentService {
 
             ////////////////////Loading new songs
             final List<Song> toSend = new ArrayList<>(musicCursor.getCount());
-            final HashSet<String> verifiedMusicPaths = new HashSet<>();
-            final File[] directories = new File[]{
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
-            };
-
-            for (File directory : directories)
-                if (directory.exists())
-                    verifiedMusicPaths.addAll(recurseDirectory(directory));
 
             int musicFiles = 0;
             while (musicCursor.moveToNext()) {
@@ -226,8 +215,8 @@ public class MetaDataScanner extends IntentService {
                 builder.size(size);
                 builder.duration(duration);
 
-                final String unverifiedPath = musicCursor.getString(music_column_file);
-                if (TextUtils.isEmpty(unverifiedPath)) {
+                final String songPath = musicCursor.getString(music_column_file);
+                if (TextUtils.isEmpty(songPath) || !isFileValid(songPath)) {
                     continue;
                 }
                 final String displayName = musicCursor.getString(music_column_name);
@@ -239,15 +228,9 @@ public class MetaDataScanner extends IntentService {
                     continue;
                 }
 
+                builder.path(songPath);
                 builder.displayName(displayName);
                 builder.actualName(actualName);
-
-                final String correctPath = verifyPath(unverifiedPath, actualName, verifiedMusicPaths);
-                if (TextUtils.isEmpty(correctPath))
-                    continue;
-
-//            reachSongDatabase.setFileHash(MiscUtils.quickHash(actualName, displayName, duration, size));
-                builder.path(correctPath);
 
                 if (music_column_artist != -1) {
 
@@ -339,50 +322,10 @@ public class MetaDataScanner extends IntentService {
             return toSend;
         }
 
-        private static HashSet<String> recurseDirectory(File file) {
+        private static boolean isFileValid(String path) {
 
-            final HashSet<String> files = new HashSet<>();
-
-            if (file == null)
-                return files;
-
-            if (file.isDirectory()) {
-
-                final File[] toIterate;
-
-                if ((toIterate = file.listFiles()) == null || toIterate.length == 0)
-                    return files;
-
-                for (File song : toIterate)
-                    if (song != null && song.exists()) //recurse
-                        files.addAll(recurseDirectory(song));
-
-            } else if (file.isFile())
-                files.add(file.getPath().trim());
-            return files;
-        }
-
-        private static String verifyPath(String path, String fileName, Iterable<String> verifiedMusicPaths) {
-
-            File file = new File(path);
-
-            if (file.exists() && file.isFile() && file.length() > 0)
-                return path; //file is OK
-
-            Log.i("Ayush", path + " invalid");
-
-            //file not OK
-            path = "";
-            for (String newPath : verifiedMusicPaths)
-                if (newPath.endsWith(fileName.trim()) || newPath.endsWith(fileName.trim() + ".mp3")) {
-
-                    file = new File(newPath);
-                    if (file.exists() && file.isFile() && file.length() > 0) {
-                        path = newPath;
-                        break;
-                    }
-                }
-            return path;
+            final File file = new File(path);
+            return file.exists() && file.isFile() && file.length() > 0;
         }
 
         private static boolean filter(String name) {
@@ -425,6 +368,10 @@ public class MetaDataScanner extends IntentService {
                         } catch (IOException ignored) {
                         }
                     }
+
+                    final String songPath = reachDatabaseCursor.getString(9);
+                    if (TextUtils.isEmpty(songPath) || !isFileValid(songPath))
+                        continue; //remove invalid files
 
                     builder.displayName(reachDatabaseCursor.getString(2));
                     builder.actualName(reachDatabaseCursor.getString(3));

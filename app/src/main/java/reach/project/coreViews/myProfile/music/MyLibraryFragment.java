@@ -166,11 +166,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
 
+//            Log.i("Ayush", "MyLibrary my profile " + count);
+
             parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
         } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
+
+//            Log.i("Ayush", "Downloaded my profile " + count);
 
             parentAdapter.setNewDownLoadCursor(data);
             if (count != parentAdapter.downloadedCount) //update only if count has changed
@@ -294,7 +298,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return latestMyLibrary;
     }
 
-    public static class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
+    private static class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
 
         /**
          * params[0] = oldVisibility
@@ -339,7 +343,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         }
     }
 
-    public static synchronized void updateDatabase(final boolean visibility, long songId, long userId, ContentResolver resolver) {
+    private static synchronized void updateDatabase(final boolean visibility, long songId, long userId, ContentResolver resolver) {
 
         //sanity check
         if (resolver == null || userId == 0)

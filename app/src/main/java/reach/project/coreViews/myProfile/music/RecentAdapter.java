@@ -58,6 +58,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
      */
     public synchronized void updateRecent(List<PrivacySongItem> newMessages) {
 
+        if (newMessages.isEmpty()) {
+
+            notifyItemRangeRemoved(0, getItemCount());
+            final RecyclerView.Adapter adapter;
+            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+                adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
+        }
+
         final List<PrivacySongItem> recentMusic = getMessageList();
         //remove to prevent duplicates
         recentMusic.removeAll(newMessages);
@@ -73,8 +81,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
         recentMusic.addAll(newSortedList);
 
         notifyDataSetChanged();
-        if (adapterWeakReference != null)
-            adapterWeakReference.get().notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     /**

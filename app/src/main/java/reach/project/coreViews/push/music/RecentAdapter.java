@@ -33,7 +33,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         super(recentMusic, handOverMessage, resourceId);
     }
 
-    private final Comparator<Song> primary = (left, right) -> {
+    private final static Comparator<Song> PRIMARY = (left, right) -> {
 
         final Long lhs = left == null ? 0 : left.dateAdded;
         final Long rhs = right == null ? 0 : right.dateAdded;
@@ -41,7 +41,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         return lhs.compareTo(rhs);
     };
 
-    private final Comparator<Song> secondary = (left, right) -> {
+    private final static Comparator<Song> SECONDARY = (left, right) -> {
         final String lhs = left == null ? "" : left.displayName;
         final String rhs = right == null ? "" : right.displayName;
 
@@ -58,6 +58,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
      */
     public void updateRecent(List<Song> newMessages) {
 
+        if (newMessages.isEmpty()) {
+
+            notifyItemRangeRemoved(0, getItemCount());
+            final RecyclerView.Adapter adapter;
+            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+                adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
+        }
+
         final List<Song> recentMusic = getMessageList();
         //remove to prevent duplicates
         recentMusic.removeAll(newMessages);
@@ -65,7 +73,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         recentMusic.addAll(newMessages);
 
         //pick top 20
-        final List<Song> newSortedList = Ordering.from(primary).compound(secondary).greatestOf(recentMusic, 20);
+        final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(recentMusic, 20);
 
         //remove all
         recentMusic.clear();

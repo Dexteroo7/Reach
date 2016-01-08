@@ -57,8 +57,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Nullable
     private Cursor myLibraryCursor = null;
 
-    public int myLibraryCount = 0;
-    public int downloadedCount = 0;
+    int myLibraryCount = 0;
+    int downloadedCount = 0;
 
     public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
 
@@ -83,8 +83,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
 
     public void updateRecentMusic(@NonNull List<Song> newRecent) {
-        if (newRecent.isEmpty())
-            return;
         recentAdapter.updateRecent(newRecent);
     }
 
