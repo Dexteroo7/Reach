@@ -6,17 +6,16 @@ import reach.project.R;
 import reach.project.utils.EnumHelper;
 
 /**
- * Created by dexter on 15/10/15.
+ * Created by dexter on 08/01/16.
  */
-enum ExploreTypes implements EnumHelper<String> {
+public enum ExploreLoaderTypes implements EnumHelper<String> {
 
-    MUSIC(R.layout.explore_music),
-    APP(R.layout.explore_app),
-    MISC(R.layout.explore_misc);
+    LOADING(R.layout.explore_loading),
+    DONE_FOR_TODAY(android.R.layout.simple_list_item_1);
 
     private final int layoutResId;
 
-    ExploreTypes(int layoutResId) {
+    ExploreLoaderTypes(int layoutResId) {
         this.layoutResId = layoutResId;
     }
 

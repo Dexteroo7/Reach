@@ -3,12 +3,12 @@
     <cron>
         <url>/refreshGCM</url>
         <description>Refreshing GCM</description>
-        <schedule>every 10 minutes</schedule>
+        <schedule>every 15 minutes</schedule>
     </cron>
 
     <cron>
         <url>/backlogCron</url>
         <description>Polling back logs</description>
-        <schedule>every 10 minutes</schedule>
+        <schedule>every 15 minutes</schedule>
     </cron>
 </cronentries>

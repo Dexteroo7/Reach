@@ -42,7 +42,7 @@ enum ExploreJSON implements EnumHelper<String> {
         this.name = name;
         this.metaInfo = null;
         this.viewInfo = null;
-        this.types = ExploreTypes.LOADING;
+        this.types = ExploreTypes.MISC;
 //        throw new IllegalArgumentException("Required params not provided");
     }
 

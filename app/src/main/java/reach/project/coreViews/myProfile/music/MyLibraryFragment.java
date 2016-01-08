@@ -70,7 +70,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return fragment;
     }
 
-    private ParentAdapter parentAdapter = new ParentAdapter(this, this);
+    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
     //handle 2 at a time
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
@@ -113,30 +113,23 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             final boolean visible = cursor.getShort(8) == 1;
             final long songId = cursor.getLong(1);
 
-            //flip
-            updateDatabase(!visible, songId, myUserId, getContext());
-
             new ToggleVisibility().executeOnExecutor(visibilityHandler,
                     (long) (visible ? 0 : 1), //flip
                     songId,
                     myUserId);
-
             //flip
-            parentAdapter.updateVisibility(songId, !visible);
+            updateDatabase(!visible, songId, myUserId, getContext().getContentResolver());
 
         } else if (message instanceof PrivacySongItem) {
 
             final PrivacySongItem song = (PrivacySongItem) message;
-            //flip
-            updateDatabase(!song.visible, song.songId, myUserId, getContext());
 
             new ToggleVisibility().executeOnExecutor(visibilityHandler,
                     (long) (song.visible ? 0 : 1), //flip
                     song.songId,
                     myUserId);
-
             //flip
-            parentAdapter.updateVisibility(song.songId, !song.visible);
+            updateDatabase(!song.visible, song.songId, myUserId, getContext().getContentResolver());
 
         } else
             throw new IllegalArgumentException("Unknown type handed over");
@@ -317,7 +310,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                 final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
                         params[2], //serverId
                         params[1], //songId
-                        params[0] == 1).execute(); //preserve visibility, do not flip
+                        params[0] == 1).execute(); //translate to boolean
                 if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
                     failed = true; //mark failed
             } catch (IOException e) {
@@ -328,7 +321,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             if (failed) {
                 MiscUtils.useContextFromFragment(reference, context -> {
                     //reset if failed, flip visibility
-                    updateDatabase(params[0] != 1, params[1], params[2], context);
+                    updateDatabase(params[0] != 1, params[1], params[2], context.getContentResolver());
                 });
             }
 
@@ -346,16 +339,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         }
     }
 
-    public static synchronized void updateDatabase(boolean visibility, long songId, long userId, Context context) {
+    public static synchronized void updateDatabase(final boolean visibility, long songId, long userId, ContentResolver resolver) {
 
         //sanity check
-        if (context == null || userId == 0)
+        if (resolver == null || userId == 0)
             return;
 
-        final ContentResolver resolver = context.getContentResolver();
-
         ContentValues values = new ContentValues();
-        values.put(MySongsHelper.COLUMN_VISIBILITY, visibility); //flip
+        values.put(MySongsHelper.COLUMN_VISIBILITY, visibility);
 
         int updated = resolver.update(
                 MySongsProvider.CONTENT_URI,
@@ -368,13 +359,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (updated == 0) {
 
             values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_VISIBILITY, visibility); //flip
+            values.put(ReachDatabaseHelper.COLUMN_VISIBILITY, visibility);
             updated = resolver.update(
                     ReachDatabaseProvider.CONTENT_URI,
                     values,
                     ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " + ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?",
                     new String[]{songId + "", userId + ""});
         }
+
+        //flip in recent list
+        MiscUtils.runOnUiThreadFragment(reference, (MyLibraryFragment fragment) -> {
+            fragment.parentAdapter.updateVisibility(songId, visibility);
+        });
 
         Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
     }

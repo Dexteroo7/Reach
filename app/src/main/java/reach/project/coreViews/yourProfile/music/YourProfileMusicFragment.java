@@ -173,7 +173,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     /////////////////////////
     @Override
     public File getCacheDirectory() {
-        return getContext().getExternalCacheDir();
+        return getContext().getCacheDir();
     }
 
     @Override

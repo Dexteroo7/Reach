@@ -27,7 +27,7 @@ public enum StringCompress {
 
         MiscUtils.closeQuietly(gzipOutputStream, base64OutputStream);
 
-        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "US-ASCII");
+        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "UTF-8");
 
         byteArrayOutputStream.close();
 
@@ -36,7 +36,7 @@ public enum StringCompress {
 
     public static byte[] deCompressStringToBytes(String compressed) throws IOException {
 
-        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressed.getBytes("US-ASCII"));
+        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressed.getBytes("UTF-8"));
         final GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
         final Base64InputStream base64InputStream = new Base64InputStream(gzipInputStream, Base64.DEFAULT);
 
@@ -63,7 +63,7 @@ public enum StringCompress {
 
         MiscUtils.closeQuietly(outputStream, base64OutputStream);
 
-        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "US-ASCII");
+        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "UTF-8");
 
         byteArrayOutputStream.close();
 

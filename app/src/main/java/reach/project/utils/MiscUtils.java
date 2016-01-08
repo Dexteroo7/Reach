@@ -114,12 +114,15 @@ import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.ancillaryClasses.DoWork;
+import reach.project.utils.ancillaryClasses.UpdateUI;
 import reach.project.utils.ancillaryClasses.UseActivity;
 import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.ancillaryClasses.UseContext2;
 import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 import reach.project.utils.ancillaryClasses.UseFragment;
 import reach.project.utils.ancillaryClasses.UseFragment2;
+import reach.project.utils.ancillaryClasses.UseReference;
+import reach.project.utils.ancillaryClasses.UseReference2;
 import reach.project.utils.viewHelpers.RetryHook;
 
 /**
@@ -679,6 +682,24 @@ public enum MiscUtils {
         task.work(activity);
     }
 
+    public static <Param> void useReference(final WeakReference<Param> reference,
+                                            final UseReference<Param> task) {
+
+        final Param param;
+        if (reference == null || (param = reference.get()) == null)
+            return;
+        task.useReference(param);
+    }
+
+    public static <Param, Result> Optional<Result> useReference(final WeakReference<Param> reference,
+                                                                final UseReference2<Param, Result> task) {
+
+        final Param param;
+        if (reference == null || (param = reference.get()) == null)
+            return Optional.absent();
+        return Optional.of(task.useReference(param));
+    }
+
     //    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
 //                                                          final UseContext<Void, T> task) {
 //
@@ -689,23 +710,6 @@ public enum MiscUtils {
 //        activity.runOnUiThread(() -> task.work(activity));
 //    }
 //
-    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseContext<Void, Activity> task) {
-
-        final T fragment;
-        if (reference == null || (fragment = reference.get()) == null)
-            return;
-
-        //checks on the fragment
-        if (isFragmentDead(fragment))
-            return;
-
-        final Activity activity = fragment.getActivity();
-        if (activity == null || activity.isFinishing())
-            return;
-
-        activity.runOnUiThread(() -> task.work(activity));
-    }
 
     public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
                                                                   final UseContext2<Activity> task) {
@@ -723,6 +727,42 @@ public enum MiscUtils {
             return;
 
         activity.runOnUiThread(() -> task.work(activity));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseContextAndFragment<Activity, T> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        //checks on the fragment
+        if (isFragmentDead(fragment))
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(activity, fragment));
+    }
+
+    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
+                                                                  final UseFragment2<T> task) {
+
+        final T fragment;
+        if (reference == null || (fragment = reference.get()) == null)
+            return;
+
+        //checks on the fragment
+        if (isFragmentDead(fragment))
+            return;
+
+        final Activity activity = fragment.getActivity();
+        if (activity == null || activity.isFinishing())
+            return;
+
+        activity.runOnUiThread(() -> task.work(fragment));
     }
 
     public static <T extends Activity> void runOnUiThreadActivity(final WeakReference<T> reference,
@@ -1625,9 +1665,17 @@ public enum MiscUtils {
 
         dataSource.subscribe(baseBitmapDataSubscriber, UiThreadImmediateExecutorService.getInstance());
     }
-    
+
     public static <T extends Fragment> boolean isFragmentDead(@Nullable T fragment) {
         return fragment == null || fragment.isDetached() || fragment.isRemoving() || !fragment.isAdded();
+    }
+
+    public static <T extends View> void updateUI(WeakReference<View> reference, UpdateUI<T> updateUI) {
+
+        //update the UI on the view is not dead
+        MiscUtils.useReference(reference, view -> {
+            view.post(() -> updateUI.updateUI((T) view));
+        });
     }
 
 //    public static String cleanseName(String name, StringBuilder stringBuilder) {

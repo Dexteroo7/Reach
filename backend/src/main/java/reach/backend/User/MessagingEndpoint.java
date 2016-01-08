@@ -7,6 +7,7 @@ import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiNamespace;
+import com.google.api.server.spi.config.Nullable;
 import com.google.appengine.api.ThreadManager;
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterator;
@@ -265,7 +266,10 @@ public class MessagingEndpoint {
     }
 
     protected boolean sendMessage(@Nonnull String message,
-                                  @Nonnull ReachUser user) {
+                                  @Nullable ReachUser user) {
+
+        if (user == null || TextUtils.isEmpty(user.getGcmId()))
+            return false;
 
         //ensure that the User is not null and message is not shit, beforehand
         final Result result;

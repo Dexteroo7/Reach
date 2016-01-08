@@ -31,7 +31,6 @@ import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.cmd.Query;
 import com.squareup.wire.Wire;
 
@@ -238,7 +237,8 @@ public class ReachUserEndpoint {
         logger.info("Starting phoneBookSyncEvenNew");
 
         if (phoneNumbers.getStringList().isEmpty())
-            return null;
+            return Collections.emptySet();
+
         logger.info(phoneNumbers.getStringList().size() + " total");
 
         final Map<String, Boolean> statusMap = new HashMap<>(phoneNumbers.getStringList().size());
@@ -262,8 +262,10 @@ public class ReachUserEndpoint {
         final long serverId = phoneNumbers.getUserId();
         if (serverId == 0)
             return friends;
-        final LoadResult<ReachUser> userLoadResult = ofy().load().type(ReachUser.class).id(serverId);
-
+        //do not log phone book if user is null
+        final ReachUser user = ofy().load().type(ReachUser.class).id(serverId).now();
+        if (user == null)
+            return friends;
         //////////////
         try {
 
@@ -277,7 +279,6 @@ public class ReachUserEndpoint {
                 arrayOfPhoneNumbers.put(object);
             }
 
-            final ReachUser user = userLoadResult.now();
             final JSONObject phoneBookPost = new JSONObject();
 
             phoneBookPost.put("secureKey", "ECeQsMORJ1W1yPJ9D9nIy6FwE1rgS1p7");
@@ -303,7 +304,7 @@ public class ReachUserEndpoint {
                         connection.getResponseCode() + " " +
                         connection.getResponseMessage());
 
-        } catch (IOException | JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             logger.info("Error on post " + e.getLocalizedMessage());
         }
@@ -341,12 +342,18 @@ public class ReachUserEndpoint {
         final Set<Long> myReach = client.getMyReach() == null ? new HashSet<Long>() : client.getMyReach();
         final Set<Long> sentRequests = client.getMyReach() == null ? new HashSet<Long>() : client.getMyReach();
 
-        //no known friends
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        final Iterable<Long> combinedView;
+
         if (myReach.isEmpty() && sentRequests.isEmpty())
             return Collections.emptySet();
+        if (myReach.isEmpty())
+            combinedView = sentRequests;
+        else if (sentRequests.isEmpty())
+            combinedView = myReach;
+        else
+            combinedView = Iterables.concat(myReach, sentRequests);
 
-        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
-        final Iterable<Long> combinedView = Iterables.concat(myReach, sentRequests);
         for (long id : combinedView)
             if (id != Constants.devikaId)
                 keysBuilder.add(Key.create(ReachUser.class, id));

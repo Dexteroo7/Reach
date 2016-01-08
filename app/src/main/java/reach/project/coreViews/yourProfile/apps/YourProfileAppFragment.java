@@ -180,7 +180,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public File getCacheDirectory() {
-        return getContext().getExternalCacheDir();
+        return getContext().getCacheDir();
     }
 
     @Override

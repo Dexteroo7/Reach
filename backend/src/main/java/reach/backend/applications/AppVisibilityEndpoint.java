@@ -57,14 +57,12 @@ public class AppVisibilityEndpoint {
             name = "get",
             path = "appVisibility/{id}",
             httpMethod = ApiMethod.HttpMethod.GET)
-    public AppVisibility get(@Named("id") long id) throws NotFoundException {
+    public AppVisibility get(@Named("id") long id) {
 
         logger.info("Getting AppVisibility with ID: " + id);
-        AppVisibility appVisibility = ofy().load().type(AppVisibility.class).id(id).now();
-        if (appVisibility == null) {
-            throw new NotFoundException("Could not find AppVisibility with ID: " + id);
-        }
-        return appVisibility;
+        if (id == 0)
+            return null;
+        return ofy().load().type(AppVisibility.class).id(id).now();
     }
 
     /**

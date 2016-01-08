@@ -59,7 +59,6 @@ public abstract class Cache implements Closeable {
         //custom thread pool
         final ThreadFactory threadFactory = new ThreadFactoryBuilder() //specify the name
                 .setNameFormat("cache_thread " + fileName)
-                .setPriority(Thread.MAX_PRIORITY)
                 .setDaemon(false)
                 .build();
 
@@ -312,9 +311,8 @@ public abstract class Cache implements Closeable {
             final Cache cache;
             //noinspection unchecked
             if ((cache = cacheWeakReference.get()) != null)
-                //make the insertion
-                cache.cacheInjectorCallbacks.injectElements(itemsToReturn, fullLoad, cache.loadingDone.get());
-
+                //make the insertion, removal not supported bug
+                cache.cacheInjectorCallbacks.injectElements(new ArrayList<>(itemsToReturn), fullLoad, cache.loadingDone.get());
         }
 
         @Override

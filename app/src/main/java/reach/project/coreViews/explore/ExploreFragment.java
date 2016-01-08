@@ -8,9 +8,10 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.LongSparseArray;
+import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
@@ -19,9 +20,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.squareup.okhttp.MediaType;
@@ -29,10 +35,12 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -47,6 +55,7 @@ import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
+import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
@@ -58,7 +67,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
  * create an instance of this fragment.
  */
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
-        ExploreBuffer.Exploration<JsonObject>, HandOverMessage<Integer> {
+        ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Integer> {
 
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
@@ -80,8 +89,41 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     private static final Random ID_GENERATOR = new Random();
-    static final LongSparseArray<String> USER_NAME_SPARSE_ARRAY = new LongSparseArray<>();
-    static final LongSparseArray<String> IMAGE_ID_SPARSE_ARRAY = new LongSparseArray<>();
+
+    static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
+        @Override
+        public Pair<String, String> load(@NonNull Long key) {
+
+            return MiscUtils.useContextFromFragment(reference, context -> {
+
+                final Cursor cursor = context.getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + key),
+                        new String[]{
+                                ReachFriendsHelper.COLUMN_USER_NAME,
+                                ReachFriendsHelper.COLUMN_IMAGE_ID
+                        },
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                        new String[]{key + ""}, null);
+
+                final Pair<String, String> toReturn;
+
+                if (cursor == null)
+                    toReturn = new Pair<>("", "");
+                else if (!cursor.moveToFirst()) {
+                    cursor.close();
+                    toReturn = new Pair<>("", "");
+                } else
+                    toReturn = new Pair<>(
+                            cursor.getString(0),
+                            cursor.getString(1));
+
+                return toReturn;
+            }).or(new Pair<>("", ""));
+        }
+    };
+    static final LoadingCache<Long, Pair<String, String>> USER_INFO_CACHE = CacheBuilder.newBuilder()
+            .initialCapacity(10)
+            .build(PAIR_CACHE_LOADER);
 
     private static final ViewPager.PageTransformer PAGE_TRANSFORMER = (page, position) -> {
 
@@ -103,6 +145,16 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     };
 
     private static final Callable<Collection<JsonObject>> FETCH_NEXT_BATCH = () -> {
+
+        final boolean onlineStatus = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Context>) MiscUtils::isOnline).or(false);
+
+        if (!onlineStatus) {
+
+            MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
+                Toast.makeText(context, "Could not connect to internet", Toast.LENGTH_SHORT).show();
+            });
+            return Collections.emptyList();
+        }
 
         final JsonObject jsonObject = MiscUtils.useContextFromFragment(reference, context -> {
 
@@ -133,8 +185,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 Log.i("Ayush", "Adding online friend id " + onlineId);
                 jsonArray.add(onlineId);
 
-                USER_NAME_SPARSE_ARRAY.append(onlineId, userName); //cache userName
-                IMAGE_ID_SPARSE_ARRAY.append(onlineId, imageId); //cache imageId
+                //cache the details
+                USER_INFO_CACHE.put(onlineId, new Pair<>(userName, imageId));
             }
             cursor.close();
 
@@ -175,7 +227,37 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return containers;
     };
 
-    private final ExploreBuffer<JsonObject> buffer = ExploreBuffer.getInstance(this);
+    private static final class ScrollToLast implements Runnable {
+
+        private final int scrollTo;
+
+        private ScrollToLast(int scrollTo) {
+            this.scrollTo = scrollTo;
+        }
+
+        @Override
+        public void run() {
+
+            MiscUtils.useFragment(reference, fragment -> {
+
+                //sanity check
+                if (fragment.explorePager == null || fragment.rootView == null)
+                    return;
+
+                //magic scroll position should be available
+                if (!(scrollTo > 0))
+                    return;
+
+                final int currentItem = fragment.explorePager.getCurrentItem();
+                //user has somehow started scrolling
+                if (currentItem > 0)
+                    return;
+
+                fragment.explorePager.setCurrentItem(scrollTo - 1, true);
+            });
+        }
+    }
+
     private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
 
     private final PopupMenu.OnMenuItemClickListener popMenuClick = item -> {
@@ -200,6 +282,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Nullable
     private View rootView = null;
+    @Nullable
+    private ViewPager explorePager = null;
+    @Nullable
+    private ExploreBuffer<JsonObject> buffer = null;
+    @Nullable
+    private SuperInterface mListener = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -208,6 +296,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         myServerId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
@@ -219,12 +308,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
         popupMenu.setOnMenuItemClickListener(popMenuClick);
 
-        final ViewPager explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
+        explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
-        explorePager.setOffscreenPageLimit(2);
+        explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
-
         return rootView;
     }
 
@@ -232,6 +320,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         super.onDestroyView();
         rootView = null;
+        explorePager = null;
     }
 
     @Override
@@ -244,31 +333,17 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public JsonObject getContainerForIndex(int index) {
 
         //return data
-        return buffer.getViewItem(index);
-    }
-
-    @Override
-    public boolean isDoneForDay(JsonObject exploreJSON) {
-        return exploreJSON.get("type").getAsString().equals(ExploreTypes.DONE_FOR_TODAY.name());
-    }
-
-    @Override
-    public boolean isLoading(JsonObject exploreJSON) {
-        return exploreJSON.get("type").getAsString().equals(ExploreTypes.LOADING.name());
-    }
-
-    @Override
-    public JsonObject getLoadingResponse() {
-
-        final JsonObject loading = new JsonObject();
-        loading.addProperty(ExploreJSON.TYPE.getName(), ExploreTypes.LOADING.getName());
-        loading.addProperty(ExploreJSON.ID.getName(), ID_GENERATOR.nextInt(Integer.MAX_VALUE));
-        return loading;
+        return buffer.getViewItem(index); //test can not be null
     }
 
     @Override
     public int getCount() {
-        return buffer.currentBufferSize();
+        return buffer != null ? buffer.currentBufferSize() : 0; //test can not be null
+    }
+
+    @Override
+    public boolean isDoneForToday() {
+        return buffer == null || buffer.isDoneForToday();
     }
 
     @Override
@@ -280,10 +355,55 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
+    public void loadedFromCache(int count) {
+
+        notifyDataAvailable();
+        if (explorePager != null)
+            explorePager.postDelayed(new ScrollToLast(count), 900L);
+    }
+
+    @Override
+    public Collection<JsonObject> transform(byte[] data) {
+
+        final String jsonString;
+        try {
+            jsonString = new String(data, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        final JsonArray jsonElements = new JsonParser().parse(jsonString).getAsJsonArray();
+        final Iterator<JsonElement> elementIterator = jsonElements.iterator();
+        final List<JsonObject> toReturn = new ArrayList<>(jsonElements.size());
+
+        while (elementIterator.hasNext())
+            toReturn.add(elementIterator.next().getAsJsonObject());
+
+        return toReturn;
+    }
+
+    @Override
+    public byte[] transform(List<JsonObject> data) {
+
+        final JsonArray array = new JsonArray();
+        for (JsonObject jsonObject : data)
+            array.add(jsonObject);
+
+        final String easyRepresentation = array.toString();
+        try {
+            return easyRepresentation.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return new byte[0];
+        }
+    }
+
+    @Override
     public void handOverMessage(@Nonnull Integer position) {
 
         //retrieve full json
-        final JsonObject exploreJson = buffer.getViewItem(position);
+        final JsonObject exploreJson = buffer.getViewItem(position); //test can not be null
 
         if (exploreJson == null)
             return;
@@ -305,7 +425,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
                 final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
                 Class<?> mClass = null;
-                if(activityClass != null) {
+                if (activityClass != null) {
                     try {
                         mClass = Class.forName(activityClass);
                     } catch (ClassNotFoundException e) {
@@ -314,12 +434,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 }
                 final Intent intent = new Intent(getActivity(), mClass);
                 startActivity(intent);
-                break;
-
-            case LOADING:
-                break;
-
-            case DONE_FOR_TODAY:
                 break;
         }
 
@@ -392,13 +506,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         MiscUtils.startDownload(reachDatabase, getActivity(), rootView);
     }
 
-    @Nullable
-    private SuperInterface mListener;
-
     @Override
     public void onAttach(Context context) {
 
         super.onAttach(context);
+        buffer = ExploreBuffer.getInstance(this, context.getCacheDir());
         try {
             mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
@@ -409,7 +521,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public void onDetach() {
+
         super.onDetach();
         mListener = null;
+        if (buffer != null)
+            buffer.close();
     }
 }

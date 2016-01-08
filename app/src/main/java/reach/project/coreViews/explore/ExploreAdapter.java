@@ -2,6 +2,7 @@ package reach.project.coreViews.explore;
 
 import android.animation.ValueAnimator;
 import android.net.Uri;
+import android.support.v4.util.Pair;
 import android.support.v4.view.PagerAdapter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -42,108 +43,114 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
 
-        final JsonObject exploreJSON = explore.getContainerForIndex(position);
-        final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
+        final LayoutInflater layoutInflater = LayoutInflater.from(collection.getContext());
+        final View layout;
 
-        final View layout = LayoutInflater.from(collection.getContext()).inflate(exploreTypes.getLayoutResId(), collection, false);
-        final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
-        final TextView title = (TextView) layout.findViewById(R.id.title);
-        final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
-        final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
-        final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
-        final RatingBar rating = (RatingBar) layout.findViewById(R.id.rating);
-        final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
-        final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
+        if (position == getCount() - 1) {
+            //last item
+            if (explore.isDoneForToday()) //done for today
+                layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);
+            else //loading
+                layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);
+            layout.setTag(POSITION_NONE);
 
-        switch (exploreTypes) {
+        } else {
 
-            case MUSIC: {
+            final JsonObject exploreJSON = explore.getContainerForIndex(position);
+            final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(exploreJSON, ExploreJSON.TYPE).getAsString());
 
-                downButton.setOnClickListener(this);
-                downButton.setTag(position);
-                final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
-                final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
-                final String imageId = ExploreFragment.IMAGE_ID_SPARSE_ARRAY.get(userId);
+            layout = layoutInflater.inflate(exploreTypes.getLayoutResId(), collection, false);
+            final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+            final TextView title = (TextView) layout.findViewById(R.id.title);
+            final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
+            final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
+            final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+            final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
+            final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
 
-                //take out view info from this object
-                final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
+            switch (exploreTypes) {
 
-                title.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
-                subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE, "").getAsString());
-                final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME, "").getAsString();
-                if (TextUtils.isEmpty(originalUserName))
-                    userHandle.setText(userName);
-                else
-                    userHandle.setText(originalUserName);
-                typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
+                case MUSIC: {
 
-                if (!TextUtils.isEmpty(imageId))
-                    userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+                    downButton.setOnClickListener(this);
+                    downButton.setTag(position);
+                    final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
+                    final Pair<String, String> userNameAndImageId = ExploreFragment.USER_INFO_CACHE.getUnchecked(userId);
 
-                final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
-                if (!TextUtils.isEmpty(albumArt))
-                    image.setImageURI(Uri.parse(albumArt));
+                    //take out view info from this object
+                    final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
 
-                layout.setTag(POSITION_UNCHANGED);
-                break;
-            }
-            case APP:
+                    title.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
+                    subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE, "").getAsString());
+                    final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME, "").getAsString();
+                    if (TextUtils.isEmpty(originalUserName))
+                        userHandle.setText(userNameAndImageId.first);
+                    else
+                        userHandle.setText(originalUserName);
+                    typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
-                downButton.setOnClickListener(this);
-                downButton.setTag(position);
-                final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
-                final String userName = ExploreFragment.USER_NAME_SPARSE_ARRAY.get(userId);
-                final String imageId = ExploreFragment.IMAGE_ID_SPARSE_ARRAY.get(userId);
+                    if (!TextUtils.isEmpty(userNameAndImageId.second))
+                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
 
-                //take out view info from this object
-                final JsonObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
+                    final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                    if (!TextUtils.isEmpty(albumArt))
+                        image.setImageURI(Uri.parse(albumArt));
 
-                title.setText(MiscUtils.get(appViewInfo, AppViewInfo.TITLE).getAsString());
-                subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE, "").getAsString());
-                final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME, "").getAsString();
-                if (TextUtils.isEmpty(originalUserName))
-                    userHandle.setText(userName);
-                else
-                    userHandle.setText(originalUserName);
-                typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
+                    layout.setTag(POSITION_UNCHANGED);
+                    break;
+                }
+                case APP:
 
-                final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
-                if (!TextUtils.isEmpty(appIcon))
-                    image.setImageURI(Uri.parse(appIcon));
+                    final RatingBar rating = (RatingBar) layout.findViewById(R.id.rating);
 
-                final String appRating = MiscUtils.get(appViewInfo, AppViewInfo.RATING, "").getAsString();
-                if (!TextUtils.isEmpty(appRating))
-                    rating.setRating(Float.parseFloat(appRating));
+                    downButton.setOnClickListener(this);
+                    downButton.setTag(position);
+                    final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
+                    final Pair<String, String> userNameAndImageId = ExploreFragment.USER_INFO_CACHE.getUnchecked(userId);
 
-                if (!TextUtils.isEmpty(imageId))
-                    userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+                    //take out view info from this object
+                    final JsonObject appViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
+
+                    title.setText(MiscUtils.get(appViewInfo, AppViewInfo.TITLE).getAsString());
+                    subTitle.setText(MiscUtils.get(appViewInfo, AppViewInfo.SUB_TITLE, "").getAsString());
+                    final String originalUserName = MiscUtils.get(appViewInfo, AppViewInfo.SENDER_NAME, "").getAsString();
+                    if (TextUtils.isEmpty(originalUserName))
+                        userHandle.setText(userNameAndImageId.first);
+                    else
+                        userHandle.setText(originalUserName);
+                    typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
+
+                    final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
+                    if (!TextUtils.isEmpty(appIcon))
+                        image.setImageURI(Uri.parse(appIcon));
+
+                    final String appRating = MiscUtils.get(appViewInfo, AppViewInfo.RATING, "").getAsString();
+                    if (!TextUtils.isEmpty(appRating))
+                        rating.setRating(Float.parseFloat(appRating));
+
+                    if (!TextUtils.isEmpty(userNameAndImageId.second))
+                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
 
 //                container.getRating();
-                layout.setTag(POSITION_UNCHANGED);
-                break;
+                    layout.setTag(POSITION_UNCHANGED);
+                    break;
 
-            case MISC:
-                final Button button = (Button) layout.findViewById(R.id.button);
-                button.setOnClickListener(this);
-                button.setTag(position);
+                case MISC:
+                    final Button button = (Button) layout.findViewById(R.id.button);
+                    button.setOnClickListener(this);
+                    button.setTag(position);
 
-                final JsonObject miscViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
-                button.setText(MiscUtils.get(miscViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
-                title.setText(MiscUtils.get(miscViewInfo, AppViewInfo.TITLE).getAsString());
+                    final JsonObject miscViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
+                    button.setText(MiscUtils.get(miscViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
+                    title.setText(MiscUtils.get(miscViewInfo, AppViewInfo.TITLE).getAsString());
 
-                final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
-                if (!TextUtils.isEmpty(miscImage))
-                    image.setImageURI(Uri.parse(miscImage));
-                break;
-
-            case LOADING:
-                layout.setTag(POSITION_NONE);
-                break;
-            case DONE_FOR_TODAY:
-                //title.setText("No more stories for today");
-                layout.setTag(POSITION_NONE);
-                break;
+                    final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                    if (!TextUtils.isEmpty(miscImage))
+                        image.setImageURI(Uri.parse(miscImage));
+                    break;
+            }
         }
+
 
         collection.addView(layout);
         return layout;
@@ -156,7 +163,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     @Override
     public int getCount() {
-        return explore.getCount();
+        return explore.getCount() + 1; //+1 for appending a loading / done for today response
     }
 
     @Override
@@ -192,6 +199,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
         handOverMessage.handOverMessage((int) view.getTag());
 
         if (view instanceof ImageView) {
+
             ((ImageView) view).setImageResource(R.drawable.icon_downloading_active);
             final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
             animator.setDuration(300);
@@ -209,5 +217,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
         JsonObject getContainerForIndex(int index);
 
         int getCount();
+
+        boolean isDoneForToday();
     }
 }
