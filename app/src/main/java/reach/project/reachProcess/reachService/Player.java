@@ -366,7 +366,7 @@ public class Player {
         }
         Uri uri=Uri.parse(path.get());
         DataSource dataSource=new myStreamingDataSource(handlerInterface);
-        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource(uri,dataSource,new DefaultAllocator(1000),5000);
+        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource(uri,dataSource,new DefaultAllocator(64*1024),64*1024*256);
 
         /*String pa=path.get();
         File file=new File(pa);

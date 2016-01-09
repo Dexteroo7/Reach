@@ -30,7 +30,7 @@ public class reachWidget extends AppWidgetProvider
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }*/
-    public static String state;
+    public static String state="play";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {

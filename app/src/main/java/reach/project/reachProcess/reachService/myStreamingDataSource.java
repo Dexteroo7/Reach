@@ -8,9 +8,12 @@ import com.google.android.exoplayer.C;
 import com.google.android.exoplayer.upstream.DataSpec;
 import com.google.android.exoplayer.upstream.UriDataSource;
 
+import java.io.BufferedInputStream;
 import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.lang.annotation.Documented;
 
 /**
@@ -38,27 +41,41 @@ public final class myStreamingDataSource implements UriDataSource
                 String path = dataspec.uri.getPath();
 
                 //inputStream = assetManager.open(path, AssetManager.ACCESS_RANDOM);
+                FileInputStream fileInputStream=new FileInputStream(path);
+                inputStream=fileInputStream;
                 PlayerSource playerSource=new PlayerSource(handlerInterface,path);
-                inputStream=playerSource.getSource();
+                //inputStream=(playerSource.getSource());
+
+                Log.i("Aman ","inputstream feeded");
 
                 Log.i("path", path);
                 Log.i("path2",uriString);
 
                 long skipped = inputStream.skip(dataspec.position);
+                Log.i("Amanskipped","value of skipped = "+skipped);
+
                 if (skipped < dataspec.position) {
+                    Log.i("Aman ","skipped<dataspec.position");
                     // assetManager.open() returns an AssetInputStream, whose skip() implementation only skips
                     // fewer bytes than requested if the skip is beyond the end of the asset's data.
                     throw new EOFException();
                 }
                 if (dataspec.length != C.LENGTH_UNBOUNDED) {
-                    bytesRemaining = dataspec.length;
+                    {
+                        bytesRemaining = dataspec.length;
+                        Log.i("Amanbytes ","dataspec.length!=C.LENGTH "+bytesRemaining);
+
+                    }
                 } else {
                     bytesRemaining = inputStream.available();
+                    Log.i("Amanbyytes ","else "+bytesRemaining);
+
                     if (bytesRemaining == Integer.MAX_VALUE) {
                         // assetManager.open() returns an AssetInputStream, whose available() implementation
                         // returns Integer.MAX_VALUE if the remaining length is greater than (or equal to)
                         // Integer.MAX_VALUE. We don't know the true length in this case, so treat as unbounded.
                         bytesRemaining = C.LENGTH_UNBOUNDED;
+                        Log.i("Amanbytes ","Last "+bytesRemaining);
                     }
                 }
             }
@@ -80,13 +97,15 @@ public final class myStreamingDataSource implements UriDataSource
         } else {
             int bytesRead = 0;
             try {
+                Log.i("Aman ","try entered");
                 int bytesToRead = bytesRemaining == C.LENGTH_UNBOUNDED ? readLength
                         : (int) Math.min(bytesRemaining, readLength);
                 bytesRead = inputStream.read(buffer, offset, bytesToRead);
+                Log.i("Aman ","bytesread = "+bytesRead);
             }
             catch (IOException e)
             {
-
+                Log.i("Aman ","excepto");
             }
 
             if (bytesRead > 0) {
