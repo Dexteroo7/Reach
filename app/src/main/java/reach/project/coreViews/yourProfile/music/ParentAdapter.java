@@ -97,6 +97,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
     @Override
     protected RecyclerView.ViewHolder newCreateViewHolder(ViewGroup parent, int viewType) {
+
         switch (viewType) {
 
             case SONG_ITEM_TYPE:

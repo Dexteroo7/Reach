@@ -23,9 +23,9 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.invite.InviteActivity;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
@@ -40,6 +40,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
         this.handOverMessage = handOverMessage;
+        setHasStableIds(true);
     }
 
     public static final String[] requiredProjection = new String[]{
@@ -289,7 +290,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         final Object item = getItem(position);
         if (item instanceof Cursor)
-            return ((Cursor) item).getLong(11);
+            return ((Cursor) item).getLong(0); //_id
         return super.getItemId(position);
     }
 

@@ -20,9 +20,9 @@ final class ReachAllContactsAdapter extends ReachCursorAdapter<InviteViewHolder>
     }
 
     @Override
-    public int getItemId(@Nonnull Cursor cursor) {
-        //TODO shift to dirtyHash
-        return (int) cursor.getLong(2);
+    public long getItemId(@Nonnull Cursor cursor) {
+
+        return cursor.getLong(2); //CONTACT_ID
     }
 
     @Override

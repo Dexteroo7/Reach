@@ -47,6 +47,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
         final View layout;
 
         if (position == getCount() - 1) {
+
             //last item
             if (explore.isDoneForToday()) //done for today
                 layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);

@@ -81,6 +81,11 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
                 }
 
                 @Override
+                public long getItemId(Object item) {
+                    return reference.getItemId(item);
+                }
+
+                @Override
                 public void onBindViewHolder(SingleItemViewHolder holder, Object item) {
                     reference.onBindViewHolder(holder, item);
                 }
@@ -104,7 +109,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
                 }
 
                 @Override
-                public int getItemId(@Nonnull Cursor cursor) {
+                public long getItemId(@Nonnull Cursor cursor) {
                     return reference.getItemId(cursor);
                 }
             };

@@ -92,6 +92,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     }
 
     @Override
+    public long getItemId(MusicData item) {
+        return item.getId();
+    }
+
+    @Override
     public void onBindViewHolder(SongItemHolder holder, MusicData item) {
 
         holder.downButton.setImageResource(R.drawable.icon_play_circle_pink);

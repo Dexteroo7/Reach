@@ -8,7 +8,6 @@ import android.view.View;
 import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 import java.util.List;
 
 import reach.project.R;
@@ -75,25 +74,21 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             adapter.notifyItemChanged(position); //position will be same
     }
 
-    final Object[] reUsable = new Object[2];
-
     @Override
     public long getItemId(int position) {
 
 //        Log.i("Ayush", "Checking item id recent " + position);
-
-        final App app = getItem(position);
-        final boolean visibility = visibilityHook.isVisible(app.packageName);
-
-        reUsable[0] = app;
-        reUsable[1] = visibility;
-
-        return Arrays.hashCode(reUsable);
+        return getItem(position).packageName.hashCode();
     }
 
     @Override
     public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         return new AppItemHolder(itemView, handOverMessage);
+    }
+
+    @Override
+    public long getItemId(App item) {
+        return item.packageName.hashCode();
     }
 
     @Override

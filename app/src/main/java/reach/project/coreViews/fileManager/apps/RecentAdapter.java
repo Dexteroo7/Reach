@@ -21,7 +21,6 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
  */
 class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
 
-
     public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId) {
         super(messageList, handOverMessage, resourceId);
     }
@@ -65,6 +64,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         return new AppItemHolder(itemView, handOverMessage);
+    }
+
+    @Override
+    public long getItemId(App item) {
+        return item.packageName.hashCode();
     }
 
     @Override

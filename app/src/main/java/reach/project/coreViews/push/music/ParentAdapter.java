@@ -18,7 +18,6 @@ import com.google.common.base.Optional;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -91,7 +90,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         if (position == -1)
             notifyDataSetChanged();
         else
-            notifyItemChanged(position);
+            notifyItemChanged(position + 1); //account for recent
 
         recentAdapter.toggleSelected(songId);
     }
@@ -231,24 +230,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             return VIEW_TYPE_RECENT;
     }
 
-    final Object[] reUsable = new Object[4];
-
     @Override
     public long getItemId(int position) {
 
         final Object item = getItem(position);
         if (item instanceof Cursor) {
 
-            final Cursor cursor = (Cursor) item;
-
-            final long songId = cursor.getLong(0);
-
-            reUsable[0] = songId;
-            reUsable[1] = ReachActivity.SELECTED_SONG_IDS.get(songId, false);
-            reUsable[2] = cursor.getShort(7); //visibility
-            reUsable[3] = cursor.getString(1); //displayName
-
-            return Arrays.hashCode(reUsable);
+            return ((Cursor) item).getLong(0); //unique_id || song_id
         } else
             return super.getItemId(position);
     }

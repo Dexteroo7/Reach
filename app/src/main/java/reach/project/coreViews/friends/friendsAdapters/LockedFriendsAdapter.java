@@ -45,8 +45,8 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
     }
 
     @Override
-    public int getItemId(@Nonnull Cursor cursor) {
-        return cursor.getInt(0); //TODO shift to dirtyHash
+    public long getItemId(@Nonnull Cursor cursor) {
+        return cursor.getLong(0); //_id
     }
 
     @Override

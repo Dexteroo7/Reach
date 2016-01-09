@@ -133,7 +133,7 @@ public class AllContactsFragment extends Fragment implements
         if (data == null || data.isClosed() || loader.getId() != StaticData.ALL_CONTACTS_LOADER)
             return;
 
-        Log.i("Ayush", "Setting new cursor " + data.getCount());
+//        Log.i("Ayush", "Setting new cursor " + data.getCount());
         inviteAdapter.setCursor(data);
     }
 

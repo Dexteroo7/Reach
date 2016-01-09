@@ -37,10 +37,11 @@ public abstract class SimpleRecyclerAdapter<T, F extends SingleItemViewHolder> e
 
     @Override
     public long getItemId(int position) {
-        return messageList.get(position).hashCode();
+        return getItemId(messageList.get(position));
     }
 
     public abstract F getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage);
+    public abstract long getItemId(T item);
 
     public abstract void onBindViewHolder(F holder, T item);
 

@@ -16,6 +16,10 @@ public abstract class RecyclerViewMaterialAdapter<T extends RecyclerView.ViewHol
     //the size taken by the header
     private final int mPlaceholderSize = 1;
 
+    public RecyclerViewMaterialAdapter() {
+        setHasStableIds(true);
+    }
+
     @Override
     public final int getItemViewType(int position) {
 

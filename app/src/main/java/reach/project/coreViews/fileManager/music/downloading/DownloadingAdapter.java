@@ -2,6 +2,7 @@ package reach.project.coreViews.fileManager.music.downloading;
 
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -10,8 +11,6 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
-
-import java.util.Arrays;
 
 import javax.annotation.Nonnull;
 
@@ -31,30 +30,21 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 
     @Override
     public DownloadingItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+
+        Log.i("Ayush", "Creating new view holder" + DownloadingAdapter.class);
         return new DownloadingItemHolder(itemView, handOverMessage);
     }
 
-    private final long[] reUsable = new long[7];
-
     @Override
-    public int getItemId(@Nonnull Cursor cursor) {
+    public long getItemId(@Nonnull Cursor cursor) {
 
-        reUsable[0] = cursor.getLong(0); //id
-        reUsable[1] = cursor.getLong(1); //length
-        reUsable[2] = cursor.getLong(2); //senderId
-        reUsable[3] = cursor.getLong(3); //processed
-
-        reUsable[4] = cursor.getShort(9); //status
-        reUsable[5] = cursor.getShort(10); //operation kind
-        reUsable[6] = cursor.getShort(13); //logical clock
-
-        return Arrays.hashCode(reUsable);
+        return cursor.getLong(0); //_id
     }
 
     @Override
     public void onBindViewHolder(DownloadingItemHolder holder, Cursor cursorExact) {
 
-        final long id = cursorExact.getLong(0);
+//        final long id = cursorExact.getLong(0);
         final long length = cursorExact.getLong(1);
 //        final long senderId = cursor.getLong(2);
         final long processed = cursorExact.getLong(3);
@@ -72,8 +62,8 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
         ///////////////
 
         final short status = cursorExact.getShort(9);
-        final short operationKind = cursorExact.getShort(10);
-        final String userName = cursorExact.getString(11);
+//        final short operationKind = cursorExact.getShort(10);
+//        final String userName = cursorExact.getString(11);
 
 //        final byte[] albumArtData = cursor.getBlob(15);
 //

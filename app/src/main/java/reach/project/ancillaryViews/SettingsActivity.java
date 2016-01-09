@@ -100,7 +100,13 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         @Override
+        public long getItemId(int position) {
+            return super.getItemId(position);
+        }
+
+        @Override
         public SettingsHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
             if (viewType == 0)
                 return new SettingsHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.settings_item_toggle, parent, false));
             else

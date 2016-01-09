@@ -109,7 +109,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
 
-            Log.i("Ayush", "Setting new cursor " + data.getCount());
+//            Log.i("Ayush", "Setting new cursor " + data.getCount());
             downloadingAdapter.setCursor(data);
         }
     }

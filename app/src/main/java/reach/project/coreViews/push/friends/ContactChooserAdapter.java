@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.view.View;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -67,14 +66,9 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
         }
     }
 
-    private final Object [] reUse = new Object[3];
     @Override
-    public int getItemId(@Nonnull Cursor cursor) {
+    public long getItemId(@Nonnull Cursor cursor) {
 
-        reUse[0] = cursor.getLong(0);
-        reUse[1] = cursor.getString(1);
-        reUse[2] = cursor.getString(2);
-
-        return Arrays.hashCode(reUse);
+        return cursor.getLong(0); //_id
     }
 }

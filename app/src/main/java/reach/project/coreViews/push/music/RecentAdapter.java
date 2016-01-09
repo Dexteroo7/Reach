@@ -111,6 +111,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
     }
 
     @Override
+    public long getItemId(Song item) {
+        return item.songId;
+    }
+
+    @Override
     public void onBindViewHolder(SongItemHolder holder, Song item) {
 
         holder.songName.setText(item.displayName);

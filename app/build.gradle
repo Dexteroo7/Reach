@@ -55,7 +55,7 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:percent:23.1.1'
 
-    //compile 'com.android.support:multidex:1.0.1'
+//    compile 'com.android.support:multidex:1.0.1'
 
     // non-google stuff
     compile 'com.facebook.fresco:fresco:0.8.1'

@@ -27,6 +27,11 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
     }
 
     @Override
+    public long getItemId(App item) {
+        return item.packageName.hashCode();
+    }
+
+    @Override
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
         holder.appName.setText(item.applicationName);

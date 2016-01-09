@@ -65,6 +65,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     }
 
     @Override
+    public long getItemId(App item) {
+        return item.packageName.hashCode();
+    }
+
+    @Override
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
         final PackageManager packageManager = holder.appName.getContext().getPackageManager();

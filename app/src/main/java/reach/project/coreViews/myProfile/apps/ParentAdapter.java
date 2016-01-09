@@ -9,16 +9,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
@@ -87,8 +86,6 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
         notifyItemChanged(position); //adjust for header
         recentAdapter.visibilityChanged(packageName);
     }
-
-    private final Object[] reUsable = new Object[2];
 
     @Override
     public boolean isVisible(String packageName) {
@@ -190,12 +187,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
         if (position > 0) {
 
             final App app = allAppsList.get(position - 1); //re-adjust for recent
-            final boolean visibility = isVisible(app.packageName);
-
-            reUsable[0] = app;
-            reUsable[1] = visibility;
-
-            return Arrays.hashCode(reUsable);
+            return app.packageName.hashCode();
         } else
             return super.getItemId(position);
     }

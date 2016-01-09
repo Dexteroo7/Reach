@@ -27,6 +27,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public ParentAdapter(HandOverMessage<App> handOverApp) {
         this.handOverApp = handOverApp;
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, R.layout.app_grid_item);
+        setHasStableIds(true);
     }
 
     private static final byte VIEW_TYPE_RECENT = 0;
@@ -148,6 +149,16 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return VIEW_TYPE_ALL;
         else
             return VIEW_TYPE_RECENT;
+    }
+
+    @Override
+    public long getItemId(int position) {
+
+        final Object item = getItem(position);
+        if (item instanceof App)
+            return ((App)item).packageName.hashCode();
+
+        return super.getItemId(position);
     }
 
     @Override

@@ -20,6 +20,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.common.base.Optional;
+import com.google.common.primitives.Longs;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -39,7 +40,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -1605,11 +1605,14 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
          * @param displayName of the song
          * @return fileChannel index
          */
-        public static long getFileChannelIndex(String actualName, String displayName, long songId) {
-            return Arrays.hashCode(new Object[]{
-                    TextUtils.isEmpty(actualName) ? "" : actualName,
-                    TextUtils.isEmpty(displayName) ? "" : displayName,
-                    songId});
+        public static int getFileChannelIndex(String actualName, String displayName, long songId) {
+
+            //simple weak hash
+            int hash = 17;
+            hash = hash * 23 + (TextUtils.isEmpty(actualName) ? "" : actualName).hashCode();
+            hash = hash * 23 + (TextUtils.isEmpty(displayName) ? "" : displayName).hashCode();
+            hash = hash * 23 + Longs.hashCode(songId);
+            return hash;
         }
 
         /**

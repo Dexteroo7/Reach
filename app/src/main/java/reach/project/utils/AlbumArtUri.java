@@ -6,9 +6,10 @@ import android.util.Log;
 import android.util.SparseArray;
 
 import com.google.common.base.Optional;
+import com.google.common.primitives.Booleans;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Arrays;
 
 /**
  * Created by dexter on 13/10/15.
@@ -23,11 +24,13 @@ public enum AlbumArtUri {
 
     public synchronized static Optional<Uri> getUri(String album, String artist, String song, boolean large) {
 
-        final int key = Arrays.hashCode(new String[]{
-                TextUtils.isEmpty(album) ? "" : album,
-                TextUtils.isEmpty(artist) ? "" : artist,
-                TextUtils.isEmpty(song) ? "" : song
-        });
+        int hash = 17;
+        hash = hash * 23 + (TextUtils.isEmpty(album) ? "" : album).hashCode();
+        hash = hash * 23 + (TextUtils.isEmpty(artist) ? "" : artist).hashCode();
+        hash = hash * 23 + (TextUtils.isEmpty(song) ? "" : song).hashCode();
+        hash = hash * 23 + Booleans.hashCode(large);
+
+        final int key = hash;
 
         Uri value = simpleCache.get(key);
         if (value != null)
@@ -38,22 +41,27 @@ public enum AlbumArtUri {
         buffer.setLength(0);
         buffer.append(large ? baseURLLarge : baseURLSmall);
 
-        if (!TextUtils.isEmpty(album)) {
+        try {
 
-            buffer.append("album=").append(URLEncoder.encode(album));
-            if (!TextUtils.isEmpty(artist))
-                buffer.append("&artist=").append(URLEncoder.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(URLEncoder.encode(song));
-        } else if (!TextUtils.isEmpty(artist)) {
+            if (!TextUtils.isEmpty(album)) {
 
-            buffer.append("artist=").append(URLEncoder.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(URLEncoder.encode(song));
-        } else if (!TextUtils.isEmpty(song))
-            buffer.append("song=").append(URLEncoder.encode(song));
-        else
-            return Optional.absent();
+                buffer.append("album=").append(URLEncoder.encode(album, "UTF-8"));
+                if (!TextUtils.isEmpty(artist))
+                    buffer.append("&artist=").append(URLEncoder.encode(artist, "UTF-8"));
+                if (!TextUtils.isEmpty(song))
+                    buffer.append("&song=").append(URLEncoder.encode(song, "UTF-8"));
+            } else if (!TextUtils.isEmpty(artist)) {
+
+                buffer.append("artist=").append(URLEncoder.encode(artist, "UTF-8"));
+                if (!TextUtils.isEmpty(song))
+                    buffer.append("&song=").append(URLEncoder.encode(song, "UTF-8"));
+            } else if (!TextUtils.isEmpty(song))
+                buffer.append("song=").append(URLEncoder.encode(song, "UTF-8"));
+            else
+                return Optional.absent();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e); //throw as is
+        }
 
         final String toParse = buffer.toString();
         Log.i("Ayush", toParse);
@@ -62,9 +70,7 @@ public enum AlbumArtUri {
             return Optional.absent();
 
         value = Uri.parse(toParse);
-        synchronized (simpleCache) {
-            simpleCache.put(key, value);
-        }
+        simpleCache.put(key, value);
         return Optional.of(value);
     }
 }

@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +18,6 @@ import com.google.common.base.Optional;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -68,7 +66,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
         //set
         downloadCursor = newDownloadCursor;
-        Log.i("Ayush", "Setting new download cursor");
+//        Log.i("Ayush", "Setting new download cursor");
         notifyDataSetChanged();
     }
 
@@ -80,7 +78,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
         //set
         myLibraryCursor = newMyLibraryCursor;
-        Log.i("Ayush", "Setting new library cursor");
+//        Log.i("Ayush", "Setting new library cursor");
         notifyDataSetChanged();
     }
 
@@ -250,23 +248,13 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             return VIEW_TYPE_RECENT;
     }
 
-    private final Object[] reUsable = new Object[7];
-
     @Override
     protected long newGetItemId(int position) {
 
         final Object item = getItem(position);
-        if (item instanceof Cursor) {
-
-            final Cursor cursor = (Cursor) item;
-            reUsable[0] = cursor.getLong(1); //songId
-            reUsable[1] = cursor.getString(2); //displayName
-            reUsable[2] = cursor.getString(3);//actualName
-            reUsable[3] = cursor.getString(4);//artist
-            reUsable[4] = cursor.getString(5); //album
-            reUsable[5] = cursor.getShort(8); //visibility
-            return Arrays.hashCode(reUsable);
-        } else
+        if (item instanceof Cursor)
+            return ((Cursor) item).getLong(1); //song_id || unique_id
+        else
             return item.hashCode();
     }
 

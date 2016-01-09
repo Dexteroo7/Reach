@@ -41,6 +41,11 @@ class MoreAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements
     }
 
     @Override
+    public long getItemId(Song item) {
+        return item.songId;
+    }
+
+    @Override
     public void onBindViewHolder(SongItemHolder holder, Song item) {
 
         holder.songName.setText(item.displayName);
