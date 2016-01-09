@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -18,6 +19,7 @@ import com.google.common.base.Optional;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 
@@ -38,6 +40,20 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
+    private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+
+            final Object object = getItem(position);
+            if (object instanceof Cursor)
+                handOverCursor.handOverMessage((Cursor) object);
+            else
+                throw new IllegalStateException("Position must correspond with a cursor");
+        }
+    };
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
                          HandOverMessage<MusicData> handOverSong) {
@@ -96,20 +112,14 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
+        Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
+
         switch (viewType) {
 
             case VIEW_TYPE_ALL: {
 
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_list_item, parent, false), position -> {
-
-                    final Object object = getItem(position);
-                    if (object instanceof Cursor)
-                        handOverCursor.handOverMessage((Cursor) object);
-                    else
-                        throw new IllegalStateException("Position must correspond with a cursor");
-
-                });
+                        .inflate(R.layout.song_list_item, parent, false), handOverMessage);
             }
 
             case VIEW_TYPE_RECENT: {
@@ -124,13 +134,14 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
+        Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
+
         final Object friend = getItem(position);
         if (friend instanceof Cursor) {
 
             final Cursor cursorExactType = (Cursor) friend;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
-            songItemHolder.downButton.setImageResource(R.drawable.icon_play_circle_pink);
-            holder.itemView.setBackgroundResource(0);
+//            holder.itemView.setBackgroundResource(0);
             songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
@@ -139,25 +150,26 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 displayName = cursorExactType.getString(5);
                 artist = cursorExactType.getString(6);
                 album = cursorExactType.getString(16);
-                actualName = cursorExactType.getString(17);
+//                actualName = cursorExactType.getString(17);
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
                 displayName = cursorExactType.getString(3);
                 artist = cursorExactType.getString(4);
                 album = cursorExactType.getString(6);
-                actualName = cursorExactType.getString(9);
+//                actualName = cursorExactType.getString(9);
             } else
                 throw new IllegalArgumentException("Unknown cursor type found");
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);
+
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
             if (uriOptional.isPresent()) {
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
                 final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                        .setResizeOptions(new ResizeOptions(200, 200))
+                        .setResizeOptions(resizeOptions)
                         .build();
 
                 final DraweeController controller = Fresco.newDraweeControllerBuilder()
@@ -173,7 +185,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         } else {
 
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-            holder.itemView.setBackgroundResource(0);
+//            holder.itemView.setBackgroundResource(0);
             horizontalViewHolder.headerText.setText("Recently Added");
             horizontalViewHolder.listOfItems.setLayoutManager(
                     new CustomGridLayoutManager(holder.itemView.getContext(), 2));
@@ -230,7 +242,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         if (item instanceof Cursor) {
             return ((Cursor)item).getLong(0); //_id || song_id
         } else
-            return super.getItemId(position);
+            return recentHolderId;
     }
 
     @Override

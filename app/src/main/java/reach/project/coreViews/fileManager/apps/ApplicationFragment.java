@@ -57,7 +57,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         return fragment;
     }
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this);
+    @Nullable
+    private ParentAdapter parentAdapter;
     private final ExecutorService applicationsFetcher = Executors.newSingleThreadExecutor();
 
     public void handOverMessage(@Nonnull App message) {
@@ -72,8 +73,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
+        parentAdapter = new ParentAdapter(this, activity.getPackageManager());
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
+
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
@@ -106,8 +109,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             MiscUtils.useFragment(reference, fragment -> {
 
-                fragment.parentAdapter.updateAllAppCount(pair.first);
-                fragment.parentAdapter.updateRecentApps(pair.second);
+                if (fragment.parentAdapter != null) {
+                    fragment.parentAdapter.updateAllAppCount(pair.first);
+                    fragment.parentAdapter.updateRecentApps(pair.second);
+                }
             });
         }
     }

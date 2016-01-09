@@ -3,13 +3,14 @@ package reach.project.utils;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.SparseArray;
 
 import com.google.common.base.Optional;
 import com.google.common.primitives.Booleans;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by dexter on 13/10/15.
@@ -19,7 +20,8 @@ public enum AlbumArtUri {
 
     private static final String baseURLSmall = "http://52.74.53.245:8080/getImage/small?";
     private static final String baseURLLarge = "http://52.74.53.245:8080/getImage/large?";
-    private static final SparseArray<Uri> simpleCache = new SparseArray<>(1000);
+    private static final Map<Integer, Uri> simpleCache = new HashMap<>(1000);
+
     private static final StringBuilder buffer = new StringBuilder(50);
 
     public synchronized static Optional<Uri> getUri(String album, String artist, String song, boolean large) {

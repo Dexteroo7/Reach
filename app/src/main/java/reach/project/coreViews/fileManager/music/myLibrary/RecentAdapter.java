@@ -3,6 +3,7 @@ package reach.project.coreViews.fileManager.music.myLibrary;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -17,7 +18,6 @@ import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
-import reach.project.R;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -28,6 +28,8 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
  * Created by dexter on 18/11/15.
  */
 class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> implements MoreQualifier {
+
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
 
     public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
@@ -88,6 +90,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
     @Override
     public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+
+        Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
+
         return new SongItemHolder(itemView, handOverMessage);
     }
 
@@ -99,7 +104,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     @Override
     public void onBindViewHolder(SongItemHolder holder, MusicData item) {
 
-        holder.downButton.setImageResource(R.drawable.icon_play_circle_pink);
+        Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
+
         holder.songName.setText(item.getDisplayName());
         holder.artistName.setText(item.getArtistName());
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
@@ -112,7 +118,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
             final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                    .setResizeOptions(new ResizeOptions(200, 200))
+                    .setResizeOptions(resizeOptions)
                     .build();
 
             final DraweeController controller = Fresco.newDraweeControllerBuilder()

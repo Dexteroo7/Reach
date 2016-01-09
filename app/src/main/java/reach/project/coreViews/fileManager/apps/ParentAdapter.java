@@ -2,11 +2,13 @@ package reach.project.coreViews.fileManager.apps;
 
 import android.content.pm.PackageManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 
@@ -23,10 +25,27 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final HandOverMessage<App> handOverApp;
     private final RecentAdapter recentAdapter;
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
-    public ParentAdapter(HandOverMessage<App> handOverApp) {
+    private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+
+            final Object object = getItem(position);
+            if (object instanceof App)
+                handOverApp.handOverMessage((App) object);
+            else
+                throw new IllegalStateException("Position must correspond with an App");
+        }
+    };
+
+    private final PackageManager packageManager;
+
+    public ParentAdapter(HandOverMessage<App> handOverApp, PackageManager packageManager) {
+
+        this.packageManager = packageManager;
         this.handOverApp = handOverApp;
-        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, R.layout.app_grid_item);
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item);
         setHasStableIds(true);
     }
 
@@ -64,19 +83,14 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
+        Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
+
         switch (viewType) {
 
             case VIEW_TYPE_ALL: {
 
                 return new AppItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.app_list_item, parent, false), position -> {
-
-                    final Object object= getItem(position);
-                    if (object instanceof App)
-                        handOverApp.handOverMessage((App) object);
-                    else
-                        throw new IllegalStateException("Position must correspond with an App");
-                });
+                        .inflate(R.layout.app_list_item, parent, false), handOverMessage);
             }
 
             case VIEW_TYPE_RECENT: {
@@ -91,19 +105,20 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
+        Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
+
         final Object friend = getItem(position);
         if (friend instanceof App) {
 
             final App appExactType = (App) friend;
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
-            final PackageManager packageManager = appItemHolder.appName.getContext().getPackageManager();
 
             appItemHolder.bindPosition(position);
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
                 appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
+            } catch (PackageManager.NameNotFoundException ignored) {
+                appItemHolder.appIcon.setImageDrawable(null);
             }
 
             //use
@@ -112,8 +127,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             horizontalViewHolder.headerText.setText("Recently Installed");
-            horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }
@@ -156,9 +170,9 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         final Object item = getItem(position);
         if (item instanceof App)
-            return ((App)item).packageName.hashCode();
+            return ((App) item).packageName.hashCode();
 
-        return super.getItemId(position);
+        return recentHolderId;
     }
 
     @Override

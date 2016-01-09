@@ -1,7 +1,6 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -17,7 +16,7 @@ class SongItemHolder extends SingleItemViewHolder {
 
     public final TextView songName;
     public final TextView artistName;
-    public final ImageView downButton;
+    public final SimpleDraweeView downButton;
     public final SimpleDraweeView albumArt;
 
     protected SongItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
@@ -26,7 +25,7 @@ class SongItemHolder extends SingleItemViewHolder {
 
         this.songName = (TextView) itemView.findViewById(R.id.songName);
         this.artistName = (TextView) itemView.findViewById(R.id.artistName);
-        this.downButton = (ImageView) itemView.findViewById(R.id.downButton);
+        this.downButton = (SimpleDraweeView) itemView.findViewById(R.id.downButton);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
     }
 }

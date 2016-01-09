@@ -3,6 +3,7 @@ package reach.project.coreViews.fileManager.apps;
 import android.content.pm.PackageManager;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.google.common.collect.Ordering;
@@ -21,8 +22,15 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
  */
 class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
 
-    public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId) {
+    private final PackageManager packageManager;
+
+    public RecentAdapter(List<App> messageList,
+                         HandOverMessage<App> handOverMessage,
+                         PackageManager packageManager,
+                         int resourceId) {
+
         super(messageList, handOverMessage, resourceId);
+        this.packageManager = packageManager;
     }
 
     @Override
@@ -63,6 +71,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     @Override
     public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+
+        Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
+
         return new AppItemHolder(itemView, handOverMessage);
     }
 
@@ -74,13 +85,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
-        final PackageManager packageManager = holder.appName.getContext().getPackageManager();
+        Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
 
         holder.appName.setText(item.applicationName);
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+        } catch (PackageManager.NameNotFoundException ignored) {
+            holder.appIcon.setImageDrawable(null);
         }
     }
 

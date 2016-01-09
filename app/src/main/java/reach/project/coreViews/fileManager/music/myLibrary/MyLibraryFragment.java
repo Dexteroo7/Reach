@@ -188,11 +188,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return Collections.emptyList();
 
         final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-
-            final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
-            latestDownloaded.add(musicData);
-        }
+        while (cursor.moveToNext())
+            latestDownloaded.add(ReachDatabaseHelper.getMusicData(cursor));
 
         cursor.close();
 
@@ -204,7 +201,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
                 MySongsHelper.DISK_LIST,
-                null, null,
+                null, null, //all songs
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
                         MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
 
@@ -212,11 +209,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return Collections.emptyList();
 
         final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-
-            final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
-            latestMyLibrary.add(musicData);
-        }
+        while (cursor.moveToNext())
+            latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));
 
         cursor.close();
 
