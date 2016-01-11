@@ -120,8 +120,10 @@ public class YourProfileActivity extends AppCompatActivity {
             musicCount.setText(numberOfSongs + "");
             appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
-            coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
+            profilePic.setController(MiscUtils.getControllerwithResize(profilePic.getController(),
+                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
+            coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
+                    Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
 
             cursor.close();
         }

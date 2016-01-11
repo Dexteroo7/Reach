@@ -19,9 +19,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.common.base.Optional;
 
@@ -73,7 +73,7 @@ public class AccountCreation extends Fragment {
     @Nullable
     private SplashInterface mListener = null;
     @Nullable
-    private ImageView profilePhotoSelector = null;
+    private SimpleDraweeView profilePhotoSelector = null;
 
     private final ExecutorService profilePhotoService = MiscUtils.getRejectionExecutor();
 
@@ -84,7 +84,7 @@ public class AccountCreation extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_account_creation, container, false);
         final EditText userName = (EditText) rootView.findViewById(R.id.userName);
 
-        profilePhotoSelector = (ImageView) rootView.findViewById(R.id.displayPic);
+        profilePhotoSelector = (SimpleDraweeView) rootView.findViewById(R.id.displayPic);
         profilePhotoSelector.setOnClickListener(imagePicker);
         userName.requestFocus();
 
@@ -111,7 +111,8 @@ public class AccountCreation extends Fragment {
                 Uri uriToDisplay = null;
                 if (!TextUtils.isEmpty(oldData[1]) && !oldData[1].equals("hello_world"))
                     uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldData[1]);
-                profilePhotoSelector.setImageURI(uriToDisplay);
+                profilePhotoSelector.setController(MiscUtils.getControllerwithResize(profilePhotoSelector.getController(),
+                        uriToDisplay, 100, 100));
             }
         } else
             oldImageId = "";
@@ -304,7 +305,8 @@ public class AccountCreation extends Fragment {
 
                         //save profile photo path
                         imageFilePath = file.getPath();
-                        fragment.profilePhotoSelector.setImageURI(Uri.parse("file://" + imageFilePath));
+                        fragment.profilePhotoSelector.setController(MiscUtils.getControllerwithResize(fragment.profilePhotoSelector.getController(),
+                                Uri.parse("file://" + imageFilePath), 100, 100));
                     }
                 }
             });

@@ -100,15 +100,20 @@ public class EditProfileActivity extends AppCompatActivity {
         profile.setOnClickListener(imagePicker);
 
         if (!TextUtils.isEmpty(profilePhotoId) && !profilePhotoId.equals("hello_world"))
-            profile.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + profilePhotoId));
+            profile.setController(MiscUtils.getControllerwithResize(profile.getController(),
+                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + profilePhotoId), 100, 100));
 
         cover = (SimpleDraweeView) findViewById(R.id.coverPic);
         cover.setTag(COVER_PICKER_SELECT);
         cover.setOnClickListener(imagePicker);
+        Uri coverUri;
         if (!TextUtils.isEmpty(coverPhotoId) && !coverPhotoId.equals("hello_world"))
-            cover.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPhotoId));
+            coverUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPhotoId);
         else
-            cover.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
+            coverUri = Uri.parse(MiscUtils.getRandomPic(random));
+
+        cover.setController(MiscUtils.getControllerwithResize(profile.getController(),
+                coverUri, 500, 500));
     }
 
     private final View.OnClickListener imagePicker = view -> {
@@ -223,7 +228,8 @@ public class EditProfileActivity extends AppCompatActivity {
                 } else if (activity.profile != null) {
 
                     toUploadProfilePhoto = file;
-                    activity.profile.setImageURI(Uri.parse("file://" + file.getAbsolutePath()));
+                    activity.profile.setController(MiscUtils.getControllerwithResize(activity.profile.getController(),
+                            Uri.parse("file://" + file.getAbsolutePath()), 100, 100));
                 }
             });
 
@@ -303,7 +309,8 @@ public class EditProfileActivity extends AppCompatActivity {
                 } else if (activity.cover != null) {
 
                     toUploadCoverPhoto = file;
-                    activity.cover.setImageURI(Uri.parse("file://" + file.getAbsolutePath()));
+                    activity.cover.setController(MiscUtils.getControllerwithResize(activity.cover.getController(),
+                            Uri.parse("file://" + file.getAbsolutePath()), 500, 500));
                 }
             });
 

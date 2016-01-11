@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 
 //TODO shift to where required
 public class DialogActivity extends Activity {
@@ -28,7 +29,8 @@ public class DialogActivity extends Activity {
         final int type = getIntent().getIntExtra("type", 0);
 
         final SimpleDraweeView userImageView = (SimpleDraweeView) findViewById(R.id.userImage);
-        userImageView.setImageURI(Uri.parse(StaticData.DROP_BOX_MANAGER));
+        userImageView.setController(MiscUtils.getControllerwithResize(userImageView.getController(),
+                Uri.parse(StaticData.DROP_BOX_MANAGER), 100, 100));
 
         reject.setVisibility(View.GONE);
         accept.setVisibility(View.GONE);

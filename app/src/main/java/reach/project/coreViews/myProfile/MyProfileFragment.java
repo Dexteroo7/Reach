@@ -150,11 +150,13 @@ public class MyProfileFragment extends Fragment {
         new Thread(() -> ((TextView) headerRoot.findViewById(R.id.appCount)).setText(MiscUtils
                 .getInstalledApps(activity.getPackageManager()).size() + "")).start();
 
-        ((SimpleDraweeView) headerRoot.findViewById(R.id.profilePic)).setImageURI(Uri.parse(
-                StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)));
+        SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
+        profilePic.setController(MiscUtils.getControllerwithResize(profilePic.getController(),
+                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)), 100, 100));
 
-        ((SimpleDraweeView) headerRoot.findViewById(R.id.coverPic)).setImageURI(Uri.parse(
-                MiscUtils.getRandomPic(random)));
+        SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
+        coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
+                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
 
         final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 

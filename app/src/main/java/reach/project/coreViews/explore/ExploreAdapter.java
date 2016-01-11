@@ -91,11 +91,13 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
                     if (!TextUtils.isEmpty(userNameAndImageId.second))
-                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
+                        userImage.setController(MiscUtils.getControllerwithResize(userImage.getController(),
+                                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second), 50, 50));
 
                     final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(albumArt))
-                        image.setImageURI(Uri.parse(albumArt));
+                        image.setController(MiscUtils.getControllerwithResize(image.getController(),
+                                Uri.parse(albumArt), 500, 500));
 
                     layout.setTag(POSITION_UNCHANGED);
                     break;
@@ -123,14 +125,16 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                     final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(appIcon))
-                        image.setImageURI(Uri.parse(appIcon));
+                        image.setController(MiscUtils.getControllerwithResize(image.getController(),
+                                Uri.parse(appIcon), 250, 250));
 
                     final String appRating = MiscUtils.get(appViewInfo, AppViewInfo.RATING, "").getAsString();
                     if (!TextUtils.isEmpty(appRating))
                         rating.setRating(Float.parseFloat(appRating));
 
                     if (!TextUtils.isEmpty(userNameAndImageId.second))
-                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
+                        userImage.setController(MiscUtils.getControllerwithResize(userImage.getController(),
+                                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second), 50, 50));
 
 //                container.getRating();
                     layout.setTag(POSITION_UNCHANGED);
@@ -147,7 +151,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                     final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(miscImage))
-                        image.setImageURI(Uri.parse(miscImage));
+                        image.setController(MiscUtils.getControllerwithResize(image.getController(),
+                                Uri.parse(miscImage), 250, 250));
                     break;
             }
         }

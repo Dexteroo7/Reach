@@ -4,6 +4,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.facebook.drawee.view.SimpleDraweeView;
+
 import reach.project.R;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
@@ -14,7 +16,8 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 final class InviteViewHolder extends SingleItemViewHolder {
 
     public final TextView userNameList, userInitials, subTitle;
-    public final ImageView profilePhotoList, listToggle;
+    public final ImageView listToggle;
+    public final SimpleDraweeView profilePhotoList;
 
     protected InviteViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         super(itemView, handOverMessage);
@@ -22,7 +25,7 @@ final class InviteViewHolder extends SingleItemViewHolder {
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);
         this.userInitials = (TextView) itemView.findViewById(R.id.userInitials);
         this.subTitle = (TextView) itemView.findViewById(R.id.listSubTitle);
-        this.profilePhotoList = (ImageView) itemView.findViewById(R.id.profilePhotoList);
+        this.profilePhotoList = (SimpleDraweeView) itemView.findViewById(R.id.profilePhotoList);
         this.listToggle = (ImageView) itemView.findViewById(R.id.listToggle);
     }
 }

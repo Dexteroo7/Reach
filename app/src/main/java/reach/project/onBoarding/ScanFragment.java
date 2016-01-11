@@ -105,11 +105,16 @@ public class ScanFragment extends Fragment {
         userNameTV.setText(userName);
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
-        coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
+        coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
+                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
+        Uri profileUri;
         if (imageFilePath == null)
-            profilePic.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId));
+            profileUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
         else
-            profilePic.setImageURI(Uri.parse("file://" + imageFilePath));
+            profileUri = Uri.parse("file://" + imageFilePath);
+
+        profilePic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
+                profileUri, 100, 100));
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
 
         new SaveUserData((LinearLayout) rootView.findViewById(R.id.scan1),

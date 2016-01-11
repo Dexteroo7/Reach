@@ -190,12 +190,11 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             //first invalidate
-            viewHolder.profilePhotoList.setImageURI(null);
-
-            Uri uriToDisplay = null;
+            //viewHolder.profilePhotoList.setController(null);
 
             if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-                uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
+                viewHolder.profilePhotoList.setController(MiscUtils.getControllerwithResize(viewHolder.profilePhotoList.getController(),
+                        Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
             /*else {
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile01);
@@ -203,8 +202,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
             }*/
 
-            viewHolder.coverPic.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
-            viewHolder.profilePhotoList.setImageURI(uriToDisplay);
+            viewHolder.coverPic.setController(MiscUtils.getControllerwithResize(viewHolder.coverPic.getController(),
+                    Uri.parse(MiscUtils.getRandomPic(random)), 200, 200));
+
             viewHolder.lockIcon.setVisibility(View.GONE);
 
             switch (status) {

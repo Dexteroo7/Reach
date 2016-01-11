@@ -72,6 +72,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
     private static long myServerId = 0;
+    private ExploreAdapter exploreAdapter;
+
 
     public static ExploreFragment newInstance(long userId) {
 
@@ -258,7 +260,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         }
     }
 
-    private final ExploreAdapter exploreAdapter = new ExploreAdapter(this, this);
 
     private final PopupMenu.OnMenuItemClickListener popMenuClick = item -> {
         switch (item.getItemId()) {
@@ -301,6 +302,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 
+        exploreAdapter = new ExploreAdapter(this, this);
         final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
         final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
 
@@ -310,7 +312,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
-        explorePager.setOffscreenPageLimit(1);
+        //explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
         return rootView;

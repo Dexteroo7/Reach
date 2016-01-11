@@ -118,7 +118,7 @@ public class PlayerActivity extends AppCompatActivity {
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.pauseClick);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
         (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "" : currentPlaying.getArtistName());
-        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setImageURI(albumArtUri);
+        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setController(MiscUtils.getControllerwithResize(albumArt.getController(), albumArtUri, 500, 500));
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
         if (currentPlaying != null)
@@ -186,10 +186,13 @@ public class PlayerActivity extends AppCompatActivity {
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(currentPlaying.getAlbumName(),
                 currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true);
         if (albumArt != null && uriOptional != null) {
+            Uri albumUri;
             if (uriOptional.isPresent())
-                albumArt.setImageURI(uriOptional.get());
+                albumUri = uriOptional.get();
             else
-                albumArt.setImageURI(Uri.parse(MiscUtils.getRandomPic(random)));
+                albumUri = Uri.parse(MiscUtils.getRandomPic(random));
+            albumArt.setController(MiscUtils.getControllerwithResize(albumArt.getController(),
+                    albumUri, 500, 500));
         }
     }
 
