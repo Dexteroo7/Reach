@@ -25,7 +25,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
@@ -50,8 +50,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
-
-    private final Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +96,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     @Override
     public void onOpenCodeVerification(String phoneNumber) {
 
-        final String randomCode = (1000 + random.nextInt(10000 - 1000 + 1)) + "";
+        final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
         Log.i("Ayush", randomCode + " code");
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                 R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)

@@ -33,9 +33,9 @@ import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
@@ -69,8 +69,6 @@ public class EditProfileActivity extends AppCompatActivity {
     private SimpleDraweeView profile = null;
     @Nullable
     private SimpleDraweeView cover = null;
-
-    private final Random random = new Random();
 
     private final ExecutorService profileEditor = Executors.newSingleThreadExecutor();
 
@@ -110,7 +108,7 @@ public class EditProfileActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(coverPhotoId) && !coverPhotoId.equals("hello_world"))
             coverUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPhotoId);
         else
-            coverUri = Uri.parse(MiscUtils.getRandomPic(random));
+            coverUri = Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current()));
 
         cover.setController(MiscUtils.getControllerwithResize(profile.getController(),
                 coverUri, 500, 500));

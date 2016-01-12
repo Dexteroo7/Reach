@@ -42,8 +42,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 
@@ -89,8 +89,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         args.putLong("userId", userId);
         return fragment;
     }
-
-    private static final Random ID_GENERATOR = new Random();
 
     static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
         @Override
@@ -361,7 +359,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         notifyDataAvailable();
         if (explorePager != null)
-            explorePager.postDelayed(new ScrollToLast(count), 900L);
+            explorePager.postDelayed(new ScrollToLast(count), 1500L);
     }
 
     @Override
@@ -492,7 +490,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ID_GENERATOR.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
         reachDatabase.setLogicalClock((short) 0);

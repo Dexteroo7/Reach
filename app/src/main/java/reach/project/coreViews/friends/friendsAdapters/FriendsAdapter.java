@@ -13,7 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,7 +36,6 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener, HandOverMessage<Cursor> {
 
     private final HandOverMessage<ClickData> handOverMessage;
-    private final Random random = new Random();
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
         this.handOverMessage = handOverMessage;
@@ -203,7 +202,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }*/
 
             viewHolder.coverPic.setController(MiscUtils.getControllerwithResize(viewHolder.coverPic.getController(),
-                    Uri.parse(MiscUtils.getRandomPic(random)), 200, 200));
+                    Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current())), 200, 200));
 
             viewHolder.lockIcon.setVisibility(View.GONE);
 

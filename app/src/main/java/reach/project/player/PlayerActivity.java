@@ -29,7 +29,7 @@ import org.json.JSONException;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -94,8 +94,6 @@ public class PlayerActivity extends AppCompatActivity {
     private View likeButton = null;
 
     private static long serverId = 0;
-
-    private final Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,7 +188,7 @@ public class PlayerActivity extends AppCompatActivity {
             if (uriOptional.isPresent())
                 albumUri = uriOptional.get();
             else
-                albumUri = Uri.parse(MiscUtils.getRandomPic(random));
+                albumUri = Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current()));
             albumArt.setController(MiscUtils.getControllerwithResize(albumArt.getController(),
                     albumUri, 500, 500));
         }

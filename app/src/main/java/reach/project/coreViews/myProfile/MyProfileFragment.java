@@ -27,7 +27,7 @@ import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
 import java.lang.ref.WeakReference;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -44,8 +44,6 @@ import reach.project.utils.SharedPrefUtils;
 public class MyProfileFragment extends Fragment {
 
     private static WeakReference<MyProfileFragment> reference = null;
-
-    private final Random random = new Random();
 
     public static MyProfileFragment newInstance() {
 
@@ -156,7 +154,7 @@ public class MyProfileFragment extends Fragment {
 
         SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
         coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
+                Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current())), 500, 500));
 
         final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 

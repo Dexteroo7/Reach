@@ -22,8 +22,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
@@ -36,8 +36,6 @@ import reach.project.utils.SharedPrefUtils;
 public class ProfileActivity extends AppCompatActivity {
 
     private static long userId = 0;
-
-    private final Random random = new Random();
 
     private static WeakReference<ProfileActivity> reference = null;
 
@@ -128,7 +126,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
         coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
+                Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current())), 500, 500));
         ((TextView) headerRoot.findViewById(R.id.appCount)).setText(cursor.getInt(4) + "");
 
         final int status = cursor.getInt(3);

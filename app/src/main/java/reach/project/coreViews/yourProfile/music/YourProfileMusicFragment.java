@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
@@ -81,7 +81,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
     private final List<Message> musicData = new ArrayList<>(100);
     private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
-    private final SecureRandom secureRandom = new SecureRandom();
     private final ExecutorService musicUpdaterService = MiscUtils.getRejectionExecutor();
 
     @Nullable
@@ -244,7 +243,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setLength(song.size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(secureRandom.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(song.duration);
         reachDatabase.setLogicalClock((short) 0);

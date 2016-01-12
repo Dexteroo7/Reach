@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AppCompatActivity;
@@ -28,9 +27,9 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
@@ -100,13 +99,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
-    private FragmentManager fragmentManager;
 
     ////////////////////////////////////////private static final
-
-    private static final SecureRandom ID_GENERATOR = new SecureRandom();
-//    private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
-//    private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
 
     @SuppressWarnings("unchecked")
     private static final PagerFragment DOWNLOAD_PAGER = PagerFragment.getNewInstance("Manager",
@@ -209,6 +203,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
+
     private static long serverId = 0;
 
     @Override
@@ -293,7 +288,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
-        fragmentManager = getSupportFragmentManager();
 
         //track app open event
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
@@ -323,7 +317,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
         viewPager.setPagingEnabled(false);
         viewPager.setOffscreenPageLimit(5);
-        viewPager.setAdapter(new FragmentPagerAdapter(fragmentManager) {
+        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
 
@@ -362,11 +356,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         final int selectedTabPosition = tabLayout.getSelectedTabPosition();
         final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
-        if (selectedTab != null) {
+        if (selectedTab != null)
             selectedTab.setCustomView(SELECTED_ICONS[selectedTabPosition]);
-        }
 
         tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
+
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 super.onTabSelected(tab);
@@ -584,7 +578,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ID_GENERATOR.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(duration);
         reachDatabase.setLogicalClock((short) 0);
