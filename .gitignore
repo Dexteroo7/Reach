@@ -13,3 +13,4 @@ settings.gradle
 httptest/*
 gradle/
 k1.jks
+captures/
