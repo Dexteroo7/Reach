@@ -62,6 +62,18 @@ public class ContactsListFragment extends Fragment implements
     private View rootView;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ashish", "ContactsListFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ashish", "ContactsListFragment - onDestroy");
+    }
+
+    @Override
     public void onDestroyView() {
 
         Log.i("Ayush", "Destroying contacts view");
@@ -76,6 +88,7 @@ public class ContactsListFragment extends Fragment implements
 
         //listView.setOnScrollListener(null);
         super.onDestroyView();
+        Log.d("Ashish", "ContactsListFragment - onDestroyView");
     }
 
     @Override
@@ -84,6 +97,7 @@ public class ContactsListFragment extends Fragment implements
                              @Nullable Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        Log.d("Ashish", "ContactsListFragment - onCreateView");
 
         final Activity activity = getActivity();
 

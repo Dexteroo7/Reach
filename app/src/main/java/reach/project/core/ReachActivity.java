@@ -11,9 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -58,7 +56,6 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.ancillaryClasses.SuperInterface;
-import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.PagerFragment;
 
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
@@ -79,14 +76,14 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     public static void openDownloading() {
 
-        MiscUtils.useActivity(reference, activity -> {
+        /*MiscUtils.useActivity(reference, activity -> {
 
             if (activity.viewPager == null)
                 return;
 
             activity.viewPager.setCurrentItem(3, true);
             DOWNLOAD_PAGER.setItem(1);
-        });
+        });*/
     }
 
     ////////////////////////////////////////public static final
@@ -205,8 +202,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return false;
     };
 
-    @Nullable
-    private CustomViewPager viewPager = null;
+    //@Nullable
+    //private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
     private static long serverId = 0;
@@ -219,7 +216,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         if (reference != null)
             reference.clear();
         reference = null;
-        viewPager = null;
+        //viewPager = null;
     }
 
     /*@Override
@@ -320,7 +317,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         ////////////////////////////////////////
 
-        viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
+        /*viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
         viewPager.setPagingEnabled(false);
         viewPager.setOffscreenPageLimit(5);
         viewPager.setAdapter(new FragmentPagerAdapter(fragmentManager) {
@@ -349,11 +346,49 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             public int getCount() {
                 return 5;
             }
-        });
+        });*/
+
+        final ContactsListFragment fragment1 = ContactsListFragment.getInstance();
+        final ExploreFragment fragment3 = ExploreFragment.newInstance(serverId);
+        final MyProfileFragment fragment5 = MyProfileFragment.newInstance();
 
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
-        tabLayout.setupWithViewPager(viewPager);
-        for (int index = 1; index < tabLayout.getTabCount(); index++) {
+        tabLayout.addTab(tabLayout.newTab().setText("1"));
+        tabLayout.addTab(tabLayout.newTab().setText("2"));
+        tabLayout.addTab(tabLayout.newTab().setText("3"));
+        tabLayout.addTab(tabLayout.newTab().setText("4"));
+        tabLayout.addTab(tabLayout.newTab().setText("5"));
+        for (int index = 0; index < tabLayout.getTabCount(); index++) {
+            final TabLayout.Tab tab = tabLayout.getTabAt(index);
+            if (tab != null) {
+                tab.setCustomView(UNSELECTED_ICONS[index]);
+            }
+        }
+        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if(tabLayout.getSelectedTabPosition() == 0){
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment1).commit();
+                }else if(tabLayout.getSelectedTabPosition() == 1){
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
+                }else if(tabLayout.getSelectedTabPosition() == 2){
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment3).commit();
+                }else if(tabLayout.getSelectedTabPosition() == 3){
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, DOWNLOAD_PAGER).commit();
+                }else if(tabLayout.getSelectedTabPosition() == 4){
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment5).commit();
+                }
+            }
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
+        tabLayout.getTabAt(2).select();
+
+        //tabLayout.setupWithViewPager(viewPager);
+        /*for (int index = 1; index < tabLayout.getTabCount(); index++) {
             final TabLayout.Tab tab = tabLayout.getTabAt(index);
             if (tab != null) {
                 tab.setCustomView(UNSELECTED_ICONS[index]);
@@ -387,9 +422,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 tab.setCustomView(null);
                 tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
             }
-        });
+        });*/
 
-        viewPager.setCurrentItem(2);
+        //viewPager.setCurrentItem(2);
 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);
@@ -402,10 +437,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         Log.i("Ayush", "Processing Intent");
 
-        if (intent.getBooleanExtra("firstTime", false)) {
+        /*if (intent.getBooleanExtra("firstTime", false)) {
             if (viewPager != null)
                 viewPager.setCurrentItem(5, false);
-        }
+        }*/
 
 //        if (intent.getBooleanExtra("openNotificationFragment", false))
 //            onOpenNotificationDrawer();

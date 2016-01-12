@@ -297,6 +297,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         myServerId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+        Log.d("Ashish", "ExploreFragment - onCreateView");
 
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
@@ -312,17 +313,30 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
-        //explorePager.setOffscreenPageLimit(1);
+        explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
         return rootView;
     }
 
     public void onDestroyView() {
-
         super.onDestroyView();
+        Log.d("Ashish", "ExploreFragment - onDestroyView");
+
         rootView = null;
         explorePager = null;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ashish", "ExploreFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ashish", "ExploreFragment - onDestroy");
     }
 
     @Override

@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -114,13 +115,32 @@ public class PagerFragment extends Fragment {
     private SuperInterface mListener;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ashish", "PagerFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ashish", "PagerFragment - onDestroy");
+    }
+
+    @Override
+    public void onDestroyView() {
+
+        super.onDestroyView();
+        Log.d("Ashish", "PagerFragment - onDestroyView");
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_pager, container, false);
+        Log.d("Ashish", "PagerFragment - onCreateView");
+
         final PagerSlidingTabStrip tabLayout = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabLayoutPager);
-
-
         final Bundle arguments = getArguments();
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
         String title = arguments.getString("pageTitle");

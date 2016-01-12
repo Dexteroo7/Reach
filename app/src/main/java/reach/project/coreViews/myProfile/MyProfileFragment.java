@@ -111,10 +111,29 @@ public class MyProfileFragment extends Fragment {
         }
     };
 
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d("Ashish", "MyProfileFragment - onDestroyView");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ashish", "MyProfileFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ashish", "MyProfileFragment - onDestroy");
+    }
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.activity_your_profile, container, false);
+        Log.d("Ashish", "MyProfileFragment - onCreateView");
+
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
         final Toolbar toolbar = materialViewPager.getToolbar();
         final Activity activity = getActivity();
