@@ -29,7 +29,6 @@ import org.json.JSONException;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -116,7 +115,7 @@ public class PlayerActivity extends AppCompatActivity {
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.pauseClick);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
         (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "" : currentPlaying.getArtistName());
-        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setController(MiscUtils.getControllerwithResize(albumArt.getController(), albumArtUri, 500, 500));
+        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setController(MiscUtils.getControllerResize(albumArt.getController(), albumArtUri, 500, 500));
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
         if (currentPlaying != null)
@@ -188,8 +187,8 @@ public class PlayerActivity extends AppCompatActivity {
             if (uriOptional.isPresent())
                 albumUri = uriOptional.get();
             else
-                albumUri = Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current()));
-            albumArt.setController(MiscUtils.getControllerwithResize(albumArt.getController(),
+                albumUri = Uri.parse(MiscUtils.getRandomPic());
+            albumArt.setController(MiscUtils.getControllerResize(albumArt.getController(),
                     albumUri, 500, 500));
         }
     }

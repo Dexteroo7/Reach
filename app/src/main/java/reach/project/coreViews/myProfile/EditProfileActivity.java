@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
@@ -98,7 +97,7 @@ public class EditProfileActivity extends AppCompatActivity {
         profile.setOnClickListener(imagePicker);
 
         if (!TextUtils.isEmpty(profilePhotoId) && !profilePhotoId.equals("hello_world"))
-            profile.setController(MiscUtils.getControllerwithResize(profile.getController(),
+            profile.setController(MiscUtils.getControllerResize(profile.getController(),
                     Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + profilePhotoId), 100, 100));
 
         cover = (SimpleDraweeView) findViewById(R.id.coverPic);
@@ -108,9 +107,9 @@ public class EditProfileActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(coverPhotoId) && !coverPhotoId.equals("hello_world"))
             coverUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPhotoId);
         else
-            coverUri = Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current()));
+            coverUri = Uri.parse(MiscUtils.getRandomPic());
 
-        cover.setController(MiscUtils.getControllerwithResize(profile.getController(),
+        cover.setController(MiscUtils.getControllerResize(profile.getController(),
                 coverUri, 500, 500));
     }
 
@@ -226,7 +225,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 } else if (activity.profile != null) {
 
                     toUploadProfilePhoto = file;
-                    activity.profile.setController(MiscUtils.getControllerwithResize(activity.profile.getController(),
+                    activity.profile.setController(MiscUtils.getControllerResize(activity.profile.getController(),
                             Uri.parse("file://" + file.getAbsolutePath()), 100, 100));
                 }
             });
@@ -307,7 +306,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 } else if (activity.cover != null) {
 
                     toUploadCoverPhoto = file;
-                    activity.cover.setController(MiscUtils.getControllerwithResize(activity.cover.getController(),
+                    activity.cover.setController(MiscUtils.getControllerResize(activity.cover.getController(),
                             Uri.parse("file://" + file.getAbsolutePath()), 500, 500));
                 }
             });

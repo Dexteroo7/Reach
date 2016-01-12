@@ -36,7 +36,6 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
-
 public class ContactsListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
 
@@ -119,9 +118,8 @@ public class ContactsListFragment extends Fragment implements
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
         inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        final GridLayoutManager manager = new GridLayoutManager(activity, 2);
 
-        recyclerView.setLayoutManager(manager);
+        recyclerView.setLayoutManager(new GridLayoutManager(activity, 2));
         recyclerView.setAdapter(friendsAdapter = new FriendsAdapter(this));
 
         if (MiscUtils.isOnline(activity))
@@ -129,18 +127,6 @@ public class ContactsListFragment extends Fragment implements
                     null,
                     new WeakReference<>(getActivity().getContentResolver()),
                     serverId);
-
-        manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-            @Override
-            public int getSpanSize(int position) {
-
-                final int itemType = friendsAdapter.getItemViewType(position);
-                if (itemType == FriendsAdapter.VIEW_TYPE_FRIEND_LARGE || itemType == FriendsAdapter.VIEW_TYPE_LOCKED)
-                    return 2;
-                else
-                    return 1;
-            }
-        });
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, null, this);
@@ -153,14 +139,14 @@ public class ContactsListFragment extends Fragment implements
         if (id == StaticData.FRIENDS_VERTICAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
-                    FriendsAdapter.requiredProjection,
+                    FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
                     ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
-                    FriendsAdapter.requiredProjection,
+                    FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
         else

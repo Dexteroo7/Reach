@@ -31,7 +31,7 @@ final class ReachAllContactsAdapter extends ReachCursorAdapter<InviteViewHolder>
         friendsViewHolder.userNameList.setText(cursor.getString(1));
         friendsViewHolder.subTitle.setText(cursor.getString(0));
         friendsViewHolder.userInitials.setText(MiscUtils.generateInitials(cursor.getString(1)));
-        friendsViewHolder.profilePhotoList.setController(MiscUtils.getControllerwithResize(friendsViewHolder.profilePhotoList.getController(),
+        friendsViewHolder.profilePhotoList.setController(MiscUtils.getControllerResize(friendsViewHolder.profilePhotoList.getController(),
                 Uri.withAppendedPath(ContentUris.
                                 withAppendedId(ContactsContract.Contacts.CONTENT_URI, cursor.getLong(2)),
                         ContactsContract.Contacts.Photo.CONTENT_DIRECTORY), 100, 100));

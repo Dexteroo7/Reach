@@ -85,11 +85,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -157,10 +157,6 @@ public enum MiscUtils {
         return (int) (px / Resources.getSystem().getDisplayMetrics().density);
     }
 
-    public static String capitalizeFirst(String string) {
-        return string.substring(0, 1).toUpperCase() + string.substring(1);
-    }
-
     public static String dateFormatter(final long milliSeconds) {
 
         return new SimpleDateFormat("dd-MM-yyyy HH-mm-ss", Locale.getDefault()).format(
@@ -192,14 +188,20 @@ public enum MiscUtils {
             }
     }
 
-    private static String[] randomPics = new String[]{
-            "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240",
-            "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240",
-            "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240"
-    };
+    public static String getRandomPic() {
 
-    public static String getRandomPic(Random random) {
-        return randomPics[random.nextInt(3)];
+        final int option = ThreadLocalRandom.current().nextInt(3);
+        switch (option) {
+
+            case 0:
+                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
+            case 1:
+                return "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240";
+            case 2:
+                return "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240";
+            default:
+                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
+        }
     }
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
@@ -310,12 +312,24 @@ public enum MiscUtils {
         }
     }
 
-    public static AbstractDraweeController getControllerwithResize(DraweeController oldController,
-                                                                   Uri uri, int width, int height) {
+    public static AbstractDraweeController getControllerResize(DraweeController oldController,
+                                                               Uri uri, int width, int height) {
+
         return Fresco.newDraweeControllerBuilder()
                 .setOldController(oldController)
                 .setImageRequest(ImageRequestBuilder.newBuilderWithSource(uri)
                         .setResizeOptions(new ResizeOptions(width, height))
+                        .build())
+                .build();
+    }
+
+    public static AbstractDraweeController getControllerResize(DraweeController oldController,
+                                                               Uri uri, ResizeOptions resizeOptions) {
+
+        return Fresco.newDraweeControllerBuilder()
+                .setOldController(oldController)
+                .setImageRequest(ImageRequestBuilder.newBuilderWithSource(uri)
+                        .setResizeOptions(resizeOptions)
                         .build())
                 .build();
     }

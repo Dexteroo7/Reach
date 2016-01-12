@@ -23,7 +23,6 @@ import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
@@ -121,12 +120,12 @@ public class ProfileActivity extends AppCompatActivity {
         ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + cursor.getString(0).toLowerCase().split(" ")[0]);
         ((TextView) headerRoot.findViewById(R.id.musicCount)).setText(cursor.getInt(1) + "");
         SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
-        profilePic.setController(MiscUtils.getControllerwithResize(profilePic.getController(),
+        profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(2)), 100, 100));
 
         SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current())), 500, 500));
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
         ((TextView) headerRoot.findViewById(R.id.appCount)).setText(cursor.getInt(4) + "");
 
         final int status = cursor.getInt(3);

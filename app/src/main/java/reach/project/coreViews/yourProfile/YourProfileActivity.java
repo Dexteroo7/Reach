@@ -19,8 +19,6 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
@@ -118,10 +116,10 @@ public class YourProfileActivity extends AppCompatActivity {
             musicCount.setText(numberOfSongs + "");
             appCount.setText(numberOfApps + "");
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
-            profilePic.setController(MiscUtils.getControllerwithResize(profilePic.getController(),
+            profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                     Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
-            coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                    Uri.parse(MiscUtils.getRandomPic(ThreadLocalRandom.current())), 500, 500));
+            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 
             cursor.close();
         }

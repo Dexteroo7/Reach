@@ -155,7 +155,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText(" likes " + like.getSongName());
-                viewHolder.profilePhoto.setController(MiscUtils.getControllerwithResize(viewHolder.profilePhoto.getController(),
+                viewHolder.profilePhoto.setController(MiscUtils.getControllerResize(viewHolder.profilePhoto.getController(),
                         Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + like.getImageId()), 100, 100));
                 break;
 
@@ -165,7 +165,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
 
                 viewHolder.userName.setText(push.getHostName());
                 viewHolder.userInitials.setText(MiscUtils.generateInitials(push.getHostName()));
-                viewHolder.profilePhoto.setController(MiscUtils.getControllerwithResize(viewHolder.profilePhoto.getController(),
+                viewHolder.profilePhoto.setController(MiscUtils.getControllerResize(viewHolder.profilePhoto.getController(),
                         Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + push.getImageId()), 100, 100));
 
                 if (accepted.get(notificationBaseLocal.getNotificationId(), false)) {
@@ -262,7 +262,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                 viewHolder.actionBlock.setVisibility(View.GONE);
                 viewHolder.librarayBtn.setVisibility(View.VISIBLE);
                 viewHolder.notifType.setText("added to your friends");
-                viewHolder.profilePhoto.setController(MiscUtils.getControllerwithResize(viewHolder.profilePhoto.getController(),
+                viewHolder.profilePhoto.setController(MiscUtils.getControllerResize(viewHolder.profilePhoto.getController(),
                         Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + becameFriends.getImageId()), 100, 100));
                 break;
 
@@ -281,7 +281,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
                     builder.append("s ");
                 builder.append(" with you");
                 viewHolder.notifType.setText(builder.toString());
-                viewHolder.profilePhoto.setController(MiscUtils.getControllerwithResize(viewHolder.profilePhoto.getController(),
+                viewHolder.profilePhoto.setController(MiscUtils.getControllerResize(viewHolder.profilePhoto.getController(),
                         Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + pushAccepted.getImageId()), 100, 100));
                 break;
         }
