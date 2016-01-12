@@ -13,7 +13,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -41,8 +40,6 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class ContactsListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
 
-    private static long serverId;
-
     private static WeakReference<ContactsListFragment> reference = null;
 
     public static ContactsListFragment getInstance() {
@@ -57,17 +54,36 @@ public class ContactsListFragment extends Fragment implements
         return fragment;
     }
 
-    private final FriendsAdapter friendsAdapter = new FriendsAdapter(this);
+    public static final View.OnClickListener INVITE_LISTENER =
+            view -> view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
 
-    private View rootView;
+    @Nullable
+    private FriendsAdapter friendsAdapter = null;
+    @Nullable
+    private View rootView = null;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ayush", "ContactsListFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ayush", "ContactsListFragment - onDestroy");
+    }
 
     @Override
     public void onDestroyView() {
 
         Log.i("Ayush", "Destroying contacts view");
 
-        friendsAdapter.setHorizontalCursor(null);
-        friendsAdapter.setVerticalCursor(null);
+        if (friendsAdapter != null) {
+
+            friendsAdapter.setHorizontalCursor(null);
+            friendsAdapter.setVerticalCursor(null);
+        }
         getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
         getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
 
@@ -76,6 +92,7 @@ public class ContactsListFragment extends Fragment implements
 
         //listView.setOnScrollListener(null);
         super.onDestroyView();
+        Log.d("Ayush", "ContactsListFragment - onDestroyView");
     }
 
     @Override
@@ -83,15 +100,13 @@ public class ContactsListFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        Log.d("Ayush", "ContactsListFragment - onCreateView");
 
         final Activity activity = getActivity();
-
-                /*if (getArguments().getBoolean("first", false))
-            new InfoDialog().show(getChildFragmentManager(),"info_dialog");*/
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        serverId = SharedPrefUtils.getServerId(sharedPreferences);
+        final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
+        rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.pager_menu);
@@ -102,9 +117,18 @@ public class ContactsListFragment extends Fragment implements
         //gridView.setOnScrollListener(scrollListener);
 
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
-        inviteContainer.setOnClickListener(inviteListener);
+        inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
         final GridLayoutManager manager = new GridLayoutManager(activity, 2);
+
+        recyclerView.setLayoutManager(manager);
+        recyclerView.setAdapter(friendsAdapter = new FriendsAdapter(this));
+
+        if (MiscUtils.isOnline(activity))
+            FireOnce.sendPing(
+                    null,
+                    new WeakReference<>(getActivity().getContentResolver()),
+                    serverId);
 
         manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
@@ -117,14 +141,6 @@ public class ContactsListFragment extends Fragment implements
                     return 1;
             }
         });
-        recyclerView.setLayoutManager(manager);
-        recyclerView.setAdapter(friendsAdapter);
-
-        if (MiscUtils.isOnline(activity))
-            FireOnce.sendPing(
-                    null,
-                    new WeakReference<>(getActivity().getContentResolver()),
-                    serverId);
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, null, this);
@@ -154,7 +170,7 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed())
+        if (data == null || data.isClosed() || friendsAdapter == null)
             return;
 
         if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
@@ -167,6 +183,8 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+        if (friendsAdapter == null)
+            return;
         if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
             friendsAdapter.setVerticalCursor(null);
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
@@ -186,43 +204,9 @@ public class ContactsListFragment extends Fragment implements
             if (clickData.networkType == 5)
                 Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
 
-        } else {
-
+        } else
             ProfileActivity.openProfile(clickData.friendId, getActivity());
-        }
-        /*else if (clickData.status == 3) {
-
-            final AlertDialog alertDialog = new AlertDialog.Builder(rootView.getContext())
-                    .setMessage("Send a friend request to " + clickData.userName + " ?")
-                    .setPositiveButton("Yes", LocalUtils.positiveButton)
-                    .setNegativeButton("No", (dialog, which) -> {
-                        dialog.dismiss();
-                    }).create();
-
-            alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(
-                    //set tag to use when positive button click
-                    new Object[]{clickData.friendId, clickData.status, new WeakReference<>(rootView)}
-            ));
-            alertDialog.show();
-        }*/
     }
-
-    public final SwipeRefreshLayout.OnRefreshListener refreshListener = () -> {
-
-        //TODO
-//            if (MiscUtils.isOnline(activity))
-//                FireOnce.sendPing(
-//                        null,
-//                        new WeakReference<>(getActivity().getContentResolver()),
-//                        serverId);
-    };
-
-    public final View.OnClickListener inviteListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
-        }
-    };
 
     @Nullable
     private SuperInterface mListener;

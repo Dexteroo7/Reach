@@ -38,6 +38,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final HandOverMessage<ClickData> handOverMessage;
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
+
         this.handOverMessage = handOverMessage;
         setHasStableIds(true);
     }
@@ -224,9 +225,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             horizontalViewHolder.headerText.setText("Newly added");
-            horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomLinearLayoutManager(holder.itemView.getContext(),
-                            LinearLayoutManager.HORIZONTAL, false));
+            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
+                horizontalViewHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(horizontalViewHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
             horizontalViewHolder.listOfItems.setAdapter(lockedFriendsAdapter);
         } else {
             //

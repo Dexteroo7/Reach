@@ -5,14 +5,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.google.common.collect.Ordering;
-
+import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import reach.project.apps.App;
 import reach.project.core.ReachActivity;
-import reach.project.core.StaticData;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -20,10 +18,17 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
+class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier, Closeable {
 
-    public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId) {
+    private final PackageManager packageManager;
+
+    public RecentAdapter(List<App> messageList,
+                         HandOverMessage<App> handOverMessage,
+                         int resourceId,
+                         PackageManager packageManager) {
+
         super(messageList, handOverMessage, resourceId);
+        this.packageManager = packageManager;
     }
 
     @Override
@@ -42,15 +47,10 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
      */
     public void updateRecent(List<App> newMessages) {
 
-        getMessageList().removeAll(newMessages);
+        getMessageList().clear();
 
-        final List<App> newSortedList;
         synchronized (getMessageList()) {
-
             getMessageList().addAll(newMessages);
-            newSortedList = Ordering.from(StaticData.byInstallDate).compound(StaticData.byName).greatestOf(getMessageList(), 20);
-            getMessageList().clear();
-            getMessageList().addAll(newSortedList);
         }
 
         notifyDataSetChanged();
@@ -72,8 +72,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
-        final PackageManager packageManager = holder.appName.getContext().getPackageManager();
-
         holder.appName.setText(item.applicationName);
         holder.checkBox.setSelected(ReachActivity.SELECTED_APPS.contains(item));
         try {
@@ -86,5 +84,10 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
         this.adapterWeakReference = adapterWeakReference;
+    }
+
+    @Override
+    public void close() {
+        getMessageList().clear();
     }
 }

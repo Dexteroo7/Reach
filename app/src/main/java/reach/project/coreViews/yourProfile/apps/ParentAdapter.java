@@ -13,9 +13,9 @@ import com.squareup.wire.Message;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 
@@ -31,6 +31,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private final CacheAdapterInterface<T, App> cacheAdapterInterface;
 
     public ParentAdapter(CacheAdapterInterface<T, App> cacheAdapterInterface) {
+
         this.cacheAdapterInterface = cacheAdapterInterface;
         setHasStableIds(true);
     }
@@ -60,7 +61,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final RecentApps recentApp = (RecentApps) message;
             final MoreListHolder listHolder = (MoreListHolder) holder;
             listHolder.headerText.setText(recentApp.title);
-            listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            if (listHolder.listOfItems.getLayoutManager() == null)
+                listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(listHolder.listOfItems.getContext(), 2));
 
             Log.i("Ayush", "Found recent apps with size " + recentApp.appList.size() + " ");
             if (recentApp.appList.size() < 4)
@@ -73,7 +75,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final SmartApps smartApp = (SmartApps) message;
             final MoreListHolder listHolder = (MoreListHolder) holder;
             listHolder.headerText.setText(smartApp.title);
-            listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            if (listHolder.listOfItems.getLayoutManager() == null)
+                listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(listHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
 
             Log.i("Ayush", "Found smart apps with size " + smartApp.appList.size() + " ");
             if (smartApp.appList.size() < 4)

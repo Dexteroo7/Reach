@@ -24,6 +24,8 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+
     public DownloadingAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
     }
@@ -178,7 +180,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //                Log.i("Ayush", "Url found = " + uriOptional.get().toString());
 
             final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                    .setResizeOptions(new ResizeOptions(50, 50))
+                    .setResizeOptions(resizeOptions)
                     .build();
 
             final DraweeController controller = Fresco.newDraweeControllerBuilder()

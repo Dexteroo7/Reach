@@ -44,6 +44,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
         return lhs.compareTo(rhs);
     };
 
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+
     public RecentAdapter(List<PrivacySongItem> recentMusic, HandOverMessage<PrivacySongItem> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
@@ -56,29 +58,34 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
      *
      * @param newMessages the new collection to display
      */
-    public synchronized void updateRecent(List<PrivacySongItem> newMessages) {
+    public void updateRecent(List<PrivacySongItem> newMessages) {
 
         if (newMessages.isEmpty()) {
 
+            synchronized (getMessageList()) {
+                getMessageList().clear();
+            }
             notifyItemRangeRemoved(0, getItemCount());
             final RecyclerView.Adapter adapter;
             if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
                 adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
         }
 
-        final List<PrivacySongItem> recentMusic = getMessageList();
-        //remove to prevent duplicates
-        recentMusic.removeAll(newMessages);
-        //add new items
-        recentMusic.addAll(newMessages);
+        synchronized (getMessageList()) {
 
-        //pick top 20
-        final List<PrivacySongItem> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(recentMusic, 20);
+            //remove to prevent duplicates
+            getMessageList().removeAll(newMessages);
+            //add new items
+            getMessageList().addAll(newMessages);
 
-        //remove all
-        recentMusic.clear();
-        //add top 20
-        recentMusic.addAll(newSortedList);
+            //pick top 20
+            final List<PrivacySongItem> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
+
+            //remove all
+            getMessageList().clear();
+            //add top 20
+            getMessageList().addAll(newSortedList);
+        }
 
         notifyDataSetChanged();
         final RecyclerView.Adapter adapter;
@@ -151,7 +158,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
             final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                    .setResizeOptions(new ResizeOptions(200, 200))
+                    .setResizeOptions(resizeOptions)
                     .build();
 
             final DraweeController controller = Fresco.newDraweeControllerBuilder()

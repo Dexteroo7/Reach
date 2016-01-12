@@ -1,8 +1,6 @@
 package reach.project.coreViews.push.music;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -34,18 +32,16 @@ import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 25/11/15.
  */
-public class MyLibraryFragment extends Fragment implements HandOverMessage,
+public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static WeakReference<MyLibraryFragment> reference = null;
-    private static long userId = 0;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -64,7 +60,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return fragment;
     }
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
+    @Nullable
+    private ParentAdapter parentAdapter = null;
 
     @Nullable
     @Override
@@ -72,13 +69,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final View rootView = inflater.inflate(R.layout.fragment_push_songs, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        final Activity activity = getActivity();
+        final Context context = mRecyclerView.getContext();
 
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+        parentAdapter = new ParentAdapter(this);
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
-
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
 
         getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
@@ -92,20 +87,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.PUSH_DOWNLOADED_LOADER);
         getLoaderManager().destroyLoader(StaticData.PUSH_MY_LIBRARY_LOADER);
-        parentAdapter.close();
+        if (parentAdapter != null)
+            parentAdapter.close();
     }
 
     @Override
-    public void handOverMessage(@Nonnull Object message) {
-
-        final Song song;
-
-        if (message instanceof Cursor)
-            song = MySongsHelper.getSong((Cursor) message);
-        else if (message instanceof Song)
-            song = (Song) message;
-        else
-            throw new IllegalArgumentException("Unknown type handed over");
+    public void handOverMessage(@Nonnull Song song) {
 
         if (ReachActivity.SELECTED_SONG_IDS.get(song.songId, false)) {
 
@@ -119,10 +106,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             Log.i("Ayush", "Adding " + song.displayName);
         }
 
-        if (message instanceof Cursor)
-            parentAdapter.setItemSelected(((Cursor) message).getPosition(), song.songId);
-        else
-            parentAdapter.setItemSelected(-1, song.songId); //position not known
+        if (parentAdapter != null)
+            parentAdapter.setItemSelected(song.songId); //position not known TODO optimize
     }
 
     @Override
@@ -151,7 +136,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed())
+        if (data == null || data.isClosed() || parentAdapter == null)
             return;
 
         final int count = data.getCount();
@@ -175,6 +160,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+        if (parentAdapter == null)
+            return;
+
         if (loader.getId() == StaticData.PUSH_MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
         else if (loader.getId() == StaticData.PUSH_DOWNLOADED_LOADER)
@@ -197,11 +185,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return Collections.emptyList();
 
         final List<Song> latestDownloaded = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-
-            final Song musicData = ReachDatabaseHelper.getSong(cursor);
-            latestDownloaded.add(musicData);
-        }
+        while (cursor.moveToNext())
+            latestDownloaded.add(ReachDatabaseHelper.getSong(cursor));
 
         cursor.close();
 
@@ -222,11 +207,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return Collections.emptyList();
 
         final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-
-            final Song musicData = MySongsHelper.getSong(cursor);
-            latestMyLibrary.add(musicData);
-        }
+        while (cursor.moveToNext())
+            latestMyLibrary.add(MySongsHelper.getSong(cursor));
 
         cursor.close();
 

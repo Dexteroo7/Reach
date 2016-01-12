@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 
@@ -35,17 +36,26 @@ import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
  */
 class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements Closeable {
 
-    private final HandOverMessage<Cursor> handOverCursor;
-    private final RecentAdapter recentAdapter;
-
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
+
+    private final RecentAdapter recentAdapter;
+    private final HandOverMessage<Cursor> handOverCursor;
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
+    private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+            handOverCursor.handOverMessage((Cursor) getItem(position));
+        }
+    };
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
                          HandOverMessage<PrivacySongItem> handOverSong) {
 
         this.handOverCursor = handOverCursor;
-        recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_mylibrary_grid_item);
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_mylibrary_grid_item);
         setHasStableIds(true);
     }
 
@@ -172,7 +182,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
                 final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                        .setResizeOptions(new ResizeOptions(200, 200))
+                        .setResizeOptions(resizeOptions)
                         .build();
 
                 final DraweeController controller = Fresco.newDraweeControllerBuilder()
@@ -190,8 +200,8 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
             horizontalViewHolder.headerText.setText("Recently Added");
-            horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
+                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }
@@ -204,7 +214,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             case VIEW_TYPE_ALL: {
 
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_mylibrary_list_item, parent, false), position -> handOverCursor.handOverMessage((Cursor) getItem(position)));
+                        .inflate(R.layout.song_mylibrary_list_item, parent, false), handOverMessage);
             }
 
             case VIEW_TYPE_RECENT: {
@@ -255,7 +265,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         if (item instanceof Cursor)
             return ((Cursor) item).getLong(1); //song_id || unique_id
         else
-            return item.hashCode();
+            return recentHolderId;
     }
 
     @Override

@@ -80,13 +80,14 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
-    private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
     private final ExecutorService musicUpdaterService = MiscUtils.getRejectionExecutor();
 
     @Nullable
     private Cache fullListCache = null, smartListCache = null, recentMusicCache = null;
     @Nullable
     private View rootView = null;
+    @Nullable
+    private ParentAdapter parentAdapter;
 
     private int lastPosition = 0;
 
@@ -110,6 +111,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         final Activity activity = getActivity();
         //mRecyclerView.setHasFixedSize(true);
 
+        parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
@@ -289,7 +291,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         //notify
         Log.i("Ayush", "Reloading list " + musicData.size());
-        parentAdapter.notifyDataSetChanged();
+        if (parentAdapter != null)
+            parentAdapter.notifyDataSetChanged();
 
         /**
          * If loading has finished request a full injection of smart lists

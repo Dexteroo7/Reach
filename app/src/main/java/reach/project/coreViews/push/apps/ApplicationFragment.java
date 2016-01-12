@@ -1,6 +1,5 @@
 package reach.project.coreViews.push.apps;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -28,7 +27,6 @@ import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -38,7 +36,6 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
     private static WeakReference<ApplicationFragment> reference = null;
-    private static long userId = 0;
 
     public static ApplicationFragment getInstance(String header) {
 
@@ -55,7 +52,9 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         return fragment;
     }
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this);
+    @Nullable
+    private ParentAdapter parentAdapter;
+
     private final ExecutorService applicationsFetcher = MiscUtils.getRejectionExecutor();
 
     public void handOverMessage(@Nonnull App message) {
@@ -68,14 +67,13 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        final Activity activity = getActivity();
+        final Context context = mRecyclerView.getContext();
 
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+        parentAdapter = new ParentAdapter(this, context);
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(applicationsFetcher, activity);
+        new GetApplications().executeOnExecutor(applicationsFetcher, context);
 
         return rootView;
     }
@@ -104,8 +102,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             MiscUtils.useFragment(reference, fragment -> {
 
-                fragment.parentAdapter.updateAllAppCount(pair.first);
-                fragment.parentAdapter.updateRecentApps(pair.second);
+                if (fragment.parentAdapter != null) {
+                    fragment.parentAdapter.updateAllAppCount(pair.first);
+                    fragment.parentAdapter.updateRecentApps(pair.second);
+                }
             });
         }
     }
