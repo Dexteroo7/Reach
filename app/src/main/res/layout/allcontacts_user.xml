@@ -32,7 +32,7 @@
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:layout_marginRight="20dp"
-        android:src="@drawable/add_pink"/>
+        android:src="@drawable/add_friend"/>
     <LinearLayout
         android:layout_toRightOf="@id/profilePhotoContainer"
         android:layout_toLeftOf="@id/listToggle"
