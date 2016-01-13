@@ -52,7 +52,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             if (explore.isDoneForToday()) //done for today
                 layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);
             else //loading
-                layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);
+                layout = layoutInflater.inflate(ExploreLoaderTypes.LOADING.getLayoutResId(), collection, false);
             layout.setTag(POSITION_NONE);
 
         } else {
@@ -146,7 +146,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     button.setTag(position);
 
                     final JsonObject miscViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
-                    button.setText(MiscUtils.get(miscViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
+                    button.setText(MiscUtils.get(miscViewInfo, AppViewInfo.SUB_TITLE).getAsString());
                     title.setText(MiscUtils.get(miscViewInfo, AppViewInfo.TITLE).getAsString());
 
                     final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();

@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 
 import com.squareup.wire.Message;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
@@ -27,6 +29,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private static final byte APP_ITEM_TYPE = 1;
     private static final byte RECENT_LIST_TYPE = 2;
     private static final byte SMART_LIST_TYPE = 3;
+
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long smartHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
 
     private final CacheAdapterInterface<T, App> cacheAdapterInterface;
 
@@ -135,7 +141,15 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
     @Override
     protected long newGetItemId(int position) {
-        return cacheAdapterInterface.getItem(position).hashCode();
+        final Message message = cacheAdapterInterface.getItem(position);
+        if (message instanceof App)
+            return cacheAdapterInterface.getItem(position).hashCode();
+        else if (message instanceof RecentApps)
+            return recentHolderId;
+        else if (message instanceof SmartApps)
+            return smartHolderId;
+        else
+            throw new IllegalArgumentException("Unknown message found in list");
     }
 
     @Override

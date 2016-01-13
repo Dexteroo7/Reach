@@ -22,6 +22,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -212,10 +217,26 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             return Collections.emptyList();
 
         final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
+        final ImagePipeline imagePipeline = Fresco.getImagePipeline();
 
         final List<JsonObject> containers = new ArrayList<>();
-        for (int index = 0; index < receivedData.size(); index++)
-            containers.add(receivedData.get(index).getAsJsonObject());
+        for (int index = 0; index < receivedData.size(); index++) {
+            final JsonObject object = receivedData.get(index).getAsJsonObject();
+            containers.add(object);
+
+            final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
+            final JsonObject viewInfo = MiscUtils.get(object, ExploreJSON.VIEW_INFO).getAsJsonObject();
+            final String image;
+            if (exploreTypes == ExploreTypes.APP)
+                image = MiscUtils.get(viewInfo, ExploreJSON.AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
+            else
+                image = MiscUtils.get(viewInfo, ExploreJSON.AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
+
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
+                    .setResizeOptions(new ResizeOptions(500, 500))
+                    .build();
+            imagePipeline.prefetchToDiskCache(imageRequest, null);
+        }
 
         if (containers.size() > 0)
             MiscUtils.useContextFromFragment(reference, context -> {

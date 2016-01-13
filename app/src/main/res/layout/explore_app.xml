@@ -123,7 +123,7 @@
                 <com.facebook.drawee.view.SimpleDraweeView
                     android:id="@+id/userImage"
                     fresco:roundAsCircle="true"
-                    card_view:placeholderImage="@drawable/default_profile_circle"
+                    fresco:placeholderImage="@drawable/default_profile_circle"
                     android:layout_marginRight="5dp"
                     android:layout_width="25dp"
                     android:layout_height="25dp" />

@@ -64,13 +64,13 @@ public class ContactsListFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("Ayush", "ContactsListFragment - onCreate");
+        Log.d("Ashish", "ContactsListFragment - onCreate");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d("Ayush", "ContactsListFragment - onDestroy");
+        Log.d("Ashish", "ContactsListFragment - onDestroy");
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ContactsListFragment extends Fragment implements
 
         //listView.setOnScrollListener(null);
         super.onDestroyView();
-        Log.d("Ayush", "ContactsListFragment - onDestroyView");
+        Log.d("Ashish", "ContactsListFragment - onDestroyView");
     }
 
     @Override
@@ -99,7 +99,7 @@ public class ContactsListFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        Log.d("Ayush", "ContactsListFragment - onCreateView");
+        Log.d("Ashish", "ContactsListFragment - onCreateView");
 
         final Activity activity = getActivity();
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);

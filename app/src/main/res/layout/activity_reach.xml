@@ -23,9 +23,8 @@
             android:layout_above="@id/mainTabLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <FrameLayout
-                android:id="@+id/container"
-                android:layout_above="@id/mainShadow"
+            <reach.project.utils.viewHelpers.CustomViewPager
+                android:id="@+id/mainViewPager"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
             <View

@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 
@@ -27,6 +28,9 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final HandOverMessage<App> handOverApp;
     private final RecentAdapter recentAdapter;
     private final PackageManager packageManager;
+
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
 
     public ParentAdapter(HandOverMessage<App> handOverApp,
                          Context context) {
@@ -165,7 +169,11 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     @Override
     public long getItemId(int position) {
-        return allAppsList.get(position).packageName.hashCode();
+        final Object item = getItem(position);
+        if (item instanceof App)
+            return allAppsList.get(position).packageName.hashCode();
+        else
+            return recentHolderId;
     }
 
     @Override
