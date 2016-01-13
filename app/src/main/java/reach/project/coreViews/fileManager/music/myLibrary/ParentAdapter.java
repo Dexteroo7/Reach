@@ -1,5 +1,6 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -38,6 +39,9 @@ import reach.project.utils.viewHelpers.MoreListHolder;
  */
 class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
+    public static final byte VIEW_TYPE_RECENT = 0;
+    public static final byte VIEW_TYPE_ALL = 1;
+
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
@@ -56,15 +60,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     };
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<MusicData> handOverSong) {
+                         HandOverMessage<MusicData> handOverSong,
+                         Context context) {
 
         this.handOverCursor = handOverCursor;
-        recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item);
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item);
         setHasStableIds(true);
     }
-
-    public static final byte VIEW_TYPE_RECENT = 0;
-    public static final byte VIEW_TYPE_ALL = 1;
 
     ///////////Data set ops
     @Nullable
@@ -187,8 +189,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
 //            holder.itemView.setBackgroundResource(0);
             horizontalViewHolder.headerText.setText("Recently Added");
-            horizontalViewHolder.listOfItems.setLayoutManager(
-                    new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
+                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }

@@ -16,13 +16,15 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import reach.project.R;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 /**
@@ -34,9 +36,13 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private static final byte RECENT_LIST_TYPE = 2;
     private static final byte SMART_LIST_TYPE = 3;
 
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long smartHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
     private final CacheAdapterInterface<T, Song> cacheAdapterInterface;
 
     public ParentAdapter(CacheAdapterInterface<T, Song> cacheAdapterInterface) {
+
         this.cacheAdapterInterface = cacheAdapterInterface;
         setHasStableIds(true);
     }
@@ -79,7 +85,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
             simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             simpleListHolder.headerText.setText(recentSong.title);
-            simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            if (simpleListHolder.listOfItems.getLayoutManager() == null)
+                simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(simpleListHolder.listOfItems.getContext(), 2));
 
             Log.i("Ayush", "Found recent items with size " + recentSong.songList.size() + " ");
             simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
@@ -90,7 +97,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
             simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
             simpleListHolder.headerText.setText(smartSong.title);
-            simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            if (simpleListHolder.listOfItems.getLayoutManager() == null)
+                simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
             simpleListHolder.listOfItems.setAdapter(new MoreAdapter(smartSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
         }
     }
@@ -144,7 +152,15 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
     @Override
     protected long newGetItemId(int position) {
-        return cacheAdapterInterface.getItem(position).hashCode();
+        final Message message = cacheAdapterInterface.getItem(position);
+        if (message instanceof Song)
+            return cacheAdapterInterface.getItem(position).hashCode();
+        else if (message instanceof RecentSong)
+            return recentHolderId;
+        else if (message instanceof SmartSong)
+            return smartHolderId;
+        else
+            throw new IllegalArgumentException("Unknown message found in list");
     }
 
     @Override

@@ -1,6 +1,5 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -61,7 +60,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return fragment;
     }
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
+    @Nullable
+    private ParentAdapter parentAdapter;
 
     @Nullable
     @Override
@@ -69,12 +69,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        final Activity activity = getActivity();
+        final Context context = mRecyclerView.getContext();
 
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+        parentAdapter = new ParentAdapter(this, this, context);
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
         getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
@@ -89,7 +90,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
-        parentAdapter.close();
+        if (parentAdapter != null)
+            parentAdapter.close();
     }
 
     @Override
@@ -140,7 +142,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed())
+        if (data == null || data.isClosed() || parentAdapter == null)
             return;
 
         final int count = data.getCount();
@@ -166,6 +168,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+
+        if (parentAdapter == null)
+            return;
 
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);

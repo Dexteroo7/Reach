@@ -1,6 +1,6 @@
 package reach.project.coreViews.fileManager.music.downloading;
 
-import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -60,9 +60,9 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        final Activity activity = getActivity();
+        final Context context = mRecyclerView.getContext();
 
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(downloadingAdapter);
 
 //        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);

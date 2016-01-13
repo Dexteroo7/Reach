@@ -111,7 +111,7 @@ public class AccountCreation extends Fragment {
                 Uri uriToDisplay = null;
                 if (!TextUtils.isEmpty(oldData[1]) && !oldData[1].equals("hello_world"))
                     uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldData[1]);
-                profilePhotoSelector.setController(MiscUtils.getControllerwithResize(profilePhotoSelector.getController(),
+                profilePhotoSelector.setController(MiscUtils.getControllerResize(profilePhotoSelector.getController(),
                         uriToDisplay, 100, 100));
             }
         } else
@@ -305,7 +305,7 @@ public class AccountCreation extends Fragment {
 
                         //save profile photo path
                         imageFilePath = file.getPath();
-                        fragment.profilePhotoSelector.setController(MiscUtils.getControllerwithResize(fragment.profilePhotoSelector.getController(),
+                        fragment.profilePhotoSelector.setController(MiscUtils.getControllerResize(fragment.profilePhotoSelector.getController(),
                                 Uri.parse("file://" + imageFilePath), 100, 100));
                     }
                 }

@@ -50,7 +50,7 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
         setHasStableIds(true);
     }
 
-    public ReachCursorAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId, Cursor cursor) {
+    public ReachCursorAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId, @Nullable Cursor cursor) {
 
         this.handOverMessage = handOverMessage;
         this.resourceId = resourceId;

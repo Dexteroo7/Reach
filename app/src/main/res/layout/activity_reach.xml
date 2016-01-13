@@ -25,9 +25,8 @@
             android:layout_height="match_parent">
             <reach.project.utils.viewHelpers.CustomViewPager
                 android:id="@+id/mainViewPager"
-                android:layout_above="@id/mainShadow"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent" />
             <View
                 android:id="@+id/mainShadow"
                 android:layout_gravity="bottom"

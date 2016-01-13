@@ -29,6 +29,8 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
  */
 class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements MoreQualifier {
 
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+
     public RecentAdapter(List<Song> recentMusic, HandOverMessage<Song> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
@@ -60,28 +62,32 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         if (newMessages.isEmpty()) {
 
+            synchronized (getMessageList()) {
+                getMessageList().clear();
+            }
             notifyItemRangeRemoved(0, getItemCount());
             final RecyclerView.Adapter adapter;
             if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
                 adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
         }
 
-        final List<Song> recentMusic = getMessageList();
-        //remove to prevent duplicates
-        recentMusic.removeAll(newMessages);
-        //add new items
-        recentMusic.addAll(newMessages);
+        synchronized (getMessageList()) {
 
-        //pick top 20
-        final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(recentMusic, 20);
+            //remove to prevent duplicates
+            getMessageList().removeAll(newMessages);
+            //add new items
+            getMessageList().addAll(newMessages);
 
-        //remove all
-        recentMusic.clear();
-        //add top 20
-        recentMusic.addAll(newSortedList);
+            //pick top 20
+            final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
+
+            //remove all
+            getMessageList().clear();
+            //add top 20
+            getMessageList().addAll(newSortedList);
+        }
 
         notifyDataSetChanged();
-
         final RecyclerView.Adapter adapter;
         if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
             adapter.notifyDataSetChanged();
@@ -136,7 +142,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
             final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                    .setResizeOptions(new ResizeOptions(200, 200))
+                    .setResizeOptions(resizeOptions)
                     .build();
 
             final DraweeController controller = Fresco.newDraweeControllerBuilder()

@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.InsertContainer;
@@ -60,8 +59,6 @@ public class ScanFragment extends Fragment {
     private static final String IMAGE_ID = "IMAGE_ID";
     private static final String IMAGE_FILE_PATH = "IMAGE_FILE_PATH";
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
-
-    private final Random random = new Random();
 
     @Nullable
     private static WeakReference<ScanFragment> reference = null;
@@ -105,15 +102,15 @@ public class ScanFragment extends Fragment {
         userNameTV.setText(userName);
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
-        coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
         Uri profileUri;
         if (imageFilePath == null)
             profileUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
         else
             profileUri = Uri.parse("file://" + imageFilePath);
 
-        profilePic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
+        profilePic.setController(MiscUtils.getControllerResize(coverPic.getController(),
                 profileUri, 100, 100));
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
 

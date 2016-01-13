@@ -1,11 +1,12 @@
 package reach.project.coreViews.fileManager.apps;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,18 +15,22 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.MoreListHolder;
 
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
-    private final HandOverMessage<App> handOverApp;
-    private final RecentAdapter recentAdapter;
+    private static final byte VIEW_TYPE_RECENT = 0;
+    private static final byte VIEW_TYPE_ALL = 1;
+
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final HandOverMessage<App> handOverApp;
+    private final PackageManager packageManager;
+    private final RecentAdapter recentAdapter;
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
@@ -39,23 +44,19 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     };
 
-    private final PackageManager packageManager;
+    public ParentAdapter(HandOverMessage<App> handOverApp, Context context) {
 
-    public ParentAdapter(HandOverMessage<App> handOverApp, PackageManager packageManager) {
-
-        this.packageManager = packageManager;
+        this.packageManager = context.getPackageManager();
         this.handOverApp = handOverApp;
+
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item);
         setHasStableIds(true);
     }
 
-    private static final byte VIEW_TYPE_RECENT = 0;
-    private static final byte VIEW_TYPE_ALL = 1;
-
     ///////////Data set ops
     private final List<App> allAppsList = new ArrayList<>(100);
+
     private int allAppCount = 0;
-    private int latestTotalCount = 0;
 
     public void updateAllAppCount(List<App> allApps) {
 
@@ -72,18 +73,16 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         recentAdapter.updateRecent(newRecent);
     }
 
-    public void destroy() {
-
+    @Override
+    public void close() {
         allAppsList.clear();
-        notifyItemRangeRemoved(0, latestTotalCount);
+        recentAdapter.close();
     }
     ///////////
 
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
-        Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
 
         switch (viewType) {
 
@@ -105,8 +104,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
-        Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
-
         final Object friend = getItem(position);
         if (friend instanceof App) {
 
@@ -121,13 +118,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 appItemHolder.appIcon.setImageDrawable(null);
             }
 
-            //use
         } else {
 
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             horizontalViewHolder.headerText.setText("Recently Installed");
-            horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
+                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }
@@ -179,6 +176,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public int getItemCount() {
 
         allAppCount = allAppsList.size();
-        return latestTotalCount = allAppCount + 1; //adjust for recent
+        return allAppCount + 1; //adjust for recent
     }
 }

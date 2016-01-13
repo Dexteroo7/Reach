@@ -10,12 +10,14 @@ import android.view.ViewGroup;
 
 import com.squareup.wire.Message;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
-import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
 
@@ -28,9 +30,14 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private static final byte RECENT_LIST_TYPE = 2;
     private static final byte SMART_LIST_TYPE = 3;
 
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long smartHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
+
     private final CacheAdapterInterface<T, App> cacheAdapterInterface;
 
     public ParentAdapter(CacheAdapterInterface<T, App> cacheAdapterInterface) {
+
         this.cacheAdapterInterface = cacheAdapterInterface;
         setHasStableIds(true);
     }
@@ -60,7 +67,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final RecentApps recentApp = (RecentApps) message;
             final MoreListHolder listHolder = (MoreListHolder) holder;
             listHolder.headerText.setText(recentApp.title);
-            listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(holder.itemView.getContext(), 2));
+            if (listHolder.listOfItems.getLayoutManager() == null)
+                listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(listHolder.listOfItems.getContext(), 2));
 
             Log.i("Ayush", "Found recent apps with size " + recentApp.appList.size() + " ");
             if (recentApp.appList.size() < 4)
@@ -73,7 +81,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final SmartApps smartApp = (SmartApps) message;
             final MoreListHolder listHolder = (MoreListHolder) holder;
             listHolder.headerText.setText(smartApp.title);
-            listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false));
+            if (listHolder.listOfItems.getLayoutManager() == null)
+                listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(listHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
 
             Log.i("Ayush", "Found smart apps with size " + smartApp.appList.size() + " ");
             if (smartApp.appList.size() < 4)
@@ -132,7 +141,15 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
     @Override
     protected long newGetItemId(int position) {
-        return cacheAdapterInterface.getItem(position).hashCode();
+        final Message message = cacheAdapterInterface.getItem(position);
+        if (message instanceof App)
+            return cacheAdapterInterface.getItem(position).hashCode();
+        else if (message instanceof RecentApps)
+            return recentHolderId;
+        else if (message instanceof SmartApps)
+            return smartHolderId;
+        else
+            throw new IllegalArgumentException("Unknown message found in list");
     }
 
     @Override

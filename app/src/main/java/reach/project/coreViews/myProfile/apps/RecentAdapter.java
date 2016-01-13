@@ -5,14 +5,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.google.common.collect.Ordering;
-
+import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.core.StaticData;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -20,37 +18,42 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier {
+class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier, Closeable {
 
     private final VisibilityHook visibilityHook;
+    private final PackageManager packageManager;
 
-    public RecentAdapter(List<App> messageList, HandOverMessage<App> handOverMessage, int resourceId, VisibilityHook visibilityHook) {
+    public RecentAdapter(List<App> messageList,
+                         HandOverMessage<App> handOverMessage,
+                         int resourceId,
+                         VisibilityHook visibilityHook,
+                         PackageManager packageManager) {
+
         super(messageList, handOverMessage, resourceId);
+
         this.visibilityHook = visibilityHook;
-        setHasStableIds(true);
+        this.packageManager = packageManager;
     }
 
     @Nullable
-    private WeakReference<RecyclerView.Adapter> moreAdapter = null;
+    private WeakReference<RecyclerView.Adapter> adapterWeakReference = null;
 
     /**
      * MUST CALL FROM UI THREAD
      *
      * @param newMessages the new collection to display
      */
-    public synchronized void updateRecent(List<App> newMessages) {
+    public void updateRecent(List<App> newMessages) {
 
-        final List<App> recentApps = getMessageList();
-        recentApps.removeAll(newMessages);
+        getMessageList().clear();
 
-        final List<App> newSortedList;
-        recentApps.addAll(newMessages);
-        newSortedList = Ordering.from(StaticData.byInstallDate).compound(StaticData.byName).greatestOf(recentApps, 20);
-        recentApps.clear();
-        recentApps.addAll(newSortedList);
+        synchronized (getMessageList()) {
+            getMessageList().addAll(newMessages);
+        }
+
         notifyDataSetChanged();
         final RecyclerView.Adapter adapter;
-        if (moreAdapter != null && (adapter = moreAdapter.get()) != null)
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
             adapter.notifyDataSetChanged();
     }
 
@@ -70,7 +73,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             notifyItemChanged(position);
 
         final RecyclerView.Adapter adapter;
-        if (moreAdapter != null && (adapter = moreAdapter.get()) != null)
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
             adapter.notifyItemChanged(position); //position will be same
     }
 
@@ -96,13 +99,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
 //        Log.i("Ayush", "Re-binding recent " + item.applicationName);
 
-        final PackageManager packageManager = holder.appName.getContext().getPackageManager();
-
         holder.appName.setText(item.applicationName);
         try {
-
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
-
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             holder.appIcon.setImageDrawable(null);
@@ -123,7 +122,12 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     @Override
     public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
-        this.moreAdapter = adapterWeakReference;
+        this.adapterWeakReference = adapterWeakReference;
+    }
+
+    @Override
+    public void close() {
+        getMessageList().clear();
     }
 
     public interface VisibilityHook {

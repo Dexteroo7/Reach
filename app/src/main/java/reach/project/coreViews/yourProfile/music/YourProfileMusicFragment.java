@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
@@ -80,14 +80,14 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     private final List<Message> musicData = new ArrayList<>(100);
-    private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
-    private final SecureRandom secureRandom = new SecureRandom();
     private final ExecutorService musicUpdaterService = MiscUtils.getRejectionExecutor();
 
     @Nullable
     private Cache fullListCache = null, smartListCache = null, recentMusicCache = null;
     @Nullable
     private View rootView = null;
+    @Nullable
+    private ParentAdapter parentAdapter;
 
     private int lastPosition = 0;
 
@@ -111,6 +111,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         final Activity activity = getActivity();
         //mRecyclerView.setHasFixedSize(true);
 
+        parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
@@ -244,7 +245,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setLength(song.size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(secureRandom.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(song.duration);
         reachDatabase.setLogicalClock((short) 0);
@@ -290,7 +291,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         //notify
         Log.i("Ayush", "Reloading list " + musicData.size());
-        parentAdapter.notifyDataSetChanged();
+        if (parentAdapter != null)
+            parentAdapter.notifyDataSetChanged();
 
         /**
          * If loading has finished request a full injection of smart lists

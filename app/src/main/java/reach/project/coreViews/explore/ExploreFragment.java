@@ -22,6 +22,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -42,8 +47,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 
@@ -89,8 +94,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         args.putLong("userId", userId);
         return fragment;
     }
-
-    private static final Random ID_GENERATOR = new Random();
 
     static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
         @Override
@@ -214,10 +217,26 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             return Collections.emptyList();
 
         final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
+        final ImagePipeline imagePipeline = Fresco.getImagePipeline();
 
         final List<JsonObject> containers = new ArrayList<>();
-        for (int index = 0; index < receivedData.size(); index++)
-            containers.add(receivedData.get(index).getAsJsonObject());
+        for (int index = 0; index < receivedData.size(); index++) {
+            final JsonObject object = receivedData.get(index).getAsJsonObject();
+            containers.add(object);
+
+            final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
+            final JsonObject viewInfo = MiscUtils.get(object, ExploreJSON.VIEW_INFO).getAsJsonObject();
+            final String image;
+            if (exploreTypes == ExploreTypes.APP)
+                image = MiscUtils.get(viewInfo, ExploreJSON.AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
+            else
+                image = MiscUtils.get(viewInfo, ExploreJSON.AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
+
+            ImageRequest imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
+                    .setResizeOptions(new ResizeOptions(500, 500))
+                    .build();
+            imagePipeline.prefetchToDiskCache(imageRequest, null);
+        }
 
         if (containers.size() > 0)
             MiscUtils.useContextFromFragment(reference, context -> {
@@ -297,6 +316,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         myServerId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
+        Log.d("Ashish", "ExploreFragment - onCreateView");
 
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
@@ -312,17 +332,30 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
-        //explorePager.setOffscreenPageLimit(1);
+        explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
         return rootView;
     }
 
     public void onDestroyView() {
-
         super.onDestroyView();
+        Log.d("Ashish", "ExploreFragment - onDestroyView");
+
         rootView = null;
         explorePager = null;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ashish", "ExploreFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ashish", "ExploreFragment - onDestroy");
     }
 
     @Override
@@ -361,7 +394,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         notifyDataAvailable();
         if (explorePager != null)
-            explorePager.postDelayed(new ScrollToLast(count), 900L);
+            explorePager.postDelayed(new ScrollToLast(count), 1500L);
     }
 
     @Override
@@ -492,7 +525,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ID_GENERATOR.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
         reachDatabase.setLogicalClock((short) 0);

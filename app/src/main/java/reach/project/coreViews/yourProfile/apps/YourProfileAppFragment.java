@@ -1,5 +1,6 @@
 package reach.project.coreViews.yourProfile.apps;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -67,7 +68,6 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     }
 
     private final List<Message> appData = new ArrayList<>(100);
-    private final ParentAdapter parentAdapter = new ParentAdapter<>(this);
     private final ExecutorService appUpdaterService = MiscUtils.getRejectionExecutor();
 
     @Nullable
@@ -84,7 +84,10 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         fullListCache = smartListCache = recentAppCache = null;
         appData.clear();
     }
-    
+
+    @Nullable
+    private ParentAdapter parentAdapter;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -130,8 +133,9 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        //mRecyclerView.setHasFixedSize(true);
+        final Activity activity = getActivity();
 
+        parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
@@ -216,7 +220,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         //notify
         Log.i("Ayush", "Reloading list " + appData.size());
-        parentAdapter.notifyDataSetChanged();
+        if (parentAdapter != null)
+            parentAdapter.notifyDataSetChanged();
 
         /**
          * If loading has finished request a full injection of smart lists

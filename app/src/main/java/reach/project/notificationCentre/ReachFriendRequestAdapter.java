@@ -72,8 +72,8 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
         final View reject = convertView.findViewById(R.id.rejectBlock);
         final ReceivedRequest receivedRequest = getItem(position);
 
-        profilePhoto.setController(MiscUtils.getControllerwithResize(profilePhoto.getController(),
-                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL +receivedRequest.getImageId()), 100, 100));
+        profilePhoto.setController(MiscUtils.getControllerResize(profilePhoto.getController(),
+                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + receivedRequest.getImageId()), 100, 100));
         userName.setText(receivedRequest.getUserName());
         userInitials.setText(MiscUtils.generateInitials(receivedRequest.getUserName()));
 

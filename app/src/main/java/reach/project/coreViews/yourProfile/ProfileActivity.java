@@ -22,7 +22,6 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.messaging.model.MyString;
@@ -36,8 +35,6 @@ import reach.project.utils.SharedPrefUtils;
 public class ProfileActivity extends AppCompatActivity {
 
     private static long userId = 0;
-
-    private final Random random = new Random();
 
     private static WeakReference<ProfileActivity> reference = null;
 
@@ -123,12 +120,12 @@ public class ProfileActivity extends AppCompatActivity {
         ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + cursor.getString(0).toLowerCase().split(" ")[0]);
         ((TextView) headerRoot.findViewById(R.id.musicCount)).setText(cursor.getInt(1) + "");
         SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
-        profilePic.setController(MiscUtils.getControllerwithResize(profilePic.getController(),
+        profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(2)), 100, 100));
 
         SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
         ((TextView) headerRoot.findViewById(R.id.appCount)).setText(cursor.getInt(4) + "");
 
         final int status = cursor.getInt(3);

@@ -1,6 +1,5 @@
 package reach.project.coreViews.fileManager.apps;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -29,7 +28,6 @@ import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -40,7 +38,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     @Nullable
     private static WeakReference<ApplicationFragment> reference = null;
-    private static long userId = 0;
 
     public static ApplicationFragment getInstance(String header) {
 
@@ -58,7 +55,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     }
 
     @Nullable
-    private ParentAdapter parentAdapter;
+    private ParentAdapter parentAdapter = null;
+
     private final ExecutorService applicationsFetcher = Executors.newSingleThreadExecutor();
 
     public void handOverMessage(@Nonnull App message) {
@@ -71,18 +69,23 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        final Activity activity = getActivity();
+        final Context context = mRecyclerView.getContext();
 
-        parentAdapter = new ParentAdapter(this, activity.getPackageManager());
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
+        parentAdapter = new ParentAdapter(this, context);
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
-
-        new GetApplications().executeOnExecutor(applicationsFetcher, activity);
+        new GetApplications().executeOnExecutor(applicationsFetcher, context);
 
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView() {
+
+        super.onDestroyView();
+        if (parentAdapter != null)
+            parentAdapter.close();
     }
 
     private static final class GetApplications extends AsyncTask<Context, Void, Pair<List<App>, List<App>>> {

@@ -70,7 +70,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return fragment;
     }
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this, this);
+    @Nullable
+    private ParentAdapter parentAdapter;
     //handle 2 at a time
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
@@ -82,6 +83,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
+        parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
@@ -101,7 +103,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.PRIVACY_DOWNLOADED_LOADER);
         getLoaderManager().destroyLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER);
-        parentAdapter.close();
+        if (parentAdapter != null)
+            parentAdapter.close();
     }
 
     @Override
@@ -159,7 +162,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed())
+        if (data == null || data.isClosed() || parentAdapter == null)
             return;
 
         final int count = data.getCount();
@@ -186,6 +189,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+        if (parentAdapter == null)
+            return;
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
         else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
@@ -373,7 +378,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         //flip in recent list
         MiscUtils.runOnUiThreadFragment(reference, (MyLibraryFragment fragment) -> {
-            fragment.parentAdapter.updateVisibility(songId, visibility);
+            if (fragment.parentAdapter != null)
+                fragment.parentAdapter.updateVisibility(songId, visibility);
         });
 
         Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);

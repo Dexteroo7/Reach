@@ -29,7 +29,7 @@ public class DialogActivity extends Activity {
         final int type = getIntent().getIntExtra("type", 0);
 
         final SimpleDraweeView userImageView = (SimpleDraweeView) findViewById(R.id.userImage);
-        userImageView.setController(MiscUtils.getControllerwithResize(userImageView.getController(),
+        userImageView.setController(MiscUtils.getControllerResize(userImageView.getController(),
                 Uri.parse(StaticData.DROP_BOX_MANAGER), 100, 100));
 
         reject.setVisibility(View.GONE);

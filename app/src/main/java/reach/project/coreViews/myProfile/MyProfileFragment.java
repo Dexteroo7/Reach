@@ -27,7 +27,6 @@ import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
 import java.lang.ref.WeakReference;
-import java.util.Random;
 
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -44,8 +43,6 @@ import reach.project.utils.SharedPrefUtils;
 public class MyProfileFragment extends Fragment {
 
     private static WeakReference<MyProfileFragment> reference = null;
-
-    private final Random random = new Random();
 
     public static MyProfileFragment newInstance() {
 
@@ -111,10 +108,29 @@ public class MyProfileFragment extends Fragment {
         }
     };
 
+    public void onDestroyView() {
+        super.onDestroyView();
+        Log.d("Ashish", "MyProfileFragment - onDestroyView");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("Ashish", "MyProfileFragment - onCreate");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d("Ashish", "MyProfileFragment - onDestroy");
+    }
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.activity_your_profile, container, false);
+        Log.d("Ashish", "MyProfileFragment - onCreateView");
+
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
         final Toolbar toolbar = materialViewPager.getToolbar();
         final Activity activity = getActivity();
@@ -147,16 +163,16 @@ public class MyProfileFragment extends Fragment {
         ((TextView) headerRoot.findViewById(R.id.musicCount)).setText(songCount + "");
         ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + userName.toLowerCase().split(" ")[0]);
 
-        new Thread(() -> ((TextView) headerRoot.findViewById(R.id.appCount)).setText(MiscUtils
-                .getInstalledApps(activity.getPackageManager()).size() + "")).start();
+//        new Thread(() -> ((TextView) headerRoot.findViewById(R.id.appCount)).setText(MiscUtils
+//                .getInstalledApps(activity.getPackageManager()).size() + "")).start();
 
-        SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
-        profilePic.setController(MiscUtils.getControllerwithResize(profilePic.getController(),
+        final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
+        profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)), 100, 100));
 
-        SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setController(MiscUtils.getControllerwithResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic(random)), 500, 500));
+        final SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 
         final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 

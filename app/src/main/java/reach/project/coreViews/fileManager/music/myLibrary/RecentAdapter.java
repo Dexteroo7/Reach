@@ -44,6 +44,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     };
 
     private final Comparator<MusicData> SECONDARY = (left, right) -> {
+
         final String lhs = left == null ? "" : left.getDisplayName();
         final String rhs = right == null ? "" : right.getDisplayName();
 
@@ -62,25 +63,30 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         if (newMessages.isEmpty()) {
 
+            synchronized (getMessageList()) {
+                getMessageList().clear();
+            }
             notifyItemRangeRemoved(0, getItemCount());
             final RecyclerView.Adapter adapter;
             if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
                 adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
         }
 
-        final List<MusicData> recentMusic = getMessageList();
-        //remove to prevent duplicates
-        recentMusic.removeAll(newMessages);
-        //add new items
-        recentMusic.addAll(newMessages);
+        synchronized (getMessageList()) {
 
-        //pick top 20
-        final List<MusicData> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(recentMusic, 20);
+            //remove to prevent duplicates
+            getMessageList().removeAll(newMessages);
+            //add new items
+            getMessageList().addAll(newMessages);
 
-        //remove all
-        recentMusic.clear();
-        //add top 20
-        recentMusic.addAll(newSortedList);
+            //pick top 20
+            final List<MusicData> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
+
+            //remove all
+            getMessageList().clear();
+            //add top 20
+            getMessageList().addAll(newSortedList);
+        }
 
         notifyDataSetChanged();
         final RecyclerView.Adapter adapter;

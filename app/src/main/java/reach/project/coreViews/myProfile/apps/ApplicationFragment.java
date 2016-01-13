@@ -65,14 +65,15 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     @Nullable
     private SharedPreferences preferences = null;
+    @Nullable
+    private ParentAdapter parentAdapter;
 
-    private final ParentAdapter parentAdapter = new ParentAdapter(this);
     //handle 2 at a time
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
     public void handOverMessage(@Nonnull App message) {
 
-        if (preferences == null)
+        if (preferences == null || parentAdapter == null)
             return;
 
         final String packageName = message.packageName;
@@ -100,6 +101,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
+        parentAdapter = new ParentAdapter(this, activity);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
@@ -138,8 +140,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             MiscUtils.useFragment(reference, fragment -> {
 
-                fragment.parentAdapter.updateAllApps(pair.first);
-                fragment.parentAdapter.updateRecentApps(pair.second);
+                if (fragment.parentAdapter != null) {
+                    fragment.parentAdapter.updateAllApps(pair.first);
+                    fragment.parentAdapter.updateRecentApps(pair.second);
+                }
             });
 
         }
@@ -207,8 +211,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
                     //notify that visibility has changed
                     Log.i("Ayush", "Server update failed for app");
-                    fragment.parentAdapter.visibilityChanged(null);
-                    Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+                    if (fragment.parentAdapter != null) {
+                        fragment.parentAdapter.visibilityChanged(null);
+                        Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+                    }
                 });
         }
     }

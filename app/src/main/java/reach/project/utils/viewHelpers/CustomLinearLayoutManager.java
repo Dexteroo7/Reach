@@ -19,11 +19,12 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
         super(context, orientation, reverseLayout);
     }
 
-    private int[] mMeasuredDimension = new int[2];
+    private final int[] mMeasuredDimension = new int[2];
 
     @Override
     public void onMeasure(RecyclerView.Recycler recycler, RecyclerView.State state,
                           int widthSpec, int heightSpec) {
+
         final int widthMode = View.MeasureSpec.getMode(widthSpec);
         final int heightMode = View.MeasureSpec.getMode(heightSpec);
         final int widthSize = View.MeasureSpec.getSize(widthSpec);
@@ -38,6 +39,7 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
         int height = mMeasuredDimension[1];
 
         switch (widthMode) {
+
             case View.MeasureSpec.EXACTLY:
             case View.MeasureSpec.AT_MOST:
                 width = widthSize;
@@ -46,6 +48,7 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
         }
 
         switch (heightMode) {
+
             case View.MeasureSpec.EXACTLY:
             case View.MeasureSpec.AT_MOST:
                 height = heightSize;
@@ -59,7 +62,7 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
     private void measureScrapChild(RecyclerView.Recycler recycler, int position, int widthSpec,
                                    int heightSpec, int[] measuredDimension) {
 
-        View view;
+        final View view;
         try {
             view = recycler.getViewForPosition(position);
         } catch (IndexOutOfBoundsException | NullPointerException ignored) {
@@ -67,11 +70,11 @@ public class CustomLinearLayoutManager extends LinearLayoutManager {
         }
 
         if (view != null) {
-            RecyclerView.LayoutParams p = (RecyclerView.LayoutParams) view.getLayoutParams();
-            int childWidthSpec = ViewGroup.getChildMeasureSpec(widthSpec,
-                    getPaddingLeft() + getPaddingRight(), p.width);
-            int childHeightSpec = ViewGroup.getChildMeasureSpec(heightSpec,
-                    getPaddingTop() + getPaddingBottom(), p.height);
+
+            final RecyclerView.LayoutParams layoutParams = (RecyclerView.LayoutParams) view.getLayoutParams();
+            final int childWidthSpec = ViewGroup.getChildMeasureSpec(widthSpec, getPaddingLeft() + getPaddingRight(), layoutParams.width);
+            final int childHeightSpec = ViewGroup.getChildMeasureSpec(heightSpec, getPaddingTop() + getPaddingBottom(), layoutParams.height);
+
             view.measure(childWidthSpec, childHeightSpec);
             measuredDimension[0] = view.getMeasuredWidth();
             measuredDimension[1] = view.getMeasuredHeight();
