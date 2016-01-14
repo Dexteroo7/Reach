@@ -22,6 +22,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.common.ResizeOptions;
+import com.facebook.imagepipeline.core.ImagePipeline;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -123,6 +128,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             .initialCapacity(10)
             .build(PAIR_CACHE_LOADER);
 
+    static final ResizeOptions FULL_IMAGE_SIZE = new ResizeOptions(450, 450);
+    static final ResizeOptions SMALL_IMAGE_SIZE = new ResizeOptions(200, 200);
+
     private static final ViewPager.PageTransformer PAGE_TRANSFORMER = (page, position) -> {
 
         if (position <= 1) {
@@ -210,10 +218,48 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             return Collections.emptyList();
 
         final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
+        final ImagePipeline imagePipeline = Fresco.getImagePipeline();
 
         final List<JsonObject> containers = new ArrayList<>();
-        for (int index = 0; index < receivedData.size(); index++)
-            containers.add(receivedData.get(index).getAsJsonObject());
+        for (int index = 0; index < receivedData.size(); index++) {
+
+            final JsonObject object = receivedData.get(index).getAsJsonObject();
+            containers.add(object);
+
+            final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
+            final JsonObject viewInfo = MiscUtils.get(object, ExploreJSON.VIEW_INFO).getAsJsonObject();
+            final ImageRequest imageRequest;
+            final String image;
+
+            switch (exploreTypes) {
+
+                case MUSIC:
+
+                    image = MiscUtils.get(viewInfo, ExploreJSON.MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                    imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
+                            .setResizeOptions(FULL_IMAGE_SIZE)
+                            .build();
+                    break;
+                case APP:
+
+                    image = MiscUtils.get(viewInfo, ExploreJSON.AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
+                    imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
+                            .setResizeOptions(SMALL_IMAGE_SIZE)
+                            .build();
+                    break;
+                case MISC:
+
+                    image = MiscUtils.get(viewInfo, ExploreJSON.MiscViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                    imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
+                            .setResizeOptions(SMALL_IMAGE_SIZE)
+                            .build();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unexpected type in explore" + exploreTypes.getName());
+            }
+
+            imagePipeline.prefetchToDiskCache(imageRequest, null);
+        }
 
         if (containers.size() > 0)
             MiscUtils.useContextFromFragment(reference, context -> {
@@ -501,10 +547,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onDetach() {
 
         super.onDetach();
+        Log.d("Ashish", "ExploreFragment - onDetach");
         mListener = null;
-        if (buffer != null)
+        if (buffer != null) {
             buffer.close();
-        buffer = null;
+            buffer = null;
+        }
     }
 
     private static final class ScrollToLast implements Runnable {

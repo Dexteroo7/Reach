@@ -61,17 +61,17 @@ public class ContactsListFragment extends Fragment implements
     @Nullable
     private View rootView = null;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.d("Ayush", "ContactsListFragment - onCreate");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d("Ayush", "ContactsListFragment - onDestroy");
-    }
+//    @Override
+//    public void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        Log.d("Ashish", "ContactsListFragment - onCreate");
+//    }
+//
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        Log.d("Ashish", "ContactsListFragment - onDestroy");
+//    }
 
     @Override
     public void onDestroyView() {
@@ -83,15 +83,12 @@ public class ContactsListFragment extends Fragment implements
             friendsAdapter.setHorizontalCursor(null);
             friendsAdapter.setVerticalCursor(null);
         }
+
+        friendsAdapter = null;
         getLoaderManager().destroyLoader(StaticData.FRIENDS_VERTICAL_LOADER);
         getLoaderManager().destroyLoader(StaticData.FRIENDS_HORIZONTAL_LOADER);
 
-//        if (inviteAdapter != null)
-//            inviteAdapter.cleanUp();
-
-        //listView.setOnScrollListener(null);
         super.onDestroyView();
-        Log.d("Ayush", "ContactsListFragment - onDestroyView");
     }
 
     @Override
@@ -99,7 +96,7 @@ public class ContactsListFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        Log.d("Ayush", "ContactsListFragment - onCreateView");
+        Log.d("Ashish", "ContactsListFragment - onCreateView");
 
         final Activity activity = getActivity();
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -142,7 +139,7 @@ public class ContactsListFragment extends Fragment implements
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
+                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_LAST_SEEN + " DESC");
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,

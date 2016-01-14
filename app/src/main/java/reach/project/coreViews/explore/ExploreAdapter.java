@@ -53,7 +53,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             if (explore.isDoneForToday()) //done for today
                 layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);
             else //loading
-                layout = layoutInflater.inflate(ExploreLoaderTypes.DONE_FOR_TODAY.getLayoutResId(), collection, false);
+                layout = layoutInflater.inflate(ExploreLoaderTypes.LOADING.getLayoutResId(), collection, false);
             layout.setTag(POSITION_NONE);
 
         } else {
@@ -92,13 +92,12 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
                     if (!TextUtils.isEmpty(userNameAndImageId.second))
-                        userImage.setController(MiscUtils.getControllerResize(userImage.getController(),
-                                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second), 50, 50));
+                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
 
                     final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(albumArt))
                         image.setController(MiscUtils.getControllerResize(image.getController(),
-                                Uri.parse(albumArt), 500, 500));
+                                Uri.parse(albumArt), ExploreFragment.FULL_IMAGE_SIZE));
 
                     layout.setTag(POSITION_UNCHANGED);
                     break;
@@ -127,15 +126,14 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(appIcon))
                         image.setController(MiscUtils.getControllerResize(image.getController(),
-                                Uri.parse(appIcon), 250, 250));
+                                Uri.parse(appIcon), ExploreFragment.FULL_IMAGE_SIZE));
 
                     final String appRating = MiscUtils.get(appViewInfo, AppViewInfo.RATING, "").getAsString();
                     if (!TextUtils.isEmpty(appRating))
                         rating.setRating(Float.parseFloat(appRating));
 
                     if (!TextUtils.isEmpty(userNameAndImageId.second))
-                        userImage.setController(MiscUtils.getControllerResize(userImage.getController(),
-                                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second), 50, 50));
+                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
 
 //                container.getRating();
                     layout.setTag(POSITION_UNCHANGED);
@@ -147,13 +145,13 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     button.setTag(position);
 
                     final JsonObject miscViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
-                    button.setText(MiscUtils.get(miscViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
+                    button.setText(MiscUtils.get(miscViewInfo, AppViewInfo.SUB_TITLE).getAsString());
                     title.setText(MiscUtils.get(miscViewInfo, AppViewInfo.TITLE).getAsString());
 
                     final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(miscImage))
                         image.setController(MiscUtils.getControllerResize(image.getController(),
-                                Uri.parse(miscImage), 250, 250));
+                                Uri.parse(miscImage), ExploreFragment.SMALL_IMAGE_SIZE));
                     break;
             }
         }

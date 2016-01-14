@@ -1,6 +1,7 @@
 package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -108,11 +109,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         Log.i("Ayush", "Creating view holder " + getClass().getName());
 
+        final Context context = parent.getContext();
+
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
 
-                return new FriendsViewHolder(LayoutInflater.from(parent.getContext())
+                return new FriendsViewHolder(LayoutInflater.from(context)
                         .inflate(R.layout.myreach_item, parent, false), clickDataHandOver);
             }
 
@@ -121,9 +124,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             case VIEW_TYPE_INVITE:
-                return new SingleItemViewHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.myreach_invite, parent, false), position -> parent.getContext().startActivity(new Intent(parent.getContext(),
-                        InviteActivity.class)));
+                return new SingleItemViewHolder(LayoutInflater.from(context)
+                        .inflate(R.layout.myreach_invite, parent, false), position -> context.startActivity(new Intent(context, InviteActivity.class)));
 
             default:
                 return null;

@@ -196,8 +196,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return false;
     };
 
-    //@Nullable
-    //private CustomViewPager viewPager = null;
+    //    @Nullable
+//    private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
 
@@ -313,7 +313,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         /*viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
         viewPager.setPagingEnabled(false);
-        viewPager.setOffscreenPageLimit(5);
+        viewPager.setOffscreenPageLimit(4);
         viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
@@ -360,27 +360,32 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
 
-                if(tabLayout.getSelectedTabPosition() == 0)
+                if (tabLayout.getSelectedTabPosition() == 0)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, ContactsListFragment.getInstance()).commit();
-                if(tabLayout.getSelectedTabPosition() == 1)
+                else if (tabLayout.getSelectedTabPosition() == 1)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
-                else if(tabLayout.getSelectedTabPosition() == 2)
+                else if (tabLayout.getSelectedTabPosition() == 2)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, ExploreFragment.newInstance(serverId)).commit();
                 else if (tabLayout.getSelectedTabPosition() == 3)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, DOWNLOAD_PAGER).commit();
-                else if(tabLayout.getSelectedTabPosition() == 4)
+                else if (tabLayout.getSelectedTabPosition() == 4)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, MyProfileFragment.newInstance()).commit();
             }
+
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
         });
 
         tabLayout.getTabAt(2).select();
 
-        //tabLayout.setupWithViewPager(viewPager);
-        /*for (int index = 1; index < tabLayout.getTabCount(); index++) {
+        /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+        tabLayout.setupWithViewPager(viewPager);
+        for (int index = 1; index < tabLayout.getTabCount(); index++) {
             final TabLayout.Tab tab = tabLayout.getTabAt(index);
             if (tab != null) {
                 tab.setCustomView(UNSELECTED_ICONS[index]);
@@ -414,9 +419,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 tab.setCustomView(null);
                 tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
             }
-        });*/
+        });
 
-        //viewPager.setCurrentItem(2);
+        viewPager.setCurrentItem(2);*/
 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);

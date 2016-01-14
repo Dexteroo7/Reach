@@ -15,22 +15,27 @@
         card_view:cardUseCompatPadding="true"
         card_view:cardElevation="4dp"
         card_view:cardCornerRadius="2dp">
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <RelativeLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
             android:orientation="vertical"
-            android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/image"
-                fresco:placeholderImage="@drawable/icon_reach_magnet_pink"
-                android:layout_width="100dp"
-                android:layout_height="100dp" />
+                fresco:placeholderImage="@drawable/logo_latest"
+                android:layout_marginTop="60dp"
+                android:layout_centerHorizontal="true"
+                android:layout_width="180dp"
+                android:layout_height="180dp" />
             <TextView
                 android:id="@+id/title"
                 android:text="Text"
+                android:layout_below="@id/image"
+                android:layout_marginTop="30dp"
                 android:gravity="center"
+                android:layout_centerHorizontal="true"
                 android:textSize="16sp"
-                android:layout_margin="40dp"
+                android:textColor="@color/reach_color"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <Button
@@ -39,9 +44,13 @@
                 android:textColor="#fff"
                 android:background="@color/reach_color"
                 android:minWidth="100dp"
+                android:layout_marginBottom="60dp"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="bottom"
                 android:textAllCaps="false"
                 android:layout_width="wrap_content"
                 android:layout_height="30dp" />
-        </LinearLayout>
+        </RelativeLayout>
     </android.support.v7.widget.CardView>
 </FrameLayout>
