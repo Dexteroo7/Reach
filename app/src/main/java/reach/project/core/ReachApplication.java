@@ -138,6 +138,8 @@ public class ReachApplication extends Application {
         //initialize fresco
         final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
                 .setDownsampleEnabled(true)
+                .setDecodeFileDescriptorEnabled(true)
+                .setDecodeMemoryFileEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
                 .build();
 

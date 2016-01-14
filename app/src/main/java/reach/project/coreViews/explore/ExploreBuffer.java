@@ -58,7 +58,7 @@ class ExploreBuffer<T> implements Closeable {
         this.explorationCallbacks = explorationCallbacks;
         this.cacheDirectory = cacheDirectory;
         //initialize with data from local cache
-        new FetchFromCache<>().executeOnExecutor(executorService, cacheDirectory);
+        new FetchFromCache<>().executeOnExecutor(storyFetchingService, cacheDirectory);
     }
 
     private final File cacheDirectory;
@@ -80,7 +80,10 @@ class ExploreBuffer<T> implements Closeable {
             .build();
 
     //an executor for getting stories from server
-    private final ExecutorService executorService = MiscUtils.getRejectionExecutor(factory);
+    private final ExecutorService storyFetchingService = MiscUtils.getRejectionExecutor(factory);
+
+    //an executor for caching stories
+    private final ExecutorService storyCachingService = MiscUtils.getRejectionExecutor(factory);
 
     /**
      * Map index to buffer position.
@@ -94,7 +97,7 @@ class ExploreBuffer<T> implements Closeable {
 
         //if reaching end of story and are not done yet
         if (position > currentSize - 3 && !isDoneForToday.get())
-            new FetchNextBatch<>().executeOnExecutor(executorService, explorationCallbacks.fetchNextBatch());
+            new FetchNextBatch<>().executeOnExecutor(storyFetchingService, explorationCallbacks.fetchNextBatch());
 
         return storyBuffer.get(position);
     }
@@ -108,7 +111,7 @@ class ExploreBuffer<T> implements Closeable {
 
         final int currentSize = storyBuffer.size();
         if (currentSize == 0)
-            new FetchNextBatch<>().executeOnExecutor(executorService, explorationCallbacks.fetchNextBatch());
+            new FetchNextBatch<>().executeOnExecutor(storyFetchingService, explorationCallbacks.fetchNextBatch());
         return currentSize;
     }
 
@@ -120,23 +123,27 @@ class ExploreBuffer<T> implements Closeable {
     @Override
     public void close() {
 
-        final int size = storyBuffer.size();
-        if (size > 10) //cache last 10 items
-            new Thread(new SaveExplore<>(storyBuffer.subList(size - 10, size), cacheDirectory)).start();
-        else
-            new Thread(new SaveExplore<>(storyBuffer, cacheDirectory)).start();
-        executorService.shutdown();
+        storyCachingService.submit(new SaveExplore<>(storyBuffer, cacheDirectory));
+        storyFetchingService.shutdownNow();
+        storyCachingService.shutdown(); //wait for cache to happen
     }
 
     //utility to cache last few stories before going away
     private static final class SaveExplore<T> implements Runnable {
 
+        private final List<T> fullList;
         private final List<T> storiesToSave;
         private final File cacheDirectory;
 
-        private SaveExplore(List<T> storiesToSave, File cacheDirectory) {
+        private SaveExplore(List<T> fullList, File cacheDirectory) {
 
-            this.storiesToSave = storiesToSave;
+            final int size = fullList.size();
+
+            this.fullList = fullList;
+            if (size > 10)
+                this.storiesToSave = fullList.subList(size - 10, size);
+            else
+                this.storiesToSave = fullList;
             this.cacheDirectory = cacheDirectory;
         }
 
@@ -150,14 +157,19 @@ class ExploreBuffer<T> implements Closeable {
             } catch (IOException e) {
                 e.printStackTrace();
                 return; //failed :(
+            } finally {
+                MiscUtils.closeQuietly(fullList, storiesToSave);
             }
 
             final byte[] toCache = MiscUtils.useReference(bufferWeakReference, buffer -> {
                 return buffer.explorationCallbacks.transform(storiesToSave);
             }).or(new byte[0]);
 
-            if (toCache == null || toCache.length == 0)
+            if (toCache == null || toCache.length == 0) {
+
+                MiscUtils.closeQuietly(fullList, storiesToSave);
                 return; //nothing to cache, weird
+            }
 
             //cache the byte array and close
             try {
@@ -165,6 +177,8 @@ class ExploreBuffer<T> implements Closeable {
                 cacheAccess.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                MiscUtils.closeQuietly(fullList, storiesToSave);
             }
         }
     }
@@ -249,7 +263,7 @@ class ExploreBuffer<T> implements Closeable {
 
                 buffer.isDoneForToday.set(true);
                 Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
-                buffer.executorService.shutdown(); //shut down this shit
+                buffer.storyFetchingService.shutdown(); //shut down this shit
                 return;
             }
 

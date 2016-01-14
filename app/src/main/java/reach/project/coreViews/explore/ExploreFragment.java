@@ -72,8 +72,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
     private static long myServerId = 0;
-    private ExploreAdapter exploreAdapter;
-
 
     public static ExploreFragment newInstance(long userId) {
 
@@ -227,39 +225,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return containers;
     };
 
-    private static final class ScrollToLast implements Runnable {
+    private static final PopupMenu.OnMenuItemClickListener POP_MENU_CLICK = item -> {
 
-        private final int scrollTo;
-
-        private ScrollToLast(int scrollTo) {
-            this.scrollTo = scrollTo;
-        }
-
-        @Override
-        public void run() {
-
-            MiscUtils.useFragment(reference, fragment -> {
-
-                //sanity check
-                if (fragment.explorePager == null || fragment.rootView == null)
-                    return;
-
-                //magic scroll position should be available
-                if (!(scrollTo > 0))
-                    return;
-
-                final int currentItem = fragment.explorePager.getCurrentItem();
-                //user has somehow started scrolling
-                if (currentItem > 0)
-                    return;
-
-                fragment.explorePager.setCurrentItem(scrollTo - 1, true);
-            });
-        }
-    }
-
-
-    private final PopupMenu.OnMenuItemClickListener popMenuClick = item -> {
         switch (item.getItemId()) {
 
             case R.id.explore_menu_1:
@@ -284,6 +251,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Nullable
     private ViewPager explorePager = null;
     @Nullable
+    private ExploreAdapter exploreAdapter = null;
+
+    @Nullable
     private ExploreBuffer<JsonObject> buffer = null;
     @Nullable
     private SuperInterface mListener = null;
@@ -295,8 +265,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         myServerId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
-        Log.d("Ashish", "ExploreFragment - onCreateView");
-
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
@@ -307,11 +275,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         popupMenu.inflate(R.menu.explore_popup_menu);
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
-        popupMenu.setOnMenuItemClickListener(popMenuClick);
+        popupMenu.setOnMenuItemClickListener(POP_MENU_CLICK);
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
-        explorePager.setOffscreenPageLimit(2);
+//        explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
         return rootView;
@@ -319,22 +287,17 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     public void onDestroyView() {
         super.onDestroyView();
-        Log.d("Ashish", "ExploreFragment - onDestroyView");
+        Log.d("Ayush", "ExploreFragment - onDestroyView");
 
         rootView = null;
         explorePager = null;
+        exploreAdapter = null;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("Ashish", "ExploreFragment - onCreate");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d("Ashish", "ExploreFragment - onDestroy");
+        Log.d("Ayush", "ExploreFragment - onCreate");
     }
 
     @Override
@@ -365,7 +328,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         //This is UI thread !
         Log.i("Ayush", "Notifying data set changed on explore adapter");
-        exploreAdapter.notifyDataSetChanged();
+        if (exploreAdapter != null)
+            exploreAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -540,5 +504,37 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         mListener = null;
         if (buffer != null)
             buffer.close();
+        buffer = null;
+    }
+
+    private static final class ScrollToLast implements Runnable {
+
+        private final int scrollTo;
+
+        private ScrollToLast(int scrollTo) {
+            this.scrollTo = scrollTo;
+        }
+
+        @Override
+        public void run() {
+
+            MiscUtils.useFragment(reference, fragment -> {
+
+                //sanity check
+                if (fragment.explorePager == null || fragment.rootView == null)
+                    return;
+
+                //magic scroll position should be available
+                if (!(scrollTo > 1))
+                    return;
+
+                final int currentItem = fragment.explorePager.getCurrentItem();
+                //user has somehow started scrolling
+                if (currentItem > 0)
+                    return;
+
+                fragment.explorePager.setCurrentItem(scrollTo - 2, true);
+            });
+        }
     }
 }

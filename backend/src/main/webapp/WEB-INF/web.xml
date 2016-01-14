@@ -70,6 +70,15 @@
         <url-pattern>/backlogCron</url-pattern>
     </servlet-mapping>
     //////////////////////////////////
+    <servlet>
+        <servlet-name>UserImageEndpoint</servlet-name>
+        <servlet-class>reach.backend.Servlets.UserImageEndpoint</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserImageEndpoint</servlet-name>
+        <url-pattern>/userImageEndpoint</url-pattern>
+    </servlet-mapping>
+    //////////////////////////////////
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

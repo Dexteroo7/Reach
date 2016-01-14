@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.apps.App;
+import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
@@ -344,9 +345,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));
         tabLayout.addTab(tabLayout.newTab().setText("2"));
-//        tabLayout.addTab(tabLayout.newTab().setText("3"));
         tabLayout.addTab(tabLayout.newTab().setText("3"));
         tabLayout.addTab(tabLayout.newTab().setText("4"));
+        tabLayout.addTab(tabLayout.newTab().setText("5"));
         for (int index = 0; index < tabLayout.getTabCount(); index++) {
 
             final TabLayout.Tab tab = tabLayout.getTabAt(index);
@@ -364,10 +365,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 if(tabLayout.getSelectedTabPosition() == 1)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
                 else if(tabLayout.getSelectedTabPosition() == 2)
-//                    getSupportFragmentManager().beginTransaction().replace(R.id.container, ExploreFragment.newInstance(serverId)).commit();
-//                else if(tabLayout.getSelectedTabPosition() == 3)
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, ExploreFragment.newInstance(serverId)).commit();
+                else if (tabLayout.getSelectedTabPosition() == 3)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, DOWNLOAD_PAGER).commit();
-                else if(tabLayout.getSelectedTabPosition() == 3)
+                else if(tabLayout.getSelectedTabPosition() == 4)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, MyProfileFragment.newInstance()).commit();
             }
             @Override

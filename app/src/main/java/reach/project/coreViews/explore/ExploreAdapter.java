@@ -36,6 +36,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     public ExploreAdapter(Explore explore,
                           HandOverMessage<Integer> handOverId) {
+
         this.explore = explore;
         this.handOverMessage = handOverId;
     }
