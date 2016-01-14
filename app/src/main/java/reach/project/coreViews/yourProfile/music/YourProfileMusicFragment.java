@@ -30,9 +30,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
@@ -245,7 +245,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setLength(song.size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
+        reachDatabase.setUniqueId(new Random().nextInt(Integer.MAX_VALUE));
 
         reachDatabase.setDuration(song.duration);
         reachDatabase.setLogicalClock((short) 0);

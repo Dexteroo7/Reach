@@ -26,8 +26,8 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
@@ -72,6 +72,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         return intent;
     }
+
+    private final Random random = new Random();
 
     public static void openDownloading() {
 
@@ -616,7 +618,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
+        reachDatabase.setUniqueId(random.nextInt(Integer.MAX_VALUE));
 
         reachDatabase.setDuration(duration);
         reachDatabase.setLogicalClock((short) 0);

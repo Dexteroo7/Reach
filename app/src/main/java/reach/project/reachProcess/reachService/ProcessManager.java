@@ -45,12 +45,12 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadLocalRandom;
 
 import reach.project.R;
 import reach.project.core.ReachActivity;
@@ -204,6 +204,7 @@ public class ProcessManager extends Service implements
     private Future<?> musicFuture, networkFuture;
     private PowerManager.WakeLock wakeLock = null;
     private static long serverId;
+    private final Random random = new Random();
 
     private void close() {
 
@@ -303,7 +304,7 @@ public class ProcessManager extends Service implements
 
         final int reachCount = reachSongCursor.getCount();
         final int myLibraryCount = myLibraryCursor.getCount();
-        final int chosenPosition = ThreadLocalRandom.current().nextInt(reachCount + myLibraryCount); //0-index
+        final int chosenPosition = random.nextInt(reachCount + myLibraryCount); //0-index
         if (reachCount > chosenPosition && reachSongCursor.move(chosenPosition)) {
             closeCursor(Optional.of(myLibraryCursor));
             return playFromCursor(Optional.of(reachSongCursor), (byte) 0);
@@ -1008,7 +1009,7 @@ public class ProcessManager extends Service implements
             cursor.close();
             return Optional.absent();
         }
-        if (cursor.move(ThreadLocalRandom.current().nextInt(count)) || cursor.moveToFirst())
+        if (cursor.move(random.nextInt(count)) || cursor.moveToFirst())
             return Optional.of(cursor);
         cursor.close();
         return Optional.absent();

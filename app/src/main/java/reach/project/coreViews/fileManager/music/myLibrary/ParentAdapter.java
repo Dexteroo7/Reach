@@ -20,7 +20,7 @@ import com.google.common.base.Optional;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import javax.annotation.Nonnull;
 
@@ -45,7 +45,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long recentHolderId = new Random().nextInt(Integer.MAX_VALUE);
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
