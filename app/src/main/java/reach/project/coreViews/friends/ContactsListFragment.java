@@ -139,7 +139,7 @@ public class ContactsListFragment extends Fragment implements
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_USER_NAME + " ASC");
+                    ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,

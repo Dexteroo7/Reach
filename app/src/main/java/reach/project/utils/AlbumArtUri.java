@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.common.primitives.Booleans;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -20,9 +22,53 @@ public enum AlbumArtUri {
 
     private static final String baseURLSmall = "http://52.74.53.245:8080/getImage/small?";
     private static final String baseURLLarge = "http://52.74.53.245:8080/getImage/large?";
+
+    private static final String userImagebase = "https://able-door-616.appspot.com/userImageEndpoint?";
+
     private static final Map<Integer, Uri> simpleCache = new HashMap<>(1000);
 
     private static final StringBuilder buffer = new StringBuilder(50);
+
+    public synchronized static Uri getUserImageUri(long hostId,
+                                                   String requestedImage,
+                                                   String requestedFormat,
+                                                   boolean requestCircularCrop,
+                                                   int requestedWidth,
+                                                   int requestedHeight) {
+
+        int hash = 17;
+        hash = hash * 23 + Longs.hashCode(hostId);
+        hash = hash * 23 + requestedImage.hashCode();
+        hash = hash * 23 + requestedFormat.hashCode();
+        hash = hash * 23 + Booleans.hashCode(requestCircularCrop);
+        hash = hash * 23 + Ints.hashCode(requestedWidth);
+        hash = hash * 23 + Ints.hashCode(requestedHeight);
+
+        final int key = hash;
+
+        Uri value = simpleCache.get(key);
+        if (value != null)
+            return value;
+
+        buffer.setLength(0);
+        buffer.append(userImagebase)
+                .append("hostIdString=").append(hostId).append("&")
+                .append("requestedImage=").append(requestedImage).append("&")
+                .append("requestedFormat=").append(requestedFormat).append("&")
+                .append("requestCircularCrop=").append(requestCircularCrop).append("&")
+                .append("requestedWidth=").append(requestedWidth).append("&")
+                .append("requestedHeight=").append(requestedHeight);
+
+        final String toParse = buffer.toString();
+        Log.i("Ayush", toParse);
+
+        value = Uri.parse(toParse);
+        simpleCache.put(key, value);
+        return value;
+
+//        ?hostIdString=5399990482501632&requestedImage=imageId&request
+// edFormat=rj&requestCircularCrop=true&requestedWidth=100&requestedHeight=100
+    }
 
     public synchronized static Optional<Uri> getUri(String album, String artist, String song, boolean large) {
 

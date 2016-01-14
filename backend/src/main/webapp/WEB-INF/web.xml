@@ -34,7 +34,8 @@
                 reach.backend.applications.UnClassifiedAppsEndpoint,
                 reach.backend.applications.ClassifiedAppsEndpoint,
                 reach.backend.applications.AppVisibilityEndpoint,
-                reach.backend.campaign.BackLogEndpoint
+                reach.backend.campaign.BackLogEndpoint,
+                reach.backend.imageServer.ServingUrlEndpoint
             </param-value>
         </init-param>
     </servlet>
