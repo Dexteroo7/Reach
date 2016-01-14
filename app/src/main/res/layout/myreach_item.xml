@@ -83,10 +83,10 @@
             <ImageView
                 android:id="@+id/lockIcon"
                 android:layout_alignParentBottom="true"
-                android:layout_width="20dp"
-                android:layout_margin="10dp"
-                android:layout_height="20dp"
-                android:src="@drawable/icon_friends_pink" />
+                android:layout_width="25dp"
+                android:layout_margin="5dp"
+                android:layout_height="25dp"
+                android:src="@drawable/add_friend" />
             <ImageView
                 android:id="@+id/optionsIcon"
                 android:layout_alignParentBottom="true"
