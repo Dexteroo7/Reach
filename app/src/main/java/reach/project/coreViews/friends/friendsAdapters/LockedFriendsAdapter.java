@@ -10,7 +10,7 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import reach.project.core.StaticData;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -36,7 +36,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         if (reference != null && (adapter = reference.get()) != null) {
 
             //must set the new cursor
-            ((ReachCursorAdapter)adapter).setCursor(newCursor);
+            ((ReachCursorAdapter) adapter).setCursor(newCursor);
             adapter.notifyDataSetChanged();
         }
     }
@@ -60,7 +60,14 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
 
         friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), 200, 200));
-        friendsViewHolder.profilePhotoList.setController(MiscUtils.getControllerResize(friendsViewHolder.profilePhotoList.getController(), Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(3)), 100, 100));
+
+        friendsViewHolder.profilePhotoList.setImageURI(AlbumArtUri.getUserImageUri(
+                cursor.getLong(0),
+                "imageId",
+                "rw",
+                true,
+                200,
+                200));
 
         friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
     }

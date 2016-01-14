@@ -19,7 +19,7 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.gson.JsonObject;
 
 import reach.project.R;
-import reach.project.core.StaticData;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -91,8 +91,13 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         userHandle.setText(originalUserName);
                     typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
-                    if (!TextUtils.isEmpty(userNameAndImageId.second))
-                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
+                    userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                            userId,
+                            "imageId",
+                            "rw",
+                            true,
+                            100,
+                            100));
 
                     final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(albumArt))
@@ -132,10 +137,14 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     if (!TextUtils.isEmpty(appRating))
                         rating.setRating(Float.parseFloat(appRating));
 
-                    if (!TextUtils.isEmpty(userNameAndImageId.second))
-                        userImage.setImageURI(Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + userNameAndImageId.second));
+                    userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                            userId,
+                            "imageId",
+                            "rw",
+                            true,
+                            100,
+                            100));
 
-//                container.getRating();
                     layout.setTag(POSITION_UNCHANGED);
                     break;
 

@@ -8,13 +8,11 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.imagepipeline.common.ResizeOptions;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,9 +21,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import reach.project.R;
-import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.invite.InviteActivity;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -41,8 +39,11 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final HandOverMessage<ClickData> handOverMessage;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final long inviteId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-    private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+//    private final long inviteId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+//    private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+
+    private final long inviteId = 655656363566L;
+    private final long lockedId = 232354674646L;
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
 
@@ -142,10 +143,10 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
             viewHolder.bindPosition(position);
 
-//        final long serverId = cursor.getLong(0);
+            final long serverId = cursorExactType.getLong(0);
 //        final String phoneNumber = cursor.getString(1);
             final String userName = cursorExactType.getString(2);
-            final String imageId = cursorExactType.getString(3);
+//            final String imageId = cursorExactType.getString(3);
             final String coverPicId = cursorExactType.getString(4);
 //        final short networkType = cursor.getShort(4);
             final short status = cursorExactType.getShort(6);
@@ -179,13 +180,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             //first invalidate
             //viewHolder.profilePhotoList.setController(null);
 
-            if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world")) {
-
-                final DraweeController oldController = viewHolder.profilePhotoList.getController();
-                final Uri requiredUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
-                viewHolder.profilePhotoList.setController(MiscUtils.getControllerResize(oldController, requiredUri, resizeOptions));
-            } else
-                viewHolder.profilePhotoList.setImageURI(null);
+            viewHolder.profilePhotoList.setImageURI(AlbumArtUri.getUserImageUri(
+                    serverId,
+                    "imageId",
+                    "rw",
+                    true,
+                    200,
+                    200));
 
             /*else {
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)

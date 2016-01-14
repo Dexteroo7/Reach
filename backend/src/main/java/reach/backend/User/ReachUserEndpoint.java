@@ -9,14 +9,9 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.CollectionResponse;
 import com.google.api.server.spi.response.NotFoundException;
-import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.blobstore.BlobstoreService;
-import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.QueryResultIterable;
 import com.google.appengine.api.datastore.QueryResultIterator;
-import com.google.appengine.api.images.Image;
-import com.google.appengine.api.images.ImagesServiceFactory;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
@@ -30,7 +25,6 @@ import com.google.appengine.repackaged.com.google.common.collect.Ordering;
 import com.google.appengine.repackaged.com.google.common.hash.HashCode;
 import com.google.appengine.repackaged.com.google.common.hash.HashFunction;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
-import com.google.appengine.tools.cloudstorage.GcsFileMetadata;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
 import com.google.appengine.tools.cloudstorage.GcsInputChannel;
 import com.google.appengine.tools.cloudstorage.GcsService;
@@ -1494,40 +1488,5 @@ public class ReachUserEndpoint {
 
         ofy().save().entities(client, host);
         return new MyString("true");
-    }
-
-    @ApiMethod(
-            name = "getImageUrl",
-            path = "user/getImageUrl/{actualImageId}/",
-            httpMethod = ApiMethod.HttpMethod.GET)
-    public MyString getImageUrl(@Named("actualImageId") String fileName) {
-
-        String BUCKET_NAME_IMAGE = "able-door-616-images";
-
-        //access using "GcsService"
-        GcsFilename gcsFilename = new GcsFilename(BUCKET_NAME_IMAGE, fileName);
-        GcsService gcsService = GcsServiceFactory.createGcsService();
-        GcsFileMetadata metadata;
-        try {
-            metadata = gcsService.getMetadata(gcsFilename);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        
-        logger.info(metadata.toString()); //works
-
-        //access using "BlobstoreService"
-        BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-        BlobKey blobKey = blobstoreService.createGsBlobKey("/gs/" + gcsFilename.getBucketName() + "/" + gcsFilename.getObjectName());
-        byte[] data = blobstoreService.fetchData(blobKey, 0, metadata.getLength()); //works
-        Image image = ImagesServiceFactory.makeImage(data);
-        logger.info(image.getFormat() + " " + image.getHeight() + " " + image.getHeight()); //works, valid Image made
-        logger.info("Requesting fileName - " + blobKey.getKeyString());
-
-        //try to "getServingUrl", fails with ACCESS_DENIED
-        String servingURL = ImagesServiceFactory.getImagesService().getServingUrl(blobKey);
-
-        return new MyString(servingURL);
     }
 }

@@ -2,14 +2,16 @@ package reach.backend.Servlets;
 
 import com.google.appengine.api.images.ImagesServiceFactory;
 import com.google.appengine.api.images.ServingUrlOptions;
-import com.google.appengine.api.memcache.ErrorHandlers;
-import com.google.appengine.api.memcache.MemcacheService;
-import com.google.appengine.api.memcache.MemcacheServiceFactory;
-import com.googlecode.objectify.Key;
-import com.googlecode.objectify.NotFoundException;
+import com.google.appengine.tools.cloudstorage.GcsFileOptions;
+import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
+import com.google.appengine.tools.cloudstorage.GcsService;
+import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 
 import java.io.IOException;
-import java.util.logging.Level;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -19,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import reach.backend.TextUtils;
 import reach.backend.User.ReachUser;
+import reach.backend.imageServer.ServingUrl;
 
 import static reach.backend.OfyService.ofy;
 
@@ -36,8 +39,6 @@ public class UserImageEndpoint extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        super.doGet(req, resp);
-
         final String hostIdString = req.getParameter("hostIdString");
         final String requestedImage = req.getParameter("requestedImage");
 
@@ -51,15 +52,20 @@ public class UserImageEndpoint extends HttpServlet {
         if (TextUtils.isEmpty(hostIdString) || TextUtils.isEmpty(requestedImage) ||
                 TextUtils.isEmpty(requestedWidthString) || TextUtils.isEmpty(requestedHeightString) ||
                 TextUtils.isEmpty(requestedFormat) || TextUtils.isEmpty(requestCircularCrop)) {
-            throw new IllegalArgumentException("Some parameters are missing");
+
+            resp.sendError(400, "Some parameters are missing");
+            return;
         }
 
         ///////////////////////////////Verify requestedFormat
 
         if (requestedFormat.equals("rj") || requestedFormat.equals("rp") || requestedFormat.equals("rw"))
             logger.info("Requested format " + requestedFormat);
-        else
-            throw new IllegalArgumentException("Illegal requested format " + requestedFormat);
+        else {
+
+            resp.sendError(400, "Illegal requested format " + requestedFormat);
+            return;
+        }
 
         ///////////////////////////////Verify other stuff and get the actualImageId
 
@@ -71,13 +77,19 @@ public class UserImageEndpoint extends HttpServlet {
         //validate longs
         if (hostId > 0 && requestedHeight > 0 && requestedWidth > 0)
             logger.info("Requesting from " + hostIdString + " width= " + requestedWidthString + " height= " + requestedHeightString);
-        else
-            throw new IllegalArgumentException("requested values must be > 0");
+        else {
+
+            resp.sendError(400, "requested values must be > 0");
+            return;
+        }
 
         final ReachUser reachUser = ofy().load().type(ReachUser.class).id(hostId).now();
 
-        if (reachUser == null)
-            throw new NotFoundException(Key.create(ReachUser.class, hostId));
+        if (reachUser == null) {
+
+            resp.sendError(400, "User not found");
+            return;
+        }
 
         final String actualImageId;
         switch (requestedImage) {
@@ -88,50 +100,107 @@ public class UserImageEndpoint extends HttpServlet {
                 actualImageId = reachUser.getCoverPicId();
                 break;
             default:
-                throw new IllegalArgumentException("Only imageId and coverPicId are supported as a requestedImage param");
+                resp.sendError(400, "Only imageId and coverPicId are supported as a requestedImage param");
+                return;
         }
-        logger.info("Requesting " + requestedImage + " = " + actualImageId);
 
         ///////////////////////////////Generate the serving url
 
-        final String cacheKey = getCacheKey(actualImageId, hostId);
-
-        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
-        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-
         final String servingURL;
-        final Object object = syncCache.get(cacheKey);
-        if (object instanceof String && !TextUtils.isEmpty((String) object)) {
+        final ServingUrl servingUrlRetriever = ofy().load().type(ServingUrl.class).id(actualImageId).now();
+        if (servingUrlRetriever == null || TextUtils.isEmpty(servingUrlRetriever.getServingUrl())) {
 
-            //use this url only
-            servingURL = (String) object;
-        } else {
+            //generate new servingURL, copies the image first
+            try {
+                servingURL = getServingURL(BUCKET_NAME_IMAGE, actualImageId);
+            } catch (IOException | IllegalArgumentException ignored) {
 
-            final ServingUrlOptions servingUrlOptions = ServingUrlOptions.Builder.withGoogleStorageFileName("/gs/" + BUCKET_NAME_IMAGE + "/" + actualImageId).secureUrl(true);
-            servingURL = ImagesServiceFactory.getImagesService().getServingUrl(servingUrlOptions);
-            syncCache.put(cacheKey, servingURL);
-        }
+                resp.sendError(500, "Serving url could not be generated");
+                return;
+            }
+            final ServingUrl toSave = new ServingUrl();
+            toSave.setId(actualImageId);
+            toSave.setServingUrl(servingURL);
+            ofy().save().entity(toSave); //save async
+        } else
+            servingURL = servingUrlRetriever.getServingUrl();
 
         ///////////////////////////////Process
-
-        logger.info("Base url - " + servingURL);
 
         final String toReturn = servingURL + //base url
                 "=w" + requestedWidth + //set width
                 "-h" + requestedHeight + //set height
                 "-nu" + //no-upscaling, disables resizing an image to larger than its original resolution
-                (circular ? "-cc" : "") + //generates a circularly cropped image
+                (circular ? "-cc" : "-s") + //generates a circularly cropped image or stretch image to dimensions
                 "-" + requestedFormat; //force requestedFormat
 
         logger.info("Final url - " + toReturn);
 
         resp.sendRedirect(toReturn);
-
     }
 
-    private String getCacheKey(String actualImageId,
-                               long hostId) {
+    /**
+     * Copies the image and gets a serving url over it
+     *
+     * @param bucketName the bucket where the image is hosted
+     * @param imageId    the id of the image to server
+     * @return the serving url
+     * @throws IOException
+     */
+    private String getServingURL(String bucketName, String imageId) throws IOException {
 
-        return hostId + "_" + actualImageId;
+        final GcsFilename gcsFilename = new GcsFilename(bucketName, imageId);
+        final GcsService gcsService = GcsServiceFactory.createGcsService();
+
+        final ReadableByteChannel readableByteChannel = gcsService.openPrefetchingReadChannel(
+                gcsFilename, 0, 4096);
+        final GcsOutputChannel gcsOutputChannel = gcsService.createOrReplace(
+                gcsFilename, new GcsFileOptions.Builder()
+                        .acl("public-read")
+                        .contentEncoding("image/webp")
+                        .mimeType("image/webp").build());
+
+        //copy the image, includes a second wait
+        copy(readableByteChannel, gcsOutputChannel);
+        //wait more
+        gcsOutputChannel.waitForOutstandingWrites();
+        //close
+        gcsOutputChannel.close();
+
+        final ServingUrlOptions servingUrlOptions =
+                ServingUrlOptions.Builder.withGoogleStorageFileName("/gs/" + BUCKET_NAME_IMAGE + "/" + imageId).secureUrl(true);
+        return ImagesServiceFactory.getImagesService().getServingUrl(servingUrlOptions);
+    }
+
+    /**
+     * Copies all bytes from the readable channel to the writable channel.
+     * Does not close or flush either channel.
+     *
+     * @param from the readable channel to read from
+     * @param to   the writable channel to write to
+     */
+    private void copy(ReadableByteChannel from,
+                      WritableByteChannel to) {
+
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4096);
+        boolean fail = false;
+
+        while (!fail) {
+
+            try {
+                fail = (from.read(byteBuffer) == -1);
+            } catch (IOException ignored) {
+                fail = true;
+            }
+
+            byteBuffer.flip();
+            while (byteBuffer.hasRemaining())
+                try {
+                    to.write(byteBuffer);
+                } catch (IOException ignored) {
+                    fail = true;
+                }
+            byteBuffer.clear();
+        }
     }
 }

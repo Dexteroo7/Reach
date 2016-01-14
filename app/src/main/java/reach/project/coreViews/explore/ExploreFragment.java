@@ -549,10 +549,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         super.onDetach();
         Log.d("Ashish", "ExploreFragment - onDetach");
         mListener = null;
-        if (buffer != null) {
+        if (buffer != null)
             buffer.close();
-            buffer = null;
-        }
     }
 
     private static final class ScrollToLast implements Runnable {
