@@ -332,7 +332,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
-        explorePager.setOffscreenPageLimit(2);
+        //explorePager.setOffscreenPageLimit(2);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
         return rootView;
@@ -558,8 +558,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onDetach() {
 
         super.onDetach();
+        Log.d("Ashish", "ExploreFragment - onDetach");
         mListener = null;
-        if (buffer != null)
+        if (buffer != null) {
             buffer.close();
+        }
     }
 }

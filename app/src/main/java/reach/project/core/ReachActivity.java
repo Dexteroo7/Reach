@@ -11,8 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -57,7 +55,6 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
 import reach.project.utils.ancillaryClasses.SuperInterface;
-import reach.project.utils.viewHelpers.CustomViewPager;
 import reach.project.utils.viewHelpers.PagerFragment;
 
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
@@ -78,14 +75,14 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     public static void openDownloading() {
 
-        MiscUtils.useActivity(reference, activity -> {
+        /*MiscUtils.useActivity(reference, activity -> {
 
             if (activity.viewPager == null)
                 return;
 
             activity.viewPager.setCurrentItem(3, true);
             DOWNLOAD_PAGER.setItem(1);
-        });
+        });*/
     }
 
     ////////////////////////////////////////public static final
@@ -199,8 +196,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return false;
     };
 
-    @Nullable
-    private CustomViewPager viewPager = null;
+//    @Nullable
+//    private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
 
@@ -214,7 +211,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         if (reference != null)
             reference.clear();
         reference = null;
-        viewPager = null;
+        //viewPager = null;
     }
 
     /*@Override
@@ -314,7 +311,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         ////////////////////////////////////////
 
-        viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
+        /*viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
         viewPager.setPagingEnabled(false);
         viewPager.setOffscreenPageLimit(4);
         viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -343,9 +340,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             public int getCount() {
                 return 5;
             }
-        });
+        });*/
 
-        /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));
         tabLayout.addTab(tabLayout.newTab().setText("2"));
         tabLayout.addTab(tabLayout.newTab().setText("3"));
@@ -380,9 +377,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        tabLayout.getTabAt(2).select();*/
+        tabLayout.getTabAt(2).select();
 
-        final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+        /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.setupWithViewPager(viewPager);
         for (int index = 1; index < tabLayout.getTabCount(); index++) {
             final TabLayout.Tab tab = tabLayout.getTabAt(index);
@@ -420,7 +417,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         });
 
-        viewPager.setCurrentItem(2);
+        viewPager.setCurrentItem(2);*/
 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);
@@ -433,10 +430,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         Log.i("Ayush", "Processing Intent");
 
-        if (intent.getBooleanExtra("firstTime", false)) {
+        /*if (intent.getBooleanExtra("firstTime", false)) {
             if (viewPager != null)
                 viewPager.setCurrentItem(5, false);
-        }
+        }*/
 
 //        if (intent.getBooleanExtra("openNotificationFragment", false))
 //            onOpenNotificationDrawer();
