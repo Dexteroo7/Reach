@@ -35,7 +35,6 @@ public class UserImageEndpoint extends HttpServlet {
     private static final Logger logger = Logger.getLogger(UserImageEndpoint.class.getName());
     private static final String BUCKET_NAME_IMAGE = "able-door-616-images";
 
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 

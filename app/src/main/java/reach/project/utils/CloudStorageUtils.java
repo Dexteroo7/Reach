@@ -58,6 +58,9 @@ public enum CloudStorageUtils {
     public static byte APP = 0;
     public static byte MUSIC = 1;
 
+    @Nullable
+    private static Storage storage = null;
+
     private static final String APPLICATION_NAME_PROPERTY = "Reach";
     private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
     private static final String BUCKET_NAME_IMAGES = "able-door-616-images";
@@ -406,7 +409,7 @@ public enum CloudStorageUtils {
             get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
 
             final HttpResponse httpResponse = get.executeMedia();
-            final String x_goog_hash = httpResponse.getHeaders().get("x-goog-hash").toString().replaceAll("\\s+","");
+            final String x_goog_hash = httpResponse.getHeaders().get("x-goog-hash").toString().replaceAll("\\s+", "");
             if (TextUtils.isEmpty(x_goog_hash))
                 throw new IOException("Response x-goog-hash was null");
 
@@ -578,9 +581,6 @@ public enum CloudStorageUtils {
         Collections.sort(apps, StaticData.byName);
         return apps;
     }
-
-    @Nullable
-    private static Storage storage = null;
 
     private static Optional<Storage> getStorage(@Nullable InputStream stream) {
 
