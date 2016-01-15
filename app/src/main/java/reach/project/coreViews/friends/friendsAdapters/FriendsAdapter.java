@@ -15,7 +15,7 @@ import android.view.ViewGroup;
 
 import com.facebook.imagepipeline.common.ResizeOptions;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,11 +39,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final HandOverMessage<ClickData> handOverMessage;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-//    private final long inviteId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-//    private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-
-    private final long inviteId = 655656363566L;
-    private final long lockedId = 232354674646L;
+    private Random random = new Random();
+    private final long inviteId = random.nextInt(Integer.MAX_VALUE);
+    private final long lockedId = random.nextInt(Integer.MAX_VALUE);
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
 
@@ -159,7 +157,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             //Capitalize only if required
             final char firstLetter = userName.charAt(0);
-            if (Character.isAlphabetic(firstLetter) && Character.isLowerCase(firstLetter) && userName.length() > 1)
+            if (Character.isLetter(firstLetter) && Character.isLowerCase(firstLetter) && userName.length() > 1)
                 viewHolder.userNameList.setText(Character.toUpperCase(firstLetter) + userName.substring(1));
             else
                 viewHolder.userNameList.setText(userName);

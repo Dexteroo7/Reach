@@ -13,7 +13,7 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import javax.annotation.Nonnull;
 
@@ -34,7 +34,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
     private static final byte VIEW_TYPE_ALL = 1;
     static final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
 
-    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long recentHolderId = new Random().nextInt(Integer.MAX_VALUE);
     private final HandOverMessage<App> handOverApp;
     private final PackageManager packageManager;
     private final RecentAdapter recentAdapter;

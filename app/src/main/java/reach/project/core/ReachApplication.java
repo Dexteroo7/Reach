@@ -1,10 +1,8 @@
 package reach.project.core;
 
-import android.app.Application;
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.multidex.MultiDex;
+import android.support.multidex.MultiDexApplication;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
@@ -30,7 +28,7 @@ import reach.project.R;
 /**
  * Created by ashish on 23/3/15.
  */
-public class ReachApplication extends Application {
+public class ReachApplication extends MultiDexApplication {
 
     public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
@@ -146,11 +144,5 @@ public class ReachApplication extends Application {
                 .build();
 
         Fresco.initialize(this, config);
-    }
-
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
     }
 }

@@ -85,11 +85,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -188,9 +188,11 @@ public enum MiscUtils {
             }
     }
 
+    private static final Random random = new Random();
+
     public static String getRandomPic() {
 
-        final int option = ThreadLocalRandom.current().nextInt(3);
+        final int option = random.nextInt(3);
         switch (option) {
 
             case 0:

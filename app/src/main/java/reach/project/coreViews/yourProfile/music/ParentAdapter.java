@@ -16,7 +16,7 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import reach.project.R;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
@@ -36,8 +36,9 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private static final byte RECENT_LIST_TYPE = 2;
     private static final byte SMART_LIST_TYPE = 3;
 
-    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-    private final long smartHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final Random random = new Random();
+    private final long recentHolderId = random.nextInt(Integer.MAX_VALUE);
+    private final long smartHolderId = random.nextInt(Integer.MAX_VALUE);
 
     private final CacheAdapterInterface<T, Song> cacheAdapterInterface;
 
