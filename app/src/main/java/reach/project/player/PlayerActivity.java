@@ -110,24 +110,24 @@ public class PlayerActivity extends AppCompatActivity {
         playerPos = (TextView) findViewById(R.id.playerPos);
 
         ((Toolbar) findViewById(R.id.playerToolbar)).setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
-        (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.likeButtonClick);
-        (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.playerSeekListener);
-        (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.pauseClick);
+        (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
+        (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
+        (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
         (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "" : currentPlaying.getArtistName());
-        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setController(MiscUtils.getControllerResize(albumArt.getController(), albumArtUri, 500, 500));
+        (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setImageURI(albumArtUri);
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
         if (currentPlaying != null)
             pause_play.setImageResource(R.drawable.play_white_selector);
 
-        findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.previousClick);
-        findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.nextClick);
+        findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.PREVIOUS_CLICK);
+        findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.NEXT_CLICK);
 
         final View shuffle = findViewById(R.id.shuffleBtn);
         final View repeat = findViewById(R.id.repeatBtn);
-        shuffle.setOnClickListener(LocalUtils.shuffleClick);
-        repeat.setOnClickListener(LocalUtils.repeatClick);
+        shuffle.setOnClickListener(LocalUtils.SHUFFLE_CLICK);
+        repeat.setOnClickListener(LocalUtils.REPEAT_CLICK);
         shuffle.setSelected(SharedPrefUtils.getShuffle(this));
         repeat.setSelected(SharedPrefUtils.getRepeat(this));
     }
@@ -299,7 +299,7 @@ public class PlayerActivity extends AppCompatActivity {
     private enum LocalUtils {
         ;
 
-        public static final SeekBar.OnSeekBarChangeListener playerSeekListener = new SeekBar.OnSeekBarChangeListener() {
+        public static final SeekBar.OnSeekBarChangeListener PLAYER_SEEK_LISTENER = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser)
@@ -315,7 +315,7 @@ public class PlayerActivity extends AppCompatActivity {
             }
         };
 
-        public static final View.OnClickListener repeatClick = view -> {
+        public static final View.OnClickListener REPEAT_CLICK = view -> {
 
             if (SharedPrefUtils.toggleRepeat(view.getContext()))
                 view.setSelected(true);
@@ -323,12 +323,12 @@ public class PlayerActivity extends AppCompatActivity {
                 view.setSelected(false);
         };
 
-        public static final View.OnClickListener nextClick = v -> ProcessManager.submitMusicRequest(
+        public static final View.OnClickListener NEXT_CLICK = v -> ProcessManager.submitMusicRequest(
                 v.getContext(),
                 Optional.absent(),
                 ProcessManager.ACTION_NEXT);
 
-        public static final View.OnClickListener previousClick = v -> ProcessManager.submitMusicRequest(
+        public static final View.OnClickListener PREVIOUS_CLICK = v -> ProcessManager.submitMusicRequest(
                 v.getContext(),
                 Optional.absent(),
                 ProcessManager.ACTION_PREVIOUS);
@@ -360,7 +360,7 @@ public class PlayerActivity extends AppCompatActivity {
                 throw new IllegalStateException("current playing has invalid type " + currentPlaying.getType());
         }
 
-        public static final AdapterView.OnClickListener likeButtonClick = view -> {
+        public static final AdapterView.OnClickListener LIKE_BUTTON_CLICK = view -> {
 
             if (currentPlaying == null)
                 return;
@@ -410,7 +410,7 @@ public class PlayerActivity extends AppCompatActivity {
                 view.setSelected(false);
         };
 
-        public static final View.OnClickListener pauseClick = v -> {
+        public static final View.OnClickListener PAUSE_CLICK = v -> {
 
             if (currentPlaying != null)
                 ProcessManager.submitMusicRequest(
@@ -424,7 +424,7 @@ public class PlayerActivity extends AppCompatActivity {
                         ProcessManager.ACTION_PLAY_PAUSE);
         };
 
-        public static final View.OnClickListener shuffleClick = view -> {
+        public static final View.OnClickListener SHUFFLE_CLICK = view -> {
 
             if (SharedPrefUtils.toggleShuffle(view.getContext()))
                 view.setSelected(true);

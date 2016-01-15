@@ -56,6 +56,9 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.HashingOutputStream;
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -64,11 +67,10 @@ import com.google.gson.JsonPrimitive;
 import org.json.JSONException;
 
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileDescriptor;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -1066,24 +1068,30 @@ public enum MiscUtils {
         }).start();
     }
 
+    /**
+     * If bitmap could not be returned use the original image as is, this should not happen normally
+     *
+     * @param inputStream the inputStream for the image
+     * @return the resized bitmap
+     */
     @NonNull
-    public static File compressImage(@NonNull File image) throws IOException {
+    public static BitmapFactory.Options getRequiredOptions(final InputStream inputStream) {
 
         // Decode just the boundaries
         final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
         mBitmapOptions.inJustDecodeBounds = true;
 
-        final FileInputStream fileInputStream = new FileInputStream(image);
-        final Bitmap temporary = BitmapFactory.decodeStream(fileInputStream, null, mBitmapOptions);
+        final Bitmap temporary = BitmapFactory.decodeStream(inputStream, null, mBitmapOptions);
         if (temporary != null)
             temporary.recycle();
+        if (mBitmapOptions.outHeight == 0 || mBitmapOptions.outWidth == 0)
+            return mBitmapOptions; //illegal
 
         // Calculate inSampleSize
         // Raw height and width of image
         final int height = mBitmapOptions.outHeight;
         final int width = mBitmapOptions.outWidth;
-        final int sideLength = 800;
-        closeQuietly(fileInputStream);
+        final int sideLength = 1000;
 
         int reqHeight = height;
         int reqWidth = width;
@@ -1133,35 +1141,19 @@ public enum MiscUtils {
         //now go resize the image to the size you want
         mBitmapOptions.inSampleSize = inSampleSize;
         mBitmapOptions.inDither = true;
+        mBitmapOptions.inPreferQualityOverSpeed = true;
         mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
         mBitmapOptions.inJustDecodeBounds = false;
         mBitmapOptions.inScaled = true;
         mBitmapOptions.inDensity = inDensity;
         mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
 
-        final File tempFile = File.createTempFile("compressed_profile_photo", ".tmp");
-        final RandomAccessFile accessFile = new RandomAccessFile(tempFile, "rws");
-        accessFile.setLength(0);
-        accessFile.close();
-
-        final FileInputStream fInputStream = new FileInputStream(image);
-        final FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-
-        // will load & resize the image to be 1/inSampleSize dimensions
+        /**
+         * Generate the compressed image
+         * Will load & resize the image to be 1/inSampleSize dimensions
+         */
         Log.i("Ayush", "Starting compression");
-        final Bitmap bitmap = BitmapFactory.decodeStream(fInputStream, null, mBitmapOptions);
-        if (bitmap == null)
-            return image;
-        bitmap.compress(Bitmap.CompressFormat.WEBP, 80, fileOutputStream);
-        fileOutputStream.flush();
-        closeQuietly(fInputStream, fileOutputStream);
-        Log.i("Ayush", "Result " + bitmap.getHeight() + " " + bitmap.getWidth());
-        bitmap.recycle();
-
-        //noinspection ResultOfMethodCallIgnored
-        image.delete(); //delete old image
-        Log.i("Ayush", "Returning image");
-        return tempFile;
+        return mBitmapOptions;
     }
 
     private static final StringBuffer buffer = new StringBuffer();
@@ -1817,4 +1809,21 @@ public enum MiscUtils {
 //        stringBuilder.append(text.substring(start));
 //        return stringBuilder.toString();
 //    }
+
+    public static String computeHashAndCopy(HashFunction hashFunction,
+                                            InputStream mainSource,
+                                            OutputStream mainSink) throws IOException {
+
+        final HashingOutputStream hashingOutputStream = new HashingOutputStream(hashFunction, mainSink);
+        ByteStreams.copy(mainSource, hashingOutputStream);
+
+        hashingOutputStream.flush();
+        mainSink.flush();
+
+        try {
+            return hashingOutputStream.hash().toString();
+        } finally {
+            MiscUtils.closeQuietly(mainSource, hashingOutputStream, mainSink);
+        }
+    }
 }

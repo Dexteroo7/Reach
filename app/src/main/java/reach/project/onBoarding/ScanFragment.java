@@ -28,7 +28,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.common.base.Optional;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -40,7 +39,6 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -171,7 +169,8 @@ public class ScanFragment extends Fragment {
                 if (keyStream != null) {
                     //try upload
                     Log.i("Ayush", "Image file path is " + imageFilePath);
-                    CloudStorageUtils.uploadImage(new File(imageFilePath), keyStream, uploadProgress);
+                    //TODO
+//                    CloudStorageUtils.uploadImage(new File(imageFilePath), keyStream, uploadProgress);
                 }
             }
 

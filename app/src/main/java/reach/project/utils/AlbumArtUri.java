@@ -23,7 +23,7 @@ public enum AlbumArtUri {
     private static final String baseURLSmall = "http://52.74.53.245:8080/getImage/small?";
     private static final String baseURLLarge = "http://52.74.53.245:8080/getImage/large?";
 
-    private static final String userImagebase = "https://able-door-616.appspot.com/userImageEndpoint?";
+    private static final String userImageBase = "https://able-door-616.appspot.com/userImageEndpoint?";
 
     private static final Map<Integer, Uri> simpleCache = new HashMap<>(1000);
 
@@ -51,7 +51,7 @@ public enum AlbumArtUri {
             return value;
 
         buffer.setLength(0);
-        buffer.append(userImagebase)
+        buffer.append(userImageBase)
                 .append("hostIdString=").append(hostId).append("&")
                 .append("requestedImage=").append(requestedImage).append("&")
                 .append("requestedFormat=").append(requestedFormat).append("&")
@@ -65,9 +65,6 @@ public enum AlbumArtUri {
         value = Uri.parse(toParse);
         simpleCache.put(key, value);
         return value;
-
-//        ?hostIdString=5399990482501632&requestedImage=imageId&request
-// edFormat=rj&requestCircularCrop=true&requestedWidth=100&requestedHeight=100
     }
 
     public synchronized static Optional<Uri> getUri(String album, String artist, String song, boolean large) {

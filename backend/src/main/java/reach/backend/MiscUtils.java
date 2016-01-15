@@ -7,6 +7,9 @@ import com.googlecode.objectify.Key;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
 import reach.backend.User.ReachUser;
 
@@ -92,5 +95,37 @@ public enum MiscUtils {
         }
         sb.append(']');
         return sb.toString();
+    }
+
+    /**
+     * Copies all bytes from the readable channel to the writable channel.
+     * Does not close or flush either channel.
+     *
+     * @param from the readable channel to read from
+     * @param to   the writable channel to write to
+     */
+    public static void copy(ReadableByteChannel from,
+                            WritableByteChannel to) {
+
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4096);
+        boolean fail = false;
+
+        while (!fail) {
+
+            try {
+                fail = (from.read(byteBuffer) == -1);
+            } catch (IOException ignored) {
+                fail = true;
+            }
+
+            byteBuffer.flip();
+            while (byteBuffer.hasRemaining())
+                try {
+                    to.write(byteBuffer);
+                } catch (IOException ignored) {
+                    fail = true;
+                }
+            byteBuffer.clear();
+        }
     }
 }

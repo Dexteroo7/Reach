@@ -80,6 +80,15 @@
         <url-pattern>/userImageEndpoint</url-pattern>
     </servlet-mapping>
     //////////////////////////////////
+    <servlet>
+        <servlet-name>ImageUploadServlet</servlet-name>
+        <servlet-class>reach.backend.Servlets.ImageUploadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ImageUploadServlet</servlet-name>
+        <url-pattern>/imageUploadServlet</url-pattern>
+    </servlet-mapping>
+    //////////////////////////////////
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

@@ -1,6 +1,7 @@
 package reach.backend.Servlets;
 
 import com.google.appengine.api.images.ImagesServiceFactory;
+import com.google.appengine.api.images.ImagesServiceFailureException;
 import com.google.appengine.api.images.ServingUrlOptions;
 import com.google.appengine.tools.cloudstorage.GcsFileOptions;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
@@ -12,6 +13,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.time.Instant;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -86,7 +89,7 @@ public class UserImageEndpoint extends HttpServlet {
 
         if (reachUser == null) {
 
-            resp.sendError(400, "User not found");
+            resp.sendError(500, "User not found");
             return;
         }
 
@@ -109,17 +112,22 @@ public class UserImageEndpoint extends HttpServlet {
         final ServingUrl servingUrlRetriever = ofy().load().type(ServingUrl.class).id(actualImageId).now();
         if (servingUrlRetriever == null || TextUtils.isEmpty(servingUrlRetriever.getServingUrl())) {
 
-            //generate new servingURL, copies the image first
+            /**
+             * Generate new servingURL, copies the image first
+             * This case will eventually become non-existent
+             */
             try {
                 servingURL = getServingURL(BUCKET_NAME_IMAGE, actualImageId);
-            } catch (IOException | IllegalArgumentException ignored) {
+            } catch (IOException | IllegalArgumentException | ImagesServiceFailureException ignored) {
 
                 resp.sendError(500, "Serving url could not be generated");
                 return;
             }
             final ServingUrl toSave = new ServingUrl();
+            toSave.setUserId(hostId);
             toSave.setId(actualImageId);
             toSave.setServingUrl(servingURL);
+            toSave.setDateOfCreation(Date.from(Instant.now()));
             ofy().save().entity(toSave); //save async
         } else
             servingURL = servingUrlRetriever.getServingUrl();

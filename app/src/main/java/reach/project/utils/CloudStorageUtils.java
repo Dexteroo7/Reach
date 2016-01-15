@@ -2,6 +2,8 @@ package reach.project.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -23,14 +25,18 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
+import com.google.common.hash.HashingInputStream;
+import com.squareup.okhttp.CacheControl;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 import com.squareup.wire.Wire;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -41,12 +47,13 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import okio.BufferedSink;
 import reach.project.apps.App;
 import reach.project.apps.AppList;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.MusicList;
 import reach.project.music.Song;
-import reach.project.utils.ancillaryClasses.UploadProgress;
 import reach.project.utils.ancillaryClasses.UseContext;
 
 /**
@@ -63,99 +70,66 @@ public enum CloudStorageUtils {
 
     private static final String APPLICATION_NAME_PROPERTY = "Reach";
     private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
-    private static final String BUCKET_NAME_IMAGES = "able-door-616-images";
     private static final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
     private static final String BUCKET_NAME_APP_DATA = "able-door-616-app-data";
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
-    public static void uploadImage(@NonNull File file,
-                                   @NonNull InputStream key,
-                                   @NonNull UploadProgress uploadProgress) {
+    public static String uploadImage(@NonNull InputStream optionsStream,
+                                     @NonNull InputStream decodeStream,
+                                     long myId) {
 
-        //get file name
-        String fileName;
-        try {
-            fileName = Files.hash(file, Hashing.md5()).toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            fileName = null;
-        }
-        if (TextUtils.isEmpty(fileName)) {
-            uploadProgress.error();
-            return;
-        }
+        //first calculate the original size
+        final BitmapFactory.Options options = MiscUtils.getRequiredOptions(optionsStream);
+        if (options.outHeight == 0 || options.outWidth == 0)
+            return ""; //failed
+        MiscUtils.closeQuietly(optionsStream);
 
-        //get storage object
-        final Optional<Storage> optional = getStorage(key);
-        if (!optional.isPresent()) {
-            uploadProgress.error();
-            return;
-        }
+        //resize and calculate the hash as well
+        final HashingInputStream hashingInputStream = new HashingInputStream(
+                Hashing.md5(), decodeStream);
+        final Bitmap resizedBitmap = BitmapFactory.decodeStream(hashingInputStream, null, options);
+        MiscUtils.closeQuietly(decodeStream, hashingInputStream);
+        final String imageHash = hashingInputStream.hash().toString();
 
-        final Storage storage = optional.get();
-
-        //check if file is present
-        try {
-            storage.objects().get(BUCKET_NAME_IMAGES, fileName).execute();
-            Log.i("Ayush", "File found" + fileName);
-            uploadProgress.success(fileName);
-            return; //quit since found
-        } catch (IOException e) {
-
-            //file not present, hence the error, we upload
-            e.printStackTrace();
-        }
-
-        //prepare upload
-        Log.i("Ayush", "File not found, Uploading " + fileName);
-        final Storage.Objects.Insert insert;
-        final AbstractInputStreamContent content = new AbstractInputStreamContent("image/") {
-
+        //post the final image to adenine
+        final RequestBody requestBody = new RequestBody() {
             @Override
-            public InputStream getInputStream() throws IOException {
-                return new FileInputStream(file); //can be retried
+            public MediaType contentType() {
+                return MediaType.parse("image/webp");
             }
 
             @Override
-            public long getLength() throws IOException {
-                return file.length();
-            }
-
-            @Override
-            public boolean retrySupported() {
-                return true;
+            public void writeTo(BufferedSink sink) throws IOException {
+                //write the final compressed image
+                resizedBitmap.compress(Bitmap.CompressFormat.WEBP, 80, sink.outputStream());
             }
         };
 
-        try {
-            insert = storage.objects().insert(BUCKET_NAME_IMAGES, null, content);
-        } catch (IOException e) {
+        String imageUploadBase = "https://able-door-616.appspot.com/imageUploadServlet?";
+        imageUploadBase += ("hostIdString=" + myId + "&");
+        imageUploadBase += ("imageHash=" + imageHash);
+        final Request request = new Request.Builder()
+                .cacheControl(CacheControl.FORCE_NETWORK)
+                .url(imageUploadBase)
+                .post(requestBody)
+                .build();
 
+        final OkHttpClient okHttpClient = ReachApplication.OK_HTTP_CLIENT;
+        final Response response;
+        try {
+            response = okHttpClient.newCall(request).execute();
+        } catch (IOException e) {
             e.printStackTrace();
-            Log.i("Ayush", "Error while creating request" + fileName);
-            uploadProgress.error();
-            return; //quit if error
+            return ""; //failed
         }
 
-        insert.setPredefinedAcl("publicRead");
-        insert.setName(fileName);
-        insert.getMediaHttpUploader().setDirectUploadEnabled(true);
-        insert.getMediaHttpUploader().setProgressListener(uploadProgress);
+        if (response.isSuccessful()) {
 
-        //upload
-        final String md5;
-        try {
-            md5 = insert.execute().getMd5Hash();
-        } catch (IOException e) {
-
-            e.printStackTrace();
-            Log.i("Ayush", "Error while uploading" + fileName);
-            uploadProgress.error();
-            return; //quit if error
+            Log.i("Ayush", "Upload complete " + imageHash);
+            return imageHash;
         }
 
-        Log.i("Ayush", "Upload complete " + md5);
-        uploadProgress.success(fileName);
+        return ""; //failed
     }
 
 //    public static void deleteFile(String fileName) {
