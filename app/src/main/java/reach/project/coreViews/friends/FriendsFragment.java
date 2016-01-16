@@ -36,17 +36,17 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
-public class ContactsListFragment extends Fragment implements
+public class FriendsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
 
-    private static WeakReference<ContactsListFragment> reference = null;
+    private static WeakReference<FriendsFragment> reference = null;
 
-    public static ContactsListFragment getInstance() {
+    public static FriendsFragment getInstance() {
 
-        ContactsListFragment fragment;
+        FriendsFragment fragment;
         if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
             Log.i("Ayush", "Creating new instance of contacts list fragment");
-            reference = new WeakReference<>(fragment = new ContactsListFragment());
+            reference = new WeakReference<>(fragment = new FriendsFragment());
         } else
             Log.i("Ayush", "Reusing contacts list fragment object :)");
 
@@ -64,13 +64,13 @@ public class ContactsListFragment extends Fragment implements
 //    @Override
 //    public void onCreate(Bundle savedInstanceState) {
 //        super.onCreate(savedInstanceState);
-//        Log.d("Ashish", "ContactsListFragment - onCreate");
+//        Log.d("Ashish", "FriendsFragment - onCreate");
 //    }
 //
 //    @Override
 //    public void onDestroy() {
 //        super.onDestroy();
-//        Log.d("Ashish", "ContactsListFragment - onDestroy");
+//        Log.d("Ashish", "FriendsFragment - onDestroy");
 //    }
 
     @Override
@@ -96,13 +96,13 @@ public class ContactsListFragment extends Fragment implements
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        Log.d("Ashish", "ContactsListFragment - onCreateView");
+        Log.d("Ashish", "FriendsFragment - onCreateView");
 
         final Activity activity = getActivity();
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
-        rootView = inflater.inflate(R.layout.fragment_contacts, container, false);
+        rootView = inflater.inflate(R.layout.fragment_friends, container, false);
         final Toolbar mToolbar = (Toolbar) rootView.findViewById(R.id.myReachToolbar);
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.pager_menu);
@@ -115,9 +115,22 @@ public class ContactsListFragment extends Fragment implements
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
         inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-
-        recyclerView.setLayoutManager(new GridLayoutManager(activity, 2));
-        recyclerView.setAdapter(friendsAdapter = new FriendsAdapter(this));
+        friendsAdapter = new FriendsAdapter(this);
+        final GridLayoutManager gridLayoutManager = new GridLayoutManager(activity, 2);
+        final GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                int itemType = friendsAdapter.getItemViewType(position);
+                if (itemType == FriendsAdapter.VIEW_TYPE_LOCKED)
+                    return 2;
+                else
+                    return 1;
+            }
+        };
+        spanSizeLookup.setSpanIndexCacheEnabled(true);
+        gridLayoutManager.setSpanSizeLookup(spanSizeLookup);
+        recyclerView.setLayoutManager(gridLayoutManager);
+        recyclerView.setAdapter(friendsAdapter);
 
         if (MiscUtils.isOnline(activity))
             FireOnce.sendPing(

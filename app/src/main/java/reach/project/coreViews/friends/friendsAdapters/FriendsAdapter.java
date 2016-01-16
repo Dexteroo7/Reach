@@ -2,7 +2,6 @@ package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -22,13 +21,11 @@ import javax.annotation.Nullable;
 
 import reach.project.R;
 import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.invite.InviteActivity;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
-import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
  * Can not use ReachCursor adapter as item type is Object not cursor
@@ -40,7 +37,6 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final HandOverMessage<ClickData> handOverMessage;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
     private Random random = new Random();
-    private final long inviteId = random.nextInt(Integer.MAX_VALUE);
     private final long lockedId = random.nextInt(Integer.MAX_VALUE);
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
@@ -67,7 +63,6 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public static final byte VIEW_TYPE_FRIEND = 0;
     public static final byte VIEW_TYPE_LOCKED = 1;
-    public static final byte VIEW_TYPE_INVITE = 2;
 
     ///////////Vertical Cursor (parent)
     @Nullable
@@ -86,7 +81,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     ///////////Vertical Cursor (parent)
 
     ///////////Horizontal Cursor
-    private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.myreach_item);
+    private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item);
 
     public void setHorizontalCursor(@Nullable Cursor cursor) {
 
@@ -115,16 +110,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             case VIEW_TYPE_FRIEND: {
 
                 return new FriendsViewHolder(LayoutInflater.from(context)
-                        .inflate(R.layout.myreach_item, parent, false), clickDataHandOver);
+                        .inflate(R.layout.friend_item, parent, false), clickDataHandOver);
             }
 
             case VIEW_TYPE_LOCKED: {
                 return new MoreListHolder(parent);
             }
-
-            case VIEW_TYPE_INVITE:
-                return new SingleItemViewHolder(LayoutInflater.from(context)
-                        .inflate(R.layout.myreach_invite, parent, false), position -> context.startActivity(new Intent(context, InviteActivity.class)));
 
             default:
                 return null;
@@ -164,7 +155,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
             viewHolder.appCount.setText(numberOfApps + "");
-            if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
+            /*if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
 
                 //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
@@ -173,7 +164,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                 viewHolder.newSongs.setVisibility(View.INVISIBLE);
                 viewHolder.newSongs.setText("");
-            }
+            }*/
 
             //first invalidate
             //viewHolder.profilePhotoList.setController(null);
@@ -195,19 +186,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             viewHolder.coverPic.setController(MiscUtils.getControllerResize(viewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
             viewHolder.lockIcon.setVisibility(View.GONE);
+            viewHolder.lockText.setVisibility(View.GONE);
 
-            switch (status) {
-
-                case ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED:
-                    viewHolder.lockIcon.setImageResource(R.drawable.icon_pending_invite);
-                    viewHolder.lockIcon.setVisibility(View.VISIBLE);
-                    //viewHolder.listStatus.setText("Pending");
-                    break;
-                case ReachFriendsHelper.REQUEST_NOT_SENT:
-                    viewHolder.lockIcon.setVisibility(View.VISIBLE);
-                    //viewHolder.listToggle.setImageResource(R.drawable.icon_locked);
-                    //viewHolder.listStatus.setText("");
-                    break;
+            if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+                viewHolder.lockIcon.setImageResource(R.drawable.icon_pending_invite);
+                viewHolder.lockIcon.setVisibility(View.VISIBLE);
+                viewHolder.lockText.setVisibility(View.VISIBLE);
             }
 
             //use
@@ -232,19 +216,14 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Nonnull
     private Object getItem(int position) {
 
-        //Invite card
-        if (position == 9 || verticalCursor == null)
-            return 1;
 
             //Locked friends adapter
-        else if (position == 10)
+        if (position == 10)
             return false;
 
         else if (position < 9) {
 
             if (position == verticalCursorCount)
-                return 1; //Invite card, second last item
-            else if (position == verticalCursorCount + 1)
                 return false; //Locked friends adapter, last item
 
             //Vertical cursor item
@@ -254,8 +233,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 throw new IllegalStateException("Cursor move should have been successful " + position + " " + verticalCursor.getCount());
         } else {
 
-            //9th and 10th position will be occupied before hand
-            final int relativePosition = position - 2;
+            //10th position will be occupied before hand
+            final int relativePosition = position - 1;
 
             if (verticalCursor.moveToPosition(relativePosition))
                 return verticalCursor;
@@ -271,10 +250,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return VIEW_TYPE_FRIEND;
-        else if (item instanceof Boolean)
-            return VIEW_TYPE_LOCKED;
         else
-            return VIEW_TYPE_INVITE;
+            return VIEW_TYPE_LOCKED;
     }
 
     @Override
@@ -283,10 +260,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return ((Cursor) item).getLong(0); //_id
-        else if (item instanceof Boolean)
-            return lockedId;
         else
-            return inviteId;
+            return lockedId;
     }
 
     @Override
@@ -294,7 +269,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         if (verticalCursor != null)
             verticalCursorCount = verticalCursor.getCount();
-        return verticalCursorCount + 2; //adjust for horizontal list
+        return verticalCursorCount + 1; //adjust for horizontal list
     }
 
     @Override
