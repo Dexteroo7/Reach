@@ -39,7 +39,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final HandOverMessage<ClickData> handOverMessage;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private Random random = new Random();
+    private final Random random = new Random();
     private final long inviteId = random.nextInt(Integer.MAX_VALUE);
     private final long lockedId = random.nextInt(Integer.MAX_VALUE);
 

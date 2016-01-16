@@ -11,7 +11,7 @@ import reach.project.R;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
-final class FriendsViewHolder extends SingleItemViewHolder implements View.OnClickListener {
+final class FriendsViewHolder extends SingleItemViewHolder {
 
     public final TextView userNameList, telephoneNumberList, newSongs, appCount;
     public final ImageView lockIcon, optionsIcon;
@@ -20,7 +20,6 @@ final class FriendsViewHolder extends SingleItemViewHolder implements View.OnCli
     protected FriendsViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
 
         super(itemView, handOverMessage);
-        this.itemView.setOnClickListener(this);
 
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);
         this.telephoneNumberList = (TextView) itemView.findViewById(R.id.telephoneNumberList);
@@ -31,17 +30,18 @@ final class FriendsViewHolder extends SingleItemViewHolder implements View.OnCli
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
 
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
-        this.optionsIcon.setOnClickListener(this);
+        this.optionsIcon.setOnClickListener(optionsMenuClick);
     }
 
-    @Override
-    public void onClick(View v) {
+    private final View.OnClickListener optionsMenuClick = view -> {
 
-        final PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+        final PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
         popupMenu.inflate(R.menu.friends_popup_menu);
         popupMenu.setOnMenuItemClickListener(item -> {
+
             switch (item.getItemId()) {
                 case R.id.friends_menu_1:
+                    handOverMessage.handOverMessage(position);
                     return true;
                 case R.id.friends_menu_2:
                     return true;
@@ -50,6 +50,6 @@ final class FriendsViewHolder extends SingleItemViewHolder implements View.OnCli
             }
         });
         popupMenu.show();
-    }
+    };
 }
 

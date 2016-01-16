@@ -76,7 +76,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
         mToolbar.setTitle("Edit Profile");
-        mToolbar.setNavigationOnClickListener(v -> doUpdate());
+        mToolbar.setNavigationOnClickListener(navListener);
 
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(sharedPreferences);
@@ -154,13 +154,16 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void doUpdate() {
+    private final View.OnClickListener navListener = view -> {
+
+        final Context context = view.getContext();
 
         if (firstName.length() == 0) //let it throw, should never happen
-            Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show();
-        else if (!MiscUtils.isOnline(this)) {
-            Toast.makeText(this, "No internet found", Toast.LENGTH_SHORT).show();
-            NavUtils.navigateUpFromSameTask(this); //move back
+            Toast.makeText(context, "Please enter your name", Toast.LENGTH_SHORT).show();
+        else if (!MiscUtils.isOnline(context)) {
+
+            Toast.makeText(context, "No internet found", Toast.LENGTH_SHORT).show();
+            NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //move back
         } else {
 
             final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -168,7 +171,7 @@ public class EditProfileActivity extends AppCompatActivity {
             final String newUserName = firstName.getText().toString();
 
             if (oldUserName.equals(newUserName) && toUploadProfilePhoto == null && toUploadCoverPhoto == null)
-                NavUtils.navigateUpFromSameTask(this); //nothing to change, exit
+                NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //nothing to change, exit
             else {
 
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);
@@ -189,14 +192,14 @@ public class EditProfileActivity extends AppCompatActivity {
                                     coderPicDecodeStream);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
-                    Toast.makeText(this, "Could not update profile data", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Could not update profile data", Toast.LENGTH_SHORT).show();
                 } finally {
                     toUploadProfilePhoto = null;
                     toUploadCoverPhoto = null;
                 }
             }
         }
-    }
+    };
 
     private static final class UpdateProfile extends AsyncTask<Object, String, Boolean> {
 
@@ -309,7 +312,6 @@ public class EditProfileActivity extends AppCompatActivity {
                     final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                     final String userName = SharedPrefUtils.getUserName(sharedPreferences);
 
-                    //TODO set old values
                     if (activity.profileDrawee != null)
                         activity.profileDrawee.setImageURI(AlbumArtUri.getUserImageUri(
                                 myId,

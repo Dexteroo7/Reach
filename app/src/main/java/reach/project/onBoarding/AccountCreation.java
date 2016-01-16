@@ -1,13 +1,11 @@
 package reach.project.onBoarding;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -21,34 +19,18 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.google.android.gms.analytics.HitBuilders;
+import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.common.base.Optional;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.lang.ref.WeakReference;
-import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
-import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ancillaryClasses.UseContext;
-import reach.project.utils.ancillaryClasses.UseContextAndFragment;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AccountCreation extends Fragment {
-
-    private static String imageFilePath = null;
-
-    private static WeakReference<AccountCreation> reference = null;
 
     public static Fragment newInstance(Optional<OldUserContainerNew> container) {
 
@@ -60,22 +42,36 @@ public class AccountCreation extends Fragment {
             final OldUserContainerNew userContainer = container.get();
             bundle.putStringArray("oldData", new String[]{
                     userContainer.getName() == null ? "" : userContainer.getName(),
+                    userContainer.getCoverPic() == null ? "" : userContainer.getCoverPic(),
                     userContainer.getImageId() == null ? "" : userContainer.getImageId()});
             fragment.setArguments(bundle);
         }
 
-        reference = new WeakReference<>(fragment);
         return fragment;
     }
 
-    private final int IMAGE_PICKER_SELECT = 999;
+    private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
+    private static final int IMAGE_PICKER_SELECT = 999;
 
+    @Nullable
+    private Uri profilePicUri = null;
     @Nullable
     private SplashInterface mListener = null;
     @Nullable
     private SimpleDraweeView profilePhotoSelector = null;
 
-    private final ExecutorService profilePhotoService = MiscUtils.getRejectionExecutor();
+    private final View.OnClickListener imagePicker = v -> {
+
+        final Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_PICKER_SELECT);
+        } catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Sorry! Your device does not support this feature", Toast.LENGTH_SHORT).show();
+        }
+    };
 
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
@@ -88,15 +84,16 @@ public class AccountCreation extends Fragment {
         profilePhotoSelector.setOnClickListener(imagePicker);
         userName.requestFocus();
 
-        final String oldImageId;
+        final String oldImageId, oldCoverPicId;
         final FragmentActivity activity = getActivity();
         final Bundle arguments;
         final String[] oldData;
-        if ((arguments = getArguments()) != null && (oldData = arguments.getStringArray("oldData")) != null && oldData.length == 2) {
+        if ((arguments = getArguments()) != null && (oldData = arguments.getStringArray("oldData")) != null && oldData.length == 3) {
 
             /**
              * oldData[0] = name;
-             * oldData[1] = imageId;
+             * oldData[1] = oldCoverPic;
+             * oldData[2] = oldImageId;
              */
             if (!TextUtils.isEmpty(oldData[0])) {
 
@@ -104,18 +101,18 @@ public class AccountCreation extends Fragment {
                 userName.setSelection(oldData[0].length());
             }
 
-            oldImageId = oldData[1];
-
-            if (!TextUtils.isEmpty(oldData[1])) {
-
-                Uri uriToDisplay = null;
-                if (!TextUtils.isEmpty(oldData[1]) && !oldData[1].equals("hello_world"))
-                    uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldData[1]);
+            oldCoverPicId = oldData[1];
+            oldImageId = oldData[2];
+            if (!TextUtils.isEmpty(oldImageId) && !oldImageId.equals("hello_world")) {
+                final Uri uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldImageId);
                 profilePhotoSelector.setController(MiscUtils.getControllerResize(profilePhotoSelector.getController(),
-                        uriToDisplay, 100, 100));
+                        uriToDisplay, PROFILE_PHOTO_RESIZE));
             }
-        } else
+        } else {
+
+            oldCoverPicId = "";
             oldImageId = "";
+        }
 
         rootView.findViewById(R.id.verify).setOnClickListener(view -> {
 
@@ -134,7 +131,7 @@ public class AccountCreation extends Fragment {
 
             final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             final String phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
-            mListener.onOpenScan(name, imageFilePath, oldImageId, phoneNumber);
+            mListener.onOpenScan(name, profilePicUri, oldImageId, oldCoverPicId, phoneNumber); //not possible to be null
 
             //TODO track
             /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);
@@ -146,19 +143,6 @@ public class AccountCreation extends Fragment {
         });
         return rootView;
     }
-
-    private final View.OnClickListener imagePicker = v -> {
-
-        final Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        try {
-            startActivityForResult(Intent.createChooser(intent, "Select Picture"), IMAGE_PICKER_SELECT);
-        } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(getContext(), "Sorry! Your device does not support this feature", Toast.LENGTH_SHORT).show();
-        }
-    };
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
@@ -177,16 +161,13 @@ public class AccountCreation extends Fragment {
             return;
         }
 
-        final InputStream imageStream;
-        try {
-            imageStream = activity.getContentResolver().openInputStream(imageUri);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (profilePhotoSelector != null) {
 
-        new ProcessImage().executeOnExecutor(profilePhotoService, imageStream);
+            final DraweeController draweeController = MiscUtils.getControllerResize(
+                    profilePhotoSelector.getController(), imageUri, PROFILE_PHOTO_RESIZE);
+            profilePhotoSelector.setController(draweeController);
+        }
+        profilePicUri = imageUri;
     }
 
     @Override
@@ -205,115 +186,5 @@ public class AccountCreation extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    private static final class ProcessImage extends AsyncTask<InputStream, Void, File> {
-
-        private static final int BUF_SIZE = 0x1000; // 4K
-
-        private long copy(InputStream from, RandomAccessFile to)
-                throws IOException {
-
-            checkNotNull(from);
-            checkNotNull(to);
-
-            byte[] buf = new byte[BUF_SIZE];
-            long total = 0;
-            while (true) {
-                int r = from.read(buf);
-                if (r == -1) {
-                    break;
-                }
-                to.write(buf, 0, r);
-                total += r;
-            }
-            return total;
-        }
-
-        @Override
-        protected File doInBackground(InputStream... params) {
-
-            if (params[0] == null)
-                return null;
-
-            File tempFile = null;
-            RandomAccessFile accessFile = null;
-
-            try {
-
-                tempFile = File.createTempFile("profile_photo", ".tmp");
-                accessFile = new RandomAccessFile(tempFile, "rws");
-                accessFile.setLength(0);
-                copy(params[0], accessFile);
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                if (tempFile != null && !tempFile.delete() && accessFile != null)
-                    try {
-                        accessFile.setLength(0);
-                    } catch (IOException ignored) {
-                    }
-                return null;
-
-            } finally {
-                MiscUtils.closeQuietly(accessFile, params[0]);
-            }
-
-            //TODO
-//            try {
-//                return MiscUtils.compressImage(tempFile); //return compressed image
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-
-            return null;
-        }
-
-        @Nullable
-        private ProgressDialog dialog = null;
-
-        @Override
-        protected void onPreExecute() {
-
-            super.onPreExecute();
-            dialog = MiscUtils.useContextFromFragment(reference, (UseContext<ProgressDialog, Context>) ProgressDialog::new).orNull();
-            if (dialog != null) {
-                dialog.setCancelable(false);
-                dialog.show();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(File file) {
-
-            super.onPostExecute(file);
-            MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, AccountCreation>() {
-                @Override
-                public void work(Activity activity, AccountCreation fragment) {
-
-                    if (file == null) {
-
-                        //TODO
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Failed to set profile photo")
-                                        //.setAction("User Id - " + serverId)
-//                                .setLabel("Phone Number - " + phoneNumber)
-                                .setValue(1)
-                                .build());
-                        Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_LONG).show();
-
-                    } else if (fragment.profilePhotoSelector != null) {
-
-                        //save profile photo path
-                        imageFilePath = file.getPath();
-                        fragment.profilePhotoSelector.setController(MiscUtils.getControllerResize(fragment.profilePhotoSelector.getController(),
-                                Uri.parse("file://" + imageFilePath), 100, 100));
-                    }
-                }
-            });
-
-            if (dialog != null)
-                dialog.dismiss();
-        }
     }
 }

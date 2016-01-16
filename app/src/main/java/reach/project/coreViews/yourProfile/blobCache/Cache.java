@@ -125,6 +125,7 @@ public abstract class Cache implements Closeable {
             }
             //load fresh
             loadingDone.set(false);
+            executorService.purge();
         }
     }
 

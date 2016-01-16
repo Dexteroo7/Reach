@@ -95,6 +95,7 @@ public class UserImageEndpoint extends HttpServlet {
 
         final String actualImageId;
         switch (requestedImage) {
+
             case "imageId":
                 actualImageId = reachUser.getImageId();
                 break;
@@ -104,6 +105,11 @@ public class UserImageEndpoint extends HttpServlet {
             default:
                 resp.sendError(400, "Only imageId and coverPicId are supported as a requestedImage param");
                 return;
+        }
+
+        if (TextUtils.isEmpty(actualImageId)) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "User does not have a " + requestedImage);
+            return;
         }
 
         ///////////////////////////////Generate the serving url
