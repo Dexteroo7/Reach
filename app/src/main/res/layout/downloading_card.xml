@@ -24,11 +24,18 @@
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="10dp"
                 fresco:placeholderImage="@color/reach_color" />
+            <ImageView
+                android:id="@+id/optionsIcon"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="4dp"
+                android:src="@drawable/icon_extra_dots_gray"
+                android:layout_width="20dp"
+                android:layout_height="25dp" />
             <LinearLayout
                 android:id="@+id/downContainer"
-                android:layout_alignParentRight="true"
+                android:layout_toLeftOf="@id/optionsIcon"
                 android:layout_centerVertical="true"
-                android:layout_margin="10dp"
+                android:layout_marginLeft="10dp"
                 android:gravity="center"
                 android:orientation="vertical"
                 android:layout_width="wrap_content"

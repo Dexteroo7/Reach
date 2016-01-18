@@ -88,8 +88,6 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             simpleListHolder.headerText.setText(recentSong.title);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(simpleListHolder.listOfItems.getContext(), 2));
-
-            Log.i("Ayush", "Found recent items with size " + recentSong.songList.size() + " ");
             simpleListHolder.listOfItems.setAdapter(new MoreAdapter(recentSong.songList, cacheAdapterInterface, R.layout.song_grid_item));
 
         } else if (message instanceof SmartSong && holder instanceof MoreListHolder) {

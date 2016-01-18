@@ -480,13 +480,11 @@ public class ReachUserEndpoint {
                 continue; //no change happened !
 
             final ReachUser reachUser = ofy().load().type(ReachUser.class).id(user.getId()).now();
-            if ((reachUser.getGcmId() == null || reachUser.getGcmId().equals(""))) {
+            if (TextUtils.isEmpty(reachUser.getGcmId()) && reachUser.getId() != Constants.devikaId) {
 
                 //DO NOT MARK AS DEAD IF DEVIKA !
-                if (!(reachUser.getPhoneNumber().equals(Constants.devikaPhoneNumber) || reachUser.getId() == Constants.devikaId)) {
-                    logger.info("Marking dead ! " + reachUser.getUserName());
-                    toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
-                }
+                logger.info("Marking dead ! " + reachUser.getUserName());
+                toUpdate.add(new Friend(reachUser.getId(), true)); //mark dead
             } else {
 
                 logger.info("Marking for update ! " + reachUser.getUserName());

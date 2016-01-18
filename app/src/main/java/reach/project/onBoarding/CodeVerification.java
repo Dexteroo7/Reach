@@ -18,6 +18,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.telephony.SmsMessage;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,7 +45,7 @@ import reach.project.onBoarding.smsRelated.SmsListener;
 import reach.project.onBoarding.smsRelated.Status;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.ancillaryClasses.UseContext2;
+import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 
 public class CodeVerification extends Fragment {
 
@@ -52,12 +53,10 @@ public class CodeVerification extends Fragment {
     private static final String AUTH_KEY = "AUTH_KEY";
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
 
-    private static String phoneNumber;
-    private static String finalAuthKey;
-
     private static WeakReference<CodeVerification> reference;
 
-    public static CodeVerification newInstance(String authKey, String phoneNumber) {
+    public static CodeVerification newInstance(String authKey,
+                                               String phoneNumber) {
 
         final Bundle args;
         CodeVerification fragment;
@@ -85,6 +84,8 @@ public class CodeVerification extends Fragment {
     private EditText verificationCode = null;
     @Nullable
     private Future<OldUserContainerNew> containerNewFuture = null;
+    @Nullable
+    private String phoneNumber = null, finalAuthKey = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -102,12 +103,18 @@ public class CodeVerification extends Fragment {
                                 Manifest.permission.RECEIVE_SMS
                         }, MY_PERMISSIONS_RECEIVE_SMS);
             else
-                activity.registerReceiver(SMSReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+                activity.registerReceiver(SMS_RECEIVER, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
         } else
-            activity.registerReceiver(SMSReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+            activity.registerReceiver(SMS_RECEIVER, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 
-        phoneNumber = getArguments().getString(PHONE_NUMBER);
-        finalAuthKey = getArguments().getString(AUTH_KEY);
+        phoneNumber = getArguments().getString(PHONE_NUMBER, "");
+        finalAuthKey = getArguments().getString(AUTH_KEY, "");
+
+        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(finalAuthKey)) {
+            //should never happen
+            activity.finish();
+            return rootView;
+        }
 
         verificationCode = (EditText) rootView.findViewById(R.id.verificationCode);
         verificationCode.addTextChangedListener(verificationWatcher);
@@ -117,7 +124,7 @@ public class CodeVerification extends Fragment {
 
         //send sms and wait
         SmsListener.forceQuit.set(true); //quit current
-        SmsListener.sendSms(phoneNumber, finalAuthKey, messenger, getContext());
+        SmsListener.sendSms(phoneNumber, finalAuthKey, MESSENGER, getContext());
 
         //meanWhile fetch old account
         containerNewFuture = oldAccountFetcher.submit(() -> MiscUtils.autoRetry(() ->
@@ -127,31 +134,13 @@ public class CodeVerification extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-
-        super.onAttach(context);
-        try {
-            mListener = (SplashInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement SplashInterface");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
 
         if (requestCode == MY_PERMISSIONS_RECEIVE_SMS)
             if (grantResults.length > 0 && grantResults[0] == 0)
-                getActivity().registerReceiver(SMSReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+                getActivity().registerReceiver(SMS_RECEIVER, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
     }
 
     @Override
@@ -159,7 +148,7 @@ public class CodeVerification extends Fragment {
 
         super.onDestroyView();
         try {
-            getActivity().unregisterReceiver(SMSReceiver);
+            getActivity().unregisterReceiver(SMS_RECEIVER);
         } catch (IllegalArgumentException ignored) {
         }
         verificationCode = null;
@@ -180,13 +169,62 @@ public class CodeVerification extends Fragment {
         @Override
         public void afterTextChanged(Editable editable) {
 
-            if (finalAuthKey.equals(editable.toString()))
-                //start account creation
-                accountCreator.submit(proceedToAccountCreation);
+            final String enteredCode = editable.toString();
+            if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey))
+                accountCreator.submit(proceedToAccountCreation); //start account creation
         }
     };
 
-    private static final BroadcastReceiver SMSReceiver = new BroadcastReceiver() {
+    private final Runnable proceedToAccountCreation = () -> {
+
+        OldUserContainerNew containerNew = null;
+        if (containerNewFuture == null)
+            containerNew = null;
+        else
+            try {
+                containerNew = containerNewFuture.get(5000L, TimeUnit.SECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                e.printStackTrace();
+            }
+
+        if (containerNew != null) {
+
+            Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
+            FireOnce.contactSync(
+                    new WeakReference<>(getActivity().getApplicationContext()),
+                    containerNew.getServerId(),
+                    phoneNumber);
+        }
+
+        if (mListener != null)
+            mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
+    };
+
+//    private static final View.OnClickListener retryListener = view -> new AlertDialog.Builder(view.getContext())
+//            .setMessage("Send verification code again?")
+//            .setPositiveButton("Yes", (dialog, which) -> {
+//                //TODO send code again
+//                dialog.dismiss();
+//            })
+//            .setNegativeButton("No", (dialog, which) -> {
+//                dialog.dismiss();
+//            })
+//            .show();
+
+    private final View.OnClickListener verifyCodeListener = view -> {
+
+        final String enteredCode = verificationCode != null ? verificationCode.getText().toString().trim() : "";
+        final Context context = view.getContext();
+
+        if (!TextUtils.isEmpty(enteredCode) && enteredCode.equals(finalAuthKey)) {
+
+            //start account creation
+            accountCreator.submit(proceedToAccountCreation);
+        } else
+            Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
+    };
+
+    private static final BroadcastReceiver SMS_RECEIVER = new BroadcastReceiver() {
 
         @SuppressWarnings("deprecation")
         private SmsMessage getMessageFromBytes(byte[] toParse) {
@@ -209,13 +247,12 @@ public class CodeVerification extends Fragment {
                 } catch (NullPointerException ignored) {
 
                     //weird null pointer
-                    MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
                         @Override
-                        public void work(Activity activity) {
-
+                        public void work(Activity activity, CodeVerification fragment) {
                             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                     .setCategory("SEVERE ERROR, number verification intent null")
-                                    .setAction("Phone Number - " + phoneNumber)
+                                    .setAction("Phone Number - " + fragment.phoneNumber)
                                     .setValue(1)
                                     .build());
                         }
@@ -229,13 +266,12 @@ public class CodeVerification extends Fragment {
                 final Bundle bundle = intent.getExtras();
                 if (bundle == null) {
 
-                    MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
                         @Override
-                        public void work(Activity activity) {
-
+                        public void work(Activity activity, CodeVerification fragment) {
                             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                     .setCategory("SEVERE ERROR, number verification bundle null")
-                                    .setAction("Phone Number - " + phoneNumber)
+                                    .setAction("Phone Number - " + fragment.phoneNumber)
                                     .setValue(1)
                                     .build());
                         }
@@ -248,17 +284,16 @@ public class CodeVerification extends Fragment {
 
                 if (pdusObj == null || pdusObj.length == 0) {
 
-                    MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
+                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
                         @Override
-                        public void work(Activity activity) {
-
+                        public void work(Activity activity, CodeVerification fragment) {
                             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                     .setCategory("SEVERE ERROR, number verification pdus error")
-                                    .setAction("Phone Number - " + phoneNumber)
+                                    .setAction("Phone Number - " + fragment.phoneNumber)
                                     .setValue(1)
                                     .build());
                         }
-                    });                        //fail
+                    });//fail
                     return;
                 }
 
@@ -269,13 +304,13 @@ public class CodeVerification extends Fragment {
 
             if (msgs == null || msgs.length == 0) {
 
-                MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
-                    @Override
-                    public void work(Activity activity) {
+                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
 
+                    @Override
+                    public void work(Activity activity, CodeVerification fragment) {
                         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("SEVERE ERROR, number verification msgs null")
-                                .setAction("Phone Number - " + phoneNumber)
+                                .setAction("Phone Number - " + fragment.phoneNumber)
                                 .setValue(1)
                                 .build());
                     }
@@ -319,13 +354,13 @@ public class CodeVerification extends Fragment {
 
             if (!done) {
 
-                MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
-                    @Override
-                    public void work(Activity activity) {
+                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
 
+                    @Override
+                    public void work(Activity activity, CodeVerification fragment) {
                         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                                 .setCategory("Number verification done was false")
-                                .setAction("Phone Number - " + phoneNumber)
+                                .setAction("Phone Number - " + fragment.phoneNumber)
                                 .setValue(1)
                                 .build());
                     }
@@ -334,60 +369,7 @@ public class CodeVerification extends Fragment {
         }
     };
 
-    private final Runnable proceedToAccountCreation = () -> {
-
-        OldUserContainerNew containerNew = null;
-        if (containerNewFuture == null)
-            containerNew = null;
-        else
-            try {
-                containerNew = containerNewFuture.get(5000L, TimeUnit.SECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                e.printStackTrace();
-            }
-
-        if (containerNew != null) {
-
-            Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
-            FireOnce.contactSync(
-                    new WeakReference<>(getActivity().getApplicationContext()),
-                    containerNew.getServerId(),
-                    phoneNumber);
-        }
-
-        if (mListener != null)
-            mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
-    };
-
-//    private static final View.OnClickListener retryListener = view -> new AlertDialog.Builder(view.getContext())
-//            .setMessage("Send verification code again?")
-//            .setPositiveButton("Yes", (dialog, which) -> {
-//                //TODO send code again
-//                dialog.dismiss();
-//            })
-//            .setNegativeButton("No", (dialog, which) -> {
-//                dialog.dismiss();
-//            })
-//            .show();
-
-    private final View.OnClickListener verifyCodeListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-
-            final String enteredCode = verificationCode != null ? verificationCode.getText().toString().trim() : null;
-            final Context context = view.getContext();
-
-            if (finalAuthKey.equals(enteredCode)) {
-
-                //start account creation
-                accountCreator.submit(proceedToAccountCreation);
-
-            } else
-                Toast.makeText(context, "Wrong verification code. Please try again!", Toast.LENGTH_SHORT).show();
-        }
-    };
-
-    private static final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
+    private static final Messenger MESSENGER = new Messenger(new Handler(new Handler.Callback() {
 
         @Override
         public boolean handleMessage(Message message) {
@@ -469,4 +451,22 @@ public class CodeVerification extends Fragment {
             return true;
         }
     }));
+
+    @Override
+    public void onAttach(Context context) {
+
+        super.onAttach(context);
+        try {
+            mListener = (SplashInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
 }

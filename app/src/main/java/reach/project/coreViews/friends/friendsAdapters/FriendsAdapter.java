@@ -1,13 +1,16 @@
 package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,9 +24,11 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -39,11 +44,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final HandOverMessage<ClickData> handOverMessage;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private Random random = new Random();
+    private final Random random = new Random();
     private final long lockedId = random.nextInt(Integer.MAX_VALUE);
+    private Context context;
 
-    public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
-
+    public FriendsAdapter(Context context, HandOverMessage<ClickData> handOverMessage) {
+        this.context = context;
         this.handOverMessage = handOverMessage;
         setHasStableIds(true);
     }
@@ -105,12 +111,39 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             Pair <Integer, Long> pair = (Pair<Integer, Long>) handOverObject;
             final Object object = getItem(pair.first);
             final Cursor cursor = (Cursor) object;
-            try {
-                StaticData.USER_API.removeFriend(cursor.getLong(0), pair.second).execute();
-            }
-            catch (IOException e) {e.printStackTrace();}
+            final long userId = cursor.getLong(0);
+            new RemoveFriend().execute(userId, pair.second);
+
+            final ContentValues values = new ContentValues();
+            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+            context.getContentResolver().update(
+                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                    values,
+                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                    new String[]{userId + ""});
         }
     };
+
+    private static class RemoveFriend extends AsyncTask<Long, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Long... params) {
+            try {
+                final MyString response = StaticData.USER_API.removeFriend(params[0], params[1]).execute();
+                return !(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean)
+                Log.d("Ashish", "Friend removed");
+        }
+    }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

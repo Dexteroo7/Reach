@@ -1,16 +1,14 @@
 package reach.project.coreViews.push.friends;
 
 import android.database.Cursor;
-import android.net.Uri;
-import android.text.TextUtils;
 import android.view.View;
 
 import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -47,21 +45,26 @@ class ContactChooserAdapter extends ReachCursorAdapter<FriendsViewHolder> {
         final String imageId = item.getString(2);
 
         holder.userNameList.setText(userName);
-        holder.telephoneNumberList.setText(item.getInt(3)+"");
-        holder.appCount.setText(item.getInt(4)+"");
+        holder.telephoneNumberList.setText(item.getInt(3) + "");
+        holder.appCount.setText(item.getInt(4) + "");
 
-        Uri uriToDisplay = null;
+        /*Uri uriToDisplay = null;
         if (!TextUtils.isEmpty(imageId) && !imageId.equals("hello_world"))
-            uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);
-        holder.profilePhotoList.setController(MiscUtils.getControllerResize(holder.profilePhotoList.getController(),
-                uriToDisplay, 100, 100));
+            uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId);*/
+        holder.profilePhotoList.setImageURI(AlbumArtUri.getUserImageUri(
+                userId,
+                "imageId",
+                "rw",
+                true,
+                200,
+                200));
+        //holder.profilePhotoList.setController(MiscUtils.getControllerResize(holder.profilePhotoList.getController(), uriToDisplay, 100, 100));
 
         //use this
         if (selectedUsers.contains(userId)) {
             holder.mask.setVisibility(View.VISIBLE);
             holder.checkBox.setChecked(true);
-        }
-        else {
+        } else {
             holder.mask.setVisibility(View.GONE);
             holder.checkBox.setChecked(false);
         }

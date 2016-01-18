@@ -136,9 +136,9 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         final Activity activity = getActivity();
 
         parentAdapter = new ParentAdapter<>(this);
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity()));
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
-        MaterialViewPagerHelper.registerRecyclerView(getActivity(), mRecyclerView, null);
+        MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
         //update music
         appUpdaterService.submit(appUpdater);
@@ -177,8 +177,6 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public void handOverMessage(@NonNull App item) {
-
-        //TODO
         MiscUtils.openAppinPlayStore(getContext(), item.packageName);
     }
 

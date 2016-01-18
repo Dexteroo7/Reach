@@ -48,6 +48,7 @@ public class NumberVerification extends Fragment {
 
     @Nullable
     private EditText telephoneNumber = null;
+    @Nullable
     private SplashInterface mListener = null;
 
     @Override

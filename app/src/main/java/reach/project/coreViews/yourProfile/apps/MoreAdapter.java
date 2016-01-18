@@ -22,6 +22,12 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
     }
 
     @Override
+    public int getItemCount() {
+        int size = super.getItemCount();
+        return size < 4 ? size : 4;
+    }
+
+    @Override
     public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         return new AppItemHolder(itemView, handOverMessage);
     }
@@ -40,6 +46,7 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
         } catch (PackageManager.NameNotFoundException ignored) {
+            holder.appIcon.setImageDrawable(null);
         }
     }
 

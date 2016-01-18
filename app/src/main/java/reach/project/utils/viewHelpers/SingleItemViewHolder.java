@@ -9,8 +9,8 @@ import android.view.View;
 public class SingleItemViewHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
-    private final HandOverMessage<Integer> handOverMessage;
-    private int position;
+    protected final HandOverMessage<Integer> handOverMessage;
+    protected int position;
 
     public SingleItemViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         super(itemView);

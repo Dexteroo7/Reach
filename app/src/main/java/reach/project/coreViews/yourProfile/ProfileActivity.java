@@ -13,6 +13,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -80,10 +81,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private final View.OnClickListener cancelRequest = view -> {
 
-        try {
-            StaticData.USER_API.removeFriend(userId, SharedPrefUtils.getServerId(sharedPreferences)).execute();
-        }
-        catch (IOException e) {e.printStackTrace();}
+        new RemoveFriend().execute(userId, SharedPrefUtils.getServerId(sharedPreferences));
 
         //update locally
         final ContentValues values = new ContentValues();
@@ -97,6 +95,27 @@ public class ProfileActivity extends AppCompatActivity {
         //show in view
         setRequestNotSent();
     };
+
+    private static class RemoveFriend extends AsyncTask<Long, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Long... params) {
+            try {
+                final reach.backend.entities.userApi.model.MyString response = StaticData.USER_API.removeFriend(params[0], params[1]).execute();
+                return !(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean)
+                Log.d("Ashish", "Friend removed");
+        }
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

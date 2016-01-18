@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.NavUtils;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -72,6 +73,7 @@ public class YourProfileActivity extends AppCompatActivity {
                     return false;
             }
         });
+        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(YourProfileActivity.this));
 
         final Intent intent = getIntent();
         final long userId = intent.getLongExtra("userId", 0L);

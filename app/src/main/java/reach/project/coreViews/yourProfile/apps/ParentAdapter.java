@@ -3,7 +3,6 @@ package reach.project.coreViews.yourProfile.apps;
 import android.content.pm.PackageManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,11 +11,14 @@ import com.squareup.wire.Message;
 
 import java.util.Random;
 
+import javax.annotation.Nonnull;
+
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 
@@ -30,12 +32,22 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private static final byte RECENT_LIST_TYPE = 2;
     private static final byte SMART_LIST_TYPE = 3;
 
-    private Random random = new Random();
+    private final Random random = new Random();
     private final long recentHolderId = random.nextInt(Integer.MAX_VALUE);
     private final long smartHolderId = random.nextInt(Integer.MAX_VALUE);
 
-
     private final CacheAdapterInterface<T, App> cacheAdapterInterface;
+    private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+
+            final T message = cacheAdapterInterface.getItem(position);
+            if (message instanceof App)
+                cacheAdapterInterface.handOverMessage((App) message);
+            else
+                throw new IllegalArgumentException("App item holder passed on an illegal value type");
+        }
+    };
 
     public ParentAdapter(CacheAdapterInterface<T, App> cacheAdapterInterface) {
 
@@ -59,8 +71,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             try {
                 appAppItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(app.packageName));
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
+            } catch (PackageManager.NameNotFoundException ignored) {
+                appAppItemHolder.appIcon.setImageDrawable(null);
             }
 
         } else if (message instanceof RecentApps && holder instanceof MoreListHolder) {
@@ -70,12 +82,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             listHolder.headerText.setText(recentApp.title);
             if (listHolder.listOfItems.getLayoutManager() == null)
                 listHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(listHolder.listOfItems.getContext(), 2));
-
-            Log.i("Ayush", "Found recent apps with size " + recentApp.appList.size() + " ");
-            if (recentApp.appList.size() < 4)
-                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
-            else
-                listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_grid_item));
+            listHolder.listOfItems.setAdapter(new MoreAdapter(recentApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
 
         } else if (message instanceof SmartApps && holder instanceof MoreListHolder) {
 
@@ -84,12 +91,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             listHolder.headerText.setText(smartApp.title);
             if (listHolder.listOfItems.getLayoutManager() == null)
                 listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(listHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
-
-            Log.i("Ayush", "Found smart apps with size " + smartApp.appList.size() + " ");
-            if (smartApp.appList.size() < 4)
-                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
-            else
-                listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList.subList(0, 4), cacheAdapterInterface, R.layout.app_grid_item));
+            listHolder.listOfItems.setAdapter(new MoreAdapter(smartApp.appList, cacheAdapterInterface, R.layout.app_grid_item));
         }
     }
 
@@ -100,14 +102,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             case APP_ITEM_TYPE:
                 return new AppItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.app_list_item, parent, false), position -> {
-
-                    final T message = cacheAdapterInterface.getItem(position);
-                    if (message instanceof App)
-                        cacheAdapterInterface.handOverMessage((App) message);
-                    else
-                        throw new IllegalArgumentException("App item holder passed on an illegal value type");
-                });
+                        .inflate(R.layout.app_list_item, parent, false), handOverMessage);
             case RECENT_LIST_TYPE:
                 return new MoreListHolder(parent,
                         R.layout.list_with_more_button_padding, //Main resource id
