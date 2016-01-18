@@ -99,10 +99,9 @@
             android:id="@+id/optionsIcon"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:layout_width="20dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginRight="2dp"
-            android:layout_height="20dp"
+            android:layout_width="25dp"
+            android:layout_height="30dp"
+            android:padding="2dp"
             android:src="@drawable/icon_extra_dots_gray" />
     </android.support.percent.PercentRelativeLayout>
 </reach.project.utils.viewHelpers.CustomCardView>

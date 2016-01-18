@@ -226,6 +226,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             final JsonObject object = receivedData.get(index).getAsJsonObject();
             containers.add(object);
+            Log.d("Ashish", object.toString());
 
             final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
             final JsonObject viewInfo = MiscUtils.get(object, ExploreJSON.VIEW_INFO).getAsJsonObject();

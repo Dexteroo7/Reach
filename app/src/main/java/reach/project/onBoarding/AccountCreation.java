@@ -259,11 +259,12 @@ public class AccountCreation extends Fragment {
                 MiscUtils.closeQuietly(accessFile, params[0]);
             }
 
-            try {
-                return MiscUtils.compressImage(tempFile); //return compressed image
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            //TODO
+//            try {
+//                return MiscUtils.compressImage(tempFile); //return compressed image
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
             return null;
         }

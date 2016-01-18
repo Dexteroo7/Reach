@@ -50,7 +50,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -839,35 +838,48 @@ public class ReachUserEndpoint {
         logger.info("Trying to update " + Arrays.toString(details));
         final String newName = details[0];
         final String newImageId = details[1];
-
-        //new stuff
-        final String coverPic, statusSong, emailId;
-        final Date birthday;
-        if (details.length == 6) {
-
-            coverPic = details[2];
-            statusSong = details[3];
-            emailId = details[4];
-            birthday = new Date(Long.parseLong(details[5]));
-        } else {
-
-            coverPic = "hello_world";
-            statusSong = "hello_world";
-            emailId = "hello_world";
-            birthday = new Date(0);
-        }
-
         final ReachUser userToSave = ofy().load().type(ReachUser.class).id(clientId).now();
         if (userToSave == null)
             return;
-
         userToSave.setUserName(newName);
         userToSave.setImageId(newImageId);
+        ofy().save().entities(userToSave).now();
+    }
 
-        userToSave.setCoverPicId(coverPic);
-        userToSave.setStatusSong(statusSong);
-        userToSave.setEmailId(emailId);
-        userToSave.setBirthday(birthday);
+    @ApiMethod(
+            name = "updateUserDetailsNew",
+            path = "user/updateUserDetailsNew",
+            httpMethod = ApiMethod.HttpMethod.PUT)
+    public void updateUserDetailsNew(ReachUser reachUser) {
+
+        if (reachUser.getId() == 0)
+            return; //illegal
+
+        final MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+        syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+        syncCache.put(reachUser.getId(), (System.currentTimeMillis() + "").getBytes(),
+                Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
+
+        final ReachUser userToSave = ofy().load().type(ReachUser.class).id(reachUser.getId()).now();
+        if (userToSave == null)
+            return; //illegal
+
+        /**
+         * If new data is available we overwrite it
+         */
+
+        if (!TextUtils.isEmpty(reachUser.getUserName()))
+            userToSave.setUserName(reachUser.getUserName()); //new userName available
+        if (!TextUtils.isEmpty(reachUser.getImageId()))
+            userToSave.setImageId(reachUser.getImageId()); //new imageId available
+        if (!TextUtils.isEmpty(reachUser.getCoverPicId()))
+            userToSave.setCoverPicId(reachUser.getCoverPicId()); //new coverPicId available
+        if (!TextUtils.isEmpty(reachUser.getStatusSong()))
+            userToSave.setStatusSong(reachUser.getStatusSong()); //new statusSong available
+        if (!TextUtils.isEmpty(reachUser.getEmailId()))
+            userToSave.setEmailId(reachUser.getEmailId()); //new emailId available
+        if (reachUser.getBirthday() != null && reachUser.getBirthday().getTime() > 0)
+            userToSave.setBirthday(reachUser.getBirthday()); //new birthDay available
 
         ofy().save().entities(userToSave).now();
     }

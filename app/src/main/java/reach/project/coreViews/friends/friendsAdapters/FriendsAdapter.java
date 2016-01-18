@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,12 +15,14 @@ import android.view.ViewGroup;
 
 import com.facebook.imagepipeline.common.ResizeOptions;
 
+import java.io.IOException;
 import java.util.Random;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import reach.project.R;
+import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -90,12 +93,23 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
     ///////////Horizontal Cursor
 
-    private final HandOverMessage<Integer> clickDataHandOver = position -> {
+    private final HandOverMessage<Object> clickDataHandOver = handOverObject -> {
 
-        final Object object = getItem(position);
-        if (!(object instanceof Cursor))
-            throw new IllegalStateException("Resource cursor has been corrupted");
-        FriendsAdapter.this.handOverMessage((Cursor) object);
+        if (handOverObject instanceof Integer) {
+            final Object object = getItem((int) handOverObject);
+            if (!(object instanceof Cursor))
+                throw new IllegalStateException("Resource cursor has been corrupted");
+            FriendsAdapter.this.handOverMessage((Cursor) object);
+        }
+        else if (handOverObject instanceof Pair) {
+            Pair <Integer, Long> pair = (Pair<Integer, Long>) handOverObject;
+            final Object object = getItem(pair.first);
+            final Cursor cursor = (Cursor) object;
+            try {
+                StaticData.USER_API.removeFriend(cursor.getLong(0), pair.second).execute();
+            }
+            catch (IOException e) {e.printStackTrace();}
+        }
     };
 
     @Override
@@ -192,13 +206,14 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 viewHolder.lockIcon.setImageResource(R.drawable.icon_pending_invite);
                 viewHolder.lockIcon.setVisibility(View.VISIBLE);
                 viewHolder.lockText.setVisibility(View.VISIBLE);
+                viewHolder.popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Cancel Request");
             }
 
             //use
         } else if (friend instanceof Boolean) {
 
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-            horizontalViewHolder.headerText.setText("Newly added");
+            horizontalViewHolder.headerText.setText("Locked friends");
             if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
                 horizontalViewHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(horizontalViewHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
             horizontalViewHolder.listOfItems.setAdapter(lockedFriendsAdapter);
