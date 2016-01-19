@@ -67,7 +67,6 @@ import com.google.gson.JsonPrimitive;
 import org.json.JSONException;
 
 import java.io.Closeable;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -191,22 +190,6 @@ public enum MiscUtils {
     }
 
     private static final Random random = new Random();
-
-    public static String getRandomPic() {
-
-        final int option = random.nextInt(3);
-        switch (option) {
-
-            case 0:
-                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
-            case 1:
-                return "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240";
-            case 2:
-                return "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240";
-            default:
-                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
-        }
-    }
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
 

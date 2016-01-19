@@ -11,7 +11,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import reach.project.utils.AlbumArtUri;
-import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -58,8 +57,8 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(7) + "");
         friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
-
-        friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), 200, 200));
+        friendsViewHolder.coverPic.setImageURI(Uri.parse(cursor.getString(5)));
+        //friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), 200, 200));
 
         friendsViewHolder.profilePhotoList.setImageURI(AlbumArtUri.getUserImageUri(
                 cursor.getLong(0),

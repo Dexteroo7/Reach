@@ -30,7 +30,6 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.AlbumArtUri;
-import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -183,7 +182,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 //        final String phoneNumber = cursor.getString(1);
             final String userName = cursorExactType.getString(2);
 //            final String imageId = cursorExactType.getString(3);
-            final String coverPicId = cursorExactType.getString(4);
+            final String coverPicId = cursorExactType.getString(5);
 //        final short networkType = cursor.getShort(4);
             final short status = cursorExactType.getShort(6);
 
@@ -231,7 +230,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
             }*/
 
-            viewHolder.coverPic.setController(MiscUtils.getControllerResize(viewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
+            viewHolder.coverPic.setImageURI(Uri.parse(coverPicId));
+            //viewHolder.coverPic.setController(MiscUtils.getControllerResize(viewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
             viewHolder.lockIcon.setVisibility(View.GONE);
             viewHolder.lockText.setVisibility(View.GONE);
 

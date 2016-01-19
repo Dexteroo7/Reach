@@ -183,11 +183,9 @@ public class PlayerActivity extends AppCompatActivity {
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(currentPlaying.getAlbumName(),
                 currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true);
         if (albumArt != null && uriOptional != null) {
-            Uri albumUri;
+            Uri albumUri = null;
             if (uriOptional.isPresent())
                 albumUri = uriOptional.get();
-            else
-                albumUri = Uri.parse(MiscUtils.getRandomPic());
             albumArt.setController(MiscUtils.getControllerResize(albumArt.getController(),
                     albumUri, 500, 500));
         }

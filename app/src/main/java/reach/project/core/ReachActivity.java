@@ -350,36 +350,55 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         tabLayout.addTab(tabLayout.newTab().setText("3"));
         tabLayout.addTab(tabLayout.newTab().setText("4"));
         tabLayout.addTab(tabLayout.newTab().setText("5"));
-        for (int index = 0; index < tabLayout.getTabCount(); index++) {
+        for (int index = 1; index < tabLayout.getTabCount(); index++) {
 
             final TabLayout.Tab tab = tabLayout.getTabAt(index);
             if (tab != null) {
                 tab.setCustomView(UNSELECTED_ICONS[index]);
             }
         }
+
+        final int selectedTabPosition = tabLayout.getSelectedTabPosition();
+        final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
+        if (selectedTab != null)
+            selectedTab.setCustomView(SELECTED_ICONS[selectedTabPosition]);
+
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
 
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-
-                if (tabLayout.getSelectedTabPosition() == 0)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container, FriendsFragment.getInstance()).commit();
-                else if (tabLayout.getSelectedTabPosition() == 1)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
-                else if (tabLayout.getSelectedTabPosition() == 2)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container, ExploreFragment.newInstance(serverId)).commit();
-                else if (tabLayout.getSelectedTabPosition() == 3)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container, DOWNLOAD_PAGER).commit();
-                else if (tabLayout.getSelectedTabPosition() == 4)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container, MyProfileFragment.newInstance()).commit();
+                final int pos = tabLayout.getSelectedTabPosition();
+                tab.setCustomView(null);
+                tab.setCustomView(SELECTED_ICONS[pos]);
+                switch (pos) {
+                    case 0:
+                        getSupportFragmentManager().beginTransaction().replace(R.id.container, FriendsFragment.getInstance()).commit();
+                        return;
+                    case 1:
+                        getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
+                        return;
+                    case 2:
+                        getSupportFragmentManager().beginTransaction().replace(R.id.container, ExploreFragment.newInstance(serverId)).commit();
+                        return;
+                    case 3:
+                        getSupportFragmentManager().beginTransaction().replace(R.id.container, DOWNLOAD_PAGER).commit();
+                        return;
+                    case 4:
+                        getSupportFragmentManager().beginTransaction().replace(R.id.container, MyProfileFragment.newInstance()).commit();
+                        return;
+                }
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
+                tab.setCustomView(null);
+                tab.setCustomView(UNSELECTED_ICONS[tab.getPosition()]);
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
+                tab.setCustomView(null);
+                tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
             }
         });
 

@@ -1,8 +1,9 @@
 package reach.project.coreViews.yourProfile.apps;
 
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.facebook.drawee.view.SimpleDraweeView;
 
 import reach.project.R;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -13,13 +14,13 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
  */
 class AppItemHolder extends SingleItemViewHolder {
 
-    public final ImageView appIcon;
+    public final SimpleDraweeView appIcon;
     public final TextView appName;
 
     public AppItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         super(itemView, handOverMessage);
 
-        this.appIcon = (ImageView) itemView.findViewById(R.id.appIcon);
+        this.appIcon = (SimpleDraweeView) itemView.findViewById(R.id.appIcon);
         this.appName = (TextView) itemView.findViewById(R.id.appName);
     }
 }

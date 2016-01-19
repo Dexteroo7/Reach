@@ -24,6 +24,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.common.base.Optional;
 
+import java.util.Random;
+
 import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.StaticData;
@@ -131,7 +133,8 @@ public class AccountCreation extends Fragment {
 
             final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             final String phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
-            mListener.onOpenScan(name, profilePicUri, oldImageId, oldCoverPicId, phoneNumber); //not possible to be null
+            //TODO temp cover solution
+            mListener.onOpenScan(name, profilePicUri, oldImageId, getRandomPic(), phoneNumber); //not possible to be null
 
             //TODO track
             /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);
@@ -142,6 +145,22 @@ public class AccountCreation extends Fragment {
             } catch (JSONException ignored) {}*/
         });
         return rootView;
+    }
+
+    private String getRandomPic() {
+
+        final int option = new Random().nextInt(3);
+        switch (option) {
+
+            case 0:
+                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
+            case 1:
+                return "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240";
+            case 2:
+                return "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240";
+            default:
+                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
+        }
     }
 
     @Override

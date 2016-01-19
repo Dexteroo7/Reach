@@ -90,7 +90,8 @@ public class YourProfileActivity extends AppCompatActivity {
                         ReachFriendsHelper.COLUMN_IMAGE_ID,
                         ReachFriendsHelper.COLUMN_NETWORK_TYPE,
                         ReachFriendsHelper.COLUMN_STATUS,
-                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS},
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS,
+                        ReachFriendsHelper.COLUMN_COVER_PIC_ID},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
         int numberOfSongs = 0;
@@ -120,8 +121,9 @@ public class YourProfileActivity extends AppCompatActivity {
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                     Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
-            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
+            coverPic.setImageURI(Uri.parse(cursor.getString(7)));
+//            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+//                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 
             cursor.close();
         }

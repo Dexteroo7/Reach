@@ -171,8 +171,9 @@ public class MyProfileFragment extends Fragment {
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)), 100, 100));
 
         final SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
+        coverPic.setImageURI(Uri.parse(SharedPrefUtils.getCoverImageId(preferences)));
+//        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+//                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 
         final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 
