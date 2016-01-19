@@ -1,6 +1,7 @@
 package reach.project.coreViews.yourProfile.apps;
 
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
@@ -46,7 +47,7 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
         } catch (PackageManager.NameNotFoundException ignored) {
-            holder.appIcon.setImageDrawable(null);
+            holder.appIcon.setImageURI(Uri.parse("http://52.74.53.245:8080/getImage/appLogo?packageName=" + item.packageName));
         }
     }
 

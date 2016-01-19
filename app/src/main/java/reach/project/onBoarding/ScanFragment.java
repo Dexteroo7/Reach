@@ -113,8 +113,9 @@ public class ScanFragment extends Fragment {
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
-        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic()), COVER_PHOTO_RESIZE));
+        coverPic.setImageURI(Uri.parse(oldCoverId));
+//        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+//                Uri.parse(MiscUtils.getRandomPic()), COVER_PHOTO_RESIZE));
 
 
         InputStream profilePicOptionsStream = null, profilePicDecodeStream = null;

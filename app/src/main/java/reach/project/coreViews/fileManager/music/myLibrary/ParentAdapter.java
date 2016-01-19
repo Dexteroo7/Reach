@@ -125,7 +125,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             case VIEW_TYPE_RECENT: {
-                return new MoreListHolder(parent);
+
+                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+//            holder.itemView.setBackgroundResource(0);
+                moreListHolder.headerText.setText("Recently Added");
+                moreListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(moreListHolder.listOfItems.getContext(), 2));
+                moreListHolder.listOfItems.setAdapter(recentAdapter);
+                return moreListHolder;
             }
 
             default:
@@ -184,14 +190,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 songItemHolder.albumArt.setImageBitmap(null);
 
             //use
-        } else {
-
-            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-//            holder.itemView.setBackgroundResource(0);
-            horizontalViewHolder.headerText.setText("Recently Added");
-            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
-                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
-            horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }
 

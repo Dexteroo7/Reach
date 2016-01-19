@@ -56,9 +56,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.HashingOutputStream;
-import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -69,7 +66,6 @@ import org.json.JSONException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -1805,21 +1801,4 @@ public enum MiscUtils {
 //        stringBuilder.append(text.substring(start));
 //        return stringBuilder.toString();
 //    }
-
-    public static String computeHashAndCopy(HashFunction hashFunction,
-                                            InputStream mainSource,
-                                            OutputStream mainSink) throws IOException {
-
-        final HashingOutputStream hashingOutputStream = new HashingOutputStream(hashFunction, mainSink);
-        ByteStreams.copy(mainSource, hashingOutputStream);
-
-        hashingOutputStream.flush();
-        mainSink.flush();
-
-        try {
-            return hashingOutputStream.hash().toString();
-        } finally {
-            MiscUtils.closeQuietly(mainSource, hashingOutputStream, mainSink);
-        }
-    }
 }

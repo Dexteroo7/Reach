@@ -144,7 +144,8 @@ public class ProfileActivity extends AppCompatActivity {
                         ReachFriendsHelper.COLUMN_NUMBER_OF_SONGS, //1
                         ReachFriendsHelper.COLUMN_IMAGE_ID, //2
                         ReachFriendsHelper.COLUMN_STATUS, //3
-                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS}, //4
+                        ReachFriendsHelper.COLUMN_NUMBER_OF_APPS, //4
+                        ReachFriendsHelper.COLUMN_COVER_PIC_ID}, //5
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{userId + ""}, null);
 
@@ -169,8 +170,9 @@ public class ProfileActivity extends AppCompatActivity {
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(2)), 100, 100));
 
         SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
+        coverPic.setImageURI(Uri.parse(cursor.getString(5)));
+//        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+//                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
         ((TextView) headerRoot.findViewById(R.id.appCount)).setText(cursor.getInt(4) + "");
 
         final int status = cursor.getInt(3);

@@ -33,6 +33,7 @@ public enum SharedPrefUtils {
                 .putString("userName", reachUserDatabase.getUserName())
                 .putString("deviceId", reachUserDatabase.getDeviceId())
                 .putString("imageId", reachUserDatabase.getImageId())
+                .putString("coverImageId", reachUserDatabase.getCoverPicId())
                 .putString("chatToken", reachUserDatabase.getChatToken())
                 .putLong("serverId", reachUserDatabase.getId())
                 .apply();

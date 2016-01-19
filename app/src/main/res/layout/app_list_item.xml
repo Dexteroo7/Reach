@@ -21,9 +21,9 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
+                fresco:placeholderImage="@android:drawable/sym_def_app_icon"
                 android:layout_width="60dp"
-                android:layout_height="60dp"
-                fresco:placeholderImage="@color/reach_color" />
+                android:layout_height="60dp" />
             <TextView
                 android:id="@+id/downButton"
                 android:layout_width="wrap_content"

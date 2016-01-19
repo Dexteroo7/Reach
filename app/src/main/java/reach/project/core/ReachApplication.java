@@ -146,6 +146,7 @@ public class ReachApplication extends MultiDexApplication implements MemoryTrimm
         super.onCreate();
         //initialize fresco
         final ImagePipelineConfig.Builder configBuilder = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
+
                 .setDecodeFileDescriptorEnabled(true)
                 .setDecodeMemoryFileEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)

@@ -9,7 +9,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.squareup.okhttp.CacheControl;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
@@ -92,7 +94,7 @@ public class SendSMS {
         final Request request = new Request.Builder()
                 .url(url)
                 .cacheControl(CacheControl.FORCE_NETWORK)
-                .post(null).build(); //just make it post
+                .post(RequestBody.create(MediaType.parse("application/octet-stream"), new byte[0])).build(); //just make it post
 
         final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
         final String responseString = response.body().string();
@@ -130,7 +132,7 @@ public class SendSMS {
         final Request request = new Request.Builder()
                 .url(url)
                 .cacheControl(CacheControl.FORCE_NETWORK)
-                .post(null).build(); //just make it post
+                .post(RequestBody.create(MediaType.parse("application/octet-stream"), new byte[0])).build(); //just make it post
 
         final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
         final String statusResponseString = response.body().string();

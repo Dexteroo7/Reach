@@ -94,7 +94,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             case VIEW_TYPE_RECENT: {
-                return new MoreListHolder(parent);
+
+                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                moreListHolder.headerText.setText("Recently Installed");
+                if (moreListHolder.listOfItems.getLayoutManager() == null)
+                    moreListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(moreListHolder.listOfItems.getContext(), 2));
+                moreListHolder.listOfItems.setAdapter(recentAdapter);
+                return moreListHolder;
             }
 
             default:
@@ -121,15 +127,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             //use
-        } else {
-
-            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
+        } else
             holder.itemView.setBackgroundResource(R.drawable.border_shadow1);
-            horizontalViewHolder.headerText.setText("Recently Installed");
-            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
-                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
-            horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
-        }
     }
 
     /**

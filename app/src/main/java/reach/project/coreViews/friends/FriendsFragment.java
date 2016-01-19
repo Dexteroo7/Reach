@@ -26,8 +26,7 @@ import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
-import reach.project.coreViews.friends.invite.InviteActivity;
+import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.utils.FireOnce;
@@ -37,7 +36,7 @@ import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class FriendsFragment extends Fragment implements
-        LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
+        LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<ClickData> {
 
     private static WeakReference<FriendsFragment> reference = null;
 
@@ -62,18 +61,6 @@ public class FriendsFragment extends Fragment implements
     private View rootView = null;
     @Nullable
     private SuperInterface mListener = null;
-
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        Log.d("Ashish", "FriendsFragment - onCreate");
-//    }
-//
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        Log.d("Ashish", "FriendsFragment - onDestroy");
-//    }
 
     @Override
     public void onDestroyView() {
@@ -117,7 +104,7 @@ public class FriendsFragment extends Fragment implements
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
         inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        friendsAdapter = new FriendsAdapter(activity, this);
+        friendsAdapter = new FriendsAdapter(this);
         final GridLayoutManager gridLayoutManager = new GridLayoutManager(activity, 2);
         final GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
             @Override
@@ -156,7 +143,6 @@ public class FriendsFragment extends Fragment implements
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
                     ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
-
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
@@ -195,7 +181,7 @@ public class FriendsFragment extends Fragment implements
     }
 
     @Override
-    public void handOverMessage(@NonNull FriendsAdapter.ClickData clickData) {
+    public void handOverMessage(@NonNull ClickData clickData) {
 
         if (rootView == null)
             return;
