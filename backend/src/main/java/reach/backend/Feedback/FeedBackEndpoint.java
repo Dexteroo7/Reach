@@ -139,7 +139,10 @@ public class FeedBackEndpoint {
         while (queryIterator.hasNext()) {
             feedBackList.add(queryIterator.next());
         }
-        return CollectionResponse.<FeedBack>builder().setItems(feedBackList).setNextPageToken(queryIterator.getCursor().toWebSafeString()).build();
+        return CollectionResponse.<FeedBack>builder()
+                .setItems(feedBackList)
+                .setNextPageToken(queryIterator.getCursor().toWebSafeString())
+                .build();
     }
 
     private void checkExists(Long id) throws NotFoundException {

@@ -662,7 +662,6 @@ public class ReachUserEndpoint {
                     .limit(limit)
                     .iterator();
 
-
         ReachUser reachUser;
         int count = 0;
 
