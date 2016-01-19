@@ -96,7 +96,7 @@ public enum FireOnce {
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
                     new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                            (System.currentTimeMillis() - (60 * 1000)) + ""});
+                            (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + ""});
             contentValues.clear();
         }
 
@@ -148,7 +148,7 @@ public enum FireOnce {
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
                     new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                            (System.currentTimeMillis() - (60 * 1000)) + ""});
+                            (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + ""});
             contentValues.clear();
         }
 
@@ -309,7 +309,6 @@ public enum FireOnce {
              * Invalidate those who were online 60 secs ago
              * and send PING
              */
-            final long currentTime = System.currentTimeMillis();
             final ContentValues contentValues = new ContentValues();
             contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
             contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
@@ -324,7 +323,8 @@ public enum FireOnce {
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
                             ReachFriendsHelper.COLUMN_ID + " != ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "", (currentTime - 60 * 1000) + "", StaticData.DEVIKA + ""});
+                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                            (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + "", StaticData.DEVIKA + ""});
             contentValues.clear();
 
             final HandOverMessage handOverMessage;

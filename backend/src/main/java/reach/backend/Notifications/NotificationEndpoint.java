@@ -388,19 +388,6 @@ public class NotificationEndpoint {
         syncCache.put(receiverId, (System.currentTimeMillis() + "").getBytes(),
                 Expiration.byDeltaSeconds(30 * 60), MemcacheService.SetPolicy.SET_ALWAYS);
 
-        final byte[] value = (byte[]) syncCache.get(receiverId);
-        final long currentTime = System.currentTimeMillis();
-        final long lastSeen;
-        if (value == null || value.length == 0)
-            lastSeen = currentTime;
-        else {
-            final String val = new String(value);
-            if (val.equals(""))
-                lastSeen = currentTime;
-            else
-                lastSeen = currentTime - Long.parseLong(val);
-        }
-
         //noinspection StringBufferReplaceableByString
         final StringBuilder urlBuilder = new StringBuilder();
         urlBuilder.append(Constants.BASE_LOG_NEW_FRIEND)
@@ -439,6 +426,19 @@ public class NotificationEndpoint {
             backLog.setFailedUrl(log);
             backLog.setId(MiscUtils.longHash(log));
             ofy().save().entities(backLog);
+        }
+
+        final byte[] value = (byte[]) syncCache.get(receiverId);
+        final long currentTime = System.currentTimeMillis();
+        final long lastSeen;
+        if (value == null || value.length == 0)
+            lastSeen = currentTime;
+        else {
+            final String val = new String(value);
+            if (val.equals(""))
+                lastSeen = currentTime;
+            else
+                lastSeen = currentTime - Long.parseLong(val);
         }
 
         return new Friend(sender, true, lastSeen);

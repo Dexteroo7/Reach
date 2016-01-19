@@ -133,7 +133,7 @@ public final class StaticData {
     public static final String DEVIKA_PHONE_NUMBER = "8860872102";
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    public static final int ONLINE_LIMIT = 30 * 60 * 1000; //30 minutes timeout
+    public static final int ONLINE_LIMIT = 90 * 1000; //90 seconds timeout
     public static final short NETWORK_CALL_WAIT = 300;
     public static final short NETWORK_RETRY = 5;
     public static final int MINIMUM_FREE_SPACE = 50 * 1024 * 1024; //50mb

@@ -60,6 +60,8 @@ public class FriendsFragment extends Fragment implements
     private FriendsAdapter friendsAdapter = null;
     @Nullable
     private View rootView = null;
+    @Nullable
+    private SuperInterface mListener = null;
 
 //    @Override
 //    public void onCreate(Bundle savedInstanceState) {
@@ -115,7 +117,7 @@ public class FriendsFragment extends Fragment implements
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
         inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        friendsAdapter = new FriendsAdapter(this.getContext(), this);
+        friendsAdapter = new FriendsAdapter(activity, this);
         final GridLayoutManager gridLayoutManager = new GridLayoutManager(activity, 2);
         final GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
             @Override
@@ -127,6 +129,7 @@ public class FriendsFragment extends Fragment implements
                     return 1;
             }
         };
+
         spanSizeLookup.setSpanIndexCacheEnabled(true);
         gridLayoutManager.setSpanSizeLookup(spanSizeLookup);
         recyclerView.setLayoutManager(gridLayoutManager);
@@ -135,7 +138,7 @@ public class FriendsFragment extends Fragment implements
         if (MiscUtils.isOnline(activity))
             FireOnce.sendPing(
                     null,
-                    new WeakReference<>(getActivity().getContentResolver()),
+                    new WeakReference<>(activity.getContentResolver()),
                     serverId);
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
@@ -152,13 +155,15 @@ public class FriendsFragment extends Fragment implements
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
-                    ReachFriendsHelper.COLUMN_STATUS + " ASC, " + ReachFriendsHelper.COLUMN_LAST_SEEN + " ASC");
+                    ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
+
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
+
         else
             return null;
     }
@@ -181,8 +186,10 @@ public class FriendsFragment extends Fragment implements
 
         if (friendsAdapter == null)
             return;
+
         if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
             friendsAdapter.setVerticalCursor(null);
+
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(null);
     }
@@ -203,9 +210,6 @@ public class FriendsFragment extends Fragment implements
         } else
             ProfileActivity.openProfile(clickData.friendId, getActivity());
     }
-
-    @Nullable
-    private SuperInterface mListener;
 
     @Override
     public void onAttach(Context context) {

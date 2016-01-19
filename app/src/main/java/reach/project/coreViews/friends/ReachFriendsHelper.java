@@ -109,7 +109,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NEW_APPS, 0); //by default 0 new apps (fresh new insert)
 
         values.put(COLUMN_NETWORK_TYPE, 0); //wifi by default
-        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen());
+        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen() != null ? System.currentTimeMillis() - reachFriend.getLastSeen() : 0);
         values.put(COLUMN_STATUS, reachFriend.getStatus());
         values.put(COLUMN_HASH, reachFriend.getHash());
         return values;
@@ -141,7 +141,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NEW_APPS, reachFriend.getNumberOfApps() - oldAppsCount);
 
         values.put(COLUMN_NETWORK_TYPE, 0); //wifi by default
-        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen());
+        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen() != null ? System.currentTimeMillis() - reachFriend.getLastSeen() : 0);
         values.put(COLUMN_STATUS, reachFriend.getStatus());
         values.put(COLUMN_HASH, reachFriend.getHash());
         return values;
@@ -172,7 +172,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NEW_APPS, 0);  //0 new songs by default
 
         values.put(COLUMN_NETWORK_TYPE, 0); //Wifi by default
-        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen());
+        values.put(COLUMN_LAST_SEEN, reachFriend.getLastSeen() != null ? System.currentTimeMillis() - reachFriend.getLastSeen() : 0);
         values.put(COLUMN_STATUS, reachFriend.getStatus());
         values.put(COLUMN_HASH, reachFriend.getHash());
         return values;

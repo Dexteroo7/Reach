@@ -9,13 +9,13 @@ import android.view.ViewGroup;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.ReachActivity;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -28,9 +28,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final HandOverMessage<App> handOverApp;
     private final RecentAdapter recentAdapter;
     private final PackageManager packageManager;
-
-    private final long recentHolderId = new Random().nextInt(Integer.MAX_VALUE);
-
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     public ParentAdapter(HandOverMessage<App> handOverApp,
                          Context context) {

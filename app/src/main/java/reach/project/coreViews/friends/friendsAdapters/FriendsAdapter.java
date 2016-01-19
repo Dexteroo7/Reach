@@ -19,7 +19,6 @@ import android.view.ViewGroup;
 import com.facebook.imagepipeline.common.ResizeOptions;
 
 import java.io.IOException;
-import java.util.Random;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,6 +30,7 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -44,8 +44,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final HandOverMessage<ClickData> handOverMessage;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final Random random = new Random();
-    private final long lockedId = random.nextInt(Integer.MAX_VALUE);
+    private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private Context context;
 
     public FriendsAdapter(Context context, HandOverMessage<ClickData> handOverMessage) {
@@ -102,13 +101,15 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final HandOverMessage<Object> clickDataHandOver = handOverObject -> {
 
         if (handOverObject instanceof Integer) {
+
             final Object object = getItem((int) handOverObject);
             if (!(object instanceof Cursor))
                 throw new IllegalStateException("Resource cursor has been corrupted");
             FriendsAdapter.this.handOverMessage((Cursor) object);
-        }
-        else if (handOverObject instanceof Pair) {
-            Pair <Integer, Long> pair = (Pair<Integer, Long>) handOverObject;
+
+        } else if (handOverObject instanceof Pair) {
+
+            Pair<Integer, Long> pair = (Pair<Integer, Long>) handOverObject;
             final Object object = getItem(pair.first);
             final Cursor cursor = (Cursor) object;
             final long userId = cursor.getLong(0);
@@ -121,6 +122,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     values,
                     ReachFriendsHelper.COLUMN_ID + " = ?",
                     new String[]{userId + ""});
+
         }
     };
 
@@ -128,6 +130,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         @Override
         protected Boolean doInBackground(Long... params) {
+
             try {
                 final MyString response = StaticData.USER_API.removeFriend(params[0], params[1]).execute();
                 return !(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"));
@@ -148,16 +151,14 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        Log.i("Ayush", "Creating view holder " + getClass().getName());
+        Log.i("Ayush", "Creating view holder " + FriendsAdapter.class.getName());
 
         final Context context = parent.getContext();
 
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
-
-                return new FriendsViewHolder(LayoutInflater.from(context)
-                        .inflate(R.layout.friend_item, parent, false), clickDataHandOver);
+                return new FriendsViewHolder(LayoutInflater.from(context).inflate(R.layout.friend_item, parent, false), clickDataHandOver);
             }
 
             case VIEW_TYPE_LOCKED: {
@@ -221,8 +222,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     "imageId",
                     "rw",
                     true,
-                    200,
-                    200));
+                    150,
+                    150));
 
             /*else {
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
@@ -264,9 +265,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Nonnull
     private Object getItem(int position) {
 
-
-            //Locked friends adapter
-        if (position == 10)
+        //Locked friends adapter
+        if (position == 10 || verticalCursor == null)
             return false;
 
         else if (position < 9) {

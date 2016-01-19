@@ -19,7 +19,6 @@ import com.google.common.base.Optional;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nonnull;
 
@@ -29,6 +28,7 @@ import reach.project.music.MySongsHelper;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -41,7 +41,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Song> handOverSong;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final long recentHolderId = new Random().nextInt(Integer.MAX_VALUE);
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override

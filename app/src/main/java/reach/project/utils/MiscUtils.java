@@ -67,7 +67,6 @@ import com.google.gson.JsonPrimitive;
 import org.json.JSONException;
 
 import java.io.Closeable;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -87,7 +86,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
@@ -190,11 +188,9 @@ public enum MiscUtils {
             }
     }
 
-    private static final Random random = new Random();
-
     public static String getRandomPic() {
 
-        final int option = random.nextInt(3);
+        final int option = ThreadLocalRandom.current().nextInt(3);
         switch (option) {
 
             case 0:

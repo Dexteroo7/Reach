@@ -5,6 +5,8 @@ import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.facebook.imagepipeline.common.ResizeOptions;
+
 import java.lang.ref.WeakReference;
 
 import javax.annotation.Nonnull;
@@ -20,6 +22,8 @@ import reach.project.utils.viewHelpers.MoreQualifier;
  * Created by dexter on 18/11/15.
  */
 final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHolder> implements MoreQualifier {
+
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
 
     public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
@@ -59,15 +63,15 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(7) + "");
         friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
 
-        friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), 200, 200));
+        friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
 
         friendsViewHolder.profilePhotoList.setImageURI(AlbumArtUri.getUserImageUri(
                 cursor.getLong(0),
                 "imageId",
                 "rw",
                 true,
-                200,
-                200));
+                150,
+                150));
 
         friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
     }

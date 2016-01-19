@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nonnull;
@@ -59,6 +58,7 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -77,7 +77,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
     private static long myServerId = 0;
-    private final Random random = new Random();
 
     public static ExploreFragment newInstance(long userId) {
 
@@ -516,7 +515,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(random.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
         reachDatabase.setLogicalClock((short) 0);

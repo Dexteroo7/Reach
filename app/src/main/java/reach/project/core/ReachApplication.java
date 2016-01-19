@@ -1,9 +1,14 @@
 package reach.project.core;
 
+import android.graphics.Bitmap;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.multidex.MultiDexApplication;
 
+import com.facebook.common.memory.MemoryTrimType;
+import com.facebook.common.memory.MemoryTrimmable;
+import com.facebook.common.memory.MemoryTrimmableRegistry;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
@@ -16,6 +21,9 @@ import com.squareup.okhttp.OkHttpClient;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -28,7 +36,7 @@ import reach.project.R;
 /**
  * Created by ashish on 23/3/15.
  */
-public class ReachApplication extends MultiDexApplication {
+public class ReachApplication extends MultiDexApplication implements MemoryTrimmableRegistry {
 
     public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
@@ -120,6 +128,7 @@ public class ReachApplication extends MultiDexApplication {
 
     @Nullable
     private Tracker mTracker = null;
+
     @NonNull
     synchronized public Tracker getTracker() {
 
@@ -136,13 +145,77 @@ public class ReachApplication extends MultiDexApplication {
 
         super.onCreate();
         //initialize fresco
-        final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
-                .setDownsampleEnabled(true)
+        final ImagePipelineConfig.Builder configBuilder = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
                 .setDecodeFileDescriptorEnabled(true)
                 .setDecodeMemoryFileEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
-                .build();
+                .setWebpSupportEnabled(true)
 
-        Fresco.initialize(this, config);
+                .setBitmapsConfig(Bitmap.Config.RGB_565)
+                .setMemoryTrimmableRegistry(this);
+
+        if (Build.VERSION.SDK_INT != 19)
+            configBuilder.setDownsampleEnabled(true);
+
+        Fresco.initialize(this, configBuilder.build());
+    }
+
+    @Override
+    public void onLowMemory() {
+
+        super.onLowMemory();
+        Fresco.getImagePipeline().clearMemoryCaches();
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+
+        super.onTrimMemory(level);
+        final Iterator<MemoryTrimmable> iterator = trimmables.iterator();
+        while (iterator.hasNext()) {
+
+            final MemoryTrimmable trimmable = iterator.next();
+            if (trimmable == null) {
+                iterator.remove();
+                continue;
+            }
+
+            switch (level) {
+
+                case TRIM_MEMORY_BACKGROUND:
+                    trimmable.trim(MemoryTrimType.OnAppBackgrounded);
+                    break;
+                case TRIM_MEMORY_COMPLETE:
+                    trimmable.trim(MemoryTrimType.OnCloseToDalvikHeapLimit);
+                    break;
+                case TRIM_MEMORY_MODERATE:
+                    trimmable.trim(MemoryTrimType.OnSystemLowMemoryWhileAppInBackground);
+                    break;
+                case TRIM_MEMORY_RUNNING_CRITICAL:
+                    trimmable.trim(MemoryTrimType.OnCloseToDalvikHeapLimit);
+                    break;
+                case TRIM_MEMORY_RUNNING_LOW:
+                    trimmable.trim(MemoryTrimType.OnSystemLowMemoryWhileAppInForeground);
+                    break;
+                case TRIM_MEMORY_RUNNING_MODERATE:
+                    trimmable.trim(MemoryTrimType.OnSystemLowMemoryWhileAppInForeground);
+                    break;
+                case TRIM_MEMORY_UI_HIDDEN:
+                    trimmable.trim(MemoryTrimType.OnAppBackgrounded);
+                    break;
+            }
+        }
+    }
+
+    private final Set<MemoryTrimmable> trimmables = new HashSet<>();
+
+    @Override
+    public void registerMemoryTrimmable(MemoryTrimmable trimmable) {
+        trimmables.add(trimmable);
+    }
+
+    @Override
+    public void unregisterMemoryTrimmable(MemoryTrimmable trimmable) {
+        trimmables.remove(trimmable);
     }
 }
