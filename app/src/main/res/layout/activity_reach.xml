@@ -1,38 +1,27 @@
 <!-- A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available. -->
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".core.ReachActivity">
     <RelativeLayout
         android:id="@+id/mainContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <android.support.design.widget.TabLayout
-            android:id="@+id/mainTabLayout"
-            android:background="#fff"
-            app:tabMode="fixed"
-            app:tabBackground="@color/white"
-            app:tabIndicatorHeight="0dp"
-            app:tabGravity="center"
-            android:layout_alignParentBottom="true"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="55dp" />
-        <FrameLayout
-            android:layout_above="@id/mainTabLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
             <FrameLayout
-                android:id="@+id/container"
+                android:id="@android:id/tabcontent"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-            <View
-                android:id="@+id/mainShadow"
-                android:layout_gravity="bottom"
-                android:background="@drawable/shadow_top"
+                android:layout_height="0dip"
+                android:layout_weight="1"/>
+            <android.support.v4.app.FragmentTabHost
+                android:id="@android:id/tabhost"
                 android:layout_width="match_parent"
-                android:layout_height="4dp" />
-        </FrameLayout>
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
     </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>

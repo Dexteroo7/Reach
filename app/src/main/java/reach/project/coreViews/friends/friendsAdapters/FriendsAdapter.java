@@ -1,9 +1,11 @@
 package reach.project.coreViews.friends.friendsAdapters;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -33,6 +35,9 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
+import reach.project.utils.viewHelpers.tourguide.Overlay;
+import reach.project.utils.viewHelpers.tourguide.ToolTip;
+import reach.project.utils.viewHelpers.tourguide.TourGuide;
 
 /**
  * Can not use ReachCursor adapter as item type is Object not cursor
@@ -176,6 +181,23 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             final Cursor cursorExactType = (Cursor) friend;
             final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
+
+            if (position == 0) {
+                final ToolTip toolTip = new ToolTip()
+                        .setTextColor(Color.WHITE)
+                        .setTitle("Hello!")
+                        .setShadow(false)
+                        .setDescription("Click to view tutorial. Next button is disabled until tutorial is viewed");
+                final Overlay overlay = new Overlay()
+                        .setBackgroundColor(Color.parseColor("#60000000"))
+                        .setStyle(Overlay.Style.Rectangle);
+                final TourGuide mTutorialHandler = TourGuide.init((Activity) context).with(TourGuide.Technique.Click)
+                        //.setPointer(new Pointer())
+                        .setToolTip(toolTip)
+                        .setOverlay(overlay);
+                        //.playOn(viewHolder.itemView);
+            }
+
             viewHolder.bindPosition(position);
 
             final long serverId = cursorExactType.getLong(0);
