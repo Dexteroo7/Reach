@@ -269,7 +269,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (position == 10)
             return false;
 
-        else if (position < 9) {
+        else if (position < 10) {
 
             if (position == verticalCursorCount)
                 return false; //Locked friends adapter, last item

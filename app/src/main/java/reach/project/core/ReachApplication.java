@@ -1,5 +1,6 @@
 package reach.project.core;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.multidex.MultiDexApplication;
@@ -136,8 +137,11 @@ public class ReachApplication extends MultiDexApplication {
 
         super.onCreate();
         //initialize fresco
+        boolean shouldSample = true;
+        if (Build.VERSION.SDK_INT == 19)
+            shouldSample = false;
         final ImagePipelineConfig config = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
-                .setDownsampleEnabled(true)
+                .setDownsampleEnabled(shouldSample)
                 .setDecodeFileDescriptorEnabled(true)
                 .setDecodeMemoryFileEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
