@@ -39,7 +39,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
-import reach.project.coreViews.friends.ContactsListFragment;
+import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushActivity;
@@ -323,7 +323,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 switch (position) {
 
                     case 0:
-                        return ContactsListFragment.getInstance();
+                        return FriendsFragment.getInstance();
                     case 1:
                         return PUSH_PAGER;
                     case 2:
@@ -363,7 +363,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             public void onTabSelected(TabLayout.Tab tab) {
 
                 if (tabLayout.getSelectedTabPosition() == 0)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container, ContactsListFragment.getInstance()).commit();
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, FriendsFragment.getInstance()).commit();
                 else if (tabLayout.getSelectedTabPosition() == 1)
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
                 else if (tabLayout.getSelectedTabPosition() == 2)

@@ -60,7 +60,7 @@ public class SendSMS {
     }
 
     //function to set parameter import java.net.URLEncoder;
-    private SendSMS(String api_url, String method, String api_key, String sender_id, String start) {
+    public SendSMS(String api_url, String method, String api_key, String sender_id, String start) {
 
         SendSMS.api_key = api_key;
         SendSMS.sender_id = sender_id;

@@ -10,7 +10,6 @@ public class SingleItemViewHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
     protected final HandOverMessage<Integer> handOverMessage;
-
     protected int position;
 
     public SingleItemViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {

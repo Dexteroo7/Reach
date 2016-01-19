@@ -1,0 +1,94 @@
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="130dp"
+    android:layout_height="165dp"
+    card_view:cardCornerRadius="0dp"
+    card_view:cardElevation="4dp"
+    android:layout_marginLeft="5dp"
+    card_view:cardUseCompatPadding="true"
+    android:descendantFocusability="blocksDescendants">
+    <android.support.percent.PercentRelativeLayout
+        android:background="#fff"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/coverPic"
+            fresco:placeholderImage="@color/reach_grey"
+            android:layout_width="match_parent"
+            app:layout_heightPercent="40%"/>
+        <View
+            android:layout_width="match_parent"
+            app:layout_heightPercent="40%"
+            android:background="#70000000" />
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/profilePhotoList"
+            android:layout_centerHorizontal="true"
+            app:layout_marginTopPercent="15%"
+            fresco:placeholderImage="@drawable/default_profile_circle"
+            fresco:roundAsCircle="true"
+            android:layout_width="70dp"
+            android:layout_height="70dp"/>
+        <TextView
+            android:id="@+id/userNameList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:lines="1"
+            android:layout_margin="2dp"
+            android:layout_below="@id/profilePhotoList"
+            android:layout_centerHorizontal="true"
+            android:text="User Name"
+            android:textColor="@color/reach_color" />
+        <LinearLayout
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/userNameList"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/icon_song_indicator_gray" />
+            <TextView
+                android:id="@+id/telephoneNumberList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:text="999"
+                android:layout_marginRight="5dp"
+                android:textColor="@color/reach_grey_new" />
+            <ImageView
+                android:id="@+id/appIcon"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/icon_apps_indicator_gray" />
+            <TextView
+                android:id="@+id/appCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:text="999"
+                android:textColor="@color/reach_grey_new" />
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/lockIcon"
+            android:layout_alignParentBottom="true"
+            android:layout_width="22dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginBottom="4dp"
+            android:layout_height="22dp"
+            android:src="@drawable/add_friend" />
+        <ImageView
+            android:id="@+id/optionsIcon"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_width="20dp"
+            android:layout_height="25dp"
+            android:padding="2dp"
+            android:src="@drawable/icon_extra_dots_gray" />
+    </android.support.percent.PercentRelativeLayout>
+</android.support.v7.widget.CardView>

@@ -52,7 +52,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
         final long processed = cursorExact.getLong(3);
 //        final String path = cursor.getString(4);
         final String displayName = cursorExact.getString(5);
-        final String artistName = cursorExact.getString(6);
+        final String artistName = cursorExact.getString(11);
         final String albumName = cursorExact.getString(15);
 
 //        final boolean liked;

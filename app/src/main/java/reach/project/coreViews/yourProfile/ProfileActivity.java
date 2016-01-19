@@ -3,6 +3,7 @@ package reach.project.coreViews.yourProfile;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -12,6 +13,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -21,6 +23,7 @@ import android.widget.Toast;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 
@@ -35,6 +38,8 @@ import reach.project.utils.SharedPrefUtils;
 public class ProfileActivity extends AppCompatActivity {
 
     private static long userId = 0;
+
+    private SharedPreferences sharedPreferences;
 
     private static WeakReference<ProfileActivity> reference = null;
 
@@ -59,7 +64,7 @@ public class ProfileActivity extends AppCompatActivity {
         new SendRequest().executeOnExecutor(
                 requestSender,
                 userId,
-                SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE)));
+                SharedPrefUtils.getServerId(sharedPreferences));
 
         //update locally
         final ContentValues values = new ContentValues();
@@ -74,6 +79,44 @@ public class ProfileActivity extends AppCompatActivity {
         setRequestSent();
     };
 
+    private final View.OnClickListener cancelRequest = view -> {
+
+        new RemoveFriend().execute(userId, SharedPrefUtils.getServerId(sharedPreferences));
+
+        //update locally
+        final ContentValues values = new ContentValues();
+        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+        getContentResolver().update(
+                Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                values,
+                ReachFriendsHelper.COLUMN_ID + " = ?",
+                new String[]{userId + ""});
+
+        //show in view
+        setRequestNotSent();
+    };
+
+    private static class RemoveFriend extends AsyncTask<Long, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Long... params) {
+            try {
+                final reach.backend.entities.userApi.model.MyString response = StaticData.USER_API.removeFriend(params[0], params[1]).execute();
+                return !(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean)
+                Log.d("Ashish", "Friend removed");
+        }
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 
@@ -81,6 +124,8 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         reference = new WeakReference<>(this);
+
+        sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
         mToolbar.setTitle("");
@@ -136,8 +181,10 @@ public class ProfileActivity extends AppCompatActivity {
         text2 = (TextView) findViewById(R.id.text2);
         sendButton = (TextView) findViewById(R.id.sendButton);
 
-        if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
+        if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
             setRequestSent();
+            sendButton.setOnClickListener(cancelRequest);
+        }
         else
             sendButton.setOnClickListener(sendRequest);
     }
@@ -152,10 +199,14 @@ public class ProfileActivity extends AppCompatActivity {
         reference = null;
     }
 
+    final int padding = MiscUtils.dpToPx(20);
+
     private void setRequestSent() {
 
-        if (requestIcon != null)
+        if (requestIcon != null) {
             requestIcon.setImageResource(R.drawable.icon_pending_invite);
+            requestIcon.setPadding(padding, padding, padding, padding);
+        }
         if (text1 != null)
             text1.setText("Looks like the user has not accepted your request yet");
         if (text2 != null)
@@ -167,7 +218,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void setRequestNotSent() {
 
         if (requestIcon != null)
-            requestIcon.setImageResource(R.drawable.icon_friends_gray);
+            requestIcon.setImageResource(R.drawable.add_friend);
         if (text1 != null)
             text1.setText("You need to be friends before you can access their collections");
         if (text2 != null)

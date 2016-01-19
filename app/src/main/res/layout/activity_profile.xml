@@ -1,5 +1,4 @@
-<android.support.percent.PercentRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+<android.support.percent.PercentFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -28,56 +27,62 @@
         card_view:cardUseCompatPadding="true"
         card_view:cardElevation="4dp"
         card_view:cardCornerRadius="2dp"
-        app:layout_marginTopPercent="34%"
+        app:layout_marginTopPercent="36%"
         app:layout_marginRightPercent="5%"
         app:layout_marginLeftPercent="5%"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        <LinearLayout
-            android:orientation="vertical"
+        android:layout_height="match_parent">
+        <android.support.percent.PercentRelativeLayout
             android:gravity="center_horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
             <RelativeLayout
+                android:id="@+id/profileIconContainer"
                 android:background="@color/reach_grey_bg"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                app:layout_heightPercent="50%"
+                android:layout_width="match_parent">
                 <ImageView
                     android:id="@+id/profileIcon"
-                    android:src="@drawable/icon_friends_gray"
-                    android:padding="15dp"
-                    android:layout_margin="25dp"
+                    android:src="@drawable/add_friend"
                     android:layout_centerInParent="true"
-                    android:background="@drawable/circular_background_pink"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp" />
+                    android:background="@drawable/circular_background"
+                    android:padding="10dp"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp" />
             </RelativeLayout>
             <TextView
                 android:id="@+id/text1"
+                android:layout_below="@id/profileIconContainer"
                 android:text="You need to be friends before you can access their collections"
                 android:textColor="#000"
                 android:gravity="center"
-                android:layout_margin="20dp"
+                android:layout_margin="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/text2"
+                android:layout_below="@id/text1"
+                android:layout_centerHorizontal="true"
+                android:lines="2"
                 android:text="Do you wish to send a request to this user?"
                 android:textColor="@color/reach_blue"
                 android:gravity="center"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <View
+                android:id="@+id/divider"
                 android:background="@color/reach_grey_light"
+                android:layout_below="@id/text2"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="0.1dp" />
             <TextView
                 android:id="@+id/sendButton"
+                android:layout_below="@id/divider"
                 android:textStyle="bold"
                 android:padding="15dp"
                 android:gravity="center"
@@ -86,6 +91,6 @@
                 android:textColor="@color/reach_color"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-        </LinearLayout>
+        </android.support.percent.PercentRelativeLayout>
     </android.support.v7.widget.CardView>
-</android.support.percent.PercentRelativeLayout>
+</android.support.percent.PercentFrameLayout>

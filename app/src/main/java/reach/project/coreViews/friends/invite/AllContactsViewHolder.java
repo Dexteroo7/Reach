@@ -13,13 +13,13 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 /**
  * Created by dexter on 18/11/15.
  */
-final class InviteViewHolder extends SingleItemViewHolder {
+final class AllContactsViewHolder extends SingleItemViewHolder {
 
     public final TextView userNameList, userInitials, subTitle;
     public final ImageView listToggle;
     public final SimpleDraweeView profilePhotoList;
 
-    protected InviteViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+    protected AllContactsViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         super(itemView, handOverMessage);
 
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);

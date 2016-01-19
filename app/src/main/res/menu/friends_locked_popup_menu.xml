@@ -5,5 +5,5 @@
         android:title="View Profile" />
     <item
         android:id="@+id/friends_menu_2"
-        android:title="Unfriend" />
+        android:title="Send Request" />
 </menu>

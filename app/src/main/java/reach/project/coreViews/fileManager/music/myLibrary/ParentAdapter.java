@@ -150,7 +150,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
                 displayName = cursorExactType.getString(5);
-                artist = cursorExactType.getString(6);
+                artist = cursorExactType.getString(11);
                 album = cursorExactType.getString(16);
 //                actualName = cursorExactType.getString(17);
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {

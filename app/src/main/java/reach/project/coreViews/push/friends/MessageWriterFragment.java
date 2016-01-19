@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -127,6 +128,7 @@ public class MessageWriterFragment extends Fragment {
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.writerToolbar);
         toolbar.setTitle("Send push");
         toolbar.inflateMenu(R.menu.menu_push);
+        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(getActivity()));
         toolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.push_button:
