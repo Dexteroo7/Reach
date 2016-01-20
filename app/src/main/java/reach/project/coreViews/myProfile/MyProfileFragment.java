@@ -11,7 +11,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.MenuItemCompat;
@@ -47,18 +46,6 @@ import reach.project.utils.SharedPrefUtils;
  * A placeholder fragment containing a simple view.
  */
 public class MyProfileFragment extends Fragment {
-
-    private static WeakReference<MyProfileFragment> reference = null;
-
-    public static MyProfileFragment newInstance() {
-
-        MyProfileFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment))
-            reference = new WeakReference<>(fragment = new MyProfileFragment());
-        else
-            Log.i("Ayush", "Reusing YourProfileAppFragment object :)");
-        return fragment;
-    }
 
     private final Toolbar.OnMenuItemClickListener menuItemClickListener = item -> {
 
@@ -110,7 +97,8 @@ public class MyProfileFragment extends Fragment {
                 return HeaderDesign.fromColorResAndUrl(
                         R.color.reach_color,
                         "");
-            default:throw new IllegalStateException("Size of 2 expected");
+            default:
+                throw new IllegalStateException("Size of 2 expected");
         }
     };
 
@@ -130,9 +118,6 @@ public class MyProfileFragment extends Fragment {
 //        super.onDestroy();
 //        Log.d("Ashish", "MyProfileFragment - onDestroy");
 //    }
-
-    @Nullable
-    private TextView musicCount = null, appCount = null;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -158,9 +143,6 @@ public class MyProfileFragment extends Fragment {
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(preferences);
-
-        musicCount = (TextView) headerRoot.findViewById(R.id.musicCount);
-        appCount = (TextView) headerRoot.findViewById(R.id.appCount);
 
         ((TextView) headerRoot.findViewById(R.id.userName)).setText(userName);
         ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + userName.toLowerCase().split(" ")[0]);
@@ -218,12 +200,20 @@ public class MyProfileFragment extends Fragment {
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
         materialViewPager.getPagerTitleStrip().setOnTouchListener((v, event) -> true);
 
-        new CountUpdater().execute(activity);
+        new CountUpdater((TextView) headerRoot.findViewById(R.id.musicCount),
+                (TextView) headerRoot.findViewById(R.id.appCount)).execute(activity);
 
         return rootView;
     }
 
     private final static class CountUpdater extends AsyncTask<Context, Void, Pair<String, String>> {
+
+        private final WeakReference<TextView> musicCountReference, appCountReference;
+
+        private CountUpdater(TextView musicCount, TextView appCount) {
+            this.musicCountReference = new WeakReference<>(musicCount);
+            this.appCountReference = new WeakReference<>(appCount);
+        }
 
         @Override
         protected Pair<String, String> doInBackground(Context... params) {
@@ -249,12 +239,12 @@ public class MyProfileFragment extends Fragment {
         protected void onPostExecute(Pair<String, String> countPair) {
             super.onPostExecute(countPair);
 
-            MiscUtils.useReference(reference, myProfileFragment -> {
+            MiscUtils.useReference(musicCountReference, textView -> {
+                textView.setText(countPair.first);
+            });
 
-                if (myProfileFragment.musicCount != null)
-                    myProfileFragment.musicCount.setText(countPair.first);
-                if (myProfileFragment.appCount != null)
-                    myProfileFragment.appCount.setText(countPair.second);
+            MiscUtils.useReference(appCountReference, textView -> {
+                textView.setText(countPair.second);
             });
         }
     }

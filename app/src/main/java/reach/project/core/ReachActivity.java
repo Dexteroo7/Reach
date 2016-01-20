@@ -100,7 +100,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     ////////////////////////////////////////private static final
 
     @SuppressWarnings("unchecked")
-    private static final PagerFragment DOWNLOAD_PAGER = PagerFragment.getNewInstance("Manager",
+    private static final Bundle DOWNLOAD_PAGER_BUNDLE = PagerFragment.getBundle("Manager",
             new PagerFragment.Pages(
                     new Class[]{ApplicationFragment.class},
                     new String[]{"My Applications"},
@@ -111,7 +111,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     "Songs"));
 
     @SuppressWarnings("unchecked")
-    private static final PagerFragment PUSH_PAGER = PagerFragment.getNewInstance("Push",
+    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Push",
 //            new PagerFragment.Pages(
 //                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
 //                    new String[]{"My Applications"},
@@ -196,8 +196,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return false;
     };
 
-    //    @Nullable
-//    private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
 
@@ -214,56 +212,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         //viewPager = null;
     }
 
-    /*@Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-
-        if (requestCode == MY_PERMISSIONS_READ_CONTACTS) {
-            if (!(grantResults.length > 0 && grantResults[0] == 0)) {
-                Toast.makeText(this,
-                        "Permission to access Contacts is required to use the App",
-                        Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else if (requestCode == MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE) {
-            if (!(grantResults.length > 0 && grantResults[0] == 0)) {
-                Toast.makeText(this,
-                        "Permission to access Storage is required to use the App",
-                        Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }*/
-
     @Override
     protected void onPostResume() {
 
         super.onPostResume();
         Log.i("Ayush", "Called onPostResume");
         processIntent(getIntent());
-
-        /*if (Build.VERSION.SDK_INT >= 23) {
-
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
-                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_CONTACTS
-                        }, MY_PERMISSIONS_READ_CONTACTS);
-            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-            }
-        }*/
     }
 
     @Override
@@ -311,9 +265,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         ////////////////////////////////////////
 
-<<<<<<< HEAD
-        final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
-=======
         /*viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
         viewPager.setPagingEnabled(false);
         viewPager.setOffscreenPageLimit(4);
@@ -345,8 +296,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         });*/
 
-        final Bundle exploreBundle = new Bundle();
-        exploreBundle.putLong("userId", serverId);
         final FragmentTabHost mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
         mTabHost.addTab(
@@ -354,13 +303,13 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 FriendsFragment.class, null);
         mTabHost.addTab(
                 mTabHost.newTabSpec("tab2").setIndicator("Tab 2", null),
-                PagerFragment.class, null);
+                PagerFragment.class, PUSH_PAGER_BUNDLE);
         mTabHost.addTab(
                 mTabHost.newTabSpec("tab3").setIndicator("Tab 3", null),
-                ExploreFragment.class, exploreBundle);
+                ExploreFragment.class, ExploreFragment.getBundle(serverId));
         mTabHost.addTab(
                 mTabHost.newTabSpec("tab4").setIndicator("Tab 4", null),
-                PagerFragment.class, null);
+                PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
         mTabHost.addTab(
                 mTabHost.newTabSpec("tab5").setIndicator("Tab 5", null),
                 MyProfileFragment.class, null);

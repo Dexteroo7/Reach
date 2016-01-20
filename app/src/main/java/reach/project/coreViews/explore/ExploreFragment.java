@@ -66,11 +66,6 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link ExploreFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Integer> {
 
@@ -78,22 +73,14 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private static WeakReference<ExploreFragment> reference = null;
     private static long myServerId = 0;
 
-    public static ExploreFragment newInstance(long userId) {
+    public static Bundle getBundle(long userId) {
 
-        final Bundle args;
-        ExploreFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new ExploreFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing ExploreFragment object :)");
-            args = fragment.getArguments();
-        }
+        final Bundle args = new Bundle(1);
         args.putLong("userId", userId);
-        return fragment;
+        return args;
     }
 
-    static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
+    private static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
         @Override
         public Pair<String, String> load(@NonNull Long key) {
 
@@ -309,6 +296,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        reference = new WeakReference<>(this);
         myServerId = getArguments().getLong("userId");
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
@@ -554,7 +542,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             buffer.close();
     }
 
-    private static final class ScrollToLast implements Runnable {
+    private final class ScrollToLast implements Runnable {
 
         private final int scrollTo;
 
@@ -565,23 +553,20 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         @Override
         public void run() {
 
-            MiscUtils.useFragment(reference, fragment -> {
+            //sanity check
+            if (explorePager == null || rootView == null)
+                return;
 
-                //sanity check
-                if (fragment.explorePager == null || fragment.rootView == null)
-                    return;
+            //magic scroll position should be available
+            if (!(scrollTo > 1))
+                return;
 
-                //magic scroll position should be available
-                if (!(scrollTo > 1))
-                    return;
+            final int currentItem = explorePager.getCurrentItem();
+            //user has somehow started scrolling
+            if (currentItem > 0)
+                return;
 
-                final int currentItem = fragment.explorePager.getCurrentItem();
-                //user has somehow started scrolling
-                if (currentItem > 0)
-                    return;
-
-                fragment.explorePager.setCurrentItem(scrollTo - 2, true);
-            });
+            explorePager.setCurrentItem(scrollTo - 2, true);
         }
     }
 }

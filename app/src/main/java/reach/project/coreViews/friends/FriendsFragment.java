@@ -38,20 +38,6 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class FriendsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<ClickData> {
 
-    private static WeakReference<FriendsFragment> reference = null;
-
-    public static FriendsFragment getInstance() {
-
-        FriendsFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            Log.i("Ayush", "Creating new instance of contacts list fragment");
-            reference = new WeakReference<>(fragment = new FriendsFragment());
-        } else
-            Log.i("Ayush", "Reusing contacts list fragment object :)");
-
-        return fragment;
-    }
-
     public static final View.OnClickListener INVITE_LISTENER =
             view -> view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
 
@@ -86,7 +72,6 @@ public class FriendsFragment extends Fragment implements
                              @Nullable Bundle savedInstanceState) {
 
         Log.d("Ashish", "FriendsFragment - onCreateView");
-
         final Activity activity = getActivity();
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
