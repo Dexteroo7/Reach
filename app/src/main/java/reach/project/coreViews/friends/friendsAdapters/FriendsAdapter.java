@@ -189,10 +189,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         .setShadow(false)
                         .setDescription("Click to view tutorial. Next button is disabled until tutorial is viewed");
                 final Overlay overlay = new Overlay()
-                        .setBackgroundColor(Color.parseColor("#60000000"))
+                        .setBackgroundColor(Color.parseColor("#99000000"))
                         .setStyle(Overlay.Style.Rectangle);
                 final TourGuide mTutorialHandler = TourGuide.init((Activity) context).with(TourGuide.Technique.Click)
-                        //.setPointer(new Pointer())
                         .setToolTip(toolTip)
                         .setOverlay(overlay);
                         //.playOn(viewHolder.itemView);

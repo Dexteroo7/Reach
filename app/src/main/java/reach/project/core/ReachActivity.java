@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -349,20 +350,26 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         final FragmentTabHost mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
         mTabHost.addTab(
-                mTabHost.newTabSpec("tab1").setIndicator("Tab 1", null),
+                mTabHost.newTabSpec("friends_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.ic_friends_gray)),
                 FriendsFragment.class, null);
         mTabHost.addTab(
-                mTabHost.newTabSpec("tab2").setIndicator("Tab 2", null),
+                mTabHost.newTabSpec("push_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.icon_send_gray)),
                 PagerFragment.class, null);
         mTabHost.addTab(
-                mTabHost.newTabSpec("tab3").setIndicator("Tab 3", null),
+                mTabHost.newTabSpec("explore_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.icon_reach_magnet_gray)),
                 ExploreFragment.class, exploreBundle);
         mTabHost.addTab(
-                mTabHost.newTabSpec("tab4").setIndicator("Tab 4", null),
+                mTabHost.newTabSpec("manager_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.icon_download_gray)),
                 PagerFragment.class, null);
         mTabHost.addTab(
-                mTabHost.newTabSpec("tab5").setIndicator("Tab 5", null),
+                mTabHost.newTabSpec("myprofile_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.icon_myprofile_gray)),
                 MyProfileFragment.class, null);
+        mTabHost.setCurrentTab(2);
 
         /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));
