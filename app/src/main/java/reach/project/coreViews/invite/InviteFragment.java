@@ -1,4 +1,4 @@
-package reach.project.coreViews.friends.invite;
+package reach.project.coreViews.invite;
 
 import android.app.Activity;
 import android.content.Context;

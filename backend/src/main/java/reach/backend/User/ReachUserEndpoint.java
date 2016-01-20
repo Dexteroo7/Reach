@@ -31,6 +31,7 @@ import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.LoadResult;
 import com.googlecode.objectify.cmd.Query;
 import com.squareup.wire.Wire;
 
@@ -65,6 +66,7 @@ import javax.inject.Named;
 
 import reach.backend.Constants;
 import reach.backend.MiscUtils;
+import reach.backend.Music.MusicData;
 import reach.backend.ObjectWrappers.App;
 import reach.backend.ObjectWrappers.AppList;
 import reach.backend.ObjectWrappers.LongArray;
@@ -123,7 +125,7 @@ public class ReachUserEndpoint {
         for (ReachUser user : ofy().load().type(ReachUser.class)
                 .filter("phoneNumber in", phoneNumbers)
                 .filter("gcmId !=", ""))
-            friends.add(new Friend(user, false, 0));
+            friends.add(new Friend(user, false, ReachUser.ONLINE_LIMIT + 1));
 
         if (phoneNumbers.contains(Constants.devikaPhoneNumber)) {
 
@@ -160,7 +162,7 @@ public class ReachUserEndpoint {
                 .filter("phoneNumber in", phoneNumbers)
                 .filter("gcmId !=", "")) {
 
-            friends.add(new Friend(user, false, 0));
+            friends.add(new Friend(user, false, ReachUser.ONLINE_LIMIT + 1));
             statusMap.put(user.getPhoneNumber(), true);
         }
 
@@ -247,7 +249,7 @@ public class ReachUserEndpoint {
                 .filter("phoneNumber in", phoneNumbers.getStringList())
                 .filter("gcmId !=", "")) {
 
-            friends.add(new Friend(user, false, 0));
+            friends.add(new Friend(user, false, ReachUser.ONLINE_LIMIT + 1));
             statusMap.put(user.getPhoneNumber(), true);
         }
 
@@ -358,22 +360,28 @@ public class ReachUserEndpoint {
                 keysBuilder.add(Key.create(ReachUser.class, id));
 
         final HashSet<Friend> friends = new HashSet<>();
-        for (ReachUser user : ofy().load().type(ReachUser.class)
-                .filterKey("in", keysBuilder.build())
-                .filter("gcmId !=", "")
-                .project(Friend.projectNewFriend)) {
+        try {
 
-            final long lastSeen;
-            if (user.getId() != Constants.devikaId)
-                lastSeen = MiscUtils.computeLastSeen(syncCache, user.getId());
-            else
-                lastSeen = 0;
+            //If no friends could be loaded exception will be thrown
+            for (ReachUser user : ofy().load().type(ReachUser.class)
+                    .filterKey("in", keysBuilder.build())
+                    .filter("gcmId !=", "")
+                    .project(Friend.projectNewFriend)) {
 
-            friends.add(new Friend(
-                    user,
-                    myReach,
-                    sentRequests,
-                    lastSeen));
+                final long lastSeen;
+                if (user.getId() != Constants.devikaId)
+                    lastSeen = MiscUtils.computeLastSeen(syncCache, user.getId());
+                else
+                    lastSeen = 0;
+
+                friends.add(new Friend(
+                        user,
+                        myReach,
+                        sentRequests,
+                        lastSeen));
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
         }
 
         if (myReach.contains(Constants.devikaId) ||
@@ -488,8 +496,7 @@ public class ReachUserEndpoint {
             } else {
 
                 logger.info("Marking for update ! " + reachUser.getUserName());
-                toUpdate.add(new Friend(reachUser, myReach, sentRequests,
-                        (short) (MiscUtils.computeLastSeen(syncCache, reachUser.getId()) > ReachUser.ONLINE_LIMIT ? 1 : 0)));
+                toUpdate.add(new Friend(reachUser, myReach, sentRequests, MiscUtils.computeLastSeen(syncCache, reachUser.getId())));
             }
         }
 
@@ -661,7 +668,6 @@ public class ReachUserEndpoint {
                     .startAt(Cursor.fromWebSafeString(cursor))
                     .limit(limit)
                     .iterator();
-
 
         ReachUser reachUser;
         int count = 0;
@@ -1291,6 +1297,8 @@ public class ReachUserEndpoint {
             httpMethod = ApiMethod.HttpMethod.GET)
     public List<SimpleSong> fetchRecentSongs(@Named("serverId") long serverId) {
 
+        final LoadResult<MusicData> musicDataLoadResult = ofy().load().type(MusicData.class).id(serverId);
+
         final String FILE_NAME = serverId + "MUSIC";
         final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
 
@@ -1324,12 +1332,27 @@ public class ReachUserEndpoint {
         if (musicList.song == null || musicList.song.isEmpty())
             return Collections.emptyList();
 
+        final MusicData musicData = musicDataLoadResult.now();
+        if (musicData == null)
+            return Collections.emptyList();
+        if (musicData.getVisibility() == null)
+            return Collections.emptyList();
+        if (musicData.getPresence() == null) {
+            musicData.setPresence(musicData.getVisibility());
+            ofy().save().entity(musicData); //save async
+        }
+
         //filter nulls and not visible
         final Iterable<Song> songIterable = Iterables.filter(
                 musicList.song, new Predicate<Song>() {
                     @Override
                     public boolean apply(@Nullable Song song) {
-                        return song != null && song.visibility;
+
+                        if (song == null || song.songId == null || song.songId == 0)
+                            return false; //invalid song
+
+                        final Boolean present = musicData.getPresence().get(song.songId);
+                        return song.visibility && present != null && present; //song must be present
                     }
                 }
         );
@@ -1458,6 +1481,8 @@ public class ReachUserEndpoint {
 
         if (client.getMyReach().contains(Constants.devikaId) && !onlineIds.contains(Constants.devikaId))
             onlineIds.add(Constants.devikaId);
+
+        Collections.shuffle(onlineIds);
 
         return new LongList(onlineIds);
     }

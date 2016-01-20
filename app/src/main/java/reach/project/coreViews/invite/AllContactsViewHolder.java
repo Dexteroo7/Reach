@@ -1,4 +1,4 @@
-package reach.project.coreViews.friends.invite;
+package reach.project.coreViews.invite;
 
 import android.view.View;
 import android.widget.ImageView;

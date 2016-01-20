@@ -10,13 +10,12 @@ import android.view.ViewGroup;
 
 import com.squareup.wire.Message;
 
-import java.util.Random;
-
 import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -33,9 +32,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
     private static final byte RECENT_LIST_TYPE = 2;
     private static final byte SMART_LIST_TYPE = 3;
 
-    private final Random random = new Random();
-    private final long recentHolderId = random.nextInt(Integer.MAX_VALUE);
-    private final long smartHolderId = random.nextInt(Integer.MAX_VALUE);
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long smartHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     private final CacheAdapterInterface<T, App> cacheAdapterInterface;
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {

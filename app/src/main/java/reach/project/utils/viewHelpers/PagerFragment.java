@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 
 import com.astuetz.PagerSlidingTabStrip;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import reach.project.R;
@@ -83,7 +82,7 @@ public class PagerFragment extends Fragment {
         }
     }
 
-    public static PagerFragment getNewInstance(String pageTitle, @NonNull Pages... pages) {
+    public static Bundle getBundle(String pageTitle, @NonNull Pages... pages) {
 
         //sanity check
         for (Pages page : pages) {
@@ -98,10 +97,7 @@ public class PagerFragment extends Fragment {
         final Bundle bundle = new Bundle(2);
         bundle.putParcelableArray(PARCEL_PAGER, pages);
         bundle.putString("pageTitle", pageTitle);
-
-        final PagerFragment pagerFragment = new PagerFragment();
-        pagerFragment.setArguments(bundle);
-        return pagerFragment;
+        return bundle;
     }
 
     public void setItem(int position) {
@@ -110,28 +106,10 @@ public class PagerFragment extends Fragment {
             viewPager.setCurrentItem(position, true);
     }
 
-    private ViewPager viewPager;
     @Nullable
-    private SuperInterface mListener;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.d("Ashish", "PagerFragment - onCreate");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d("Ashish", "PagerFragment - onDestroy");
-    }
-
-    @Override
-    public void onDestroyView() {
-
-        super.onDestroyView();
-        Log.d("Ashish", "PagerFragment - onDestroyView");
-    }
+    private ViewPager viewPager = null;
+    @Nullable
+    private SuperInterface mListener = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -181,6 +159,7 @@ public class PagerFragment extends Fragment {
         }
 
         viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
+        //noinspection ConstantConditions
         viewPager.setAdapter(new FragmentPagerAdapter(getChildFragmentManager()) {
             @Override
             public Fragment getItem(int position) {

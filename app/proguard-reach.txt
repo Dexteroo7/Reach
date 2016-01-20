@@ -208,4 +208,4 @@
 -keep class reach.project.coreViews.fileManager.music.downloading.DownloadingFragment { *; }
 -keep class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }
 -keep class reach.project.coreViews.push.music.MyLibraryFragment { *; }
--keep class reach.project.coreViews.friends.invite.InviteActivity { *; }
+-keep class reach.project.coreViews.invite.InviteActivity { *; }

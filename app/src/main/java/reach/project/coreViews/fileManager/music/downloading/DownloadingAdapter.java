@@ -104,25 +104,30 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //            viewHolder.songSize.setText(String.format("%.1f", (float) (length / 1024000.0f)) + " MB");
         } else {
 
+            int prog = (int) ((processed * 100) / length);
+            holder.progressBar.setProgress(prog);
+            holder.downProgress.setText(prog + "%");
+            holder.progressBar.setVisibility(View.VISIBLE);
+
             switch (status) {
 
                 case ReachDatabase.FILE_NOT_CREATED: {
-
+                    holder.downProgress.setText("File not found");
                     //The file for this song was moved / deleted from local storage
                 }
 
                 case ReachDatabase.GCM_FAILED: {
-
+                    holder.downProgress.setText("User deleted the app");
                     //Sender could not be notified to initiate upload
                 }
 
                 case ReachDatabase.PAUSED_BY_USER: {
-
+                    holder.downProgress.setText("Paused");
                     //The download has been paused
                 }
 
                 case ReachDatabase.FILE_NOT_FOUND: {
-
+                    holder.downProgress.setText("User deleted the file");
                     //The file could not be found on sender's side
                 }
 
@@ -147,10 +152,6 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //                holder.progressBar.setProgressDrawable(ResourcesCompat.getDrawable(context.getResources(), R.drawable.reachq_progressbar_stop, context.getTheme()));
 
 //            viewHolder.songSize.setText((processed * 100 / length) + "%");
-            int prog = (int) ((processed * 100) / length);
-            holder.progressBar.setProgress(prog);
-            holder.downProgress.setText(prog + "%");
-            holder.progressBar.setVisibility(View.VISIBLE);
         }
 
 //        if (operationKind == 0) {

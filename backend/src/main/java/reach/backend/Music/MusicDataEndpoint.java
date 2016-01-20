@@ -67,13 +67,13 @@ public class MusicDataEndpoint {
 
         final MusicData musicData = ofy().load().type(MusicData.class).id(id).now();
 
-        if (musicData == null || musicData.getVisibility() == null || musicData.getVisibility().isEmpty())
+        if (musicData == null || musicData.getPresence() == null || musicData.getPresence().isEmpty())
             return new VisibilityChangeResponse(); //empty response, ignore
 
-        final int hashCode = musicData.getVisibility().hashCode();
+        final int hashCode = musicData.getPresence().hashCode();
 
         if (hashCode != clientSideHashCode)
-            return new VisibilityChangeResponse(musicData.getVisibility(), hashCode);
+            return new VisibilityChangeResponse(musicData.getPresence(), hashCode);
         else
             return new VisibilityChangeResponse(); //empty response, ignore
     }
@@ -102,10 +102,13 @@ public class MusicDataEndpoint {
             //old data found, overwrite new values
             oldData.getVisibility().putAll(musicData.getVisibility());
 
+        oldData.setPresence(musicData.getVisibility()); //simply over-write the presence
+
         visibleSongs = 0;
-        for (Boolean aBoolean : oldData.getVisibility().values())
-            if (aBoolean != null && aBoolean)
-                visibleSongs++;
+        if (oldData.getPresence() != null)
+            for (Boolean aBoolean : oldData.getPresence().values())
+                if (aBoolean != null && aBoolean)
+                    visibleSongs++;
 
         final ReachUser user = ofy().load().type(ReachUser.class).id(id).now();
         user.setNumberOfSongs(visibleSongs);
@@ -139,8 +142,10 @@ public class MusicDataEndpoint {
             musicData = new MusicData();
             musicData.setId(id);
             musicData.setVisibility(new HashMap<Long, Boolean>(500));
+            musicData.setPresence(new HashMap<Long, Boolean>(500));
         }
         musicData.getVisibility().put(musicId, visibility);
+        musicData.getPresence().put(musicId, visibility);
 
         //update new visible songs count
         final ReachUser user = ofy().load().type(ReachUser.class).id(id).now();

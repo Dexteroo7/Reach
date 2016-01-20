@@ -6,24 +6,29 @@ import android.view.View;
 /**
  * Created by dexter on 21/11/15.
  */
-public class SingleItemViewHolder extends RecyclerView.ViewHolder
-        implements View.OnClickListener {
+public class SingleItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    protected final HandOverMessage<Integer> handOverMessage;
+    private final HandOverMessage<Integer> handOverMessage;
+
+    public int getPositionItem() {
+        return position;
+    }
+
     protected int position;
 
     public SingleItemViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+
         super(itemView);
         this.handOverMessage = handOverMessage;
         this.itemView.setOnClickListener(this);
     }
 
-    public void bindPosition(int position) {
+    public final void bindPosition(int position) {
         this.position = position;
     }
 
     @Override
-    public void onClick(View v) {
+    public final void onClick(View v) {
         handOverMessage.handOverMessage(position);
     }
 }

@@ -64,7 +64,7 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
         if (cursor != null && cursor.moveToPosition(position))
             return getItemId(cursor);
         else
-            return super.getItemId(position);
+            throw new IllegalArgumentException("Cursor is invalid");
     }
 
     @Override
@@ -91,9 +91,9 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Override
     public void onBindViewHolder(T holder, int position) {
 
-        final Optional<Cursor> cursorOptional = getItem(position);
         holder.bindPosition(position);
 
+        final Optional<Cursor> cursorOptional = getItem(position);
         if (!cursorOptional.isPresent())
             return;
 

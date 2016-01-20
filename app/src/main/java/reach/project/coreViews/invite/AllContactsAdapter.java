@@ -1,4 +1,4 @@
-package reach.project.coreViews.friends.invite;
+package reach.project.coreViews.invite;
 
 import android.content.ContentUris;
 import android.database.Cursor;
@@ -25,6 +25,7 @@ final class AllContactsAdapter extends ReachCursorAdapter<AllContactsViewHolder>
 
     @Override
     public void onBindViewHolder(AllContactsViewHolder friendsViewHolder, Cursor cursor) {
+
         friendsViewHolder.userNameList.setText(cursor.getString(1));
         friendsViewHolder.subTitle.setText(cursor.getString(0));
         friendsViewHolder.userInitials.setText(MiscUtils.generateInitials(cursor.getString(1)));

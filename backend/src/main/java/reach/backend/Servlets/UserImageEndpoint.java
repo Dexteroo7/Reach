@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.time.Instant;
 import java.util.Date;
 import java.util.logging.Logger;
 
@@ -129,11 +128,12 @@ public class UserImageEndpoint extends HttpServlet {
                 resp.sendError(500, "Serving url could not be generated");
                 return;
             }
+
             final ServingUrl toSave = new ServingUrl();
             toSave.setUserId(hostId);
             toSave.setId(actualImageId);
             toSave.setServingUrl(servingURL);
-            toSave.setDateOfCreation(Date.from(Instant.now()));
+            toSave.setDateOfCreation(new Date(System.currentTimeMillis()));
             ofy().save().entity(toSave); //save async
         } else
             servingURL = servingUrlRetriever.getServingUrl();

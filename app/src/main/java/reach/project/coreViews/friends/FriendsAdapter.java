@@ -1,37 +1,25 @@
-package reach.project.coreViews.friends.friendsAdapters;
+package reach.project.coreViews.friends;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.support.v4.util.Pair;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.facebook.imagepipeline.common.ResizeOptions;
-
-import java.io.IOException;
-import java.util.Random;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import reach.backend.entities.userApi.model.MyString;
 import reach.project.R;
-import reach.project.core.StaticData;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.utils.AlbumArtUri;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -44,16 +32,12 @@ import reach.project.utils.viewHelpers.tourguide.TourGuide;
  * Created by dexter on 18/11/15.
  */
 @SuppressLint("SetTextI18n")
-public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<Cursor> {
+class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<Cursor> {
 
     private final HandOverMessage<ClickData> handOverMessage;
-    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final Random random = new Random();
-    private final long lockedId = random.nextInt(Integer.MAX_VALUE);
-    private Context context;
+    private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
-    public FriendsAdapter(Context context, HandOverMessage<ClickData> handOverMessage) {
-        this.context = context;
+    public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
         this.handOverMessage = handOverMessage;
         setHasStableIds(true);
     }
@@ -103,73 +87,50 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
     ///////////Horizontal Cursor
 
-    private final HandOverMessage<Object> clickDataHandOver = handOverObject -> {
+    private final HandOverWithContext handOverWithContext = new HandOverWithContext() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
 
-        if (handOverObject instanceof Integer) {
-            final Object object = getItem((int) handOverObject);
+            final Object object = getItem(position);
             if (!(object instanceof Cursor))
                 throw new IllegalStateException("Resource cursor has been corrupted");
             FriendsAdapter.this.handOverMessage((Cursor) object);
         }
-        else if (handOverObject instanceof Pair) {
-            Pair <Integer, Long> pair = (Pair<Integer, Long>) handOverObject;
-            final Object object = getItem(pair.first);
-            final Cursor cursor = (Cursor) object;
-            final long userId = cursor.getLong(0);
-            new RemoveFriend().execute(userId, pair.second);
 
-            final ContentValues values = new ContentValues();
-            values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
-            context.getContentResolver().update(
-                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
-                    values,
-                    ReachFriendsHelper.COLUMN_ID + " = ?",
-                    new String[]{userId + ""});
+        @Override
+        public Cursor getCursor(@Nonnull Integer position) {
+
+            final Object object = getItem(position);
+            if (!(object instanceof Cursor))
+                throw new IllegalStateException("Resource cursor has been corrupted");
+            return (Cursor) object;
         }
     };
-
-    private static class RemoveFriend extends AsyncTask<Long, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(Long... params) {
-            try {
-                final MyString response = StaticData.USER_API.removeFriend(params[0], params[1]).execute();
-                return !(response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"));
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            if (aBoolean)
-                Log.d("Ashish", "Friend removed");
-        }
-    }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        Log.i("Ayush", "Creating view holder " + getClass().getName());
+        Log.i("Ayush", "Creating view holder " + FriendsAdapter.class.getName());
 
         final Context context = parent.getContext();
 
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
-
-                return new FriendsViewHolder(LayoutInflater.from(context)
-                        .inflate(R.layout.friend_item, parent, false), clickDataHandOver);
+                return new FriendsViewHolder(LayoutInflater.from(context).inflate(R.layout.friend_item, parent, false), handOverWithContext);
             }
 
             case VIEW_TYPE_LOCKED: {
-                return new MoreListHolder(parent);
+
+                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                moreListHolder.headerText.setText("Locked friends");
+                moreListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(moreListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
+                moreListHolder.listOfItems.setAdapter(lockedFriendsAdapter);
+                return moreListHolder;
             }
 
             default:
-                return null;
+                throw new IllegalStateException("Illegal view type detected");
         }
     }
 
@@ -177,12 +138,14 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         final Object friend = getItem(position);
+
         if (friend instanceof Cursor) {
 
             final Cursor cursorExactType = (Cursor) friend;
             final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
 
             if (position == 0) {
+
                 final ToolTip toolTip = new ToolTip()
                         .setTextColor(Color.WHITE)
                         .setTitle("Hello!")
@@ -191,7 +154,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 final Overlay overlay = new Overlay()
                         .setBackgroundColor(Color.parseColor("#99000000"))
                         .setStyle(Overlay.Style.Rectangle);
-                final TourGuide mTutorialHandler = TourGuide.init((Activity) context).with(TourGuide.Technique.Click)
+                final TourGuide mTutorialHandler = TourGuide.init((Activity) viewHolder.itemView.getContext()).with(TourGuide.Technique.Click)
                         .setToolTip(toolTip)
                         .setOverlay(overlay);
                         //.playOn(viewHolder.itemView);
@@ -241,8 +204,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     "imageId",
                     "rw",
                     true,
-                    200,
-                    200));
+                    150,
+                    150));
 
             /*else {
                 if (status == ReachFriendsHelper.ONLINE_REQUEST_GRANTED)
@@ -257,23 +220,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             viewHolder.lockText.setVisibility(View.GONE);
 
             if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+
                 viewHolder.lockIcon.setImageResource(R.drawable.icon_pending_invite);
                 viewHolder.lockIcon.setVisibility(View.VISIBLE);
                 viewHolder.lockText.setVisibility(View.VISIBLE);
-                viewHolder.popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Cancel Request");
             }
-
-            //use
-        } else if (friend instanceof Boolean) {
-
-            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-            horizontalViewHolder.headerText.setText("Locked friends");
-            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
-                horizontalViewHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(horizontalViewHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
-            horizontalViewHolder.listOfItems.setAdapter(lockedFriendsAdapter);
-        } else {
-            //Invite does not need any modifications
         }
+
     }
 
     /**
@@ -285,9 +238,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Nonnull
     private Object getItem(int position) {
 
-
-            //Locked friends adapter
-        if (position == 10)
+        //Locked friends adapter
+        if (position == 10 || verticalCursor == null)
             return false;
 
         else if (position < 10) {
@@ -344,20 +296,12 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public void handOverMessage(@NonNull Cursor cursor) {
 
-        final ClickData clickData = new ClickData();
+        final ClickData clickData = ClickData.getInstance();
         clickData.friendId = cursor.getLong(0);
         clickData.networkType = cursor.getShort(5);
         clickData.status = cursor.getShort(6);
-        clickData.userName = cursor.getString(2);
 
         Log.i("Ayush", "Detected status" + clickData.status);
         handOverMessage.handOverMessage(clickData);
-    }
-
-    public class ClickData {
-
-        public long friendId;
-        public short status, networkType;
-        public String userName;
     }
 }

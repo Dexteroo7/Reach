@@ -25,6 +25,10 @@ public class AppVisibility {
     @Unindex
     @Serialize(zip = true)
     private Map<String, Boolean> visibility = new HashMap<>(500);
+    //presence of packages
+    @Unindex
+    @Serialize(zip = true)
+    private Map<String, Boolean> presence = new HashMap<>(500);
 
     public Map<String, Boolean> getVisibility() {
         return visibility;
@@ -40,5 +44,13 @@ public class AppVisibility {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Map<String, Boolean> getPresence() {
+        return presence;
+    }
+
+    public void setPresence(Map<String, Boolean> presence) {
+        this.presence = presence;
     }
 }

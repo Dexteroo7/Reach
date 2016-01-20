@@ -26,8 +26,7 @@ import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.friends.friendsAdapters.FriendsAdapter;
-import reach.project.coreViews.friends.invite.InviteActivity;
+import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.utils.FireOnce;
@@ -37,21 +36,7 @@ import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class FriendsFragment extends Fragment implements
-        LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<FriendsAdapter.ClickData> {
-
-    private static WeakReference<FriendsFragment> reference = null;
-
-    public static FriendsFragment getInstance() {
-
-        FriendsFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            Log.i("Ayush", "Creating new instance of contacts list fragment");
-            reference = new WeakReference<>(fragment = new FriendsFragment());
-        } else
-            Log.i("Ayush", "Reusing contacts list fragment object :)");
-
-        return fragment;
-    }
+        LoaderManager.LoaderCallbacks<Cursor>, HandOverMessage<ClickData> {
 
     public static final View.OnClickListener INVITE_LISTENER =
             view -> view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
@@ -60,18 +45,8 @@ public class FriendsFragment extends Fragment implements
     private FriendsAdapter friendsAdapter = null;
     @Nullable
     private View rootView = null;
-
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        Log.d("Ashish", "FriendsFragment - onCreate");
-//    }
-//
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        Log.d("Ashish", "FriendsFragment - onDestroy");
-//    }
+    @Nullable
+    private SuperInterface mListener = null;
 
     @Override
     public void onDestroyView() {
@@ -97,7 +72,6 @@ public class FriendsFragment extends Fragment implements
                              @Nullable Bundle savedInstanceState) {
 
         Log.d("Ashish", "FriendsFragment - onCreateView");
-
         final Activity activity = getActivity();
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
@@ -115,7 +89,7 @@ public class FriendsFragment extends Fragment implements
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
         inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        friendsAdapter = new FriendsAdapter(this.getContext(), this);
+        friendsAdapter = new FriendsAdapter(this);
         final GridLayoutManager gridLayoutManager = new GridLayoutManager(activity, 2);
         final GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
             @Override
@@ -127,6 +101,7 @@ public class FriendsFragment extends Fragment implements
                     return 1;
             }
         };
+
         spanSizeLookup.setSpanIndexCacheEnabled(true);
         gridLayoutManager.setSpanSizeLookup(spanSizeLookup);
         recyclerView.setLayoutManager(gridLayoutManager);
@@ -135,7 +110,7 @@ public class FriendsFragment extends Fragment implements
         if (MiscUtils.isOnline(activity))
             FireOnce.sendPing(
                     null,
-                    new WeakReference<>(getActivity().getContentResolver()),
+                    new WeakReference<>(activity.getContentResolver()),
                     serverId);
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
@@ -159,6 +134,7 @@ public class FriendsFragment extends Fragment implements
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
                     new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
+
         else
             return null;
     }
@@ -181,14 +157,16 @@ public class FriendsFragment extends Fragment implements
 
         if (friendsAdapter == null)
             return;
+
         if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
             friendsAdapter.setVerticalCursor(null);
+
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(null);
     }
 
     @Override
-    public void handOverMessage(@NonNull FriendsAdapter.ClickData clickData) {
+    public void handOverMessage(@NonNull ClickData clickData) {
 
         if (rootView == null)
             return;
@@ -203,9 +181,6 @@ public class FriendsFragment extends Fragment implements
         } else
             ProfileActivity.openProfile(clickData.friendId, getActivity());
     }
-
-    @Nullable
-    private SuperInterface mListener;
 
     @Override
     public void onAttach(Context context) {

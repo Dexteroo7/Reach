@@ -82,13 +82,13 @@ public class AppVisibilityEndpoint {
 
         final AppVisibility appVisibility = ofy().load().type(AppVisibility.class).id(id).now();
 
-        if (appVisibility == null || appVisibility.getVisibility() == null || appVisibility.getVisibility().isEmpty())
+        if (appVisibility == null || appVisibility.getPresence() == null || appVisibility.getPresence().isEmpty())
             return new VisibilityChangeResponse(); //empty response, ignore
 
-        final int hashCode = appVisibility.getVisibility().hashCode();
+        final int hashCode = appVisibility.getPresence().hashCode();
 
         if (hashCode != clientSideHashCode)
-            return new VisibilityChangeResponse(appVisibility.getVisibility(), hashCode);
+            return new VisibilityChangeResponse(appVisibility.getPresence(), hashCode);
         else
             return new VisibilityChangeResponse(); //empty response, ignore
     }
@@ -116,10 +116,13 @@ public class AppVisibilityEndpoint {
             //old data found, overwrite new values
             oldData.getVisibility().putAll(appVisibility.getVisibility());
 
+        oldData.setPresence(appVisibility.getVisibility()); //simply over-write the presence
+
         int visibleApps = 0;
-        for (Boolean aBoolean : oldData.getVisibility().values())
-            if (aBoolean != null && aBoolean)
-                visibleApps++;
+        if (oldData.getPresence() != null)
+            for (Boolean aBoolean : oldData.getPresence().values())
+                if (aBoolean != null && aBoolean)
+                    visibleApps++;
 
         final ReachUser user = ofy().load().type(ReachUser.class).id(id).now();
         user.setNumberOfApps(visibleApps);
@@ -155,8 +158,10 @@ public class AppVisibilityEndpoint {
             appVisibility = new AppVisibility();
             appVisibility.setId(id);
             appVisibility.setVisibility(new HashMap<String, Boolean>(500));
+            appVisibility.setPresence(new HashMap<String, Boolean>(500));
         }
         appVisibility.getVisibility().put(packageName, visibility);
+        appVisibility.getPresence().put(packageName, visibility);
 
         //update new visible apps count
         final ReachUser user = ofy().load().type(ReachUser.class).id(id).now();

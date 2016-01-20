@@ -1,9 +1,12 @@
-package reach.project.coreViews.friends.friendsAdapters;
+package reach.project.coreViews.friends;
 
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
+
+import com.facebook.imagepipeline.common.ResizeOptions;
 
 import java.lang.ref.WeakReference;
 
@@ -11,6 +14,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import reach.project.utils.AlbumArtUri;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -18,10 +22,13 @@ import reach.project.utils.viewHelpers.MoreQualifier;
 /**
  * Created by dexter on 18/11/15.
  */
-final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHolder> implements MoreQualifier {
+final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> implements MoreQualifier {
+
+    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
 
     public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
+        setHasStableIds(true);
     }
 
     @Nullable
@@ -42,6 +49,8 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
 
     @Override
     public long getItemId(@Nonnull Cursor cursor) {
+
+        Log.i(LockedFriendsAdapter.class.getName(), "Getting locked cursor id " + cursor.getLong(0));
         return cursor.getLong(0); //_id
     }
 
@@ -52,28 +61,45 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<LockedFriendsViewHol
         return count > 4 ? 4 : count;
     }
 
-    public void onBindViewHolder(LockedFriendsViewHolder friendsViewHolder, Cursor cursor) {
+    @Override
+    public void onViewRecycled(FriendsViewHolder holder) {
+
+        Log.i(LockedFriendsAdapter.class.getName(), "Recycling " + holder.getPositionItem());
+        super.onViewRecycled(holder);
+    }
+
+    @Override
+    public boolean onFailedToRecycleView(FriendsViewHolder holder) {
+
+        Log.i(LockedFriendsAdapter.class.getName(), "onFailedToRecycleView " + holder.getPositionItem());
+        return true;
+    }
+
+    public void onBindViewHolder(FriendsViewHolder friendsViewHolder, Cursor cursor) {
 
         friendsViewHolder.userNameList.setText(cursor.getString(2));
         friendsViewHolder.telephoneNumberList.setText(cursor.getInt(7) + "");
         friendsViewHolder.appCount.setText(cursor.getInt(8) + "");
-        friendsViewHolder.coverPic.setImageURI(Uri.parse(cursor.getString(5)));
-        //friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), 200, 200));
-
+        friendsViewHolder.coverPic.setController(MiscUtils.getControllerResize(friendsViewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
         friendsViewHolder.profilePhotoList.setImageURI(AlbumArtUri.getUserImageUri(
                 cursor.getLong(0),
                 "imageId",
                 "rw",
                 true,
-                200,
-                200));
+                150,
+                150));
 
         friendsViewHolder.lockIcon.setVisibility(View.VISIBLE);
+        
+        Log.i(LockedFriendsAdapter.class.getName(), "Binding view holder " + friendsViewHolder.getPositionItem());
     }
 
     @Override
-    public LockedFriendsViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new LockedFriendsViewHolder(itemView, handOverMessage);
+    public FriendsViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+
+        final FriendsViewHolder friendsViewHolder = new FriendsViewHolder(itemView, handOverMessage);
+        Log.i(LockedFriendsAdapter.class.getName(), "Creating view holder ");
+        return friendsViewHolder;
     }
 
     @Override

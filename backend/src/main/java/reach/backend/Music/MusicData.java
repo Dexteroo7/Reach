@@ -25,6 +25,10 @@ public class MusicData {
     @Unindex
     @Serialize(zip = true)
     private Map<Long, Boolean> visibility = new HashMap<>(500);
+    //presence of songs
+    @Unindex
+    @Serialize(zip = true)
+    private Map<Long, Boolean> presence = new HashMap<>(500);
 
     public Map<Long, Boolean> getVisibility() {
         return visibility;
@@ -40,5 +44,13 @@ public class MusicData {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public Map<Long, Boolean> getPresence() {
+        return presence;
+    }
+
+    public void setPresence(Map<Long, Boolean> presence) {
+        this.presence = presence;
     }
 }

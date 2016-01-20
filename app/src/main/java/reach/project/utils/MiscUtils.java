@@ -56,9 +56,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.HashingOutputStream;
-import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -69,7 +66,6 @@ import org.json.JSONException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -86,7 +82,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
@@ -189,7 +184,21 @@ public enum MiscUtils {
             }
     }
 
-    private static final Random random = new Random();
+    public static String getRandomPic() {
+
+        final int option = ThreadLocalRandom.current().nextInt(3);
+        switch (option) {
+
+            case 0:
+                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
+            case 1:
+                return "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240";
+            case 2:
+                return "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240";
+            default:
+                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
+        }
+    }
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
 
@@ -1792,21 +1801,4 @@ public enum MiscUtils {
 //        stringBuilder.append(text.substring(start));
 //        return stringBuilder.toString();
 //    }
-
-    public static String computeHashAndCopy(HashFunction hashFunction,
-                                            InputStream mainSource,
-                                            OutputStream mainSink) throws IOException {
-
-        final HashingOutputStream hashingOutputStream = new HashingOutputStream(hashFunction, mainSink);
-        ByteStreams.copy(mainSource, hashingOutputStream);
-
-        hashingOutputStream.flush();
-        mainSink.flush();
-
-        try {
-            return hashingOutputStream.hash().toString();
-        } finally {
-            MiscUtils.closeQuietly(mainSource, hashingOutputStream, mainSink);
-        }
-    }
 }

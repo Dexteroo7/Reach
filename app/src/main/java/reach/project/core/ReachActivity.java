@@ -27,7 +27,6 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import reach.project.R;
@@ -55,6 +54,7 @@ import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.StringCompress;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.PagerFragment;
 
@@ -73,8 +73,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         return intent;
     }
-
-    private final Random random = new Random();
 
     public static void openDownloading() {
 
@@ -103,7 +101,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     ////////////////////////////////////////private static final
 
     @SuppressWarnings("unchecked")
-    private static final PagerFragment DOWNLOAD_PAGER = PagerFragment.getNewInstance("Manager",
+    private static final Bundle DOWNLOAD_PAGER_BUNDLE = PagerFragment.getBundle("Manager",
             new PagerFragment.Pages(
                     new Class[]{ApplicationFragment.class},
                     new String[]{"My Applications"},
@@ -114,7 +112,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     "Songs"));
 
     @SuppressWarnings("unchecked")
-    private static final PagerFragment PUSH_PAGER = PagerFragment.getNewInstance("Push",
+    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Push",
 //            new PagerFragment.Pages(
 //                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
 //                    new String[]{"My Applications"},
@@ -199,8 +197,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return false;
     };
 
-    //    @Nullable
-//    private CustomViewPager viewPager = null;
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
 
@@ -217,56 +213,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         //viewPager = null;
     }
 
-    /*@Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-
-        if (requestCode == MY_PERMISSIONS_READ_CONTACTS) {
-            if (!(grantResults.length > 0 && grantResults[0] == 0)) {
-                Toast.makeText(this,
-                        "Permission to access Contacts is required to use the App",
-                        Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else if (requestCode == MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE) {
-            if (!(grantResults.length > 0 && grantResults[0] == 0)) {
-                Toast.makeText(this,
-                        "Permission to access Storage is required to use the App",
-                        Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }*/
-
     @Override
     protected void onPostResume() {
 
         super.onPostResume();
         Log.i("Ayush", "Called onPostResume");
         processIntent(getIntent());
-
-        /*if (Build.VERSION.SDK_INT >= 23) {
-
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS))
-                    Toast.makeText(this, "Permission to access Contacts is required to use the App", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_CONTACTS
-                        }, MY_PERMISSIONS_READ_CONTACTS);
-            } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != 0) {
-
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                    Toast.makeText(this, "Permission to access Storage is required to use the App", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-            }
-        }*/
     }
 
     @Override
@@ -345,8 +297,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         });*/
 
-        final Bundle exploreBundle = new Bundle();
-        exploreBundle.putLong("userId", serverId);
         final FragmentTabHost mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
         mTabHost.addTab(
@@ -356,15 +306,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         mTabHost.addTab(
                 mTabHost.newTabSpec("push_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.icon_send_gray)),
-                PagerFragment.class, null);
+                PagerFragment.class, PUSH_PAGER_BUNDLE);
         mTabHost.addTab(
                 mTabHost.newTabSpec("explore_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.icon_reach_magnet_gray)),
-                ExploreFragment.class, exploreBundle);
+                ExploreFragment.class, ExploreFragment.getBundle(serverId));
         mTabHost.addTab(
                 mTabHost.newTabSpec("manager_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.icon_download_gray)),
-                PagerFragment.class, null);
+                PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
         mTabHost.addTab(
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.icon_myprofile_gray)),
@@ -664,7 +614,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
         reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(random.nextInt(Integer.MAX_VALUE));
+        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(duration);
         reachDatabase.setLogicalClock((short) 0);

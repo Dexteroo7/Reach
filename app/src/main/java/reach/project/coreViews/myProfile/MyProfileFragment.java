@@ -1,12 +1,15 @@
 package reach.project.coreViews.myProfile;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -15,6 +18,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +36,7 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
+import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
@@ -41,18 +46,6 @@ import reach.project.utils.SharedPrefUtils;
  * A placeholder fragment containing a simple view.
  */
 public class MyProfileFragment extends Fragment {
-
-    private static WeakReference<MyProfileFragment> reference = null;
-
-    public static MyProfileFragment newInstance() {
-
-        MyProfileFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment))
-            reference = new WeakReference<>(fragment = new MyProfileFragment());
-        else
-            Log.i("Ayush", "Reusing YourProfileAppFragment object :)");
-        return fragment;
-    }
 
     private final Toolbar.OnMenuItemClickListener menuItemClickListener = item -> {
 
@@ -93,7 +86,7 @@ public class MyProfileFragment extends Fragment {
         }
     };
 
-    private final MaterialViewPager.Listener materialListener = page -> {
+    private static final MaterialViewPager.Listener MATERIAL_LISTENER = page -> {
 
         switch (page) {
             case 0:
@@ -104,26 +97,27 @@ public class MyProfileFragment extends Fragment {
                 return HeaderDesign.fromColorResAndUrl(
                         R.color.reach_color,
                         "");
-            default:throw new IllegalStateException("Size of 2 expected");
+            default:
+                throw new IllegalStateException("Size of 2 expected");
         }
     };
 
-    public void onDestroyView() {
-        super.onDestroyView();
-        Log.d("Ashish", "MyProfileFragment - onDestroyView");
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.d("Ashish", "MyProfileFragment - onCreate");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d("Ashish", "MyProfileFragment - onDestroy");
-    }
+//    public void onDestroyView() {
+//        super.onDestroyView();
+//        Log.d("Ashish", "MyProfileFragment - onDestroyView");
+//    }
+//
+//    @Override
+//    public void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        Log.d("Ashish", "MyProfileFragment - onCreate");
+//    }
+//
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        Log.d("Ashish", "MyProfileFragment - onDestroy");
+//    }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -150,21 +144,8 @@ public class MyProfileFragment extends Fragment {
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(preferences);
 
-        final Cursor cursor = activity.getContentResolver().query(MySongsProvider.CONTENT_URI,
-                null, null, null, null);
-        final int songCount;
-        if (cursor != null) {
-            songCount = cursor.getCount();
-            cursor.close();
-        } else
-            songCount = 0;
-
         ((TextView) headerRoot.findViewById(R.id.userName)).setText(userName);
-        ((TextView) headerRoot.findViewById(R.id.musicCount)).setText(songCount + "");
         ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + userName.toLowerCase().split(" ")[0]);
-
-//        new Thread(() -> ((TextView) headerRoot.findViewById(R.id.appCount)).setText(MiscUtils
-//                .getInstalledApps(activity.getPackageManager()).size() + "")).start();
 
         final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
         profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
@@ -215,10 +196,56 @@ public class MyProfileFragment extends Fragment {
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         viewPager.setPageTransformer(true, PAGE_TRANSFORMER);
 
-        materialViewPager.setMaterialViewPagerListener(materialListener);
+        materialViewPager.setMaterialViewPagerListener(MATERIAL_LISTENER);
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
         materialViewPager.getPagerTitleStrip().setOnTouchListener((v, event) -> true);
 
+        new CountUpdater((TextView) headerRoot.findViewById(R.id.musicCount),
+                (TextView) headerRoot.findViewById(R.id.appCount)).execute(activity);
+
         return rootView;
+    }
+
+    private final static class CountUpdater extends AsyncTask<Context, Void, Pair<String, String>> {
+
+        private final WeakReference<TextView> musicCountReference, appCountReference;
+
+        private CountUpdater(TextView musicCount, TextView appCount) {
+            this.musicCountReference = new WeakReference<>(musicCount);
+            this.appCountReference = new WeakReference<>(appCount);
+        }
+
+        @Override
+        protected Pair<String, String> doInBackground(Context... params) {
+
+            final ContentResolver contentResolver = params[0].getContentResolver();
+            final PackageManager packageManager = params[0].getPackageManager();
+
+            final Cursor cursor = contentResolver.query(MySongsProvider.CONTENT_URI,
+                    new String[]{MySongsHelper.COLUMN_ID}, null, null, null);
+            final int songCount;
+            if (cursor != null) {
+                songCount = cursor.getCount();
+                cursor.close();
+            } else
+                songCount = 0;
+
+            final int appCount = MiscUtils.getInstalledApps(packageManager).size();
+
+            return new Pair<>(songCount + "", appCount + "");
+        }
+
+        @Override
+        protected void onPostExecute(Pair<String, String> countPair) {
+            super.onPostExecute(countPair);
+
+            MiscUtils.useReference(musicCountReference, textView -> {
+                textView.setText(countPair.first);
+            });
+
+            MiscUtils.useReference(appCountReference, textView -> {
+                textView.setText(countPair.second);
+            });
+        }
     }
 }

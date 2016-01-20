@@ -19,7 +19,6 @@ import com.google.common.base.Optional;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nonnull;
 
@@ -29,6 +28,7 @@ import reach.project.music.MySongsHelper;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -41,7 +41,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Song> handOverSong;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final long recentHolderId = new Random().nextInt(Integer.MAX_VALUE);
+    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
@@ -126,7 +126,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             case VIEW_TYPE_RECENT: {
-                return new MoreListHolder(parent);
+
+                final MoreListHolder moreListHolder = new MoreListHolder(parent);
+                moreListHolder.headerText.setText("Recently Added");
+                if (moreListHolder.listOfItems.getLayoutManager() == null)
+                    moreListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(moreListHolder.listOfItems.getContext(), 2));
+                moreListHolder.listOfItems.setAdapter(recentAdapter);
+                return moreListHolder;
             }
 
             default:
@@ -183,12 +189,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             //use
         } else {
 
-            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
             holder.itemView.setBackgroundResource(0);
-            horizontalViewHolder.headerText.setText("Recently Added");
-            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
-                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
-            horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
         }
     }
 

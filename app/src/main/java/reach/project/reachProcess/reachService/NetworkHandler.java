@@ -334,6 +334,18 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                 }
             }
 
+            case "404" : {
+
+                if (reachDatabase == null) {
+                    Log.i("Downloader", "download deleted");
+                    break;
+                }
+
+                final ContentValues contentValues = new ContentValues(1);
+                contentValues.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FILE_NOT_FOUND);
+                LocalUtils.updateReachDatabase(contentValues, handlerInterface, reachDatabase.getId());
+            }
+
             default:
                 Log.i("Downloader", "ILLEGAL CONNECT OP !");
         }

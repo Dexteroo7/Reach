@@ -76,7 +76,7 @@ public class Friend {
         this.statusSong = host.getStatusSong();
         this.numberOfSongs = host.getNumberOfSongs();
         this.numberOfApps = host.getNumberOfApps();
-        this.lastSeen = ReachUser.ONLINE_LIMIT + 1;
+        this.lastSeen = lastSeen;
         //in-case dirty check was not set compute
         this.hash = host.getDirtyCheck() == 0 ? host.computeDirtyHash() : host.getDirtyCheck();
         if (this.hash == 0)
