@@ -10,7 +10,7 @@ import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentTabHost;
 import android.support.v4.util.LongSparseArray;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -311,7 +311,62 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         ////////////////////////////////////////
 
+<<<<<<< HEAD
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+=======
+        /*viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
+        viewPager.setPagingEnabled(false);
+        viewPager.setOffscreenPageLimit(4);
+        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
+            @Override
+            public Fragment getItem(int position) {
+
+                switch (position) {
+
+                    case 0:
+                        return FriendsFragment.getInstance();
+                    case 1:
+                        return PUSH_PAGER;
+                    case 2:
+                        return ExploreFragment.newInstance(serverId);
+                    case 3:
+                        return DOWNLOAD_PAGER;
+                    case 4:
+                        return MyProfileFragment.newInstance();
+
+                    default:
+                        throw new IllegalStateException("only 5 tabs expected");
+                }
+            }
+
+            @Override
+            public int getCount() {
+                return 5;
+            }
+        });*/
+
+        final Bundle exploreBundle = new Bundle();
+        exploreBundle.putLong("userId", serverId);
+        final FragmentTabHost mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
+        mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
+        mTabHost.addTab(
+                mTabHost.newTabSpec("tab1").setIndicator("Tab 1", null),
+                FriendsFragment.class, null);
+        mTabHost.addTab(
+                mTabHost.newTabSpec("tab2").setIndicator("Tab 2", null),
+                PagerFragment.class, null);
+        mTabHost.addTab(
+                mTabHost.newTabSpec("tab3").setIndicator("Tab 3", null),
+                ExploreFragment.class, exploreBundle);
+        mTabHost.addTab(
+                mTabHost.newTabSpec("tab4").setIndicator("Tab 4", null),
+                PagerFragment.class, null);
+        mTabHost.addTab(
+                mTabHost.newTabSpec("tab5").setIndicator("Tab 5", null),
+                MyProfileFragment.class, null);
+
+        /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+>>>>>>> c93236aad5bdf62d95a702a216492c69afc79e9c
         tabLayout.addTab(tabLayout.newTab().setText("1"));
         tabLayout.addTab(tabLayout.newTab().setText("2"));
         tabLayout.addTab(tabLayout.newTab().setText("3"));
@@ -369,7 +424,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         });
 
-        tabLayout.getTabAt(2).select();
+        tabLayout.getTabAt(2).select();*/
 
         /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.setupWithViewPager(viewPager);
