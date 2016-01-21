@@ -310,7 +310,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         mTabHost.addTab(
                 mTabHost.newTabSpec("explore_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.icon_reach_magnet_gray)),
-                ExploreFragment.class, ExploreFragment.getBundle(serverId));
+                ExploreFragment.class, null);
         mTabHost.addTab(
                 mTabHost.newTabSpec("manager_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.icon_download_gray)),
