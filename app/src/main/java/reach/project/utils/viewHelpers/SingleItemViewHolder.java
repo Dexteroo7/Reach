@@ -10,12 +10,6 @@ public class SingleItemViewHolder extends RecyclerView.ViewHolder implements Vie
 
     private final HandOverMessage<Integer> handOverMessage;
 
-    public int getPositionItem() {
-        return position;
-    }
-
-    protected int position;
-
     public SingleItemViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
 
         super(itemView);
@@ -23,12 +17,8 @@ public class SingleItemViewHolder extends RecyclerView.ViewHolder implements Vie
         this.itemView.setOnClickListener(this);
     }
 
-    public final void bindPosition(int position) {
-        this.position = position;
-    }
-
     @Override
     public final void onClick(View v) {
-        handOverMessage.handOverMessage(position);
+        handOverMessage.handOverMessage(getAdapterPosition());
     }
 }

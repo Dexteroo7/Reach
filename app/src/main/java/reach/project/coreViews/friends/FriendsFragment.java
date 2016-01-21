@@ -89,7 +89,7 @@ public class FriendsFragment extends Fragment implements
         final RelativeLayout inviteContainer = (RelativeLayout) rootView.findViewById(R.id.inviteContainer);
         inviteContainer.setOnClickListener(INVITE_LISTENER);
         final RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.contactsList);
-        friendsAdapter = new FriendsAdapter(this);
+        friendsAdapter = new FriendsAdapter(this, sharedPreferences);
         final GridLayoutManager gridLayoutManager = new GridLayoutManager(activity, 2);
         final GridLayoutManager.SpanSizeLookup spanSizeLookup = new GridLayoutManager.SpanSizeLookup() {
             @Override

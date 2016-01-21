@@ -201,13 +201,11 @@ public class ProfileActivity extends AppCompatActivity {
         reference = null;
     }
 
-    final int padding = MiscUtils.dpToPx(20);
 
     private void setRequestSent() {
 
         if (requestIcon != null) {
             requestIcon.setImageResource(R.drawable.icon_pending_invite);
-            requestIcon.setPadding(padding, padding, padding, padding);
         }
         if (text1 != null)
             text1.setText("Looks like the user has not accepted your request yet");
@@ -220,7 +218,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void setRequestNotSent() {
 
         if (requestIcon != null)
-            requestIcon.setImageResource(R.drawable.add_friend);
+            requestIcon.setImageResource(R.drawable.icon_add_friend);
         if (text1 != null)
             text1.setText("You need to be friends before you can access their collections");
         if (text2 != null)

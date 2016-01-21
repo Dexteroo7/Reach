@@ -3,6 +3,7 @@ package reach.project.coreViews.friends;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
@@ -19,6 +20,7 @@ import javax.annotation.Nullable;
 
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -37,9 +39,19 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     private final HandOverMessage<ClickData> handOverMessage;
     private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
-    public FriendsAdapter(HandOverMessage<ClickData> handOverMessage) {
+    ///////////Horizontal Cursor
+    private LockedFriendsAdapter lockedFriendsAdapter;
+
+    private boolean shouldShowCoach1;
+    private SharedPreferences sharedPreferences;
+    private TourGuide tourGuide = null;
+
+    public FriendsAdapter(HandOverMessage<ClickData> handOverMessage, SharedPreferences sharedPreferences) {
         this.handOverMessage = handOverMessage;
         setHasStableIds(true);
+        lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item, sharedPreferences);
+        this.sharedPreferences = sharedPreferences;
+        this.shouldShowCoach1 = !SharedPrefUtils.getFriendsCoach1Seen(this.sharedPreferences);
     }
 
     public static final String[] REQUIRED_PROJECTION = new String[]{
@@ -76,9 +88,6 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         notifyDataSetChanged();
     }
     ///////////Vertical Cursor (parent)
-
-    ///////////Horizontal Cursor
-    private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item);
 
     public void setHorizontalCursor(@Nullable Cursor cursor) {
 
@@ -144,8 +153,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             final Cursor cursorExactType = (Cursor) friend;
             final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
 
-            if (position == 0) {
-
+            if (shouldShowCoach1) {
                 final ToolTip toolTip = new ToolTip()
                         .setTextColor(Color.WHITE)
                         .setTitle("Hello!")
@@ -154,13 +162,13 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 final Overlay overlay = new Overlay()
                         .setBackgroundColor(Color.parseColor("#99000000"))
                         .setStyle(Overlay.Style.Rectangle);
-                final TourGuide mTutorialHandler = TourGuide.init((Activity) viewHolder.itemView.getContext()).with(TourGuide.Technique.Click)
+                tourGuide = TourGuide.init((Activity) viewHolder.itemView.getContext()).with(TourGuide.Technique.Click)
                         .setToolTip(toolTip)
-                        .setOverlay(overlay);
-                        //.playOn(viewHolder.itemView);
+                        .setOverlay(overlay)
+                        .playOn(viewHolder.itemView);
+                shouldShowCoach1 = false;
+                SharedPrefUtils.setFriendsCoach1Seen(sharedPreferences);
             }
-
-            viewHolder.bindPosition(position);
 
             final long serverId = cursorExactType.getLong(0);
 //        final String phoneNumber = cursor.getString(1);
@@ -296,6 +304,8 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     @Override
     public void handOverMessage(@NonNull Cursor cursor) {
 
+        if (tourGuide != null)
+            tourGuide.cleanUp();
         final ClickData clickData = ClickData.getInstance();
         clickData.friendId = cursor.getLong(0);
         clickData.networkType = cursor.getShort(5);

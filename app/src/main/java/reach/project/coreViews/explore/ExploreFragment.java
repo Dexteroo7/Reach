@@ -314,6 +314,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 //        explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
+
+        if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
+            mListener.showSwipeCoach();
+            SharedPrefUtils.setExploreCoach1Seen(preferences);
+        }
         return rootView;
     }
 

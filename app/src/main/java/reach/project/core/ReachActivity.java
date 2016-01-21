@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.ContextCompat;
@@ -17,6 +18,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.common.collect.ImmutableList;
@@ -76,14 +80,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     public static void openDownloading() {
 
-        /*MiscUtils.useActivity(reference, activity -> {
+        MiscUtils.useActivity(reference, activity -> {
 
-            if (activity.viewPager == null)
+            if (activity.mTabHost == null)
                 return;
 
-            activity.viewPager.setCurrentItem(3, true);
-            DOWNLOAD_PAGER.setItem(1);
-        });*/
+            activity.mTabHost.setCurrentTab(3);
+            //activity.viewPager.setCurrentItem(3, true);
+            //DOWNLOAD_PAGER.setItem(1);
+        });
     }
 
     ////////////////////////////////////////public static final
@@ -107,8 +112,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     new String[]{"My Applications"},
                     "Apps"),
             new PagerFragment.Pages(
-                    new Class[]{DownloadingFragment.class, MyLibraryFragment.class},
-                    new String[]{"Downloading", "My Library"},
+                    new Class[]{MyLibraryFragment.class, DownloadingFragment.class},
+                    new String[]{"My Library", "Downloading"},
                     "Songs"));
 
     @SuppressWarnings("unchecked")
@@ -200,6 +205,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
 
+    private FragmentTabHost mTabHost;
+
     private static long serverId = 0;
 
     @Override
@@ -210,6 +217,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         if (reference != null)
             reference.clear();
         reference = null;
+        mTabHost = null;
         //viewPager = null;
     }
 
@@ -297,7 +305,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
         });*/
 
-        final FragmentTabHost mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
+        mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
         mTabHost.addTab(
                 mTabHost.newTabSpec("friends_page").setIndicator("",
@@ -432,20 +440,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         Log.i("Ayush", "Processing Intent");
 
-        /*if (intent.getBooleanExtra("firstTime", false)) {
-            if (viewPager != null)
-                viewPager.setCurrentItem(5, false);
-        }*/
+        if (intent.getBooleanExtra("firstTime", false)) {
+            if (mTabHost != null)
+                mTabHost.setCurrentTab(5);
+                //viewPager.setCurrentItem(5, false);
+        }
 
-//        if (intent.getBooleanExtra("openNotificationFragment", false))
-//            onOpenNotificationDrawer();
-//        else if (intent.getBooleanExtra("openFriendRequests", false)) {
-//            if (viewPager != null)
-//                viewPager.setCurrentItem(0);
-//        } else if (intent.getBooleanExtra("openNotifications", false)) {
-//            if (viewPager != null)
-//                viewPager.setCurrentItem(1);
-//        else
         if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals(ADD_PUSH_SONG)) {
 
             Log.i("Ayush", "FOUND PUSH DATA");
@@ -630,5 +630,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         //We call bulk starter always
         MiscUtils.startDownload(reachDatabase, this, null);
+    }
+
+    @Override
+    public void showSwipeCoach() {
+        new Handler().postDelayed(() -> {
+            final ViewGroup viewGroup = (ViewGroup) findViewById(android.R.id.content);
+            final View coachView = LayoutInflater.from(this).inflate(R.layout.swipe_coach, viewGroup, false);
+            viewGroup.addView(coachView);
+            coachView.setOnClickListener(v -> viewGroup.removeView(coachView));
+        }, 1000L);
     }
 }

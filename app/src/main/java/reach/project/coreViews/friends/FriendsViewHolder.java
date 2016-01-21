@@ -52,7 +52,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.lockText = (TextView) itemView.findViewById(R.id.lockText);
 
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
-        this.optionsIcon.setTag(new Object[]{position, null}); //int, popMenu (reuse)
+        this.optionsIcon.setTag(new Object[]{getAdapterPosition(), null}); //int, popMenu (reuse)
         this.optionsIcon.setOnClickListener(optionsClickListener);
     }
 

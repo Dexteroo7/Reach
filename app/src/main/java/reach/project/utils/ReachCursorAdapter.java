@@ -91,8 +91,6 @@ public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends
     @Override
     public void onBindViewHolder(T holder, int position) {
 
-        holder.bindPosition(position);
-
         final Optional<Cursor> cursorOptional = getItem(position);
         if (!cursorOptional.isPresent())
             return;

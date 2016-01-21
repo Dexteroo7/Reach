@@ -150,7 +150,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             final Cursor cursorExactType = (Cursor) friend;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
             holder.itemView.setBackgroundResource(0);
-            songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
             final boolean selected;
@@ -188,7 +187,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             //use
         } else {
-
             holder.itemView.setBackgroundResource(0);
         }
     }

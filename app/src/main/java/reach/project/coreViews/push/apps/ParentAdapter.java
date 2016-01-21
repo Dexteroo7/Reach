@@ -117,7 +117,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             final App appExactType = (App) friend;
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
 
-            appItemHolder.bindPosition(position);
             appItemHolder.checkBox.setSelected(ReachActivity.SELECTED_APPS.contains(appExactType));
             appItemHolder.appName.setText(appExactType.applicationName);
             try {

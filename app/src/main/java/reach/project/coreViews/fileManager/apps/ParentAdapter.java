@@ -115,7 +115,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             final App appExactType = (App) friend;
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
 
-            appItemHolder.bindPosition(position);
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
                 appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));

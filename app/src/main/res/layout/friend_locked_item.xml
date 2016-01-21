@@ -77,11 +77,11 @@
         <ImageView
             android:id="@+id/lockIcon"
             android:layout_alignParentBottom="true"
-            android:layout_width="22dp"
+            android:layout_width="15dp"
             android:layout_marginLeft="5dp"
-            android:layout_marginBottom="4dp"
-            android:layout_height="22dp"
-            android:src="@drawable/add_friend" />
+            android:layout_marginBottom="6dp"
+            android:layout_height="15dp"
+            android:src="@drawable/icon_add_friend" />
         <ImageView
             android:id="@+id/optionsIcon"
             android:layout_alignParentBottom="true"

@@ -1,8 +1,14 @@
 package reach.project.coreViews.myProfile.apps;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import java.io.Closeable;
@@ -11,9 +17,14 @@ import java.util.List;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
+import reach.project.utils.viewHelpers.tourguide.Overlay;
+import reach.project.utils.viewHelpers.tourguide.ToolTip;
+import reach.project.utils.viewHelpers.tourguide.TourGuide;
 
 /**
  * Created by dexter on 25/11/15.
@@ -22,17 +33,34 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     private final VisibilityHook visibilityHook;
     private final PackageManager packageManager;
+    private TourGuide tourGuide = null;
+    private boolean shouldShowCoach1;
+    private SharedPreferences sharedPreferences;
+    private SuperInterface mListener = null;
 
     public RecentAdapter(List<App> messageList,
                          HandOverMessage<App> handOverMessage,
                          int resourceId,
                          VisibilityHook visibilityHook,
-                         PackageManager packageManager) {
+                         Context context) {
 
         super(messageList, handOverMessage, resourceId);
 
         this.visibilityHook = visibilityHook;
-        this.packageManager = packageManager;
+        this.mListener = (SuperInterface) context;
+        this.packageManager = context.getPackageManager();
+        this.sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        shouldShowCoach1 = !SharedPrefUtils.getMyProfileCoach1Seen(sharedPreferences);
+    }
+
+    @Override
+    public void handOverMessage(@NonNull Integer position) {
+        if (tourGuide != null) {
+            Log.d("Ashish", "tourGuide.cleanUp");
+            tourGuide.cleanUp();
+            mListener.showSwipeCoach();
+        }
+        super.handOverMessage(position);
     }
 
     @Nullable
@@ -51,6 +79,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             getMessageList().addAll(newMessages);
         }
 
+        //shouldShowCoach1 = true;
         notifyDataSetChanged();
         final RecyclerView.Adapter adapter;
         if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
@@ -98,6 +127,23 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
 //        Log.i("Ayush", "Re-binding recent " + item.applicationName);
+        if (shouldShowCoach1 && holder.getAdapterPosition() == 0) {
+            Log.d("Ashish", "tourGuide.playOn");
+            final ToolTip toolTip = new ToolTip()
+                    .setTextColor(Color.WHITE)
+                    .setTitle("Hello!")
+                    .setShadow(false)
+                    .setDescription("Click to view tutorial. Next button is disabled until tutorial is viewed");
+            final Overlay overlay = new Overlay()
+                    .setBackgroundColor(Color.parseColor("#99000000"))
+                    .setStyle(Overlay.Style.Rectangle);
+            tourGuide = TourGuide.init((Activity) holder.itemView.getContext()).with(TourGuide.Technique.Click)
+                    .setToolTip(toolTip)
+                    .setOverlay(overlay)
+                    .playOn(holder.itemView);
+            SharedPrefUtils.setMyProfileCoach1Seen(sharedPreferences);
+            shouldShowCoach1 = false;
+        }
 
         holder.appName.setText(item.applicationName);
         try {
