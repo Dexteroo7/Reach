@@ -212,7 +212,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             final JsonObject object = receivedData.get(index).getAsJsonObject();
             containers.add(object);
-            Log.d("Ashish", object.toString());
+            Log.d("Ayush", object.toString());
 
             final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
             final JsonObject viewInfo = MiscUtils.get(object, ExploreJSON.VIEW_INFO).getAsJsonObject();
@@ -536,7 +536,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onDetach() {
 
         super.onDetach();
-        Log.d("Ashish", "ExploreFragment - onDetach");
+        Log.d("Ayush", "ExploreFragment - onDetach");
         mListener = null;
         if (buffer != null)
             buffer.close();
