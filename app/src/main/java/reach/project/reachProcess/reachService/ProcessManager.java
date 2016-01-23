@@ -17,6 +17,7 @@ import android.os.Parcelable;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
+import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -705,7 +706,6 @@ public class ProcessManager extends Service implements
         // Remember that to use this, we have to declare the android.permission.WAKE_LOCK
         // permission in AndroidManifest.xml.
         reference = new WeakReference<>(this);
-        exoplayer= ExoPlayer.Factory.newInstance(1);
     }
 
     @Override
@@ -979,7 +979,8 @@ public class ProcessManager extends Service implements
             return;
         if (musicFuture == null || musicFuture.isCancelled() || musicFuture.isDone())
             musicFuture = submitParent(musicHandler);
-
+        if(Build.VERSION.SDK_INT>=16 && exoplayer==null)
+            exoplayer= ExoPlayer.Factory.newInstance(1);
         musicHandler.passNewSong(musicData.get());
         pushSongToStack(musicData.get());
     }

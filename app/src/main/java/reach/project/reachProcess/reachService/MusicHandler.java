@@ -8,6 +8,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
+import com.google.android.exoplayer.ExoPlaybackException;
+import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer.util.SystemClock;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
@@ -36,10 +39,13 @@ import reach.project.utils.MiscUtils;
  * Music player is reinitialized, started, and observer started again.
  */
 public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
-        implements Player.DecoderHandler,
+        implements ExoPlayer.Listener,
+        Player.DecoderHandler,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener,
         MusicFocusable {
+
+
 
     // indicates the state our service:
     private enum State {
@@ -188,16 +194,18 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         try
         {
             Log.e("musichandler", "try");
+
             if(currentSong.getProcessed() < currentSong.getLength())
             {
-                if(Build.VERSION.SDK_INT>=16)
+                Log.i("Aman","processing called");
+                if(Build.VERSION.SDK_INT >= 16)
                     duration=player.createStreamingExoPlayerIfNeeded(Optional.fromNullable(currentSong.getPath()),currentSong.getLength());
                 else
                     duration=player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength());
             }
             else if(Build.VERSION.SDK_INT>=16)
             {
-                duration=player.createExoPlayerIfNeeded(this, this, currentSong.getPath());
+                duration=player.createExoPlayerIfNeeded(this,currentSong.getPath());
             }
             else
             {
@@ -396,7 +404,29 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     public Context getContext() {
         return handlerInterface.getContext();
     }
+    @Override
 
+    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+        Log.i("exoplayer", "onPlayerStateChanged");
+        if(playbackState== ExoPlayer.STATE_ENDED)
+        handlerInterface.pushNextSong(
+                handlerInterface.nextSong(Optional.fromNullable(currentSong), true));
+    }
+
+    @Override
+    public void onPlayWhenReadyCommitted() {
+            Log.i("exoplayer","onPlayWhenReadyCommitted");
+    }
+
+    @Override
+    public void onPlayerError(ExoPlaybackException error) {
+        Log.i("exoplayer","onPlayerError");
+        kill.set(true);
+        if (currentSong == null)
+            handlerInterface.errorReport("", error.toString());
+        else
+            handlerInterface.errorReport(currentSong.getDisplayName(), error.toString());
+    }
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
 
@@ -435,6 +465,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     /////////////////////////////////////
     @Override
     public long getProcessed() {
+        long current= System.currentTimeMillis();
         //if this gets called current song HAS to be reachDatabase
         final Cursor cursor = handlerInterface.getContext().getContentResolver().query(
                 Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentSong.getId()),
@@ -451,6 +482,7 @@ public class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         final long processed = cursor.getLong(0); //processed is at 1 in custom cursor
         cursor.close();
         currentSong.setProcessed(processed);
+        Log.i("Aman","over processed "+(System.currentTimeMillis()-current));
         return processed;
     }
 

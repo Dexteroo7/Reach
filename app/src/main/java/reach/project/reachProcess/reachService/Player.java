@@ -12,24 +12,14 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.android.exoplayer.DefaultLoadControl;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.FrameworkSampleSource;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.SampleSource;
 import com.google.android.exoplayer.TrackRenderer;
-import com.google.android.exoplayer.chunk.ChunkSampleSource;
-import com.google.android.exoplayer.chunk.ChunkSource;
-import com.google.android.exoplayer.dash.DashChunkSource;
-import com.google.android.exoplayer.dash.DefaultDashTrackSelector;
 import com.google.android.exoplayer.extractor.ExtractorSampleSource;
-import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.upstream.DataSource;
-import com.google.android.exoplayer.upstream.DataSpec;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
-import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer.upstream.DefaultUriDataSource;
-import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.PlayerControl;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -61,7 +51,8 @@ import reach.project.reachProcess.decoder.SampleBuffer;
 /**
  * Created by Dexter on 22-06-2015.
  */
-public class Player {
+public class Player{
+
 
     //which player is playing
     private enum WhichPlayer {
@@ -91,7 +82,6 @@ public class Player {
     private WhichPlayer whichPlayer = WhichPlayer.MediaPlayer;
     private AudioTrack audioTrack;
     private MediaPlayer mediaPlayer;
-    private ExoPlayer exoplayer;
 
     private Future decodeFuture;
     private Future pipeFuture;
@@ -103,15 +93,15 @@ public class Player {
 
     public boolean isNull()
     {
-        return (mediaPlayer == null && exoplayer==null && audioTrack == null) || whichPlayer == null;
+        return (mediaPlayer == null && ProcessManager.exoplayer==null && audioTrack == null) || whichPlayer == null;
     }
 
     public boolean isPlaying()
     {
         try
         {
-            PlayerControl pl=new PlayerControl(exoplayer);
-            boolean IS_PLAYING_EXOPLAYER=(exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer && pl.isPlaying());
+            PlayerControl pl=new PlayerControl(ProcessManager.exoplayer);
+            boolean IS_PLAYING_EXOPLAYER=(ProcessManager.exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer && pl.isPlaying());
             boolean IS_PLAYING_MEDIA_PLAYER=(mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer.isPlaying());
             boolean IS_PLAYING_AUDIO_TRACK=(whichPlayer == WhichPlayer.AudioTrack && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING);
             return IS_PLAYING_AUDIO_TRACK || IS_PLAYING_EXOPLAYER || IS_PLAYING_MEDIA_PLAYER;
@@ -156,8 +146,8 @@ public class Player {
 //        Log.i("Downloader", "Resetting mediaPlayer");
         if (mediaPlayer != null)
             mediaPlayer.reset();
-        if(exoplayer!=null)
-            exoplayer.stop();
+        if(ProcessManager.exoplayer!=null)
+            ProcessManager.exoplayer.stop();
         Log.i("Downloader", "Reset complete");
     }
 
@@ -166,7 +156,7 @@ public class Player {
         if (whichPlayer == WhichPlayer.MediaPlayer)
             return mediaPlayer.getCurrentPosition() / 1000;
         else if(whichPlayer==WhichPlayer.Exoplayer)
-            return (int)(exoplayer.getCurrentPosition()/1000);
+            return (int)(ProcessManager.exoplayer.getCurrentPosition()/1000);
         else
             return (audioTrack.getPlaybackHeadPosition() / audioTrack.getSampleRate());
     }
@@ -176,9 +166,9 @@ public class Player {
      */
     public void pause()
     {
-        if(exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer)
+        if(ProcessManager.exoplayer!=null && whichPlayer==WhichPlayer.Exoplayer)
         {
-            exoplayer.setPlayWhenReady(false);
+            ProcessManager.exoplayer.setPlayWhenReady(false);
         }
 
         if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack)
@@ -203,7 +193,7 @@ public class Player {
         else if(whichPlayer==WhichPlayer.Exoplayer)
         {
             Log.i("EXOPLAYER PLAY","TRUE");
-            exoplayer.setPlayWhenReady(true);
+            ProcessManager.exoplayer.setPlayWhenReady(true);
         }
         else
         {
@@ -214,8 +204,8 @@ public class Player {
 
     public void setVolume(float duck_volume)
     {
-        if(exoplayer!=null)
-            exoplayer.sendMessage(audio,MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,duck_volume);
+        if(ProcessManager.exoplayer!=null)
+            ProcessManager.exoplayer.sendMessage(audio,MediaCodecAudioTrackRenderer.MSG_SET_VOLUME,duck_volume);
         if (mediaPlayer != null)
             mediaPlayer.setVolume(duck_volume, duck_volume);
         if (audioTrack == null)
@@ -241,11 +231,8 @@ public class Player {
         Log.i("Downloader", "Seeking to " + i);
         if (whichPlayer == WhichPlayer.MediaPlayer && mediaPlayer != null)
             mediaPlayer.seekTo(i);
-        else if(whichPlayer==WhichPlayer.Exoplayer && exoplayer != null) {
-            if(i<exoplayer.getBufferedPosition())
-                exoplayer.seekTo(i);
-            else
-                exoplayer.seekTo(exoplayer.getBufferedPosition());
+        else if(whichPlayer==WhichPlayer.Exoplayer && ProcessManager.exoplayer != null) {
+            ProcessManager.exoplayer.seekTo(i);
         }
         else throw new UnsupportedOperationException("Seek not allowed in AudioTrack yet !");
     }
@@ -307,8 +294,8 @@ public class Player {
         if (mediaPlayer != null)
             mediaPlayer.release();
 
-        if(exoplayer!=null)
-            exoplayer.seekTo(0);
+        if(ProcessManager.exoplayer!=null)
+            ProcessManager.exoplayer.seekTo(0);
 
 //        Log.i("Downloader", "shutting down decoder service");
         decoderService.shutdownNow();
@@ -332,24 +319,21 @@ public class Player {
         return mediaPlayer.getDuration();
 
     }
-    protected long createExoPlayerIfNeeded(MediaPlayer.OnCompletionListener completionListener,
-                                            MediaPlayer.OnErrorListener onErrorListener,
-                                            String path) throws IOException, InterruptedException {
+    protected long createExoPlayerIfNeeded(ExoPlayer.Listener listener, String path) throws IOException, InterruptedException {
         reset(); //throws InterruptedException
 
         whichPlayer=WhichPlayer.Exoplayer;
-        if (exoplayer == null)
-        {
-            exoplayer=ProcessManager.exoplayer;
-        }
+
+
+        ProcessManager.exoplayer.addListener(listener);
         File file = new File(path);
         FileInputStream inputStream = new FileInputStream(file);
         FileDescriptor fd = inputStream.getFD();
         SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
         audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-        exoplayer.prepare(audio);
-        exoplayer.seekTo(0);
-        return exoplayer.getDuration();
+        ProcessManager.exoplayer.prepare(audio);
+        ProcessManager.exoplayer.seekTo(0);
+        return ProcessManager.exoplayer.getDuration();
     }
 
     protected long createStreamingExoPlayerIfNeeded(Optional<String> path,final long contentLength) throws IOException, InterruptedException
@@ -360,35 +344,13 @@ public class Player {
         if (!path.isPresent() || TextUtils.isEmpty(path.get()) || path.get().equals("hello_world"))
             throw new IOException("Given path is invalid");
 
-        if(exoplayer == null)
-        {
-            exoplayer=ProcessManager.exoplayer;
-        }
-        Uri uri=Uri.parse(path.get());
-        DataSource dataSource=new myStreamingDataSource(handlerInterface);
-        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource(uri,dataSource,new DefaultAllocator(64*1024),64*1024*256);
-
-        /*String pa=path.get();
-        File file=new File(pa);
-        FileInputStream fileInputStream=new FileInputStream(file);
-        FileDescriptor fd=fileInputStream.getFD();
-        SampleSource sampleSource = new FrameworkSampleSource(fd, 0, file.length());
-        audio = new MediaCodecAudioTrackRenderer(sampleSource, null, true);
-        exoplayer.prepare(audio);
-
-        SampleSource sampleSource;
-        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource()
-        AssetDataSource
-        DataSource audioDataSource=new DefaultUriDataSource(handlerInterface.getContext(),bandwidthMeter,"android");
-        ChunkSource audioChunkSource=new DashChunkSource(playerSource.getSource(),DefaultDashTrackSelector.newAudioInstance(), audioDataSource, null, 30000,0, null, null);
-        ChunkSampleSource audioSampleSource=new ChunkSampleSource(audioChunkSource,new DefaultLoadControl(new DefaultAllocator(64 * 1024)),54*64*1024);
-        MediaCodecAudioTrackRenderer audioStream=new MediaCodecAudioTrackRenderer(audioSampleSource);*/
-
-        audio = new MediaCodecAudioTrackRenderer(extractorSampleSource,null,true);
-        exoplayer.prepare(audio);
-        exoplayer.seekTo(0);
-        Log.i("Exoplayer bufffer","Done");
-        return exoplayer.getDuration();
+        DataSource dataSource=new myDataSource(handlerInterface::getProcessed);
+        ExtractorSampleSource extractorSampleSource=new ExtractorSampleSource(Uri.parse(path.get()),dataSource,new DefaultAllocator(64*1024),64*1024*256);
+        audio=new MediaCodecAudioTrackRenderer(extractorSampleSource,null,true);
+        ProcessManager.exoplayer.prepare(audio);
+        ProcessManager.exoplayer.seekTo(0);
+        Log.i("Aman","Exoplayer bufffer Done");
+        return ProcessManager.exoplayer.getDuration();
     }
 
     protected long createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
