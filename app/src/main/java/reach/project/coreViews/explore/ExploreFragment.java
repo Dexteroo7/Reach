@@ -72,12 +72,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
     private static long myServerId = 0;
+    private SharedPreferences preferences;
 
-    public static Bundle getBundle(long userId) {
-
-        final Bundle args = new Bundle(1);
-        args.putLong("userId", userId);
-        return args;
+    public ExploreFragment() {
+        reference = new WeakReference<>(this);
     }
 
     private static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
@@ -250,9 +248,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         }
 
         if (containers.size() > 0)
-            MiscUtils.useContextFromFragment(reference, context -> {
-                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                SharedPrefUtils.storeLastRequestTime(preferences);
+            MiscUtils.useFragment(reference, fragment -> {
+                SharedPrefUtils.storeLastRequestTime(fragment.preferences);
             });
 
         Log.i("Ayush", "Explore has " + containers.size() + " stories");
@@ -296,8 +293,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        reference = new WeakReference<>(this);
-        myServerId = getArguments().getLong("userId");
+        preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        myServerId = SharedPrefUtils.getServerId(preferences);
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
@@ -317,6 +314,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 //        explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
         explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
+
+        if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
+            mListener.showSwipeCoach();
+            SharedPrefUtils.setExploreCoach1Seen(preferences);
+        }
         return rootView;
     }
 

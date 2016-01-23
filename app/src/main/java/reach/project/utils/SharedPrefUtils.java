@@ -268,4 +268,28 @@ public enum SharedPrefUtils {
     public static long getLastRequestTime(SharedPreferences preferences) {
         return preferences.getLong("lastRequestTime", 0);
     }
+
+    public synchronized static void setMyProfileCoach1Seen(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("myProfileCoach1", true).apply();
+    }
+
+    public synchronized static boolean getMyProfileCoach1Seen(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean("myProfileCoach1", false);
+    }
+
+    public synchronized static void setFriendsCoach1Seen(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("friendsCoach1", true).apply();
+    }
+
+    public synchronized static boolean getFriendsCoach1Seen(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean("friendsCoach1", false);
+    }
+
+    public synchronized static void setExploreCoach1Seen(SharedPreferences sharedPreferences) {
+        sharedPreferences.edit().putBoolean("exploreCoach1", true).apply();
+    }
+
+    public synchronized static boolean getExploreCoach1Seen(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean("exploreCoach1", false);
+    }
 }

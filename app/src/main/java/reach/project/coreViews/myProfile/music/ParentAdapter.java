@@ -156,7 +156,6 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
             final Cursor cursorExactType = (Cursor) object;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
-            songItemHolder.bindPosition(position);
 
             final String displayName, artist, album, actualName;
             final boolean visible;

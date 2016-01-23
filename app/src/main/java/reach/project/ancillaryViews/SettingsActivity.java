@@ -60,7 +60,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         public final TextView settingsTitle;
         public SwitchCompat switchCompat;
-        private int position;
 
         public SettingsHolder(View itemView) {
             super(itemView);
@@ -69,13 +68,9 @@ public class SettingsActivity extends AppCompatActivity {
             itemView.setOnClickListener(this);
         }
 
-        public void bindPosition(int pos) {
-            position = pos;
-        }
-
         @Override
         public void onClick(View v) {
-            switch (position) {
+            switch (getAdapterPosition()) {
                 case 1:
                     break;
                 case 2:
@@ -116,7 +111,6 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(SettingsHolder holder, int position) {
             holder.settingsTitle.setText(titles[position]);
-            holder.bindPosition(position);
             if (position == 0) {
                 SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_APPEND);
                 if (SharedPrefUtils.getMobileData(preferences))

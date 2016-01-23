@@ -63,7 +63,6 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final App app = (App) message;
             final AppItemHolder appAppItemHolder = (AppItemHolder) holder;
 
-            appAppItemHolder.bindPosition(position);
             appAppItemHolder.appName.setText(app.applicationName);
 
             final PackageManager packageManager = appAppItemHolder.appName.getContext().getPackageManager();

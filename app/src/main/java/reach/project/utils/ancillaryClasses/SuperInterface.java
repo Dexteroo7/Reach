@@ -15,4 +15,5 @@ public interface SuperInterface {
                         String networkType, String artistName, long duration,
                         String albumName, String genre); //MusicListFragment
 
+    void showSwipeCoach();
 }

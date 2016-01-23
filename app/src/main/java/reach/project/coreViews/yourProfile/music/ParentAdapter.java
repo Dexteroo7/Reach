@@ -54,7 +54,6 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final Song song = (Song) message;
             final SongItemHolder songSongItemHolder = (SongItemHolder) holder;
 
-            songSongItemHolder.bindPosition(position);
             songSongItemHolder.songName.setText(song.displayName);
             songSongItemHolder.artistName.setText(song.artist);
 

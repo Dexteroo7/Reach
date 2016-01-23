@@ -31,7 +31,6 @@ public abstract class SimpleRecyclerAdapter<T, F extends SingleItemViewHolder> e
 
     @Override
     public void onBindViewHolder(F holder, int position) {
-        holder.bindPosition(position);
         onBindViewHolder(holder, messageList.get(position));
     }
 

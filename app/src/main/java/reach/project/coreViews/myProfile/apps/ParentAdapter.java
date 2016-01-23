@@ -50,8 +50,8 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
                          Context context) {
 
         this.handOverApp = handOverApp;
-        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, R.layout.app_mylibray_grid_item, this, context.getPackageManager());
         this.packageManager = context.getPackageManager();
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, R.layout.app_mylibray_grid_item, this, context);
         setHasStableIds(true);
     }
 
@@ -119,7 +119,6 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
             final App appExactType = allAppsList.get(position - 1); //re-adjust for recent
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
 
-            appItemHolder.bindPosition(position);
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
 
@@ -137,7 +136,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
                 appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 appItemHolder.toggleText.setText("Only Me");
             }
-        } else {
+        } /*else {
 
             //assume its recent
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
@@ -146,7 +145,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
             if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
                 horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
             horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
-        }
+        }*/
     }
 
     @Override
@@ -162,11 +161,17 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
             }
 
             case VIEW_TYPE_RECENT: {
-                return new MoreListHolder(parent,
+                final MoreListHolder horizontalViewHolder = new MoreListHolder(parent,
                         R.layout.list_with_more_button_padding, //Main resource id
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
                         R.id.moreButton); //id of more button
+                horizontalViewHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
+                horizontalViewHolder.headerText.setText("Recently Installed");
+                if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
+                    horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
+                horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
+                return horizontalViewHolder;
             }
 
             default:
