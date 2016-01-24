@@ -184,23 +184,11 @@ public class ProfileActivity extends AppCompatActivity {
         sendButton = (TextView) findViewById(R.id.sendButton);
 
         if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
-            setRequestSent();
             sendButton.setOnClickListener(cancelRequest);
-        }
-        else
+            setRequestSent();
+        } else
             sendButton.setOnClickListener(sendRequest);
     }
-
-    @Override
-    protected void onDestroy() {
-
-        super.onDestroy();
-
-        if (reference != null)
-            reference.clear();
-        reference = null;
-    }
-
 
     private void setRequestSent() {
 
