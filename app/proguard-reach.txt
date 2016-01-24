@@ -96,9 +96,7 @@
 
 # Application classes that will be serialized/deserialized over Gson
 -keep class reach.project.reachProcess.auxiliaryClasses.Connection { *; }
--keep class reach.project.coreViews.push.PushContainer { *; }
--keep class reach.project.music.Song { *; }
-
+-keep class reach.project.reachProcess.auxiliaryClasses.MusicData { *; }
 
 #-keep class com.viewpagerindicator.** { *; }
 #-keep interface com.viewpagerindicator.** { *; }
@@ -204,8 +202,8 @@
 
 -dontwarn javax.annotation.**
 
--keep class reach.project.coreViews.fileManager.apps.ApplicationFragment { *; }
--keep class reach.project.coreViews.fileManager.music.downloading.DownloadingFragment { *; }
--keep class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }
--keep class reach.project.coreViews.push.music.MyLibraryFragment { *; }
--keep class reach.project.coreViews.invite.InviteActivity { *; }
+-keepnames class reach.project.coreViews.fileManager.apps.ApplicationFragment { *; }
+-keepnames class reach.project.coreViews.fileManager.music.downloading.DownloadingFragment { *; }
+-keepnames class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }
+-keepnames class reach.project.coreViews.push.music.MyLibraryFragment { *; }
+-keepnames class * extends android.app.Activity { *; }
