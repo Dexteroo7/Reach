@@ -73,7 +73,6 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
 
-
     /**
      * The volume we set the media player to when we lose audio focus, but are allowed to reduce
      * the volume instead of stopping playback.
@@ -134,7 +133,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
             if (result == 0) //gg fail
                 break;
-            if(result == 1) //should update the duration
+            if (result == 1) //should update the duration
                 handlerInterface.updateDuration(MiscUtils.combinationFormatter(currentSong.getDuration()));
 
             try {
@@ -195,9 +194,9 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         }
 
         //if we did not know the duration already try to set
-        if(currentSong.getDuration() == 0) {
+        if (currentSong.getDuration() == 0) {
 
-            if(duration == 0)
+            if (duration == 0)
                 return 0; //now if duration is not known fuck off
             currentSong.setDuration(duration); //only update duration for old songs
             toReturn = 1; //update the duration

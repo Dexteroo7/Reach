@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -41,6 +42,7 @@ import reach.backend.Notifications.NotificationBase;
 import reach.backend.Notifications.NotificationEndpoint;
 import reach.backend.Notifications.Push;
 import reach.backend.Notifications.Types;
+import reach.backend.ObjectWrappers.BulkManualNotification;
 import reach.backend.ObjectWrappers.MyBoolean;
 import reach.backend.ObjectWrappers.MyString;
 import reach.backend.TextUtils;
@@ -356,6 +358,32 @@ public class MessagingEndpoint {
         sendMultiCastMessage(
                 message,
                 sender,
+                ofy().load().type(ReachUser.class)
+                        .filterKey("in", keysBuilder.build())
+                        .filter("gcmId !=", "")
+                        .project("gcmId"));
+    }
+
+    public void sendBulkManualNotification(BulkManualNotification bulkManualNotification) {
+
+        final Map<String, String> messages = bulkManualNotification.getMessages();
+        final List<Long> ids = bulkManualNotification.getIds();
+
+        if (messages.isEmpty() || ids.isEmpty())
+            throw new IllegalArgumentException("Please specify some arguments");
+
+        final ImmutableList.Builder<Key> keysBuilder = new ImmutableList.Builder<>();
+        for (Long id : ids)
+            keysBuilder.add(Key.create(ReachUser.class, id));
+
+        final Message.Builder messageBuilder = new Message.Builder();
+
+        final Set<Map.Entry<String, String>> entrySet = messages.entrySet();
+        for (Map.Entry<String, String> entry : entrySet)
+            messageBuilder.addData(entry.getKey(), entry.getValue());
+
+        sendMultiCastMessage(messageBuilder.build(),
+                new Sender(API_KEY),
                 ofy().load().type(ReachUser.class)
                         .filterKey("in", keysBuilder.build())
                         .filter("gcmId !=", "")
