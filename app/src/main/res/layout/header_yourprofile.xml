@@ -17,8 +17,8 @@
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/profilePic"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_centerHorizontal="true"
         fresco:placeholderImage="@drawable/default_profile_circle"
@@ -31,7 +31,7 @@
         android:layout_below="@id/profilePic"
         android:layout_centerHorizontal="true"
         android:textSize="16sp"
-        android:layout_margin="2dp"
+        android:layout_marginTop="2dp"
         android:text="User Name"
         android:textColor="#fff" />
 
@@ -42,7 +42,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/userName"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="2dp"
         android:text="user"
         android:textColor="#fff"
         android:textSize="15sp" />

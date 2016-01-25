@@ -47,7 +47,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
         public void handOverMessage(@Nonnull Integer position) {
-            handOverCursor.handOverMessage((Cursor) getItem(position));
+            handOverCursor.handOverMessage((Cursor) getItem(position-1));
         }
     };
 

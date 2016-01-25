@@ -42,7 +42,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
         public void handOverMessage(@Nonnull Integer position) {
-            handOverApp.handOverMessage(allAppsList.get(position - 1));
+            handOverApp.handOverMessage(allAppsList.get(position - 2));
         }
     };
 
