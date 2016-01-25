@@ -1,8 +1,6 @@
 package reach.project.utils;
 
 import android.util.Base64;
-import android.util.Base64InputStream;
-import android.util.Base64OutputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -52,20 +50,20 @@ public enum StringCompress {
 
     public static byte[] deCompressStringToBytes(String compressed) throws IOException {
 
-        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressed.getBytes("UTF-8"));
+        final byte [] decodedBytes = Base64.decode(compressed, Base64.DEFAULT);
+        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(decodedBytes);
         final InputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
-        final InputStream base64InputStream = new Base64InputStream(gzipInputStream, Base64.DEFAULT);
 
         final byte[] buffer = new byte[8192];
         int len;
 
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        while ((len = base64InputStream.read(buffer)) > 0)
+        while ((len = gzipInputStream.read(buffer)) > 0)
             byteArrayOutputStream.write(buffer, 0, len);
 
         final byte [] toReturn = byteArrayOutputStream.toByteArray();
 
-        MiscUtils.closeQuietly(byteArrayInputStream, gzipInputStream, base64InputStream, byteArrayOutputStream);
+        MiscUtils.closeQuietly(byteArrayInputStream, gzipInputStream, byteArrayOutputStream);
 
         return toReturn;
     }
@@ -74,13 +72,12 @@ public enum StringCompress {
 
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         final OutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
-        final OutputStream base64OutputStream = new Base64OutputStream(gzipOutputStream, Base64.DEFAULT);
 
-        base64OutputStream.write(unCompressed);
+        gzipOutputStream.write(unCompressed);
 
-        MiscUtils.closeQuietly(gzipOutputStream, base64OutputStream);
+        MiscUtils.closeQuietly(gzipOutputStream, byteArrayOutputStream);
 
-        final String toReturn = new String(byteArrayOutputStream.toByteArray(), "UTF-8");
+        final String toReturn = Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.DEFAULT);
 
         MiscUtils.closeQuietly(byteArrayOutputStream);
 
