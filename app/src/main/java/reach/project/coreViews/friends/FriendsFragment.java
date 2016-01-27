@@ -175,7 +175,7 @@ public class FriendsFragment extends Fragment implements
 
             Log.i("Ayush", "Detected status" + clickData.status);
             YourProfileActivity.openProfile(clickData.friendId, getActivity());
-            if (clickData.networkType == 5)
+            if ((clickData.friendId!=StaticData.DEVIKA) && clickData.networkType == 5)
                 Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
 
         } else

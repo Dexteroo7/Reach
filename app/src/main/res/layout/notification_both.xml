@@ -5,15 +5,15 @@
     android:layout_height="wrap_content"
     android:paddingLeft="5dp"
     android:id="@+id/Nplayer"
-    android:background="@color/reach_grey_bg">
+    android:background="#4B5B67">
 
         <ImageButton
             android:id="@+id/NcloseButton"
-            android:src="@drawable/icon_close_black"
+            android:src="@drawable/icon_close_white"
             android:scaleType="fitCenter"
             android:background="@drawable/close_selector"
             android:layout_alignParentRight="true"
-            android:padding="7dp"
+            android:padding="3dp"
             android:layout_width="25dp"
             android:layout_height="25dp" />
         <TextView
@@ -24,6 +24,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginLeft="5dp"
             android:id="@+id/NsongNamePlaying"
+            android:textColor="#fff"
             android:text="Song Name"
             android:textSize="16sp"
             android:ellipsize="marquee"
@@ -71,6 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:text="4"
+                android:textColor="#fff"
                 android:textSize="18sp"
                 android:id="@+id/NupCount"/>
             <ImageView
@@ -88,6 +90,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:text="2"
+                android:textColor="#fff"
                 android:textSize="18sp"
                 android:id="@+id/NdownCount"/>
             <ImageView

@@ -13,13 +13,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -314,7 +312,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return containers;
     };
 
-    private static final PopupMenu.OnMenuItemClickListener POP_MENU_CLICK = item -> {
+    /*private static final PopupMenu.OnMenuItemClickListener POP_MENU_CLICK = item -> {
 
         switch (item.getItemId()) {
 
@@ -333,7 +331,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             default:
                 return false;
         }
-    };
+    };*/
 
     @Nullable
     private View rootView = null;
@@ -360,12 +358,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 
         exploreAdapter = new ExploreAdapter(this, this);
-        final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
+        /*final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
         final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
 
         popupMenu.inflate(R.menu.explore_popup_menu);
         exploreToolbarText.setOnClickListener(v -> popupMenu.show());
-        popupMenu.setOnMenuItemClickListener(POP_MENU_CLICK);
+        popupMenu.setOnMenuItemClickListener(POP_MENU_CLICK);*/
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
@@ -453,8 +451,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
-                MiscUtils.openAppinPlayStore(getContext(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
-                        .getAsString());
+                MiscUtils.openAppinPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                        .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong());
                 break;
 
             case MISC:

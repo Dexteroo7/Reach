@@ -123,7 +123,7 @@ public final class StaticData {
         final String a = left == null || left.applicationName == null ? "" : left.applicationName;
         final String b = right == null || right.applicationName == null ? "" : right.applicationName;
 
-        return a.compareTo(b);
+        return a.compareToIgnoreCase(b);
     };
 
     public static final int PLAYER_BUFFER_DEFAULT = 4096;

@@ -37,7 +37,7 @@ import reach.project.utils.SharedPrefUtils;
 /**
  * Created by ashish on 10/07/15.
  */
-public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
+public class NotificationAdapter extends ArrayAdapter<NotificationBaseLocal> {
 
     public static final SparseBooleanArray accepted = new SparseBooleanArray();
     private static final SparseBooleanArray opened = new SparseBooleanArray();
@@ -48,7 +48,7 @@ public class ReachNotificationAdapter extends ArrayAdapter<NotificationBaseLocal
     private final Activity activity;
     private final long serverID;
 
-    public ReachNotificationAdapter(Activity mActivity, int resourceID, List<NotificationBaseLocal> notificationBaseLocalList, long serverId) {
+    public NotificationAdapter(Activity mActivity, int resourceID, List<NotificationBaseLocal> notificationBaseLocalList, long serverId) {
         super(mActivity, resourceID, notificationBaseLocalList);
         this.resID = resourceID;
         this.activity = mActivity;

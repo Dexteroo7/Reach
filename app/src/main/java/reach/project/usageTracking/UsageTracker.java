@@ -31,6 +31,7 @@ public enum UsageTracker {
     LIKE_SONG, //liked by user (client)
     DOWNLOAD_SONG, //downloaded by friends
     DOWNLOAD_COMPLETE, //download completed by friends
+    CLICK_APP, //app clicked by user
 
     ////////////
 
@@ -74,6 +75,47 @@ public enum UsageTracker {
         } else
             Log.i("Ayush", "USAGE TRACKED !");
     };
+
+    public static void trackApp(@NonNull Map<PostParams, String> simpleParams,
+                                 @NonNull Map<AppMetadata, String> complexParams,
+                                 @NonNull UsageTracker eventName) throws JSONException {
+
+        final JSONObject jsonObject = new JSONObject();
+
+        ///////////////
+        final Set<Map.Entry<PostParams, String>> simpleEntries = simpleParams.entrySet();
+        for (Map.Entry<PostParams, String> entry : simpleEntries)
+            jsonObject.put(entry.getKey().getValue(), entry.getValue());
+        ///////////////
+        final Set<Map.Entry<AppMetadata, String>> complexEntries = complexParams.entrySet();
+        final StringBuilder builder = new StringBuilder(50);
+
+        String or = "";
+        for (Map.Entry<AppMetadata, String> entry : complexEntries) {
+
+            builder.append(or);
+            or = "|"; //next time onwards, we append a pipe
+            builder.append(entry.getKey().name()).append(":").append(entry.getValue());
+        }
+        ///////////////
+
+        jsonObject.put(PostParams.META_INFO.getValue(), builder.toString());
+        jsonObject.put(PostParams.EVENT_NAME.getValue(), eventName.name());
+        jsonObject.put(PostParams.TIME_STAMP.getValue(), calendar.getTimeInMillis());
+
+        final String toPost = jsonObject.toString();
+        Log.i("Ayush", "Posting " + toPost);
+
+        synchronized (requests) {
+
+            requests.push(new Request.Builder()
+                    .url("http://52.74.175.56:8080/analytics/events")
+                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))
+                    .build());
+        }
+
+        asyncTracker.execute(track);
+    }
 
     public static void trackSong(@NonNull Map<PostParams, String> simpleParams,
                                  @NonNull Map<SongMetadata, String> complexParams,

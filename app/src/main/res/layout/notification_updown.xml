@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/Nplayer"
-    android:background="@color/reach_grey_bg">
+    android:background="#4B5B67">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -12,6 +12,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:singleLine="true"
+        android:textColor="#fff"
         android:ellipsize="marquee"
         android:id="@+id/NsongNamePlaying"
         android:text="Streaming songs"
@@ -28,6 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
+            android:textColor="#fff"
             android:text="4"
             android:textSize="18sp"
             android:id="@+id/NupCount"/>
@@ -45,6 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
+            android:textColor="#fff"
             android:text="2"
             android:textSize="18sp"
             android:id="@+id/NdownCount"/>

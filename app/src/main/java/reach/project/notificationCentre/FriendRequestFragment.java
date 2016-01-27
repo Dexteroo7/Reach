@@ -31,6 +31,7 @@ import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -62,36 +63,33 @@ public class FriendRequestFragment extends Fragment {
             new FetchRequests().executeOnExecutor(friendsRefresher);
     }
 
-    private final AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
+    private final AdapterView.OnItemClickListener itemClickListener = (parent, view, position, id) -> {
 
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        final FriendRequestAdapter adapter = (FriendRequestAdapter) parent.getAdapter();
+        final ReceivedRequest receivedRequest = adapter.getItem(position);
+        final long userId = receivedRequest.getId();
+        if (FriendRequestAdapter.accepted.get(userId, false)) {
 
-            final ReachFriendRequestAdapter adapter = (ReachFriendRequestAdapter) parent.getAdapter();
-            final ReceivedRequest receivedRequest = adapter.getItem(position);
-            final long userId = receivedRequest.getId();
-            if (ReachFriendRequestAdapter.accepted.get(userId, false)) {
+            //check validity
+            final Cursor cursor = view.getContext().getContentResolver().query(
+                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                    new String[]{ReachFriendsHelper.COLUMN_ID},
+                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                    new String[]{userId + ""}, null);
 
-                //check validity
-                final Cursor cursor = view.getContext().getContentResolver().query(
-                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
-                        new String[]{ReachFriendsHelper.COLUMN_ID},
-                        ReachFriendsHelper.COLUMN_ID + " = ?",
-                        new String[]{userId + ""}, null);
+            if (cursor == null || !cursor.moveToFirst()) {
 
-                if (cursor == null || !cursor.moveToFirst()) {
+                if (cursor != null)
+                    cursor.close();
 
-                    if (cursor != null)
-                        cursor.close();
-
-                    //fail
-                    adapter.remove(receivedRequest);
-                    Toast.makeText(view.getContext(), "404", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                cursor.close();
-                //mListener.onOpenLibrary(userId);
+                //fail
+                adapter.remove(receivedRequest);
+                Toast.makeText(view.getContext(), "404", Toast.LENGTH_SHORT).show();
+                return;
             }
+            cursor.close();
+            YourProfileActivity.openProfile(userId, getActivity());
+            //mListener.onOpenLibrary(userId);
         }
     };
 
@@ -105,7 +103,7 @@ public class FriendRequestFragment extends Fragment {
         listView = MiscUtils.addLoadingToListView((ListView) rootView.findViewById(R.id.listView));
         listView.setPadding(0, MiscUtils.dpToPx(10), 0, 0);
         serverId = SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE));
-        listView.setAdapter(new ReachFriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId));
+        listView.setAdapter(new FriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId));
         listView.setOnItemClickListener(itemClickListener);
 
         friendsRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,

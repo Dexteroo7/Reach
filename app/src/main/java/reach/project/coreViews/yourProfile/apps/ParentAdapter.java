@@ -40,7 +40,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
         @Override
         public void handOverMessage(@Nonnull Integer position) {
 
-            final T message = cacheAdapterInterface.getItem(position);
+            final T message = cacheAdapterInterface.getItem(position - 1);
             if (message instanceof App)
                 cacheAdapterInterface.handOverMessage((App) message);
             else

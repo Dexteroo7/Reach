@@ -39,6 +39,16 @@ public class NotificationActivity extends AppCompatActivity {
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
         mToolbar.setTitle("Notifications");
         mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(NotificationActivity.this));
+        mToolbar.inflateMenu(R.menu.notification_menu);
+        mToolbar.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.clear_button:
+                    NotificationFragment.clearNotifications();
+                    return true;
+                default:
+                    return false;
+            }
+        });
 
         final ViewPager viewPager = (ViewPager) findViewById(R.id.invitePager);
         viewPager.setAdapter(pagerAdapter);

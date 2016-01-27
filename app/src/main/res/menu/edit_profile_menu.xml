@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="reach.project.push.PushActivity">
+    <item
+        android:id="@+id/clear_button"
+        android:title="Clear"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_done_white"
+        />
+</menu>
