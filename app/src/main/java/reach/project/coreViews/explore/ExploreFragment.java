@@ -28,6 +28,7 @@ import com.facebook.imagepipeline.core.ImagePipeline;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -77,6 +78,63 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public ExploreFragment() {
         reference = new WeakReference<>(this);
     }
+
+    /**
+     * @param data the byte[] to transform from
+     * @return collection of explore stories, take care to remove loading / done for today etc...
+     */
+    public static Function<byte[], Collection<JsonObject>> bytesToJson = new Function<byte[], Collection<JsonObject>>() {
+        @javax.annotation.Nullable
+        @Override
+        public Collection<JsonObject> apply(@Nullable byte[] input) {
+
+            if (input == null || input.length == 0)
+                return Collections.emptyList();
+
+            final String jsonString;
+            try {
+                jsonString = new String(input, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                return Collections.emptyList();
+            }
+
+            final JsonArray jsonElements = new JsonParser().parse(jsonString).getAsJsonArray();
+            final Iterator<JsonElement> elementIterator = jsonElements.iterator();
+            final List<JsonObject> toReturn = new ArrayList<>(jsonElements.size());
+
+            while (elementIterator.hasNext())
+                toReturn.add(elementIterator.next().getAsJsonObject());
+
+            return toReturn;
+        }
+    };
+
+    /**
+     * @param data the collection to transform into byte[]
+     * @return byte[] explore stories, take care to remove loading / done for today etc...
+     */
+    public static Function<List<JsonObject>, byte[]> jsonToBytes = new Function<List<JsonObject>, byte[]>() {
+        @javax.annotation.Nullable
+        @Override
+        public byte[] apply(@Nullable List<JsonObject> input) {
+
+            if (input == null || input.isEmpty())
+                return new byte[0];
+
+            final JsonArray array = new JsonArray();
+            for (JsonObject jsonObject : input)
+                array.add(jsonObject);
+
+            final String easyRepresentation = array.toString();
+            try {
+                return easyRepresentation.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                return new byte[0];
+            }
+        }
+    };
 
     private static final CacheLoader<Long, Pair<String, String>> PAIR_CACHE_LOADER = new CacheLoader<Long, Pair<String, String>>() {
         @Override
@@ -357,7 +415,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public boolean isDoneForToday() {
-        return buffer == null || buffer.isDoneForToday();
+        return buffer == null;
     }
 
     @Override
@@ -375,43 +433,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         notifyDataAvailable();
         if (explorePager != null)
             explorePager.postDelayed(new ScrollToLast(count), 1500L);
-    }
-
-    @Override
-    public Collection<JsonObject> transform(byte[] data) {
-
-        final String jsonString;
-        try {
-            jsonString = new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
-
-        final JsonArray jsonElements = new JsonParser().parse(jsonString).getAsJsonArray();
-        final Iterator<JsonElement> elementIterator = jsonElements.iterator();
-        final List<JsonObject> toReturn = new ArrayList<>(jsonElements.size());
-
-        while (elementIterator.hasNext())
-            toReturn.add(elementIterator.next().getAsJsonObject());
-
-        return toReturn;
-    }
-
-    @Override
-    public byte[] transform(List<JsonObject> data) {
-
-        final JsonArray array = new JsonArray();
-        for (JsonObject jsonObject : data)
-            array.add(jsonObject);
-
-        final String easyRepresentation = array.toString();
-        try {
-            return easyRepresentation.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return new byte[0];
-        }
     }
 
     @Override
@@ -525,7 +546,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onAttach(Context context) {
 
         super.onAttach(context);
-        buffer = ExploreBuffer.getInstance(this, context.getCacheDir());
+        buffer = ExploreBuffer.getInstance(this, context.getCacheDir(), bytesToJson, jsonToBytes);
         try {
             mListener = (SuperInterface) context;
         } catch (ClassCastException e) {

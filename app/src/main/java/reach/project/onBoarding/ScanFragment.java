@@ -318,7 +318,7 @@ public class ScanFragment extends Fragment {
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
                     totalMusic = message.arg1;
-                    Log.d("Ashish", totalMusic + "," + totalApps);
+                    Log.d("Ayush", totalMusic + "," + totalApps);
 
                     totalFiles = totalMusic + totalApps;
                     scanCount.setText(totalFiles + "");
@@ -331,7 +331,7 @@ public class ScanFragment extends Fragment {
                 } else if (message.what == MetaDataScanner.SCANNING_APPS) {
 
                     totalApps = message.arg1;
-                    Log.d("Ashish", totalMusic + "," + totalApps);
+                    Log.d("Ayush", totalMusic + "," + totalApps);
 
                     totalFiles = totalMusic + totalApps;
                     scanCount.setText(totalFiles + "");
@@ -343,7 +343,7 @@ public class ScanFragment extends Fragment {
 
                 } else if (message.what == MetaDataScanner.UPLOADING) {
 
-                    Log.d("Ashish", totalMusic + "," + totalApps);
+                    Log.d("Ayush", totalMusic + "," + totalApps);
                     totalFiles = totalMusic + totalApps;
                     scanCount.setText(totalFiles + "");
                     musicCount.setText(totalMusic + "");
@@ -364,8 +364,9 @@ public class ScanFragment extends Fragment {
     }
 
     private static final View.OnClickListener PROCEED = v -> MiscUtils.useFragment(reference, fragment -> {
-        Activity activity = fragment.getActivity();
-        Intent intent = new Intent(activity, ReachActivity.class);
+        
+        final Activity activity = fragment.getActivity();
+        final Intent intent = new Intent(activity, ReachActivity.class);
         intent.putExtra("firstTime", true);
         activity.startActivity(intent);
         activity.finish();

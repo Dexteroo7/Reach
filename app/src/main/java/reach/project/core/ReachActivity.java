@@ -443,7 +443,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         if (intent.getBooleanExtra("firstTime", false)) {
             if (mTabHost != null)
                 mTabHost.setCurrentTab(5);
-                //viewPager.setCurrentItem(5, false);
+            //viewPager.setCurrentItem(5, false);
         }
 
         if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals(ADD_PUSH_SONG)) {
