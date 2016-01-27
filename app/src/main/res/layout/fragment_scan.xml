@@ -167,8 +167,8 @@
                 android:gravity="center"
                 android:textSize="16sp"
                 android:visibility="visible"
-                android:text="SETTING UP YOUR PROFILE"
-                android:textColor="@color/reach_color"
+                android:text="Setting up your Profile..."
+                android:textColor="@color/reach_grey"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </LinearLayout>

@@ -193,7 +193,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void setRequestSent() {
 
         if (requestIcon != null) {
-            requestIcon.setImageResource(R.drawable.icon_pending_invite);
+            requestIcon.setImageResource(R.drawable.icon_pending_invite_white);
         }
         if (text1 != null)
             text1.setText("Looks like the user has not accepted your request yet");
@@ -206,7 +206,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void setRequestNotSent() {
 
         if (requestIcon != null)
-            requestIcon.setImageResource(R.drawable.icon_add_friend);
+            requestIcon.setImageResource(R.drawable.ic_add_friend_white);
         if (text1 != null)
             text1.setText("You need to be friends before you can access their collections");
         if (text2 != null)

@@ -9,6 +9,8 @@
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
         android:layout_width="match_parent"
+        fresco:placeholderImage="@drawable/default_album_art"
+        android:background="#333c45"
         app:layout_heightPercent="70%" />
     <android.support.design.widget.AppBarLayout
         android:id="@+id/toolbarLayout"

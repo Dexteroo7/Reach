@@ -12,6 +12,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -162,7 +163,7 @@ public class ScanFragment extends Fragment {
 
     private static class SaveUserData extends AsyncTask<Object, Void, ReachUser> {
 
-        View next;
+        TextView next;
         TextView scanCount;
         TextView musicCount;
         TextView appCount;
@@ -176,7 +177,7 @@ public class ScanFragment extends Fragment {
             final InputStream profilePicOptionsStream, profilePicDecodeStream;
             final String userName, phoneNumber;
 
-            next = (View) objects[0];
+            next = (TextView) objects[0];
             scanCount = (TextView) objects[1];
             musicCount = (TextView) objects[2];
             appCount = (TextView) objects[3];
@@ -313,6 +314,13 @@ public class ScanFragment extends Fragment {
 
                 if (message.what == MetaDataScanner.FINISHED) {
 
+                    next.setText("Click to Proceed");
+                    MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
+                        @Override
+                        public void work(Context context) {
+                            next.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+                        }
+                    });
                     next.setOnClickListener(PROCEED);
                     next.setVisibility(View.VISIBLE);
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
