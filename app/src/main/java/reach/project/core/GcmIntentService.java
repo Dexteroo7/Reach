@@ -197,10 +197,9 @@ public class GcmIntentService extends IntentService {
 
                 final Intent viewIntent;
 
-                if (splitter[3].split(" ")[0].equals("likes")) {
+                if (splitter[3].split(" ")[0].equals("likes"))
                     viewIntent = new Intent(this, ReachActivity.class);
-                    viewIntent.putExtra("openPlayer", true);
-                } else {
+                else {
                     viewIntent = new Intent(this, DialogActivity.class);
                     viewIntent.putExtra("type", 3);
                     viewIntent.putExtra("manual_title", splitter[2].trim());

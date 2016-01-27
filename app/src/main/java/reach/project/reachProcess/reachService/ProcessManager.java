@@ -428,8 +428,7 @@ public class ProcessManager extends Service implements
         remoteViews.setTextViewText(R.id.NsongNamePlaying, generateNotificationText(totalDownloads, totalUploads));
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        if (totalUploads == 0)
-            foreGround.putExtra("openPlayer", true);
+        foreGround.setAction(ReachActivity.OPEN_MY_PROFILE_MUSIC);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)
@@ -449,7 +448,7 @@ public class ProcessManager extends Service implements
             return;
 
         final RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notification_player);
-        final Intent foreGround = new Intent(this, ReachActivity.class);
+        final Intent foreGround = new Intent(this, PlayerActivity.class);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this);
         final Notification notification;
 
@@ -466,7 +465,6 @@ public class ProcessManager extends Service implements
         else
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.pause_white_selector);
 
-        foreGround.putExtra("openPlayer", true);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         notification = note
                 .setSmallIcon(R.drawable.ic_icon_notif)
@@ -531,8 +529,7 @@ public class ProcessManager extends Service implements
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.pause_white_selector);
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        if (totalUploads == 0)
-            foreGround.putExtra("openPlayer", true);
+        foreGround.setAction(ReachActivity.OPEN_MY_PROFILE_MUSIC);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_icon_notif)

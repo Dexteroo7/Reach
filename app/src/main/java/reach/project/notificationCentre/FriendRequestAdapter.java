@@ -29,7 +29,7 @@ import reach.project.utils.MiscUtils;
 /**
  * Created by ashish on 14/07/15.
  */
-public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
+public class FriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
 
     public static final LongSparseArray<Boolean> accepted = new LongSparseArray<>();
     private static final LongSparseArray<Boolean> opened = new LongSparseArray<>();
@@ -39,7 +39,7 @@ public class ReachFriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
     private static long serverId;
     private final int rId;
 
-    public ReachFriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long id) {
+    public FriendRequestAdapter(Context context, int resourceId, List<ReceivedRequest> receivedRequestList, long id) {
         super(context, resourceId, receivedRequestList);
 
         this.rId = resourceId;

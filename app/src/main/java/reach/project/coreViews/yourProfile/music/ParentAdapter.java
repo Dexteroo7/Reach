@@ -107,7 +107,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.song_list_item, parent, false), position -> {
 
-                    final T message = cacheAdapterInterface.getItem(position);
+                    final T message = cacheAdapterInterface.getItem(position - 1);
                     if (message instanceof Song)
                         cacheAdapterInterface.handOverMessage((Song) message);
                     else

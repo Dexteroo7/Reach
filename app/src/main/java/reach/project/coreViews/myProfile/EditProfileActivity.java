@@ -76,7 +76,9 @@ public class EditProfileActivity extends AppCompatActivity {
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
         mToolbar.setTitle("Edit Profile");
-        mToolbar.setNavigationOnClickListener(navListener);
+        mToolbar.inflateMenu(R.menu.edit_profile_menu);
+        mToolbar.setOnMenuItemClickListener(navListener);
+        mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(this));
 
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(sharedPreferences);
@@ -154,51 +156,52 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
-    private final View.OnClickListener navListener = view -> {
+    private final Toolbar.OnMenuItemClickListener navListener = item -> {
 
-        final Context context = view.getContext();
+        MiscUtils.useActivity(reference, activity -> {
+            if (firstName.length() == 0) //let it throw, should never happen
+                Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
+            else if (!MiscUtils.isOnline(activity)) {
 
-        if (firstName.length() == 0) //let it throw, should never happen
-            Toast.makeText(context, "Please enter your name", Toast.LENGTH_SHORT).show();
-        else if (!MiscUtils.isOnline(context)) {
+                Toast.makeText(activity, "No internet found", Toast.LENGTH_SHORT).show();
+                NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //move back
+            } else {
 
-            Toast.makeText(context, "No internet found", Toast.LENGTH_SHORT).show();
-            NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //move back
-        } else {
+                final SharedPreferences sharedPreferences = EditProfileActivity.this.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                final String oldUserName = SharedPrefUtils.getUserName(sharedPreferences);
+                final String newUserName = firstName.getText().toString();
 
-            final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
-            final String oldUserName = SharedPrefUtils.getUserName(sharedPreferences);
-            final String newUserName = firstName.getText().toString();
+                if (oldUserName.equals(newUserName) && toUploadProfilePhoto == null && toUploadCoverPhoto == null)
+                    NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //nothing to change, exit
+                else {
 
-            if (oldUserName.equals(newUserName) && toUploadProfilePhoto == null && toUploadCoverPhoto == null)
-                NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //nothing to change, exit
-            else {
+                    ((InputMethodManager) EditProfileActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);
 
-                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);
+                    final ContentResolver contentResolver = EditProfileActivity.this.getContentResolver();
 
-                final ContentResolver contentResolver = getContentResolver();
-
-                try {
-                    final InputStream profilePicOptionsStream = toUploadProfilePhoto != null ? contentResolver.openInputStream(toUploadProfilePhoto) : null;
-                    final InputStream profilePicDecodeStream = toUploadProfilePhoto != null ? contentResolver.openInputStream(toUploadProfilePhoto) : null;
-                    final InputStream coderPicOptionsStream = toUploadCoverPhoto != null ? contentResolver.openInputStream(toUploadCoverPhoto) : null;
-                    final InputStream coderPicDecodeStream = toUploadCoverPhoto != null ? contentResolver.openInputStream(toUploadCoverPhoto) : null;
-                    new UpdateProfile(new WeakReference<>(progressDialog))
-                            .executeOnExecutor(profileEditor,
-                                    newUserName,
-                                    profilePicOptionsStream,
-                                    profilePicDecodeStream,
-                                    coderPicOptionsStream,
-                                    coderPicDecodeStream);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    Toast.makeText(context, "Could not update profile data", Toast.LENGTH_SHORT).show();
-                } finally {
-                    toUploadProfilePhoto = null;
-                    toUploadCoverPhoto = null;
+                    try {
+                        final InputStream profilePicOptionsStream = toUploadProfilePhoto != null ? contentResolver.openInputStream(toUploadProfilePhoto) : null;
+                        final InputStream profilePicDecodeStream = toUploadProfilePhoto != null ? contentResolver.openInputStream(toUploadProfilePhoto) : null;
+                        final InputStream coderPicOptionsStream = toUploadCoverPhoto != null ? contentResolver.openInputStream(toUploadCoverPhoto) : null;
+                        final InputStream coderPicDecodeStream = toUploadCoverPhoto != null ? contentResolver.openInputStream(toUploadCoverPhoto) : null;
+                        new UpdateProfile(new WeakReference<>(progressDialog))
+                                .executeOnExecutor(profileEditor,
+                                        newUserName,
+                                        profilePicOptionsStream,
+                                        profilePicDecodeStream,
+                                        coderPicOptionsStream,
+                                        coderPicDecodeStream);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        Toast.makeText(activity, "Could not update profile data", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        toUploadProfilePhoto = null;
+                        toUploadCoverPhoto = null;
+                    }
                 }
             }
-        }
+        });
+        return true;
     };
 
     private static final class UpdateProfile extends AsyncTask<Object, String, Boolean> {

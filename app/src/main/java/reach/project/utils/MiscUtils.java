@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.ArraySet;
@@ -107,6 +108,7 @@ import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
+import reach.project.usageTracking.AppMetadata;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
@@ -1260,8 +1262,38 @@ public enum MiscUtils {
         return applications;
     }
 
-    public static void openAppinPlayStore(Context context, String packageName) {
-        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
+    public static void openAppinPlayStore(Activity activity, String packageName, Long senderId) {
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach",
+                Context.MODE_PRIVATE);
+        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Open App")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
+                .setLabel("App - " + packageName + ", From - " + senderId)
+                .setValue(1)
+                .build());
+
+        //usage tracking
+        final Map<PostParams, String> simpleParams = getMap(6);
+        simpleParams.put(PostParams.USER_ID, SharedPrefUtils.getServerId(sharedPreferences) + "");
+        simpleParams.put(PostParams.DEVICE_ID, getDeviceId(activity));
+        simpleParams.put(PostParams.OS, getOsName());
+        simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
+        try {
+            simpleParams.put(PostParams.APP_VERSION,
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        simpleParams.put(PostParams.SCREEN_NAME, "unknown");
+
+        final Map<AppMetadata, String> complexParams = getMap(2);
+        complexParams.put(AppMetadata.PACKAGE_NAME, packageName + "");
+        complexParams.put(AppMetadata.SENDER_ID, senderId + "");
+
+        try {
+            UsageTracker.trackApp(simpleParams, complexParams, UsageTracker.CLICK_APP);
+        } catch (JSONException ignored) {}
+        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
                 + packageName)));
     }
 
@@ -1588,6 +1620,8 @@ public enum MiscUtils {
         if (snackView != null)
             Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_LONG)
                     .setAction("Open manager", v -> {
+                        if (activity.getClass() != ReachActivity.class)
+                            NavUtils.navigateUpFromSameTask(activity);
                         ReachActivity.openDownloading();
                     })
                     .show();

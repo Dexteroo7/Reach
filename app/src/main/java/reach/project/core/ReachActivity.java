@@ -446,8 +446,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 //viewPager.setCurrentItem(5, false);
         }
 
-        if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().equals(ADD_PUSH_SONG)) {
 
+        final String action = intent.getAction();
+        if (TextUtils.isEmpty(action))
+            return;
+        switch (action) {
+            case ADD_PUSH_SONG:
             Log.i("Ayush", "FOUND PUSH DATA");
 
             final String compressed = intent.getStringExtra("data");
@@ -494,14 +498,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     FireOnce.refreshOperations(reference);
                     openDownloading();
                 }
-                ///////////
             }
+            case OPEN_MY_PROFILE_APPS:
+                mTabHost.setCurrentTab(3);
         }
-
-//        intent.removeExtra("openNotificationFragment");
-//        intent.removeExtra("openPlayer");
-//        intent.removeExtra("openFriendRequests");
-//        intent.removeExtra("openNotifications");
     }
 
     @Override

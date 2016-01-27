@@ -31,7 +31,8 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 final class FriendsViewHolder extends SingleItemViewHolder {
 
     public final TextView userNameList, telephoneNumberList, appCount, lockText;
-    public final ImageView lockIcon, optionsIcon;
+    public final ImageView lockIcon;
+    public ImageView optionsIcon = null;
     public final SimpleDraweeView profilePhotoList, coverPic;
 
     @Nullable
@@ -52,7 +53,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.lockText = (TextView) itemView.findViewById(R.id.lockText);
 
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
-        this.optionsIcon.setTag(new Object[]{getAdapterPosition(), null}); //int, popMenu (reuse)
+        this.optionsIcon.setTag(null);
         this.optionsIcon.setOnClickListener(optionsClickListener);
     }
 
@@ -70,22 +71,22 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
         this.lockText = (TextView) itemView.findViewById(R.id.lockText);
         itemView.findViewById(R.id.optionsIcon).setVisibility(View.GONE);
-        optionsIcon = null;
+        this.optionsIcon = null;
     }
 
-    private static final View.OnClickListener optionsClickListener = view -> {
+    private final View.OnClickListener optionsClickListener = view -> {
+        final Context context = view.getContext();
+        final int position = getAdapterPosition();
 
         final Object object = view.getTag();
-        if (object == null || !(object instanceof Object[]))
-            throw new IllegalStateException("Object array tag is expected");
-
-        final Object[] objectArray = (Object[]) object;
-        if (objectArray.length != 2 || !(objectArray[0] instanceof Integer))
-            throw new IllegalStateException("Tag length of 2 is expected and int and popMenu");
-
-        final int position = (int) objectArray[0];
-        final Context context = view.getContext();
-        PopupMenu popupMenu = (PopupMenu) objectArray[1];
+        final PopupMenu popupMenu;
+        if (object == null) {
+            popupMenu = new PopupMenu(itemView.getContext(), optionsIcon);
+            popupMenu.inflate(R.menu.friends_popup_menu);
+            view.setTag(popupMenu);
+        }
+        else
+            popupMenu = (PopupMenu) object;
 
         final Cursor cursor = MiscUtils.useReference(reference, handOverWithContext -> {
             return handOverWithContext.getCursor(position);
@@ -93,14 +94,6 @@ final class FriendsViewHolder extends SingleItemViewHolder {
 
         if (cursor == null)
             return;
-
-        if (popupMenu == null) {
-
-            popupMenu = new PopupMenu(context, view);
-            popupMenu.inflate(R.menu.friends_popup_menu);
-            //cache the popMenu
-            view.setTag(new Object[]{position, popupMenu});
-        }
 
         popupMenu.setOnMenuItemClickListener(item -> {
 
