@@ -279,8 +279,9 @@ public class GcmIntentService extends IntentService {
                 getContentResolver().update(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                         friend,
-                        ReachFriendsHelper.COLUMN_ID + " = ?",
-                        new String[]{hostId + ""});
+                        ReachFriendsHelper.COLUMN_ID + " = ? and " +
+                                ReachFriendsHelper.COLUMN_STATUS + " < ?",
+                        new String[]{hostId + "", ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""});
                 getContentResolver().update(
                         ReachDatabaseProvider.CONTENT_URI,
                         database,
@@ -357,9 +358,7 @@ public class GcmIntentService extends IntentService {
                     ProcessManager.submitNetworkRequest(this, actualMessage);
             } else
                 Log.i("Downloader", "Received unexpected GCM " + message);
-        }
-
-        else {
+        } else {
             switch (type) {
                 case "MANUAL":
                     break;

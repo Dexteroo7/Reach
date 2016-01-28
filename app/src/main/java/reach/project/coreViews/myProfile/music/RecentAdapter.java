@@ -69,28 +69,29 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
             final RecyclerView.Adapter adapter;
             if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
                 adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
+        } else {
+
+            synchronized (getMessageList()) {
+
+                //remove to prevent duplicates
+                getMessageList().removeAll(newMessages);
+                //add new items
+                getMessageList().addAll(newMessages);
+
+                //pick top 20
+                final List<PrivacySongItem> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
+
+                //remove all
+                getMessageList().clear();
+                //add top 20
+                getMessageList().addAll(newSortedList);
+            }
+
+            notifyDataSetChanged();
+            final RecyclerView.Adapter adapter;
+            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+                adapter.notifyDataSetChanged();
         }
-
-        synchronized (getMessageList()) {
-
-            //remove to prevent duplicates
-            getMessageList().removeAll(newMessages);
-            //add new items
-            getMessageList().addAll(newMessages);
-
-            //pick top 20
-            final List<PrivacySongItem> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
-
-            //remove all
-            getMessageList().clear();
-            //add top 20
-            getMessageList().addAll(newSortedList);
-        }
-
-        notifyDataSetChanged();
-        final RecyclerView.Adapter adapter;
-        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-            adapter.notifyDataSetChanged();
     }
 
     /**

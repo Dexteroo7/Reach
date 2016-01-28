@@ -470,7 +470,7 @@ public class ReachUserEndpoint {
                     newIds.add(id);
 
         //newStatus built
-        if (newIds.size() > 0)
+        if (!newIds.isEmpty())
             newIdQuery = ofy().load().type(ReachUser.class)
                     .filterKey("in", MiscUtils.getKeyBuilder(newIds).build())
                     .filter("gcmId !=", "")
@@ -501,7 +501,7 @@ public class ReachUserEndpoint {
         }
 
         //toUpdate built
-        if (newIds.size() == 0 || newIdQuery == null) {
+        if (newIdQuery == null) {
             logger.info("No new friends " + client.getUserName());
             return new QuickSync(newStatus, null, toUpdate);
         }

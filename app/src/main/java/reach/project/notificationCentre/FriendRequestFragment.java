@@ -21,10 +21,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import reach.backend.entities.userApi.model.ReceivedRequest;
 import reach.project.R;
@@ -106,15 +102,16 @@ public class FriendRequestFragment extends Fragment {
         listView.setAdapter(new FriendRequestAdapter(getActivity(), R.layout.notification_item, receivedRequests, serverId));
         listView.setOnItemClickListener(itemClickListener);
 
-        friendsRefresher = Executors.unconfigurableExecutorService(new ThreadPoolExecutor(1, 1,
-                0L, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<>(),
-                (r, executor) -> {/**ignored**/}));
+        friendsRefresher = MiscUtils.getRejectionExecutor();
 
         reference = new WeakReference<>(this);
-
-        refresh();
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refresh();
     }
 
     @Override
@@ -128,24 +125,6 @@ public class FriendRequestFragment extends Fragment {
 
         super.onDestroyView();
     }
-
-    /*@Override
-    public void onAttach(Context context) {
-
-        super.onAttach(context);
-        try {
-            mListener = (SuperInterface) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString()
-                    + " must implement SuperInterface");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }*/
 
     private static final class FetchRequests extends AsyncTask<Void, Void, List<ReceivedRequest>> {
 

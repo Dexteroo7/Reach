@@ -213,8 +213,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         final Cursor senderCursor = activity.getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                 new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
-                        ReachFriendsHelper.COLUMN_STATUS,
-                        ReachFriendsHelper.COLUMN_NETWORK_TYPE},
+                        ReachFriendsHelper.COLUMN_STATUS},
                 ReachFriendsHelper.COLUMN_ID + " = ?",
                 new String[]{hostId + ""}, null);
 
@@ -224,7 +223,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             senderCursor.close();
             return;
         }
-
 
         final ReachDatabase reachDatabase = new ReachDatabase();
 

@@ -35,10 +35,11 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
         @Override
         public void handOverMessage(@Nonnull Integer position) {
 
-            final Object object = getItem(position);
-            if (!(object instanceof Cursor))
+            final Optional<Cursor> cursorOptional = getItem(position);
+            if (cursorOptional.isPresent())
+                DownloadingAdapter.this.handOverMessage.handOverMessage(cursorOptional.get());
+            else
                 throw new IllegalStateException("Resource cursor has been corrupted");
-            DownloadingAdapter.this.handOverMessage.handOverMessage((Cursor) object);
         }
 
         @Override
