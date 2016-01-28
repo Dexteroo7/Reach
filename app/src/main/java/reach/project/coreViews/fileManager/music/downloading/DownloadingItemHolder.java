@@ -1,23 +1,33 @@
 package reach.project.coreViews.fileManager.music.downloading;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
-import android.support.annotation.Nullable;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.common.base.Optional;
 
-import java.lang.ref.WeakReference;
+import java.io.File;
 
 import reach.project.R;
-import reach.project.coreViews.friends.HandOverWithContext;
+import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
@@ -25,80 +35,202 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
  */
 class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClickListener {
 
-    public final TextView songName, artisName, downProgress;
-    public final SimpleDraweeView albumArt;
-    public final ProgressBar progressBar;
-    public ImageView optionsIcon = null;
+    final TextView songName, artistName, downProgress;
+    final SimpleDraweeView albumArt;
+    final ProgressBar progressBar;
+    final ImageView optionsIcon;
 
-    @Nullable
-    private static WeakReference<HandOverWithContext> reference = null;
+    //must set this position
+    int position = -1;
 
-    public DownloadingItemHolder(View itemView, HandOverWithContext handOverWithContext) {
+    DownloadingItemHolder(View itemView, HandOverMessageExtra<Cursor> handOverMessageExtra) {
 
-        super(itemView, handOverWithContext);
-        reference = new WeakReference<>(handOverWithContext);
+        super(itemView, handOverMessageExtra);
+
+        final Context context = itemView.getContext();
 
         this.songName = (TextView) itemView.findViewById(R.id.songName);
-        this.artisName = (TextView) itemView.findViewById(R.id.artistName);
+        this.artistName = (TextView) itemView.findViewById(R.id.artistName);
         this.downProgress = (TextView) itemView.findViewById(R.id.downProgress);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
         this.progressBar = (ProgressBar) itemView.findViewById(R.id.downloadProgress);
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
-        this.optionsIcon.setOnClickListener(popupListener);
-        this.optionsIcon.setTag(null);
-    }
+        this.optionsIcon.setOnClickListener(view -> {
 
-    public DownloadingItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+            if (position == -1)
+                throw new IllegalArgumentException("Position not set for the view holder");
 
-        super(itemView, handOverMessage);
-        reference = null; //not used
-
-        this.songName = (TextView) itemView.findViewById(R.id.songName);
-        this.artisName = (TextView) itemView.findViewById(R.id.artistName);
-        this.downProgress = (TextView) itemView.findViewById(R.id.downProgress);
-        this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
-        this.progressBar = (ProgressBar) itemView.findViewById(R.id.downloadProgress);
-        this.optionsIcon = null;
-    }
-
-    private final View.OnClickListener popupListener = view -> {
-        final Context context = view.getContext();
-        final int position = getAdapterPosition();
-
-        final Object object = view.getTag();
-        final PopupMenu popupMenu;
-        if (object == null) {
-            popupMenu = new PopupMenu(itemView.getContext(), this.optionsIcon);
+            final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
             popupMenu.inflate(R.menu.friends_popup_menu);
-            view.setTag(popupMenu);
-        }
-        else
-            popupMenu = (PopupMenu) object;
+            popupMenu.setOnMenuItemClickListener(item -> {
 
-        final Cursor cursor = MiscUtils.useReference(reference, handOverWithContext -> {
-            return handOverWithContext.getCursor(position);
-        }).orNull();
+                final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
+
+                switch (item.getItemId()) {
+                    case R.id.friends_menu_1:
+                        //pause
+                        pause_unpause(reachDatabaseId, context);
+                        return true;
+                    case R.id.friends_menu_2:
+                        //delete
+                        final AlertDialog alertDialog = new AlertDialog.Builder(context)
+                                .setMessage("Are you sure you want to delete it?")
+                                .setPositiveButton("Yes", handleClick)
+                                .setNegativeButton("No", handleClick)
+                                .setIcon(R.drawable.up_icon)
+                                .create();
+
+                        alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabaseId));
+                        alertDialog.show();
+                        return true;
+                    default:
+                        return false;
+                }
+            });
+
+            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle("Pause Download");
+            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
+
+            popupMenu.show();
+        });
+    }
+
+    /**
+     * Pause / Unpause transaction
+     */
+    public static void pause_unpause(long reachDatabaseId, Context context) {
+
+        final ContentResolver resolver = context.getContentResolver();
+        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
+
+        final Cursor cursor = resolver.query(
+                uri,
+                ReachDatabaseHelper.projection,
+                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{reachDatabaseId + ""}, null);
 
         if (cursor == null)
             return;
+        if (!cursor.moveToFirst()) {
+            cursor.close();
+            return;
+        }
 
-        popupMenu.setOnMenuItemClickListener(item -> {
+        final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
 
-            final WeakReference<ContentResolver> weakReference = new WeakReference<>(context.getContentResolver());
+        ///////////////
 
-            switch (item.getItemId()) {
-                case R.id.friends_menu_1:
-                    //pause
-                    return true;
-                case R.id.friends_menu_2:
-                    //cancel
-                    return true;
-                default:
-                    return false;
+        if (database.getStatus() != ReachDatabase.PAUSED_BY_USER) {
+
+            //pause operation (both upload/download case)
+            final ContentValues values = new ContentValues();
+            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
+            context.getContentResolver().update(
+                    uri,
+                    values,
+                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    new String[]{reachDatabaseId + ""});
+            Log.i("Ayush", "Pausing");
+        } else if (database.getOperationKind() == 1) {
+
+            //un-paused upload operation
+            context.getContentResolver().delete(
+                    uri,
+                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    new String[]{reachDatabaseId + ""});
+        } else {
+
+            //un-paused download operation
+            final Optional<Runnable> optional = reset(database, resolver, context, uri);
+            if (optional.isPresent())
+                AsyncTask.SERIAL_EXECUTOR.execute(optional.get());
+            else //should never happen
+                Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
+            Log.i("Ayush", "Un-pausing");
+        }
+    }
+
+    /**
+     * Resets the transaction, reset download only. Updates memory cache and disk table both.
+     * Update happens in MiscUtils.startDownloadOperation() method.
+     *
+     * @param reachDatabase the transaction to reset
+     */
+    private static Optional<Runnable> reset(ReachDatabase reachDatabase,
+                                            ContentResolver resolver,
+                                            Context context,
+                                            Uri uri) {
+
+        reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
+        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+
+        final ContentValues values = new ContentValues();
+        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+        values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
+
+        final boolean updateSuccess = resolver.update(
+                uri,
+                values,
+                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{reachDatabase.getId() + ""}) > 0;
+
+        if (updateSuccess)
+            //send REQ gcm
+            return Optional.of((Runnable) MiscUtils.startDownloadOperation(
+                    context,
+                    reachDatabase,
+                    reachDatabase.getReceiverId(), //myID
+                    reachDatabase.getSenderId(),   //the uploaded
+                    reachDatabase.getId()));
+
+        return Optional.absent(); //update failed !
+    }
+
+    private static final DialogInterface.OnClickListener handleClick = (dialog, which) -> {
+
+        if (which == AlertDialog.BUTTON_NEGATIVE) {
+            dialog.dismiss();
+            return;
+        }
+
+        /**
+         * Can not remove from memory cache just yet, because some operation might be underway
+         * in connection manager
+         **/
+        final AlertDialog alertDialog = (AlertDialog) dialog;
+        final ContentResolver resolver = alertDialog.getContext().getContentResolver();
+        final long reachDatabaseId = (long) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
+        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
+
+        //find path and delete the file
+        final Cursor pathCursor = resolver.query(
+                uri,
+                new String[]{ReachDatabaseHelper.COLUMN_PATH},
+                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{reachDatabaseId + ""}, null);
+
+        if (pathCursor != null) {
+
+            if (pathCursor.moveToFirst()) {
+
+                final String path = pathCursor.getString(0);
+                if (!TextUtils.isEmpty(path) && !path.equals("hello_world")) {
+
+                    final File toDelete = new File(path);
+                    Log.i("Ayush", "Deleting " + toDelete.delete());
+                }
             }
-        });
+            pathCursor.close();
+        }
 
-        popupMenu.show();
+        //delete the database entry
+        Log.i("Downloader", "Deleting " +
+                reachDatabaseId + " " +
+                resolver.delete(
+                        uri,
+                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        new String[]{reachDatabaseId + ""}));
+        dialog.dismiss();
     };
 
 }

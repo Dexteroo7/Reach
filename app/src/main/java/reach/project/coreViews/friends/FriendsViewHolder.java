@@ -29,17 +29,19 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 final class FriendsViewHolder extends SingleItemViewHolder {
 
-    public final TextView userNameList, telephoneNumberList, appCount, lockText;
-    public final ImageView lockIcon;
-    public final ImageView optionsIcon;
-    public final SimpleDraweeView profilePhotoList, coverPic;
+    final TextView userNameList, telephoneNumberList, appCount, lockText;
+    final ImageView lockIcon;
+    final ImageView optionsIcon;
+    final SimpleDraweeView profilePhotoList, coverPic;
+
+    //set this position to use inside listener
+    int position = -1;
 
     protected FriendsViewHolder(View itemView,
-                                HandOverWithContext handOverWithContext) {
+                                HandOverMessageExtra<Cursor> handOverMessageExtra) {
 
-        super(itemView, handOverWithContext);
+        super(itemView, handOverMessageExtra);
 
-        final int position = getAdapterPosition();
         final Context context = itemView.getContext();
 
         this.userNameList = (TextView) itemView.findViewById(R.id.userNameList);
@@ -53,10 +55,9 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
         this.optionsIcon.setOnClickListener(view -> {
 
+            if (position == -1)
+                throw new IllegalArgumentException("Position not set for the view holder");
             Log.i("Ayush", "Position detected " + position);
-            final Cursor cursor = handOverWithContext.getCursor(position);
-            if (cursor == null)
-                return;
 
             final PopupMenu popupMenu = new PopupMenu(context, optionsIcon);
             popupMenu.inflate(R.menu.friends_popup_menu);
@@ -65,15 +66,15 @@ final class FriendsViewHolder extends SingleItemViewHolder {
                 switch (item.getItemId()) {
 
                     case R.id.friends_menu_1:
-                        handOverWithContext.handOverMessage(position);
+                        handOverMessageExtra.handOverMessage(position);
                         return true;
                     case R.id.friends_menu_2:
 
                         final WeakReference<ContentResolver> weakReference = new WeakReference<>(context.getContentResolver());
                         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                         final long myId = SharedPrefUtils.getServerId(preferences);
-                        final long hostId = cursor.getLong(0);
-                        //remove the frnd async
+                        final long hostId = handOverMessageExtra.getExtra(position).getLong(0);
+                        //remove the friend async
                         new RemoveFriend(weakReference).execute(myId, hostId);
 
                         return true;
@@ -82,7 +83,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
                 }
             });
 
-            if (cursor.getShort(6) == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
+            if (handOverMessageExtra.getExtra(position).getShort(6) == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
                 popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Cancel Request");
 
             popupMenu.show();

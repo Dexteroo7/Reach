@@ -1,6 +1,5 @@
 package reach.project.coreViews.friends;
 
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
@@ -30,7 +29,7 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> i
     private SharedPreferences sharedPreferences;
     private TourGuide tourGuide = null;*/
 
-    public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId, SharedPreferences sharedPreferences) {
+    public LockedFriendsAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
         setHasStableIds(true);
         //this.sharedPreferences = sharedPreferences;

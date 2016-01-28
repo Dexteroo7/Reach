@@ -315,3 +315,77 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         onCreate(database);
     }
 }
+
+
+//private static final View.OnClickListener deleteListener = view -> {
+//
+//    final AlertDialog alertDialog = new AlertDialog.Builder(view.getContext())
+//            .setMessage("Are you sure you want to delete it?")
+//            .setPositiveButton("Yes", handleClick)
+//            .setNegativeButton("No", handleClick)
+//            .setIcon(R.drawable.icon_grey)
+//            .create();
+//    alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(view.getTag()));
+//
+//    alertDialog.show();
+//};
+//
+//private static final View.OnClickListener pauseListener = view -> {
+//
+//    final long id = (long) view.getTag();
+//    final Context context = view.getContext();
+//    final ContentResolver resolver = context.getContentResolver();
+//
+//    final Cursor cursor = resolver.query(
+//            ReachDatabaseProvider.CONTENT_URI,
+//            ReachDatabaseHelper.projection,
+//            ReachDatabaseHelper.COLUMN_ID + " = ?",
+//            new String[]{id + ""}, null);
+//
+//    if (cursor == null)
+//        return;
+//    if (!cursor.moveToFirst()) {
+//        cursor.close();
+//        return;
+//    }
+//
+//    final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
+//    final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
+//
+//    ///////////////
+//
+//    if (database.getStatus() != ReachDatabase.PAUSED_BY_USER) {
+//
+//        //pause operation (both upload/download case)
+//        final ContentValues values = new ContentValues();
+//        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
+//        context.getContentResolver().update(
+//                uri,
+//                values,
+//                ReachDatabaseHelper.COLUMN_ID + " = ?",
+//                new String[]{id + ""});
+//        Log.i("Ayush", "Pausing");
+//    } else if (database.getOperationKind() == 1) {
+//
+//        //un-paused upload operation
+//        context.getContentResolver().delete(
+//                uri,
+//                ReachDatabaseHelper.COLUMN_ID + " = ?",
+//                new String[]{id + ""});
+//    } else {
+//
+//        //un-paused download operation
+//        final Optional<Runnable> optional = reset(database, resolver, context, uri);
+//        if (optional.isPresent())
+//            StaticData.temporaryFix.execute(optional.get());
+//        else //should never happen
+//            Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
+//        Log.i("Ayush", "Un-pausing");
+//    }
+//};
+//}
+//}
+//
+//        Status API Training Shop Blog About Pricing
+//
+
