@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.utils.MiscUtils;
 
@@ -34,9 +34,15 @@ class ExploreBuffer<T> implements Closeable {
     private static WeakReference<ExploreBuffer> bufferWeakReference;
 
     public static <T> ExploreBuffer<T> getInstance(ExplorationCallbacks<T> explorationCallbacks,
-                                                   File cacheDirectory) {
+                                                   File cacheDirectory,
+                                                   Function<byte[], Collection<T>> bytesToObject,
+                                                   Function<List<T>, byte[]> objectToBytes) {
 
-        final ExploreBuffer<T> buffer = new ExploreBuffer<>(explorationCallbacks, cacheDirectory);
+        final ExploreBuffer<T> buffer = new ExploreBuffer<>(
+                explorationCallbacks,
+                cacheDirectory,
+                bytesToObject,
+                objectToBytes);
         bufferWeakReference = new WeakReference<>(buffer);
         //do some stuff
         return buffer;
@@ -53,18 +59,22 @@ class ExploreBuffer<T> implements Closeable {
     }
 
     private ExploreBuffer(ExplorationCallbacks<T> explorationCallbacks,
-                          File cacheDirectory) {
+                          File cacheDirectory,
+                          Function<byte[], Collection<T>> bytesToObject,
+                          Function<List<T>, byte[]> objectToBytes) {
 
         this.explorationCallbacks = explorationCallbacks;
         this.cacheDirectory = cacheDirectory;
+        this.objectToBytes = objectToBytes;
         //initialize with data from local cache
-        new FetchFromCache<>().executeOnExecutor(storyFetchingService, cacheDirectory);
+        new FetchFromCache<>().executeOnExecutor(storyFetchingService, cacheDirectory, bytesToObject);
     }
 
-    private final File cacheDirectory;
+    //transformer functions
+    private final Function<List<T>, byte[]> objectToBytes;
 
-    //flag for done for today
-    private final AtomicBoolean isDoneForToday = new AtomicBoolean(false);
+    //the cache directory
+    private final File cacheDirectory;
 
     //holds a buffer of network objects
     private final List<T> storyBuffer = new ArrayList<>(100);
@@ -96,7 +106,7 @@ class ExploreBuffer<T> implements Closeable {
         final int currentSize = storyBuffer.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 3 && !isDoneForToday.get())
+        if (position == currentSize - 1)
             new FetchNextBatch<>().executeOnExecutor(storyFetchingService, explorationCallbacks.fetchNextBatch());
 
         return storyBuffer.get(position);
@@ -115,36 +125,33 @@ class ExploreBuffer<T> implements Closeable {
         return currentSize;
     }
 
-    //is loader done ?
-    public boolean isDoneForToday() {
-        return isDoneForToday.get();
-    }
-
     @Override
     public void close() {
 
-        storyCachingService.submit(new SaveExplore<>(storyBuffer, cacheDirectory));
+        storyCachingService.submit(new SaveExplore<>(storyBuffer, cacheDirectory, objectToBytes));
         storyFetchingService.shutdownNow();
-        storyCachingService.shutdown(); //wait for cache to happen
     }
 
     //utility to cache last few stories before going away
     private static final class SaveExplore<T> implements Runnable {
 
-        private final List<T> fullList;
         private final List<T> storiesToSave;
         private final File cacheDirectory;
+        private final Function<List<T>, byte[]> transformer;
 
-        private SaveExplore(List<T> fullList, File cacheDirectory) {
+        private SaveExplore(List<T> fullList,
+                            File cacheDirectory,
+                            Function<List<T>, byte[]> transformer) {
 
             final int size = fullList.size();
 
-            this.fullList = fullList;
             if (size > 10)
                 this.storiesToSave = fullList.subList(size - 10, size);
             else
                 this.storiesToSave = fullList;
+
             this.cacheDirectory = cacheDirectory;
+            this.transformer = transformer;
         }
 
         @Override
@@ -157,19 +164,12 @@ class ExploreBuffer<T> implements Closeable {
             } catch (IOException e) {
                 e.printStackTrace();
                 return; //failed :(
-            } finally {
-                MiscUtils.closeQuietly(fullList, storiesToSave);
             }
 
-            final byte[] toCache = MiscUtils.useReference(bufferWeakReference, buffer -> {
-                return buffer.explorationCallbacks.transform(storiesToSave);
-            }).or(new byte[0]);
+            final byte[] toCache = transformer.apply(storiesToSave);
 
-            if (toCache == null || toCache.length == 0) {
-
-                MiscUtils.closeQuietly(fullList, storiesToSave);
+            if (toCache == null || toCache.length == 0)
                 return; //nothing to cache, weird
-            }
 
             //cache the byte array and close
             try {
@@ -177,22 +177,28 @@ class ExploreBuffer<T> implements Closeable {
                 cacheAccess.close();
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                MiscUtils.closeQuietly(fullList, storiesToSave);
             }
         }
     }
 
     //utility to fetch stories from cache
-    private static class FetchFromCache<T> extends AsyncTask<File, Void, Collection<T>> {
+    private static class FetchFromCache<T> extends AsyncTask<Object, Void, Collection<T>> {
 
         @Override
-        protected Collection<T> doInBackground(File... params) {
+        protected Collection<T> doInBackground(Object... params) {
+
+            if (!(params.length == 2 &&
+                    params[0] instanceof File &&
+                    params[1] instanceof Function))
+                throw new IllegalArgumentException("Expected arguments not found");
+
+            final File cacheDirectory = (File) params[0];
+            final Function<byte[], List<T>> transformer = (Function<byte[], List<T>>) params[1];
 
             //read explore cache
             final byte[] byteArray;
             try {
-                final RandomAccessFile cacheAccess = new RandomAccessFile(params[0] + "/" + EXPLORE_CACHE_FILE, "rwd");
+                final RandomAccessFile cacheAccess = new RandomAccessFile(cacheDirectory + "/" + EXPLORE_CACHE_FILE, "rwd");
                 final int length = (int) cacheAccess.length();
                 if (length == 0)
                     return Collections.emptyList();
@@ -204,10 +210,7 @@ class ExploreBuffer<T> implements Closeable {
             }
 
             //parse the byte array and return
-            //noinspection unchecked
-            return MiscUtils.useReference(bufferWeakReference, exploreBuffer -> {
-                return exploreBuffer.explorationCallbacks.transform(byteArray);
-            }).or(Collections.emptyList());
+            return transformer.apply(byteArray);
         }
 
         @Override
@@ -219,7 +222,6 @@ class ExploreBuffer<T> implements Closeable {
                 return;
 
             final ExploreBuffer<T> buffer;
-            //noinspection unchecked
             if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)
                 return; //buffer destroyed
 
@@ -255,15 +257,12 @@ class ExploreBuffer<T> implements Closeable {
             super.onPostExecute(stories);
 
             final ExploreBuffer<T> buffer;
-            //noinspection unchecked
             if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)
                 return; //buffer destroyed
 
             if (stories == null || stories.isEmpty()) {
 
-                buffer.isDoneForToday.set(true);
                 Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
-                buffer.storyFetchingService.shutdown(); //shut down this shit
                 return;
             }
 
@@ -288,17 +287,5 @@ class ExploreBuffer<T> implements Closeable {
 
         //first load from cache
         void loadedFromCache(int count);
-
-        /**
-         * @param data the byte[] to transform from
-         * @return collection of explore stories, take care to remove loading / done for today etc...
-         */
-        Collection<T> transform(byte[] data);
-
-        /**
-         * @param data the collection to transform into byte[]
-         * @return byte[] explore stories, take care to remove loading / done for today etc...
-         */
-        byte[] transform(List<T> data);
     }
 }

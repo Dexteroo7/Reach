@@ -30,8 +30,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 25/11/15.
  */
-public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>,
-        LoaderManager.LoaderCallbacks<Cursor> {
+public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>, LoaderManager.LoaderCallbacks<Cursor> {
 
     @Nullable
     private static WeakReference<DownloadingFragment> reference = null;

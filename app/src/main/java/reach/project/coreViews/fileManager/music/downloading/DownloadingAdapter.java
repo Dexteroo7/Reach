@@ -15,6 +15,7 @@ import com.google.common.base.Optional;
 import javax.annotation.Nonnull;
 
 import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -24,17 +25,38 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 
-    private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+    final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
 
-    public DownloadingAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
+    DownloadingAdapter(HandOverMessage<Cursor> handOverMessage, int resourceId) {
         super(handOverMessage, resourceId);
     }
+
+    private final HandOverMessageExtra<Cursor> handOverMessageExtra = new HandOverMessageExtra<Cursor>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+
+            final Object object = getItem(position);
+            if (!(object instanceof Cursor))
+                throw new IllegalStateException("Resource cursor has been corrupted");
+            DownloadingAdapter.this.handOverMessage.handOverMessage((Cursor) object);
+        }
+
+        @Override
+        public Cursor getExtra(@Nonnull Integer position) {
+
+            final Optional<Cursor> cursorOptional = getItem(position);
+            if (cursorOptional.isPresent())
+                return cursorOptional.get();
+            else
+                throw new IllegalStateException("Resource cursor has been corrupted");
+        }
+    };
 
     @Override
     public DownloadingItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
 
         Log.i("Ayush", "Creating new view holder" + DownloadingAdapter.class);
-        return new DownloadingItemHolder(itemView, handOverMessage);
+        return new DownloadingItemHolder(itemView, handOverMessageExtra);
     }
 
     @Override
@@ -46,6 +68,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
     @Override
     public void onBindViewHolder(DownloadingItemHolder holder, Cursor cursorExact) {
 
+        holder.position = cursorExact.getPosition();
 //        final long id = cursorExact.getLong(0);
         final long length = cursorExact.getLong(1);
 //        final long senderId = cursor.getLong(2);
@@ -193,6 +216,6 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
         } else
             holder.albumArt.setImageBitmap(null);
         holder.songName.setText(displayName);
-        holder.artisName.setText(artistName);
+        holder.artistName.setText(artistName);
     }
 }

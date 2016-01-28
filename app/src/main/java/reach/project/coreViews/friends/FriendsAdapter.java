@@ -37,21 +37,22 @@ import reach.project.utils.viewHelpers.tourguide.TourGuide;
 class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements HandOverMessage<Cursor> {
 
     private final HandOverMessage<ClickData> handOverMessage;
+    private final SharedPreferences sharedPreferences;
     private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     ///////////Horizontal Cursor
-    private LockedFriendsAdapter lockedFriendsAdapter;
+    private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item);
 
     private boolean shouldShowCoach1;
-    private SharedPreferences sharedPreferences;
     private TourGuide tourGuide = null;
 
     public FriendsAdapter(HandOverMessage<ClickData> handOverMessage, SharedPreferences sharedPreferences) {
+
         this.handOverMessage = handOverMessage;
-        setHasStableIds(true);
-        lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item, sharedPreferences);
         this.sharedPreferences = sharedPreferences;
         this.shouldShowCoach1 = !SharedPrefUtils.getFriendsCoach1Seen(this.sharedPreferences);
+
+        setHasStableIds(true);
     }
 
     public static final String[] REQUIRED_PROJECTION = new String[]{
@@ -96,7 +97,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     }
     ///////////Horizontal Cursor
 
-    private final HandOverWithContext handOverWithContext = new HandOverWithContext() {
+    private final HandOverMessageExtra<Cursor> handOverMessageExtra = new HandOverMessageExtra<Cursor>() {
         @Override
         public void handOverMessage(@Nonnull Integer position) {
 
@@ -107,7 +108,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         }
 
         @Override
-        public Cursor getCursor(@Nonnull Integer position) {
+        public Cursor getExtra(@Nonnull Integer position) {
 
             final Object object = getItem(position);
             if (!(object instanceof Cursor))
@@ -126,7 +127,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         switch (viewType) {
 
             case VIEW_TYPE_FRIEND: {
-                return new FriendsViewHolder(LayoutInflater.from(context).inflate(R.layout.friend_item, parent, false), handOverWithContext);
+                return new FriendsViewHolder(LayoutInflater.from(context).inflate(R.layout.friend_item, parent, false), handOverMessageExtra);
             }
 
             case VIEW_TYPE_LOCKED: {
@@ -152,6 +153,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             final Cursor cursorExactType = (Cursor) friend;
             final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
+            viewHolder.position = position;
 
             if (shouldShowCoach1) {
                 final ToolTip toolTip = new ToolTip()
@@ -180,8 +182,8 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             final int numberOfSongs = cursorExactType.getInt(7);
             final int numberOfApps = cursorExactType.getInt(8);
-            final int newSongs = cursorExactType.getInt(9);
-            final int newApps = cursorExactType.getInt(10);
+//            final int newSongs = cursorExactType.getInt(9);
+//            final int newApps = cursorExactType.getInt(10);
             //final int newFiles = newSongs + newApps;
 
             //Capitalize only if required

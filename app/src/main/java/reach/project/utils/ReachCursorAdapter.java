@@ -23,7 +23,7 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 public abstract class ReachCursorAdapter<T extends SingleItemViewHolder> extends RecyclerView.Adapter<T> implements HandOverMessage<Integer>, Closeable {
 
     private final int resourceId;
-    private final HandOverMessage<Cursor> handOverMessage;
+    protected final HandOverMessage<Cursor> handOverMessage;
 
     @Nullable
     public Cursor getCursor() {
