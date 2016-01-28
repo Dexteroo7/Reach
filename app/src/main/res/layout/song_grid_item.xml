@@ -16,7 +16,6 @@
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/albumArt"
             fresco:placeholderImage="@drawable/default_music_icon"
-            card_view:placeholderImageScaleType="centerCrop"
             android:layout_width="match_parent"
             android:layout_marginBottom="10dp"
             android:layout_height="150dp" />
