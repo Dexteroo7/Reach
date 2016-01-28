@@ -470,7 +470,7 @@ public class ReachUserEndpoint {
                     newIds.add(id);
 
         //newStatus built
-        if (newIds.size() > 0)
+        if (!newIds.isEmpty())
             newIdQuery = ofy().load().type(ReachUser.class)
                     .filterKey("in", MiscUtils.getKeyBuilder(newIds).build())
                     .filter("gcmId !=", "")
