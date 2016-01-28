@@ -59,7 +59,7 @@ public class NotificationFragment extends Fragment {
         return reference;
     }
 
-//    public void refresh() {
+    //    public void refresh() {
 //
 //        if (listView != null)
 //            new NotificationSync().executeOnExecutor(notificationRefresher);

@@ -187,6 +187,7 @@ class QuickSyncFriends implements Callable<QuickSyncFriends.Status> {
             }
 
             for (Long id : toDelete) {
+
                 Log.i("Ayush", "Deleting " + id);
                 sqlDB.delete(ReachFriendsHelper.FRIENDS_TABLE,
                         ReachFriendsHelper.COLUMN_ID + "=" + id, null);

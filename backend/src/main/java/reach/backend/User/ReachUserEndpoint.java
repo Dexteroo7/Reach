@@ -501,7 +501,7 @@ public class ReachUserEndpoint {
         }
 
         //toUpdate built
-        if (newIds.size() == 0 || newIdQuery == null) {
+        if (newIdQuery == null) {
             logger.info("No new friends " + client.getUserName());
             return new QuickSync(newStatus, null, toUpdate);
         }

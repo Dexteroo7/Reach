@@ -1,6 +1,7 @@
 package reach.project.notificationCentre;
 
 import android.animation.ValueAnimator;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -99,8 +100,18 @@ public class FriendRequestAdapter extends ArrayAdapter<ReceivedRequest> {
             accept.setTag(new Object[]{receivedRequest.getId(), (Result) friend -> {
 
                 if (friend != null) {
+
                     //success
-                    getContext().getContentResolver().insert(
+                    Log.i("Ayush", "Adding friend " + friend.getUserName() + " " + friend.getStatus());
+
+                    final ContentResolver resolver = getContext().getContentResolver();
+
+                    resolver.delete(
+                            ReachFriendsProvider.CONTENT_URI,
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{friend.getId() + ""});
+
+                    resolver.insert(
                             ReachFriendsProvider.CONTENT_URI,
                             ReachFriendsHelper.contentValuesCreator(friend));
 

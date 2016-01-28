@@ -223,13 +223,13 @@ public class MessagingEndpoint {
             log.severe("Removing from reach " + sender.getUserName() + " " + sender.getMyReach().remove(clientId));
         }
 
-        ofy().save().entities(client, sender).now();
+        ofy().save().entities(client, sender);
 
         //DO NOT SEND GCM, Devika does not have a gcm id !
         if (isDevika(sender.getPhoneNumber(), sender.getId()))
             return new MyString("true");
 
-        if (sender.getGcmId() == null || sender.getGcmId().equals("")) {
+        if (TextUtils.isEmpty(sender.getGcmId())) {
 
             log.info("Error handling reply " + sender.getId() + " " + clientId);
             return new MyString("false");
