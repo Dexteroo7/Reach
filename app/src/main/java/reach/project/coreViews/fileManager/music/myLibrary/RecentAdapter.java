@@ -35,7 +35,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         super(recentMusic, handOverMessage, resourceId);
     }
 
-    private final Comparator<MusicData> PRIMARY = (left, right) -> {
+    private static final Comparator<MusicData> PRIMARY = (left, right) -> {
 
         final Long lhs = left == null ? 0 : left.getDateAdded();
         final Long rhs = right == null ? 0 : right.getDateAdded();
@@ -43,7 +43,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         return lhs.compareTo(rhs);
     };
 
-    private final Comparator<MusicData> SECONDARY = (left, right) -> {
+    private static final Comparator<MusicData> SECONDARY = (left, right) -> {
 
         final String lhs = left == null ? "" : left.getDisplayName();
         final String rhs = right == null ? "" : right.getDisplayName();
@@ -70,28 +70,29 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
             final RecyclerView.Adapter adapter;
             if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
                 adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
+        } else {
+
+            synchronized (getMessageList()) {
+
+                //remove to prevent duplicates
+                getMessageList().removeAll(newMessages);
+                //add new items
+                getMessageList().addAll(newMessages);
+
+                //pick top 20
+                final List<MusicData> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
+
+                //remove all
+                getMessageList().clear();
+                //add top 20
+                getMessageList().addAll(newSortedList);
+            }
+
+            notifyDataSetChanged();
+            final RecyclerView.Adapter adapter;
+            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+                adapter.notifyDataSetChanged();
         }
-
-        synchronized (getMessageList()) {
-
-            //remove to prevent duplicates
-            getMessageList().removeAll(newMessages);
-            //add new items
-            getMessageList().addAll(newMessages);
-
-            //pick top 20
-            final List<MusicData> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
-
-            //remove all
-            getMessageList().clear();
-            //add top 20
-            getMessageList().addAll(newSortedList);
-        }
-
-        notifyDataSetChanged();
-        final RecyclerView.Adapter adapter;
-        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-            adapter.notifyDataSetChanged();
     }
 
     @Override
