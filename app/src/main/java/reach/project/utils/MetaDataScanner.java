@@ -62,7 +62,7 @@ public class MetaDataScanner extends IntentService {
             MediaStore.Audio.Media.DURATION, //7
             MediaStore.Audio.Media.ALBUM, //8
             MediaStore.Audio.Media.YEAR, //9
-            MediaStore.Audio.Media.DATE_ADDED}; //10
+            MediaStore.Audio.Media.DATE_MODIFIED}; //10
 
     private static final String[] reachDatabaseProjection = {
             ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
@@ -200,7 +200,7 @@ public class MetaDataScanner extends IntentService {
                 final int music_column_year = musicCursor
                         .getColumnIndex(MediaStore.Audio.Media.YEAR);
                 final int music_date_added = musicCursor
-                        .getColumnIndex(MediaStore.Audio.Media.DATE_ADDED);
+                        .getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
 
                 final Song.Builder builder = new Song.Builder();
                 final long songID = musicCursor.getLong(music_column_id);
