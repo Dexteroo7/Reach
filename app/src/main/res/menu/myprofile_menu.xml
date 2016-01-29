@@ -20,7 +20,15 @@
         android:title="Edit"
         app:showAsAction="always"
         />
-    <group android:checkableBehavior="single">
+    <item
+        android:id="@+id/settings_button"
+        android:title="Settings"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_settings_white"
+        />
+    <group
+        android:visible="false"
+        android:checkableBehavior="single">
         <item
             android:id="@+id/show_all"
             android:checked="true"

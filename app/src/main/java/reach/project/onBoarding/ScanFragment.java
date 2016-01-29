@@ -59,7 +59,7 @@ public class ScanFragment extends Fragment {
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
-    private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 500);
+    private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
 
     @Nullable
     private static Uri profilePicUri = null;
@@ -114,9 +114,8 @@ public class ScanFragment extends Fragment {
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
-        coverPic.setImageURI(Uri.parse(oldCoverId));
-//        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-//                Uri.parse(MiscUtils.getRandomPic()), COVER_PHOTO_RESIZE));
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldCoverId), COVER_PHOTO_RESIZE));
 
 
         InputStream profilePicOptionsStream = null, profilePicDecodeStream = null;
@@ -375,7 +374,7 @@ public class ScanFragment extends Fragment {
         
         final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
-        intent.putExtra("firstTime", true);
+        intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS);
         activity.startActivity(intent);
         activity.finish();
     });

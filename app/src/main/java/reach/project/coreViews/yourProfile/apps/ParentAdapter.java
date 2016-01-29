@@ -86,6 +86,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             final SmartApps smartApp = (SmartApps) message;
             final MoreListHolder listHolder = (MoreListHolder) holder;
+            listHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             listHolder.headerText.setText(smartApp.title);
             if (listHolder.listOfItems.getLayoutManager() == null)
                 listHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(listHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));

@@ -23,7 +23,7 @@
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="10dp"
-                fresco:placeholderImage="@color/reach_color" />
+                fresco:placeholderImage="@drawable/default_music_icon" />
             <ImageView
                 android:id="@+id/optionsIcon"
                 android:layout_alignParentRight="true"

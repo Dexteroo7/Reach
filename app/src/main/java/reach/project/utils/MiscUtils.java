@@ -186,22 +186,6 @@ public enum MiscUtils {
             }
     }
 
-    public static String getRandomPic() {
-
-        final int option = ThreadLocalRandom.current().nextInt(3);
-        switch (option) {
-
-            case 0:
-                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
-            case 1:
-                return "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240";
-            case 2:
-                return "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240";
-            default:
-                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
-        }
-    }
-
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
 
         final List<ApplicationInfo> applicationInfoList = getInstalledApps(packageManager);

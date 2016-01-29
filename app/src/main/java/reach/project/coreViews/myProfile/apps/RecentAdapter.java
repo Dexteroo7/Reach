@@ -18,7 +18,6 @@ import java.util.List;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -36,7 +35,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     private TourGuide tourGuide = null;
     private boolean shouldShowCoach1;
     private SharedPreferences sharedPreferences;
-    private SuperInterface mListener = null;
 
     public RecentAdapter(List<App> messageList,
                          HandOverMessage<App> handOverMessage,
@@ -47,7 +45,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         super(messageList, handOverMessage, resourceId);
 
         this.visibilityHook = visibilityHook;
-        this.mListener = (SuperInterface) context;
         this.packageManager = context.getPackageManager();
         this.sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         shouldShowCoach1 = !SharedPrefUtils.getMyProfileCoach1Seen(sharedPreferences);
@@ -58,7 +55,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         if (tourGuide != null) {
             Log.d("Ashish", "tourGuide.cleanUp");
             tourGuide.cleanUp();
-            mListener.showSwipeCoach();
         }
         super.handOverMessage(position);
     }
@@ -131,11 +127,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             Log.d("Ashish", "tourGuide.playOn");
             final ToolTip toolTip = new ToolTip()
                     .setTextColor(Color.WHITE)
-                    .setTitle("Hello!")
+                    .setTitle("Manage your privacy")
                     .setShadow(false)
-                    .setDescription("Click to view tutorial. Next button is disabled until tutorial is viewed");
+                    .setDescription("Tap on the file to hide/un-hide it from your friends");
             final Overlay overlay = new Overlay()
-                    .setBackgroundColor(Color.parseColor("#99000000"))
+                    .setBackgroundColor(Color.parseColor("#BF000000"))
                     .setStyle(Overlay.Style.Rectangle);
             tourGuide = TourGuide.init((Activity) holder.itemView.getContext()).with(TourGuide.Technique.Click)
                     .setToolTip(toolTip)

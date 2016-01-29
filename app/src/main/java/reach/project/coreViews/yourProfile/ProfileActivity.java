@@ -29,9 +29,12 @@ import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
+import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.notificationCentre.NotificationActivity;
+import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -130,6 +133,22 @@ public class ProfileActivity extends AppCompatActivity {
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
         mToolbar.setTitle("");
         mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(ProfileActivity.this));
+        mToolbar.inflateMenu(R.menu.yourprofile_menu);
+        mToolbar.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.player_button:
+                    startActivity(new Intent(this, PlayerActivity.class));
+                    return true;
+                case R.id.notif_button:
+                    startActivity(new Intent(this, NotificationActivity.class));
+                    return true;
+                case R.id.settings_button:
+                    startActivity(new Intent(this, SettingsActivity.class));
+                    return true;
+                default:
+                    return false;
+            }
+        });
 
         final Intent intent = getIntent();
         if (intent == null || (userId = intent.getLongExtra("userId", 0L)) == 0) {
@@ -170,7 +189,8 @@ public class ProfileActivity extends AppCompatActivity {
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(2)), 100, 100));
 
         SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setImageURI(Uri.parse(cursor.getString(5)));
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(5)), 500, 300));
 //        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
 //                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
         ((TextView) headerRoot.findViewById(R.id.appCount)).setText(cursor.getInt(4) + "");

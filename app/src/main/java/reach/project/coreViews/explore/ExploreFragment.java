@@ -368,8 +368,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
 //        explorePager.setOffscreenPageLimit(1);
-        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
-        explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
+        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
+        //explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
 
         if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
             mListener.showSwipeCoach();

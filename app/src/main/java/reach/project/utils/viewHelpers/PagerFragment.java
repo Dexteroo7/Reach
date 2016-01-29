@@ -178,7 +178,7 @@ public class PagerFragment extends Fragment {
         });
 
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
-        viewPager.setPageTransformer(true, (view, position) -> {
+        /*viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {
 
@@ -195,7 +195,7 @@ public class PagerFragment extends Fragment {
                 view.setScaleX(scaleFactor);
                 view.setScaleY(scaleFactor);
             }
-        });
+        });*/
         tabLayout.setViewPager(viewPager);
         return rootView;
     }

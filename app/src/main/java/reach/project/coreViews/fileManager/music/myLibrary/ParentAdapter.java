@@ -127,7 +127,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             case VIEW_TYPE_RECENT: {
 
                 final MoreListHolder moreListHolder = new MoreListHolder(parent);
-//            holder.itemView.setBackgroundResource(0);
+                moreListHolder.itemView.setBackgroundResource(0);
                 moreListHolder.headerText.setText("Recently Added");
                 moreListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(moreListHolder.listOfItems.getContext(), 2));
                 moreListHolder.listOfItems.setAdapter(recentAdapter);
@@ -149,7 +149,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             final Cursor cursorExactType = (Cursor) friend;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
-//            holder.itemView.setBackgroundResource(0);
+            holder.itemView.setBackgroundResource(0);
 
             final String displayName, artist, album, actualName;
             if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {

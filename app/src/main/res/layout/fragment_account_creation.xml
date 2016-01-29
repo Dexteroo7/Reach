@@ -20,7 +20,7 @@
             android:layout_centerHorizontal="true"
             android:background="@color/reach_color"
             android:textColor="#fff"
-            android:text="CREATE ACCOUNT"
+            android:text="CREATE PROFILE"
             android:paddingLeft="35dp"
             android:paddingRight="35dp"
             android:layout_width="wrap_content"

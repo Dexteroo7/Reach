@@ -186,13 +186,13 @@ public class InterceptAppInstall extends BroadcastReceiver {
             MiscUtils.useContextFromContext(reference, context -> {
 
                 final Intent openMyProfileApps = ReachActivity.getIntent(context);
-                openMyProfileApps.setAction(ReachActivity.OPEN_MY_PROFILE_APPS);
+                openMyProfileApps.setAction(ReachActivity.OPEN_MANAGER_APPS);
 
                 final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                         .setContentTitle(app.applicationName)
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                         .setOnlyAlertOnce(true)
-                        .setSmallIcon(R.drawable.ic_icon_notif)
+                        .setSmallIcon(R.drawable.icon_notification)
                         .setContentInfo("click to handle application privacy")
                         .setContentIntent(PendingIntent.getActivity(context, 0, openMyProfileApps, PendingIntent.FLAG_CANCEL_CURRENT));
 

@@ -138,31 +138,37 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
                 case ReachDatabase.FILE_NOT_CREATED: {
                     holder.downProgress.setText("File not found");
                     //The file for this song was moved / deleted from local storage
+                    break;
                 }
 
                 case ReachDatabase.GCM_FAILED: {
                     holder.downProgress.setText("User deleted the app");
                     //Sender could not be notified to initiate upload
+                    break;
                 }
 
                 case ReachDatabase.PAUSED_BY_USER: {
                     holder.downProgress.setText("Paused");
                     //The download has been paused
+                    break;
                 }
 
                 case ReachDatabase.FILE_NOT_FOUND: {
                     holder.downProgress.setText("User deleted the file");
                     //The file could not be found on sender's side
+                    break;
                 }
 
                 case ReachDatabase.NOT_WORKING: {
 
                     //Download has not started yet
+                    break;
                 }
 
                 case ReachDatabase.RELAY: {
 
                     //Download is working
+                    break;
                 }
             }
 

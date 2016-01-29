@@ -39,6 +39,8 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
     final SimpleDraweeView albumArt;
     final ProgressBar progressBar;
     final ImageView optionsIcon;
+    private static PopupMenu popupMenu;
+    private static boolean paused = false;
 
     //must set this position
     int position = -1;
@@ -60,7 +62,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             if (position == -1)
                 throw new IllegalArgumentException("Position not set for the view holder");
 
-            final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
+            popupMenu = new PopupMenu(context, this.optionsIcon);
             popupMenu.inflate(R.menu.friends_popup_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
 
@@ -88,7 +90,10 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 }
             });
 
-            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle("Pause Download");
+            final String status;
+            status = paused ? "Resume Download" : "Pause Download";
+            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
+
             popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
 
             popupMenu.show();
@@ -98,7 +103,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
     /**
      * Pause / Unpause transaction
      */
-    public static void pause_unpause(long reachDatabaseId, Context context) {
+    private static void pause_unpause(long reachDatabaseId, Context context) {
 
         final ContentResolver resolver = context.getContentResolver();
         final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
@@ -131,6 +136,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                     ReachDatabaseHelper.COLUMN_ID + " = ?",
                     new String[]{reachDatabaseId + ""});
             Log.i("Ayush", "Pausing");
+            paused = true;
         } else if (database.getOperationKind() == 1) {
 
             //un-paused upload operation
@@ -147,6 +153,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             else //should never happen
                 Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
             Log.i("Ayush", "Un-pausing");
+            paused = false;
         }
     }
 

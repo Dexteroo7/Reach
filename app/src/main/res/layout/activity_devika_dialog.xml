@@ -1,11 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="20dp"
-    tools:context="reach.project.core.ReachNotificationActivity">
+    android:layout_height="wrap_content"
+    android:padding="20dp">
 
     <RelativeLayout
         android:id="@+id/userContainer"
@@ -19,6 +16,7 @@
             fresco:actualImageScaleType="centerCrop"
             fresco:failureImageScaleType="centerCrop"
             fresco:placeholderImageScaleType="centerCrop"
+            fresco:placeholderImage="@drawable/default_profile_circle"
             fresco:roundAsCircle="true" />
 
         <TextView
@@ -46,65 +44,18 @@
         android:text="wants you to listen to"
         android:textSize="15sp" />
 
-    <LinearLayout
-        android:id="@+id/btnContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/textView1">
-
-        <LinearLayout
-            android:id="@+id/accept"
-            android:layout_width="110dp"
-            android:layout_height="30dp"
-            android:layout_marginRight="20dp"
-            android:clickable="false"
-            android:gravity="center">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:text="Accept"
-                android:textColor="@color/white"
-                android:textSize="15sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/reject"
-            android:layout_width="110dp"
-            android:layout_height="30dp"
-            android:clickable="false"
-            android:gravity="center">
-
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="15dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:text="Reject"
-                android:textColor="@color/white"
-                android:textSize="15sp" />
-        </LinearLayout>
-    </LinearLayout>
-
     <TextView
         android:id="@+id/exit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@id/textView1"
+        android:layout_alignParentRight="true"
         android:layout_below="@id/textView1"
         android:paddingBottom="10dp"
         android:paddingLeft="5dp"
+        android:textAllCaps="true"
+        android:textStyle="bold"
         android:paddingRight="5dp"
         android:paddingTop="10dp"
         android:text="Ok! I got it"
-        android:textColor="@color/reach_grey"
-        android:visibility="gone" />
+        android:textColor="@color/reach_color" />
 </RelativeLayout>

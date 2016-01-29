@@ -121,7 +121,8 @@ public class YourProfileActivity extends AppCompatActivity {
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                     Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
-            coverPic.setImageURI(Uri.parse(cursor.getString(7)));
+            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(7)), 500, 300));
 //            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
 //                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 
@@ -179,7 +180,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
-        viewPager.setPageTransformer(true, (view, position) -> {
+        /*viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {
                 // Modify the default slide transition to shrink the page as well
@@ -195,7 +196,7 @@ public class YourProfileActivity extends AppCompatActivity {
                 view.setScaleX(scaleFactor);
                 view.setScaleY(scaleFactor);
             }
-        });
+        });*/
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
 
     }

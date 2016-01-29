@@ -22,7 +22,7 @@
             android:orientation="horizontal"
             android:paddingLeft="35dp"
             android:paddingRight="35dp"
-            android:text="SEND CODE"
+            android:text="VERIFY"
             android:textColor="#fff" />
 
         <TextView
@@ -33,9 +33,9 @@
             android:layout_centerHorizontal="true"
             android:layout_margin="40dp"
             android:gravity="center"
-            android:text="We will send an SMS to your mobile number with a verification code. You need a valid mobile number to use Reach."
+            android:text="Help us build your trusted network"
             android:textColor="@color/reach_grey_light"
-            android:textSize="13sp" />
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/telephoneNumber"
@@ -45,7 +45,6 @@
             android:layout_centerHorizontal="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:hint="Enter phone number"
             android:inputType="phone"
             android:textColor="@color/reach_grey_light"/>
 
@@ -66,7 +65,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="10dp"
             android:gravity="center"
-            android:text="Please verify your mobile number"
+            android:text="Enter your mobile number"
             android:textColor="@color/reach_blue" />
     </RelativeLayout>
 </RelativeLayout>

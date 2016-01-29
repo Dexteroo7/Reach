@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -158,11 +157,11 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             if (shouldShowCoach1) {
                 final ToolTip toolTip = new ToolTip()
                         .setTextColor(Color.WHITE)
-                        .setTitle("Hello!")
+                        .setTitle("View Profile")
                         .setShadow(false)
-                        .setDescription("Click to view tutorial. Next button is disabled until tutorial is viewed");
+                        .setDescription("Tap to check out your friend's library");
                 final Overlay overlay = new Overlay()
-                        .setBackgroundColor(Color.parseColor("#99000000"))
+                        .setBackgroundColor(Color.parseColor("#BF000000"))
                         .setStyle(Overlay.Style.Rectangle);
                 tourGuide = TourGuide.init((Activity) viewHolder.itemView.getContext()).with(TourGuide.Technique.Click)
                         .setToolTip(toolTip)
@@ -224,7 +223,13 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
             }*/
 
-            viewHolder.coverPic.setImageURI(Uri.parse(coverPicId));
+            viewHolder.coverPic.setImageURI(AlbumArtUri.getUserImageUri(
+                    serverId,
+                    "coverPicId",
+                    "rw",
+                    false,
+                    250,
+                    150));
             //viewHolder.coverPic.setController(MiscUtils.getControllerResize(viewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
             viewHolder.lockIcon.setVisibility(View.GONE);
             viewHolder.lockText.setVisibility(View.GONE);
