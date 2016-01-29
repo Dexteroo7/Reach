@@ -109,7 +109,9 @@ public class PlayerActivity extends AppCompatActivity {
 
         playerPos = (TextView) findViewById(R.id.playerPos);
 
-        ((Toolbar) findViewById(R.id.playerToolbar)).setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
+        toolbar.setTitle("Player");
+        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
         (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);

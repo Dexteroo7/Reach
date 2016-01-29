@@ -43,11 +43,10 @@
                 android:layout_width="match_parent"
                 android:layout_below="@id/imageContainer"
                 app:layout_heightPercent="1%" />
-            <ImageView
+            <reach.project.utils.viewHelpers.CustomImageView
                 android:id="@+id/downButton"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                app:layout_marginTopPercent="47%"
+                app:layout_widthPercent="21%"
+                app:layout_marginTopPercent="46%"
                 android:layout_centerHorizontal="true"
                 android:background="@android:color/transparent"
                 android:src="@drawable/explore_download_btn" />
@@ -107,14 +106,14 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/subtitle"
-                android:layout_marginTop="10dp"
+                app:layout_marginTopPercent="1.5%"
                 style="?android:attr/ratingBarStyleSmall"
                 android:numStars="5"
                 android:stepSize="0.1" />
             <LinearLayout
                 android:id="@+id/handle"
                 android:gravity="center_vertical"
-                app:layout_marginTopPercent="2%"
+                app:layout_marginTopPercent="1.5%"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/rating"
                 android:orientation="horizontal"

@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         fresco:placeholderImage="@drawable/default_album_art"
         android:background="#333c45"
-        app:layout_heightPercent="70%" />
+        app:layout_heightPercent="68%" />
     <android.support.design.widget.AppBarLayout
         android:id="@+id/toolbarLayout"
         app:elevation="0dp"
@@ -35,8 +35,8 @@
         android:background="@drawable/shadow_bottom" />
     <ImageView
         android:id="@+id/likeBtn"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:elevation="4dp"
         app:layout_marginTopPercent="64%"
         app:layout_marginRightPercent="5%"
@@ -51,7 +51,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/mainShadow"
-        android:layout_marginTop="25dp"
+        app:layout_marginTopPercent="5%"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:ellipsize="marquee"
@@ -78,7 +78,7 @@
         android:layout_centerHorizontal="true"
         android:layout_height="wrap_content"
         android:layout_below="@id/artistName"
-        android:layout_marginTop="10dp"
+        app:layout_marginTopPercent="2%"
         android:progressDrawable="@drawable/player_progressbar"
         android:thumb="@drawable/thumb"
         android:thumbOffset="5dp" />
@@ -102,12 +102,12 @@
         android:textSize="12sp" />
     <ImageView
         android:id="@+id/pause_play"
-        android:layout_marginTop="20dp"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:layout_below="@id/seekBar"
+        app:layout_marginBottomPercent="3%"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:src="@drawable/play_white_selector" />
     <ImageView

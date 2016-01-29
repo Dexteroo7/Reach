@@ -37,6 +37,11 @@ android {
             minifyEnabled true
             proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
         }
+        /*debug {
+            shrinkResources true
+            minifyEnabled true
+            proguardFile '/Users/ashish/AndroidStudioProjects/Reach/app/proguard-reach.txt'
+        }*/
     }
 }
 
