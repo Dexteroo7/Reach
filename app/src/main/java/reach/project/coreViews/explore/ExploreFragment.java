@@ -354,6 +354,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
+        toolbar.setTitle("Explore");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 

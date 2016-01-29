@@ -7,7 +7,6 @@
     android:layout_height="match_parent" >
 
     <android.support.design.widget.AppBarLayout
-        app:elevation="0dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
@@ -21,15 +20,19 @@
             android:minHeight="?attr/actionBarSize"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
-        <ImageView
-            android:background="#fff"
-            android:src="@drawable/shadow_bottom"
-            android:layout_width="match_parent"
-            android:layout_height="2dp" />
     </android.support.design.widget.AppBarLayout >
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/settingsRecycler"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/settingsRecycler"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent" />
+        <View
+            android:layout_gravity="top"
+            android:background="@drawable/shadow_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="3dp" />
+    </FrameLayout>
 </LinearLayout>

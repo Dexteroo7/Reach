@@ -181,8 +181,10 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             final int numberOfSongs = cursorExactType.getInt(7);
             final int numberOfApps = cursorExactType.getInt(8);
-//            final int newSongs = cursorExactType.getInt(9);
-//            final int newApps = cursorExactType.getInt(10);
+            int newSongs = cursorExactType.getInt(9);
+            if (newSongs > 99)
+                newSongs = 99;
+            //final int newApps = cursorExactType.getInt(10);
             //final int newFiles = newSongs + newApps;
 
             //Capitalize only if required
@@ -194,16 +196,17 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
             viewHolder.appCount.setText(numberOfApps + "");
-            /*if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
+            if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
 
                 //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
+                viewHolder.newSongsView.setVisibility(View.VISIBLE);
                 viewHolder.newSongs.setText("+" + newSongs);
             } else {
-
-                viewHolder.newSongs.setVisibility(View.INVISIBLE);
+                viewHolder.newSongs.setVisibility(View.GONE);
+                viewHolder.newSongsView.setVisibility(View.GONE);
                 viewHolder.newSongs.setText("");
-            }*/
+            }
 
             //first invalidate
             //viewHolder.profilePhotoList.setController(null);

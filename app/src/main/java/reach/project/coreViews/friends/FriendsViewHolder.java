@@ -29,10 +29,11 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 final class FriendsViewHolder extends SingleItemViewHolder {
 
-    final TextView userNameList, telephoneNumberList, appCount, lockText;
+    final TextView userNameList, telephoneNumberList, appCount, lockText, newSongs;
     final ImageView lockIcon;
     final ImageView optionsIcon;
     final SimpleDraweeView profilePhotoList, coverPic;
+    final View newSongsView;
 
     //set this position to use inside listener
     int position = -1;
@@ -51,6 +52,8 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
         this.lockText = (TextView) itemView.findViewById(R.id.lockText);
+        this.newSongs = (TextView) itemView.findViewById(R.id.newSongs);
+        this.newSongsView = itemView.findViewById(R.id.newSongsView);
 
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
         this.optionsIcon.setOnClickListener(view -> {
@@ -102,6 +105,8 @@ final class FriendsViewHolder extends SingleItemViewHolder {
         this.coverPic = (SimpleDraweeView) itemView.findViewById(R.id.coverPic);
         this.lockIcon = (ImageView) itemView.findViewById(R.id.lockIcon);
         this.lockText = (TextView) itemView.findViewById(R.id.lockText);
+        this.newSongs = (TextView) itemView.findViewById(R.id.newSongs);
+        this.newSongsView = itemView.findViewById(R.id.newSongsView);
         itemView.findViewById(R.id.optionsIcon).setVisibility(View.GONE);
         this.optionsIcon = null;
     }
