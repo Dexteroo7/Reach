@@ -49,9 +49,6 @@ import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
 import com.facebook.imagepipeline.image.CloseableImage;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
-import com.firebase.client.AuthData;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -93,7 +90,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 import reach.backend.entities.messaging.model.MyBoolean;
-import reach.backend.entities.userApi.model.MyString;
 import reach.project.apps.App;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
@@ -1392,7 +1388,7 @@ public enum MiscUtils {
         ////////
     }
 
-    public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
+    /*public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
                                                    WeakReference<Firebase> firebaseWeakReference,
                                                    WeakReference<? extends Activity> toHelpTrack) {
 
@@ -1468,7 +1464,7 @@ public enum MiscUtils {
                 }
             });
         }
-    }
+    }*/
 
     public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView) {
 

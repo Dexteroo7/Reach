@@ -239,8 +239,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             final JsonObject toReturn = new JsonObject();
             toReturn.addProperty("userId", myServerId);
+            /*MiscUtils.useFragment(reference, fragment -> {
+                final long lastRequestTime = SharedPrefUtils.getLastRequestTime(fragment.preferences);
+                    toReturn.addProperty("lastRequestTime", lastRequestTime);
+            });*/
             toReturn.add("friends", jsonArray);
-//            requestMap.put("lastRequestTime", SharedPrefUtils.getLastRequestTime(preferences));
 
             return toReturn;
 
@@ -354,7 +357,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
-        toolbar.setTitle("Explore");
+        toolbar.setTitle("Discover");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 
