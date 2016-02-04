@@ -138,7 +138,7 @@ public class PagerFragment extends Fragment {
 
         if (title != null) {
 
-            if (title.equals("Push"))
+            if (title.equals("Share"))
                 toolbar.inflateMenu(R.menu.menu_push);
             else
                 toolbar.inflateMenu(R.menu.pager_menu);
