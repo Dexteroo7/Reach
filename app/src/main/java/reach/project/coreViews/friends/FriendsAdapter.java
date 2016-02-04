@@ -159,7 +159,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                         .setTextColor(Color.WHITE)
                         .setTitle("View Profile")
                         .setShadow(false)
-                        .setDescription("Tap to check out your friend's library");
+                        .setDescription("Tap to browse their library");
                 final Overlay overlay = new Overlay()
                         .setBackgroundColor(Color.parseColor("#BF000000"))
                         .setStyle(Overlay.Style.Rectangle);

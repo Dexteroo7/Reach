@@ -92,8 +92,6 @@ public class PlayerActivity extends AppCompatActivity {
     @Nullable
     private View likeButton = null;
 
-    private static long serverId = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -366,6 +364,7 @@ public class PlayerActivity extends AppCompatActivity {
                 return;
 
             final Context context = view.getContext();
+            final long serverId = SharedPrefUtils.getServerId(context.getSharedPreferences("Reach", MODE_PRIVATE));
 
             if (toggleLiked(context)) {
 

@@ -43,8 +43,7 @@ public class FriendRequestFragment extends Fragment {
     public static FriendRequestFragment newInstance() {
 
         FriendRequestFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment))
-            reference = new WeakReference<>(fragment = new FriendRequestFragment());
+        reference = new WeakReference<>(fragment = new FriendRequestFragment());
 
         return fragment;
     }

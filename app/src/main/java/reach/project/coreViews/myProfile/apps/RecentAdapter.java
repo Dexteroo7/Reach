@@ -129,7 +129,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
                     .setTextColor(Color.WHITE)
                     .setTitle("Manage your privacy")
                     .setShadow(false)
-                    .setDescription("Tap on the file to hide/un-hide it from your friends");
+                    .setDescription("Tap on a file to hide/un-hide it from your friends");
             final Overlay overlay = new Overlay()
                     .setBackgroundColor(Color.parseColor("#BF000000"))
                     .setStyle(Overlay.Style.Rectangle);

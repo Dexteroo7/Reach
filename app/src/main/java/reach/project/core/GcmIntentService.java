@@ -48,6 +48,7 @@ public class GcmIntentService extends IntentService {
     public static final int NOTIFICATION_ID_SYNC = 565128993;
     public static final int NOTIFICATION_ID_CHAT = 865910077;
     public static final int NOTIFICATION_ID_MANUAL = 884587848;
+    public static final int NOTIFICATION_ID_CURATED = 854643264;
 
     /**
      * Handle GCM receipt intent
@@ -360,7 +361,58 @@ public class GcmIntentService extends IntentService {
                 Log.i("Downloader", "Received unexpected GCM " + message);
         } else {
             switch (type) {
-                case "MANUAL":
+                case "CURATED":
+                    final String heading = extras.getString("heading");
+                    final String message = extras.getString("message");
+
+                    final NotificationCompat.Builder notificationBuilder =
+                            new NotificationCompat.Builder(this)
+                                    .setAutoCancel(true)
+                                    .setDefaults(NotificationCompat.DEFAULT_LIGHTS | NotificationCompat.DEFAULT_VIBRATE | NotificationCompat.DEFAULT_SOUND)
+                                    .setContentTitle(heading)
+                                    .setTicker(heading + " " + message)
+                                    .setContentText(message)
+                                    .setSmallIcon(R.drawable.icon_notification)
+                                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                                    .setWhen(System.currentTimeMillis());
+
+//                    final String imageURL = extras.getString("imageURL");
+//                    setBitmap(imageURL, notificationBuilder);
+
+                    final Intent mIntent;
+
+                    final String activityName = extras.getString("activityName");
+                    if (!TextUtils.isEmpty(activityName)) {
+                        Class<?> mClass = null;
+                        try {
+                            mClass = Class.forName(activityName);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        mIntent = new Intent(this, mClass);
+
+                        if (!TextUtils.isEmpty(extras.getString("userId"))) {
+                            final long userId = Long.parseLong(extras.getString("userId"));
+                            if (userId > 0)
+                                intent.putExtra("userId", userId);
+                        }
+
+                        final String tab = extras.getString("tab");
+                        if (!TextUtils.isEmpty(tab))
+                            intent.setAction(tab);
+                    }
+                    else
+                        mIntent = ReachActivity.getIntent(this);
+
+                    final PendingIntent viewPendingIntent = PendingIntent.getActivity(
+                            this,
+                            NOTIFICATION_ID_CURATED,
+                            mIntent,
+                            PendingIntent.FLAG_CANCEL_CURRENT);
+                    notificationBuilder.setContentIntent(viewPendingIntent);
+
+                    notificationManager.notify(NOTIFICATION_ID_FRIEND, notificationBuilder.build());
+
                     break;
                 default:
                     GcmBroadcastReceiver.completeWakefulIntent(intent);
@@ -370,6 +422,49 @@ public class GcmIntentService extends IntentService {
 
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
+
+    /*private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    private void setBitmap(String url, NotificationCompat.Builder notificationBuilder) {
+        if (notificationBuilder == null)
+            return;
+        DataSubscriber dataSubscriber = new BaseDataSubscriber<CloseableReference<CloseableBitmap>>() {
+            @Override
+            public void onNewResultImpl(
+                    DataSource<CloseableReference<CloseableBitmap>> dataSource) {
+                if (!dataSource.isFinished()) {
+                    return;
+                }
+                CloseableReference<CloseableBitmap> imageReference = dataSource.getResult();
+                if (imageReference != null) {
+                    final CloseableReference<CloseableBitmap> closeableReference = imageReference.clone();
+                    try {
+                        CloseableBitmap closeableBitmap = closeableReference.get();
+                        Bitmap bitmap  = closeableBitmap.getUnderlyingBitmap();
+                        if(bitmap != null && !bitmap.isRecycled()) {
+                            notificationBuilder.setLargeIcon(bitmap);
+                        }
+                    } finally {
+                        imageReference.close();
+                        closeableReference.close();
+                    }
+                }
+            }
+            @Override
+            public void onFailureImpl(DataSource dataSource) {
+                Throwable throwable = dataSource.getFailureCause();
+                // handle failure
+            }
+        };
+        ImagePipeline imagePipeline = Fresco.getImagePipeline();
+        ImageRequestBuilder builder = ImageRequestBuilder.newBuilderWithSource(Uri.parse(url));
+        final int size = MiscUtils.dpToPx(100);
+        builder.setResizeOptions(new ResizeOptions(size, size));
+        ImageRequest request = builder.build();
+        DataSource<CloseableReference<CloseableImage>>
+                dataSource = imagePipeline.fetchDecodedImage(request, this);
+        dataSource.subscribe(dataSubscriber, executorService);
+    }*/
 
     private short getNetworkType(Context context) {
 

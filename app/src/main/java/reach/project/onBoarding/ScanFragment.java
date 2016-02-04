@@ -75,13 +75,8 @@ public class ScanFragment extends Fragment {
 
         final Bundle args;
         ScanFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new ScanFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing ScanFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new ScanFragment());
+        fragment.setArguments(args = new Bundle());
 
         args.putString(USER_NAME, name);
         args.putString(OLD_IMAGE_ID, oldImageId);

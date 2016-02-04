@@ -5,7 +5,7 @@
         android:id="@+id/player_button"
         android:title="Player"
         app:showAsAction="always"
-        android:icon="@drawable/ic_equalizer_pink"
+        android:icon="@drawable/ic_player"
         />
     <item
         android:id="@+id/notif_button"

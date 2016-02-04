@@ -18,8 +18,19 @@
         android:layout_below="@id/logo"
         android:layout_centerHorizontal="true"
         android:gravity="center"
-        android:text="Discover and share stories from\nyour trusted network"
+        android:text="Discover what your friends like"
         android:textColor="#000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/agreeTerms"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:text="By clicking 'Let's Reach'\nyou agree to the Terms and Conditons"
+        android:textColor="#000"
+        android:layout_marginBottom="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
     <Button

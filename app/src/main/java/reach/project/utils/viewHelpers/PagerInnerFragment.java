@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import reach.project.R;
@@ -49,12 +48,20 @@ public class PagerInnerFragment extends Fragment {
         return pagerInnerFragment;
     }
 
+    private ViewPager viewPager = null;
+
+    public void setItem(int position) {
+
+        if (viewPager != null)
+            viewPager.setCurrentItem(position, true);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_pager_inner, container, false);
-        final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewPagerInner);
+        viewPager = (ViewPager) rootView.findViewById(R.id.viewPagerInner);
         final TabLayout tabLayout = (TabLayout) rootView.findViewById(R.id.tabLayoutInner);
 
         final Bundle arguments = getArguments();

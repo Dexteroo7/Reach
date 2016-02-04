@@ -428,7 +428,7 @@ public class ProcessManager extends Service implements
         remoteViews.setTextViewText(R.id.NsongNamePlaying, generateNotificationText(totalDownloads, totalUploads));
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS);
+        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.icon_notification)
@@ -529,7 +529,7 @@ public class ProcessManager extends Service implements
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.pause_white_selector);
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS);
+        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.icon_notification)

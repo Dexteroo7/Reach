@@ -93,6 +93,18 @@
         </activity>
 
         <activity
+            android:name=".ancillaryViews.TermsActivity"
+            android:excludeFromRecents="true"
+            android:label="@string/title_activity_terms"
+            android:launchMode="singleTask"
+            android:parentActivityName=".ancillaryViews.SettingsActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.ancillaryViews.SettingsActivity" />
+        </activity>
+
+        <activity
             android:name=".coreViews.invite.InviteActivity"
             android:label="@string/title_activity_invite"
             android:launchMode="singleTask"
@@ -175,6 +187,13 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".core.InstallReferrerReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
+
         <receiver
             android:name=".pacemaker.HeartbeatReceiver"
             android:exported="false" />
@@ -209,10 +228,6 @@
 
         <service
             android:name=".utils.MetaDataScanner"
-            android:exported="false" />
-
-        <service
-            android:name="com.google.android.gms.analytics.CampaignTrackingService"
             android:exported="false" />
 
         <service

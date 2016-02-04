@@ -61,13 +61,8 @@ public class CodeVerification extends Fragment {
         final Bundle args;
         CodeVerification fragment;
 
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new CodeVerification());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing CodeVerification object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new CodeVerification());
+        fragment.setArguments(args = new Bundle());
 
         args.putString(AUTH_KEY, authKey);
         args.putString(PHONE_NUMBER, phoneNumber);

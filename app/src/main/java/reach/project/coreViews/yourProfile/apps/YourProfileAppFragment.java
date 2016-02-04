@@ -56,13 +56,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         final Bundle args;
         YourProfileAppFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new YourProfileAppFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing YourProfileAppFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new YourProfileAppFragment());
+        fragment.setArguments(args = new Bundle());
         args.putLong("hostId", hostId);
         return fragment;
     }
@@ -177,7 +172,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public void handOverMessage(@NonNull App item) {
-        MiscUtils.openAppinPlayStore(getActivity(), item.packageName, hostId);
+        MiscUtils.openAppinPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
     }
 
     @Override

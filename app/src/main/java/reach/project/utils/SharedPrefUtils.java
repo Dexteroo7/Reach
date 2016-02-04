@@ -292,4 +292,12 @@ public enum SharedPrefUtils {
     public synchronized static boolean getExploreCoach1Seen(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("exploreCoach1", false);
     }
+
+    public synchronized static void storeEmailId(SharedPreferences sharedPreferences, String emailId) {
+        sharedPreferences.edit().putString("emailId", emailId).apply();
+    }
+
+    public synchronized static String getEmailId(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("emailId", "");
+    }
 }

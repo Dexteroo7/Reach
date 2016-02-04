@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,13 +41,8 @@ public class MessageWriterFragment extends Fragment {
 
         final Bundle args;
         MessageWriterFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new MessageWriterFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing MessageWriterFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new MessageWriterFragment());
+        fragment.setArguments(args = new Bundle());
 
         args.putLongArray(USER_IDS, userIds);
         args.putString(PUSH_CONTAINER, pushContainer);

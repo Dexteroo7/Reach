@@ -52,13 +52,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
         final Bundle args;
         ApplicationFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new ApplicationFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing ApplicationFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new ApplicationFragment());
+        fragment.setArguments(args = new Bundle());
         args.putString("header", header);
         return fragment;
     }

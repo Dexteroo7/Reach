@@ -117,25 +117,6 @@
                 android:hint="Enter your name"
                 android:inputType="textCapSentences"/>
             <TextView
-                android:id="@+id/handleText"
-                android:text="HANDLE"
-                android:paddingLeft="2dp"
-                android:layout_marginTop="30dp"
-                android:layout_marginLeft="30dp"
-                android:textColor="@color/reach_color"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <EditText
-                android:id="@+id/handle"
-                android:textColor="#000"
-                android:layout_marginLeft="32dp"
-                android:layout_marginRight="32dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:hint="Enter your handle"
-                android:inputType="textCapSentences"/>
-            <TextView
                 android:id="@+id/emailText"
                 android:text="EMAIL"
                 android:paddingLeft="2dp"

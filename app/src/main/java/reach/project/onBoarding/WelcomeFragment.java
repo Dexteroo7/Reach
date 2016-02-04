@@ -1,6 +1,7 @@
 package reach.project.onBoarding;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -10,7 +11,7 @@ import android.view.ViewGroup;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.utils.MiscUtils;
+import reach.project.ancillaryViews.TermsActivity;
 
 public class WelcomeFragment extends Fragment {
 
@@ -20,8 +21,7 @@ public class WelcomeFragment extends Fragment {
     public static Fragment newInstance() {
 
         WelcomeFragment welcomeFragment;
-        if (reference == null || (welcomeFragment = reference.get()) == null || MiscUtils.isFragmentDead(welcomeFragment))
-            reference = new WeakReference<>(welcomeFragment = new WelcomeFragment());
+        reference = new WeakReference<>(welcomeFragment = new WelcomeFragment());
 
         return welcomeFragment;
     }
@@ -33,6 +33,8 @@ public class WelcomeFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_welcome, container, false);
         rootView.findViewById(R.id.getStartedBtn).setOnClickListener(v ->
                 mListener.onOpenNumberVerification());
+        rootView.findViewById(R.id.agreeTerms).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), TermsActivity.class)));
         return rootView;
     }
 

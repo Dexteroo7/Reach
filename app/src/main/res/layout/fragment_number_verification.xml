@@ -33,7 +33,7 @@
             android:layout_centerHorizontal="true"
             android:layout_margin="40dp"
             android:gravity="center"
-            android:text="Help us build your trusted network"
+            android:text="Help us bring you closer to your friends"
             android:textColor="@color/reach_grey_light"
             android:textSize="16sp" />
 

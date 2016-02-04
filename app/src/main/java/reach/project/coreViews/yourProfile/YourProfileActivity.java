@@ -33,12 +33,12 @@ import reach.project.utils.MiscUtils;
 
 public class YourProfileActivity extends AppCompatActivity {
 
-    private static final String OPEN_PROFILE = "OPEN_PROFILE";
+    //private static final String OPEN_PROFILE = "OPEN_PROFILE";
 
     public static void openProfile(long userId, Context context) {
 
         final Intent intent = new Intent(context, YourProfileActivity.class);
-        intent.setAction(OPEN_PROFILE);
+        //intent.setAction(OPEN_PROFILE);
         intent.putExtra("userId", userId);
 
         context.startActivity(intent);
@@ -77,7 +77,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
         final Intent intent = getIntent();
         final long userId = intent.getLongExtra("userId", 0L);
-        if (userId == 0 || !intent.getAction().equals(OPEN_PROFILE)) {
+        if (userId == 0) {
             finish();
             return;
         }

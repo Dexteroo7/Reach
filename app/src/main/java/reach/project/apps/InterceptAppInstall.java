@@ -186,7 +186,7 @@ public class InterceptAppInstall extends BroadcastReceiver {
             MiscUtils.useContextFromContext(reference, context -> {
 
                 final Intent openMyProfileApps = ReachActivity.getIntent(context);
-                openMyProfileApps.setAction(ReachActivity.OPEN_MANAGER_APPS);
+                openMyProfileApps.setAction(ReachActivity.OPEN_MY_PROFILE_APPS);
 
                 final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                         .setContentTitle(app.applicationName)

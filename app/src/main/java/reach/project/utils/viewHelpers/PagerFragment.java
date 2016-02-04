@@ -100,6 +100,15 @@ public class PagerFragment extends Fragment {
         return bundle;
     }
 
+    public void setInnerItem(int position, int innerPosition) {
+
+        setItem(position);
+        if (viewPager == null || fragments == null || fragments[position] == null)
+            return;
+        PagerInnerFragment pagerInnerFragment = (PagerInnerFragment) fragments[position];
+        pagerInnerFragment.setItem(innerPosition);
+    }
+
     public void setItem(int position) {
 
         if (viewPager != null)
@@ -110,6 +119,8 @@ public class PagerFragment extends Fragment {
     private ViewPager viewPager = null;
     @Nullable
     private SuperInterface mListener = null;
+
+    private Fragment[] fragments = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -139,7 +150,7 @@ public class PagerFragment extends Fragment {
 
         final Pages[] pages = (Pages[]) parcelables;
         final String[] titles = new String[pages.length];
-        final Fragment[] fragments = new Fragment[pages.length];
+        fragments = new Fragment[pages.length];
 
         for (int index = 0; index < pages.length; index++) {
 

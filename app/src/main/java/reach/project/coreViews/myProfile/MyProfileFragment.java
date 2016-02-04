@@ -109,6 +109,14 @@ public class MyProfileFragment extends Fragment {
         }
     };
 
+    private static ViewPager viewPager = null;
+
+    public static void setItem(int position) {
+
+        if (viewPager != null)
+            viewPager.setCurrentItem(position, true);
+    }
+
 //    public void onDestroyView() {
 //        super.onDestroyView();
 //        Log.d("Ashish", "MyProfileFragment - onDestroyView");
@@ -133,6 +141,7 @@ public class MyProfileFragment extends Fragment {
         Log.d("Ashish", "MyProfileFragment - onCreateView");
 
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
+        viewPager = materialViewPager.getViewPager();
         final Toolbar toolbar = materialViewPager.getToolbar();
         final Activity activity = getActivity();
 
@@ -206,7 +215,6 @@ public class MyProfileFragment extends Fragment {
             }
         };
 
-        final ViewPager viewPager = materialViewPager.getViewPager();
         viewPager.setAdapter(pagerAdapter);
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));

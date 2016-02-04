@@ -64,7 +64,7 @@
             android:layout_centerHorizontal="true"
             android:gravity="center"
             android:layout_marginBottom="20dp"
-            android:text="Kindly wait while we verify your number"
+            android:text="Wait up! Our little birdies are working on it"
             android:textColor="@color/reach_blue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />

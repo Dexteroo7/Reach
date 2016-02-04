@@ -79,18 +79,26 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return intent;
     }
 
-    public static void openDownloading() {
+    /*public static void openDownloading() {
 
         MiscUtils.useActivity(reference, activity -> {
 
             if (activity.mTabHost == null)
                 return;
 
-            new Handler().postDelayed(() -> activity.mTabHost.setCurrentTab(3), 1000L);
+            activity.mTabHost.postDelayed(() -> {
+                activity.mTabHost.setCurrentTab(3);
+                activity.mTabHost.postDelayed(() -> {
+                    final PagerFragment pagerFragment = (PagerFragment) activity.getSupportFragmentManager()
+                            .findFragmentByTag("manager_page");
+                    pagerFragment.setInnerItem(0, 1);
+                }, 500L);
+
+            }, 1000L);
             //activity.viewPager.setCurrentItem(3, true);
             //DOWNLOAD_PAGER.setItem(1);
         });
-    }
+    }*/
 
     ////////////////////////////////////////public static final
 
@@ -99,7 +107,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_MANAGER_APPS = "OPEN_MANAGER_APPS";
     public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     public static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
-    public static final String OPEN_MANAGER_SONGS = "OPEN_MANAGER_SONGS";
+    public static final String OPEN_MANAGER_SONGS_DOWNLOADING = "OPEN_MANAGER_SONGS_DOWNLOADING";
+    public static final String OPEN_MANAGER_SONGS_LIBRARY = "OPEN_MANAGER_SONGS_LIBRARY";
     public static final String ADD_PUSH_SONG = "ADD_PUSH_SONG";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
@@ -109,18 +118,18 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     ////////////////////////////////////////private static final
 
     @SuppressWarnings("unchecked")
-    private static final Bundle DOWNLOAD_PAGER_BUNDLE = PagerFragment.getBundle("Manager",
-            new PagerFragment.Pages(
-                    new Class[]{ApplicationFragment.class},
-                    new String[]{"My Applications"},
-                    "Apps"),
+    private static final Bundle DOWNLOAD_PAGER_BUNDLE = PagerFragment.getBundle("My Files",
             new PagerFragment.Pages(
                     new Class[]{MyLibraryFragment.class, DownloadingFragment.class},
                     new String[]{"My Library", "Downloading"},
-                    "Songs"));
+                    "Songs"),
+            new PagerFragment.Pages(
+                    new Class[]{ApplicationFragment.class},
+                    new String[]{"My Applications"},
+                    "Apps"));
 
     @SuppressWarnings("unchecked")
-    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Push",
+    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Share",
 //            new PagerFragment.Pages(
 //                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
 //                    new String[]{"My Applications"},
@@ -424,7 +433,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         if (intent == null)
             return;
 
-        Log.i("Ayush", "Processing Intent");
+        Log.i("Ayush", "Processing Intent + " + intent.getAction());
 
         final String action = intent.getAction();
         if (TextUtils.isEmpty(action))
@@ -475,21 +484,65 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                     song.genre);
                         }
                         FireOnce.refreshOperations(reference);
-                        openDownloading();
+                        mTabHost.setCurrentTab(3);
+                        mTabHost.postDelayed(() -> {
+                            final PagerFragment pagerFragment = (PagerFragment) getSupportFragmentManager()
+                                    .findFragmentByTag("manager_page");
+                            pagerFragment.setInnerItem(0, 1);
+                        }, 500L);
                     }
                 }
                 break;
             case OPEN_MANAGER_APPS:
                 if (mTabHost != null)
-                    new Handler().postDelayed(() -> mTabHost.setCurrentTab(3), 1000L);
+                    mTabHost.postDelayed(() -> {
+                        mTabHost.setCurrentTab(3);
+                        mTabHost.postDelayed(() -> {
+                            final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                    .findFragmentByTag("manager_page");
+                            fragment.setItem(1);
+                        }, 500L);
+                    }, 1000L);
+
                 break;
-            case OPEN_MANAGER_SONGS:
+            case OPEN_MANAGER_SONGS_DOWNLOADING:
                 if (mTabHost != null)
-                    new Handler().postDelayed(() -> mTabHost.setCurrentTab(3), 1000L);
+                    mTabHost.postDelayed(() -> {
+                            mTabHost.setCurrentTab(3);
+                            mTabHost.postDelayed(() -> {
+                                final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                        .findFragmentByTag("manager_page");
+                                fragment.setItem(0);
+                                fragment.setInnerItem(0, 1);
+                            }, 500L);
+                        }, 1000L);
+
+                break;
+            case OPEN_MANAGER_SONGS_LIBRARY:
+                if (mTabHost != null)
+                    mTabHost.postDelayed(() -> {
+                        mTabHost.setCurrentTab(3);
+                        mTabHost.postDelayed(() -> {
+                            final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                    .findFragmentByTag("manager_page");
+                            fragment.setItem(0);
+                            fragment.setInnerItem(0, 0);
+                        }, 500L);
+                    }, 1000L);
                 break;
             case OPEN_MY_PROFILE_APPS:
                 if (mTabHost != null)
-                    mTabHost.setCurrentTab(4);
+                    mTabHost.postDelayed(() -> {
+                        mTabHost.setCurrentTab(4);
+                        MyProfileFragment.setItem(0);
+                    }, 1000L);
+                break;
+            case OPEN_MY_PROFILE_SONGS:
+                if (mTabHost != null)
+                    mTabHost.postDelayed(() -> {
+                        mTabHost.setCurrentTab(4);
+                        MyProfileFragment.setItem(1);
+                    }, 1000L);
                 break;
         }
     }
@@ -619,7 +672,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
-        MiscUtils.startDownload(reachDatabase, this, null);
+        MiscUtils.startDownload(reachDatabase, this, null, "PUSH");
     }
 
     @Override

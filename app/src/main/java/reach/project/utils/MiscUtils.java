@@ -22,7 +22,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NavUtils;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.ArraySet;
@@ -1227,7 +1226,7 @@ public enum MiscUtils {
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
-        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
         final Iterator<ApplicationInfo> iterator = applications.iterator();
 
         while (iterator.hasNext()) {
@@ -1242,13 +1241,13 @@ public enum MiscUtils {
         return applications;
     }
 
-    public static void openAppinPlayStore(Activity activity, String packageName, Long senderId) {
+    public static void openAppinPlayStore(Activity activity, String packageName, Long senderId, String page) {
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach",
                 Context.MODE_PRIVATE);
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Open App")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
-                .setLabel("App - " + packageName + ", From - " + senderId)
+                .setLabel(page)
                 .setValue(1)
                 .build());
 
@@ -1466,7 +1465,7 @@ public enum MiscUtils {
         }
     }*/
 
-    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView) {
+    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView, String page) {
 
 //        final Activity activity = getActivity();
         final ContentResolver contentResolver = activity.getContentResolver();
@@ -1546,7 +1545,7 @@ public enum MiscUtils {
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Add song failed")
                     .setAction("User Name - " + clientName)
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setLabel(page)
                     .setValue(1)
                     .build());
             return;
@@ -1600,9 +1599,10 @@ public enum MiscUtils {
         if (snackView != null)
             Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_LONG)
                     .setAction("Open manager", v -> {
-                        if (activity.getClass() != ReachActivity.class)
-                            NavUtils.navigateUpFromSameTask(activity);
-                        ReachActivity.openDownloading();
+                        final Intent foreGround = new Intent(activity, ReachActivity.class);
+                        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+                        foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        activity.startActivity(foreGround);
                     })
                     .show();
 
