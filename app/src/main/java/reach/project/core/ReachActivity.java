@@ -106,6 +106,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_PUSH = "OPEN_PUSH";
     public static final String OPEN_MANAGER_APPS = "OPEN_MANAGER_APPS";
     public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
+    public static final String OPEN_MY_PROFILE_APPS_FIRST = "OPEN_MY_PROFILE_APPS_FIRST";
     public static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
     public static final String OPEN_MANAGER_SONGS_DOWNLOADING = "OPEN_MANAGER_SONGS_DOWNLOADING";
     public static final String OPEN_MANAGER_SONGS_LIBRARY = "OPEN_MANAGER_SONGS_LIBRARY";
@@ -536,6 +537,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.setCurrentTab(4);
                         MyProfileFragment.setItem(0);
                     }, 1000L);
+                break;
+            case OPEN_MY_PROFILE_APPS_FIRST:
+                if (mTabHost != null) {
+                    mTabHost.setCurrentTab(4);
+                    MyProfileFragment.setItem(0);
+                }
                 break;
             case OPEN_MY_PROFILE_SONGS:
                 if (mTabHost != null)
