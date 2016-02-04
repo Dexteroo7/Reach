@@ -369,7 +369,7 @@ public class ScanFragment extends Fragment {
         
         final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
-        intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS);
+        intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
         activity.startActivity(intent);
         activity.finish();
     });
