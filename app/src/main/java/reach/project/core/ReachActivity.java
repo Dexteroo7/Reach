@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.crittercism.app.Crittercism;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -263,9 +262,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         }
 
         //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
-        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
-                SharedPrefUtils.getPhoneNumber(preferences));
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+//        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
+//                SharedPrefUtils.getPhoneNumber(preferences));
 
         ////////////////////////////////////////
 
