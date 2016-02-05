@@ -23,6 +23,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.ArrayMap;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.Log;
@@ -1699,6 +1700,15 @@ public enum MiscUtils {
         MiscUtils.useReference(reference, view -> {
             view.post(() -> updateUI.updateUI((T) view));
         });
+    }
+
+    public static void navigateUp(final AppCompatActivity activity) {
+        final Intent upIntent = activity.getSupportParentActivityIntent();
+        if (upIntent == null)
+            return;
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        activity.startActivity(upIntent);
+        activity.finish();
     }
 
 //    public static String cleanseName(String name, StringBuilder stringBuilder) {

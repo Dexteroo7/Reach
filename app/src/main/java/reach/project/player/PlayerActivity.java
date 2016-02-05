@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -93,6 +93,11 @@ public class PlayerActivity extends AppCompatActivity {
     private View likeButton = null;
 
     @Override
+    public void onBackPressed() {
+        MiscUtils.navigateUp(this);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
@@ -109,7 +114,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
         toolbar.setTitle("Player");
-        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
         (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
@@ -407,6 +412,9 @@ public class PlayerActivity extends AppCompatActivity {
                 view.setSelected(true);
             else
                 view.setSelected(false);
+
+            Snackbar.make(view.getRootView(), "You liked " + currentPlaying.getDisplayName(),
+                    Snackbar.LENGTH_SHORT).show();
         };
 
         public static final View.OnClickListener PAUSE_CLICK = v -> {

@@ -7,12 +7,12 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 
 public class NotificationActivity extends AppCompatActivity {
 
@@ -31,6 +31,11 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        MiscUtils.navigateUp(this);
+    }
+
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
@@ -38,7 +43,7 @@ public class NotificationActivity extends AppCompatActivity {
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
         mToolbar.setTitle("Notifications");
-        mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(NotificationActivity.this));
+        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
         mToolbar.inflateMenu(R.menu.notification_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {

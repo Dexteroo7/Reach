@@ -128,6 +128,7 @@ public class NotificationFragment extends Fragment {
                 } else return; //TODO fix this hack
                 break;
             case LIKE:
+                YourProfileActivity.openProfile(hostID, getActivity());
                 break;
             case BECAME_FRIENDS:
                 //check validity

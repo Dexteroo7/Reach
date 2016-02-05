@@ -32,7 +32,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
-    static final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
+    public final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
 
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private final HandOverMessage<App> handOverApp;

@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -78,7 +77,7 @@ public class EditProfileActivity extends AppCompatActivity {
         mToolbar.setTitle("Edit Profile");
         mToolbar.inflateMenu(R.menu.edit_profile_menu);
         mToolbar.setOnMenuItemClickListener(navListener);
-        mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(this));
+        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(sharedPreferences);
@@ -114,6 +113,11 @@ public class EditProfileActivity extends AppCompatActivity {
                 false, //simple crop
                 COVER_PHOTO_RESIZE.width,
                 COVER_PHOTO_RESIZE.height));
+    }
+
+    @Override
+    public void onBackPressed() {
+        MiscUtils.navigateUp(this);
     }
 
     private final View.OnClickListener imagePicker = view -> {
@@ -168,7 +172,7 @@ public class EditProfileActivity extends AppCompatActivity {
             else if (!MiscUtils.isOnline(activity)) {
 
                 Toast.makeText(activity, "No internet found", Toast.LENGTH_SHORT).show();
-                NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //move back
+                onBackPressed(); //move back
             } else {
 
                 final SharedPreferences sharedPreferences = EditProfileActivity.this.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -178,7 +182,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 final String newEmailId = email.getText().toString();
 
                 if (oldUserName.equals(newUserName) && oldEmailId.equals(newEmailId) && toUploadProfilePhoto == null && toUploadCoverPhoto == null)
-                    NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //nothing to change, exit
+                    onBackPressed(); //nothing to change, exit
                 else {
 
                     ((InputMethodManager) EditProfileActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(firstName.getWindowToken(), 0);

@@ -6,12 +6,12 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import reach.project.R;
+import reach.project.utils.MiscUtils;
 
 public class InviteActivity extends AppCompatActivity {
 
@@ -27,9 +27,7 @@ public class InviteActivity extends AppCompatActivity {
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
 
         mToolbar.setTitle("Invite Friends");
-        mToolbar.setNavigationOnClickListener(v -> {
-            NavUtils.navigateUpFromSameTask(InviteActivity.this);
-        });
+        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.invitePager);
         viewPager.setAdapter(new InvitePagerAdapter(getSupportFragmentManager()));
@@ -38,6 +36,11 @@ public class InviteActivity extends AppCompatActivity {
 
         //sharedPreferences = getSharedPreferences("Reach", Context.MODE_APPEND);
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        MiscUtils.navigateUp(this);
     }
 
     private class InvitePagerAdapter extends FragmentPagerAdapter {

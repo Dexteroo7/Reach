@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -132,7 +131,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.editProfileToolbar);
         mToolbar.setTitle("");
-        mToolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(ProfileActivity.this));
+        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
         mToolbar.inflateMenu(R.menu.yourprofile_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
@@ -208,6 +207,11 @@ public class ProfileActivity extends AppCompatActivity {
             setRequestSent();
         } else
             sendButton.setOnClickListener(sendRequest);
+    }
+
+    @Override
+    public void onBackPressed() {
+        MiscUtils.navigateUp(this);
     }
 
     private void setRequestSent() {

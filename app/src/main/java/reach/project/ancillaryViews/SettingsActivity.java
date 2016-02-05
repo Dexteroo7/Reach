@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,6 +22,7 @@ import reach.project.R;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -46,14 +46,17 @@ public class SettingsActivity extends AppCompatActivity {
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.settingsToolbar);
 
         mToolbar.setTitle("Settings");
-        mToolbar.setNavigationOnClickListener(v -> {
-            NavUtils.navigateUpFromSameTask(SettingsActivity.this);
-        });
+        mToolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.settingsRecycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplication()));
         recyclerView.setAdapter(new SettingsAdapter());
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        MiscUtils.navigateUp(this);
     }
 
     private class SettingsHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
