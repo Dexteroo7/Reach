@@ -264,7 +264,7 @@ public enum CloudStorageUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.i("Ayush", "Server hash = " + hash);
+        Log.i("Ayush", "Server hash = " + bucketToUse + " " + hash);
 
         //compare hash
         if (currentHash.equals(hash))

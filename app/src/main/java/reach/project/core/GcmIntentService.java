@@ -267,7 +267,7 @@ public class GcmIntentService extends IntentService {
                 final ContentValues database = new ContentValues();
                 StaticData.NETWORK_CACHE.put(hostId, splitter[2]);
 
-                Log.i("Ayush", hostId + " Got PONG");
+//                Log.i("Ayush", hostId + " Got PONG");
 
                 friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
                 friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
@@ -357,8 +357,8 @@ public class GcmIntentService extends IntentService {
                     Log.i("Downloader", "Dropping request on mobile network");
                 else
                     ProcessManager.submitNetworkRequest(this, actualMessage);
-            } else
-                Log.i("Downloader", "Received unexpected GCM " + message);
+            }
+//                Log.i("Downloader", "Received unexpected GCM " + message);
         } else {
             switch (type) {
                 case "CURATED":

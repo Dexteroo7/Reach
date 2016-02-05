@@ -54,6 +54,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.hash.HashFunction;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -1272,7 +1273,8 @@ public enum MiscUtils {
 
         try {
             UsageTracker.trackApp(simpleParams, complexParams, UsageTracker.CLICK_APP);
-        } catch (JSONException ignored) {}
+        } catch (JSONException ignored) {
+        }
         activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
                 + packageName)));
     }
@@ -1470,7 +1472,6 @@ public enum MiscUtils {
 
 //        final Activity activity = getActivity();
         final ContentResolver contentResolver = activity.getContentResolver();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         if (contentResolver == null)
             return;
@@ -1491,10 +1492,10 @@ public enum MiscUtils {
                         ReachDatabaseHelper.COLUMN_PATH, //2
 
                         ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                        ReachDatabaseHelper.COLUMN_SENDER_ID,
-                        ReachDatabaseHelper.COLUMN_RECEIVER_ID,
-                        ReachDatabaseHelper.COLUMN_SIZE,
-
+                        ReachDatabaseHelper.COLUMN_SENDER_ID, //4
+                        ReachDatabaseHelper.COLUMN_RECEIVER_ID, //5
+                        ReachDatabaseHelper.COLUMN_SIZE, //6
+                        ReachDatabaseHelper.COLUMN_META_HASH //7
                 },
 
                 ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
@@ -1516,6 +1517,7 @@ public enum MiscUtils {
 
                 final MusicData musicData = new MusicData(
                         cursor.getLong(0), //id
+                        cursor.getString(7), //metaHash
                         reachDatabase.getLength(),
                         reachDatabase.getSenderId(),
                         cursor.getLong(1),
@@ -1535,6 +1537,7 @@ public enum MiscUtils {
             cursor.close();
         }
 
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
 
         //new song
@@ -1585,12 +1588,15 @@ public enum MiscUtils {
         }
         simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
         complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
+        complexParams.put(SongMetadata.META_HASH, reachDatabase.getMetaHash());
         complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
         complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
         complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+        complexParams.put(SongMetadata.UPLOADER_ID, reachDatabase.getSenderId() + "");
+        complexParams.put(SongMetadata.ALBUM, reachDatabase.getAlbumName());
 
         try {
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
@@ -1824,5 +1830,30 @@ public enum MiscUtils {
 //        }
 //        stringBuilder.append(text.substring(start));
 //        return stringBuilder.toString();
+//    }
+
+    public static String songHashCalculator(long userId,
+                                            long duration,
+                                            long size,
+                                            @NonNull String title,
+                                            @NonNull HashFunction hashFunction) {
+
+        return hashFunction.newHasher()
+                .putLong(userId)
+                .putLong(duration)
+                .putLong(size)
+                .putUnencodedChars(title)
+                .hash().toString();
+    }
+
+//    public static long songHashCalculator(@NonNull String title,
+//                                          @NonNull long duration,
+//                                          @NonNull long size,
+//                                          @NonNull HashFunction hashFunction) {
+//
+//        return hashFunction.newHasher()
+//                .putUnencodedChars(title)
+//                .putLong(duration)
+//                .putLong(size).hash().asLong();
 //    }
 }

@@ -387,12 +387,15 @@ public class PlayerActivity extends AppCompatActivity {
                 }
                 simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
                 complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
+                complexParams.put(SongMetadata.META_HASH, currentPlaying.getMetaHash());
                 complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
                 complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
                 complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
                 complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
+                complexParams.put(SongMetadata.UPLOADER_ID, currentPlaying.getSenderId() + "");
+                complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbumName());
 
                 try {
                     UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);

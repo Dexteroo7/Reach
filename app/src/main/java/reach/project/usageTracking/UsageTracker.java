@@ -50,6 +50,7 @@ public enum UsageTracker {
     private static final Executor asyncTracker = Executors.newSingleThreadExecutor();
 
     private static final Calendar calendar = Calendar.getInstance();
+
     static {
         calendar.setTimeZone(TimeZone.getTimeZone("IST"));
     }
@@ -77,8 +78,8 @@ public enum UsageTracker {
     };
 
     public static void trackApp(@NonNull Map<PostParams, String> simpleParams,
-                                 @NonNull Map<AppMetadata, String> complexParams,
-                                 @NonNull UsageTracker eventName) throws JSONException {
+                                @NonNull Map<AppMetadata, String> complexParams,
+                                @NonNull UsageTracker eventName) throws JSONException {
 
         final JSONObject jsonObject = new JSONObject();
 
@@ -184,5 +185,4 @@ public enum UsageTracker {
 
         asyncTracker.execute(track);
     }
-
 }

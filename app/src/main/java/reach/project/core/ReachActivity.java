@@ -594,9 +594,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             ReachDatabaseHelper.COLUMN_PATH, //2
 
                             ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                            ReachDatabaseHelper.COLUMN_SENDER_ID,
-                            ReachDatabaseHelper.COLUMN_RECEIVER_ID,
-                            ReachDatabaseHelper.COLUMN_SIZE,
+                            ReachDatabaseHelper.COLUMN_SENDER_ID, //4
+                            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //5
+                            ReachDatabaseHelper.COLUMN_SIZE, //6
+                            ReachDatabaseHelper.COLUMN_META_HASH //7
 
                     },
 
@@ -621,6 +622,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
                     final MusicData musicData = new MusicData(
                             cursor.getLong(0), //id
+                            cursor.getString(7), //meta-hash
                             size,
                             senderId,
                             cursor.getLong(1),

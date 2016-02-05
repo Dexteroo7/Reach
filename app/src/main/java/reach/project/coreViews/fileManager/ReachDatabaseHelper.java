@@ -8,9 +8,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.common.hash.Hashing;
+
 import reach.project.music.AlbumArtData;
 import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
+import reach.project.utils.MiscUtils;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -19,14 +22,16 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
     /**
      * COLUMN_ID : local dataBase table id, used exclusively for referencing locally
-     * COLUMN_SONG_ID : songId of where the song is located, used for referencing the reachSong table (upload/download both)
-     * COLUMN_UNIQUE_ID : a uniqueId which is used when this track will be uploaded (only downloads)
+     * COLUMN_SONG_ID : songId of where the song is located, used for referencing the MySongsHelper table (upload/download both)
+     * COLUMN_META_HASH : hash of displayName, duration and size and userId
+     * COLUMN_UNIQUE_ID : random UUID
      */
 
     public static final String REACH_TABLE = "reach";
     public static final String COLUMN_ID = "_id";
     public static final String COLUMN_SONG_ID = "songId";
     public static final String COLUMN_UNIQUE_ID = "uniqueId";
+    public static final String COLUMN_META_HASH = "metaHash";
 
     public static final String COLUMN_RECEIVER_ID = "receiverId"; //in-case of downloads = myId
     public static final String COLUMN_SENDER_ID = "senderId"; // in-case of uploads = myId
@@ -54,7 +59,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IS_LIKED = "globalPort";
 
     private static final String DATABASE_NAME = "reach.database.sql.ReachDatabaseHelper";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
@@ -62,6 +67,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             + " integer primary key autoincrement, " +
 
             COLUMN_SONG_ID + " long" + "," +
+            COLUMN_META_HASH + " text" + "," +
+
             COLUMN_RECEIVER_ID + " long" + "," +
             COLUMN_SENDER_ID + " long" + "," +
             COLUMN_OPERATION_KIND + " short" + "," +
@@ -118,7 +125,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     COLUMN_GENRE, //19
                     COLUMN_ALBUM_ART_DATA, //20
                     COLUMN_VISIBILITY, //21
-                    COLUMN_UNIQUE_ID
+                    COLUMN_UNIQUE_ID //22
             };
 
     /**
@@ -185,6 +192,16 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
         values.put(COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
 
+        //set the metaHash if absent
+        if (TextUtils.isEmpty(reachDatabase.getMetaHash()))
+            reachDatabase.setMetaHash(MiscUtils.songHashCalculator(
+                    reachDatabase.getReceiverId(), reachDatabase.getDuration(),
+                    reachDatabase.getLength(), reachDatabase.getDisplayName(),
+                    Hashing.sipHash24()));
+        values.put(COLUMN_META_HASH, reachDatabase.getMetaHash());
+
+        Log.i("Ayush", "Saving reach database with hash " + reachDatabase.getMetaHash());
+
         values.put(COLUMN_SIZE, reachDatabase.getLength());
         values.put(COLUMN_PROCESSED, reachDatabase.getProcessed());
         values.put(COLUMN_DATE_ADDED, reachDatabase.getAdded());
@@ -226,7 +243,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_ALBUM, //15
             COLUMN_ACTUAL_NAME, //16
             COLUMN_DATE_ADDED, //17
-            COLUMN_VISIBILITY //18
+            COLUMN_VISIBILITY, //18
+            COLUMN_META_HASH //19
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -253,6 +271,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
         return new MusicData(
                 cursor.getLong(0), //id
+                cursor.getString(19), //meta-hash
                 cursor.getLong(1), //length
                 cursor.getLong(2), //senderId
                 cursor.getLong(3), //processed
@@ -270,7 +289,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor.getColumnCount() != SONG_LIST.length)
             throw new IllegalArgumentException("Provided cursor of invalid length");
-        
+
         final String liked = cursor.getString(11);
         final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
 
@@ -306,86 +325,12 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         Log.w(ReachDatabaseHelper.class.getName(),
                 "Upgrading database from version " + oldVersion + " to "
                         + newVersion + ", which will destroy all old data");
-        database.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
-//        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM_ART_DATA + " blob");
+//        database.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
+        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_META_HASH + " text");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM + " text");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_GENRE + " text");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_VISIBILITY + " short");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_UNIQUE_ID + " long");
-        onCreate(database);
+//        onCreate(database);
     }
 }
-
-
-//private static final View.OnClickListener deleteListener = view -> {
-//
-//    final AlertDialog alertDialog = new AlertDialog.Builder(view.getContext())
-//            .setMessage("Are you sure you want to delete it?")
-//            .setPositiveButton("Yes", handleClick)
-//            .setNegativeButton("No", handleClick)
-//            .setIcon(R.drawable.icon_grey)
-//            .create();
-//    alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(view.getTag()));
-//
-//    alertDialog.show();
-//};
-//
-//private static final View.OnClickListener pauseListener = view -> {
-//
-//    final long id = (long) view.getTag();
-//    final Context context = view.getContext();
-//    final ContentResolver resolver = context.getContentResolver();
-//
-//    final Cursor cursor = resolver.query(
-//            ReachDatabaseProvider.CONTENT_URI,
-//            ReachDatabaseHelper.projection,
-//            ReachDatabaseHelper.COLUMN_ID + " = ?",
-//            new String[]{id + ""}, null);
-//
-//    if (cursor == null)
-//        return;
-//    if (!cursor.moveToFirst()) {
-//        cursor.close();
-//        return;
-//    }
-//
-//    final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
-//    final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id);
-//
-//    ///////////////
-//
-//    if (database.getStatus() != ReachDatabase.PAUSED_BY_USER) {
-//
-//        //pause operation (both upload/download case)
-//        final ContentValues values = new ContentValues();
-//        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
-//        context.getContentResolver().update(
-//                uri,
-//                values,
-//                ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                new String[]{id + ""});
-//        Log.i("Ayush", "Pausing");
-//    } else if (database.getOperationKind() == 1) {
-//
-//        //un-paused upload operation
-//        context.getContentResolver().delete(
-//                uri,
-//                ReachDatabaseHelper.COLUMN_ID + " = ?",
-//                new String[]{id + ""});
-//    } else {
-//
-//        //un-paused download operation
-//        final Optional<Runnable> optional = reset(database, resolver, context, uri);
-//        if (optional.isPresent())
-//            StaticData.temporaryFix.execute(optional.get());
-//        else //should never happen
-//            Toast.makeText(context, "Failed", Toast.LENGTH_SHORT);
-//        Log.i("Ayush", "Un-pausing");
-//    }
-//};
-//}
-//}
-//
-//        Status API Training Shop Blog About Pricing
-//
-

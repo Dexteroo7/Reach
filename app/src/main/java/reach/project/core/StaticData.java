@@ -64,7 +64,8 @@ public final class StaticData {
             ReachDatabaseHelper.COLUMN_IS_LIKED, //6
             ReachDatabaseHelper.COLUMN_SONG_ID, //7
             ReachDatabaseHelper.COLUMN_ARTIST, //8
-            ReachDatabaseHelper.COLUMN_DURATION}; //9
+            ReachDatabaseHelper.COLUMN_DURATION, //9
+            ReachDatabaseHelper.COLUMN_META_HASH}; //10
 
     public static final String[] DISK_PARTIAL = new String[]{
             MySongsHelper.COLUMN_ARTIST, //0
@@ -74,7 +75,9 @@ public final class StaticData {
             MySongsHelper.COLUMN_DISPLAY_NAME, //4
             MySongsHelper.COLUMN_ID, //5
             MySongsHelper.COLUMN_DURATION, //6
-            MySongsHelper.COLUMN_IS_LIKED}; //7
+            MySongsHelper.COLUMN_IS_LIKED, //7
+            ReachDatabaseHelper.COLUMN_META_HASH}; //8
+
 
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;
@@ -145,5 +148,6 @@ public final class StaticData {
     public static final String CLOUD_STORAGE_IMAGE_BASE_URL = "http://storage.googleapis.com/able-door-616-images/";
     public static final String DROP_BOX_PROMO = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
     public static final String DROP_BOX_MANAGER = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
+
     public static final LongSparseArray<String> NETWORK_CACHE = new LongSparseArray<>();
 }
