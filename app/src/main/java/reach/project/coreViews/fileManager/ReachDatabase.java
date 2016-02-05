@@ -1,5 +1,11 @@
 package reach.project.coreViews.fileManager;
 
+import android.text.TextUtils;
+
+import com.google.common.hash.Hashing;
+
+import reach.project.utils.MiscUtils;
+
 /**
  * Created by dexter on 14/9/14.
  */
@@ -22,7 +28,7 @@ public final class ReachDatabase {
 
     private String displayName = "hello_world"; //10
     private String actualName = "hello_world"; //11
-    private String mbid = "hello_world";
+    private String metaHash;
 
     private long length = 0; //12
     private long processed = 0; //13
@@ -34,7 +40,7 @@ public final class ReachDatabase {
 
     private String albumName = "hello_world"; //18
     private String genre = "hello_world"; //19
-    private byte [] albumArtData; //20
+    private byte[] albumArtData; //20
     private short visibility = 0; //21
 
     private long lastActive = 0; //not in sql
@@ -261,14 +267,6 @@ public final class ReachDatabase {
         this.duration = duration;
     }
 
-    public String getMbid() {
-        return mbid;
-    }
-
-    public void setMbid(String mbid) {
-        this.mbid = mbid;
-    }
-
     public String getAlbumName() {
         return albumName;
     }
@@ -307,5 +305,18 @@ public final class ReachDatabase {
 
     public void setUniqueId(long uniqueId) {
         this.uniqueId = uniqueId;
+    }
+
+    public String getMetaHash() {
+
+        if (TextUtils.isEmpty(metaHash)                                                                                                                                                                                                                                                   )
+            metaHash = MiscUtils.songHashCalculator(
+                    receiverId, duration, length, displayName, Hashing.sipHash24());
+
+        return metaHash;
+    }
+
+    public void setMetaHash(String metaHash) {
+        this.metaHash = metaHash;
     }
 }

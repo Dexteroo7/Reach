@@ -16,6 +16,7 @@ public class MusicData implements Parcelable {
     private final String path;
     private final String artistName;
     private final String albumName;
+    private final String metaHash;
 
     private final long dateAdded;
     private final long id;
@@ -30,6 +31,7 @@ public class MusicData implements Parcelable {
     private int primaryProgress; //changes
 
     public MusicData(long id,
+                     String metaHash,
                      long length,
                      long senderId,
                      long processed,
@@ -42,6 +44,7 @@ public class MusicData implements Parcelable {
                      long duration,
                      byte type) {
 
+        this.metaHash = metaHash;
         this.displayName = displayName;
         this.path = path;
         this.id = id;
@@ -56,21 +59,22 @@ public class MusicData implements Parcelable {
         this.albumName = albumName;
     }
 
-    public MusicData() {
-
-        this.displayName = "";
-        this.path = "";
-        this.id = 0;
-        this.length = 0;
-        this.senderId = 0;
-        this.processed = 0;
-        this.artistName = "";
-        this.type = 0;
-        this.isLiked = false;
-        this.duration = 0; //for MyLibrary case
-        this.dateAdded = 0;
-        this.albumName = "";
-    }
+//    public MusicData() {
+//
+//        this.displayName = "";
+//        this.path = "";
+//        this.id = 0;
+//        this.length = 0;
+//        this.senderId = 0;
+//        this.processed = 0;
+//        this.artistName = "";
+//        this.type = 0;
+//        this.isLiked = false;
+//        this.duration = 0; //for MyLibrary case
+//        this.dateAdded = 0;
+//        this.albumName = "";
+//        this.metaHash = "";
+//    }
 
     public void setDuration(long duration) {
         this.duration = duration;
@@ -197,6 +201,8 @@ public class MusicData implements Parcelable {
         secondaryProgress = in.readInt();
         albumName = in.readString();
         dateAdded = in.readLong();
+
+        metaHash = in.readString();
     }
 
     @Override
@@ -221,6 +227,8 @@ public class MusicData implements Parcelable {
         dest.writeInt(secondaryProgress);
         dest.writeString(albumName);
         dest.writeLong(dateAdded);
+
+        dest.writeString(metaHash);
     }
 
     public static final Parcelable.Creator<MusicData> CREATOR = new Parcelable.Creator<MusicData>() {
@@ -241,5 +249,9 @@ public class MusicData implements Parcelable {
 
     public long getDateAdded() {
         return dateAdded;
+    }
+
+    public String getMetaHash() {
+        return metaHash;
     }
 }

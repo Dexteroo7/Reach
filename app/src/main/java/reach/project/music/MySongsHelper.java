@@ -20,6 +20,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     //identity of the song (meta-data hash ?)
     public static final String COLUMN_SONG_ID = "songId";
+    public static final String COLUMN_META_HASH = "metaHash";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
     public static final String COLUMN_ACTUAL_NAME = "actualName";
@@ -28,6 +29,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     public static final String COLUMN_DURATION = "duration"; //duration
     public static final String COLUMN_SIZE = "size";
+
     public static final String COLUMN_GENRE = "genre";
     public static final String COLUMN_ALBUM_ART_DATA = "albumArtData";
     public static final String COLUMN_PATH = "path";
@@ -38,19 +40,22 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IS_LIKED = "isLiked";
 
     private static final String DATABASE_NAME = "reach.database.sql.MySongsHelper";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
             + SONG_TABLE + "(" + COLUMN_ID
             + " integer primary key autoincrement, " +
             COLUMN_SONG_ID + " long" + "," +
+            COLUMN_META_HASH + " text" + "," +
+
             COLUMN_DISPLAY_NAME + " text" + "," +
             COLUMN_ACTUAL_NAME + " text" + "," +
             COLUMN_GENRE + " text" + "," +
             COLUMN_PATH + " text" + "," +
             COLUMN_ARTIST + " text" + "," +
             COLUMN_DURATION + " long" + "," +
+
             COLUMN_ALBUM + " text" + "," +
             COLUMN_ALBUM_ART_DATA + " blob" + "," +
 
@@ -78,7 +83,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
                     COLUMN_SIZE,
                     COLUMN_YEAR,
                     COLUMN_DATE_ADDED,
-                    COLUMN_VISIBILITY
+                    COLUMN_VISIBILITY,
+                    COLUMN_META_HASH
             };
 
     public static ContentValues contentValuesCreator(Song song) {
@@ -95,8 +101,12 @@ public class MySongsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_ARTIST, song.artist);
         values.put(COLUMN_DURATION, song.duration);
         values.put(COLUMN_ALBUM, song.album);
+
         if (song.albumArtData != null)
             values.put(COLUMN_ALBUM_ART_DATA, song.albumArtData.toByteArray());
+
+        if (!TextUtils.isEmpty(song.fileHash))
+            values.put(COLUMN_META_HASH, song.fileHash);
 
         values.put(COLUMN_SIZE, song.size);
         values.put(COLUMN_YEAR, song.year);
@@ -107,19 +117,20 @@ public class MySongsHelper extends SQLiteOpenHelper {
     }
 
     public static final String[] DISK_LIST = new String[]{ //count = 8
-            MySongsHelper.COLUMN_SONG_ID, //0
-            MySongsHelper.COLUMN_SIZE, //1
-            MySongsHelper.COLUMN_PATH, //2
-            MySongsHelper.COLUMN_DISPLAY_NAME, //3
-            MySongsHelper.COLUMN_ARTIST, //4
-            MySongsHelper.COLUMN_DURATION, //5
-            MySongsHelper.COLUMN_ALBUM, //6
-            MySongsHelper.COLUMN_ID, //7
-            MySongsHelper.COLUMN_ALBUM_ART_DATA, //8
-            MySongsHelper.COLUMN_ACTUAL_NAME, //9
-            MySongsHelper.COLUMN_DATE_ADDED, //9
-            MySongsHelper.COLUMN_VISIBILITY, //10
-            MySongsHelper.COLUMN_IS_LIKED //11
+            COLUMN_SONG_ID, //0
+            COLUMN_SIZE, //1
+            COLUMN_PATH, //2
+            COLUMN_DISPLAY_NAME, //3
+            COLUMN_ARTIST, //4
+            COLUMN_DURATION, //5
+            COLUMN_ALBUM, //6
+            COLUMN_ID, //7
+            COLUMN_ALBUM_ART_DATA, //8
+            COLUMN_ACTUAL_NAME, //9
+            COLUMN_DATE_ADDED, //10
+            COLUMN_VISIBILITY, //11
+            COLUMN_IS_LIKED, //12
+            COLUMN_META_HASH //13
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -170,6 +181,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
         return new MusicData(
                 cursor.getLong(0), //songId
+                cursor.getString(13), //meta-hash
                 cursor.getLong(1), //length
                 serverId, //senderId
                 cursor.getLong(1), //processed = length
@@ -178,7 +190,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 cursor.getString(3), //displayName
                 cursor.getString(4), //artistName
                 cursor.getString(6), //albumName
-                cursor.getShort(11) == 1, //liked
+                cursor.getShort(12) == 1, //liked
                 cursor.getLong(5), //duration
                 (byte) 1); //type
     }

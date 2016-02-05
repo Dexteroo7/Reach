@@ -60,7 +60,7 @@
                 android:id="@+id/telephoneNumberList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="999"
+                android:text="0"
                 android:textSize="12sp"
                 android:layout_marginRight="5dp"
                 android:textColor="@color/reach_grey_new" />
@@ -74,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:text="999"
+                android:text="0"
                 android:textColor="@color/reach_grey_new" />
         </LinearLayout>
         <ImageView

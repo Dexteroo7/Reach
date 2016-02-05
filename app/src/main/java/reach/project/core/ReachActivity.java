@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.crittercism.app.Crittercism;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -539,10 +538,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     }, 1000L);
                 break;
             case OPEN_MY_PROFILE_APPS_FIRST:
-                if (mTabHost != null) {
-                    mTabHost.setCurrentTab(4);
+                if (mTabHost != null)
+                        mTabHost.setCurrentTab(4);
                     MyProfileFragment.setItem(0);
-                }
                 break;
             case OPEN_MY_PROFILE_SONGS:
                 if (mTabHost != null)
@@ -596,9 +594,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             ReachDatabaseHelper.COLUMN_PATH, //2
 
                             ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                            ReachDatabaseHelper.COLUMN_SENDER_ID,
-                            ReachDatabaseHelper.COLUMN_RECEIVER_ID,
-                            ReachDatabaseHelper.COLUMN_SIZE,
+                            ReachDatabaseHelper.COLUMN_SENDER_ID, //4
+                            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //5
+                            ReachDatabaseHelper.COLUMN_SIZE, //6
+                            ReachDatabaseHelper.COLUMN_META_HASH //7
 
                     },
 
@@ -623,6 +622,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
                     final MusicData musicData = new MusicData(
                             cursor.getLong(0), //id
+                            cursor.getString(7), //meta-hash
                             size,
                             senderId,
                             cursor.getLong(1),

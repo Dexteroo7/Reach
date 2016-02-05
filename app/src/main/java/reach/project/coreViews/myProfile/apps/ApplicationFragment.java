@@ -75,8 +75,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final boolean newVisibility = !parentAdapter.isVisible(packageName);
 
         //update in memory
-        synchronized (ParentAdapter.packageVisibility) {
-            ParentAdapter.packageVisibility.put(packageName, newVisibility);
+        synchronized (parentAdapter.packageVisibility) {
+            parentAdapter.packageVisibility.put(packageName, newVisibility);
         }
         //update in disk
         SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
@@ -97,16 +97,16 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final Activity activity = getActivity();
 
         parentAdapter = new ParentAdapter(this, activity);
+        //update the package visibilities
+        preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
+
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
-        preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
         new GetApplications().executeOnExecutor(visibilityHandler, activity);
-
-        //update the package visibilities
-        ParentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
 
         return rootView;
     }
@@ -187,8 +187,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                 MiscUtils.useFragment(reference, fragment -> {
 
                     //reset in memory
-                    synchronized (ParentAdapter.packageVisibility) {
-                        ParentAdapter.packageVisibility.put(packageName, !visibility);
+                    if (fragment.parentAdapter != null) {
+                        synchronized (fragment.parentAdapter.packageVisibility) {
+                            fragment.parentAdapter.packageVisibility.put(packageName, !visibility);
+                        }
                     }
                     //reset in disk
                     SharedPrefUtils.addPackageVisibility(fragment.preferences, packageName, !visibility);

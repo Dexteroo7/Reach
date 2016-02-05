@@ -45,6 +45,8 @@ public class InterceptAppInstall extends BroadcastReceiver {
 
         reference = new WeakReference<>(context);
         Log.i("Ayush", intent.getAction() + " ACTION");
+        if (intent.getBooleanExtra("android.intent.extra.REPLACING", false))
+            return;
 
         final PackageManager packageManager = context.getPackageManager();
         final List<ApplicationInfo> applicationInfoList = MiscUtils.getInstalledApps(packageManager);
@@ -193,7 +195,6 @@ public class InterceptAppInstall extends BroadcastReceiver {
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                         .setOnlyAlertOnce(true)
                         .setSmallIcon(R.drawable.icon_notification)
-                        .setContentInfo("click to handle application privacy")
                         .setContentIntent(PendingIntent.getActivity(context, 0, openMyProfileApps, PendingIntent.FLAG_CANCEL_CURRENT));
 
                 if (app.visible)

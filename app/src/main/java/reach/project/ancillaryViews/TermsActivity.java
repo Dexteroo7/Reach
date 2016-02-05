@@ -2,7 +2,6 @@ package reach.project.ancillaryViews;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.webkit.WebView;
@@ -18,7 +17,7 @@ public class TermsActivity extends AppCompatActivity {
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.termsToolbar);
         toolbar.setTitle("Terms and Conditions");
-        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(this));
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
         final WebView webView = (WebView) findViewById(R.id.webView);
         webView.loadUrl("http://letsreach.co/terms");
     }

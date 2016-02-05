@@ -2,7 +2,6 @@ package reach.project.utils;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.common.primitives.Booleans;
@@ -60,7 +59,7 @@ public enum AlbumArtUri {
                 .append("requestedHeight=").append(requestedHeight);
 
         final String toParse = buffer.toString();
-        Log.i("Ayush", toParse);
+//        Log.i("Ayush", toParse);
 
         value = Uri.parse(toParse);
         simpleCache.put(key, value);
@@ -109,7 +108,7 @@ public enum AlbumArtUri {
         }
 
         final String toParse = buffer.toString();
-        Log.i("Ayush", toParse);
+//        Log.i("Ayush", toParse);
 
         if (TextUtils.isEmpty(toParse))
             return Optional.absent();
