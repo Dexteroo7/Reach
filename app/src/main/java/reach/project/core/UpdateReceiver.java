@@ -1,13 +1,77 @@
 package reach.project.core;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.RemoteException;
+
+import com.google.common.hash.Hashing;
+
+import java.util.ArrayList;
+
+import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.utils.MiscUtils;
 
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        //adding metaHash entry for reachDataBase table
+
+        final ContentResolver resolver = context.getContentResolver();
+
+        final Cursor cursor = resolver.query(
+                ReachDatabaseProvider.CONTENT_URI,
+                new String[]{
+                        ReachDatabaseHelper.COLUMN_ID,
+                        ReachDatabaseHelper.COLUMN_RECEIVER_ID,
+                        ReachDatabaseHelper.COLUMN_DURATION,
+                        ReachDatabaseHelper.COLUMN_SIZE,
+                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME,
+                },
+                ReachDatabaseHelper.COLUMN_META_HASH + " = ? OR " +
+                        ReachDatabaseHelper.COLUMN_META_HASH + " = ?", new String[]{"", null}, null);
+
+        if (cursor == null)
+            return;
+
+        final ArrayList<ContentProviderOperation> operations = new ArrayList<>(cursor.getCount());
+
+        while (cursor.moveToNext()) {
+
+            final long entryId = cursor.getLong(0);
+            final String metaHash = MiscUtils.songHashCalculator(
+                    cursor.getLong(1), //userID
+                    cursor.getLong(2), //duration
+                    cursor.getLong(3), //size
+                    cursor.getString(4), //title
+                    Hashing.sipHash24());
+
+            final ContentValues contentValues = new ContentValues(1);
+            contentValues.put(ReachDatabaseHelper.COLUMN_META_HASH, metaHash);
+            operations.add(ContentProviderOperation
+                    .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + entryId))
+                    .withValues(contentValues)
+                    .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?",
+                            new String[]{entryId + ""})
+                    .build());
+        }
+        cursor.close();
+
+        if (operations.size() > 0)
+            try {
+                resolver.applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+            } catch (RemoteException | OperationApplicationException e) {
+                e.printStackTrace();
+            }
 
         //cleanse the songs table to remove songs of friends
 //        context.getContentResolver().delete(MySongsProvider.CONTENT_URI, null, null);

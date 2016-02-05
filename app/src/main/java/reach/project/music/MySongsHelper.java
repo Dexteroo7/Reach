@@ -30,7 +30,6 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_DURATION = "duration"; //duration
     public static final String COLUMN_SIZE = "size";
 
-
     public static final String COLUMN_GENRE = "genre";
     public static final String COLUMN_ALBUM_ART_DATA = "albumArtData";
     public static final String COLUMN_PATH = "path";
@@ -117,19 +116,19 @@ public class MySongsHelper extends SQLiteOpenHelper {
     }
 
     public static final String[] DISK_LIST = new String[]{ //count = 8
-            MySongsHelper.COLUMN_SONG_ID, //0
-            MySongsHelper.COLUMN_SIZE, //1
-            MySongsHelper.COLUMN_PATH, //2
-            MySongsHelper.COLUMN_DISPLAY_NAME, //3
-            MySongsHelper.COLUMN_ARTIST, //4
-            MySongsHelper.COLUMN_DURATION, //5
-            MySongsHelper.COLUMN_ALBUM, //6
-            MySongsHelper.COLUMN_ID, //7
-            MySongsHelper.COLUMN_ALBUM_ART_DATA, //8
-            MySongsHelper.COLUMN_ACTUAL_NAME, //9
-            MySongsHelper.COLUMN_DATE_ADDED, //9
-            MySongsHelper.COLUMN_VISIBILITY, //10
-            MySongsHelper.COLUMN_IS_LIKED //11
+            COLUMN_SONG_ID, //0
+            COLUMN_SIZE, //1
+            COLUMN_PATH, //2
+            COLUMN_DISPLAY_NAME, //3
+            COLUMN_ARTIST, //4
+            COLUMN_DURATION, //5
+            COLUMN_ALBUM, //6
+            COLUMN_ID, //7
+            COLUMN_ALBUM_ART_DATA, //8
+            COLUMN_ACTUAL_NAME, //9
+            COLUMN_DATE_ADDED, //9
+            COLUMN_VISIBILITY, //10
+            COLUMN_IS_LIKED //11
     };
 
     public static final String[] SONG_LIST = new String[]{

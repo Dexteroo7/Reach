@@ -8,9 +8,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.common.hash.Hashing;
+
 import reach.project.music.AlbumArtData;
 import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
+import reach.project.utils.MiscUtils;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -122,7 +125,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     COLUMN_GENRE, //19
                     COLUMN_ALBUM_ART_DATA, //20
                     COLUMN_VISIBILITY, //21
-                    COLUMN_UNIQUE_ID
+                    COLUMN_UNIQUE_ID //22
             };
 
     /**
@@ -188,8 +191,16 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
         values.put(COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
         values.put(COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
-        if (!TextUtils.isEmpty(reachDatabase.getMetaHash()))
-            values.put(COLUMN_META_HASH, reachDatabase.getMetaHash());
+
+        //set the metaHash if absent
+        if (TextUtils.isEmpty(reachDatabase.getMetaHash()))
+            reachDatabase.setMetaHash(MiscUtils.songHashCalculator(
+                    reachDatabase.getReceiverId(), reachDatabase.getDuration(),
+                    reachDatabase.getLength(), reachDatabase.getDisplayName(),
+                    Hashing.sipHash24()));
+        values.put(COLUMN_META_HASH, reachDatabase.getMetaHash());
+
+        Log.i("Ayush", "Saving reach database with hash " + reachDatabase.getMetaHash());
 
         values.put(COLUMN_SIZE, reachDatabase.getLength());
         values.put(COLUMN_PROCESSED, reachDatabase.getProcessed());
