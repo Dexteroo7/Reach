@@ -38,7 +38,7 @@ public class UpdateReceiver extends BroadcastReceiver {
                         ReachDatabaseHelper.COLUMN_DISPLAY_NAME,
                 },
                 ReachDatabaseHelper.COLUMN_META_HASH + " = ? OR " +
-                        ReachDatabaseHelper.COLUMN_META_HASH + " = ?", new String[]{"", null}, null);
+                        ReachDatabaseHelper.COLUMN_META_HASH + " = NULL", new String[]{""}, null);
 
         if (cursor == null)
             return;

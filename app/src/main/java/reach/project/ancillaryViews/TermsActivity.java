@@ -7,7 +7,6 @@ import android.support.v7.widget.Toolbar;
 import android.webkit.WebView;
 
 import reach.project.R;
-import reach.project.utils.MiscUtils;
 
 public class TermsActivity extends AppCompatActivity {
 
@@ -21,10 +20,5 @@ public class TermsActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
         final WebView webView = (WebView) findViewById(R.id.webView);
         webView.loadUrl("http://letsreach.co/terms");
-    }
-
-    @Override
-    public void onBackPressed() {
-        MiscUtils.navigateUp(this);
     }
 }

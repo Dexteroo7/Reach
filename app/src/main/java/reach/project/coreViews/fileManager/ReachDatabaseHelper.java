@@ -125,7 +125,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                     COLUMN_GENRE, //19
                     COLUMN_ALBUM_ART_DATA, //20
                     COLUMN_VISIBILITY, //21
-                    COLUMN_UNIQUE_ID //22
+                    COLUMN_UNIQUE_ID, //22
+                    COLUMN_META_HASH //23
             };
 
     /**
@@ -326,7 +327,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
                 "Upgrading database from version " + oldVersion + " to "
                         + newVersion + ", which will destroy all old data");
 //        database.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
-        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_META_HASH + " text");
+        if (newVersion > oldVersion)
+            database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_META_HASH + " text");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_ALBUM + " text");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_GENRE + " text");
 //        database.execSQL("ALTER TABLE " + REACH_TABLE + " ADD COLUMN " + COLUMN_VISIBILITY + " short");
