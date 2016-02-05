@@ -33,12 +33,12 @@ import reach.project.utils.MiscUtils;
 
 public class YourProfileActivity extends AppCompatActivity {
 
-    private static final String OPEN_PROFILE = "OPEN_PROFILE";
+    //private static final String OPEN_PROFILE = "OPEN_PROFILE";
 
     public static void openProfile(long userId, Context context) {
 
         final Intent intent = new Intent(context, YourProfileActivity.class);
-        intent.setAction(OPEN_PROFILE);
+        //intent.setAction(OPEN_PROFILE);
         intent.putExtra("userId", userId);
 
         context.startActivity(intent);
@@ -77,7 +77,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
         final Intent intent = getIntent();
         final long userId = intent.getLongExtra("userId", 0L);
-        if (userId == 0 || !intent.getAction().equals(OPEN_PROFILE)) {
+        if (userId == 0) {
             finish();
             return;
         }
@@ -121,7 +121,8 @@ public class YourProfileActivity extends AppCompatActivity {
             userHandle.setText("@" + uName.toLowerCase().split(" ")[0]);
             profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
                     Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + imageId), 100, 100));
-            coverPic.setImageURI(Uri.parse(cursor.getString(7)));
+            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + cursor.getString(7)), 500, 300));
 //            coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
 //                    Uri.parse(MiscUtils.getRandomPic()), 500, 500));
 
@@ -179,7 +180,7 @@ public class YourProfileActivity extends AppCompatActivity {
 
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
-        viewPager.setPageTransformer(true, (view, position) -> {
+        /*viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {
                 // Modify the default slide transition to shrink the page as well
@@ -195,7 +196,7 @@ public class YourProfileActivity extends AppCompatActivity {
                 view.setScaleX(scaleFactor);
                 view.setScaleY(scaleFactor);
             }
-        });
+        });*/
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
 
     }

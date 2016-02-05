@@ -2,52 +2,53 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
-    <android.support.v7.widget.CardView
+    <reach.project.utils.viewHelpers.CustomCardView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:fresco="http://schemas.android.com/apk/res-auto"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
-        android:layout_width="160dp"
-        android:layout_height="200dp"
-        android:layout_margin="5dp"
-        card_view:cardUseCompatPadding="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        card_view:cardCornerRadius="0dp"
         card_view:cardElevation="4dp"
-        card_view:cardCornerRadius="2dp"
+        card_view:cardUseCompatPadding="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         android:descendantFocusability="blocksDescendants">
         <android.support.percent.PercentRelativeLayout
+            android:background="#fff"
             android:layout_height="match_parent"
             android:layout_width="match_parent">
-
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/coverPic"
-                fresco:placeholderImage="@color/reach_grey"
-                fresco:placeholderImageScaleType="focusCrop"
+                fresco:placeholderImageScaleType="centerCrop"
+                fresco:placeholderImage="@drawable/cover_small"
                 android:layout_width="match_parent"
-                android:layout_height="70dp"/>
-
-            <com.facebook.drawee.view.SimpleDraweeView
+                app:layout_heightPercent="40%"/>
+            <View
+                android:layout_width="match_parent"
+                app:layout_heightPercent="40%"
+                android:background="#70000000" />
+            <reach.project.utils.viewHelpers.CustomDraweeView
                 android:id="@+id/profilePhotoList"
                 android:layout_centerHorizontal="true"
-                app:layout_marginTopPercent="18%"
+                app:layout_marginTopPercent="14%"
+                app:layout_widthPercent="50%"
                 fresco:placeholderImage="@drawable/default_profile_circle"
-                fresco:roundAsCircle="true"
-                android:layout_width="70dp"
-                android:layout_height="70dp"/>
-
+                fresco:roundAsCircle="true" />
             <TextView
                 android:id="@+id/userNameList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="marquee"
                 android:lines="1"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="2dp"
+                android:layout_margin="5dp"
                 android:layout_below="@id/profilePhotoList"
                 android:layout_centerHorizontal="true"
                 android:text="User Name"
                 android:textColor="@color/reach_color"
                 android:textSize="16sp" />
-
             <LinearLayout
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/userNameList"
@@ -56,28 +57,29 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginRight="2dp"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:src="@drawable/icon_song_indicator_gray" />
                 <TextView
                     android:id="@+id/telephoneNumberList"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="100"
-                    android:textColor="@color/reach_grey_light" />
+                    android:text="999"
+                    android:textSize="12sp"
+                    android:layout_marginRight="5dp"
+                    android:textColor="@color/reach_grey_new" />
                 <ImageView
                     android:id="@+id/appIcon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
                     android:src="@drawable/icon_apps_indicator_gray" />
                 <TextView
                     android:id="@+id/appCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="2dp"
+                    android:textSize="12sp"
                     android:text="999"
-                    android:textColor="@color/reach_grey_light" />
+                    android:textColor="@color/reach_grey_new" />
             </LinearLayout>
             <CheckBox
                 android:id="@+id/checkBox"
@@ -93,19 +95,5 @@
             android:background="#30f33b5b"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </android.support.v7.widget.CardView>
-    <TextView
-        android:id="@+id/newSongs"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:background="@drawable/circular_background_pink"
-        android:gravity="center"
-        android:layout_gravity="right"
-        android:layout_marginRight="18dp"
-        android:layout_marginTop="2dp"
-        android:text="+99"
-        android:visibility="gone"
-        android:elevation="5dp"
-        android:layout_alignParentRight="true"
-        android:textColor="#fff" />
+    </reach.project.utils.viewHelpers.CustomCardView>
 </FrameLayout>

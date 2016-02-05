@@ -202,8 +202,8 @@
 
 -dontwarn javax.annotation.**
 
--keepnames class reach.project.coreViews.fileManager.apps.ApplicationFragment { *; }
--keepnames class reach.project.coreViews.fileManager.music.downloading.DownloadingFragment { *; }
--keepnames class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }
--keepnames class reach.project.coreViews.push.music.MyLibraryFragment { *; }
+-keep class reach.project.coreViews.fileManager.apps.ApplicationFragment { *; }
+-keep class reach.project.coreViews.fileManager.music.downloading.DownloadingFragment { *; }
+-keep class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }
+-keep class reach.project.coreViews.push.music.MyLibraryFragment { *; }
 -keepnames class * extends android.app.Activity { *; }

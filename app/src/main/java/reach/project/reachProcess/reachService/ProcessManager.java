@@ -428,10 +428,10 @@ public class ProcessManager extends Service implements
         remoteViews.setTextViewText(R.id.NsongNamePlaying, generateNotificationText(totalDownloads, totalUploads));
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        foreGround.setAction(ReachActivity.OPEN_MY_PROFILE_MUSIC);
+        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_icon_notif)
+                .setSmallIcon(R.drawable.icon_notification)
                 .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
@@ -467,7 +467,7 @@ public class ProcessManager extends Service implements
 
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         notification = note
-                .setSmallIcon(R.drawable.ic_icon_notif)
+                .setSmallIcon(R.drawable.icon_notification)
                 .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
@@ -529,10 +529,10 @@ public class ProcessManager extends Service implements
             remoteViews.setImageViewResource(R.id.Npause_play, R.drawable.pause_white_selector);
 
         final Intent foreGround = new Intent(this, ReachActivity.class);
-        foreGround.setAction(ReachActivity.OPEN_MY_PROFILE_MUSIC);
+        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
         foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         final NotificationCompat.Builder note = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_icon_notif)
+                .setSmallIcon(R.drawable.icon_notification)
                 .setContentTitle("Playing Music")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContent(remoteViews)
@@ -598,12 +598,15 @@ public class ProcessManager extends Service implements
         }
         simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
         complexParams.put(SongMetadata.SONG_ID, musicData.getId() + "");
+        complexParams.put(SongMetadata.META_HASH, musicData.getMetaHash());
         complexParams.put(SongMetadata.ARTIST, musicData.getArtistName());
         complexParams.put(SongMetadata.TITLE, musicData.getDisplayName());
         complexParams.put(SongMetadata.DURATION, musicData.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, musicData.getLength() + "");
+        complexParams.put(SongMetadata.UPLOADER_ID, musicData.getSenderId() + "");
+        complexParams.put(SongMetadata.ALBUM, musicData.getAlbumName());
 
         try {
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.PLAY_SONG);
@@ -964,6 +967,7 @@ public class ProcessManager extends Service implements
 
             musicData = new MusicData(
                     cursor.getLong(0), //id
+                    cursor.getString(10), //meta-hash
                     cursor.getLong(1), //length
                     cursor.getLong(2), //senderId
                     cursor.getLong(3), //processed
@@ -980,6 +984,7 @@ public class ProcessManager extends Service implements
 
             musicData = new MusicData(
                     cursor.getLong(1), //songId
+                    cursor.getString(8), //meta-hash
                     cursor.getLong(2), //length
                     serverId, //senderId
                     cursor.getLong(2), //processed = length

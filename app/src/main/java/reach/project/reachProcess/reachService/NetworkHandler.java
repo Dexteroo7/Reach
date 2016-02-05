@@ -742,12 +742,15 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                 }
                 simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
                 complexParams.put(SongMetadata.SONG_ID, database.getSongId() + "");
+                complexParams.put(SongMetadata.META_HASH, database.getMetaHash());
                 complexParams.put(SongMetadata.ARTIST, database.getArtistName());
                 complexParams.put(SongMetadata.TITLE, database.getDisplayName());
                 complexParams.put(SongMetadata.DURATION, database.getDuration() + "");
                 complexParams.put(SongMetadata.SIZE, database.getLength() + "");
+                complexParams.put(SongMetadata.UPLOADER_ID, database.getSenderId() + "");
+                complexParams.put(SongMetadata.ALBUM, database.getAlbumName());
 
                 //obviously network available !
 

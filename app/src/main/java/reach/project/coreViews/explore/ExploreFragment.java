@@ -25,6 +25,7 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.core.ImagePipeline;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
@@ -239,8 +240,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             final JsonObject toReturn = new JsonObject();
             toReturn.addProperty("userId", myServerId);
+            /*MiscUtils.useFragment(reference, fragment -> {
+                final long lastRequestTime = SharedPrefUtils.getLastRequestTime(fragment.preferences);
+                    toReturn.addProperty("lastRequestTime", lastRequestTime);
+            });*/
             toReturn.add("friends", jsonArray);
-//            requestMap.put("lastRequestTime", SharedPrefUtils.getLastRequestTime(preferences));
 
             return toReturn;
 
@@ -265,7 +269,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         for (int index = 0; index < receivedData.size(); index++) {
 
             final JsonObject object = receivedData.get(index).getAsJsonObject();
-            containers.add(object);
             Log.d("Ayush", object.toString());
 
             final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
@@ -291,6 +294,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     break;
                 case MISC:
 
+                    final String typeText = MiscUtils.get(viewInfo, ExploreJSON.MiscViewInfo.TYPE_TEXT, "").getAsString();
+                    //TODO remove later
+                    if (!typeText.equalsIgnoreCase("Small"))
+                        continue;
                     image = MiscUtils.get(viewInfo, ExploreJSON.MiscViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
                             .setResizeOptions(SMALL_IMAGE_SIZE)
@@ -301,6 +308,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             }
 
             imagePipeline.prefetchToDiskCache(imageRequest, null);
+            containers.add(object);
         }
 
         if (containers.size() > 0)
@@ -354,6 +362,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_explore, container, false);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.exploreToolbar);
+        toolbar.setTitle("Discover");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
 
@@ -368,8 +377,23 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
 //        explorePager.setOffscreenPageLimit(1);
-        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
-        explorePager.setPageTransformer(true, PAGE_TRANSFORMER);
+        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
+        explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+            @Override
+            public void onPageSelected(int position) {
+                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Explore - Page Swiped")
+                        .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                        .setValue(1)
+                        .build());
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {}
+        });
 
         if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
             mListener.showSwipeCoach();
@@ -452,7 +476,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             case APP:
                 MiscUtils.openAppinPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
-                        .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong());
+                        .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
                 break;
 
             case MISC:
@@ -537,7 +561,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         reachDatabase.setVisibility((short) 1);
 
-        MiscUtils.startDownload(reachDatabase, getActivity(), rootView);
+        MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");
     }
 
     @Override

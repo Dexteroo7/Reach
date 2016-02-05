@@ -11,7 +11,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,13 +48,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         final Bundle args;
         MyLibraryFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new MyLibraryFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing MyLibraryFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new MyLibraryFragment());
+        fragment.setArguments(args = new Bundle());
         args.putString("header", header);
         return fragment;
     }

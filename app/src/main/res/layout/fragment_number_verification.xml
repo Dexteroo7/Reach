@@ -2,76 +2,70 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#fff">
-
     <ImageView
-        android:layout_width="wrap_content"
+        android:id="@+id/topImage"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:src="@drawable/onboarding_graphic_owl_2" />
-
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="150dp"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/logo_latest" />
-
-    <Button
-        android:id="@+id/verify"
-        android:layout_width="wrap_content"
-        android:layout_height="35dp"
-        android:layout_above="@id/logo"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="20dp"
-        android:background="@color/reach_color"
-        android:orientation="horizontal"
-        android:paddingLeft="35dp"
-        android:paddingRight="35dp"
-        android:text="SEND CODE"
-        android:textColor="#fff" />
-
-    <TextView
-        android:id="@+id/whyAns"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/verify"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="30dp"
+    <RelativeLayout
+        android:layout_below="@id/topImage"
         android:gravity="center"
-        android:text="We will send an SMS to your mobile number with a verification code. You need a valid mobile number to use Reach."
-        android:textColor="@color/reach_grey_light"
-        android:textSize="13sp" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/verify"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@color/reach_color"
+            android:orientation="horizontal"
+            android:paddingLeft="35dp"
+            android:paddingRight="35dp"
+            android:text="VERIFY"
+            android:textColor="#fff" />
 
-    <EditText
-        android:id="@+id/telephoneNumber"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/whyAns"
-        android:layout_centerHorizontal="true"
-        android:digits="0,1,2,3,4,5,6,7,8,9,-,+"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:hint="Enter phone number"
-        android:inputType="phone"
-        android:textColor="@color/reach_grey_light"/>
+        <TextView
+            android:id="@+id/whyAns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/verify"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="40dp"
+            android:gravity="center"
+            android:text="Help us bring you closer to your friends"
+            android:textColor="@color/reach_grey_light"
+            android:textSize="16sp" />
 
-    <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_alignTop="@id/telephoneNumber"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_toLeftOf="@id/telephoneNumber"
-        android:src="@drawable/icon_tag_phone" />
+        <EditText
+            android:id="@+id/telephoneNumber"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/whyAns"
+            android:layout_centerHorizontal="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:inputType="phone"
+            android:textColor="@color/reach_grey_light"/>
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/telephoneNumber"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp"
-        android:gravity="center"
-        android:text="Please verify your mobile number"
-        android:textColor="@color/reach_blue" />
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignTop="@id/telephoneNumber"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_toLeftOf="@id/telephoneNumber"
+            android:src="@drawable/icon_tag_phone" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/telephoneNumber"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:text="Enter your mobile number"
+            android:textColor="@color/reach_blue" />
+    </RelativeLayout>
 </RelativeLayout>

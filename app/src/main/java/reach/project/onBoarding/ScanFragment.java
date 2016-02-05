@@ -12,6 +12,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -58,7 +59,7 @@ public class ScanFragment extends Fragment {
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
-    private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 500);
+    private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
 
     @Nullable
     private static Uri profilePicUri = null;
@@ -74,13 +75,8 @@ public class ScanFragment extends Fragment {
 
         final Bundle args;
         ScanFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new ScanFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing ScanFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new ScanFragment());
+        fragment.setArguments(args = new Bundle());
 
         args.putString(USER_NAME, name);
         args.putString(OLD_IMAGE_ID, oldImageId);
@@ -113,9 +109,8 @@ public class ScanFragment extends Fragment {
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
         SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
-        coverPic.setImageURI(Uri.parse(oldCoverId));
-//        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-//                Uri.parse(MiscUtils.getRandomPic()), COVER_PHOTO_RESIZE));
+        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
+                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldCoverId), COVER_PHOTO_RESIZE));
 
 
         InputStream profilePicOptionsStream = null, profilePicDecodeStream = null;
@@ -162,7 +157,7 @@ public class ScanFragment extends Fragment {
 
     private static class SaveUserData extends AsyncTask<Object, Void, ReachUser> {
 
-        View next;
+        TextView next;
         TextView scanCount;
         TextView musicCount;
         TextView appCount;
@@ -176,7 +171,7 @@ public class ScanFragment extends Fragment {
             final InputStream profilePicOptionsStream, profilePicDecodeStream;
             final String userName, phoneNumber;
 
-            next = (View) objects[0];
+            next = (TextView) objects[0];
             scanCount = (TextView) objects[1];
             musicCount = (TextView) objects[2];
             appCount = (TextView) objects[3];
@@ -313,6 +308,13 @@ public class ScanFragment extends Fragment {
 
                 if (message.what == MetaDataScanner.FINISHED) {
 
+                    next.setText("CLICK TO PROCEED");
+                    MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
+                        @Override
+                        public void work(Context context) {
+                            next.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+                        }
+                    });
                     next.setOnClickListener(PROCEED);
                     next.setVisibility(View.VISIBLE);
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
@@ -367,7 +369,7 @@ public class ScanFragment extends Fragment {
         
         final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
-        intent.putExtra("firstTime", true);
+        intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
         activity.startActivity(intent);
         activity.finish();
     });

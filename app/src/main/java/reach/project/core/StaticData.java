@@ -1,6 +1,5 @@
 package reach.project.core;
 
-import android.content.pm.ApplicationInfo;
 import android.support.v4.util.LongSparseArray;
 
 import com.google.api.client.http.HttpRequestInitializer;
@@ -9,9 +8,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
 import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
 import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
@@ -67,7 +64,8 @@ public final class StaticData {
             ReachDatabaseHelper.COLUMN_IS_LIKED, //6
             ReachDatabaseHelper.COLUMN_SONG_ID, //7
             ReachDatabaseHelper.COLUMN_ARTIST, //8
-            ReachDatabaseHelper.COLUMN_DURATION}; //9
+            ReachDatabaseHelper.COLUMN_DURATION, //9
+            ReachDatabaseHelper.COLUMN_META_HASH}; //10
 
     public static final String[] DISK_PARTIAL = new String[]{
             MySongsHelper.COLUMN_ARTIST, //0
@@ -77,7 +75,9 @@ public final class StaticData {
             MySongsHelper.COLUMN_DISPLAY_NAME, //4
             MySongsHelper.COLUMN_ID, //5
             MySongsHelper.COLUMN_DURATION, //6
-            MySongsHelper.COLUMN_IS_LIKED}; //7
+            MySongsHelper.COLUMN_IS_LIKED, //7
+            ReachDatabaseHelper.COLUMN_META_HASH}; //8
+
 
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;

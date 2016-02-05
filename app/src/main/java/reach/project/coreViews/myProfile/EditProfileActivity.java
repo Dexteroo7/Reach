@@ -58,7 +58,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private static Uri toUploadCoverPhoto = null;
 
     @Nullable
-    private EditText firstName = null;
+    private EditText firstName = null, email = null;
     @Nullable
     private SimpleDraweeView profileDrawee = null;
     @Nullable
@@ -82,11 +82,15 @@ public class EditProfileActivity extends AppCompatActivity {
 
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(sharedPreferences);
+        final String emailId = SharedPrefUtils.getEmailId(sharedPreferences);
         myId = SharedPrefUtils.getServerId(sharedPreferences);
 
         firstName = (EditText) findViewById(R.id.name);
         firstName.setText(userName);
         firstName.setSelection(userName.length());
+        email = (EditText) findViewById(R.id.email);
+        email.setText(emailId);
+        email.setSelection(emailId.length());
 
         profileDrawee = (SimpleDraweeView) findViewById(R.id.profilePic);
         profileDrawee.setTag(IMAGE_PICKER_SELECT);
@@ -159,7 +163,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private final Toolbar.OnMenuItemClickListener navListener = item -> {
 
         MiscUtils.useActivity(reference, activity -> {
-            if (firstName.length() == 0) //let it throw, should never happen
+            if (firstName!=null && firstName.length() == 0) //let it throw, should never happen
                 Toast.makeText(activity, "Please enter your name", Toast.LENGTH_SHORT).show();
             else if (!MiscUtils.isOnline(activity)) {
 
@@ -170,8 +174,10 @@ public class EditProfileActivity extends AppCompatActivity {
                 final SharedPreferences sharedPreferences = EditProfileActivity.this.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                 final String oldUserName = SharedPrefUtils.getUserName(sharedPreferences);
                 final String newUserName = firstName.getText().toString();
+                final String oldEmailId = SharedPrefUtils.getEmailId(sharedPreferences);
+                final String newEmailId = email.getText().toString();
 
-                if (oldUserName.equals(newUserName) && toUploadProfilePhoto == null && toUploadCoverPhoto == null)
+                if (oldUserName.equals(newUserName) && oldEmailId.equals(newEmailId) && toUploadProfilePhoto == null && toUploadCoverPhoto == null)
                     NavUtils.navigateUpFromSameTask(EditProfileActivity.this); //nothing to change, exit
                 else {
 
@@ -190,7 +196,9 @@ public class EditProfileActivity extends AppCompatActivity {
                                         profilePicOptionsStream,
                                         profilePicDecodeStream,
                                         coderPicOptionsStream,
-                                        coderPicDecodeStream);
+                                        coderPicDecodeStream,
+                                        null,
+                                        newEmailId);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                         Toast.makeText(activity, "Could not update profile data", Toast.LENGTH_SHORT).show();
@@ -255,6 +263,7 @@ public class EditProfileActivity extends AppCompatActivity {
             final InputStream profilePicDecodeStream = (InputStream) name[2];
             final InputStream coderPicOptionsStream = (InputStream) name[3];
             final InputStream coderPicDecodeStream = (InputStream) name[4];
+            reachUser.setEmailId((String) name[6]);
 
             //upload profile pic
             if (profilePicOptionsStream != null && profilePicDecodeStream != null) {
@@ -293,6 +302,8 @@ public class EditProfileActivity extends AppCompatActivity {
                         SharedPrefUtils.storeCoverImageId(sharedPreferences, reachUser.getCoverPicId());
                     if (!TextUtils.isEmpty(reachUser.getUserName()))
                         SharedPrefUtils.storeUserName(sharedPreferences, reachUser.getUserName());
+                    if (!TextUtils.isEmpty(reachUser.getEmailId()))
+                        SharedPrefUtils.storeEmailId(sharedPreferences, reachUser.getEmailId());
                 });
             }
 
@@ -314,6 +325,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
                     final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                     final String userName = SharedPrefUtils.getUserName(sharedPreferences);
+                    final String emailId = SharedPrefUtils.getEmailId(sharedPreferences);
 
                     if (activity.profileDrawee != null)
                         activity.profileDrawee.setImageURI(AlbumArtUri.getUserImageUri(
@@ -333,10 +345,14 @@ public class EditProfileActivity extends AppCompatActivity {
                                 COVER_PHOTO_RESIZE.height));
                     if (activity.firstName != null)
                         activity.firstName.setText(userName);
+                    if (activity.email != null)
+                        activity.email.setText(emailId);
                 }
 
                 if (activity.firstName != null)
                     activity.firstName.requestFocus();
+                if (activity.email != null)
+                    activity.email.requestFocus();
             });
 
             MiscUtils.useReference(reference, Dialog::dismiss);

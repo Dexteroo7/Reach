@@ -56,6 +56,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             songSongItemHolder.songName.setText(song.displayName);
             songSongItemHolder.artistName.setText(song.artist);
+            songSongItemHolder.downButton.setImageResource(R.drawable.icon_download_gray);
 
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(song.album, song.artist, song.displayName, false);
 
@@ -80,7 +81,6 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             final RecentSong recentSong = (RecentSong) message;
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
-            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             simpleListHolder.headerText.setText(recentSong.title);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(simpleListHolder.listOfItems.getContext(), 2));
@@ -90,7 +90,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             final SmartSong smartSong = (SmartSong) message;
             final MoreListHolder simpleListHolder = (MoreListHolder) holder;
-            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
+            simpleListHolder.itemView.setBackgroundResource(R.drawable.border_shadow1);
             simpleListHolder.headerText.setText(smartSong.title);
             if (simpleListHolder.listOfItems.getLayoutManager() == null)
                 simpleListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(simpleListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
@@ -114,14 +114,15 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                         throw new IllegalArgumentException("Song item holder passed on an illegal value type");
                 });
             case RECENT_LIST_TYPE:
-                return new MoreListHolder(parent);
-
-            case SMART_LIST_TYPE:
                 return new MoreListHolder(parent,
                         R.layout.list_with_more_button_padding, //Main resource id
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
                         R.id.moreButton); //id of more button
+
+            case SMART_LIST_TYPE:
+                return new MoreListHolder(parent);
+
             default:
                 throw new IllegalArgumentException("Unknown view type found");
         }

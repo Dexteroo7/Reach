@@ -16,7 +16,6 @@
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/albumArt"
             fresco:placeholderImage="@drawable/default_music_icon"
-            card_view:placeholderImageScaleType="centerCrop"
             android:layout_width="match_parent"
             android:layout_marginBottom="10dp"
             android:layout_height="150dp" />
@@ -29,11 +28,11 @@
             android:paddingBottom="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.facebook.drawee.view.SimpleDraweeView
+            <ImageView
                 android:id="@+id/downButton"
                 android:layout_centerVertical="true"
                 android:layout_alignParentRight="true"
-                fresco:placeholderImage="@drawable/icon_play_circle_pink"
+                android:src="@drawable/icon_play_circle_pink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
             <TextView

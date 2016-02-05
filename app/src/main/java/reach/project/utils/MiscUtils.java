@@ -22,7 +22,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NavUtils;
 import android.support.v4.util.ArrayMap;
 import android.text.TextUtils;
 import android.util.ArraySet;
@@ -49,9 +48,6 @@ import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
 import com.facebook.imagepipeline.image.CloseableImage;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
-import com.firebase.client.AuthData;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -94,7 +90,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 import reach.backend.entities.messaging.model.MyBoolean;
-import reach.backend.entities.userApi.model.MyString;
 import reach.project.apps.App;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
@@ -185,22 +180,6 @@ public enum MiscUtils {
                 closeable.close();
             } catch (IOException ignored) {
             }
-    }
-
-    public static String getRandomPic() {
-
-        final int option = ThreadLocalRandom.current().nextInt(3);
-        switch (option) {
-
-            case 0:
-                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
-            case 1:
-                return "https://pexels.imgix.net/photos/6620/pexels-photo.jpeg?fit=crop&w=320&h=240";
-            case 2:
-                return "https://pexels.imgix.net/photos/5876/food-salad-healthy-vegetables.jpg?fit=crop&w=320&h=240";
-            default:
-                return "https://pexels.imgix.net/photos/2242/wall-sport-green-bike.jpg?fit=crop&w=320&h=240";
-        }
     }
 
     public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
@@ -1248,7 +1227,7 @@ public enum MiscUtils {
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
-        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
         final Iterator<ApplicationInfo> iterator = applications.iterator();
 
         while (iterator.hasNext()) {
@@ -1263,13 +1242,13 @@ public enum MiscUtils {
         return applications;
     }
 
-    public static void openAppinPlayStore(Activity activity, String packageName, Long senderId) {
+    public static void openAppinPlayStore(Activity activity, String packageName, Long senderId, String page) {
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach",
                 Context.MODE_PRIVATE);
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Open App")
                 .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
-                .setLabel("App - " + packageName + ", From - " + senderId)
+                .setLabel(page)
                 .setValue(1)
                 .build());
 
@@ -1410,7 +1389,7 @@ public enum MiscUtils {
         ////////
     }
 
-    public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
+    /*public synchronized static void checkChatToken(WeakReference<SharedPreferences> preferencesWeakReference,
                                                    WeakReference<Firebase> firebaseWeakReference,
                                                    WeakReference<? extends Activity> toHelpTrack) {
 
@@ -1486,13 +1465,12 @@ public enum MiscUtils {
                 }
             });
         }
-    }
+    }*/
 
-    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView) {
+    public static void startDownload(@Nonnull ReachDatabase reachDatabase, Activity activity, View snackView, String page) {
 
 //        final Activity activity = getActivity();
         final ContentResolver contentResolver = activity.getContentResolver();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         if (contentResolver == null)
             return;
@@ -1513,10 +1491,10 @@ public enum MiscUtils {
                         ReachDatabaseHelper.COLUMN_PATH, //2
 
                         ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                        ReachDatabaseHelper.COLUMN_SENDER_ID,
-                        ReachDatabaseHelper.COLUMN_RECEIVER_ID,
-                        ReachDatabaseHelper.COLUMN_SIZE,
-
+                        ReachDatabaseHelper.COLUMN_SENDER_ID, //4
+                        ReachDatabaseHelper.COLUMN_RECEIVER_ID, //5
+                        ReachDatabaseHelper.COLUMN_SIZE, //6
+                        ReachDatabaseHelper.COLUMN_META_HASH //7
                 },
 
                 ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
@@ -1538,6 +1516,7 @@ public enum MiscUtils {
 
                 final MusicData musicData = new MusicData(
                         cursor.getLong(0), //id
+                        cursor.getString(7), //metaHash
                         reachDatabase.getLength(),
                         reachDatabase.getSenderId(),
                         cursor.getLong(1),
@@ -1557,6 +1536,7 @@ public enum MiscUtils {
             cursor.close();
         }
 
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String clientName = SharedPrefUtils.getUserName(sharedPreferences);
 
         //new song
@@ -1568,7 +1548,7 @@ public enum MiscUtils {
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Add song failed")
                     .setAction("User Name - " + clientName)
-                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                    .setLabel(page)
                     .setValue(1)
                     .build());
             return;
@@ -1607,12 +1587,15 @@ public enum MiscUtils {
         }
         simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+        final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
         complexParams.put(SongMetadata.SONG_ID, reachDatabase.getSongId() + "");
+        complexParams.put(SongMetadata.META_HASH, reachDatabase.getMetaHash());
         complexParams.put(SongMetadata.ARTIST, reachDatabase.getArtistName());
         complexParams.put(SongMetadata.TITLE, reachDatabase.getDisplayName());
         complexParams.put(SongMetadata.DURATION, reachDatabase.getDuration() + "");
         complexParams.put(SongMetadata.SIZE, reachDatabase.getLength() + "");
+        complexParams.put(SongMetadata.UPLOADER_ID, reachDatabase.getSenderId() + "");
+        complexParams.put(SongMetadata.ALBUM, reachDatabase.getAlbumName());
 
         try {
             UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.DOWNLOAD_SONG);
@@ -1622,9 +1605,10 @@ public enum MiscUtils {
         if (snackView != null)
             Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_LONG)
                     .setAction("Open manager", v -> {
-                        if (activity.getClass() != ReachActivity.class)
-                            NavUtils.navigateUpFromSameTask(activity);
-                        ReachActivity.openDownloading();
+                        final Intent foreGround = new Intent(activity, ReachActivity.class);
+                        foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+                        foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        activity.startActivity(foreGround);
                     })
                     .show();
 

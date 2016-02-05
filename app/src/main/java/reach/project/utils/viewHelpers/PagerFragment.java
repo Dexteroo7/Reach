@@ -100,6 +100,15 @@ public class PagerFragment extends Fragment {
         return bundle;
     }
 
+    public void setInnerItem(int position, int innerPosition) {
+
+        setItem(position);
+        if (viewPager == null || fragments == null || fragments[position] == null)
+            return;
+        PagerInnerFragment pagerInnerFragment = (PagerInnerFragment) fragments[position];
+        pagerInnerFragment.setItem(innerPosition);
+    }
+
     public void setItem(int position) {
 
         if (viewPager != null)
@@ -110,6 +119,8 @@ public class PagerFragment extends Fragment {
     private ViewPager viewPager = null;
     @Nullable
     private SuperInterface mListener = null;
+
+    private Fragment[] fragments = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -127,7 +138,7 @@ public class PagerFragment extends Fragment {
 
         if (title != null) {
 
-            if (title.equals("Push"))
+            if (title.equals("Share"))
                 toolbar.inflateMenu(R.menu.menu_push);
             else
                 toolbar.inflateMenu(R.menu.pager_menu);
@@ -139,7 +150,7 @@ public class PagerFragment extends Fragment {
 
         final Pages[] pages = (Pages[]) parcelables;
         final String[] titles = new String[pages.length];
-        final Fragment[] fragments = new Fragment[pages.length];
+        fragments = new Fragment[pages.length];
 
         for (int index = 0; index < pages.length; index++) {
 
@@ -178,7 +189,7 @@ public class PagerFragment extends Fragment {
         });
 
         viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
-        viewPager.setPageTransformer(true, (view, position) -> {
+        /*viewPager.setPageTransformer(true, (view, position) -> {
 
             if (position <= 1) {
 
@@ -195,7 +206,7 @@ public class PagerFragment extends Fragment {
                 view.setScaleX(scaleFactor);
                 view.setScaleY(scaleFactor);
             }
-        });
+        });*/
         tabLayout.setViewPager(viewPager);
         return rootView;
     }

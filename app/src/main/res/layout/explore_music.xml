@@ -21,7 +21,8 @@
             android:layout_height="match_parent">
             <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/image"
-                fresco:placeholderImage="@drawable/logo_latest"
+                android:background="@drawable/explore_bg"
+                fresco:placeholderImage="@drawable/explore_placeholder"
                 android:layout_width="match_parent"
                 app:layout_heightPercent="60%" />
             <View
@@ -29,16 +30,16 @@
                 android:layout_width="match_parent"
                 android:layout_below="@id/image"
                 app:layout_heightPercent="1%" />
-            <ImageView
+            <reach.project.utils.viewHelpers.CustomImageView
                 android:id="@+id/downButton"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                app:layout_marginTopPercent="52%"
+                app:layout_widthPercent="21%"
+                app:layout_marginTopPercent="51%"
                 android:layout_centerHorizontal="true"
                 android:background="@android:color/transparent"
                 android:src="@drawable/explore_download_btn" />
             <LinearLayout
                 android:id="@+id/type"
+                app:layout_marginTopPercent="1%"
                 android:gravity="center_vertical"
                 android:layout_below="@id/downButton"
                 android:layout_centerHorizontal="true"
@@ -90,7 +91,7 @@
             <LinearLayout
                 android:id="@+id/handle"
                 android:gravity="center_vertical"
-                app:layout_marginTopPercent="2%"
+                app:layout_marginTopPercent="1%"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/subtitle"
                 android:orientation="horizontal"

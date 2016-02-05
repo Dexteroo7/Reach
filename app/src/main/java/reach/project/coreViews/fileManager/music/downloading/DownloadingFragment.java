@@ -9,7 +9,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,13 +39,8 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         final Bundle args;
         DownloadingFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new DownloadingFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing DownloadingFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new DownloadingFragment());
+        fragment.setArguments(args = new Bundle());
         args.putString("header", header);
         return fragment;
     }

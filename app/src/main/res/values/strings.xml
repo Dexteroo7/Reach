@@ -7,6 +7,7 @@
     <string name="title_activity_player">PlayerActivity</string>
     <string name="title_activity_edit_profile">EditProfileActivity</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_terms">TermsActivity</string>
     <string name="title_activity_your_profile">YourProfileActivity</string>
     <string name="title_activity_push">PushActivity</string>
     <string name="action_settings">Settings</string>

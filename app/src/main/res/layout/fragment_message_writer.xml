@@ -15,16 +15,25 @@
             android:layout_height="?attr/actionBarSize"
             app:titleTextColor="@color/reach_color"
             app:layout_scrollFlags="scroll|enterAlways"
-            app:navigationIcon="@drawable/abc_ic_ab_back_mtrl_am_alpha"
+            app:navigationIcon="@drawable/ic_arrow_back_pink"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
     </android.support.design.widget.AppBarLayout>
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="10dp"
+    <FrameLayout
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:gravity="start"
-        android:hint="Enter your message here"
-        android:id="@+id/message"/>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:gravity="start"
+            android:hint="Enter your message here"
+            android:id="@+id/message"/>
+        <View
+            android:layout_gravity="top"
+            android:background="@drawable/shadow_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="3dp" />
+    </FrameLayout>
 </android.support.design.widget.CoordinatorLayout>

@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -27,18 +26,20 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
 
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.core.StaticData;
+import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.player.PlayerActivity;
+import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -47,11 +48,14 @@ import reach.project.utils.SharedPrefUtils;
  */
 public class MyProfileFragment extends Fragment {
 
+    private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
+    private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
+
     private final Toolbar.OnMenuItemClickListener menuItemClickListener = item -> {
 
         boolean check;
         switch (item.getItemId()) {
-            case R.id.show_visible:
+            /*case R.id.show_visible:
                 check = !item.isChecked();
                 //TODO show visible files
                 item.setChecked(check);
@@ -60,9 +64,12 @@ public class MyProfileFragment extends Fragment {
                 check = !item.isChecked();
                 //TODO show invisible files
                 item.setChecked(check);
-                return true;
+                return true;*/
             case R.id.player_button:
                 PlayerActivity.openActivity(getContext());
+                return true;
+            case R.id.settings_button:
+                startActivity(new Intent(getContext(), SettingsActivity.class));
                 return true;
         }
         return false;
@@ -102,6 +109,14 @@ public class MyProfileFragment extends Fragment {
         }
     };
 
+    private static ViewPager viewPager = null;
+
+    public static void setItem(int position) {
+
+        if (viewPager != null)
+            viewPager.setCurrentItem(position, true);
+    }
+
 //    public void onDestroyView() {
 //        super.onDestroyView();
 //        Log.d("Ashish", "MyProfileFragment - onDestroyView");
@@ -126,6 +141,7 @@ public class MyProfileFragment extends Fragment {
         Log.d("Ashish", "MyProfileFragment - onCreateView");
 
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);
+        viewPager = materialViewPager.getViewPager();
         final Toolbar toolbar = materialViewPager.getToolbar();
         final Activity activity = getActivity();
 
@@ -148,13 +164,22 @@ public class MyProfileFragment extends Fragment {
         ((TextView) headerRoot.findViewById(R.id.userHandle)).setText("@" + userName.toLowerCase().split(" ")[0]);
 
         final SimpleDraweeView profilePic = (SimpleDraweeView) headerRoot.findViewById(R.id.profilePic);
-        profilePic.setController(MiscUtils.getControllerResize(profilePic.getController(),
-                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + SharedPrefUtils.getImageId(preferences)), 100, 100));
+        profilePic.setImageURI(AlbumArtUri.getUserImageUri(
+                SharedPrefUtils.getServerId(preferences),
+                "imageId",
+                "rw", //webP
+                true, //circular
+                PROFILE_PHOTO_RESIZE.width,
+                PROFILE_PHOTO_RESIZE.height));
 
         final SimpleDraweeView coverPic = (SimpleDraweeView) headerRoot.findViewById(R.id.coverPic);
-        coverPic.setImageURI(Uri.parse(SharedPrefUtils.getCoverImageId(preferences)));
-//        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-//                Uri.parse(MiscUtils.getRandomPic()), 500, 500));
+        coverPic.setImageURI(AlbumArtUri.getUserImageUri(
+                SharedPrefUtils.getServerId(preferences),
+                "coverPicId",
+                "rw", //webP
+                false, //simple crop
+                COVER_PHOTO_RESIZE.width,
+                COVER_PHOTO_RESIZE.height));
 
         final PagerAdapter pagerAdapter = new FragmentPagerAdapter(getChildFragmentManager()) {
 
@@ -190,11 +215,10 @@ public class MyProfileFragment extends Fragment {
             }
         };
 
-        final ViewPager viewPager = materialViewPager.getViewPager();
         viewPager.setAdapter(pagerAdapter);
         viewPager.setOffscreenPageLimit(viewPager.getAdapter().getCount());
-        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(40)));
-        viewPager.setPageTransformer(true, PAGE_TRANSFORMER);
+        viewPager.setPageMargin(-1 * (MiscUtils.dpToPx(20)));
+        //viewPager.setPageTransformer(true, PAGE_TRANSFORMER);
 
         materialViewPager.setMaterialViewPagerListener(MATERIAL_LISTENER);
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);

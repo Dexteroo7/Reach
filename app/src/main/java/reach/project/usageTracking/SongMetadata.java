@@ -6,8 +6,16 @@ package reach.project.usageTracking;
 public enum SongMetadata {
 
     SONG_ID,
+    META_HASH,
+
     ARTIST,
     TITLE,
     DURATION,
-    SIZE
+    SIZE,
+    UPLOADER_ID,
+
+    ACTUAL_NAME,
+    USER_NAME,
+    ALBUM,
+    GENRE
 }

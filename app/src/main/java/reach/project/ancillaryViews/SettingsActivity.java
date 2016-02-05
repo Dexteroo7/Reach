@@ -74,6 +74,7 @@ public class SettingsActivity extends AppCompatActivity {
                 case 1:
                     break;
                 case 2:
+                    startActivity(new Intent(SettingsActivity.this, TermsActivity.class));
                     break;
                 case 3:
                     try {

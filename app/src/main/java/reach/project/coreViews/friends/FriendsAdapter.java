@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -158,11 +157,11 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             if (shouldShowCoach1) {
                 final ToolTip toolTip = new ToolTip()
                         .setTextColor(Color.WHITE)
-                        .setTitle("Hello!")
+                        .setTitle("View Profile")
                         .setShadow(false)
-                        .setDescription("Click to view tutorial. Next button is disabled until tutorial is viewed");
+                        .setDescription("Tap to browse their library");
                 final Overlay overlay = new Overlay()
-                        .setBackgroundColor(Color.parseColor("#99000000"))
+                        .setBackgroundColor(Color.parseColor("#BF000000"))
                         .setStyle(Overlay.Style.Rectangle);
                 tourGuide = TourGuide.init((Activity) viewHolder.itemView.getContext()).with(TourGuide.Technique.Click)
                         .setToolTip(toolTip)
@@ -182,8 +181,10 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             final int numberOfSongs = cursorExactType.getInt(7);
             final int numberOfApps = cursorExactType.getInt(8);
-//            final int newSongs = cursorExactType.getInt(9);
-//            final int newApps = cursorExactType.getInt(10);
+            int newSongs = cursorExactType.getInt(9);
+            if (newSongs > 99)
+                newSongs = 99;
+            //final int newApps = cursorExactType.getInt(10);
             //final int newFiles = newSongs + newApps;
 
             //Capitalize only if required
@@ -195,16 +196,17 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
             viewHolder.appCount.setText(numberOfApps + "");
-            /*if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
+            if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
 
                 //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
+                viewHolder.newSongsView.setVisibility(View.VISIBLE);
                 viewHolder.newSongs.setText("+" + newSongs);
             } else {
-
-                viewHolder.newSongs.setVisibility(View.INVISIBLE);
+                viewHolder.newSongs.setVisibility(View.GONE);
+                viewHolder.newSongsView.setVisibility(View.GONE);
                 viewHolder.newSongs.setText("");
-            }*/
+            }
 
             //first invalidate
             //viewHolder.profilePhotoList.setController(null);
@@ -224,7 +226,13 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                     uriToDisplay = Uri.parse("res:///" + R.drawable.default_profile02);
             }*/
 
-            viewHolder.coverPic.setImageURI(Uri.parse(coverPicId));
+            viewHolder.coverPic.setImageURI(AlbumArtUri.getUserImageUri(
+                    serverId,
+                    "coverPicId",
+                    "rw",
+                    false,
+                    250,
+                    150));
             //viewHolder.coverPic.setController(MiscUtils.getControllerResize(viewHolder.coverPic.getController(), Uri.parse(MiscUtils.getRandomPic()), resizeOptions));
             viewHolder.lockIcon.setVisibility(View.GONE);
             viewHolder.lockText.setVisibility(View.GONE);

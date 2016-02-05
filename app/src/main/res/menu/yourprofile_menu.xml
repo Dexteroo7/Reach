@@ -5,13 +5,13 @@
         android:id="@+id/player_button"
         android:title="Player"
         app:showAsAction="always"
-        android:icon="@drawable/icon_equalizer_white"
+        android:icon="@drawable/ic_equalizer_white"
         />
     <item
         android:id="@+id/notif_button"
         android:title="Notifications"
         app:showAsAction="always"
-        android:icon="@drawable/icon_notification_new_white"
+        android:icon="@drawable/icon_notification_white"
         />
     <item
         android:id="@+id/settings_button"

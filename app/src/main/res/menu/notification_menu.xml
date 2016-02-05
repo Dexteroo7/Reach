@@ -6,6 +6,6 @@
         android:id="@+id/clear_button"
         android:title="Clear"
         app:showAsAction="always"
-        android:icon="@drawable/icon_done_pink"
+        android:icon="@drawable/ic_clear_all_pink"
         />
 </menu>

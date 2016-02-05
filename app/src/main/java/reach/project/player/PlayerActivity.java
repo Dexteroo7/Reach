@@ -92,8 +92,6 @@ public class PlayerActivity extends AppCompatActivity {
     @Nullable
     private View likeButton = null;
 
-    private static long serverId = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -109,7 +107,9 @@ public class PlayerActivity extends AppCompatActivity {
 
         playerPos = (TextView) findViewById(R.id.playerPos);
 
-        ((Toolbar) findViewById(R.id.playerToolbar)).setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
+        toolbar.setTitle("Player");
+        toolbar.setNavigationOnClickListener(v -> NavUtils.navigateUpFromSameTask(PlayerActivity.this));
         (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
@@ -364,6 +364,7 @@ public class PlayerActivity extends AppCompatActivity {
                 return;
 
             final Context context = view.getContext();
+            final long serverId = SharedPrefUtils.getServerId(context.getSharedPreferences("Reach", MODE_PRIVATE));
 
             if (toggleLiked(context)) {
 
@@ -381,12 +382,15 @@ public class PlayerActivity extends AppCompatActivity {
                 }
                 simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
-                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(5);
+                final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
                 complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
+                complexParams.put(SongMetadata.META_HASH, currentPlaying.getMetaHash());
                 complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
                 complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
                 complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
                 complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
+                complexParams.put(SongMetadata.UPLOADER_ID, currentPlaying.getSenderId() + "");
+                complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbumName());
 
                 try {
                     UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);

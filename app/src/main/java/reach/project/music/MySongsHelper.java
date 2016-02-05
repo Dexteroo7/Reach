@@ -128,7 +128,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
             COLUMN_ACTUAL_NAME, //9
             COLUMN_DATE_ADDED, //9
             COLUMN_VISIBILITY, //10
-            COLUMN_IS_LIKED //11
+            COLUMN_IS_LIKED, //11
+            COLUMN_META_HASH //12
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -179,6 +180,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
         return new MusicData(
                 cursor.getLong(0), //songId
+                cursor.getString(12), //meta-hash
                 cursor.getLong(1), //length
                 serverId, //senderId
                 cursor.getLong(1), //processed = length

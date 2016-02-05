@@ -64,6 +64,7 @@
                 android:textColor="@color/reach_grey" />
             <ImageView
                 android:id="@+id/extraButton"
+                android:visibility="invisible"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"

@@ -68,13 +68,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         final Bundle args;
         YourProfileMusicFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new YourProfileMusicFragment());
-            fragment.setArguments(args = new Bundle());
-        } else {
-            Log.i("Ayush", "Reusing YourProfileMusicFragment object :)");
-            args = fragment.getArguments();
-        }
+        reference = new WeakReference<>(fragment = new YourProfileMusicFragment());
+        fragment.setArguments(args = new Bundle());
         args.putLong("hostId", hostId);
         return fragment;
     }
@@ -257,7 +252,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         reachDatabase.setVisibility((short) 1);
 
-        MiscUtils.startDownload(reachDatabase, activity, rootView);
+        MiscUtils.startDownload(reachDatabase, activity, rootView, "YOUR_PROFILE");
         senderCursor.close();
     }
 

@@ -47,11 +47,8 @@ public class AllContactsFragment extends Fragment implements
     public static AllContactsFragment newInstance() {
 
         AllContactsFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            Log.i("Ayush", "Creating new instance of all contacts fragment");
-            reference = new WeakReference<>(fragment = new AllContactsFragment());
-        } else
-            Log.i("Ayush", "Reusing contacts list fragment object :)");
+        Log.i("Ayush", "Creating new instance of all contacts fragment");
+        reference = new WeakReference<>(fragment = new AllContactsFragment());
 
         return fragment;
     }

@@ -4,70 +4,69 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <ImageView
+        android:id="@+id/topImage"
         android:src="@drawable/onboarding_graphic_owl_3"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    <ImageView
-        android:id="@+id/logo"
-        android:src="@drawable/logo_latest"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_width="150dp"
-        android:layout_height="100dp" />
-    <Button
-        android:id="@+id/verify"
-        android:orientation="horizontal"
-        android:layout_above="@id/logo"
-        android:layout_centerHorizontal="true"
-        android:background="@color/reach_color"
-        android:textColor="#fff"
-        android:layout_margin="20dp"
-        android:text="VERIFY"
-        android:paddingLeft="35dp"
-        android:paddingRight="35dp"
-        android:layout_width="wrap_content"
-        android:layout_height="35dp" />
-    <!--<TextView-->
-        <!--android:id="@+id/sendAgain"-->
-        <!--android:layout_above="@id/verify"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:gravity="center"-->
-        <!--android:layout_marginTop="5dp"-->
-        <!--android:layout_marginBottom="20dp"-->
-        <!--android:text="Did not receive the code?\nSend it again"-->
-        <!--android:textColor="@color/reach_color"-->
-        <!--android:textSize="13sp"-->
-        <!--android:textStyle="bold"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content" />-->
-    <EditText
-        android:id="@+id/verificationCode"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:textCursorDrawable="@null"
-        android:layout_above="@id/verify"
-        android:layout_centerHorizontal="true"
-        android:textColor="@color/reach_grey_light"
-        android:focusable="true"
-        android:gravity="center"
-        android:focusableInTouchMode="true"
-        android:digits="0,1,2,3,4,5,6,7,8,9"
-        android:inputType="numberSigned" />
-    <ImageView
-        android:src="@drawable/icon_tag_phone"
-        android:layout_toLeftOf="@id/verificationCode"
-        android:layout_alignTop="@id/verificationCode"
-        android:layout_marginTop="5dp"
-        android:layout_width="30dp"
-        android:layout_height="30dp" />
-    <TextView
-        android:id="@+id/title"
-        android:layout_above="@id/verificationCode"
-        android:layout_centerHorizontal="true"
-        android:gravity="center"
-        android:layout_marginBottom="10dp"
-        android:text="Please enter verification code"
-        android:textColor="@color/reach_blue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <RelativeLayout
+        android:layout_below="@id/topImage"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/verify"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@color/reach_color"
+            android:textColor="#fff"
+            android:layout_margin="20dp"
+            android:text="VERIFY"
+            android:paddingLeft="35dp"
+            android:paddingRight="35dp"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp" />
+        <!--<TextView-->
+            <!--android:id="@+id/sendAgain"-->
+            <!--android:layout_above="@id/verify"-->
+            <!--android:layout_centerHorizontal="true"-->
+            <!--android:gravity="center"-->
+            <!--android:layout_marginTop="5dp"-->
+            <!--android:layout_marginBottom="20dp"-->
+            <!--android:text="Did not receive the code?\nSend it again"-->
+            <!--android:textColor="@color/reach_color"-->
+            <!--android:textSize="13sp"-->
+            <!--android:textStyle="bold"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content" />-->
+        <EditText
+            android:id="@+id/verificationCode"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:textCursorDrawable="@null"
+            android:layout_above="@id/verify"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/reach_grey_light"
+            android:focusable="true"
+            android:gravity="center"
+            android:focusableInTouchMode="true"
+            android:inputType="numberSigned" />
+        <ImageView
+            android:src="@drawable/icon_tag_phone"
+            android:layout_toLeftOf="@id/verificationCode"
+            android:layout_alignTop="@id/verificationCode"
+            android:layout_marginTop="5dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+        <TextView
+            android:id="@+id/title"
+            android:layout_above="@id/verificationCode"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"
+            android:text="Wait up! Our little birdies are working on it"
+            android:textColor="@color/reach_blue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
 </RelativeLayout>

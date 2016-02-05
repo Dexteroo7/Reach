@@ -23,7 +23,6 @@
                 <com.facebook.drawee.view.SimpleDraweeView
                     android:id="@+id/albumArt"
                     fresco:placeholderImage="@drawable/default_music_icon"
-                    card_view:placeholderImageScaleType="centerCrop"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
                 <View
@@ -71,6 +70,7 @@
                 android:layout_height="wrap_content">
                 <ImageView
                     android:id="@+id/extraButton"
+                    android:visibility="invisible"
                     android:layout_centerVertical="true"
                     android:layout_alignParentRight="true"
                     android:src="@drawable/icon_extra_dots_gray"

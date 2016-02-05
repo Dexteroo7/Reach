@@ -4,72 +4,73 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <ImageView
+        android:id="@+id/topImage"
         android:src="@drawable/onboarding_graphic_owl_4"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    <ImageView
-        android:id="@+id/logo"
-        android:src="@drawable/logo_latest"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_width="150dp"
-        android:layout_height="100dp" />
-    <Button
-        android:id="@+id/verify"
-        android:orientation="horizontal"
-        android:layout_above="@id/logo"
-        android:layout_centerHorizontal="true"
-        android:background="@color/reach_color"
-        android:textColor="#fff"
-        android:layout_margin="20dp"
-        android:text="CREATE ACCOUNT"
-        android:paddingLeft="35dp"
-        android:paddingRight="35dp"
-        android:layout_width="wrap_content"
-        android:layout_height="35dp" />
-    <android.support.design.widget.TextInputLayout
-        android:id="@+id/userNameContainer"
-        android:orientation="horizontal"
-        android:layout_marginLeft="10dp"
-        android:hint="Name"
-        android:textColorHint="@color/reach_blue"
-        android:layout_above="@id/verify"
-        android:layout_marginBottom="30dp"
-        android:layout_centerHorizontal="true"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_below="@id/topImage"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <EditText
-            android:id="@+id/userName"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:textCursorDrawable="@null"
-            android:textColor="#000"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:inputType="textCapSentences" />
-    </android.support.design.widget.TextInputLayout>
-    <ImageView
-        android:src="@drawable/icon_tag_name"
-        android:layout_toLeftOf="@id/userNameContainer"
-        android:layout_alignBottom="@id/userNameContainer"
-        android:layout_marginBottom="5dp"
-        android:layout_width="30dp"
-        android:layout_height="30dp" />
-    <TextView
-        android:id="@id/text1"
-        android:text="Upload a profile photo"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="20dp"
-        android:layout_above="@id/userNameContainer"
-        android:textColor="@color/reach_blue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <com.facebook.drawee.view.SimpleDraweeView
-        android:id="@+id/displayPic"
-        android:layout_above="@id/text1"
-        android:layout_centerHorizontal="true"
-        fresco:placeholderImage="@drawable/default_profile_circle"
-        fresco:roundAsCircle="true"
-        android:layout_width="100dp"
-        android:layout_height="100dp" />
+        <Button
+            android:id="@+id/verify"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@color/reach_color"
+            android:textColor="#fff"
+            android:text="CREATE PROFILE"
+            android:paddingLeft="35dp"
+            android:paddingRight="35dp"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp" />
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/userNameContainer"
+            android:orientation="horizontal"
+            android:layout_marginLeft="10dp"
+            android:hint="Name"
+            android:textColorHint="@color/reach_blue"
+            android:layout_above="@id/verify"
+            android:layout_marginBottom="30dp"
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/userName"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:textCursorDrawable="@null"
+                android:textColor="#000"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:inputType="textCapSentences" />
+        </android.support.design.widget.TextInputLayout>
+        <ImageView
+            android:src="@drawable/icon_tag_name"
+            android:layout_toLeftOf="@id/userNameContainer"
+            android:layout_alignBottom="@id/userNameContainer"
+            android:layout_marginBottom="5dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+        <TextView
+            android:id="@id/text1"
+            android:text="Upload a profile photo"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:layout_above="@id/userNameContainer"
+            android:textColor="@color/reach_blue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/displayPic"
+            android:layout_above="@id/text1"
+            android:layout_centerHorizontal="true"
+            fresco:placeholderImage="@drawable/default_profile_circle"
+            fresco:roundAsCircle="true"
+            android:background="@drawable/default_profile_circle"
+            android:layout_width="100dp"
+            android:layout_height="100dp" />
+    </RelativeLayout>
 </RelativeLayout>

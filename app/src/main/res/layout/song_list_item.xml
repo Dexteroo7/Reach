@@ -12,11 +12,11 @@
         android:layout_height="60dp"
         fresco:placeholderImage="@drawable/default_music_icon" />
 
-    <com.facebook.drawee.view.SimpleDraweeView
+    <ImageView
         android:id="@+id/downButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        fresco:placeholderImage="@drawable/icon_play_circle_pink"
+        android:src="@drawable/icon_play_circle_pink"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"/>
 

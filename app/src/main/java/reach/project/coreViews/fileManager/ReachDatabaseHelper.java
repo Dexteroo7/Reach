@@ -243,7 +243,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_ALBUM, //15
             COLUMN_ACTUAL_NAME, //16
             COLUMN_DATE_ADDED, //17
-            COLUMN_VISIBILITY //18
+            COLUMN_VISIBILITY, //18
+            COLUMN_META_HASH //19
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -270,6 +271,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
         return new MusicData(
                 cursor.getLong(0), //id
+                cursor.getString(19), //meta-hash
                 cursor.getLong(1), //length
                 cursor.getLong(2), //senderId
                 cursor.getLong(3), //processed

@@ -1,6 +1,7 @@
 package reach.project.notificationCentre;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -49,8 +50,7 @@ public class NotificationFragment extends Fragment {
     public static NotificationFragment newInstance() {
 
         NotificationFragment fragment;
-        if (reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment))
-            reference = new WeakReference<>(fragment = new NotificationFragment());
+        reference = new WeakReference<>(fragment = new NotificationFragment());
 
         return fragment;
     }
@@ -152,7 +152,10 @@ public class NotificationFragment extends Fragment {
                 YourProfileActivity.openProfile(hostID, getActivity());
                 break;
             case PUSH_ACCEPTED:
-                ReachActivity.openDownloading();
+                final Intent foreGround = new Intent(getContext(), ReachActivity.class);
+                foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+                foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(foreGround);
                 break;
         }
 
