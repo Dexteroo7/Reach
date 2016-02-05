@@ -1,5 +1,6 @@
 package reach.project.core;
 
+import android.content.pm.ApplicationInfo;
 import android.support.v4.util.LongSparseArray;
 
 import com.google.api.client.http.HttpRequestInitializer;
@@ -8,7 +9,9 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
 import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
@@ -145,5 +148,6 @@ public final class StaticData {
     public static final String CLOUD_STORAGE_IMAGE_BASE_URL = "http://storage.googleapis.com/able-door-616-images/";
     public static final String DROP_BOX_PROMO = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";
     public static final String DROP_BOX_MANAGER = "https://dl.dropboxusercontent.com/s/n04wqrlr0sq0tqn/reach_manager.jpg";
+
     public static final LongSparseArray<String> NETWORK_CACHE = new LongSparseArray<>();
 }

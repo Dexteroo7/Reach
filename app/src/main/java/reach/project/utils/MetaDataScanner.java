@@ -15,13 +15,13 @@ import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.LongSparseArray;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.hash.Hashing;
 import com.squareup.wire.Wire;
 
 import java.io.File;
@@ -76,8 +76,7 @@ public class MetaDataScanner extends IntentService {
             ReachDatabaseHelper.COLUMN_GENRE, //8
             ReachDatabaseHelper.COLUMN_PATH, //9
             ReachDatabaseHelper.COLUMN_DATE_ADDED, //10
-            ReachDatabaseHelper.COLUMN_VISIBILITY //11
-    };
+            ReachDatabaseHelper.COLUMN_VISIBILITY}; //11
 
     private enum ScanMusic {
 
@@ -96,25 +95,26 @@ public class MetaDataScanner extends IntentService {
             final Cursor reachSongInitialCursor = resolver.query(
                     MySongsProvider.CONTENT_URI,
                     new String[]{
-                            MySongsHelper.COLUMN_SONG_ID, //0
+                            MySongsHelper.COLUMN_META_HASH, //0
                             MySongsHelper.COLUMN_VISIBILITY, //1
                             MySongsHelper.COLUMN_IS_LIKED},
                     null, null, null);
 
 
-            LongSparseArray<SongPersist> songPersist = null;
+            Map<String, SongPersist> songPersist = null;
             //try local first
             if (reachSongInitialCursor != null) {
 
-                songPersist = new LongSparseArray<>(reachSongInitialCursor.getCount());
+                songPersist = MiscUtils.getMap(reachSongInitialCursor.getCount());
                 while (reachSongInitialCursor.moveToNext()) {
+
                     //songId = key, visibility = value;
                     final SongPersist persist = new SongPersist();
                     persist.visibility = reachSongInitialCursor.getShort(1) == 1;
                     persist.liked = reachSongInitialCursor.getShort(2) == 1;
 
-                    songPersist.append(
-                            reachSongInitialCursor.getLong(0),  //songId
+                    songPersist.put(
+                            reachSongInitialCursor.getString(0),  //songHash
                             persist); //visibility
                 }
                 reachSongInitialCursor.close();
@@ -131,7 +131,7 @@ public class MetaDataScanner extends IntentService {
                     Log.i("Ayush", "no visibility data found on cloud");
                 else {
 
-                    songPersist = new LongSparseArray<>(visibilityMap.size());
+                    songPersist = MiscUtils.getMap(visibilityMap.size());
                     //cloud visibility found
                     for (Map.Entry<String, Object> objectEntry : visibilityMap.entrySet()) {
 
@@ -144,7 +144,7 @@ public class MetaDataScanner extends IntentService {
                         final String key = objectEntry.getKey();
                         final Object value = objectEntry.getValue();
 
-                        if (TextUtils.isEmpty(key) || !TextUtils.isDigitsOnly(key) || value == null || !(value instanceof Boolean)) {
+                        if (TextUtils.isEmpty(key) || value == null || !(value instanceof Boolean)) {
                             //TODO track
                             Log.i("Ayush", "Found shit data inside visibilityMap " + key + " " + value);
                             continue;
@@ -155,8 +155,8 @@ public class MetaDataScanner extends IntentService {
                         persist.visibility = (Boolean) value;
                         persist.liked = false; //TODO persist later
 
-                        songPersist.append(
-                                Long.parseLong(key),  //songId
+                        songPersist.put(
+                                key,  //songHash
                                 persist); //visibility
                     }
                     visibilityMap.clear();
@@ -203,8 +203,8 @@ public class MetaDataScanner extends IntentService {
                         .getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
 
                 final Song.Builder builder = new Song.Builder();
-                final long songID = musicCursor.getLong(music_column_id);
-                builder.songId(songID);
+                final long androidSongID = musicCursor.getLong(music_column_id);
+                builder.songId(androidSongID);
 
                 final long size = musicCursor.getLong(music_column_size);
                 final long duration = musicCursor.getLong(music_column_duration);
@@ -231,6 +231,9 @@ public class MetaDataScanner extends IntentService {
                 builder.path(songPath);
                 builder.displayName(displayName);
                 builder.actualName(actualName);
+                //Generate the fileHash
+                builder.fileHash(MiscUtils.songHashCalculator(
+                        serverId, duration, size, displayName, Hashing.sipHash24()));
 
                 if (music_column_artist != -1) {
 
@@ -262,7 +265,7 @@ public class MetaDataScanner extends IntentService {
                         MediaStore.Audio.Genres._ID};
 
                 genresCursor = resolver.query(
-                        MediaStore.Audio.Genres.getContentUriForAudioId("external", (int) songID),
+                        MediaStore.Audio.Genres.getContentUriForAudioId("external", (int) androidSongID),
                         genresProjection, null, null, null);
 
                 if (genresCursor != null && genresCursor.moveToFirst()) {
@@ -278,7 +281,8 @@ public class MetaDataScanner extends IntentService {
                 if (genresCursor != null)
                     genresCursor.close();
 
-                final SongPersist persist = songPersist != null ? songPersist.get(builder.songId, null) : null;
+                final SongPersist persist = songPersist != null && songPersist.containsKey(builder.fileHash) ?
+                        songPersist.get(builder.fileHash) : null;
                 //load visibility
                 if (persist == null) {
 
@@ -338,7 +342,7 @@ public class MetaDataScanner extends IntentService {
         }
 
         @NonNull
-        private static ImmutableList<Song> getDownloadedSongs(ContentResolver resolver) {
+        private static ImmutableList<Song> getDownloadedSongs(ContentResolver resolver, long serverId) {
 
             final ImmutableList.Builder<Song> downloadBuilder = new ImmutableList.Builder<>();
             final Cursor reachDatabaseCursor = resolver.query(
@@ -354,6 +358,7 @@ public class MetaDataScanner extends IntentService {
 
                     final Song.Builder builder = new Song.Builder();
                     builder.songId(reachDatabaseCursor.getLong(0));
+
                     if (builder.songId == 0 || builder.songId == -1)
                         continue; //no unique Id found, can not process
 
@@ -383,6 +388,14 @@ public class MetaDataScanner extends IntentService {
                     builder.path(reachDatabaseCursor.getString(9));
                     builder.dateAdded(reachDatabaseCursor.getLong(10));
                     builder.visibility(reachDatabaseCursor.getShort(11) == 1);
+                    //get the metaDataHash
+                    builder.fileHash(MiscUtils.songHashCalculator(
+                            serverId,
+                            builder.duration,
+                            builder.size,
+                            builder.displayName,
+                            Hashing.sipHash24()));
+
                     downloadBuilder.add(builder.build());
                 }
                 reachDatabaseCursor.close();
@@ -643,6 +656,9 @@ public class MetaDataScanner extends IntentService {
 
         final List<Song> total = ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(myLibrary, downloaded))); //music
 
+        for (Song song : total)
+                Log.i("Ayush", song.displayName + " " + song.fileHash);
+
 //        for (Song song : total)
 //            Log.i("Downloader", "Found " + song.displayName + " " + song.songId);
 
@@ -734,7 +750,7 @@ public class MetaDataScanner extends IntentService {
         ////////////////////Get my library songs
         final List<Song> songs = ScanMusic.getSongListing(resolver, musicCursor, serverId);
         ////////////////////Get downloaded songs
-        final List<Song> downloaded = ScanMusic.getDownloadedSongs(resolver);
+        final List<Song> downloaded = ScanMusic.getDownloadedSongs(resolver, serverId);
         ////////////////////Get applications
         final List<App> appList = ScanApps.getPackages(serverId, sharedPreferences, packageManager, applications);
         ////////////////////Put into server

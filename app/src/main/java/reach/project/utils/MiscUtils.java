@@ -57,6 +57,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.hash.HashFunction;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -1292,7 +1293,8 @@ public enum MiscUtils {
 
         try {
             UsageTracker.trackApp(simpleParams, complexParams, UsageTracker.CLICK_APP);
-        } catch (JSONException ignored) {}
+        } catch (JSONException ignored) {
+        }
         activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id="
                 + packageName)));
     }
@@ -1834,5 +1836,30 @@ public enum MiscUtils {
 //        }
 //        stringBuilder.append(text.substring(start));
 //        return stringBuilder.toString();
+//    }
+
+    public static String songHashCalculator(long userId,
+                                            long duration,
+                                            long size,
+                                            @NonNull String title,
+                                            @NonNull HashFunction hashFunction) {
+
+        return hashFunction.newHasher()
+                .putLong(userId)
+                .putLong(duration)
+                .putLong(size)
+                .putUnencodedChars(title)
+                .hash().toString();
+    }
+
+//    public static long songHashCalculator(@NonNull String title,
+//                                          @NonNull long duration,
+//                                          @NonNull long size,
+//                                          @NonNull HashFunction hashFunction) {
+//
+//        return hashFunction.newHasher()
+//                .putUnencodedChars(title)
+//                .putLong(duration)
+//                .putLong(size).hash().asLong();
 //    }
 }

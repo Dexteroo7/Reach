@@ -10,7 +10,7 @@ android {
 
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 19
+        minSdkVersion 14
         versionCode 80
         versionName "1.0-alpha"
         multiDexEnabled true
@@ -45,9 +45,9 @@ dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     compile 'com.google.apis:google-api-services-storage:v1-rev58-1.21.0'
-    compile 'com.google.android.gms:play-services-gcm:8.4.0'
-    compile 'com.google.android.gms:play-services-analytics:8.4.0'
-    //compile 'com.google.android.gms:play-services:6.1.11'
+//    compile 'com.google.android.gms:play-services-gcm:8.4.0'
+//    compile 'com.google.android.gms:play-services-analytics:8.4.0'
+    compile 'com.google.android.gms:play-services:6.1.11'
     compile 'com.google.code.gson:gson:2.4'
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:percent:23.1.1'

@@ -22,7 +22,7 @@ public final class ReachDatabase {
 
     private String displayName = "hello_world"; //10
     private String actualName = "hello_world"; //11
-    private String mbid = "hello_world";
+    private String metaHash = "hello_world";
 
     private long length = 0; //12
     private long processed = 0; //13
@@ -261,14 +261,6 @@ public final class ReachDatabase {
         this.duration = duration;
     }
 
-    public String getMbid() {
-        return mbid;
-    }
-
-    public void setMbid(String mbid) {
-        this.mbid = mbid;
-    }
-
     public String getAlbumName() {
         return albumName;
     }
@@ -307,5 +299,13 @@ public final class ReachDatabase {
 
     public void setUniqueId(long uniqueId) {
         this.uniqueId = uniqueId;
+    }
+
+    public String getMetaHash() {
+        return metaHash;
+    }
+
+    public void setMetaHash(String metaHash) {
+        this.metaHash = metaHash;
     }
 }

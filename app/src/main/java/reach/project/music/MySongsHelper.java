@@ -20,6 +20,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     //identity of the song (meta-data hash ?)
     public static final String COLUMN_SONG_ID = "songId";
+    public static final String COLUMN_META_HASH = "metaHash";
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
     public static final String COLUMN_ACTUAL_NAME = "actualName";
@@ -28,6 +29,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     public static final String COLUMN_DURATION = "duration"; //duration
     public static final String COLUMN_SIZE = "size";
+
+
     public static final String COLUMN_GENRE = "genre";
     public static final String COLUMN_ALBUM_ART_DATA = "albumArtData";
     public static final String COLUMN_PATH = "path";
@@ -38,19 +41,22 @@ public class MySongsHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IS_LIKED = "isLiked";
 
     private static final String DATABASE_NAME = "reach.database.sql.MySongsHelper";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     // Database creation sql statement
     private static final String DATABASE_CREATE = "create table "
             + SONG_TABLE + "(" + COLUMN_ID
             + " integer primary key autoincrement, " +
             COLUMN_SONG_ID + " long" + "," +
+            COLUMN_META_HASH + " text" + "," +
+
             COLUMN_DISPLAY_NAME + " text" + "," +
             COLUMN_ACTUAL_NAME + " text" + "," +
             COLUMN_GENRE + " text" + "," +
             COLUMN_PATH + " text" + "," +
             COLUMN_ARTIST + " text" + "," +
             COLUMN_DURATION + " long" + "," +
+
             COLUMN_ALBUM + " text" + "," +
             COLUMN_ALBUM_ART_DATA + " blob" + "," +
 
@@ -95,8 +101,12 @@ public class MySongsHelper extends SQLiteOpenHelper {
         values.put(COLUMN_ARTIST, song.artist);
         values.put(COLUMN_DURATION, song.duration);
         values.put(COLUMN_ALBUM, song.album);
+
         if (song.albumArtData != null)
             values.put(COLUMN_ALBUM_ART_DATA, song.albumArtData.toByteArray());
+
+        if (!TextUtils.isEmpty(song.fileHash))
+            values.put(COLUMN_META_HASH, song.fileHash);
 
         values.put(COLUMN_SIZE, song.size);
         values.put(COLUMN_YEAR, song.year);

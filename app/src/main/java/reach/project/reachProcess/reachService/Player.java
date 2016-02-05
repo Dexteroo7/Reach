@@ -291,7 +291,7 @@ class Player {
             //caller should handle InterruptedException
             frameHeader = getHeader.get(5, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException e) {
-
+            
             try {
                 bitStream.close();
             } catch (BitstreamException ignored) {
