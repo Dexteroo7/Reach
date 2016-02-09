@@ -3,7 +3,7 @@
 .navigation/
 Reach.iml
 app/app.iml
-app/app-release.apk
+app/*.apk
 app/build/
 build/
 local.properties

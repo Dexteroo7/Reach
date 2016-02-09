@@ -10,7 +10,6 @@ import com.facebook.common.memory.MemoryTrimType;
 import com.facebook.common.memory.MemoryTrimmable;
 import com.facebook.common.memory.MemoryTrimmableRegistry;
 import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
@@ -145,13 +144,11 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
 
         super.onCreate();
         //initialize fresco
-        final ImagePipelineConfig.Builder configBuilder = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
-
+        final ImagePipelineConfig.Builder configBuilder = ImagePipelineConfig.newBuilder(this)
                 .setDecodeFileDescriptorEnabled(true)
                 .setDecodeMemoryFileEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
                 .setWebpSupportEnabled(true)
-
                 .setBitmapsConfig(Bitmap.Config.RGB_565)
                 .setMemoryTrimmableRegistry(this);
 
