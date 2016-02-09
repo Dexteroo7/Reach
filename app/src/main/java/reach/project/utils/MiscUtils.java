@@ -1549,7 +1549,7 @@ public enum MiscUtils {
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Add song failed")
                     .setAction("User Name - " + clientName)
-                    .setLabel(page)
+                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                     .setValue(1)
                     .build());
             return;
@@ -1570,7 +1570,7 @@ public enum MiscUtils {
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + clientName)
-                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                .setLabel(page)
                 .setValue(1)
                 .build());
 

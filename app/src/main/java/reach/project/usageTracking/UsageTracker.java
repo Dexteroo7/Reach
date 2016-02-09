@@ -31,12 +31,11 @@ public enum UsageTracker {
     LIKE_SONG, //liked by user (client)
     DOWNLOAD_SONG, //downloaded by friends
     DOWNLOAD_COMPLETE, //download completed by friends
-    CLICK_APP, //app clicked by user
 
     ////////////
 
     LIKE_APP, //user likes an app (his own or someone else's)
-    REDIRECT_PLAY_STORE, //user redirected to play store
+    CLICK_APP, //app clicked by user
 
     ////////////
 
