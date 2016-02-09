@@ -1,6 +1,7 @@
 package reach.project.onBoarding;
 
 import android.Manifest;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
+import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
@@ -51,6 +53,10 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     private static final int MY_PERMISSIONS_READ_CONTACTS = 11;
     private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 22;
+    private static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
+
+    @Nullable
+    private String chosenEmail = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +68,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
+
+        chosenEmail = SharedPrefUtils.getChosenAccount(getSharedPreferences("Reach", MODE_PRIVATE));
 
         if (Build.VERSION.SDK_INT >= 23) {
 
@@ -82,9 +90,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                                 Manifest.permission.WRITE_EXTERNAL_STORAGE
                         }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
             } else //all granted
-                proceedAfterChecks();
+                pickUserAccount();
         } else //no issue of permissions
-            proceedAfterChecks();
+            pickUserAccount();
     }
 
     @Override
@@ -141,7 +149,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                             }, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
                 } else //all granted
-                    proceedAfterChecks();
+                    pickUserAccount();
             }
         } else if (requestCode == MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE) {
 
@@ -163,13 +171,47 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                                     Manifest.permission.READ_CONTACTS
                             }, MY_PERMISSIONS_READ_CONTACTS);
                 } else //all granted
-                    proceedAfterChecks();
+                    pickUserAccount();
             }
         } else
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+    private void pickUserAccount() {
+
+        if (TextUtils.isEmpty(chosenEmail)) {
+
+            Toast.makeText(this, "Pick an account", Toast.LENGTH_SHORT).show();
+            final String[] accountTypes = new String[]{"com.google"};
+            final Intent intent = AccountPicker.newChooseAccountIntent(null, null,
+                    accountTypes, false, null, null, null, null);
+            startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
+        } else
+            proceedAfterChecks();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == REQUEST_CODE_PICK_ACCOUNT) {
+
+            // Receiving a result from the AccountPicker
+            if (resultCode == RESULT_OK) {
+
+                chosenEmail = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                // With the account name acquired, go get the auth token
+            } else if (resultCode == RESULT_CANCELED) {
+                // The account picker dialog closed without selecting an account.
+                // Notify users that they must pick an account to proceed.
+            }
+        }
+
+        pickUserAccount();
+    }
+
     private void proceedAfterChecks() {
+
+        Log.i("Ayush", "Chosen account = " + chosenEmail);
 
         final Handler handler = new Handler();
         final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);

@@ -380,7 +380,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
 
             @Override
             public void onPageSelected(int position) {
@@ -392,7 +393,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             }
 
             @Override
-            public void onPageScrollStateChanged(int state) {}
+            public void onPageScrollStateChanged(int state) {
+            }
         });
 
         if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {

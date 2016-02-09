@@ -300,4 +300,12 @@ public enum SharedPrefUtils {
     public synchronized static String getEmailId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("emailId", "");
     }
+
+    public synchronized static void setChosenAccount(SharedPreferences sharedPreferences, String account) {
+        sharedPreferences.edit().putString("chosen_account", account).apply();
+    }
+
+    public synchronized static String getChosenAccount(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString("chosen_account", "");
+    }
 }
