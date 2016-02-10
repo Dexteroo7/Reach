@@ -107,11 +107,10 @@ public class ScanFragment extends Fragment {
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
 
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
-        SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
-        SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
+        final SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
+        final SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
         coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldCoverId), COVER_PHOTO_RESIZE));
-
 
         InputStream profilePicOptionsStream = null, profilePicDecodeStream = null;
         if (profilePicUri != null) {
@@ -269,6 +268,7 @@ public class ScanFragment extends Fragment {
                                 .setValue(1)
                                 .build());
 
+                        Toast.makeText(activity, "Network error", Toast.LENGTH_SHORT).show();
                         activity.finish();
                         return;
                     }
@@ -278,7 +278,7 @@ public class ScanFragment extends Fragment {
                     tracker.setScreenName(AccountCreation.class.getPackage().getName());
 
                     if (user.getId() != 0) {
-                        
+
                         tracker.set("&uid", user.getId() + "");
                         tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
                     }
@@ -366,7 +366,7 @@ public class ScanFragment extends Fragment {
     }
 
     private static final View.OnClickListener PROCEED = v -> MiscUtils.useFragment(reference, fragment -> {
-        
+
         final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
         intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);

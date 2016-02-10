@@ -58,14 +58,12 @@ public class CodeVerification extends Fragment {
     public static CodeVerification newInstance(String authKey,
                                                String phoneNumber) {
 
-        final Bundle args;
-        CodeVerification fragment;
-
-        reference = new WeakReference<>(fragment = new CodeVerification());
-        fragment.setArguments(args = new Bundle());
+        final Bundle args = new Bundle();
+        final CodeVerification fragment = new CodeVerification();
 
         args.putString(AUTH_KEY, authKey);
         args.putString(PHONE_NUMBER, phoneNumber);
+        fragment.setArguments(args);
 
         return fragment;
     }
@@ -88,8 +86,9 @@ public class CodeVerification extends Fragment {
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_code_verification, container, false);
+        reference = new WeakReference<>(this);
 
-        Activity activity = getActivity();
+        final Activity activity = getActivity();
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(activity,
                     Manifest.permission.RECEIVE_SMS) != 0)
@@ -194,17 +193,6 @@ public class CodeVerification extends Fragment {
         if (mListener != null)
             mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
     };
-
-//    private static final View.OnClickListener retryListener = view -> new AlertDialog.Builder(view.getContext())
-//            .setMessage("Send verification code again?")
-//            .setPositiveButton("Yes", (dialog, which) -> {
-//                //TODO send code again
-//                dialog.dismiss();
-//            })
-//            .setNegativeButton("No", (dialog, which) -> {
-//                dialog.dismiss();
-//            })
-//            .show();
 
     private final View.OnClickListener verifyCodeListener = view -> {
 

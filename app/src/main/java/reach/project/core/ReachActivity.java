@@ -23,6 +23,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.appspot.able_door_616.blahApi.BlahApi;
+import com.appspot.able_door_616.blahApi.model.SimpleString;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -54,6 +61,7 @@ import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
+import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -426,6 +434,32 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);
+
+        new Thread(() -> {
+
+            final HttpTransport transport = new NetHttpTransport();
+            final JsonFactory factory = new JacksonFactory();
+//            final HttpRequestInitializer initialize = request -> {
+//
+//                request.setConnectTimeout(request.getConnectTimeout() * 2);
+//                request.setReadTimeout(request.getReadTimeout() * 2);
+//            };
+
+            final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(this, StaticData.SCOPE);
+            credential.setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+            Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
+
+            final BlahApi businessApi = CloudEndPointsUtils.updateBuilder(new BlahApi.Builder(transport, factory, credential)
+                    .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
+
+            final SimpleString simpleString;
+            try {
+                simpleString = businessApi.addNewActiveCode(StaticData.DEVIKA, "Fuck off").execute();
+                Log.i("Ayush", "Got result " + simpleString.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private synchronized void processIntent(Intent intent) {
@@ -508,14 +542,14 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             case OPEN_MANAGER_SONGS_DOWNLOADING:
                 if (mTabHost != null)
                     mTabHost.postDelayed(() -> {
-                            mTabHost.setCurrentTab(3);
-                            mTabHost.postDelayed(() -> {
-                                final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
-                                        .findFragmentByTag("manager_page");
-                                fragment.setItem(0);
-                                fragment.setInnerItem(0, 1);
-                            }, 500L);
-                        }, 1000L);
+                        mTabHost.setCurrentTab(3);
+                        mTabHost.postDelayed(() -> {
+                            final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                    .findFragmentByTag("manager_page");
+                            fragment.setItem(0);
+                            fragment.setInnerItem(0, 1);
+                        }, 500L);
+                    }, 1000L);
 
                 break;
             case OPEN_MANAGER_SONGS_LIBRARY:
@@ -539,8 +573,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 break;
             case OPEN_MY_PROFILE_APPS_FIRST:
                 if (mTabHost != null)
-                        mTabHost.setCurrentTab(4);
-                    MyProfileFragment.setItem(0);
+                    mTabHost.setCurrentTab(4);
+                MyProfileFragment.setItem(0);
                 break;
             case OPEN_MY_PROFILE_SONGS:
                 if (mTabHost != null)

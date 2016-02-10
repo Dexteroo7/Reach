@@ -83,7 +83,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
                     COLUMN_SIZE,
                     COLUMN_YEAR,
                     COLUMN_DATE_ADDED,
-                    COLUMN_VISIBILITY
+                    COLUMN_VISIBILITY,
+                    COLUMN_META_HASH
             };
 
     public static ContentValues contentValuesCreator(Song song) {
@@ -126,10 +127,10 @@ public class MySongsHelper extends SQLiteOpenHelper {
             COLUMN_ID, //7
             COLUMN_ALBUM_ART_DATA, //8
             COLUMN_ACTUAL_NAME, //9
-            COLUMN_DATE_ADDED, //9
-            COLUMN_VISIBILITY, //10
-            COLUMN_IS_LIKED, //11
-            COLUMN_META_HASH //12
+            COLUMN_DATE_ADDED, //10
+            COLUMN_VISIBILITY, //11
+            COLUMN_IS_LIKED, //12
+            COLUMN_META_HASH //13
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -180,7 +181,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
         return new MusicData(
                 cursor.getLong(0), //songId
-                cursor.getString(12), //meta-hash
+                cursor.getString(13), //meta-hash
                 cursor.getLong(1), //length
                 serverId, //senderId
                 cursor.getLong(1), //processed = length
@@ -189,7 +190,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 cursor.getString(3), //displayName
                 cursor.getString(4), //artistName
                 cursor.getString(6), //albumName
-                cursor.getShort(11) == 1, //liked
+                cursor.getShort(12) == 1, //liked
                 cursor.getLong(5), //duration
                 (byte) 1); //type
     }

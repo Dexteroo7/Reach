@@ -394,12 +394,12 @@ public class GcmIntentService extends IntentService {
                         if (!TextUtils.isEmpty(extras.getString("userId"))) {
                             final long userId = Long.parseLong(extras.getString("userId"));
                             if (userId > 0)
-                                intent.putExtra("userId", userId);
+                                mIntent.putExtra("userId", userId);
                         }
 
                         final String tab = extras.getString("tab");
                         if (!TextUtils.isEmpty(tab))
-                            intent.setAction(tab);
+                            mIntent.setAction(tab);
                     }
                     else
                         mIntent = ReachActivity.getIntent(this);

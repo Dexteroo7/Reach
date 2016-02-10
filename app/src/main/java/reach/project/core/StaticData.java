@@ -144,7 +144,7 @@ public final class StaticData {
     public static final long MINIMUM_PONG_GAP = 18 * 1000; //15 seconds
     public static final short MUSIC_PLAYER = 12;
 
-    public static final String SCOPE = "audience:server:client_id:528178870551-m0emotumn7gb4r9hted42p58tr3s8ukt.apps.googleusercontent.com";
+    public static final String SCOPE = "server:client_id:528178870551-m0emotumn7gb4r9hted42p58tr3s8ukt.apps.googleusercontent.com";
     public static final String DROP_BOX = "https://dl.dropboxusercontent.com/u/17710400/Reach_Version.txt";
     public static final String CLOUD_STORAGE_IMAGE_BASE_URL = "http://storage.googleapis.com/able-door-616-images/";
     public static final String DROP_BOX_PROMO = "https://dl.dropboxusercontent.com/s/p2m01z9opnf3xtu/promo_codes.txt";

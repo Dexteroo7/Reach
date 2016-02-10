@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+
+    <application>able-door-616</application>
+    <version>1</version>
+    <instance-class>F4</instance-class>
+    <threadsafe>true</threadsafe>
+
+    <!--
+     We do not specify the module name so this is the default module.
+     There is only 1 default module per application.
+-->
+    <!--module>client-endpoints</module-->
+    <module>business-module</module>
+
+    <system-properties>
+        <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+        <property name="gcm.api.key" value="AIzaSyDMF3_8dtR0iLWxEFPIPDY92zCp_42mh_k"/>
+    </system-properties>
+</appengine-web-app>

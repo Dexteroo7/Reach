@@ -28,7 +28,7 @@ public final class ReachDatabase {
 
     private String displayName = "hello_world"; //10
     private String actualName = "hello_world"; //11
-    private String metaHash = "hello_world";
+    private String metaHash;
 
     private long length = 0; //12
     private long processed = 0; //13
@@ -309,7 +309,7 @@ public final class ReachDatabase {
 
     public String getMetaHash() {
 
-        if (TextUtils.isEmpty(metaHash))
+        if (TextUtils.isEmpty(metaHash)                                                                                                                                                                                                                                                   )
             metaHash = MiscUtils.songHashCalculator(
                     receiverId, duration, length, displayName, Hashing.sipHash24());
 

@@ -24,7 +24,7 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
@@ -69,7 +69,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
 
-        chosenEmail = SharedPrefUtils.getChosenAccount(getSharedPreferences("Reach", MODE_PRIVATE));
+        chosenEmail = SharedPrefUtils.getEmailId(getSharedPreferences("Reach", MODE_PRIVATE));
 
         if (Build.VERSION.SDK_INT >= 23) {
 
@@ -93,36 +93,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 pickUserAccount();
         } else //no issue of permissions
             pickUserAccount();
-    }
-
-    @Override
-    public void onOpenNumberVerification() {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
-    }
-
-    @Override
-    public void onOpenCodeVerification(String phoneNumber) {
-
-        final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
-        Log.i("Ayush", randomCode + " code");
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
-    }
-
-    @Override
-    public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
-    }
-
-    @Override
-    public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
     }
 
     @Override
@@ -177,19 +147,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    private void pickUserAccount() {
-
-        if (TextUtils.isEmpty(chosenEmail)) {
-
-            Toast.makeText(this, "Pick an account", Toast.LENGTH_SHORT).show();
-            final String[] accountTypes = new String[]{"com.google"};
-            final Intent intent = AccountPicker.newChooseAccountIntent(null, null,
-                    accountTypes, false, null, null, null, null);
-            startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
-        } else
-            proceedAfterChecks();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -199,14 +156,29 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             if (resultCode == RESULT_OK) {
 
                 chosenEmail = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                SharedPrefUtils.storeEmailId(getSharedPreferences("Reach", MODE_PRIVATE), chosenEmail);
                 // With the account name acquired, go get the auth token
             } else if (resultCode == RESULT_CANCELED) {
                 // The account picker dialog closed without selecting an account.
                 // Notify users that they must pick an account to proceed.
             }
-        }
 
-        pickUserAccount();
+            pickUserAccount();
+        } else
+            super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void pickUserAccount() {
+
+        if (TextUtils.isEmpty(chosenEmail)) {
+
+            Toast.makeText(this, "Pick an account", Toast.LENGTH_SHORT).show();
+            final String[] accountTypes = new String[]{"com.google"};
+            final Intent intent = AccountPicker.newChooseAccountIntent(null, null,
+                    accountTypes, true, null, null, null, null);
+            startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
+        } else
+            proceedAfterChecks();
     }
 
     private void proceedAfterChecks() {
@@ -215,7 +187,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
         final Handler handler = new Handler();
         final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
-
         final String userName = SharedPrefUtils.getUserName(preferences);
         final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
         final long serverId = SharedPrefUtils.getServerId(preferences);
@@ -245,7 +216,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
                 //TODO chat check
                 //perform contact sync
-                FireOnce.contactSync(getApplicationContext());
+                FireOnce.contactSync(contextWeakReference, serverId, phoneNumber);
                 //refresh gcm
                 FireOnce.checkGCM(contextWeakReference, serverId);
                 //refresh download ops
@@ -262,6 +233,36 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         }
     }
 
+    @Override
+    public void onOpenNumberVerification() {
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
+    }
+
+    @Override
+    public void onOpenCodeVerification(String phoneNumber) {
+
+        final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
+        Log.i("Ayush", randomCode + " code");
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
+    }
+
+    @Override
+    public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
+    }
+
+    @Override
+    public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
+                ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
+    }
+
     /**
      * Check the device to make sure it has the Google Play Services APK. If
      * it doesn't, display a dialog that allows users to download the APK from
@@ -272,14 +273,14 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
      */
     public static boolean checkPlayServices(Activity activity) {
 
-        final int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
+        final GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
+
+        final int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(activity);
         if (resultCode == ConnectionResult.SUCCESS)
             return true;
 
-        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-
-            GooglePlayServicesUtil.getErrorDialog(resultCode, activity,
-                    StaticData.PLAY_SERVICES_RESOLUTION_REQUEST).show();
+        if (googleApiAvailability.isUserResolvableError(resultCode)) {
+            googleApiAvailability.getErrorDialog(activity, resultCode, StaticData.PLAY_SERVICES_RESOLUTION_REQUEST);
         } else {
 
             Toast.makeText(activity, "This device is not supported", Toast.LENGTH_LONG).show();

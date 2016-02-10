@@ -69,8 +69,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 
+        reference = new WeakReference<>(this);
         new GetApplications().executeOnExecutor(applicationsFetcher, context);
-
         return rootView;
     }
 
