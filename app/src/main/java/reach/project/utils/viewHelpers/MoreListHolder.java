@@ -63,7 +63,11 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         if (!(adapter instanceof MoreQualifier))
             throw new IllegalArgumentException("More button qualifier failed");
 
-        final String title = (String) headerText.getText();
+        CharSequence charSequence = headerText.getText();
+        if (!(charSequence instanceof String))
+            return;
+
+        final String title = (String) charSequence;
         final Context context = view.getContext();
         final RecyclerView.Adapter newAdapter;
 

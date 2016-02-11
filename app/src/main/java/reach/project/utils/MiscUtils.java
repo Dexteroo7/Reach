@@ -62,9 +62,11 @@ import com.google.gson.JsonPrimitive;
 
 import org.json.JSONException;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -1228,19 +1230,48 @@ public enum MiscUtils {
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
-        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
-        final Iterator<ApplicationInfo> iterator = applications.iterator();
+        try {
+            final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
+            final Iterator<ApplicationInfo> iterator = applications.iterator();
+            while (iterator.hasNext()) {
 
-        while (iterator.hasNext()) {
+                final ApplicationInfo applicationInfo = iterator.next();
+                if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                        || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                        || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
+                    iterator.remove();
+            }
 
-            final ApplicationInfo applicationInfo = iterator.next();
-            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
-                    || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
-                    || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
-                iterator.remove();
+            return applications;
+        } catch (Exception e) {}
+
+        final List<ApplicationInfo> result = new ArrayList<>();
+        BufferedReader bufferedReader = null;
+
+        try {
+            final Process process = Runtime.getRuntime().exec("pm list packages");
+            bufferedReader=new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while((line=bufferedReader.readLine()) != null) {
+                final String packageName = line.substring(line.indexOf(':')+1);
+                final ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
+                result.add(applicationInfo);
+            }
+            process.waitFor();
         }
 
-        return applications;
+        catch (Exception e) { e.printStackTrace(); }
+
+        finally {
+            if(bufferedReader!=null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return result;
     }
 
     public static void openAppinPlayStore(Activity activity, String packageName, Long senderId, String page) {
@@ -1280,7 +1311,9 @@ public enum MiscUtils {
     }
 
     public static void openApp(Context context, String packageName) {
-        context.startActivity(context.getPackageManager().getLaunchIntentForPackage(packageName));
+        try {
+            context.startActivity(context.getPackageManager().getLaunchIntentForPackage(packageName));
+        } catch (Exception ignored) {}
     }
 
     private static class StartDownloadOperation implements Runnable {

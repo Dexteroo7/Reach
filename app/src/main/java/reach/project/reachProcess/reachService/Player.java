@@ -153,8 +153,10 @@ class Player {
     }
 
     public void setVolume(float duck_volume) {
-        if (mediaPlayer != null)
-            mediaPlayer.setVolume(duck_volume, duck_volume);
+        try {
+            if (mediaPlayer != null)
+                mediaPlayer.setVolume(duck_volume, duck_volume);
+        } catch (IllegalStateException ignored) {}
         if (audioTrack == null)
             return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
