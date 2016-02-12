@@ -592,7 +592,7 @@ public class ProcessManager extends Service implements
         simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }

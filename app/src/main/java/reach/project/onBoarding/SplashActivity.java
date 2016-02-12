@@ -1,6 +1,8 @@
 package reach.project.onBoarding;
 
 import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -88,36 +90,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenNumberVerification() {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
-    }
-
-    @Override
-    public void onOpenCodeVerification(String phoneNumber) {
-
-        final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
-        Log.i("Ayush", randomCode + " code");
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
-    }
-
-    @Override
-    public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
-    }
-
-    @Override
-    public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -171,16 +143,23 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     private void proceedAfterChecks() {
 
+        String chosenEmail = SharedPrefUtils.getEmailId(getSharedPreferences("Reach", MODE_PRIVATE));
+        if (TextUtils.isEmpty(chosenEmail)) {
+            Account[] accounts = AccountManager.get(this).getAccountsByType("com.google");
+            chosenEmail = accounts[0].name;
+            SharedPrefUtils.storeEmailId(getSharedPreferences("Reach", MODE_PRIVATE), chosenEmail);
+        }
+        Log.i("Ayush", "Chosen account = " + chosenEmail);
+
         final Handler handler = new Handler();
         final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
-
         final String userName = SharedPrefUtils.getUserName(preferences);
         final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
         final long serverId = SharedPrefUtils.getServerId(preferences);
 
         //track screen
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
-        tracker.setScreenName("reach.project.core.ReachActivity");
+        tracker.setScreenName("reach.project.onBoarding.SplashActivity");
         tracker.set("&uid", serverId + "");
         tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
 
@@ -203,7 +182,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
                 //TODO chat check
                 //perform contact sync
-                FireOnce.contactSync(getApplicationContext());
+                FireOnce.contactSync(contextWeakReference, serverId, phoneNumber);
                 //refresh gcm
                 FireOnce.checkGCM(contextWeakReference, serverId);
                 //refresh download ops
@@ -218,6 +197,36 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
             handler.postDelayed(OPEN_APP_SPLASH, 2000L);
         }
+    }
+
+    @Override
+    public void onOpenNumberVerification() {
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
+    }
+
+    @Override
+    public void onOpenCodeVerification(String phoneNumber) {
+
+        final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
+        Log.i("Ayush", randomCode + " code");
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
+    }
+
+    @Override
+    public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
+    }
+
+    @Override
+    public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
+                ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
     }
 
     /**

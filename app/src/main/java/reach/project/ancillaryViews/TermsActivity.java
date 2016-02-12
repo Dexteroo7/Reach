@@ -19,6 +19,6 @@ public class TermsActivity extends AppCompatActivity {
         toolbar.setTitle("Terms and Conditions");
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
         final WebView webView = (WebView) findViewById(R.id.webView);
-        webView.loadUrl("http://letsreach.co/terms");
+        webView.loadUrl("http://letsreach.co/terms/");
     }
 }

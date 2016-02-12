@@ -26,6 +26,11 @@ public class InstallReferrerReceiver extends BroadcastReceiver {
         final SharedPreferences sharedPrefs = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         sharedPrefs.edit().putString("referrer", referrer).apply();
 
+        final Matcher codeMatcher = UTM_CODE_PATTERN.matcher(referrer);
+        final String code = find(codeMatcher);
+        if (code != null)
+            sharedPrefs.edit().putString("code", code).apply();
+
         final Matcher sourceMatcher = UTM_SOURCE_PATTERN.matcher(referrer);
         final String source = find(sourceMatcher);
         if (source != null)
@@ -72,5 +77,6 @@ public class InstallReferrerReceiver extends BroadcastReceiver {
     private final Pattern UTM_CAMPAIGN_PATTERN = Pattern.compile("(^|&)utm_campaign=([^&#=]*)([#&]|$)");
     private final Pattern UTM_CONTENT_PATTERN = Pattern.compile("(^|&)utm_content=([^&#=]*)([#&]|$)");
     private final Pattern UTM_TERM_PATTERN = Pattern.compile("(^|&)utm_term=([^&#=]*)([#&]|$)");
+    private final Pattern UTM_CODE_PATTERN = Pattern.compile("(^|&)code=([^&#=]*)([#&]|$)");
 
 }

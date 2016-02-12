@@ -253,7 +253,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         simpleParams.put(PostParams.SCREEN_NAME, "my_reach");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -263,8 +263,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         } catch (JSONException ignored) {
         }
 
-        //initialize bug tracking
-        Crittercism.initialize(this, "552eac3c8172e25e67906922");
         Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
                 SharedPrefUtils.getPhoneNumber(preferences));
 
@@ -439,118 +437,147 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         final String action = intent.getAction();
         if (TextUtils.isEmpty(action))
             return;
-        switch (action) {
-            case ADD_PUSH_SONG:
-                Log.i("Ayush", "FOUND PUSH DATA");
+        try {
+            switch (action) {
+                case ADD_PUSH_SONG:
+                    Log.i("Ayush", "FOUND PUSH DATA");
 
-                final String compressed = intent.getStringExtra("data");
+                    final String compressed = intent.getStringExtra("data");
 
-                byte[] unCompressed;
-                try {
-                    unCompressed = StringCompress.deCompressStringToBytes(compressed);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    unCompressed = null;
-                }
-
-                if (unCompressed != null && unCompressed.length > 0) {
-
-                    PushContainer pushContainer;
+                    byte[] unCompressed;
                     try {
-                        pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
+                        unCompressed = StringCompress.deCompressStringToBytes(compressed);
                     } catch (IOException e) {
                         e.printStackTrace();
-                        pushContainer = null;
+                        unCompressed = null;
                     }
 
-                    if (pushContainer != null && pushContainer.song != null && !pushContainer.song.isEmpty()) {
+                    if (unCompressed != null && unCompressed.length > 0) {
 
-                        for (Song song : pushContainer.song) {
-
-                            if (song == null)
-                                continue;
-
-                            addSongToQueue(song.songId,
-                                    pushContainer.senderId,
-                                    song.size,
-                                    song.displayName,
-                                    song.actualName,
-                                    true,
-                                    pushContainer.userName,
-                                    ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                                    "0",
-                                    song.artist,
-                                    song.duration,
-                                    song.album,
-                                    song.genre);
+                        PushContainer pushContainer;
+                        try {
+                            pushContainer = new Wire(PushContainer.class).parseFrom(unCompressed, PushContainer.class);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            pushContainer = null;
                         }
-                        FireOnce.refreshOperations(reference);
-                        mTabHost.setCurrentTab(3);
-                        mTabHost.postDelayed(() -> {
-                            final PagerFragment pagerFragment = (PagerFragment) getSupportFragmentManager()
-                                    .findFragmentByTag("manager_page");
-                            pagerFragment.setInnerItem(0, 1);
-                        }, 500L);
-                    }
-                }
-                break;
-            case OPEN_MANAGER_APPS:
-                if (mTabHost != null)
-                    mTabHost.postDelayed(() -> {
-                        mTabHost.setCurrentTab(3);
-                        mTabHost.postDelayed(() -> {
-                            final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
-                                    .findFragmentByTag("manager_page");
-                            fragment.setItem(1);
-                        }, 500L);
-                    }, 1000L);
 
-                break;
-            case OPEN_MANAGER_SONGS_DOWNLOADING:
-                if (mTabHost != null)
-                    mTabHost.postDelayed(() -> {
+                        if (pushContainer != null && pushContainer.song != null && !pushContainer.song.isEmpty()) {
+
+                            for (Song song : pushContainer.song) {
+
+                                if (song == null)
+                                    continue;
+
+                                addSongToQueue(song.songId,
+                                        pushContainer.senderId,
+                                        song.size,
+                                        song.displayName,
+                                        song.actualName,
+                                        true,
+                                        pushContainer.userName,
+                                        ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                        "0",
+                                        song.artist,
+                                        song.duration,
+                                        song.album,
+                                        song.genre);
+                            }
+                            FireOnce.refreshOperations(reference);
+                            if (mTabHost != null) {
+                                mTabHost.postDelayed(() -> {
+                                    if (mTabHost == null || isFinishing())
+                                        return;
+                                    mTabHost.setCurrentTab(3);
+                                    mTabHost.postDelayed(() -> {
+                                        final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                                .findFragmentByTag("manager_page");
+                                        if (fragment == null)
+                                            return;
+                                        fragment.setItem(0);
+                                        fragment.setInnerItem(0, 1);
+                                    }, 500L);
+                                }, 1000L);
+                            }
+                        }
+                    }
+                    break;
+                case OPEN_MANAGER_APPS:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(3);
+                            mTabHost.postDelayed(() -> {
+                                final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                        .findFragmentByTag("manager_page");
+                                fragment.setItem(1);
+                            }, 500L);
+                        }, 1000L);
+                    }
+
+                    break;
+                case OPEN_MANAGER_SONGS_DOWNLOADING:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(3);
+                            mTabHost.postDelayed(() -> {
+                                final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
+                                        .findFragmentByTag("manager_page");
+                                if (fragment == null)
+                                    return;
+                                fragment.setItem(0);
+                                fragment.setInnerItem(0, 1);
+                            }, 500L);
+                        }, 1000L);
+                    }
+
+                    break;
+                case OPEN_MANAGER_SONGS_LIBRARY:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
                             mTabHost.setCurrentTab(3);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
                                 fragment.setItem(0);
-                                fragment.setInnerItem(0, 1);
+                                fragment.setInnerItem(0, 0);
                             }, 500L);
                         }, 1000L);
-
-                break;
-            case OPEN_MANAGER_SONGS_LIBRARY:
-                if (mTabHost != null)
-                    mTabHost.postDelayed(() -> {
-                        mTabHost.setCurrentTab(3);
+                    }
+                    break;
+                case OPEN_MY_PROFILE_APPS:
+                    if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
-                            final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
-                                    .findFragmentByTag("manager_page");
-                            fragment.setItem(0);
-                            fragment.setInnerItem(0, 0);
-                        }, 500L);
-                    }, 1000L);
-                break;
-            case OPEN_MY_PROFILE_APPS:
-                if (mTabHost != null)
-                    mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(4);
+                            MyProfileFragment.setItem(0);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_MY_PROFILE_APPS_FIRST:
+                    if (mTabHost != null && !isFinishing()) {
                         mTabHost.setCurrentTab(4);
                         MyProfileFragment.setItem(0);
-                    }, 1000L);
-                break;
-            case OPEN_MY_PROFILE_APPS_FIRST:
-                if (mTabHost != null)
-                        mTabHost.setCurrentTab(4);
-                    MyProfileFragment.setItem(0);
-                break;
-            case OPEN_MY_PROFILE_SONGS:
-                if (mTabHost != null)
-                    mTabHost.postDelayed(() -> {
-                        mTabHost.setCurrentTab(4);
-                        MyProfileFragment.setItem(1);
-                    }, 1000L);
-                break;
-        }
+                    }
+                    break;
+                case OPEN_MY_PROFILE_SONGS:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(4);
+                            MyProfileFragment.setItem(1);
+                        }, 1000L);
+                    }
+                    break;
+            }
+        } catch (IllegalStateException ignored) {}
     }
 
     @Override

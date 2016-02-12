@@ -656,8 +656,8 @@ public class MetaDataScanner extends IntentService {
 
         final List<Song> total = ImmutableList.copyOf(Iterables.unmodifiableIterable(Iterables.concat(myLibrary, downloaded))); //music
 
-        for (Song song : total)
-                Log.i("Ayush", song.displayName + " " + song.fileHash);
+//        for (Song song : total)
+//                Log.i("Ayush", song.displayName + " " + song.fileHash);
 
 //        for (Song song : total)
 //            Log.i("Downloader", "Found " + song.displayName + " " + song.songId);
