@@ -44,19 +44,10 @@ public class NotificationFragment extends Fragment {
 
 
     private static long serverId = 0;
-    private static WeakReference<NotificationFragment> reference = null;
     private static NotificationAdapter notificationAdapter = null;
 
     public static NotificationFragment newInstance() {
-
-        NotificationFragment fragment;
-        reference = new WeakReference<>(fragment = new NotificationFragment());
-
-        return fragment;
-    }
-
-    public static WeakReference<NotificationFragment> getReference() {
-        return reference;
+        return new NotificationFragment();
     }
 
     //    public void refresh() {
@@ -100,7 +91,6 @@ public class NotificationFragment extends Fragment {
         listView.setAdapter(notificationAdapter);
         listView.setOnItemClickListener(itemClickListener);
 
-        reference = new WeakReference<>(this);
         return rootView;
     }
 
@@ -108,7 +98,7 @@ public class NotificationFragment extends Fragment {
     public void onResume() {
 
         super.onResume();
-        new NotificationSync().executeOnExecutor(notificationRefresher);
+        new NotificationSync(this).executeOnExecutor(notificationRefresher);
     }
 
     private AdapterView.OnItemClickListener itemClickListener = (parent, view, position, id) -> {
@@ -166,6 +156,12 @@ public class NotificationFragment extends Fragment {
 
     private static final class NotificationSync extends AsyncTask<Void, Void, List<NotificationBase>> {
 
+        private WeakReference<NotificationFragment> notificationFragmentWeakReference;
+
+        public NotificationSync(NotificationFragment notificationFragment) {
+            this.notificationFragmentWeakReference = new WeakReference<NotificationFragment>(notificationFragment);
+        }
+
         @Override
         protected List<NotificationBase> doInBackground(Void... params) {
 
@@ -181,7 +177,7 @@ public class NotificationFragment extends Fragment {
 
             super.onPostExecute(notificationBaseList);
 
-            MiscUtils.useFragment(reference, fragment -> {
+            MiscUtils.useFragment(notificationFragmentWeakReference, fragment -> {
 
                 final ListAdapter temp;
                 if (fragment.listView == null || (temp = fragment.listView.getAdapter()) == null)

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,12 +24,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.appspot.able_door_616.blahApi.BlahApi;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.base.Optional;
 
 import java.io.FileNotFoundException;
@@ -43,6 +50,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
@@ -107,11 +115,10 @@ public class ScanFragment extends Fragment {
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
 
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
-        SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
-        SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
+        final SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
+        final SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
         coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
                 Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldCoverId), COVER_PHOTO_RESIZE));
-
 
         InputStream profilePicOptionsStream = null, profilePicDecodeStream = null;
         if (profilePicUri != null) {
@@ -269,6 +276,7 @@ public class ScanFragment extends Fragment {
                                 .setValue(1)
                                 .build());
 
+                        Toast.makeText(activity, "Network error", Toast.LENGTH_SHORT).show();
                         activity.finish();
                         return;
                     }
@@ -277,13 +285,34 @@ public class ScanFragment extends Fragment {
                     final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
                     tracker.setScreenName(AccountCreation.class.getPackage().getName());
 
-                    if (user.getId() != 0) {
-                        
-                        tracker.set("&uid", user.getId() + "");
-                        tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, user.getId() + "").build());
+                    final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
+                    final long userId = user.getId();
+                    if (userId != 0) {
+
+                        MiscUtils.autoRetryAsync(() -> {
+                            final HttpTransport transport = new NetHttpTransport();
+                            final JsonFactory factory = new JacksonFactory();
+                            final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(activity, StaticData.SCOPE);
+                            credential.setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
+                            Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
+
+                            final BlahApi businessApi = CloudEndPointsUtils.updateBuilder(new BlahApi.Builder(transport, factory, credential)
+                                    .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
+
+                            try {
+                                businessApi.addNewActiveCode(userId, sharedPreferences.getString("code", "unknown")).execute();
+                                businessApi.addRefCodeIfNotPresent(userId, sharedPreferences.getString("utm_source", "unknown"), sharedPreferences.getString("utm_medium", "unknown"), sharedPreferences.getString("code", "unknown")).execute();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        }, Optional.absent());
+                        tracker.set("&uid", userId + "");
+                        tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userId + "").build());
                     }
 
-                    SharedPrefUtils.storeReachUser(activity.getSharedPreferences("Reach", Context.MODE_PRIVATE), user);
+                    SharedPrefUtils.storeReachUser(sharedPreferences, user);
                     final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("messenger", messenger);
                     intent.putExtra("first", true);
@@ -366,7 +395,7 @@ public class ScanFragment extends Fragment {
     }
 
     private static final View.OnClickListener PROCEED = v -> MiscUtils.useFragment(reference, fragment -> {
-        
+
         final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
         intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);

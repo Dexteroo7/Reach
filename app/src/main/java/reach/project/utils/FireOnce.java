@@ -5,7 +5,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -57,58 +56,6 @@ public enum FireOnce {
 
     @Nullable
     private static Future syncingContacts = null;
-
-    public static synchronized void contactSync(Context context) {
-
-        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        final ContentResolver resolver = context.getContentResolver();
-
-        final long serverId = SharedPrefUtils.getServerId(preferences);
-        final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
-
-        final Cursor verify = resolver.query(
-                ReachFriendsProvider.CONTENT_URI,
-                new String[]{ReachFriendsHelper.COLUMN_ID}, null, null, null);
-
-        if (verify == null || verify.getCount() == 0) { //run full sync if no friends
-
-            syncingContacts = contactSyncService.submit(new ForceSyncFriends(
-                    new WeakReference<>(context),
-                    serverId,
-                    phoneNumber));
-        } else { //run quick sync
-
-            syncingContacts = contactSyncService.submit(new QuickSyncFriends(
-                    new WeakReference<>(context),
-                    serverId,
-                    phoneNumber));
-
-            /**
-             * Invalidate everyone
-             */
-            final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
-            contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
-
-            resolver.update(
-                    ReachFriendsProvider.CONTENT_URI,
-                    contentValues,
-                    ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
-                            ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
-                            (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + ""});
-            contentValues.clear();
-        }
-
-        if (verify != null)
-            verify.close();
-        StaticData.NETWORK_CACHE.clear(); //clear network cache
-
-        pingService.submit(new SendPing( //send ping
-                null,
-                new WeakReference<>(resolver),
-                serverId));
-    }
 
     public static synchronized void contactSync(@Nullable WeakReference<Context> reference,
                                                 long serverId,

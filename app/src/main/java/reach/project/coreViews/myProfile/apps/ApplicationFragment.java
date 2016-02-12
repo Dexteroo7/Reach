@@ -43,18 +43,14 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
-    @Nullable
-    private static WeakReference<ApplicationFragment> reference = null;
-
     private static long userId = 0;
 
     public static ApplicationFragment getInstance(String header) {
 
-        final Bundle args;
-        ApplicationFragment fragment;
-        reference = new WeakReference<>(fragment = new ApplicationFragment());
-        fragment.setArguments(args = new Bundle());
+        final Bundle args = new Bundle();
         args.putString("header", header);
+        ApplicationFragment fragment = new ApplicationFragment();
+        fragment.setArguments(args);
         return fragment;
     }
 
@@ -81,7 +77,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         //update in disk
         SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
         //update on server
-        new ToggleVisibility().executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
+        new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
 
         //notify that visibility has changed
         parentAdapter.visibilityChanged(packageName);
@@ -106,12 +102,18 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        new GetApplications().executeOnExecutor(visibilityHandler, activity);
+        new GetApplications(this).executeOnExecutor(visibilityHandler, activity);
 
         return rootView;
     }
 
     private static final class GetApplications extends AsyncTask<Context, Void, Pair<List<App>, List<App>>> {
+
+        private WeakReference<ApplicationFragment> applicationFragmentWeakReference;
+
+        public GetApplications(ApplicationFragment applicationFragment) {
+            this.applicationFragmentWeakReference = new WeakReference<>(applicationFragment);
+        }
 
         @Override
         protected Pair<List<App>, List<App>> doInBackground(Context... params) {
@@ -133,7 +135,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             super.onPostExecute(pair);
 
-            MiscUtils.useFragment(reference, fragment -> {
+            MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
 
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllApps(pair.first);
@@ -145,6 +147,12 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     }
 
     private static class ToggleVisibility extends AsyncTask<Object, Void, Boolean> {
+
+        private WeakReference<ApplicationFragment> applicationFragmentWeakReference;
+
+        public ToggleVisibility(ApplicationFragment applicationFragment) {
+            this.applicationFragmentWeakReference = new WeakReference<>(applicationFragment);
+        }
 
         /**
          * params[0] = oldVisibility
@@ -184,7 +192,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             //reset if failed
             if (failed)
-                MiscUtils.useFragment(reference, fragment -> {
+                MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
 
                     //reset in memory
                     if (fragment.parentAdapter != null) {
@@ -204,7 +212,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             super.onPostExecute(failed);
             if (failed)
-                MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
+                MiscUtils.useContextAndFragment(applicationFragmentWeakReference, (context, fragment) -> {
 
                     //notify that visibility has changed
                     Log.i("Ayush", "Server update failed for app");

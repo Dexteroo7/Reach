@@ -34,28 +34,19 @@ import reach.project.utils.SharedPrefUtils;
 public class FriendRequestFragment extends Fragment {
 
     public static final List<ReceivedRequest> receivedRequests = new ArrayList<>();
-    private static WeakReference<FriendRequestFragment> reference = null;
     private static long serverId = 0;
 
     private ExecutorService friendsRefresher = null;
     private ListView listView = null;
 
     public static FriendRequestFragment newInstance() {
-
-        FriendRequestFragment fragment;
-        reference = new WeakReference<>(fragment = new FriendRequestFragment());
-
-        return fragment;
-    }
-
-    public static WeakReference<FriendRequestFragment> getReference() {
-        return reference;
+        return new FriendRequestFragment();
     }
 
     public void refresh() {
 
         if (friendsRefresher != null && listView != null)
-            new FetchRequests().executeOnExecutor(friendsRefresher);
+            new FetchRequests(this).executeOnExecutor(friendsRefresher);
     }
 
     private final AdapterView.OnItemClickListener itemClickListener = (parent, view, position, id) -> {
@@ -103,7 +94,6 @@ public class FriendRequestFragment extends Fragment {
 
         friendsRefresher = MiscUtils.getRejectionExecutor();
 
-        reference = new WeakReference<>(this);
         return rootView;
     }
 
@@ -127,6 +117,12 @@ public class FriendRequestFragment extends Fragment {
 
     private static final class FetchRequests extends AsyncTask<Void, Void, List<ReceivedRequest>> {
 
+        private WeakReference<FriendRequestFragment> friendRequestFragmentWeakReference;
+
+        public FetchRequests(FriendRequestFragment friendRequestFragment) {
+            this.friendRequestFragmentWeakReference = new WeakReference<>(friendRequestFragment);
+        }
+
         @Override
         protected List<ReceivedRequest> doInBackground(Void... params) {
 
@@ -141,7 +137,7 @@ public class FriendRequestFragment extends Fragment {
 
             super.onPostExecute(receivedRequestList);
 
-            MiscUtils.useFragment(reference, fragment -> {
+            MiscUtils.useFragment(friendRequestFragmentWeakReference, fragment -> {
 
                 final ListAdapter temp;
                 if (fragment.listView == null || (temp = fragment.listView.getAdapter()) == null)

@@ -13,8 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.lang.ref.WeakReference;
-
 import javax.annotation.Nonnull;
 
 import reach.project.R;
@@ -31,17 +29,12 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>, LoaderManager.LoaderCallbacks<Cursor> {
 
-    @Nullable
-    private static WeakReference<DownloadingFragment> reference = null;
-//    private static long userId = 0;
-
     public static DownloadingFragment getInstance(String header) {
 
-        final Bundle args;
-        DownloadingFragment fragment;
-        reference = new WeakReference<>(fragment = new DownloadingFragment());
-        fragment.setArguments(args = new Bundle());
+        final Bundle args = new Bundle();
         args.putString("header", header);
+        DownloadingFragment fragment = new DownloadingFragment();
+        fragment.setArguments(args);
         return fragment;
     }
 

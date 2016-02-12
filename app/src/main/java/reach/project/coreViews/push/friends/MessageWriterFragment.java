@@ -32,22 +32,18 @@ public class MessageWriterFragment extends Fragment {
     public static final String FIRST_CONTENT_NAME = "FIRST_CONTENT_NAME";
     public static final String PUSH_SIZE = "PUSH_SIZE";
 
-    @Nullable
-    private static WeakReference<MessageWriterFragment> reference = null;
     private static long myUserId = 0;
 
     public static MessageWriterFragment getInstance(long[] userIds, String pushContainer, String firstSongName, int songCount) {
 
-        final Bundle args;
-        MessageWriterFragment fragment;
-        reference = new WeakReference<>(fragment = new MessageWriterFragment());
-        fragment.setArguments(args = new Bundle());
-
+        final Bundle args = new Bundle();
         args.putLongArray(USER_IDS, userIds);
         args.putString(PUSH_CONTAINER, pushContainer);
         args.putString(FIRST_CONTENT_NAME, firstSongName);
         args.putInt(PUSH_SIZE, songCount);
 
+        MessageWriterFragment fragment = new MessageWriterFragment();
+        fragment.setArguments(args);
         return fragment;
     }
 
@@ -69,6 +65,12 @@ public class MessageWriterFragment extends Fragment {
 
     private static final class SendPush extends AsyncTask<PushContainerJSON, Void, Boolean> {
 
+        private WeakReference<MessageWriterFragment> messageWriterFragmentWeakReference;
+
+        public SendPush(MessageWriterFragment messageWriterFragment) {
+            this.messageWriterFragmentWeakReference = new WeakReference<>(messageWriterFragment);
+        }
+
         @NonNull
         @Override
         protected Boolean doInBackground(PushContainerJSON... params) {
@@ -88,7 +90,7 @@ public class MessageWriterFragment extends Fragment {
 
             super.onPostExecute(aBoolean);
 
-            MiscUtils.useContextAndFragment(reference, (context, fragment) -> {
+            MiscUtils.useContextAndFragment(messageWriterFragmentWeakReference, (context, fragment) -> {
 
                 if (aBoolean) {
                     Toast.makeText(context, "Pushed successfully", Toast.LENGTH_SHORT).show();
@@ -147,7 +149,7 @@ public class MessageWriterFragment extends Fragment {
                         sendPush.setAlpha(0.1f);
                         sendPush.setClickable(false);
                     }
-                    new SendPush().execute(pushJSON);
+                    new SendPush(this).execute(pushJSON);
                     return true;
             }
             return false;

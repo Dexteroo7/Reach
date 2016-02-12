@@ -1230,8 +1230,9 @@ public enum MiscUtils {
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
+        List<ApplicationInfo> applications;
         try {
-            final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
+            applications = packageManager.getInstalledApplications(0);
             final Iterator<ApplicationInfo> iterator = applications.iterator();
             while (iterator.hasNext()) {
 
@@ -1243,9 +1244,9 @@ public enum MiscUtils {
             }
 
             return applications;
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
 
-        final List<ApplicationInfo> result = new ArrayList<>();
+        applications = new ArrayList<>();
         BufferedReader bufferedReader = null;
 
         try {
@@ -1255,7 +1256,10 @@ public enum MiscUtils {
             while((line=bufferedReader.readLine()) != null) {
                 final String packageName = line.substring(line.indexOf(':')+1);
                 final ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
-                result.add(applicationInfo);
+                if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0
+                        && (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0
+                        && (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) == 0)
+                    applications.add(applicationInfo);
             }
             process.waitFor();
         }
@@ -1271,7 +1275,7 @@ public enum MiscUtils {
                 }
             }
         }
-        return result;
+        return applications;
     }
 
     public static void openAppinPlayStore(Activity activity, String packageName, Long senderId, String page) {

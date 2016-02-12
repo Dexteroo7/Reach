@@ -15,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,15 +39,12 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>,
         LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static WeakReference<MyLibraryFragment> reference = null;
-
     public static MyLibraryFragment getInstance(String header) {
 
-        final Bundle args;
-        MyLibraryFragment fragment;
-        reference = new WeakReference<>(fragment = new MyLibraryFragment());
-        fragment.setArguments(args = new Bundle());
+        final Bundle args = new Bundle();
         args.putString("header", header);
+        MyLibraryFragment fragment = new MyLibraryFragment();
+        fragment.setArguments(args);
         return fragment;
     }
 
