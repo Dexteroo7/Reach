@@ -23,13 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.appspot.able_door_616.blahApi.BlahApi;
-import com.appspot.able_door_616.blahApi.model.SimpleString;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -61,7 +54,6 @@ import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
-import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -260,7 +252,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         simpleParams.put(PostParams.SCREEN_NAME, "my_reach");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }

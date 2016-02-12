@@ -380,7 +380,7 @@ public class PlayerActivity extends AppCompatActivity {
                 simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
                 try {
                     simpleParams.put(PostParams.APP_VERSION,
-                            context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+                            context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode + "");
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }

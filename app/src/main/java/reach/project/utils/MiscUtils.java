@@ -1296,7 +1296,7 @@ public enum MiscUtils {
         simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -1619,7 +1619,7 @@ public enum MiscUtils {
         simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
