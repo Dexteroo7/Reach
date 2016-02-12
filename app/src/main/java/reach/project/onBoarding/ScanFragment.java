@@ -44,6 +44,7 @@ import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.utils.CloudStorageUtils;
+import reach.project.utils.FireOnce;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -288,6 +289,11 @@ public class ScanFragment extends Fragment {
                     intent.putExtra("messenger", messenger);
                     intent.putExtra("first", true);
                     activity.startService(intent);
+
+                    FireOnce.contactSync(
+                            new WeakReference<>(activity.getApplicationContext()),
+                            user.getId(),
+                            user.getPhoneNumber());
                 }
             });
         }
