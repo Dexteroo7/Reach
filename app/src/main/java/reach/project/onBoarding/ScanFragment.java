@@ -25,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.appspot.able_door_616.blahApi.BlahApi;
+import com.appspot.able_door_616.blahApi.model.JsonMap;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
@@ -302,13 +303,48 @@ public class ScanFragment extends Fragment {
                                     .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
 
                             try {
-                                businessApi.addNewActiveCode(userId, sharedPreferences.getString("code", "unknown")).execute();
-                                businessApi.addRefCodeIfNotPresent(userId, sharedPreferences.getString("utm_source", "unknown"), sharedPreferences.getString("utm_medium", "unknown"), sharedPreferences.getString("code", "unknown")).execute();
+                                final String code = sharedPreferences.getString("code", "");
+                                final String utm_source = sharedPreferences.getString("utm_source", "");
+                                final String utm_medium = sharedPreferences.getString("utm_medium", "");
+                                final String utm_campaign = sharedPreferences.getString("utm_campaign", "");
+                                final String utm_content = sharedPreferences.getString("utm_content", "");
+                                final String utm_term = sharedPreferences.getString("utm_term", "");
+
+                                if (!TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
+                                    final JsonMap jsonMap = new JsonMap();
+                                    jsonMap.set("utm_source", utm_source);
+                                    if (!TextUtils.isEmpty(utm_medium))
+                                        jsonMap.set("utm_medium", utm_medium);
+                                    if (!TextUtils.isEmpty(utm_campaign))
+                                        jsonMap.set("utm_campaign", utm_campaign);
+                                    if (!TextUtils.isEmpty(utm_content))
+                                        jsonMap.set("utm_content", utm_content);
+                                    if (!TextUtils.isEmpty(utm_term))
+                                        jsonMap.set("utm_term", utm_term);
+                                    businessApi.addNewUTMAndCode(userId, code, jsonMap).execute();
+                                }
+                                else if (!TextUtils.isEmpty(code) && TextUtils.isEmpty(utm_source)) {
+                                    businessApi.addPromoCodeIfNotPresent(userId, code).execute();
+                                }
+                                else if (TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
+                                    final JsonMap jsonMap = new JsonMap();
+                                    jsonMap.set("utm_source", utm_source);
+                                    if (!TextUtils.isEmpty(utm_medium))
+                                        jsonMap.set("utm_medium", utm_medium);
+                                    if (!TextUtils.isEmpty(utm_campaign))
+                                        jsonMap.set("utm_campaign", utm_campaign);
+                                    if (!TextUtils.isEmpty(utm_content))
+                                        jsonMap.set("utm_content", utm_content);
+                                    if (!TextUtils.isEmpty(utm_term))
+                                        jsonMap.set("utm_term", utm_term);
+                                    businessApi.addNewUTM(userId, jsonMap).execute();
+                                }
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             return null;
                         }, Optional.absent());
+
                         tracker.set("&uid", userId + "");
                         tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userId + "").build());
                     }

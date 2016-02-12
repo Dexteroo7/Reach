@@ -202,20 +202,32 @@ public enum FireOnce {
             if (serverId == 0)
                 return;
 
-            final MyString dataToReturn = MiscUtils.autoRetry(() -> StaticData.USER_API.getGcmId(serverId).execute(), Optional.absent()).orNull();
+            MiscUtils.useContextFromContext(contextWeakReference, context -> {
+                try {
+                    final int version = context.getPackageManager()
+                            .getPackageInfo(context.getPackageName(), 0).versionCode;
 
-            //check returned gcm
-            final String gcmId;
-            if (dataToReturn == null || //fetch failed
-                    TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
-                    gcmId.equals("hello_world")) { //bad gcm
+                    final MyString dataToReturn = MiscUtils.autoRetry(() ->
+                            StaticData.USER_API.getGcmIdAndUpdateAppVersion(serverId,
+                                    String.valueOf(version)).execute(), Optional.absent()).orNull();
 
-                //network operation
-                if (MiscUtils.updateGCM(serverId, contextWeakReference))
-                    Log.i("Ayush", "GCM updated !");
-                else
-                    Log.i("Ayush", "GCM check failed");
-            }
+                    //check returned gcm
+                    final String gcmId;
+                    if (dataToReturn == null || //fetch failed
+                            TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
+                            gcmId.equals("hello_world")) { //bad gcm
+
+                        //network operation
+                        if (MiscUtils.updateGCM(serverId, contextWeakReference))
+                            Log.i("Ayush", "GCM updated !");
+                        else
+                            Log.i("Ayush", "GCM check failed");
+                    }
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+            });
+
         }
     }
 
