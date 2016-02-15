@@ -50,6 +50,8 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 25/11/15.
  */
+
+// Fragment which displays songs of the user
 public class MyLibraryFragment extends Fragment implements HandOverMessage, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static WeakReference<MyLibraryFragment> reference = null;
@@ -67,7 +69,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
     @Nullable
     private ParentAdapter parentAdapter;
-    //handle 2 at a time
+    //handle 2 at a time, for thread queue
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
     @Nullable

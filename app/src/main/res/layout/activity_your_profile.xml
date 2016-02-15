@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/root_layout"
     android:background="@color/reach_grey_bg"
     tools:context=".coreViews.yourProfile.YourProfileActivity">
+
     <com.github.florent37.materialviewpager.MaterialViewPager
         android:id="@+id/materialViewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:viewpager_header="@layout/header_yourprofile"
-        app:viewpager_pagerTitleStrip="@layout/tabstrip"
+        app:viewpager_animatedHeaderImage="false"
         app:viewpager_color="@color/colorPrimary"
-        app:viewpager_headerHeight="220dp"
-        app:viewpager_headerAlpha="1.0"
-        app:viewpager_imageHeaderDarkLayerAlpha="0.2"
-        app:viewpager_hideToolbarAndTitle="true"
-        app:viewpager_enableToolbarElevation="true"
-        app:viewpager_parallaxHeaderFactor="1.5"
-        app:viewpager_headerAdditionalHeight="20dp"
         app:viewpager_displayToolbarWhenSwipe="true"
-        app:viewpager_animatedHeaderImage="false" />
+        app:viewpager_enableToolbarElevation="true"
+        app:viewpager_header="@layout/header_yourprofile"
+        app:viewpager_headerAdditionalHeight="20dp"
+        app:viewpager_headerAlpha="1.0"
+        app:viewpager_headerHeight="220dp"
+        app:viewpager_hideToolbarAndTitle="true"
+        app:viewpager_imageHeaderDarkLayerAlpha="0.2"
+        app:viewpager_pagerTitleStrip="@layout/tabstrip"
+        app:viewpager_parallaxHeaderFactor="1.5" />
 </android.support.design.widget.CoordinatorLayout>

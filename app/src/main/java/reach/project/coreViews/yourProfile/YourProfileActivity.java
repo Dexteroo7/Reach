@@ -30,6 +30,8 @@ import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 
+
+// If a friend is added, then this activity is displayed
 public class YourProfileActivity extends AppCompatActivity {
 
     //private static final String OPEN_PROFILE = "OPEN_PROFILE";

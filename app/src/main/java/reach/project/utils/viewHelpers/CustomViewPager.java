@@ -9,8 +9,15 @@ import android.view.MotionEvent;
  * Created by ashish on 16/07/15.
  */
 public class CustomViewPager extends ViewPager {
-
+    // A viewpager with paging disabled
     private boolean enabled;
+
+    /**
+     *
+     * @param context
+     * @param attrs
+     */
+
 
     public CustomViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);

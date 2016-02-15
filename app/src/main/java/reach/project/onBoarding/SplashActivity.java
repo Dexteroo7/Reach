@@ -63,6 +63,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
 
+        // Checking if the user has given permission to read contacts on API 23(marshmallow) or greater
         if (Build.VERSION.SDK_INT >= 23) {
 
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
@@ -178,6 +179,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
         final long serverId = SharedPrefUtils.getServerId(preferences);
 
+        //For google analytics
         //track screen
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
         tracker.setScreenName("reach.project.core.ReachActivity");

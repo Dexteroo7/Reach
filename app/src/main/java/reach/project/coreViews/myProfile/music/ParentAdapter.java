@@ -244,7 +244,12 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
 //        Log.i("Ayush", "Total size = " + (myLibraryCount + downloadedCount + 1));
 
-        return myLibraryCount + downloadedCount + 1; //adjust for recent list
+        if(myLibraryCount + downloadedCount == 0){
+            return 0;
+        }
+        else {
+            return myLibraryCount + downloadedCount + 1; //adjust for recent list
+        }
     }
 
     @Override
