@@ -146,6 +146,11 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         String chosenEmail = SharedPrefUtils.getEmailId(getSharedPreferences("Reach", MODE_PRIVATE));
         if (TextUtils.isEmpty(chosenEmail)) {
             Account[] accounts = AccountManager.get(this).getAccountsByType("com.google");
+            if (accounts.length == 0) {
+                Toast.makeText(this, "You need atleast 1 Google account signed-in to use the app", Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
             chosenEmail = accounts[0].name;
             SharedPrefUtils.storeEmailId(getSharedPreferences("Reach", MODE_PRIVATE), chosenEmail);
         }
@@ -201,33 +206,50 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     @Override
     public void onOpenNumberVerification() {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
+        if (isFinishing())
+            return;
+        try {
+            getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                    R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                    .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
+        } catch (IllegalStateException ignored) {}
+
     }
 
     @Override
     public void onOpenCodeVerification(String phoneNumber) {
-
-        final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
-        Log.i("Ayush", randomCode + " code");
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
+        if (isFinishing())
+            return;
+        try {
+            final String randomCode = ThreadLocalRandom.current().nextInt(1000, 10000) + "";
+            Log.i("Ayush", randomCode + " code");
+            getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                    R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                    .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
+        } catch (IllegalStateException ignored) { finish();}
     }
 
     @Override
     public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
-                R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
+        if (isFinishing())
+            return;
+        try {
+            getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                    R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                    .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
+        } catch (IllegalStateException ignored) { finish();}
+
     }
 
     @Override
     public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
-    }
+            if (isFinishing())
+                return;
+            try {
+                getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
+                        ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
+            } catch (IllegalStateException ignored) { finish();}
+}
 
     /**
      * Check the device to make sure it has the Google Play Services APK. If
@@ -279,11 +301,16 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     private static final Runnable WELCOME_SPLASH = () -> MiscUtils.useActivity(activityWeakReference, activity -> {
 
-        activity.getWindow().setBackgroundDrawableResource(R.color.white);
-        activity.setContentView(R.layout.activity_splash);
+        if (activity.isFinishing())
+            return;
+        try {
+            activity.getWindow().setBackgroundDrawableResource(R.color.white);
+            activity.setContentView(R.layout.activity_splash);
 
-        final FragmentManager fragmentManager = activity.getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.splashLayout,
-                WelcomeFragment.newInstance()).commit();
+            final FragmentManager fragmentManager = activity.getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.splashLayout,
+                    WelcomeFragment.newInstance()).commit();
+        } catch (IllegalStateException ignored) { activity.finish();}
+
     });
 }

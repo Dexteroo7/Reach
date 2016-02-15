@@ -144,9 +144,9 @@ class Player {
 
     public void start() {
 
-        if (whichPlayer == WhichPlayer.MediaPlayer)
+        if (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer)
             mediaPlayer.start();
-        else {
+        if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack) {
             audioTrack.play();
             pauseDecoding.set(false);
         }
