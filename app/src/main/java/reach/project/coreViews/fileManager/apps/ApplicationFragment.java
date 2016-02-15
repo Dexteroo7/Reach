@@ -35,16 +35,12 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
-    @Nullable
-    private static WeakReference<ApplicationFragment> reference = null;
-
     public static ApplicationFragment getInstance(String header) {
 
-        final Bundle args;
-        ApplicationFragment fragment;
-        reference = new WeakReference<>(fragment = new ApplicationFragment());
-        fragment.setArguments(args = new Bundle());
+        final Bundle args = new Bundle();
         args.putString("header", header);
+        final ApplicationFragment fragment = new ApplicationFragment();
+        fragment.setArguments(args);
         return fragment;
     }
 
@@ -69,8 +65,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 
-        reference = new WeakReference<>(this);
-        new GetApplications().executeOnExecutor(applicationsFetcher, context);
+        new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
+
         return rootView;
     }
 
@@ -83,6 +79,12 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     }
 
     private static final class GetApplications extends AsyncTask<Context, Void, Pair<List<App>, List<App>>> {
+
+        private WeakReference<ApplicationFragment> applicationFragmentWeakReference;
+
+        public GetApplications(ApplicationFragment applicationFragment) {
+            this.applicationFragmentWeakReference = new WeakReference<>(applicationFragment);
+        }
 
         @Override
         protected Pair<List<App>, List<App>> doInBackground(Context... params) {
@@ -103,9 +105,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         protected void onPostExecute(Pair<List<App>, List<App>> pair) {
 
             super.onPostExecute(pair);
-
-            MiscUtils.useFragment(reference, fragment -> {
-
+            MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllAppCount(pair.first);
                     fragment.parentAdapter.updateRecentApps(pair.second);

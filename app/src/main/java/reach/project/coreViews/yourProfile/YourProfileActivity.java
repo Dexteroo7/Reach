@@ -102,9 +102,8 @@ public class YourProfileActivity extends AppCompatActivity {
                 new String[]{userId + ""}, null);
         int numberOfSongs = 0;
 
-        if (cursor != null) {
+        if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst()) {
 
-            cursor.moveToFirst();
             final String uName = cursor.getString(1);
             numberOfSongs = cursor.getInt(2);
             final int numberOfApps = cursor.getInt(6);

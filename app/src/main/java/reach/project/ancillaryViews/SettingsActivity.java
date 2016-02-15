@@ -28,10 +28,10 @@ import reach.project.utils.SharedPrefUtils;
 public class SettingsActivity extends AppCompatActivity {
 
     //private static WeakReference<SettingsActivity> reference;
+    private SharedPreferences preferences;
 
     private final static String [] titles = new String [] {
             "Enable sharing on mobile data",
-            "Live Help",
             "Terms and Conditions",
             "Rate our App"
     };
@@ -40,7 +40,7 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-
+        preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         //reference = new WeakReference<>(this);
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.settingsToolbar);
@@ -74,12 +74,26 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             switch (getAdapterPosition()) {
-                case 1:
+                case 0:
+                    switchCompat.toggle();
+                    if (switchCompat.isChecked()) {
+                        SharedPrefUtils.setDataOn(preferences);
+                    }
+                    else {
+                        SharedPrefUtils.setDataOff(preferences);
+                        ////////////////////purge all upload operations, but retain paused operations
+                        //TODO
+                        getContentResolver().delete(
+                                ReachDatabaseProvider.CONTENT_URI,
+                                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                        ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                                new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
+                    }
                     break;
-                case 2:
+                case 1:
                     startActivity(new Intent(SettingsActivity.this, TermsActivity.class));
                     break;
-                case 3:
+                case 2:
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
                     } catch (ActivityNotFoundException e) {
@@ -115,29 +129,8 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(SettingsHolder holder, int position) {
             holder.settingsTitle.setText(titles[position]);
-            if (position == 0) {
-                SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_APPEND);
-                if (SharedPrefUtils.getMobileData(preferences))
-                    holder.switchCompat.setChecked(true);
-                else
-                    holder.switchCompat.setChecked(false);
-
-                holder.switchCompat.setOnCheckedChangeListener((buttonView, isChecked) -> {
-
-                    if (isChecked)
-                        SharedPrefUtils.setDataOn(preferences);
-                    else {
-                        SharedPrefUtils.setDataOff(preferences);
-                        ////////////////////purge all upload operations, but retain paused operations
-                        //TODO
-                        getContentResolver().delete(
-                                ReachDatabaseProvider.CONTENT_URI,
-                                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                        ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                                new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
-                    }
-                });
-            }
+            if (position == 0)
+                holder.switchCompat.setChecked(SharedPrefUtils.getMobileData(preferences));
         }
 
         @Override

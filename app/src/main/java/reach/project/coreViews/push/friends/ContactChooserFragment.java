@@ -11,13 +11,11 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import java.lang.ref.WeakReference;
 import java.util.Iterator;
 
 import javax.annotation.Nonnull;
@@ -37,16 +35,9 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
 
     @Nullable
     private ContactChooserInterface chooserInterface = null;
-    @Nullable
-    private static WeakReference<ContactChooserFragment> reference;
 
     public static ContactChooserFragment getInstance() {
-
-        ContactChooserFragment fragment;
-        Log.i("Ayush", "Creating new instance of contacts list fragment");
-        reference = new WeakReference<>(fragment = new ContactChooserFragment());
-
-        return fragment;
+        return new ContactChooserFragment();
     }
 
     private final ContactChooserAdapter contactChooserAdapter = new ContactChooserAdapter(this, R.layout.push_contact_item);

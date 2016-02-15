@@ -51,7 +51,7 @@ public class AccountCreation extends Fragment {
     }
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
-    private static final int IMAGE_PICKER_SELECT = 999;
+    static final int IMAGE_PICKER_SELECT = 999;
 
     @Nullable
     private Uri profilePicUri = null;
@@ -126,7 +126,6 @@ public class AccountCreation extends Fragment {
             ((InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(userName.getWindowToken(), 0);
             view.setOnClickListener(null);
             view.setEnabled(false);
-            Log.i("Ayush", "Cleared everything : AccountCreation underway");
             profilePhotoSelector.setOnClickListener(null);
 
             final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -155,8 +154,7 @@ public class AccountCreation extends Fragment {
             return;
         }
 
-        final Uri imageUri;
-        if (requestCode != IMAGE_PICKER_SELECT || resultCode != Activity.RESULT_OK || (imageUri = data.getData()) == null) {
+        if (requestCode != IMAGE_PICKER_SELECT || resultCode != Activity.RESULT_OK || (profilePicUri = data.getData()) == null) {
 
             Toast.makeText(activity, "Failed to set Profile Photo, try again", Toast.LENGTH_SHORT).show();
             return;
@@ -165,10 +163,9 @@ public class AccountCreation extends Fragment {
         if (profilePhotoSelector != null) {
 
             final DraweeController draweeController = MiscUtils.getControllerResize(
-                    profilePhotoSelector.getController(), imageUri, PROFILE_PHOTO_RESIZE);
+                    profilePhotoSelector.getController(), profilePicUri, PROFILE_PHOTO_RESIZE);
             profilePhotoSelector.setController(draweeController);
         }
-        profilePicUri = imageUri;
     }
 
     @Override

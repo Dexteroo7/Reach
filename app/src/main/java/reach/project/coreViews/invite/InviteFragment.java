@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,26 +17,14 @@ import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 
-import java.lang.ref.WeakReference;
-
 import reach.project.R;
 import reach.project.core.ReachApplication;
-import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 public class InviteFragment extends Fragment {
 
-    private static WeakReference<InviteFragment> reference = null;
     public static InviteFragment newInstance() {
-
-        InviteFragment fragment;
-        if(reference == null || (fragment = reference.get()) == null || MiscUtils.isFragmentDead(fragment)) {
-            reference = new WeakReference<>(fragment = new InviteFragment());
-        }
-        else {
-            Log.i("Ayush", "Reusing invite fragment object :)");
-        }
-        return fragment;
+        return new InviteFragment();
     }
 
     private class InviteListAdapter extends ArrayAdapter<String>{

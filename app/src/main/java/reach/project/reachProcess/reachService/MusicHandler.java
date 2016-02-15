@@ -323,6 +323,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         try {
             if (!player.isPlaying())
                 processPlayRequest();
+            if (player == null || player.isNull() || currentSong == null)
+                return false;
             player.seekTo((int) ((currentSong.getDuration() / 100) * percent));
         } catch (UnsupportedOperationException e) {
             e.printStackTrace();

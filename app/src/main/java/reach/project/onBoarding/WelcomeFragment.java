@@ -8,8 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.lang.ref.WeakReference;
-
 import reach.project.R;
 import reach.project.ancillaryViews.TermsActivity;
 
@@ -17,13 +15,8 @@ public class WelcomeFragment extends Fragment {
 
     private SplashInterface mListener;
 
-    private static WeakReference<WelcomeFragment> reference;
     public static Fragment newInstance() {
-
-        WelcomeFragment welcomeFragment;
-        reference = new WeakReference<>(welcomeFragment = new WelcomeFragment());
-
-        return welcomeFragment;
+        return new WelcomeFragment();
     }
 
     @Override

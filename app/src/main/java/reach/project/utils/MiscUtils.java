@@ -62,9 +62,11 @@ import com.google.gson.JsonPrimitive;
 
 import org.json.JSONException;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -1228,18 +1230,51 @@ public enum MiscUtils {
 
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
-        final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
-        final Iterator<ApplicationInfo> iterator = applications.iterator();
+        List<ApplicationInfo> applications;
+        try {
+            applications = packageManager.getInstalledApplications(0);
+            final Iterator<ApplicationInfo> iterator = applications.iterator();
+            while (iterator.hasNext()) {
 
-        while (iterator.hasNext()) {
+                final ApplicationInfo applicationInfo = iterator.next();
+                if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
+                        || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                        || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
+                    iterator.remove();
+            }
 
-            final ApplicationInfo applicationInfo = iterator.next();
-            if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
-                    || (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0
-                    || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
-                iterator.remove();
+            return applications;
+        } catch (Exception ignored) {}
+
+        applications = new ArrayList<>();
+        BufferedReader bufferedReader = null;
+
+        try {
+            final Process process = Runtime.getRuntime().exec("pm list packages");
+            bufferedReader=new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while((line=bufferedReader.readLine()) != null) {
+                final String packageName = line.substring(line.indexOf(':')+1);
+                final ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
+                if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0
+                        && (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0
+                        && (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) == 0)
+                    applications.add(applicationInfo);
+            }
+            process.waitFor();
         }
 
+        catch (Exception e) { e.printStackTrace(); }
+
+        finally {
+            if(bufferedReader!=null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         return applications;
     }
 
@@ -1261,7 +1296,7 @@ public enum MiscUtils {
         simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -1280,7 +1315,9 @@ public enum MiscUtils {
     }
 
     public static void openApp(Context context, String packageName) {
-        context.startActivity(context.getPackageManager().getLaunchIntentForPackage(packageName));
+        try {
+            context.startActivity(context.getPackageManager().getLaunchIntentForPackage(packageName));
+        } catch (Exception ignored) {}
     }
 
     private static class StartDownloadOperation implements Runnable {
@@ -1549,7 +1586,7 @@ public enum MiscUtils {
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                     .setCategory("Add song failed")
                     .setAction("User Name - " + clientName)
-                    .setLabel(page)
+                    .setLabel("Song - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
                     .setValue(1)
                     .build());
             return;
@@ -1570,7 +1607,7 @@ public enum MiscUtils {
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
                 .setAction("User Name - " + clientName)
-                .setLabel("SongBrainz - " + reachDatabase.getDisplayName() + ", From - " + reachDatabase.getSenderId())
+                .setLabel(page)
                 .setValue(1)
                 .build());
 
@@ -1582,7 +1619,7 @@ public enum MiscUtils {
         simpleParams.put(PostParams.OS_VERSION, Build.VERSION.SDK_INT + "");
         try {
             simpleParams.put(PostParams.APP_VERSION,
-                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName);
+                    activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode + "");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }

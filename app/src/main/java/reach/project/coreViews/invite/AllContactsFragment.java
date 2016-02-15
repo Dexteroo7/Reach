@@ -17,7 +17,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,8 +25,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.lang.ref.WeakReference;
 
 import javax.annotation.Nonnull;
 
@@ -42,15 +39,8 @@ public class AllContactsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>,HandOverMessage<Cursor> {
 
     private AllContactsAdapter inviteAdapter;
-    private static WeakReference<AllContactsFragment> reference = null;
-
     public static AllContactsFragment newInstance() {
-
-        AllContactsFragment fragment;
-        Log.i("Ayush", "Creating new instance of all contacts fragment");
-        reference = new WeakReference<>(fragment = new AllContactsFragment());
-
-        return fragment;
+        return new AllContactsFragment();
     }
 
     public static void showAlert(String name, String number, Context context) {

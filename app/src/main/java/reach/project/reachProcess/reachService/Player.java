@@ -144,17 +144,19 @@ class Player {
 
     public void start() {
 
-        if (whichPlayer == WhichPlayer.MediaPlayer)
+        if (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer)
             mediaPlayer.start();
-        else {
+        if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack) {
             audioTrack.play();
             pauseDecoding.set(false);
         }
     }
 
     public void setVolume(float duck_volume) {
-        if (mediaPlayer != null)
-            mediaPlayer.setVolume(duck_volume, duck_volume);
+        try {
+            if (mediaPlayer != null)
+                mediaPlayer.setVolume(duck_volume, duck_volume);
+        } catch (IllegalStateException ignored) {}
         if (audioTrack == null)
             return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)

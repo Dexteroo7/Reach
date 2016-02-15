@@ -10,7 +10,6 @@ import com.facebook.common.memory.MemoryTrimType;
 import com.facebook.common.memory.MemoryTrimmable;
 import com.facebook.common.memory.MemoryTrimmableRegistry;
 import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.imagepipeline.backends.okhttp.OkHttpImagePipelineConfigFactory;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
@@ -144,8 +143,10 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
     public void onCreate() {
 
         super.onCreate();
+        //initialize bug tracking
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //initialize fresco
-        final ImagePipelineConfig.Builder configBuilder = OkHttpImagePipelineConfigFactory.newBuilder(this, OK_HTTP_CLIENT)
+        final ImagePipelineConfig.Builder configBuilder = ImagePipelineConfig.newBuilder(this)
 
                 .setDecodeFileDescriptorEnabled(true)
                 .setDecodeMemoryFileEnabled(true)
