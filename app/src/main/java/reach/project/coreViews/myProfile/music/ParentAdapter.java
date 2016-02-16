@@ -27,6 +27,7 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
+import reach.project.utils.viewHelpers.EmptyViewHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
@@ -38,11 +39,14 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
-
+    private static final byte VIEW_TYPE_EMPTY = 2;
+    private static final byte VIEW_TYPE_ERROR = 3;
+    private boolean mEmptyViewVisible = false;
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long emptyHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
@@ -195,13 +199,17 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
             //use
         } else {
+            if(!mEmptyViewVisible) {
+                final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
+                holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
+                horizontalViewHolder.headerText.setText("Recently Added");
+                if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
+                    horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
+                horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
+            }
+            else{
 
-            final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
-            horizontalViewHolder.headerText.setText("Recently Added");
-            if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
-                horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
-            horizontalViewHolder.listOfItems.setAdapter(recentAdapter);
+            }
         }
     }
 
@@ -224,6 +232,15 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
                         R.id.moreButton);
             }
 
+            case VIEW_TYPE_EMPTY: {
+                return new EmptyViewHolder(parent,
+                        R.layout.my_profile_music_emptyview,
+                        R.id.empty_view
+                        );
+
+            }
+
+
             default:
                 return null;
         }
@@ -245,9 +262,11 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 //        Log.i("Ayush", "Total size = " + (myLibraryCount + downloadedCount + 1));
 
         if(myLibraryCount + downloadedCount == 0){
-            return 0;
+            mEmptyViewVisible = true;
+            return 1;
         }
         else {
+            mEmptyViewVisible = false;
             return myLibraryCount + downloadedCount + 1; //adjust for recent list
         }
     }
@@ -259,17 +278,28 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         if (item instanceof Cursor)
             return VIEW_TYPE_ALL;
         else
-            return VIEW_TYPE_RECENT;
+            if(mEmptyViewVisible){
+                return VIEW_TYPE_EMPTY;
+            }
+            else {
+                return VIEW_TYPE_RECENT;
+            }
     }
 
     @Override
     protected long newGetItemId(int position) {
 
+        // TODO: Generate id for emptyView
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return ((Cursor) item).getLong(1); //song_id || unique_id
         else
-            return recentHolderId;
+            if(mEmptyViewVisible){
+                return emptyHolderId;
+            }
+            else {
+                return recentHolderId;
+            }
     }
 
     @Override
@@ -277,4 +307,6 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         return new RecyclerView.ViewHolder(view) {
         };
     }
+
+
 }
