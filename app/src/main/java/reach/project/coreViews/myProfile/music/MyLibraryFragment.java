@@ -40,6 +40,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
@@ -74,13 +75,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
+        final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
         parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
+        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -167,6 +169,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 //            Log.i("Ayush", "MyLibrary my profile " + count);
 
             parentAdapter.setNewMyLibraryCursor(data);
+
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
