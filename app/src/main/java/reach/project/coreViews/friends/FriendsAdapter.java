@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,6 +23,7 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
+import reach.project.utils.viewHelpers.EmptyViewHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.tourguide.Overlay;
@@ -38,6 +40,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     private final HandOverMessage<ClickData> handOverMessage;
     private final SharedPreferences sharedPreferences;
     private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private final long emptyViewId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 
     ///////////Horizontal Cursor
     private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item);
@@ -72,6 +75,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
     public static final byte VIEW_TYPE_FRIEND = 0;
     public static final byte VIEW_TYPE_LOCKED = 1;
+    public static final byte VIEW_TYPE_EMPTY_OR_ERROR = 2;
 
     ///////////Vertical Cursor (parent)
     @Nullable
@@ -136,6 +140,10 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 moreListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(moreListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
                 moreListHolder.listOfItems.setAdapter(lockedFriendsAdapter);
                 return moreListHolder;
+            }
+            case VIEW_TYPE_EMPTY_OR_ERROR:{
+                final EmptyViewHolder emptyViewHolder = new EmptyViewHolder(parent,R.layout.general_emptyview,R.id.empty_view);
+                return emptyViewHolder;
             }
 
             default:
@@ -244,6 +252,10 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 viewHolder.lockText.setVisibility(View.VISIBLE);
             }
         }
+        else if (getItemViewType(position) == VIEW_TYPE_EMPTY_OR_ERROR){
+            EmptyViewHolder emptyViewHolder = (EmptyViewHolder) holder;
+            emptyViewHolder.mEmptyImageView.setImageResource(R.drawable.onboarding_graphic_owl);
+        }
 
     }
 
@@ -257,10 +269,19 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     private Object getItem(int position) {
 
         //Locked friends adapter
-        if (position == 10 || verticalCursor == null)
+        if (position == 10 || verticalCursor == null) {
             return false;
+        }
 
         else if (position < 10) {
+
+        if (verticalCursorCount == 0) {
+            if (position == 0) {
+                return 1;
+            } else {
+                return false;
+            }
+        }
 
             if (position == verticalCursorCount)
                 return false; //Locked friends adapter, last item
@@ -287,10 +308,14 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     public int getItemViewType(int position) {
 
         final Object item = getItem(position);
-        if (item instanceof Cursor)
+        if (item instanceof Cursor) {
             return VIEW_TYPE_FRIEND;
-        else
+        } else if (item instanceof Integer ) {
+            return VIEW_TYPE_EMPTY_OR_ERROR;
+
+        } else {
             return VIEW_TYPE_LOCKED;
+        }
     }
 
     @Override
@@ -299,16 +324,47 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return ((Cursor) item).getLong(0); //_id
-        else
+        else if (item instanceof Integer ){
+            return emptyViewId;
+        }
+        else {
             return lockedId;
+        }
     }
 
+    //TODO: Check if the logic can be optimized
     @Override
     public int getItemCount() {
-
-        if (verticalCursor != null)
+        final Cursor lockedFriendsCursor = lockedFriendsAdapter.getCursor();
+        int count = 0;
+        if (verticalCursor == null) {
+            if (lockedFriendsCursor == null) {
+                count =  0;
+            } else if(lockedFriendsCursor.getCount()>0){
+                count =  1;
+            }
+            else{
+                count = 0;
+            }
+        } else {
             verticalCursorCount = verticalCursor.getCount();
-        return verticalCursorCount + 1; //adjust for horizontal list
+            if (lockedFriendsCursor != null) {
+                if (lockedFriendsCursor.getCount() > 0) {
+                    count =  verticalCursorCount + 1;
+                } else {
+                    count =  verticalCursorCount;
+                }
+            } else {
+                count = verticalCursorCount;
+            }
+
+        }
+        if(verticalCursorCount == 0){
+            count = count + 1;
+        }
+
+        //adjust for horizontal list
+        return count;
     }
 
     @Override

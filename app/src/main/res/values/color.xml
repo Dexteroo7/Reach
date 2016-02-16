@@ -7,6 +7,7 @@
     <item name="reach_grey" type="color">#4d4d4d</item>
     <item name="reach_grey_light" type="color">#595959</item>
     <item name="reach_grey_bg" type="color">#ededed</item>
+    <item name="reach_grey_bg1" type="color">#f5f5f5</item>
     <item name="reach_grey_new" type="color">#bfbfbf</item>
     <item name="reach_blue" type="color">#3faacf</item>
     <item name="default_grey" type="color">#e8e8e8</item>

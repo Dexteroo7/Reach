@@ -257,6 +257,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         else
             myLibraryCount = 0;
 
-        return myLibraryCount + downloadedCount + 1; //adjust for recent list
+        //return myLibraryCount + downloadedCount + 1; //adjust for recent list
+        if(myLibraryCount + downloadedCount == 0){
+            return 0;
+        }
+        else {
+            return myLibraryCount + downloadedCount + 1; //adjust for recent list
+        }
+
     }
 }
