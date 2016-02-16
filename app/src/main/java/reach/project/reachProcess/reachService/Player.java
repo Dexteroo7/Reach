@@ -144,12 +144,14 @@ class Player {
 
     public void start() {
 
-        if (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer)
-            mediaPlayer.start();
-        if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack) {
-            audioTrack.play();
-            pauseDecoding.set(false);
-        }
+        try {
+            if (mediaPlayer != null && whichPlayer == WhichPlayer.MediaPlayer)
+                mediaPlayer.start();
+            if (audioTrack != null && whichPlayer == WhichPlayer.AudioTrack) {
+                audioTrack.play();
+                pauseDecoding.set(false);
+            }
+        } catch (IllegalStateException ignored) {}
     }
 
     public void setVolume(float duck_volume) {
