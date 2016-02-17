@@ -3,6 +3,7 @@ package reach.project.coreViews.myProfile;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -37,12 +38,14 @@ public class EmptyRecyclerView extends RecyclerView {
 
     public EmptyRecyclerView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+
     }
 
     void checkIfEmpty() {
 
         if (emptyView != null && getAdapter() != null) {
             final boolean emptyViewVisible = getAdapter().getItemCount() == 0;
+            Log.d("EmptyRecyclerView","emptyViewVisible = "+ emptyViewVisible);
             emptyView.setVisibility(emptyViewVisible ? VISIBLE : GONE);
             setVisibility(emptyViewVisible ? GONE : VISIBLE);
         }
@@ -50,14 +53,14 @@ public class EmptyRecyclerView extends RecyclerView {
 
     @Override
     public void setAdapter(Adapter adapter) {
-        final Adapter oldAdapter = getAdapter();
+        //final Adapter oldAdapter = getAdapter();
         /*if (oldAdapter != null) {
             oldAdapter.unregisterAdapterDataObserver(observer);
         }*/
         super.setAdapter(adapter);
-        /*if (adapter != null) {
+        if (adapter != null) {
             adapter.registerAdapterDataObserver(observer);
-        }*/
+        }
 
         //checkIfEmpty();
     }

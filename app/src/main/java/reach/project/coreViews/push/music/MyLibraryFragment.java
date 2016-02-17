@@ -27,6 +27,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
@@ -56,12 +57,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_push_songs, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
+
 
         parentAdapter = new ParentAdapter(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
+        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
 
         getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);

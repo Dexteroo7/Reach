@@ -268,7 +268,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     @Nonnull
     private Object getItem(int position) {
 
-        //Locked friends adapter
+        /*//Locked friends adapter
         if (position == 10 || verticalCursor == null) {
             return false;
         }
@@ -300,7 +300,41 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 return verticalCursor;
             else
                 throw new IllegalStateException("Cursor move should have been successful " + position + " " + verticalCursor.getCount());
+        }*/
+        if(verticalCursor==null && lockedFriendsAdapter.getCursor()==null){
+            return 'a';
         }
+
+        if(position == 10){
+            return false;
+        }
+        else if (position <10){
+            if(verticalCursorCount == 0){
+                if(position == 0){
+                    return 1;
+                }
+                else{
+                    return false;
+                }
+            }
+            else if(position == verticalCursorCount){
+                return false;
+            }
+            else{
+                if (verticalCursor.moveToPosition(position))
+                    return verticalCursor;
+                else
+                    throw new IllegalStateException("Cursor move should have been successful " + position + " " + verticalCursor.getCount());
+            }
+        }
+        else{
+            final int relativePosition = position - 1;
+            if (verticalCursor.moveToPosition(relativePosition))
+                return verticalCursor;
+            else
+                throw new IllegalStateException("Cursor move should have been successful " + position + " " + verticalCursor.getCount());
+        }
+
     }
 
 

@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.ContextCompat;
@@ -115,6 +116,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
+    public static final String CURRENT_TAB_KEY = "CURRENT_TAB";
 
     ////////////////////////////////////////private static final
 
@@ -232,6 +234,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         super.onNewIntent(intent);
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(CURRENT_TAB_KEY,mTabHost.getCurrentTab());
+        super.onSaveInstanceState(outState);
+    }
+
     @SuppressLint("RtlHardcoded")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -321,7 +329,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.my_profile_tab_selector)),
                 MyProfileFragment.class, null);
-        mTabHost.setCurrentTab(2);
+        if(savedInstanceState == null) {
+            mTabHost.setCurrentTab(2);
+        }
+        else{
+            mTabHost.setCurrentTab(savedInstanceState.getInt(CURRENT_TAB_KEY,2));
+        }
 
         /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));

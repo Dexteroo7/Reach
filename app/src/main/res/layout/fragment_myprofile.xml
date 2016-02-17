@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@null"
+        android:visibility="gone"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
         android:src="@drawable/common_google_signin_btn_icon_light_disabled"

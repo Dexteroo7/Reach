@@ -16,6 +16,7 @@
         android:background="@null"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
+        android:visibility="gone"
         android:src="@drawable/common_google_signin_btn_icon_light_disabled"
         android:layout_gravity="center_horizontal"
         />
