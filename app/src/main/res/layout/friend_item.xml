@@ -8,12 +8,13 @@
     card_view:cardCornerRadius="0dp"
     card_view:cardElevation="4dp"
     card_view:cardUseCompatPadding="true"
+    card_view:cardBackgroundColor="#fff"
     android:layout_marginTop="5dp"
     android:layout_marginLeft="5dp"
     android:layout_marginRight="5dp"
     android:descendantFocusability="blocksDescendants">
     <android.support.percent.PercentRelativeLayout
-        android:background="#fff"
+        android:background="@null"
         android:layout_height="match_parent"
         android:layout_width="match_parent">
         <com.facebook.drawee.view.SimpleDraweeView
@@ -90,7 +91,9 @@
             android:layout_marginBottom="8dp"
             android:layout_marginRight="3dp"
             android:layout_height="20dp"
-            android:src="@drawable/icon_pending_invite" />
+            android:src="@drawable/icon_pending_invite"
+            android:background="@null"
+            />
         <TextView
             android:id="@+id/lockText"
             android:layout_alignBottom="@id/lockIcon"
@@ -99,6 +102,7 @@
             android:layout_toRightOf="@id/lockIcon"
             android:textColor="@color/reach_grey_new"
             android:text="Request pending"
+            android:background="@null"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <ImageView
@@ -108,7 +112,9 @@
             android:layout_width="25dp"
             android:layout_height="30dp"
             android:padding="2dp"
-            android:src="@drawable/icon_extra_dots_gray" />
+            android:src="@drawable/icon_extra_dots_gray"
+            android:background="@null"
+            />
         <View
             android:id="@+id/newSongsView"
             android:visibility="gone"
