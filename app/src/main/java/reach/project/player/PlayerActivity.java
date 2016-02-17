@@ -66,6 +66,7 @@ public class PlayerActivity extends AppCompatActivity {
     public static final String PRIMARY_PROGRESS = "reach.project.player.PlayerActivity.PRIMARY_PROGRESS";
     public static final String SECONDARY_PROGRESS = "reach.project.player.PlayerActivity.SECONDARY_PROGRESS";
     public static final String PLAYER_POSITION = "reach.project.player.PlayerActivity.PLAYER_POSITION";
+    public static final float EMPTY_VIEW_ITEM_ALPHA = 0.4f;
 
     public static final String PLAY_SONG = "reach.project.player.PlayerActivity.PLAY_SONG";
 
@@ -105,7 +106,7 @@ public class PlayerActivity extends AppCompatActivity {
         reference = new WeakReference<>(this);
         currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
 
-        final String duration = currentPlaying == null ? "" : MiscUtils.combinationFormatter(currentPlaying.getDuration());
+        final String duration = currentPlaying == null ? "00:00" : MiscUtils.combinationFormatter(currentPlaying.getDuration());
         final Uri albumArtUri = currentPlaying == null ? null : AlbumArtUri.getUri(currentPlaying.getAlbumName(),
                 currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true).orNull();
 
@@ -114,22 +115,42 @@ public class PlayerActivity extends AppCompatActivity {
         final Toolbar toolbar = (Toolbar) findViewById(R.id.playerToolbar);
         toolbar.setTitle("Player");
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
-        (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
+        final View shuffle = findViewById(R.id.shuffleBtn);
+        final View repeat = findViewById(R.id.repeatBtn);
+        final View rwdBtn = findViewById(R.id.rwdBtn);
+        final View fwdBtn = findViewById(R.id.fwdBtn);
+
+                (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
-        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "" : currentPlaying.getArtistName());
+        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "Currently there is no music." : currentPlaying.getArtistName());
         (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setImageURI(albumArtUri);
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
-        if (currentPlaying != null)
+        if (currentPlaying != null) {
             pause_play.setImageResource(R.drawable.play_white_selector);
+        }
+        else{
+            likeButton.setEnabled(false);
+            pause_play.setEnabled(false);
+            shuffle.setEnabled(false);
+            repeat.setEnabled(false);
+            rwdBtn.setEnabled(false);
+            fwdBtn.setEnabled(false);
+            likeButton.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
+            pause_play.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
+            shuffle.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
+            repeat.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
+            rwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
+            fwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
 
-        findViewById(R.id.rwdBtn).setOnClickListener(LocalUtils.PREVIOUS_CLICK);
-        findViewById(R.id.fwdBtn).setOnClickListener(LocalUtils.NEXT_CLICK);
 
-        final View shuffle = findViewById(R.id.shuffleBtn);
-        final View repeat = findViewById(R.id.repeatBtn);
+        }
+        rwdBtn.setOnClickListener(LocalUtils.PREVIOUS_CLICK);
+        fwdBtn.setOnClickListener(LocalUtils.NEXT_CLICK);
+
+
         shuffle.setOnClickListener(LocalUtils.SHUFFLE_CLICK);
         repeat.setOnClickListener(LocalUtils.REPEAT_CLICK);
         shuffle.setSelected(SharedPrefUtils.getShuffle(this));
