@@ -18,6 +18,9 @@ import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
+import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -34,6 +37,23 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
+
+    private final HandOverMessageExtra<Object> handOverMessageExtra = new HandOverMessageExtra<Object>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+            RecentAdapter.this.handOverMessage(position);
+        }
+
+        @Override
+        public MusicData getExtra(@Nonnull Integer position) {
+
+            final MusicData musicData = getItem(position);
+            if (musicData != null)
+                return musicData;
+            else
+                throw new IllegalStateException("Music data has been corrupted");
+        }
+    };
 
     private static final Comparator<MusicData> PRIMARY = (left, right) -> {
 
@@ -100,7 +120,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
 
-        return new SongItemHolder(itemView, handOverMessage);
+        return new SongItemHolder(itemView, handOverMessageExtra);
     }
 
     @Override
@@ -113,6 +133,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
 
+        holder.position = holder.getAdapterPosition();
         holder.songName.setText(item.getDisplayName());
         holder.artistName.setText(item.getArtistName());
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
@@ -136,6 +157,17 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
             holder.albumArt.setController(controller);
         } else
             holder.albumArt.setImageBitmap(null);
+
+        //TODO introduce visibility in MusicData
+        /*if (item.visible) {
+
+            holder.toggleButton.setImageResource(R.drawable.icon_everyone);
+            holder.toggleText.setText("Everyone");
+        } else {
+
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
+            holder.toggleText.setText("Only Me");
+        }*/
     }
 
     @Override

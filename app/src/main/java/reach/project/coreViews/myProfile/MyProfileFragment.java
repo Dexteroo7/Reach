@@ -196,9 +196,10 @@ public class MyProfileFragment extends Fragment {
                 }
             }
 
+            //
             @Override
             public int getCount() {
-                return 2;
+                return 0;
             }
 
             @Override

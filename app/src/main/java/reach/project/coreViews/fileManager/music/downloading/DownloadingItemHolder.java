@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -63,17 +64,16 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 throw new IllegalArgumentException("Position not set for the view holder");
 
             popupMenu = new PopupMenu(context, this.optionsIcon);
-            popupMenu.inflate(R.menu.friends_popup_menu);
+            popupMenu.inflate(R.menu.manager_popup_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
 
                 final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
 
                 switch (item.getItemId()) {
-                    case R.id.friends_menu_1:
-                        //pause
-                        pause_unpause(reachDatabaseId, context);
+                    case R.id.manager_menu_1:
+                        //send
                         return true;
-                    case R.id.friends_menu_2:
+                    case R.id.manager_menu_3:
                         //delete
                         final AlertDialog alertDialog = new AlertDialog.Builder(context)
                                 .setMessage("Are you sure you want to delete it?")
@@ -85,17 +85,21 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                         alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabaseId));
                         alertDialog.show();
                         return true;
+                    case R.id.manager_menu_4:
+                        //pause
+                        pause_unpause(reachDatabaseId, context);
+                        return true;
                     default:
                         return false;
                 }
             });
 
+            final MenuItem pauseItem = popupMenu.getMenu().findItem(R.id.manager_menu_4);
+            popupMenu.getMenu().findItem(R.id.manager_menu_2).setVisible(false);
+            pauseItem.setVisible(true);
             final String status;
             status = paused ? "Resume Download" : "Pause Download";
-            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
-
-            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
-
+            pauseItem.setTitle(status);
             popupMenu.show();
         });
     }

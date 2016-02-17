@@ -27,6 +27,7 @@ import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -64,6 +65,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         parentAdapter = new ParentAdapter(this, context);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
+        parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(context.getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+
 
         new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
 
