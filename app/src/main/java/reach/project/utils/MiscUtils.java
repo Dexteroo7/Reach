@@ -626,6 +626,7 @@ public enum MiscUtils {
             task.work((Param1) activity);
     }
 
+    //To check if the fragment still exists, if it doesn't you can't use its fragment
     public static <Param1 extends Context, Param2 extends Fragment> void useContextAndFragment(final WeakReference<Param2> reference,
                                                                                                final UseContextAndFragment<Param1, Param2> task) {
 
