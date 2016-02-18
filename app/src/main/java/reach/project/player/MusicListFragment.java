@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager.music.myLibrary;
+package reach.project.player;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -37,22 +37,22 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 25/11/15.
  */
-public class MyLibraryFragment extends Fragment implements HandOverMessage,
+public class MusicListFragment extends Fragment implements HandOverMessage,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static long userId = 0;
 
-    public static MyLibraryFragment getInstance(String header) {
+    public static MusicListFragment getInstance(String header) {
 
         final Bundle args = new Bundle();
         args.putString("header", header);
-        MyLibraryFragment fragment = new MyLibraryFragment();
+        MusicListFragment fragment = new MusicListFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
     @Nullable
-    private ParentAdapter parentAdapter;
+    private MusicListAdapter musicListAdapter;
 
     @Nullable
     @Override
@@ -62,9 +62,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
 
-        parentAdapter = new ParentAdapter(this, this, context);
+        musicListAdapter = new MusicListAdapter(this, this, context);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
-        mRecyclerView.setAdapter(parentAdapter);
+        mRecyclerView.setAdapter(musicListAdapter);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
 
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -82,8 +82,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
-        if (parentAdapter != null)
-            parentAdapter.close();
+        if (musicListAdapter != null)
+            musicListAdapter.close();
     }
 
     // The song is being played here
@@ -140,7 +140,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed() || parentAdapter == null)
+        if (data == null || data.isClosed() || musicListAdapter == null)
             return;
 
         final int count = data.getCount();
@@ -148,18 +148,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
 //            Log.i("Ayush", "MyLibrary file manager " + count);
 
-            parentAdapter.setNewMyLibraryCursor(data);
-            if (count != parentAdapter.myLibraryCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentMyLibrary());
+            musicListAdapter.setNewMyLibraryCursor(data);
 
 
         } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
 
 //            Log.i("Ayush", "Downloaded file manager " + count);
 
-            parentAdapter.setNewDownLoadCursor(data);
-            if (count != parentAdapter.downloadedCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentDownloaded());
+            musicListAdapter.setNewDownLoadCursor(data);
 
         }
     }
@@ -167,56 +163,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (parentAdapter == null)
+        if (musicListAdapter == null)
             return;
 
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER)
-            parentAdapter.setNewMyLibraryCursor(null);
+            musicListAdapter.setNewMyLibraryCursor(null);
         else if (loader.getId() == StaticData.DOWNLOAD_LOADER)
-            parentAdapter.setNewDownLoadCursor(null);
+            musicListAdapter.setNewDownLoadCursor(null);
     }
 
-    @NonNull
-    private List<MusicData> getRecentDownloaded() {
-
-        final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.MUSIC_DATA_LIST,
-                ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                new String[]{ReachDatabase.FINISHED + "", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
-
-        if (cursor == null)
-            return Collections.emptyList();
-
-        final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext())
-            latestDownloaded.add(ReachDatabaseHelper.getMusicData(cursor));
-
-        cursor.close();
-
-        return latestDownloaded;
-    }
-
-    @NonNull
-    private List<MusicData> getRecentMyLibrary() {
-
-        final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
-                MySongsHelper.DISK_LIST,
-                null, null, //all songs
-                MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
-
-        if (cursor == null)
-            return Collections.emptyList();
-
-        final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext())
-            latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));
-
-        cursor.close();
-
-        return latestMyLibrary;
-    }
 }

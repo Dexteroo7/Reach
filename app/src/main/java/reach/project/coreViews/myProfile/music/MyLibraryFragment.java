@@ -66,7 +66,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     }
 
     @Nullable
-    private ParentAdapter parentAdapter;
+    private MusicListAdapter parentAdapter;
     //handle 2 at a time, for thread queue
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
@@ -78,7 +78,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
-        parentAdapter = new ParentAdapter(this, this);
+        parentAdapter = new MusicListAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));

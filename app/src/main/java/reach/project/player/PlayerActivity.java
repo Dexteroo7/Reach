@@ -13,6 +13,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -119,6 +121,20 @@ public class PlayerActivity extends AppCompatActivity {
         final View repeat = findViewById(R.id.repeatBtn);
         final View rwdBtn = findViewById(R.id.rwdBtn);
         final View fwdBtn = findViewById(R.id.fwdBtn);
+        toolbar.inflateMenu(R.menu.player_activity_menu);
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                int id = item.getItemId();
+
+                //noinspection SimplifiableIfStatement
+                if (id == R.id.action_music_list) {
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container,MusicListFragment.getInstance("Songs")).commit();
+                    return true;
+                }
+                return false;
+            }
+        });
 
                 (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
@@ -131,6 +147,7 @@ public class PlayerActivity extends AppCompatActivity {
         if (currentPlaying != null) {
             pause_play.setImageResource(R.drawable.play_white_selector);
         }
+        // Empty view modifications
         else{
             likeButton.setEnabled(false);
             pause_play.setEnabled(false);
@@ -144,9 +161,8 @@ public class PlayerActivity extends AppCompatActivity {
             repeat.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
             rwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
             fwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
-
-
         }
+
         rwdBtn.setOnClickListener(LocalUtils.PREVIOUS_CLICK);
         fwdBtn.setOnClickListener(LocalUtils.NEXT_CLICK);
 
@@ -459,4 +475,5 @@ public class PlayerActivity extends AppCompatActivity {
                 view.setSelected(false);
         };
     }
+
 }

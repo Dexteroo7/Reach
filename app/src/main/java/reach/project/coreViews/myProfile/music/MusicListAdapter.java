@@ -35,7 +35,7 @@ import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements Closeable {
+class MusicListAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements Closeable {
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
@@ -51,8 +51,8 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         }
     };
 
-    public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<PrivacySongItem> handOverSong) {
+    public MusicListAdapter(HandOverMessage<Cursor> handOverCursor,
+                            HandOverMessage<PrivacySongItem> handOverSong) {
 
         this.handOverCursor = handOverCursor;
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_mylibrary_grid_item);
