@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -68,6 +70,7 @@ public class PlayerActivity extends AppCompatActivity {
     public static final String PRIMARY_PROGRESS = "reach.project.player.PlayerActivity.PRIMARY_PROGRESS";
     public static final String SECONDARY_PROGRESS = "reach.project.player.PlayerActivity.SECONDARY_PROGRESS";
     public static final String PLAYER_POSITION = "reach.project.player.PlayerActivity.PLAYER_POSITION";
+    public static final String MUSIC_LIST_FRAGMENT_TAG = "music_list_fragment";
     public static final float EMPTY_VIEW_ITEM_ALPHA = 0.4f;
 
     public static final String PLAY_SONG = "reach.project.player.PlayerActivity.PLAY_SONG";
@@ -93,6 +96,8 @@ public class PlayerActivity extends AppCompatActivity {
     private SeekBar seekBar = null;
     @Nullable
     private View likeButton = null;
+
+    private boolean mMusicFragmentVisible;
 
     @Override
     public void onBackPressed() {
@@ -121,6 +126,9 @@ public class PlayerActivity extends AppCompatActivity {
         final View repeat = findViewById(R.id.repeatBtn);
         final View rwdBtn = findViewById(R.id.rwdBtn);
         final View fwdBtn = findViewById(R.id.fwdBtn);
+        final RelativeLayout musicListFragContainer = (RelativeLayout) findViewById(R.id.music_list_frag_container);
+
+
         toolbar.inflateMenu(R.menu.player_activity_menu);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
@@ -129,8 +137,26 @@ public class PlayerActivity extends AppCompatActivity {
 
                 //noinspection SimplifiableIfStatement
                 if (id == R.id.action_music_list) {
-                    getSupportFragmentManager().beginTransaction().replace(R.id.container,MusicListFragment.getInstance("Songs")).commit();
-                    return true;
+
+                    if(!mMusicFragmentVisible) {
+                        musicListFragContainer.setVisibility(View.VISIBLE);
+
+                        getSupportFragmentManager().beginTransaction()/*.setCustomAnimations(
+                                R.animator.card_flip_right_in,
+                                R.animator.card_flip_right_out,
+                                R.animator.card_flip_left_in,
+                                R.animator.card_flip_left_out)*/.replace(R.id.music_list_frag_container, MusicListFragment.getInstance("Songs",currentPlaying==null?null:currentPlaying.getId()), MUSIC_LIST_FRAGMENT_TAG ).commit();
+                        mMusicFragmentVisible = true;
+                        return true;
+                    }
+                    else{
+                        final Fragment music_list_frag = getSupportFragmentManager().findFragmentByTag(MUSIC_LIST_FRAGMENT_TAG);
+                        if(music_list_frag !=null){
+                            getSupportFragmentManager().beginTransaction().remove(music_list_frag).commit();
+                            musicListFragContainer.setVisibility(View.GONE);
+                            mMusicFragmentVisible = false;
+                        }
+                    }
                 }
                 return false;
             }

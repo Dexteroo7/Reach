@@ -245,7 +245,8 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
             COLUMN_ACTUAL_NAME, //16
             COLUMN_DATE_ADDED, //17
             COLUMN_VISIBILITY, //18
-            COLUMN_META_HASH //19
+            COLUMN_META_HASH, //19
+            COLUMN_UNIQUE_ID //20
     };
 
     public static final String[] SONG_LIST = new String[]{

@@ -8,7 +8,6 @@ import com.facebook.drawee.view.SimpleDraweeView;
 
 import reach.project.R;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
 /**
  * Created by dexter on 18/11/15.

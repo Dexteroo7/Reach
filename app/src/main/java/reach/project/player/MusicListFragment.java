@@ -41,11 +41,13 @@ public class MusicListFragment extends Fragment implements HandOverMessage,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static long userId = 0;
+    public static final String CURRENT_SONG_ID_KEY = "current_id";
 
-    public static MusicListFragment getInstance(String header) {
+    public static MusicListFragment getInstance(String header,long currently_playing_song_id) {
 
         final Bundle args = new Bundle();
         args.putString("header", header);
+        args.putLong(CURRENT_SONG_ID_KEY, currently_playing_song_id);
         MusicListFragment fragment = new MusicListFragment();
         fragment.setArguments(args);
         return fragment;
@@ -58,11 +60,13 @@ public class MusicListFragment extends Fragment implements HandOverMessage,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_music_list, container, false);
         final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
 
-        musicListAdapter = new MusicListAdapter(this, this, context);
+        final long current_playing_song_id = getArguments().getLong(CURRENT_SONG_ID_KEY);
+        //TODO: Check where in the adapter there is current song and scroll to that position
+        musicListAdapter = new MusicListAdapter(this, this, context,current_playing_song_id);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(musicListAdapter);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
@@ -158,6 +162,16 @@ public class MusicListFragment extends Fragment implements HandOverMessage,
             musicListAdapter.setNewDownLoadCursor(data);
 
         }
+    }
+
+    private int findItemInCursor(long id, Cursor c, int song_id_index){
+
+        /*while(c.){
+
+        }*/
+
+        return 0;
+
     }
 
     @Override

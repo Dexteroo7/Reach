@@ -1,7 +1,9 @@
-package reach.project.utils.viewHelpers;
+package reach.project.player;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 21/11/15.
@@ -20,6 +22,7 @@ public class SingleItemViewHolder extends RecyclerView.ViewHolder implements Vie
     @Override
     public final void onClick(View v) {
 
+        itemView.setSelected(true);
         handOverMessage.handOverMessage(getAdapterPosition());
     }
 }

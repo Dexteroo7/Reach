@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,18 +51,38 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         public void handOverMessage(@Nonnull Integer position) {
 
             final Object object = getItem(position);
-            if (object instanceof Cursor)
-                handOverCursor.handOverMessage((Cursor) object);
+            if (object instanceof Cursor) {
+                Cursor cursor = (Cursor) object;
+                handOverCursor.handOverMessage(cursor);
+
+                if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+
+                    currentlyPlayingSongId = cursor.getLong(20);
+                    notifyItemChanged(currentlyPlayingSongPosition);
+                    notifyItemChanged(position);
+
+                } else if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+                    currentlyPlayingSongId = cursor.getLong(0);
+                    notifyItemChanged(currentlyPlayingSongPosition);
+                    notifyItemChanged(position);
+
+                } else
+                    throw new IllegalArgumentException("Unknown cursor type found");
+            }
             else
                 throw new IllegalStateException("Position must correspond with a cursor");
         }
     };
+    private long currentlyPlayingSongId;
+    private int currentlyPlayingSongPosition;
+
 
     public MusicListAdapter(HandOverMessage<Cursor> handOverCursor,
                             HandOverMessage<MusicData> handOverSong,
-                            Context context) {
+                            Context context, long currentlyPlayingSongId) {
 
         this.handOverCursor = handOverCursor;
+        this.currentlyPlayingSongId = currentlyPlayingSongId;
         setHasStableIds(true);
     }
 
@@ -114,7 +135,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
             case VIEW_TYPE_ALL: {
 
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_list_item, parent, false), handOverMessage);
+                        .inflate(R.layout.music_list_song_item, parent, false), handOverMessage);
             }
 
             default:
@@ -129,23 +150,31 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
         final Object friend = getItem(position);
         if (friend instanceof Cursor) {
-
+            holder.itemView.setSelected(false);
             final Cursor cursorExactType = (Cursor) friend;
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
-            holder.itemView.setBackgroundResource(0);
-
+            //holder.itemView.setBackgroundResource(0);
+            /*holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.));*/
             final String displayName, artist, album, actualName;
             if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
                 displayName = cursorExactType.getString(5);
                 artist = cursorExactType.getString(11);
                 album = cursorExactType.getString(16);
+                if(cursorExactType.getLong(20)==currentlyPlayingSongId){
+                    holder.itemView.setSelected(true);
+                    currentlyPlayingSongPosition = position;
+                };
 //                actualName = cursorExactType.getString(17);
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
                 displayName = cursorExactType.getString(3);
                 artist = cursorExactType.getString(4);
                 album = cursorExactType.getString(6);
+                if(cursorExactType.getLong(0)==currentlyPlayingSongId){
+                    holder.itemView.setSelected(true);
+                    currentlyPlayingSongPosition = position;
+                };
 //                actualName = cursorExactType.getString(9);
             } else
                 throw new IllegalArgumentException("Unknown cursor type found");
