@@ -180,13 +180,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             } else
                 throw new IllegalArgumentException("Unknown cursor type found");
 
-            if (visible) {
+            /*if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
                 songItemHolder.toggleText.setText("Everyone");
             } else {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 songItemHolder.toggleText.setText("Only Me");
-            }
+            }*/
 
             songItemHolder.songName.setText(displayName);
             songItemHolder.artistName.setText(artist);

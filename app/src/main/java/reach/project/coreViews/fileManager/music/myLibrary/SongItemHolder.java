@@ -31,8 +31,8 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
  */
 class SongItemHolder extends SingleItemViewHolder {
 
-    public final TextView songName, artistName, toggleText;
-    public final ImageView downButton, extraButton, likeButton, toggleButton;
+    public final TextView songName, artistName;
+    public final ImageView extraButton, likeButton;
     public final SimpleDraweeView albumArt;
     private static PopupMenu popupMenu;
 
@@ -47,13 +47,10 @@ class SongItemHolder extends SingleItemViewHolder {
 
         this.songName = (TextView) itemView.findViewById(R.id.songName);
         this.artistName = (TextView) itemView.findViewById(R.id.artistName);
-        this.downButton = (ImageView) itemView.findViewById(R.id.downButton);
-        this.toggleButton = (ImageView) itemView.findViewById(R.id.toggleButton);
-        this.toggleText = (TextView) itemView.findViewById(R.id.toggleText);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
-        //this.likeButton.setOnClickListener(v -> ((ImageView) v).setImageResource(R.drawable.icon_heart_pink));
+        this.likeButton.setOnClickListener(v -> ((ImageView) v).setImageResource(R.drawable.icon_heart_pink));
         this.extraButton.setOnClickListener(v -> {
             if (position == -1)
                 throw new IllegalArgumentException("Position not set for the view holder");
