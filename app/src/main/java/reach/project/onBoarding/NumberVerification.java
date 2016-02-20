@@ -57,11 +57,11 @@ public class NumberVerification extends Fragment {
         telephoneNumber.requestFocus();
         Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
 
-        //clear the shared pref
+        /*//clear the shared pref
         final SharedPreferences preferences = getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String retainEmailId = SharedPrefUtils.getEmailId(preferences);
         preferences.edit().clear().apply(); //clear everything other than email-id
-        SharedPrefUtils.storeEmailId(preferences, retainEmailId);
+        SharedPrefUtils.storeEmailId(preferences, retainEmailId);*/
 
         rootView.findViewById(R.id.verify).setOnClickListener(clickListener);
         return rootView;
