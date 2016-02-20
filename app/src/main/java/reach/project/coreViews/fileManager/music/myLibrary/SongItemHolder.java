@@ -33,7 +33,7 @@ class SongItemHolder extends SingleItemViewHolder {
 
     public final TextView songName, artistName;
     public final ImageView extraButton, likeButton;
-    public final SimpleDraweeView albumArt;
+    public final SimpleDraweeView albumArt, userImage;
     private static PopupMenu popupMenu;
 
     //must set this position
@@ -50,6 +50,7 @@ class SongItemHolder extends SingleItemViewHolder {
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
+        this.userImage = (SimpleDraweeView) itemView.findViewById(R.id.userImage);
         this.likeButton.setOnClickListener(v -> ((ImageView) v).setImageResource(R.drawable.icon_heart_pink));
         this.extraButton.setOnClickListener(v -> {
             if (position == -1)

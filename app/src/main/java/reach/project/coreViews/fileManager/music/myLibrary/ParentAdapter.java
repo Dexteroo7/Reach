@@ -1,12 +1,16 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
+import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
@@ -25,6 +29,8 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.friends.HandOverMessageExtra;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
@@ -170,6 +176,32 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 album = cursorExactType.getString(16);
                 visible = cursorExactType.getShort(18) == 1;
 //                actualName = cursorExactType.getString(17);
+                final long senderId = cursorExactType.getLong(2);
+
+                final Context context = holder.itemView.getContext();
+                songItemHolder.userImage.setVisibility(View.VISIBLE);
+                songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+                final Cursor cursor = context.getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
+                        new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
+                                ReachFriendsHelper.COLUMN_IMAGE_ID},
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                        new String[]{senderId + ""}, null);
+                if (cursor == null)
+                    return;
+                if (!cursor.moveToFirst()) {
+                    cursor.close();
+                    return;
+                }
+                songItemHolder.artistName.setText(cursor.getString(0));
+                final int length = MiscUtils.dpToPx(20);
+                songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                        senderId,
+                        "imageId",
+                        "rw",
+                        true,
+                        length,
+                        length));
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
                 displayName = cursorExactType.getString(3);
@@ -177,6 +209,10 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 album = cursorExactType.getString(6);
                 visible = cursorExactType.getShort(11) == 1;
 //                actualName = cursorExactType.getString(9);
+
+                songItemHolder.userImage.setVisibility(View.GONE);
+                songItemHolder.artistName.setTextColor(Color.parseColor("#878691"));
+                songItemHolder.artistName.setText(artist);
             } else
                 throw new IllegalArgumentException("Unknown cursor type found");
 
@@ -189,7 +225,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }*/
 
             songItemHolder.songName.setText(displayName);
-            songItemHolder.artistName.setText(artist);
 
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
