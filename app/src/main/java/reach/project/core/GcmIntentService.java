@@ -283,13 +283,15 @@ public class GcmIntentService extends IntentService {
                         ReachFriendsHelper.COLUMN_ID + " = ? and " +
                                 ReachFriendsHelper.COLUMN_STATUS + " < ?",
                         new String[]{hostId + "", ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""});
-                getContentResolver().update(
-                        ReachDatabaseProvider.CONTENT_URI,
-                        database,
-                        "(" + ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? or " +
-                                ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?) and " +
-                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                        new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
+                try {
+                    getContentResolver().update(
+                            ReachDatabaseProvider.CONTENT_URI,
+                            database,
+                            "(" + ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? or " +
+                                    ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?) and " +
+                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                            new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
+                } catch (IllegalArgumentException e) {return;}
             }
 
             /**

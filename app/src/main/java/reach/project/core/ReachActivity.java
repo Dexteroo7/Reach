@@ -443,6 +443,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     Log.i("Ayush", "FOUND PUSH DATA");
 
                     final String compressed = intent.getStringExtra("data");
+                    if (compressed == null)
+                        return;
 
                     byte[] unCompressed;
                     try {

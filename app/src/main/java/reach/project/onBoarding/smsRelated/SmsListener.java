@@ -9,6 +9,8 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.google.gson.JsonSyntaxException;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.utils.SendSMS;
@@ -108,7 +110,13 @@ public class SmsListener extends IntentService {
                 return;
             }
 
-            final GroupStatus groupStatus = smsObj.check_status(sendResponse.trackingId);
+            final GroupStatus groupStatus;
+            try {
+                groupStatus = smsObj.check_status(sendResponse.trackingId);
+            } catch (JsonSyntaxException e) {
+                sendMessage(messenger, Status.ERROR);
+                return;
+            }
             if (!groupStatus.success) {
 
                 sendMessage(messenger, Status.ERROR);
