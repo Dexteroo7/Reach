@@ -139,14 +139,14 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 appItemHolder.appIcon.setImageDrawable(null);
             }
 
-            //if contains and is true
+            /*//if contains and is true
             if (isVisible(appExactType.packageName)) {
                 appItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
                 appItemHolder.toggleText.setText("Everyone");
             } else {
                 appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
                 appItemHolder.toggleText.setText("Only Me");
-            }
+            }*/
 
         } else {
 

@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -103,7 +102,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             holder.appIcon.setImageDrawable(null);
         }
 
-        //if contains and is true
+        /*//if contains and is true
         if (visibilityHook.isVisible(item.packageName)) {
             holder.toggleButton.setImageResource(R.drawable.icon_everyone);
             holder.toggleText.setText("Everyone");
@@ -111,7 +110,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         else {
             holder.toggleButton.setImageResource(R.drawable.icon_locked);
             holder.toggleText.setText("Only Me");
-        }
+        }*/
     }
 
     @Override

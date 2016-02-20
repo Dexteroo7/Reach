@@ -18,8 +18,8 @@ import reach.project.utils.viewHelpers.SingleItemViewHolder;
  */
 class AppItemHolder extends SingleItemViewHolder {
 
-    public final ImageView appIcon, extraButton, likeButton, toggleButton;
-    public final TextView appName, toggleText;
+    public final ImageView appIcon, extraButton;
+    public final TextView appName;
     private static PopupMenu popupMenu;
 
     //must set this position
@@ -33,10 +33,6 @@ class AppItemHolder extends SingleItemViewHolder {
         this.appIcon = (ImageView) itemView.findViewById(R.id.appIcon);
         this.appName = (TextView) itemView.findViewById(R.id.appName);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
-        this.toggleButton = (ImageView) itemView.findViewById(R.id.toggleButton);
-        this.toggleText = (TextView) itemView.findViewById(R.id.toggleText);
-        this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
-        this.likeButton.setOnClickListener(v -> ((ImageView) v).setImageResource(R.drawable.icon_heart_pink));
 
         this.extraButton.setOnClickListener(v -> {
             if (position == -1)

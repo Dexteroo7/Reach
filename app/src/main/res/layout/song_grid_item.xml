@@ -1,98 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:padding="5dp"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    card_view:cardUseCompatPadding="true"
+    android:layout_margin="5dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-    <android.support.v7.widget.CardView
-        card_view:cardCornerRadius="0dp"
-        card_view:cardElevation="4dp"
-        card_view:cardUseCompatPadding="true"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <LinearLayout
-            android:orientation="vertical"
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp">
+            <com.facebook.drawee.view.SimpleDraweeView
+                android:id="@+id/albumArt"
+                android:background="@color/reach_grey"
+                fresco:placeholderImage="@drawable/default_music_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <View
+                android:background="@drawable/gradient_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+            <ImageView
+                android:id="@+id/likeButton"
+                android:layout_gravity="bottom|right"
+                android:layout_margin="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/icon_heart_outline_grayer" />
+        </FrameLayout>
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="140dp">
-                <com.facebook.drawee.view.SimpleDraweeView
-                    android:id="@+id/albumArt"
-                    android:background="@color/reach_grey"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-                <View
-                    android:background="@drawable/gradient_bg"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-                <TextView
-                    android:id="@+id/artistName"
-                    android:text="User Name"
-                    android:textColor="#fff"
-                    android:lines="1"
-                    android:ellipsize="marquee"
-                    android:textSize="12sp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginBottom="5dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <TextView
-                    android:id="@+id/songName"
-                    android:text="Song Title"
-                    android:textColor="#fff"
-                    android:lines="1"
-                    android:ellipsize="marquee"
-                    android:textSize="15sp"
-                    android:layout_marginBottom="3dp"
-                    android:layout_alignLeft="@id/artistName"
-                    android:layout_marginRight="10dp"
-                    android:layout_above="@id/artistName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <ImageView
-                    android:id="@+id/likeButton"
-                    android:layout_alignParentRight="true"
-                    android:src="@drawable/icon_heart_outline_white"
-                    android:padding="8dp"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp" />
-            </RelativeLayout>
-            <RelativeLayout
-                android:layout_gravity="bottom"
-                android:background="#f1f1f1"
-                android:paddingLeft="5dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
+            <ImageView
+                android:id="@+id/extraButton"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/icon_extra_dots_light_gray" />
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@id/extraButton"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <ImageView
-                    android:id="@+id/extraButton"
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentRight="true"
-                    android:src="@drawable/icon_extra_dots_gray"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <ImageView
-                    android:id="@+id/toggleButton"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/icon_locked"
-                    android:layout_marginRight="2dp"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp" />
                 <TextView
-                    android:id="@+id/toggleText"
-                    android:text="Only Me"
-                    android:textSize="12sp"
-                    android:layout_centerVertical="true"
-                    android:layout_toRightOf="@id/toggleButton"
-                    android:textColor="@color/reach_grey"
+                    android:id="@+id/songName"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </RelativeLayout>
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
-</RelativeLayout>
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:lines="1"
+                    android:text="Test"
+                    android:textColor="#000"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/artistName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:textSize="13sp"
+                    android:lines="1"
+                    android:text="Test"
+                    android:textColor="#878691" />
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+</android.support.v7.widget.CardView>
