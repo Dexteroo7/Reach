@@ -43,14 +43,36 @@ class SongItemHolder extends SingleItemViewHolder {
 
         super(itemView, handOverMessageExtra);
 
-        final Context context = itemView.getContext();
-
         this.songName = (TextView) itemView.findViewById(R.id.songName);
         this.artistName = (TextView) itemView.findViewById(R.id.artistName);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
         this.userImage = (SimpleDraweeView) itemView.findViewById(R.id.userImage);
+
+        final Context context = itemView.getContext();
+        final Object object = handOverMessageExtra.getExtra(position);
+        final ContentResolver resolver = context.getContentResolver();
+
+        this.likeButton.setOnClickListener(v -> {
+            if (object instanceof MusicData) {
+                final MusicData musicData = (MusicData) object;
+                musicData.setIsLiked(!musicData.isLiked());
+            }
+            else if (object instanceof Cursor) {
+                final Cursor cursor = (Cursor) object;
+                if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+                    if (cursor.getShort(12) == 1)
+
+                } else if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+                    if (cursor.getString(7).equalsIgnoreCase("TRUE"))
+
+                } else
+                    throw new IllegalArgumentException("Unknown column count found");
+            }
+            else
+                throw new IllegalArgumentException("Invalid Object type detected");
+        });
         this.likeButton.setOnClickListener(v -> ((ImageView) v).setImageResource(R.drawable.icon_heart_pink));
         this.extraButton.setOnClickListener(v -> {
             if (position == -1)
@@ -60,7 +82,6 @@ class SongItemHolder extends SingleItemViewHolder {
             popupMenu.inflate(R.menu.manager_popup_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
 
-                final Object object = handOverMessageExtra.getExtra(position);
                 switch (item.getItemId()) {
                     case R.id.manager_menu_1:
                         //send

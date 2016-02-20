@@ -202,6 +202,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                         true,
                         length,
                         length));
+                songItemHolder.likeButton.setImageResource(cursorExactType.getString(7).equals("TRUE")
+                        ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
                 displayName = cursorExactType.getString(3);
@@ -213,6 +215,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 songItemHolder.userImage.setVisibility(View.GONE);
                 songItemHolder.artistName.setTextColor(Color.parseColor("#878691"));
                 songItemHolder.artistName.setText(artist);
+                songItemHolder.likeButton.setImageResource(cursorExactType.getShort(12) == 1
+                        ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
             } else
                 throw new IllegalArgumentException("Unknown cursor type found");
 

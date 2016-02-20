@@ -200,6 +200,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         } else
             holder.albumArt.setImageBitmap(null);
 
+        holder.likeButton.setImageResource(item.isLiked()
+                ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
+
         //TODO introduce visibility in MusicData
         /*if (item.visible) {
 
