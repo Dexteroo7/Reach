@@ -62,6 +62,8 @@ import reach.project.utils.ancillaryClasses.UseContext;
 public enum CloudStorageUtils {
     ;
 
+    ///////////////////////////////////
+
     public static byte APP = 0;
     public static byte MUSIC = 1;
 
@@ -72,6 +74,7 @@ public enum CloudStorageUtils {
     private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
     private static final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
     private static final String BUCKET_NAME_APP_DATA = "able-door-616-app-data";
+
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
     public static String uploadImage(@NonNull InputStream optionsStream,

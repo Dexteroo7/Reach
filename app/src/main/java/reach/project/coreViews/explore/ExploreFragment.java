@@ -82,7 +82,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
      * @param data the byte[] to transform from
      * @return collection of explore stories, take care to remove loading / done for today etc...
      */
-    public static Function<byte[], Collection<JsonObject>> bytesToJson = new Function<byte[], Collection<JsonObject>>() {
+    public static final Function<byte[], Collection<JsonObject>> BYTES_TO_JSON = new Function<byte[], Collection<JsonObject>>() {
         @javax.annotation.Nullable
         @Override
         public Collection<JsonObject> apply(@Nullable byte[] input) {
@@ -113,7 +113,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
      * @param data the collection to transform into byte[]
      * @return byte[] explore stories, take care to remove loading / done for today etc...
      */
-    public static Function<List<JsonObject>, byte[]> jsonToBytes = new Function<List<JsonObject>, byte[]>() {
+    public static final Function<List<JsonObject>, byte[]> JSON_TO_BYTES = new Function<List<JsonObject>, byte[]>() {
         @javax.annotation.Nullable
         @Override
         public byte[] apply(@Nullable List<JsonObject> input) {
@@ -570,7 +570,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onAttach(Context context) {
 
         super.onAttach(context);
-        buffer = ExploreBuffer.getInstance(this, context.getCacheDir(), bytesToJson, jsonToBytes);
+        buffer = ExploreBuffer.getInstance(this, context.getCacheDir(), BYTES_TO_JSON, JSON_TO_BYTES);
         try {
             mListener = (SuperInterface) context;
         } catch (ClassCastException e) {
