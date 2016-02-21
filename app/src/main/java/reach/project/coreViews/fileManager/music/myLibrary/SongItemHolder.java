@@ -1,6 +1,7 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -62,10 +64,28 @@ class SongItemHolder extends SingleItemViewHolder {
             else if (object instanceof Cursor) {
                 final Cursor cursor = (Cursor) object;
                 if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-                    if (cursor.getShort(12) == 1)
+                    if (cursor.getShort(12) == 1) {
+                        final long dbId = cursor.getLong(7);
+                        final ContentValues mySong = new ContentValues();
+                        mySong.put(MySongsHelper.COLUMN_IS_LIKED, cursor.getShort(12) == 0 ? 1 : 0);
+                        resolver.update(
+                                Uri.parse(MySongsProvider.CONTENT_URI+"/"+dbId),
+                                mySong,
+                                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                new String[]{dbId + ""});
+                    }
 
                 } else if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
-                    if (cursor.getString(7).equalsIgnoreCase("TRUE"))
+                    if (cursor.getString(7).equalsIgnoreCase("TRUE")) {
+                        final long dbId = cursor.getLong(0);
+                        final ContentValues mySong = new ContentValues();
+                        mySong.put(ReachDatabaseHelper.COLUMN_IS_LIKED, cursor.getString(7).equalsIgnoreCase("FALSE") ? 1 : 0);
+                        resolver.update(
+                                Uri.parse(ReachDatabaseProvider.CONTENT_URI+"/"+dbId),
+                                mySong,
+                                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                new String[]{dbId + ""});
+                    }
 
                 } else
                     throw new IllegalArgumentException("Unknown column count found");
@@ -103,6 +123,12 @@ class SongItemHolder extends SingleItemViewHolder {
                         return false;
                 }
             });
+            final MenuItem hideItem = popupMenu.getMenu().findItem(R.id.manager_menu_2);
+            if (visible) {
+                hideItem.setTitle("Everyone");
+            } else {
+                hideItem.setTitle("Only Me");
+            }
             popupMenu.show();
         });
     }

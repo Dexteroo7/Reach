@@ -202,7 +202,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                         true,
                         length,
                         length));
-                songItemHolder.likeButton.setImageResource(cursorExactType.getString(7).equals("TRUE")
+                songItemHolder.likeButton.setImageResource(cursorExactType.getString(7).equalsIgnoreCase("TRUE")
                         ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
             } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
