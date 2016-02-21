@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -32,7 +33,8 @@ import reach.project.utils.MiscUtils;
 
 public class YourProfileActivity extends AppCompatActivity {
 
-    //private static final String OPEN_PROFILE = "OPEN_PROFILE";
+    private static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
+    private static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
 
     public static void openProfile(long userId, Context context) {
 
@@ -201,6 +203,14 @@ public class YourProfileActivity extends AppCompatActivity {
             }
         });*/
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
+
+        final String action = intent.getAction();
+        if (TextUtils.isEmpty(action))
+            return;
+        if (action.equals(OPEN_MY_PROFILE_APPS))
+            viewPager.setCurrentItem(0);
+        else if (action.equals(OPEN_MY_PROFILE_SONGS))
+            viewPager.setCurrentItem(1);
 
     }
 }
