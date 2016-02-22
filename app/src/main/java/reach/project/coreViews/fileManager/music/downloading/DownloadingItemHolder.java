@@ -23,9 +23,9 @@ import com.google.common.base.Optional;
 import java.io.File;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
@@ -39,8 +39,6 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
     final SimpleDraweeView albumArt;
     final ProgressBar progressBar;
     final ImageView optionsIcon;
-    private static PopupMenu popupMenu;
-    private static boolean paused = false;
 
     //must set this position
     int position = -1;
@@ -50,6 +48,8 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         super(itemView, handOverMessageExtra);
 
         final Context context = itemView.getContext();
+        final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
+        final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.PAUSED_BY_USER;
 
         this.songName = (TextView) itemView.findViewById(R.id.songName);
         this.artistName = (TextView) itemView.findViewById(R.id.artistName);
@@ -62,16 +62,22 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             if (position == -1)
                 throw new IllegalArgumentException("Position not set for the view holder");
 
-            popupMenu = new PopupMenu(context, this.optionsIcon);
+            final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
             popupMenu.inflate(R.menu.friends_popup_menu);
-            popupMenu.setOnMenuItemClickListener(item -> {
+            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
+            final String status;
+            status = isPaused ? "Resume Download" : "Pause Download";
+            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
 
-                final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
+            popupMenu.setOnMenuItemClickListener(item -> {
 
                 switch (item.getItemId()) {
                     case R.id.friends_menu_1:
                         //pause
-                        pause_unpause(reachDatabaseId, context);
+                        if (pause_unpause(reachDatabaseId, context))
+                            item.setTitle("Resume Download");
+                        else
+                            item.setTitle("Pause Download");
                         return true;
                     case R.id.friends_menu_2:
                         //delete
@@ -89,21 +95,16 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                         return false;
                 }
             });
-
-            final String status;
-            status = paused ? "Resume Download" : "Pause Download";
-            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
-
-            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
-
             popupMenu.show();
         });
     }
 
+    //////////////////////////////
+
     /**
      * Pause / Unpause transaction
      */
-    private static void pause_unpause(long reachDatabaseId, Context context) {
+    private static boolean pause_unpause(long reachDatabaseId, Context context) {
 
         final ContentResolver resolver = context.getContentResolver();
         final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
@@ -115,13 +116,14 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 new String[]{reachDatabaseId + ""}, null);
 
         if (cursor == null)
-            return;
+            return false;
         if (!cursor.moveToFirst()) {
             cursor.close();
-            return;
+            return false;
         }
 
         final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
+        final boolean paused;
 
         ///////////////
 
@@ -130,31 +132,34 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             //pause operation (both upload/download case)
             final ContentValues values = new ContentValues();
             values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
-            context.getContentResolver().update(
+            paused = context.getContentResolver().update(
                     uri,
                     values,
                     ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabaseId + ""});
-            Log.i("Ayush", "Pausing");
-            paused = true;
+                    new String[]{reachDatabaseId + ""}) > 0;
         } else if (database.getOperationKind() == 1) {
 
             //un-paused upload operation
-            context.getContentResolver().delete(
+            paused = context.getContentResolver().delete(
                     uri,
                     ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabaseId + ""});
+                    new String[]{reachDatabaseId + ""}) > 0;
         } else {
 
             //un-paused download operation
             final Optional<Runnable> optional = reset(database, resolver, context, uri);
-            if (optional.isPresent())
+            if (optional.isPresent()) {
                 AsyncTask.SERIAL_EXECUTOR.execute(optional.get());
-            else //should never happen
+                paused = false;
+            } else { //should never happen
                 Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
+                paused = true;
+            }
             Log.i("Ayush", "Un-pausing");
-            paused = false;
         }
+
+        Log.i("Ayush", "Pause status " + paused);
+        return paused;
     }
 
     /**

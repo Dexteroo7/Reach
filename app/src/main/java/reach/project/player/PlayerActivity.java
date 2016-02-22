@@ -31,8 +31,8 @@ import java.util.Map;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -53,12 +53,12 @@ public class PlayerActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
-    public static Intent getIntent(Context context) {
-
-        final Intent intent = new Intent(context, PlayerActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        return intent;
-    }
+//    public static Intent getIntent(Context context) {
+//
+//        final Intent intent = new Intent(context, PlayerActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+//        return intent;
+//    }
 
     public static final String ACTION = "reach.project.player.PlayerActivity.ACTION";
     public static final String MUSIC_PARCEL = "reach.project.player.PlayerActivity.MUSIC_PARCEL";
@@ -342,7 +342,7 @@ public class PlayerActivity extends AppCompatActivity {
 
             final ContentValues values = new ContentValues();
             //CARE WE USE SQL TABLE ID HERE
-            if (currentPlaying.getType() == MusicData.DOWNLOADED) {
+            if (currentPlaying.getType() == MusicData.Type.DOWNLOADED) {
 
                 values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
                 return context.getContentResolver().update(
@@ -350,7 +350,7 @@ public class PlayerActivity extends AppCompatActivity {
                         values,
                         ReachDatabaseHelper.COLUMN_ID + " = ?",
                         new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
-            } else if (currentPlaying.getType() == MusicData.MY_LIBRARY) {
+            } else if (currentPlaying.getType() == MusicData.Type.MY_LIBRARY) {
 
                 values.put(MySongsHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
                 return context.getContentResolver().update(
@@ -392,7 +392,7 @@ public class PlayerActivity extends AppCompatActivity {
                 complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
                 complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
                 complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
-                complexParams.put(SongMetadata.SIZE, currentPlaying.getLength() + "");
+                complexParams.put(SongMetadata.SIZE, currentPlaying.getSize() + "");
                 complexParams.put(SongMetadata.UPLOADER_ID, currentPlaying.getSenderId() + "");
                 complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbumName());
 

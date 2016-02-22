@@ -31,7 +31,6 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -57,8 +56,6 @@ import reach.project.utils.FireOnce;
 import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ancillaryClasses.UseContext2;
-import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 
 public class ScanFragment extends Fragment {
 
@@ -84,7 +81,8 @@ public class ScanFragment extends Fragment {
                                            String phoneNumber) {
 
         final Bundle args;
-        ScanFragment fragment;
+        final ScanFragment fragment;
+
         reference = new WeakReference<>(fragment = new ScanFragment());
         fragment.setArguments(args = new Bundle());
 
@@ -106,12 +104,12 @@ public class ScanFragment extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_scan, container, false);
 
+        final String phoneNumber = getArguments().getString(PHONE_NUMBER);
+        final String userName = getArguments().getString(USER_NAME);
+
         oldImageId = getArguments().getString(OLD_IMAGE_ID, null);
         oldCoverId = getArguments().getString(OLD_COVER_ID, null);
         profilePicUri = getArguments().getParcelable(IMAGE_FILE_URI);
-
-        final String phoneNumber = getArguments().getString(PHONE_NUMBER);
-        final String userName = getArguments().getString(USER_NAME);
 
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
@@ -119,8 +117,13 @@ public class ScanFragment extends Fragment {
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
         final SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         final SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
-        coverPic.setController(MiscUtils.getControllerResize(coverPic.getController(),
-                Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldCoverId), COVER_PHOTO_RESIZE));
+
+        if (!TextUtils.isEmpty(oldCoverId) && !oldCoverId.equals("hello_world")) {
+
+            final DraweeController draweeController = MiscUtils.getControllerResize(coverPic.getController(),
+                    Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldCoverId), COVER_PHOTO_RESIZE);
+            coverPic.setController(draweeController);
+        }
 
         InputStream profilePicOptionsStream = null, profilePicDecodeStream = null;
         if (profilePicUri != null) {
@@ -137,7 +140,7 @@ public class ScanFragment extends Fragment {
                 e.printStackTrace();
                 Toast.makeText(getActivity(), "Could not update profile data", Toast.LENGTH_SHORT).show();
             }
-        } else if (!TextUtils.isEmpty(oldImageId)) {
+        } else if (!TextUtils.isEmpty(oldImageId) && !oldImageId.equals("hello_world")) {
 
             final String url = StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldImageId;
             final DraweeController draweeController = MiscUtils.getControllerResize(
@@ -166,13 +169,12 @@ public class ScanFragment extends Fragment {
 
     private static class SaveUserData extends AsyncTask<Object, Void, ReachUser> {
 
-        TextView next;
-        TextView scanCount;
-        TextView musicCount;
-        TextView appCount;
-        ProgressBar progress;
-        String deviceId;
-        LinearLayout scan1, scan2;
+        private TextView finishOnBoarding;
+        private TextView scanCount;
+        private TextView musicCount;
+        private TextView appCount;
+        private ProgressBar scanProgress;
+        private LinearLayout switchLayout1, switchLayout2;
 
         @Override
         protected ReachUser doInBackground(Object... objects) {
@@ -180,46 +182,42 @@ public class ScanFragment extends Fragment {
             final InputStream profilePicOptionsStream, profilePicDecodeStream;
             final String userName, phoneNumber;
 
-            next = (TextView) objects[0];
+            finishOnBoarding = (TextView) objects[0];
             scanCount = (TextView) objects[1];
             musicCount = (TextView) objects[2];
             appCount = (TextView) objects[3];
-            progress = (ProgressBar) objects[4];
-            deviceId = (String) objects[5];
-            scan1 = (LinearLayout) objects[6];
-            scan2 = (LinearLayout) objects[7];
+            scanProgress = (ProgressBar) objects[4];
+            final String deviceId = (String) objects[5];
+            switchLayout1 = (LinearLayout) objects[6];
+            switchLayout2 = (LinearLayout) objects[7];
             profilePicOptionsStream = (InputStream) objects[8];
             profilePicDecodeStream = (InputStream) objects[9];
             userName = (String) objects[10];
             phoneNumber = (String) objects[11];
 
-            final String gcmId;
-            final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
-                    (reference, GoogleCloudMessaging::getInstance).orNull();
-
-            if (messagingInstance == null)
-                gcmId = null;
-            else
-                gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.of(TextUtils::isEmpty)).orNull();
-
-            if (TextUtils.isEmpty(gcmId)) {
-
-                MiscUtils.useContextFromFragment(reference, new UseContext2<Activity>() {
-                    @Override
-                    public void work(Activity activity) {
-
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("GCM could not be initialized")
-                                .setAction("User Id - " + serverId)
-                                .setValue(1)
-                                .build());
-                    }
-                });
-            }
+            //SKIP GCM here
+//            final String gcmId;
+//            final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
+//                    (reference, GoogleCloudMessaging::getInstance).orNull();
+//
+//            if (messagingInstance == null)
+//                gcmId = null;
+//            else
+//                gcmId = MiscUtils.autoRetry(() -> messagingInstance.register("528178870551"), Optional.of(TextUtils::isEmpty)).orNull();
+//
+//            if (TextUtils.isEmpty(gcmId)) {
+//
+//                MiscUtils.useContextFromFragment(reference, activity -> {
+//                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+//                            .setCategory("GCM could not be initialized")
+//                            .setAction("User Id - " + serverId)
+//                            .setValue(1)
+//                            .build());
+//                });
+//            }
 
             final ReachUser user = new ReachUser();
             user.setDeviceId(deviceId);
-            user.setGcmId(gcmId);
             user.setUserName(userName);
             user.setPhoneNumber(phoneNumber);
             user.setImageId(oldImageId);
@@ -265,101 +263,102 @@ public class ScanFragment extends Fragment {
             super.onPostExecute(user);
 
             //set serverId here
-            MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, ScanFragment>() {
+            MiscUtils.useContextAndFragment(reference, (activity, fragment) -> {
 
-                @Override
-                public void work(Activity activity, ScanFragment fragment) {
+                if (user.getId() == 0) {
 
-                    if (user.getId() == 0) {
+                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, account creation failed")
+                            .setAction("User Id - " + serverId)
+                            .setValue(1)
+                            .build());
 
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("SEVERE ERROR, account creation failed")
-                                .setAction("User Id - " + serverId)
-                                .setValue(1)
-                                .build());
-
-                        Toast.makeText(activity, "Network error", Toast.LENGTH_SHORT).show();
-                        activity.finish();
-                        return;
-                    }
-
-
-                    final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
-                    tracker.setScreenName(AccountCreation.class.getPackage().getName());
-
-                    final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
-                    final long userId = user.getId();
-                    if (userId != 0) {
-
-                        MiscUtils.autoRetryAsync(() -> {
-                            final HttpTransport transport = new NetHttpTransport();
-                            final JsonFactory factory = new JacksonFactory();
-                            final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(activity, StaticData.SCOPE);
-                            credential.setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
-                            Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
-
-                            final BlahApi businessApi = CloudEndPointsUtils.updateBuilder(new BlahApi.Builder(transport, factory, credential)
-                                    .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
-
-                            try {
-                                final String code = sharedPreferences.getString("code", "");
-                                final String utm_source = sharedPreferences.getString("utm_source", "");
-                                final String utm_medium = sharedPreferences.getString("utm_medium", "");
-                                final String utm_campaign = sharedPreferences.getString("utm_campaign", "");
-                                final String utm_content = sharedPreferences.getString("utm_content", "");
-                                final String utm_term = sharedPreferences.getString("utm_term", "");
-
-                                if (!TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
-                                    final JsonMap jsonMap = new JsonMap();
-                                    jsonMap.set("utm_source", utm_source);
-                                    if (!TextUtils.isEmpty(utm_medium))
-                                        jsonMap.set("utm_medium", utm_medium);
-                                    if (!TextUtils.isEmpty(utm_campaign))
-                                        jsonMap.set("utm_campaign", utm_campaign);
-                                    if (!TextUtils.isEmpty(utm_content))
-                                        jsonMap.set("utm_content", utm_content);
-                                    if (!TextUtils.isEmpty(utm_term))
-                                        jsonMap.set("utm_term", utm_term);
-                                    businessApi.addNewUTMAndCode(userId, code, jsonMap).execute();
-                                }
-                                else if (!TextUtils.isEmpty(code) && TextUtils.isEmpty(utm_source)) {
-                                    businessApi.addPromoCodeIfNotPresent(userId, code).execute();
-                                }
-                                else if (TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
-                                    final JsonMap jsonMap = new JsonMap();
-                                    jsonMap.set("utm_source", utm_source);
-                                    if (!TextUtils.isEmpty(utm_medium))
-                                        jsonMap.set("utm_medium", utm_medium);
-                                    if (!TextUtils.isEmpty(utm_campaign))
-                                        jsonMap.set("utm_campaign", utm_campaign);
-                                    if (!TextUtils.isEmpty(utm_content))
-                                        jsonMap.set("utm_content", utm_content);
-                                    if (!TextUtils.isEmpty(utm_term))
-                                        jsonMap.set("utm_term", utm_term);
-                                    businessApi.addNewUTM(userId, jsonMap).execute();
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            return null;
-                        }, Optional.absent());
-
-                        tracker.set("&uid", userId + "");
-                        tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userId + "").build());
-                    }
-
-                    SharedPrefUtils.storeReachUser(sharedPreferences, user);
-                    final Intent intent = new Intent(activity, MetaDataScanner.class);
-                    intent.putExtra("messenger", messenger);
-                    intent.putExtra("first", true);
-                    activity.startService(intent);
-
-                    FireOnce.contactSync(
-                            new WeakReference<>(activity.getApplicationContext()),
-                            user.getId(),
-                            user.getPhoneNumber());
+                    Toast.makeText(activity, "Network error", Toast.LENGTH_SHORT).show();
+                    activity.finish();
+                    return;
                 }
+
+
+                final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
+                tracker.setScreenName(AccountCreation.class.getPackage().getName());
+
+                final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
+                final long userId = user.getId();
+                if (userId != 0) {
+
+                    MiscUtils.autoRetryAsync(() -> {
+                        final HttpTransport transport = new NetHttpTransport();
+                        final JsonFactory factory = new JacksonFactory();
+                        final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(activity, StaticData.SCOPE);
+                        credential.setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
+                        Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
+
+                        final BlahApi businessApi = CloudEndPointsUtils.updateBuilder(new BlahApi.Builder(transport, factory, credential)
+                                .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
+
+                        try {
+                            final String code = sharedPreferences.getString("code", "");
+                            final String utm_source = sharedPreferences.getString("utm_source", "");
+                            final String utm_medium = sharedPreferences.getString("utm_medium", "");
+                            final String utm_campaign = sharedPreferences.getString("utm_campaign", "");
+                            final String utm_content = sharedPreferences.getString("utm_content", "");
+                            final String utm_term = sharedPreferences.getString("utm_term", "");
+
+                            if (!TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
+                                final JsonMap jsonMap = new JsonMap();
+                                jsonMap.set("utm_source", utm_source);
+                                if (!TextUtils.isEmpty(utm_medium))
+                                    jsonMap.set("utm_medium", utm_medium);
+                                if (!TextUtils.isEmpty(utm_campaign))
+                                    jsonMap.set("utm_campaign", utm_campaign);
+                                if (!TextUtils.isEmpty(utm_content))
+                                    jsonMap.set("utm_content", utm_content);
+                                if (!TextUtils.isEmpty(utm_term))
+                                    jsonMap.set("utm_term", utm_term);
+                                businessApi.addNewUTMAndCode(userId, code, jsonMap).execute();
+                            } else if (!TextUtils.isEmpty(code) && TextUtils.isEmpty(utm_source)) {
+                                businessApi.addPromoCodeIfNotPresent(userId, code).execute();
+                            } else if (TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
+                                final JsonMap jsonMap = new JsonMap();
+                                jsonMap.set("utm_source", utm_source);
+                                if (!TextUtils.isEmpty(utm_medium))
+                                    jsonMap.set("utm_medium", utm_medium);
+                                if (!TextUtils.isEmpty(utm_campaign))
+                                    jsonMap.set("utm_campaign", utm_campaign);
+                                if (!TextUtils.isEmpty(utm_content))
+                                    jsonMap.set("utm_content", utm_content);
+                                if (!TextUtils.isEmpty(utm_term))
+                                    jsonMap.set("utm_term", utm_term);
+                                businessApi.addNewUTM(userId, jsonMap).execute();
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }, Optional.absent());
+
+                    tracker.set("&uid", userId + "");
+                    tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userId + "").build());
+                }
+
+                SharedPrefUtils.storeReachUser(sharedPreferences, user);
+                final Intent intent = new Intent(activity, MetaDataScanner.class);
+                intent.putExtra("messenger", messenger);
+                intent.putExtra("first", true);
+                activity.startService(intent);
+
+                //sync up contacts
+                final WeakReference<Context> reference = new WeakReference<>(activity.getApplicationContext());
+                FireOnce.contactSync(
+                        reference,
+                        userId,
+                        user.getPhoneNumber());
+
+                //sync up gcmId
+                FireOnce.checkGCM(
+                        reference,
+                        userId);
             });
         }
 
@@ -379,15 +378,13 @@ public class ScanFragment extends Fragment {
 
                 if (message.what == MetaDataScanner.FINISHED) {
 
-                    next.setText("CLICK TO PROCEED");
-                    MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
-                        @Override
-                        public void work(Context context) {
-                            next.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
-                        }
+                    finishOnBoarding.setText("CLICK TO PROCEED");
+                    MiscUtils.useContextFromFragment(reference, activity -> {
+                        finishOnBoarding.setTextColor(ContextCompat.getColor(activity, R.color.reach_color));
+
                     });
-                    next.setOnClickListener(PROCEED);
-                    next.setVisibility(View.VISIBLE);
+                    finishOnBoarding.setOnClickListener(PROCEED);
+                    finishOnBoarding.setVisibility(View.VISIBLE);
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
                     totalMusic = message.arg1;
@@ -397,9 +394,9 @@ public class ScanFragment extends Fragment {
                     scanCount.setText(totalFiles + "");
 
                     if (totalExpected > totalFiles)
-                        progress.setProgress((totalFiles * 100) / totalExpected);
+                        scanProgress.setProgress((totalFiles * 100) / totalExpected);
                     else
-                        progress.setProgress(100); //error case
+                        scanProgress.setProgress(100); //error case
 
                 } else if (message.what == MetaDataScanner.SCANNING_APPS) {
 
@@ -410,9 +407,9 @@ public class ScanFragment extends Fragment {
                     scanCount.setText(totalFiles + "");
 
                     if (totalExpected > totalFiles)
-                        progress.setProgress((totalFiles * 100) / totalExpected);
+                        scanProgress.setProgress((totalFiles * 100) / totalExpected);
                     else
-                        progress.setProgress(100); //error case
+                        scanProgress.setProgress(100); //error case
 
                 } else if (message.what == MetaDataScanner.UPLOADING) {
 
@@ -422,9 +419,9 @@ public class ScanFragment extends Fragment {
                     musicCount.setText(totalMusic + "");
                     appCount.setText(totalApps + "");
 
-                    scan1.setVisibility(View.INVISIBLE);
-                    scan2.setVisibility(View.VISIBLE);
-                    progress.setProgress(100);
+                    switchLayout1.setVisibility(View.INVISIBLE);
+                    switchLayout2.setVisibility(View.VISIBLE);
+                    scanProgress.setProgress(100);
 
                 } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
 

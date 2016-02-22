@@ -172,7 +172,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public void handOverMessage(@NonNull App item) {
-        MiscUtils.openAppinPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
+        MiscUtils.openAppInPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
     }
 
     @Override

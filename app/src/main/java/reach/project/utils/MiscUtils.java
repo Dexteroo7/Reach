@@ -10,8 +10,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -31,26 +29,18 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.common.executors.UiThreadImmediateExecutorService;
-import com.facebook.common.references.CloseableReference;
-import com.facebook.datasource.DataSource;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.controller.AbstractDraweeController;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.imagepipeline.common.ResizeOptions;
-import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
-import com.facebook.imagepipeline.image.CloseableImage;
-import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -65,9 +55,7 @@ import org.json.JSONException;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
@@ -97,11 +85,9 @@ import reach.project.apps.App;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.music.Song;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
@@ -112,15 +98,15 @@ import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.ancillaryClasses.DoWork;
-import reach.project.utils.ancillaryClasses.UpdateUI;
 import reach.project.utils.ancillaryClasses.UseActivity;
+import reach.project.utils.ancillaryClasses.UseActivityWithResult;
+import reach.project.utils.ancillaryClasses.UseContextWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
-import reach.project.utils.ancillaryClasses.UseContext2;
-import reach.project.utils.ancillaryClasses.UseContextAndFragment;
+import reach.project.utils.ancillaryClasses.UseFragmentAndActivity;
+import reach.project.utils.ancillaryClasses.UseFragmentWithResult;
 import reach.project.utils.ancillaryClasses.UseFragment;
-import reach.project.utils.ancillaryClasses.UseFragment2;
 import reach.project.utils.ancillaryClasses.UseReference;
-import reach.project.utils.ancillaryClasses.UseReference2;
+import reach.project.utils.ancillaryClasses.UseReferenceWithResult;
 import reach.project.utils.viewHelpers.RetryHook;
 
 /**
@@ -273,7 +259,8 @@ public enum MiscUtils {
         return container;
     }
 
-    public static String generateInitials(String name) {
+    //TODO test
+    public static CharSequence generateInitials(String name) {
 
         name = name.trim();
         if (TextUtils.isEmpty(name))
@@ -286,10 +273,8 @@ public enum MiscUtils {
                 return "A";
             case 1:
                 return (splitter[0].charAt(0) + "").toUpperCase();
-            case 2:
-                return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
             default:
-                return "A";
+                return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
         }
     }
 
@@ -393,6 +378,31 @@ public enum MiscUtils {
         //stop any other play clicks till current is processed
         //sanity check
 //            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
+        if (musicData.getSize() == 0 || TextUtils.isEmpty(musicData.getPath())) {
+            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (musicData.getProcessed() == 0) {
+            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        ProcessManager.submitMusicRequest(context,
+                Optional.of(musicData),
+                ProcessManager.ACTION_NEW_SONG);
+
+        final Intent intent = new Intent(context, PlayerActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent);
+        ////////////////////////////////////////
+        return true;
+    }
+
+    public static boolean playSong(Song musicData, Context context) {
+
+        //sanity check
+//            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
         if (musicData.getLength() == 0 || TextUtils.isEmpty(musicData.getPath())) {
             Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
             return false;
@@ -414,57 +424,57 @@ public enum MiscUtils {
         return true;
     }
 
-    public static void setEmptyTextforGridView(GridView gridView, String emptyText) {
-
-        if (gridView.getContext() == null)
-            return;
-        final TextView emptyTextView = new TextView(gridView.getContext());
-        emptyTextView.setText(emptyText);
-
-        final ViewParent parent = gridView.getParent();
-        if (parent == null ||
-                parent.getClass() == null ||
-                TextUtils.isEmpty(parent.getClass().getName()))
-            return;
-        final String parentType = parent.getClass().getName();
-
-        if (parentType.equals("android.widget.FrameLayout")) {
-            emptyTextView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
-            gridView.setEmptyView(emptyTextView);
-            final FrameLayout frameLayout = (FrameLayout) parent;
-            frameLayout.removeViewAt(1);
-            frameLayout.addView(emptyTextView);
-        } else if (parentType.equals("android.widget.RelativeLayout")) {
-
-            final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-            emptyTextView.setLayoutParams(layoutParams);
-            gridView.setEmptyView(emptyTextView);
-            final RelativeLayout relativeLayout = (RelativeLayout) parent;
-            relativeLayout.removeViewAt(1);
-            relativeLayout.addView(emptyTextView);
-        }
-    }
-
-    public static ListView addLoadingToMusicListView(ListView listView) {
-
-        if (listView.getContext() == null)
-            return listView;
-        final ProgressBar loading = new ProgressBar(listView.getContext());
-        loading.setIndeterminate(true);
-        loading.setPadding(0, 0, 0, dpToPx(60));
-
-        final ViewParent parent = listView.getParent();
-
-        final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
-        loading.setLayoutParams(layoutParams);
-        listView.setEmptyView(loading);
-        final RelativeLayout relativeLayout = (RelativeLayout) parent;
-        relativeLayout.addView(loading);
-        return listView;
-    }
+//    public static void setEmptyTextforGridView(GridView gridView, String emptyText) {
+//
+//        if (gridView.getContext() == null)
+//            return;
+//        final TextView emptyTextView = new TextView(gridView.getContext());
+//        emptyTextView.setText(emptyText);
+//
+//        final ViewParent parent = gridView.getParent();
+//        if (parent == null ||
+//                parent.getClass() == null ||
+//                TextUtils.isEmpty(parent.getClass().getName()))
+//            return;
+//        final String parentType = parent.getClass().getName();
+//
+//        if (parentType.equals("android.widget.FrameLayout")) {
+//            emptyTextView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+//            gridView.setEmptyView(emptyTextView);
+//            final FrameLayout frameLayout = (FrameLayout) parent;
+//            frameLayout.removeViewAt(1);
+//            frameLayout.addView(emptyTextView);
+//        } else if (parentType.equals("android.widget.RelativeLayout")) {
+//
+//            final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+//            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+//            emptyTextView.setLayoutParams(layoutParams);
+//            gridView.setEmptyView(emptyTextView);
+//            final RelativeLayout relativeLayout = (RelativeLayout) parent;
+//            relativeLayout.removeViewAt(1);
+//            relativeLayout.addView(emptyTextView);
+//        }
+//    }
+//
+//    public static ListView addLoadingToMusicListView(ListView listView) {
+//
+//        if (listView.getContext() == null)
+//            return listView;
+//        final ProgressBar loading = new ProgressBar(listView.getContext());
+//        loading.setIndeterminate(true);
+//        loading.setPadding(0, 0, 0, dpToPx(60));
+//
+//        final ViewParent parent = listView.getParent();
+//
+//        final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+//        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+//        layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+//        loading.setLayoutParams(layoutParams);
+//        listView.setEmptyView(loading);
+//        final RelativeLayout relativeLayout = (RelativeLayout) parent;
+//        relativeLayout.addView(loading);
+//        return listView;
+//    }
 
     public static ListView addLoadingToListView(ListView listView) {
 
@@ -498,45 +508,28 @@ public enum MiscUtils {
         return listView;
     }
 
-    public static GridView addLoadingToGridView(GridView gridView) {
-
-        final ProgressBar loading = new ProgressBar(gridView.getContext());
-        loading.setIndeterminate(true);
-        final ViewParent parent = gridView.getParent();
-        final String parentType = parent.getClass().getName();
-        if (parentType.equals("android.widget.FrameLayout")) {
-            loading.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
-            gridView.setEmptyView(loading);
-            final FrameLayout frameLayout = (FrameLayout) parent;
-            frameLayout.addView(loading);
-        } else if (parentType.equals("android.widget.RelativeLayout")) {
-
-            final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-            loading.setLayoutParams(layoutParams);
-            gridView.setEmptyView(loading);
-            final RelativeLayout relativeLayout = (RelativeLayout) parent;
-            relativeLayout.addView(loading);
-        }
-        return gridView;
-    }
-
-    public static void bulkInsertSongs(Collection<Song> reachSongs,
-                                       ContentResolver contentResolver) {
-
-        //Add all songs
-        final ContentValues[] songs = new ContentValues[reachSongs.size()];
-
-        int i = 0;
-        if (reachSongs.size() > 0) {
-
-            for (Song song : reachSongs)
-                songs[i++] = MySongsHelper.contentValuesCreator(song);
-            i = 0; //reset counter
-            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
-        } else
-            contentResolver.delete(MySongsProvider.CONTENT_URI, null, null);
-    }
+//    public static GridView addLoadingToGridView(GridView gridView) {
+//
+//        final ProgressBar loading = new ProgressBar(gridView.getContext());
+//        loading.setIndeterminate(true);
+//        final ViewParent parent = gridView.getParent();
+//        final String parentType = parent.getClass().getName();
+//        if (parentType.equals("android.widget.FrameLayout")) {
+//            loading.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+//            gridView.setEmptyView(loading);
+//            final FrameLayout frameLayout = (FrameLayout) parent;
+//            frameLayout.addView(loading);
+//        } else if (parentType.equals("android.widget.RelativeLayout")) {
+//
+//            final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+//            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+//            loading.setLayoutParams(layoutParams);
+//            gridView.setEmptyView(loading);
+//            final RelativeLayout relativeLayout = (RelativeLayout) parent;
+//            relativeLayout.addView(loading);
+//        }
+//        return gridView;
+//    }
 
     public static MyBoolean sendGCM(final String message, final long hostId, final long clientId) {
 
@@ -546,30 +539,10 @@ public enum MiscUtils {
         }, Optional.of(input -> input == null)).orNull();
     }
 
-//    /**
-//     * //TODO improve/fix/replace this hack
-//     * @return The current localIP
-//     * @throws IOException
-//     * @throws InterruptedException
-//     */
-//    public static InetAddress getLocalIp() throws IOException, InterruptedException {
-//
-//        final Socket temp = new Socket();
-//        final InetSocketAddress google = new InetSocketAddress("www.google.com", 80);
-//        final InetAddress localIpAddress;
-//        temp.connect(google);
-//        temp.setSoLinger(true, 1);
-//        temp.setReuseAddress(true);
-//        localIpAddress = temp.getLocalAddress();
-//        temp.close();
-//        Thread.sleep(1000L);
-//        return localIpAddress;
-//    }
+    public static <Result> Optional<Result> useContextFromContext(final WeakReference<? extends Context> reference,
+                                                                  final UseContextWithResult<Result> task) {
 
-    public static <Param extends Context, Result> Optional<Result> useContextFromContext(final WeakReference<Param> reference,
-                                                                                         final UseContext<Result, Param> task) {
-
-        final Param context;
+        final Context context;
         if (reference == null || (context = reference.get()) == null)
             return Optional.absent();
 
@@ -579,10 +552,10 @@ public enum MiscUtils {
         return Optional.fromNullable(task.work(context));
     }
 
-    public static <Param extends Context> void useContextFromContext(final WeakReference<Param> reference,
-                                                                     final UseContext2<Param> task) {
+    public static void useContextFromContext(final WeakReference<? extends Context> reference,
+                                             final UseContext task) {
 
-        final Param context;
+        final Context context;
         if (reference == null || (context = reference.get()) == null)
             return;
 
@@ -592,10 +565,10 @@ public enum MiscUtils {
         task.work(context);
     }
 
-    public static <Param1 extends Context, Param2 extends Fragment, Result> Optional<Result> useContextFromFragment(final WeakReference<Param2> reference,
-                                                                                                                    final UseContext<Result, Param1> task) {
+    public static <Result> Optional<Result> useContextFromFragment(final WeakReference<? extends Fragment> reference,
+                                                                   final UseActivityWithResult<Activity, Result> task) {
 
-        final Param2 fragment;
+        final Fragment fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return Optional.absent();
 
@@ -607,13 +580,13 @@ public enum MiscUtils {
         if (activity == null || activity.isFinishing())
             return Optional.absent();
 
-        return Optional.fromNullable(task.work((Param1) activity));
+        return Optional.fromNullable(task.work(activity));
     }
 
-    public static <Param1 extends Context, Param2 extends Fragment> void useContextFromFragment(final WeakReference<Param2> reference,
-                                                                                                final UseContext2<Param1> task) {
+    public static void useContextFromFragment(final WeakReference<? extends Fragment> reference,
+                                              final UseActivity<Activity> task) {
 
-        final Param2 fragment;
+        final Fragment fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
@@ -623,13 +596,13 @@ public enum MiscUtils {
 
         final Activity activity = fragment.getActivity();
         if (activity != null && !activity.isFinishing())
-            task.work((Param1) activity);
+            task.work(activity);
     }
 
-    public static <Param1 extends Context, Param2 extends Fragment> void useContextAndFragment(final WeakReference<Param2> reference,
-                                                                                               final UseContextAndFragment<Param1, Param2> task) {
+    public static <Param extends Fragment> void useContextAndFragment(final WeakReference<Param> reference,
+                                                                      final UseFragmentAndActivity<Param> task) {
 
-        final Param2 fragment;
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
@@ -639,11 +612,11 @@ public enum MiscUtils {
 
         final Activity activity = fragment.getActivity();
         if (activity != null && !activity.isFinishing())
-            task.work((Param1) activity, fragment);
+            task.work(activity, fragment);
     }
 
     public static <Param extends Fragment, Result> Optional<Result> useFragment(final WeakReference<Param> reference,
-                                                                                final UseFragment<Result, Param> task) {
+                                                                                final UseFragmentWithResult<Param, Result> task) {
 
         final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
@@ -661,7 +634,7 @@ public enum MiscUtils {
     }
 
     public static <Param extends Fragment> void useFragment(final WeakReference<Param> reference,
-                                                            final UseFragment2<Param> task) {
+                                                            final UseFragment<Param> task) {
 
         final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
@@ -676,14 +649,23 @@ public enum MiscUtils {
             task.work(fragment);
     }
 
-    public static <T extends Activity> void useActivity(final WeakReference<T> reference,
-                                                        final UseActivity<T> task) {
+    public static <Param extends Activity> void useActivity(final WeakReference<Param> reference,
+                                                            final UseActivity<Param> task) {
 
-        final T activity;
+        final Param activity;
         if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
             return;
 
         task.work(activity);
+    }
+
+    public static <Param extends Activity, Result> Optional<Result> useActivityWithResult(final WeakReference<Param> reference,
+                                                                                          final UseActivityWithResult<Param, Result> task) {
+
+        final Param activity;
+        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
+            return Optional.absent();
+        return Optional.fromNullable(task.work(activity));
     }
 
     public static <Param> void useReference(final WeakReference<Param> reference,
@@ -696,7 +678,7 @@ public enum MiscUtils {
     }
 
     public static <Param, Result> Optional<Result> useReference(final WeakReference<Param> reference,
-                                                                final UseReference2<Param, Result> task) {
+                                                                final UseReferenceWithResult<Param, Result> task) {
 
         final Param param;
         if (reference == null || (param = reference.get()) == null)
@@ -705,7 +687,7 @@ public enum MiscUtils {
     }
 
     //    public static <T extends Activity> void runOnUiThread(final WeakReference<T> reference,
-//                                                          final UseContext<Void, T> task) {
+//                                                          final UseContextWithResult<Void, T> task) {
 //
 //        final T activity;
 //        if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
@@ -716,7 +698,7 @@ public enum MiscUtils {
 //
 
     public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseContext2<Activity> task) {
+                                                                  final UseContext task) {
 
         final T fragment;
         if (reference == null || (fragment = reference.get()) == null)
@@ -733,10 +715,10 @@ public enum MiscUtils {
         activity.runOnUiThread(() -> task.work(activity));
     }
 
-    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseContextAndFragment<Activity, T> task) {
+    public static <Param extends Fragment> void runOnUiThreadFragment(final WeakReference<Param> reference,
+                                                                      final UseFragmentAndActivity<Param> task) {
 
-        final T fragment;
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
@@ -751,10 +733,10 @@ public enum MiscUtils {
         activity.runOnUiThread(() -> task.work(activity, fragment));
     }
 
-    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-                                                                  final UseFragment2<T> task) {
+    public static <Param extends Fragment> void runOnUiThreadFragment(final WeakReference<Param> reference,
+                                                                      final UseFragment<Param> task) {
 
-        final T fragment;
+        final Param fragment;
         if (reference == null || (fragment = reference.get()) == null)
             return;
 
@@ -769,10 +751,10 @@ public enum MiscUtils {
         activity.runOnUiThread(() -> task.work(fragment));
     }
 
-    public static <T extends Activity> void runOnUiThreadActivity(final WeakReference<T> reference,
-                                                                  final UseActivity<T> task) {
+    public static <Param extends Activity> void runOnUiThreadActivity(final WeakReference<Param> reference,
+                                                                      final UseActivity<Param> task) {
 
-        final T activity;
+        final Param activity;
         if (reference == null || (activity = reference.get()) == null || activity.isFinishing())
             return;
 
@@ -780,7 +762,7 @@ public enum MiscUtils {
     }
 //
 //    public static <T extends Fragment> void runOnUiThreadFragment(final WeakReference<T> reference,
-//                                                                  final UseFragment<Void, T> task) {
+//                                                                  final UseFragmentWithResult<Void, T> task) {
 //
 //        final T fragment;
 //        if (reference == null || (fragment = reference.get()) == null)
@@ -796,38 +778,12 @@ public enum MiscUtils {
 //        activity.runOnUiThread(() -> task.work(fragment));
 //    }
 
-    /**
-     * @param id        id of the person to update gcm of
-     * @param reference the context reference
-     * @param <T>       something which extends context
-     * @return false : failed, true : OK
-     */
-    public static <T extends Context> boolean updateGCM(final long id, final WeakReference<T> reference) {
+    public static <Param extends Fragment> boolean isOnline(@Nullable Param stuff) {
 
-        final String regId = autoRetry(() -> {
-
-            final Context context;
-            if (reference == null || (context = reference.get()) == null)
-                return "QUIT";
-            return GoogleCloudMessaging.getInstance(context)
-                    .register("528178870551");
-        }, Optional.of(TextUtils::isEmpty)).orNull();
-
-        if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
-            return false;
-        //if everything is fine, send to server
-        Log.i("Ayush", "Uploading newGcmId to server");
-        final Boolean result = autoRetry(() -> {
-
-            StaticData.USER_API.setGCMId(id, regId).execute();
-            Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
-            return true;
-        }, Optional.absent()).orNull();
-        //set locally
-        return !(result == null || !result);
+        return !(stuff == null || isFragmentDead(stuff)) && isOnline(stuff.getActivity());
     }
 
-    public static <T extends Context> boolean isOnline(T stuff) {
+    public static <Param extends Context> boolean isOnline(@Nullable Param stuff) {
 
         if (stuff == null)
             return false;
@@ -838,21 +794,6 @@ public enum MiscUtils {
 
         final NetworkInfo networkInfo =
                 ((ConnectivityManager) stuff.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
-
-    }
-
-    public static <T extends Fragment> boolean isOnline(T stuff) {
-
-        if (stuff == null || isFragmentDead(stuff))
-            return false;
-
-        final Activity activity = stuff.getActivity();
-        if (activity == null || activity.isFinishing())
-            return false;
-
-        final NetworkInfo networkInfo =
-                ((ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
 
     }
@@ -868,51 +809,7 @@ public enum MiscUtils {
      */
     public static <T> Optional<T> autoRetry(@NonNull final DoWork<T> task,
                                             @NonNull final Optional<Predicate<T>> predicate) {
-
-        for (int retry = 0; retry <= StaticData.NETWORK_RETRY; ++retry) {
-
-            try {
-
-                Thread.sleep(retry * StaticData.NETWORK_CALL_WAIT);
-                final T resultAfterWork = task.doWork();
-                /**
-                 * If the result was not
-                 * desirable we RETRY.
-                 */
-                if (predicate.isPresent() && predicate.get().apply(resultAfterWork))
-                    continue;
-                /**
-                 * Else we return
-                 */
-                return Optional.fromNullable(resultAfterWork);
-            } catch (InterruptedException | UnknownHostException | NullPointerException | SocketTimeoutException e) {
-
-                try {
-                    Log.i("Ayush", e.getLocalizedMessage());
-                } catch (NullPointerException ignored) {
-                }
-                e.printStackTrace();
-                return Optional.absent(); //do not retry
-
-            } catch (GoogleJsonResponseException e) {
-
-                try {
-                    Log.i("Ayush", e.getLocalizedMessage());
-                } catch (NullPointerException ignored) {
-                }
-                if (e.getLocalizedMessage().contains("404"))
-                    return Optional.absent(); //do not retry on 404
-
-            } catch (Exception e) {
-
-                try {
-                    Log.i("Ayush", e.getLocalizedMessage());
-                } catch (NullPointerException ignored) {
-                }
-                e.printStackTrace();
-            }
-        }
-        return Optional.absent();
+        return autoRetry(task, predicate, Optional.absent());
     }
 
     /**
@@ -1045,155 +942,6 @@ public enum MiscUtils {
         }).start();
     }
 
-    /**
-     * If bitmap could not be returned use the original image as is, this should not happen normally
-     *
-     * @param inputStream the inputStream for the image
-     * @return the resized bitmap
-     */
-    @NonNull
-    public static BitmapFactory.Options getRequiredOptions(final InputStream inputStream) {
-
-        // Decode just the boundaries
-        final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
-        mBitmapOptions.inJustDecodeBounds = true;
-
-        final Bitmap temporary = BitmapFactory.decodeStream(inputStream, null, mBitmapOptions);
-        if (temporary != null)
-            temporary.recycle();
-        if (mBitmapOptions.outHeight == 0 || mBitmapOptions.outWidth == 0)
-            return mBitmapOptions; //illegal
-
-        // Calculate inSampleSize
-        // Raw height and width of image
-        final int height = mBitmapOptions.outHeight;
-        final int width = mBitmapOptions.outWidth;
-        final int sideLength = 1000;
-
-        int reqHeight = height;
-        int reqWidth = width;
-        final int inDensity;
-        final int inTargetDensity;
-
-        if (height > width) {
-
-            if (height > sideLength) {
-
-                reqHeight = sideLength;
-                reqWidth = (width * sideLength) / height;
-            }
-            inDensity = height;
-            inTargetDensity = reqHeight;
-
-        } else if (width > height) {
-
-            if (width > sideLength) {
-                reqWidth = sideLength;
-                reqHeight = (height * sideLength) / width;
-            }
-            inDensity = width;
-            inTargetDensity = reqWidth;
-
-        } else {
-
-            reqWidth = sideLength;
-            reqHeight = sideLength;
-            inDensity = height;
-            inTargetDensity = reqHeight;
-        }
-
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth)
-                inSampleSize *= 2;
-        }
-
-        //now go resize the image to the size you want
-        mBitmapOptions.inSampleSize = inSampleSize;
-        mBitmapOptions.inDither = true;
-        mBitmapOptions.inPreferQualityOverSpeed = true;
-        mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
-        mBitmapOptions.inJustDecodeBounds = false;
-        mBitmapOptions.inScaled = true;
-        mBitmapOptions.inDensity = inDensity;
-        mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
-
-        /**
-         * Generate the compressed image
-         * Will load & resize the image to be 1/inSampleSize dimensions
-         */
-        Log.i("Ayush", "Starting compression");
-        return mBitmapOptions;
-    }
-
-    private static final StringBuffer buffer = new StringBuffer();
-    private static final String baseURL = "http://52.74.53.245:8080/getImage/small?";
-
-    public synchronized static String getAlbumArt(String album, String artist, String song) throws UnsupportedEncodingException {
-
-        buffer.setLength(0);
-        buffer.append(baseURL);
-        if (!TextUtils.isEmpty(album)) {
-
-            buffer.append("album=").append(Uri.encode(album));
-            if (!TextUtils.isEmpty(artist))
-                buffer.append("&artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(Uri.encode(song));
-        } else if (!TextUtils.isEmpty(artist)) {
-
-            buffer.append("artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(song))
-                buffer.append("&song=").append(Uri.encode(song));
-        } else if (!TextUtils.isEmpty(song))
-            buffer.append("song=").append(Uri.encode(song));
-
-        final String toReturn = buffer.toString();
-//        Log.i("Ayush", toReturn);
-        return toReturn;
-    }
-
-    public synchronized static String getAlbumArt(String album, String artist,
-                                                  String displayName, String actualName) throws UnsupportedEncodingException {
-
-        buffer.setLength(0);
-        buffer.append(baseURL);
-        if (!TextUtils.isEmpty(album)) {
-
-            buffer.append("album=").append(Uri.encode(album));
-            if (!TextUtils.isEmpty(artist))
-                buffer.append("&artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(displayName))
-                buffer.append("&song=").append(Uri.encode(displayName));
-            if (!TextUtils.isEmpty(actualName))
-                buffer.append("&actualName=").append(Uri.encode(actualName));
-        } else if (!TextUtils.isEmpty(artist)) {
-
-            buffer.append("artist=").append(Uri.encode(artist));
-            if (!TextUtils.isEmpty(displayName))
-                buffer.append("&song=").append(Uri.encode(displayName));
-            if (!TextUtils.isEmpty(actualName))
-                buffer.append("&actualName=").append(Uri.encode(actualName));
-        } else if (!TextUtils.isEmpty(displayName)) {
-
-            buffer.append("song=").append(Uri.encode(displayName));
-            if (!TextUtils.isEmpty(actualName))
-                buffer.append("&actualName=").append(Uri.encode(actualName));
-        } else if (!TextUtils.isEmpty(actualName))
-            buffer.append("actualName=").append(Uri.encode(actualName));
-
-        final String toReturn = buffer.toString();
-//        Log.i("Ayush", toReturn);
-        return toReturn;
-    }
-
     public static String getDeviceId(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
@@ -1232,6 +980,7 @@ public enum MiscUtils {
 
         List<ApplicationInfo> applications;
         try {
+
             applications = packageManager.getInstalledApplications(0);
             final Iterator<ApplicationInfo> iterator = applications.iterator();
             while (iterator.hasNext()) {
@@ -1244,17 +993,19 @@ public enum MiscUtils {
             }
 
             return applications;
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+
+        }
 
         applications = new ArrayList<>();
         BufferedReader bufferedReader = null;
 
         try {
             final Process process = Runtime.getRuntime().exec("pm list packages");
-            bufferedReader=new BufferedReader(new InputStreamReader(process.getInputStream()));
+            bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            while((line=bufferedReader.readLine()) != null) {
-                final String packageName = line.substring(line.indexOf(':')+1);
+            while ((line = bufferedReader.readLine()) != null) {
+                final String packageName = line.substring(line.indexOf(':') + 1);
                 final ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
                 if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0
                         && (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0
@@ -1262,12 +1013,10 @@ public enum MiscUtils {
                     applications.add(applicationInfo);
             }
             process.waitFor();
-        }
-
-        catch (Exception e) { e.printStackTrace(); }
-
-        finally {
-            if(bufferedReader!=null) {
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (bufferedReader != null) {
                 try {
                     bufferedReader.close();
                 } catch (IOException e) {
@@ -1278,7 +1027,8 @@ public enum MiscUtils {
         return applications;
     }
 
-    public static void openAppinPlayStore(Activity activity, String packageName, Long senderId, String page) {
+    public static void openAppInPlayStore(Activity activity, String packageName, Long senderId, String page) {
+
         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach",
                 Context.MODE_PRIVATE);
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
@@ -1317,7 +1067,8 @@ public enum MiscUtils {
     public static void openApp(Context context, String packageName) {
         try {
             context.startActivity(context.getPackageManager().getLaunchIntentForPackage(packageName));
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     private static class StartDownloadOperation implements Runnable {
@@ -1565,7 +1316,7 @@ public enum MiscUtils {
                         "",
                         liked,
                         reachDatabase.getDuration(),
-                        (byte) 0);
+                        MusicData.Type.DOWNLOADED);
                 playSong(musicData, activity);
                 //in both cases close and continue
                 cursor.close();
@@ -1649,7 +1400,6 @@ public enum MiscUtils {
                         activity.startActivity(foreGround);
                     })
                     .show();
-
     }
 
     @NonNull
@@ -1665,21 +1415,6 @@ public enum MiscUtils {
     @NonNull
     public static JsonElement get(JsonObject jsonObject, EnumHelper<String> enumHelper) {
         return jsonObject.get(enumHelper.getName());
-    }
-
-    public static <T> List<T> convertToList(T[] array) {
-
-        final List<T> list = new ArrayList<>(array.length);
-        Collections.addAll(list, array);
-        return list;
-    }
-
-    public static List<Long> convertToList(long[] array) {
-
-        final List<Long> list = new ArrayList<>(array.length);
-        for (long item : array)
-            list.add(item);
-        return list;
     }
 
     public static ThreadPoolExecutor getRejectionExecutor() {
@@ -1705,47 +1440,12 @@ public enum MiscUtils {
                 new ThreadPoolExecutor.DiscardPolicy()); //ignored
     }
 
-
-    public static <T> String seqToString(Iterable<T> items) {
-
-        final StringBuilder sb = new StringBuilder();
-        sb.append('[');
-        boolean needSeparator = false;
-        for (T x : items) {
-            if (needSeparator)
-                sb.append(' ');
-            sb.append(x.toString());
-            needSeparator = true;
-        }
-        sb.append(']');
-        return sb.toString();
-    }
-
-    public static void imageForRemoteViewRequest(Uri uri, BaseBitmapDataSubscriber baseBitmapDataSubscriber) {
-
-        final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri)
-                .setResizeOptions(new ResizeOptions(200, 200))
-                .build();
-
-        final DataSource<CloseableReference<CloseableImage>> dataSource =
-                Fresco.getImagePipeline().fetchDecodedImage(request, null);
-
-        dataSource.subscribe(baseBitmapDataSubscriber, UiThreadImmediateExecutorService.getInstance());
-    }
-
     public static <T extends Fragment> boolean isFragmentDead(@Nullable T fragment) {
         return fragment == null || fragment.isDetached() || fragment.isRemoving() || !fragment.isAdded();
     }
 
-    public static <T extends View> void updateUI(WeakReference<View> reference, UpdateUI<T> updateUI) {
-
-        //update the UI on the view is not dead
-        MiscUtils.useReference(reference, view -> {
-            view.post(() -> updateUI.updateUI((T) view));
-        });
-    }
-
     public static void navigateUp(final AppCompatActivity activity) {
+
         final Intent upIntent = activity.getSupportParentActivityIntent();
         if (upIntent == null)
             return;
@@ -1754,126 +1454,11 @@ public enum MiscUtils {
         activity.finish();
     }
 
-//    public static String cleanseName(String name, StringBuilder stringBuilder) {
-//
-//        name = name.replaceAll("^0[1-9]", "");
-//        name = replace(name, "-", "", -1, stringBuilder);
-//        name = replace(name, "+", "", -1, stringBuilder);
-//        name = replace(name, "www.", "", -1, stringBuilder);
-//        name = replace(name, ".com", "", -1, stringBuilder);
-//        name = replace(name, ".in", "", -1, stringBuilder);
-//        name = replace(name, ".pk", "", -1, stringBuilder);
-//        name = replace(name, ".name", "", -1, stringBuilder);
-//        name = replace(name, ".link", "", -1, stringBuilder);
-//        name = replace(name, ".fm", "", -1, stringBuilder);
-//        name = replace(name, ".net", "", -1, stringBuilder);
-//        name = replace(name, ".", "", -1, stringBuilder);
-//        name = replace(name, ":", "", -1, stringBuilder);
-//        name = replace(name, "pagalworld", "", -1, stringBuilder);
-//        name = replace(name, "DownloadMing", "", -1, stringBuilder);
-//        name = replace(name, "skymaza", "", -1, stringBuilder);
-//        name = replace(name, "DjGol", "", -1, stringBuilder);
-//        name = replace(name, "DJBoss", "", -1, stringBuilder);
-//        name = replace(name, "iPendu", "", -1, stringBuilder);
-//        name = replace(name, "Songspk", "", -1, stringBuilder);
-//        name = replace(name, "  ", "", -1, stringBuilder);
-//        name = replace(name, "DjPunjab", "", -1, stringBuilder);
-//        name = replace(name, "MyMp3Song", "", -1, stringBuilder);
-//        name = replace(name, "iPendu", "", -1, stringBuilder);
-//        name = replace(name, "iPendu", "", -1, stringBuilder);
-//        name = replace(name, "iPendu", "", -1, stringBuilder);
-//        "".toLowerCase()
-//
-//
-////
-////                .replace("downloadming", "").replace("DjPunjab", "").replace("MyMp3Song", "").replace("PagalWorld", "")
-////
-////                .replace("lebewafa", "").replace("Mp3Singer", "").replace("Mr-Jatt", "").replace("MastiCity", "")
-////
-////                .replace("DJJOhAL", "").replace("RoyalJatt", "").replace("hotmentos", "")
-////
-////                .replace("BDLovE24", "MP3Khan").replace("DJMaza", "").replace("songsweb", "").replace("MobMaza", "")
-////
-////                .replace("wapking", "").replace("Mixmp3", "").replace("SongsLover", "").replace(".songs", "");
-////
-////        field.replace("<unknown>", "");
-////
-////        field.replace("  ", "");
-////
-////        field.replace("[]", "");
-////
-////        field.replace("()", "");
-//    }
-//
-//    /**
-//     * <p>Replaces a String with another String inside a larger String,
-//     * for the first <code>max</code> values of the search String.</p>
-//     * <p>
-//     * <p>A <code>null</code> reference passed to this method is a no-op.</p>
-//     * <p>
-//     * <pre>
-//     * StringUtils.replace(null, *, *, *)         = null
-//     * StringUtils.replace("", *, *, *)           = ""
-//     * StringUtils.replace("any", null, *, *)     = "any"
-//     * 3784         * StringUtils.replace("any", *, null, *)     = "any"
-//     * 3785         * StringUtils.replace("any", "", *, *)       = "any"
-//     * 3786         * StringUtils.replace("any", *, *, 0)        = "any"
-//     * 3787         * StringUtils.replace("abaa", "a", null, -1) = "abaa"
-//     * 3788         * StringUtils.replace("abaa", "a", "", -1)   = "b"
-//     * 3789         * StringUtils.replace("abaa", "a", "z", 0)   = "abaa"
-//     * 3790         * StringUtils.replace("abaa", "a", "z", 1)   = "zbaa"
-//     * 3791         * StringUtils.replace("abaa", "a", "z", 2)   = "zbza"
-//     * 3792         * StringUtils.replace("abaa", "a", "z", -1)  = "zbzz"
-//     * 3793         * </pre>
-//     * 3794         *
-//     * 3795         * @param text  text to search and replace in, may be null
-//     * 3796         * @param searchString  the String to search for, may be null
-//     * 3797         * @param replacement  the String to replace it with, may be null
-//     * 3798         * @param max  maximum number of values to replace, or <code>-1</code> if no maximum
-//     * 3799         * @return the text with any replacements processed,
-//     * 3800         *  <code>null</code> if null String input
-//     * 3801
-//     */
-//    public static String replace(String text, String searchString, String replacement, int max, StringBuilder stringBuilder) {
-//
-//        if (TextUtils.isEmpty(text) || TextUtils.isEmpty(searchString) || replacement == null || max == 0)
-//            return text;
-//
-//        final int INDEX_NOT_FOUND = -1;
-//
-//        int start = 0;
-//        int end = text.indexOf(searchString, start);
-//
-//        if (end == INDEX_NOT_FOUND) {
-//            return text;
-//        }
-//
-//        int replaceLength = searchString.length();
-//        int increase = replacement.length() - replaceLength;
-//        increase = (increase < 0 ? 0 : increase);
-//        increase *= (max < 0 ? 16 : (max > 64 ? 64 : max));
-//
-//        stringBuilder.setLength(0);
-//        stringBuilder.ensureCapacity(increase);
-//
-//        while (end != INDEX_NOT_FOUND) {
-//
-//            stringBuilder.append(text.substring(start, end)).append(replacement);
-//            start = end + replaceLength;
-//            if (--max == 0) {
-//                break;
-//            }
-//            end = text.indexOf(searchString, start);
-//        }
-//        stringBuilder.append(text.substring(start));
-//        return stringBuilder.toString();
-//    }
-
-    public static String songHashCalculator(long userId,
-                                            long duration,
-                                            long size,
-                                            @NonNull String title,
-                                            @NonNull HashFunction hashFunction) {
+    public static String calculateSongHash(long userId,
+                                           long duration,
+                                           long size,
+                                           @NonNull String title,
+                                           @NonNull HashFunction hashFunction) {
 
         return hashFunction.newHasher()
                 .putLong(userId)
@@ -1883,14 +1468,10 @@ public enum MiscUtils {
                 .hash().toString();
     }
 
-//    public static long songHashCalculator(@NonNull String title,
-//                                          @NonNull long duration,
-//                                          @NonNull long size,
-//                                          @NonNull HashFunction hashFunction) {
-//
-//        return hashFunction.newHasher()
-//                .putUnencodedChars(title)
-//                .putLong(duration)
-//                .putLong(size).hash().asLong();
-//    }
+    public static String calculateAppHash(@NonNull String packageName,
+                                          @NonNull HashFunction hashFunction) {
+
+        return hashFunction.hashUnencodedChars(packageName).toString();
+    }
+
 }

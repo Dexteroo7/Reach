@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.ReachDatabaseHelper;
 import reach.project.reachProcess.auxiliaryClasses.AudioFocusHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.MusicFocusable;
@@ -168,8 +168,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         }
 
         currentSong = latestMusic.get();
-        Log.i("Downloader", currentSong.getProcessed() + " " + currentSong.getLength());
-        Log.i("Downloader", "found new song, needs streaming ? " + (currentSong.getProcessed() < currentSong.getLength()) +
+        Log.i("Downloader", currentSong.getProcessed() + " " + currentSong.getSize());
+        Log.i("Downloader", "found new song, needs streaming ? " + (currentSong.getProcessed() < currentSong.getSize()) +
                 " name= " + currentSong.getDisplayName());
         handlerInterface.updateSongDetails(currentSong);
 
@@ -177,15 +177,15 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         final long duration;
 
         try {
-            duration = (currentSong.getProcessed() < currentSong.getLength()) ?
-                    player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength()) :
+            duration = (currentSong.getProcessed() < currentSong.getSize()) ?
+                    player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getSize()) :
                     player.createMediaPlayerIfNeeded(this, this, currentSong.getPath());
         } catch (IOException e) {
             e.printStackTrace();
             Log.i("Downloader", currentSong.getPath() + " could not be prepared");
             final File check = new File(currentSong.getPath());
             final String missType;
-            if (!(check.isFile() && check.length() == currentSong.getLength()))
+            if (!(check.isFile() && check.length() == currentSong.getSize()))
                 missType = "Possible File Corruption " + e.getLocalizedMessage();
             else
                 missType = "AudioTrackError " + e.getLocalizedMessage();
@@ -323,6 +323,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         try {
             if (!player.isPlaying())
                 processPlayRequest();
+            if (player == null || player.isNull() || currentSong == null)
+                return false;
             player.seekTo((int) ((currentSong.getDuration() / 100) * percent));
         } catch (UnsupportedOperationException e) {
             e.printStackTrace();

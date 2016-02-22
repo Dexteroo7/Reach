@@ -17,9 +17,9 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -38,7 +38,8 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         return fragment;
     }
 
-    private final DownloadingAdapter downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
+    @Nullable
+    private DownloadingAdapter downloadingAdapter;
 
     @Nullable
     @Override
@@ -47,15 +48,12 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
+        downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(downloadingAdapter);
 
-//        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-//        userId = SharedPrefUtils.getServerId(preferences);
-
         getLoaderManager().initLoader(StaticData.DOWNLOADING_LOADER, null, this);
-
         return rootView;
     }
 
@@ -64,7 +62,9 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.DOWNLOADING_LOADER);
-        downloadingAdapter.close();
+        if (downloadingAdapter != null)
+            downloadingAdapter.close();
+        downloadingAdapter = null;
     }
 
     @Override
@@ -93,7 +93,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         if (data == null || data.isClosed())
             return;
 
-        if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
+        if (loader.getId() == StaticData.DOWNLOADING_LOADER && downloadingAdapter != null) {
 
 //            Log.i("Ayush", "Setting new cursor " + data.getCount());
             downloadingAdapter.setCursor(data);
@@ -103,7 +103,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
+        if (loader.getId() == StaticData.DOWNLOADING_LOADER && downloadingAdapter != null) {
 
 //            Log.i("Ayush", "Invalidating downloading cursor");
             downloadingAdapter.setCursor(null);

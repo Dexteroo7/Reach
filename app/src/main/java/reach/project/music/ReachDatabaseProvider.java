@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager;
+package reach.project.music;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -20,7 +20,7 @@ public class ReachDatabaseProvider extends ContentProvider {
     public static final int DATABASE = 12;
     private static final int DATABASE_ID = 22; //+10
     private static final String BASE_PATH = "database/contentProvider/ReachDatabaseProvider";
-    public static final String AUTHORITY = "reach.project.coreViews.fileManager.ReachDatabaseProvider";
+    public static final String AUTHORITY = "reach.project.music.ReachDatabaseProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
     static {

@@ -36,7 +36,7 @@ import java.util.concurrent.ExecutorService;
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.music.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.blobCache.Cache;

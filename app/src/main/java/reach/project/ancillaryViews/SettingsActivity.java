@@ -19,9 +19,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 

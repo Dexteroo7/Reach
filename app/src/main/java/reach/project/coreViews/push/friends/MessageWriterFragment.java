@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.common.primitives.Longs;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
@@ -140,7 +142,7 @@ public class MessageWriterFragment extends Fragment {
                     pushJSON.setContainer(pushContainer);
                     pushJSON.setCustomMessage(editText != null ? editText.getText().toString() : "");
                     pushJSON.setFirstContentName(firstContentName);
-                    pushJSON.setReceiverId(MiscUtils.convertToList(serverIds));
+                    pushJSON.setReceiverId(Longs.asList(serverIds));
                     pushJSON.setSize(contentCount);
                     pushJSON.setSenderId(myUserId);
 

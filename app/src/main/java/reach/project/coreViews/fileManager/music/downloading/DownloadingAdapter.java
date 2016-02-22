@@ -14,7 +14,7 @@ import com.google.common.base.Optional;
 
 import javax.annotation.Nonnull;
 
-import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.music.ReachDatabase;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.ReachCursorAdapter;

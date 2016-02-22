@@ -15,8 +15,8 @@ import com.google.common.hash.Hashing;
 
 import java.util.ArrayList;
 
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 
 public class UpdateReceiver extends BroadcastReceiver {
@@ -48,7 +48,7 @@ public class UpdateReceiver extends BroadcastReceiver {
         while (cursor.moveToNext()) {
 
             final long entryId = cursor.getLong(0);
-            final String metaHash = MiscUtils.songHashCalculator(
+            final String metaHash = MiscUtils.calculateSongHash(
                     cursor.getLong(1), //userID
                     cursor.getLong(2), //duration
                     cursor.getLong(3), //size

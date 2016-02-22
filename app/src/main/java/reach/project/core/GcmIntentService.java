@@ -21,9 +21,9 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
@@ -283,13 +283,15 @@ public class GcmIntentService extends IntentService {
                         ReachFriendsHelper.COLUMN_ID + " = ? and " +
                                 ReachFriendsHelper.COLUMN_STATUS + " < ?",
                         new String[]{hostId + "", ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""});
-                getContentResolver().update(
-                        ReachDatabaseProvider.CONTENT_URI,
-                        database,
-                        "(" + ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? or " +
-                                ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?) and " +
-                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                        new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
+                try {
+                    getContentResolver().update(
+                            ReachDatabaseProvider.CONTENT_URI,
+                            database,
+                            "(" + ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? or " +
+                                    ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?) and " +
+                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                            new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
+                } catch (IllegalArgumentException e) {return;}
             }
 
             /**

@@ -53,13 +53,14 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.ReachApplication;
-import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.music.ReachDatabase;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
+import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -194,11 +195,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     private static final Callable<Collection<JsonObject>> FETCH_NEXT_BATCH = () -> {
 
-        final boolean onlineStatus = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Context>) MiscUtils::isOnline).or(false);
+        final boolean onlineStatus = MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, Boolean>) MiscUtils::isOnline).or(false);
 
         if (!onlineStatus) {
 
-            MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
+            MiscUtils.runOnUiThreadFragment(reference, (UseContext) context -> {
                 Toast.makeText(context, "Could not connect to internet", Toast.LENGTH_SHORT).show();
             });
             return Collections.emptyList();
@@ -477,7 +478,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
-                MiscUtils.openAppinPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                MiscUtils.openAppInPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
                         .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
                 break;
 

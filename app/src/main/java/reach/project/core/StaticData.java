@@ -18,7 +18,7 @@ import reach.backend.entities.userApi.UserApi;
 import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
 import reach.project.utils.CloudEndPointsUtils;
 

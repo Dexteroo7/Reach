@@ -45,7 +45,6 @@ import reach.project.onBoarding.smsRelated.SmsListener;
 import reach.project.onBoarding.smsRelated.Status;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.ancillaryClasses.UseContextAndFragment;
 
 public class CodeVerification extends Fragment {
 
@@ -223,7 +222,6 @@ public class CodeVerification extends Fragment {
         public void onReceive(Context context, Intent intent) {
 
             final SmsMessage[] msgs;
-
             if (Build.VERSION.SDK_INT >= 19) { //KITKAT
 
                 try {
@@ -231,16 +229,11 @@ public class CodeVerification extends Fragment {
                 } catch (NullPointerException ignored) {
 
                     //weird null pointer
-                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-                        @Override
-                        public void work(Activity activity, CodeVerification fragment) {
-                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("SEVERE ERROR, number verification intent null")
-                                    .setAction("Phone Number - " + fragment.phoneNumber)
-                                    .setValue(1)
-                                    .build());
-                        }
-                    });
+                    MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, number verification intent null")
+                            .setAction("Phone Number - " + fragment.phoneNumber)
+                            .setValue(1)
+                            .build()));
                     //fail
                     return;
                 }
@@ -250,16 +243,11 @@ public class CodeVerification extends Fragment {
                 final Bundle bundle = intent.getExtras();
                 if (bundle == null) {
 
-                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-                        @Override
-                        public void work(Activity activity, CodeVerification fragment) {
-                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("SEVERE ERROR, number verification bundle null")
-                                    .setAction("Phone Number - " + fragment.phoneNumber)
-                                    .setValue(1)
-                                    .build());
-                        }
-                    });
+                    MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, number verification bundle null")
+                            .setAction("Phone Number - " + fragment.phoneNumber)
+                            .setValue(1)
+                            .build()));
                     //fail
                     return;
                 }
@@ -268,16 +256,11 @@ public class CodeVerification extends Fragment {
 
                 if (pdusObj == null || pdusObj.length == 0) {
 
-                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-                        @Override
-                        public void work(Activity activity, CodeVerification fragment) {
-                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("SEVERE ERROR, number verification pdus error")
-                                    .setAction("Phone Number - " + fragment.phoneNumber)
-                                    .setValue(1)
-                                    .build());
-                        }
-                    });//fail
+                    MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, number verification pdus error")
+                            .setAction("Phone Number - " + fragment.phoneNumber)
+                            .setValue(1)
+                            .build()));//fail
                     return;
                 }
 
@@ -288,17 +271,11 @@ public class CodeVerification extends Fragment {
 
             if (msgs == null || msgs.length == 0) {
 
-                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-
-                    @Override
-                    public void work(Activity activity, CodeVerification fragment) {
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("SEVERE ERROR, number verification msgs null")
-                                .setAction("Phone Number - " + fragment.phoneNumber)
-                                .setValue(1)
-                                .build());
-                    }
-                });
+                MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("SEVERE ERROR, number verification msgs null")
+                        .setAction("Phone Number - " + fragment.phoneNumber)
+                        .setValue(1)
+                        .build()));
                 //fail
                 return;
             }
@@ -338,17 +315,11 @@ public class CodeVerification extends Fragment {
 
             if (!done) {
 
-                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-
-                    @Override
-                    public void work(Activity activity, CodeVerification fragment) {
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Number verification done was false")
-                                .setAction("Phone Number - " + fragment.phoneNumber)
-                                .setValue(1)
-                                .build());
-                    }
-                });
+                MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Number verification done was false")
+                        .setAction("Phone Number - " + fragment.phoneNumber)
+                        .setValue(1)
+                        .build()));
             }
         }
     };

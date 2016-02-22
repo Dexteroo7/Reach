@@ -17,8 +17,6 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     public static final String SONG_TABLE = "songs";
     public static final String COLUMN_ID = "_id";
-
-    //identity of the song (meta-data hash ?)
     public static final String COLUMN_SONG_ID = "songId";
     public static final String COLUMN_META_HASH = "metaHash";
 
@@ -41,29 +39,6 @@ public class MySongsHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "reach.database.sql.MySongsHelper";
     private static final int DATABASE_VERSION = 5;
-
-    // Database creation sql statement
-    private static final String DATABASE_CREATE = "create table "
-            + SONG_TABLE + "(" + COLUMN_ID
-            + " integer primary key autoincrement, " +
-            COLUMN_SONG_ID + " long" + "," +
-            COLUMN_META_HASH + " text" + "," +
-
-            COLUMN_DISPLAY_NAME + " text" + "," +
-            COLUMN_ACTUAL_NAME + " text" + "," +
-            COLUMN_GENRE + " text" + "," +
-            COLUMN_PATH + " text" + "," +
-            COLUMN_ARTIST + " text" + "," +
-            COLUMN_DURATION + " long" + "," +
-
-            COLUMN_ALBUM + " text" + "," +
-            COLUMN_ALBUM_ART_DATA + " blob" + "," +
-
-            COLUMN_SIZE + " long" + "," +
-            COLUMN_YEAR + " long" + "," +
-            COLUMN_DATE_ADDED + " long" + "," +
-            COLUMN_IS_LIKED + " short" + "," +
-            COLUMN_VISIBILITY + " short" + " )";
 
     public static final String[] projection =
             {
@@ -151,6 +126,25 @@ public class MySongsHelper extends SQLiteOpenHelper {
             COLUMN_IS_LIKED, //11
     };
 
+    private final String[] projectionMyLibrary =
+            {
+                    MySongsHelper.COLUMN_ID, //0
+
+                    MySongsHelper.COLUMN_SONG_ID, //1
+
+                    MySongsHelper.COLUMN_DISPLAY_NAME, //2
+                    MySongsHelper.COLUMN_ACTUAL_NAME, //3
+
+                    MySongsHelper.COLUMN_ARTIST, //4
+                    MySongsHelper.COLUMN_ALBUM, //5
+
+                    MySongsHelper.COLUMN_DURATION, //6
+                    MySongsHelper.COLUMN_SIZE, //7
+
+                    MySongsHelper.COLUMN_VISIBILITY, //8
+                    MySongsHelper.COLUMN_GENRE //9
+            };
+
     public static Song getSong(final Cursor cursor) {
 
         if (cursor.getColumnCount() != SONG_LIST.length)
@@ -192,12 +186,36 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 cursor.getString(6), //albumName
                 cursor.getShort(12) == 1, //liked
                 cursor.getLong(5), //duration
-                (byte) 1); //type
+                MusicData.Type.MY_LIBRARY); //type
     }
 
     public MySongsHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+
+    // Database creation sql statement
+    private static final String DATABASE_CREATE = "create table "
+            + SONG_TABLE + "(" + COLUMN_ID
+            + " integer primary key autoincrement, " +
+            COLUMN_SONG_ID + " long" + "," +
+            COLUMN_META_HASH + " text" + "," +
+
+            COLUMN_DISPLAY_NAME + " text" + "," +
+            COLUMN_ACTUAL_NAME + " text" + "," +
+            COLUMN_GENRE + " text" + "," +
+            COLUMN_PATH + " text" + "," +
+            COLUMN_ARTIST + " text" + "," +
+            COLUMN_DURATION + " long" + "," +
+
+            COLUMN_ALBUM + " text" + "," +
+            COLUMN_ALBUM_ART_DATA + " blob" + "," +
+
+            COLUMN_SIZE + " long" + "," +
+            COLUMN_YEAR + " long" + "," +
+            COLUMN_DATE_ADDED + " long" + "," +
+
+            COLUMN_IS_LIKED + " short" + "," +
+            COLUMN_VISIBILITY + " short" + " )";
 
     @Override
     public void onCreate(SQLiteDatabase database) {

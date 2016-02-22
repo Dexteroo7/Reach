@@ -41,9 +41,9 @@ public class AccountCreation extends Fragment {
             final Bundle bundle = new Bundle(2);
             final OldUserContainerNew userContainer = container.get();
             bundle.putStringArray("oldData", new String[]{
-                    userContainer.getName() == null ? "" : userContainer.getName(),
-                    userContainer.getCoverPic() == null ? "" : userContainer.getCoverPic(),
-                    userContainer.getImageId() == null ? "" : userContainer.getImageId()});
+                    TextUtils.isEmpty(userContainer.getName()) ? "" : userContainer.getName(),
+                    TextUtils.isEmpty(userContainer.getCoverPic()) ? "" : userContainer.getCoverPic(),
+                    TextUtils.isEmpty(userContainer.getImageId()) ? "" : userContainer.getImageId()});
             fragment.setArguments(bundle);
         }
 
@@ -104,6 +104,7 @@ public class AccountCreation extends Fragment {
             oldCoverPicId = oldData[1];
             oldImageId = oldData[2];
             if (!TextUtils.isEmpty(oldImageId) && !oldImageId.equals("hello_world")) {
+
                 final Uri uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldImageId);
                 profilePhotoSelector.setController(MiscUtils.getControllerResize(profilePhotoSelector.getController(),
                         uriToDisplay, PROFILE_PHOTO_RESIZE));

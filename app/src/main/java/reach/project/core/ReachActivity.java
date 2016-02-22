@@ -37,9 +37,9 @@ import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.apps.App;
 import reach.project.coreViews.explore.ExploreFragment;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
@@ -212,6 +212,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             reference.clear();
         reference = null;
         mTabHost = null;
+        FireOnce.INSTANCE.close(); //app is getting killed
         //viewPager = null;
     }
 
@@ -442,6 +443,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     Log.i("Ayush", "FOUND PUSH DATA");
 
                     final String compressed = intent.getStringExtra("data");
+                    if (compressed == null)
+                        return;
 
                     byte[] unCompressed;
                     try {
@@ -660,7 +663,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             "",
                             liked,
                             duration,
-                            (byte) 0);
+                            MusicData.Type.DOWNLOADED);
                     MiscUtils.playSong(musicData, this);
                 }
                 //in both cases close and continue

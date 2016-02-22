@@ -2,6 +2,7 @@ package reach.project.utils;
 
 import android.app.IntentService;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -27,6 +28,7 @@ import com.squareup.wire.Wire;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,9 +42,9 @@ import reach.backend.music.musicVisibilityApi.model.MusicData;
 import reach.project.apps.App;
 import reach.project.apps.AppList;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.music.AlbumArtData;
 import reach.project.music.MusicList;
 import reach.project.music.MySongsHelper;
@@ -78,20 +80,21 @@ public class MetaDataScanner extends IntentService {
             ReachDatabaseHelper.COLUMN_DATE_ADDED, //10
             ReachDatabaseHelper.COLUMN_VISIBILITY}; //11
 
-    private enum ScanMusic {
-
+    public enum ScanMusic {
         ;
-
         //genre collection holder
         private static final HashSet<String> genreHashSet = new HashSet<>(50);
 
         @NonNull
-        private static List<Song> getSongListing(ContentResolver resolver, Cursor musicCursor, long serverId) {
+        public static List<Song> getSongListing(ContentResolver resolver,
+                                                Cursor musicCursor,
+                                                long serverId) {
 
             if (musicCursor == null)
                 return Collections.emptyList();
             ////////////////////handling old visibility
 
+            Map<String, SongPersist> songPersist = null;
             final Cursor reachSongInitialCursor = resolver.query(
                     MySongsProvider.CONTENT_URI,
                     new String[]{
@@ -100,8 +103,6 @@ public class MetaDataScanner extends IntentService {
                             MySongsHelper.COLUMN_IS_LIKED},
                     null, null, null);
 
-
-            Map<String, SongPersist> songPersist = null;
             //try local first
             if (reachSongInitialCursor != null) {
 
@@ -232,7 +233,7 @@ public class MetaDataScanner extends IntentService {
                 builder.displayName(displayName);
                 builder.actualName(actualName);
                 //Generate the fileHash
-                builder.fileHash(MiscUtils.songHashCalculator(
+                builder.fileHash(MiscUtils.calculateSongHash(
                         serverId, duration, size, displayName, Hashing.sipHash24()));
 
                 if (music_column_artist != -1) {
@@ -342,7 +343,7 @@ public class MetaDataScanner extends IntentService {
         }
 
         @NonNull
-        private static ImmutableList<Song> getDownloadedSongs(ContentResolver resolver, long serverId) {
+        public static ImmutableList<Song> getDownloadedSongs(ContentResolver resolver, long serverId) {
 
             final ImmutableList.Builder<Song> downloadBuilder = new ImmutableList.Builder<>();
             final Cursor reachDatabaseCursor = resolver.query(
@@ -389,7 +390,7 @@ public class MetaDataScanner extends IntentService {
                     builder.dateAdded(reachDatabaseCursor.getLong(10));
                     builder.visibility(reachDatabaseCursor.getShort(11) == 1);
                     //get the metaDataHash
-                    builder.fileHash(MiscUtils.songHashCalculator(
+                    builder.fileHash(MiscUtils.calculateSongHash(
                             serverId,
                             builder.duration,
                             builder.size,
@@ -456,7 +457,7 @@ public class MetaDataScanner extends IntentService {
         }
     }
 
-    private enum ScanApps {
+    public enum ScanApps {
         ;
 
         @NonNull
@@ -695,7 +696,7 @@ public class MetaDataScanner extends IntentService {
             ScanMusic.createVisibilityMap(total, serverId);
 
             //over-write local db
-            MiscUtils.bulkInsertSongs(
+            bulkInsertSongs(
                     myLibrary, //sync up only myLibrary
                     context.getContentResolver());
         }
@@ -722,6 +723,23 @@ public class MetaDataScanner extends IntentService {
             //over-write app visibility
             ScanApps.createVisibilityMap(apps, serverId);
         }
+    }
+
+    private static void bulkInsertSongs(Collection<Song> reachSongs,
+                                        ContentResolver contentResolver) {
+
+        //Add all songs
+        final ContentValues[] songs = new ContentValues[reachSongs.size()];
+
+        int i = 0;
+        if (reachSongs.size() > 0) {
+
+            for (Song song : reachSongs)
+                songs[i++] = MySongsHelper.contentValuesCreator(song);
+            i = 0; //reset counter
+            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
+        } else
+            contentResolver.delete(MySongsProvider.CONTENT_URI, null, null);
     }
 
     @Override

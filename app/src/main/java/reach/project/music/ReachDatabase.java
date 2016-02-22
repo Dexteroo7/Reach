@@ -1,4 +1,4 @@
-package reach.project.coreViews.fileManager;
+package reach.project.music;
 
 import android.text.TextUtils;
 
@@ -310,7 +310,7 @@ public final class ReachDatabase {
     public String getMetaHash() {
 
         if (TextUtils.isEmpty(metaHash)                                                                                                                                                                                                                                                   )
-            metaHash = MiscUtils.songHashCalculator(
+            metaHash = MiscUtils.calculateSongHash(
                     receiverId, duration, length, displayName, Hashing.sipHash24());
 
         return metaHash;

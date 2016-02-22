@@ -54,7 +54,7 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.MusicList;
 import reach.project.music.Song;
-import reach.project.utils.ancillaryClasses.UseContext;
+import reach.project.utils.ancillaryClasses.UseContextWithResult;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -82,7 +82,7 @@ public enum CloudStorageUtils {
                                      long myId) {
 
         //first calculate the original size
-        final BitmapFactory.Options options = MiscUtils.getRequiredOptions(optionsStream);
+        final BitmapFactory.Options options = getRequiredOptions(optionsStream);
         if (options.outHeight == 0 || options.outWidth == 0)
             return ""; //failed
         MiscUtils.closeQuietly(optionsStream);
@@ -413,7 +413,7 @@ public enum CloudStorageUtils {
         }
 
         //store the hash
-        final List<Song> songList = MiscUtils.useContextFromContext(reference, (UseContext<List<Song>, Context>) context -> {
+        final List<Song> songList = MiscUtils.useContextFromContext(reference, (UseContextWithResult<List<Song>>) context -> {
 
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             if (musicList.song == null || musicList.song.isEmpty()) {
@@ -534,7 +534,7 @@ public enum CloudStorageUtils {
         }
 
         //store the hash
-        final List<App> apps = MiscUtils.useContextFromContext(reference, (UseContext<List<App>, Context>) context -> {
+        final List<App> apps = MiscUtils.useContextFromContext(reference, (UseContextWithResult<List<App>>) context -> {
 
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             if (appList.app == null || appList.app.isEmpty()) {
@@ -542,7 +542,6 @@ public enum CloudStorageUtils {
                 SharedPrefUtils.removeMusicHash(preferences, fileName);
                 return Collections.emptyList(); //no songs found !
             }
-
             //first update the hash
             SharedPrefUtils.storeCloudStorageFileHash(preferences, fileName, serverHash);
             //app must not be null and must be visible
@@ -606,5 +605,93 @@ public enum CloudStorageUtils {
         return Optional.of(storage = new Storage.Builder(transport, factory, googleCredential)
                 .setApplicationName(APPLICATION_NAME_PROPERTY)
                 .build());
+    }
+
+    /**
+     * If bitmap could not be returned use the original image as is, this should not happen normally
+     *
+     * @param inputStream the inputStream for the image
+     * @return the resized bitmap
+     */
+    @NonNull
+    private static BitmapFactory.Options getRequiredOptions(final InputStream inputStream) {
+
+        // Decode just the boundaries
+        final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
+        mBitmapOptions.inJustDecodeBounds = true;
+
+        final Bitmap temporary = BitmapFactory.decodeStream(inputStream, null, mBitmapOptions);
+        if (temporary != null)
+            temporary.recycle();
+        if (mBitmapOptions.outHeight == 0 || mBitmapOptions.outWidth == 0)
+            return mBitmapOptions; //illegal
+
+        // Calculate inSampleSize
+        // Raw height and width of image
+        final int height = mBitmapOptions.outHeight;
+        final int width = mBitmapOptions.outWidth;
+        final int sideLength = 1000;
+
+        int reqHeight = height;
+        int reqWidth = width;
+        final int inDensity;
+        final int inTargetDensity;
+
+        if (height > width) {
+
+            if (height > sideLength) {
+
+                reqHeight = sideLength;
+                reqWidth = (width * sideLength) / height;
+            }
+            inDensity = height;
+            inTargetDensity = reqHeight;
+
+        } else if (width > height) {
+
+            if (width > sideLength) {
+                reqWidth = sideLength;
+                reqHeight = (height * sideLength) / width;
+            }
+            inDensity = width;
+            inTargetDensity = reqWidth;
+
+        } else {
+
+            reqWidth = sideLength;
+            reqHeight = sideLength;
+            inDensity = height;
+            inTargetDensity = reqHeight;
+        }
+
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth)
+                inSampleSize *= 2;
+        }
+
+        //now go resize the image to the size you want
+        mBitmapOptions.inSampleSize = inSampleSize;
+        mBitmapOptions.inDither = true;
+        mBitmapOptions.inPreferQualityOverSpeed = true;
+        mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
+        mBitmapOptions.inJustDecodeBounds = false;
+        mBitmapOptions.inScaled = true;
+        mBitmapOptions.inDensity = inDensity;
+        mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
+
+        /**
+         * Generate the compressed image
+         * Will load & resize the image to be 1/inSampleSize dimensions
+         */
+        Log.i("Ayush", "Starting compression");
+        return mBitmapOptions;
     }
 }

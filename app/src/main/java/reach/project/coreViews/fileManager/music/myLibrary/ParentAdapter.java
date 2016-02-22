@@ -1,6 +1,5 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -24,8 +23,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
+import reach.project.music.ReachDatabaseHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -60,8 +59,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     };
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<MusicData> handOverSong,
-                         Context context) {
+                         HandOverMessage<MusicData> handOverSong) {
 
         this.handOverCursor = handOverCursor;
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item);
@@ -239,7 +237,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         final Object item = getItem(position);
         if (item instanceof Cursor) {
-            return ((Cursor)item).getLong(0); //_id || song_id
+            return ((Cursor) item).getLong(0); //_id || song_id
         } else
             return recentHolderId;
     }

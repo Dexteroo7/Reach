@@ -16,9 +16,11 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -33,9 +35,9 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
@@ -45,14 +47,29 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 31/12/15.
  */
-public enum FireOnce {
-    ;
+public enum FireOnce implements Closeable {
+
+    INSTANCE;
 
     private static final ExecutorService contactSyncService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService pingService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService refreshDownloadOpsService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService checkGCMService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService checkUpdateService = MiscUtils.getRejectionExecutor();
+
+    @Override
+    public void close() {
+
+        if (syncingContacts != null)
+            syncingContacts.cancel(true);
+        syncingContacts = null;
+
+        contactSyncService.shutdownNow();
+        pingService.shutdownNow();
+        refreshDownloadOpsService.shutdownNow();
+        checkGCMService.shutdownNow();
+        checkUpdateService.shutdownNow();
+    }
 
     @Nullable
     private static Future syncingContacts = null;
@@ -123,7 +140,7 @@ public enum FireOnce {
         new RefreshOperations(reference).executeOnExecutor(refreshDownloadOpsService);
     }
 
-    public static void checkGCM(WeakReference<? extends Context> reference, long serverId) {
+    public static void checkGCM(WeakReference<Context> reference, long serverId) {
         checkGCMService.submit(new CheckGCM(serverId, reference));
     }
 
@@ -151,7 +168,7 @@ public enum FireOnce {
             //noinspection unchecked
             final WeakReference<AppCompatActivity> reference = params[0];
 
-            final Integer currentVersion = MiscUtils.useContextFromContext(reference, activity -> {
+            final Integer currentVersion = MiscUtils.useActivityWithResult(reference, activity -> {
                 try {
                     return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
                 } catch (PackageManager.NameNotFoundException e) {
@@ -173,7 +190,7 @@ public enum FireOnce {
             if (activityWeakReference == null) //no need to show dialog
                 return;
 
-            MiscUtils.useContextFromContext(activityWeakReference, activity -> {
+            MiscUtils.useActivity(activityWeakReference, activity -> {
 
                 final UpdateFragment updateFragment = new UpdateFragment();
                 updateFragment.setCancelable(false);
@@ -189,9 +206,9 @@ public enum FireOnce {
     private static final class CheckGCM implements Runnable {
 
         private final long serverId;
-        private final WeakReference<? extends Context> contextWeakReference;
+        private final WeakReference<Context> contextWeakReference;
 
-        private CheckGCM(long serverId, WeakReference<? extends Context> contextWeakReference) {
+        private CheckGCM(long serverId, WeakReference<Context> contextWeakReference) {
             this.serverId = serverId;
             this.contextWeakReference = contextWeakReference;
         }
@@ -202,33 +219,63 @@ public enum FireOnce {
             if (serverId == 0)
                 return;
 
-            MiscUtils.useContextFromContext(contextWeakReference, context -> {
+            final int version = MiscUtils.useContextFromContext(contextWeakReference, context -> {
                 try {
-                    final int version = context.getPackageManager()
+                    return context.getPackageManager()
                             .getPackageInfo(context.getPackageName(), 0).versionCode;
-
-                    final MyString dataToReturn = MiscUtils.autoRetry(() ->
-                            StaticData.USER_API.getGcmIdAndUpdateAppVersion(serverId,
-                                    String.valueOf(version)).execute(), Optional.absent()).orNull();
-
-                    //check returned gcm
-                    final String gcmId;
-                    if (dataToReturn == null || //fetch failed
-                            TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
-                            gcmId.equals("hello_world")) { //bad gcm
-
-                        //network operation
-                        if (MiscUtils.updateGCM(serverId, contextWeakReference))
-                            Log.i("Ayush", "GCM updated !");
-                        else
-                            Log.i("Ayush", "GCM check failed");
-                    }
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-            });
+                return 0;
+            }).or(0);
 
+            final MyString dataToReturn = MiscUtils.autoRetry(() ->
+                    StaticData.USER_API.getGcmIdAndUpdateAppVersion(serverId, version + "").execute(), Optional.absent()).orNull();
+
+            //check returned gcm
+            final String gcmId;
+            if (dataToReturn == null || //fetch failed
+                    TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
+                    gcmId.equals("hello_world")) { //bad gcm
+
+                //network operation
+                if (updateGCM(serverId, contextWeakReference))
+                    Log.i("Ayush", "GCM updated !");
+                else
+                    Log.i("Ayush", "GCM check failed");
+            }
         }
+    }
+
+    /**
+     * @param id        id of the person to update gcm of
+     * @param reference the context reference
+     * @param <T>       something which extends context
+     * @return false : failed, true : OK
+     */
+    private static <T extends Context> boolean updateGCM(final long id, final WeakReference<T> reference) {
+
+        final String regId = MiscUtils.autoRetry(() -> {
+
+            final Context context;
+            if (reference == null || (context = reference.get()) == null)
+                return "QUIT";
+            return GoogleCloudMessaging.getInstance(context)
+                    .register("528178870551");
+        }, Optional.of(TextUtils::isEmpty)).orNull();
+
+        if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
+            return false;
+        //if everything is fine, send to server
+        Log.i("Ayush", "Uploading newGcmId to server");
+        final Boolean result = MiscUtils.autoRetry(() -> {
+
+            StaticData.USER_API.setGCMId(id, regId).execute();
+            Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
+            return true;
+        }, Optional.absent()).orNull();
+        //set locally
+        return !(result == null || !result);
     }
 
     private static final class SendPing implements Runnable {

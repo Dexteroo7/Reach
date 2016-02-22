@@ -237,9 +237,7 @@ public class EditProfileActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... toToast) {
             super.onProgressUpdate(toToast);
-            MiscUtils.useContextFromContext(EditProfileActivity.reference, context -> {
-                Toast.makeText(context, toToast[0], Toast.LENGTH_SHORT).show();
-            });
+            MiscUtils.useActivity(EditProfileActivity.reference, context -> Toast.makeText(context, toToast[0], Toast.LENGTH_SHORT).show());
         }
 
         /**
@@ -297,7 +295,7 @@ public class EditProfileActivity extends AppCompatActivity {
             if (success) {
 
                 //locally save the values
-                MiscUtils.useContextFromContext(EditProfileActivity.reference, context -> {
+                MiscUtils.useActivity(EditProfileActivity.reference, context -> {
 
                     final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                     if (!TextUtils.isEmpty(reachUser.getImageId()))
