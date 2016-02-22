@@ -10,9 +10,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +45,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
     private static long userId = 0;
 
+    private EmptyRecyclerView mRecyclerView;
+
     public static MyLibraryFragment getInstance(String header) {
 
         final Bundle args = new Bundle();
@@ -59,13 +64,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
-        final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
+        mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
-
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
         parentAdapter = new ParentAdapter(this, this, context);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
-        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
+        //mRecyclerView.setEmptyView();
 
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
@@ -75,6 +82,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         return rootView;
     }
+
 
     @Override
     public void onDestroyView() {
@@ -162,6 +170,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
+        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }
 
     @Override

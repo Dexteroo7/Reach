@@ -6,7 +6,7 @@
     <item
         android:id="@+id/action_music_list"
         android:orderInCategory="1"
-        android:icon="@android:drawable/ic_dialog_dialer"
+        android:icon="@drawable/ic_player_2"
         android:title="@string/music_list"
         app:showAsAction="always" />
 

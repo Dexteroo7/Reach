@@ -38,9 +38,12 @@ import reach.project.utils.viewHelpers.MoreListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
+
+//TODO: To distinguish between downloaded songs and my library songs, cursor count is used, what if both cursor counts are the same
+    //To distinguish between them, two different type of cursor subclasses should be used instead
 class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
-    public static final byte VIEW_TYPE_RECENT = 0;
+    //public static final byte VIEW_TYPE_RECENT = 0;
     public static final byte VIEW_TYPE_ALL = 1;
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
@@ -56,7 +59,6 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                 handOverCursor.handOverMessage(cursor);
 
                 if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
-
                     currentlyPlayingSongId = cursor.getLong(20);
                     notifyItemChanged(currentlyPlayingSongPosition);
                     notifyItemChanged(position);
@@ -86,6 +88,10 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         setHasStableIds(true);
     }
 
+    public void setCurrentlyPlayingSongId(long id){
+        this.currentlyPlayingSongId = id;
+    }
+
     ///////////Data set ops
     @Nullable
     private Cursor downloadCursor = null;
@@ -103,7 +109,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
         //set
         this.downloadCursor = newDownloadCursor;
-        notifyDataSetChanged();
+        //notifyDataSetChanged();
     }
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
@@ -114,7 +120,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
         //set
         this.myLibraryCursor = newMyLibraryCursor;
-        notifyDataSetChanged();
+        //notifyDataSetChanged();
     }
 
     @Override
@@ -143,6 +149,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         }
     }
 
+
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
@@ -161,7 +168,12 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                 displayName = cursorExactType.getString(5);
                 artist = cursorExactType.getString(11);
                 album = cursorExactType.getString(16);
+                //Log.i("MusicListAdapter","downloaded song unique id = " + cursorExactType.getLong(20) +
+                //        " downloaded song id = " + cursorExactType.getLong(14) +
+                //        " currently playing song id = " + currentlyPlayingSongId );
+
                 if(cursorExactType.getLong(20)==currentlyPlayingSongId){
+                 //   Log.i("MusicListAdapter","Currently playing song is downloaded song");
                     holder.itemView.setSelected(true);
                     currentlyPlayingSongPosition = position;
                 };
@@ -171,7 +183,9 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                 displayName = cursorExactType.getString(3);
                 artist = cursorExactType.getString(4);
                 album = cursorExactType.getString(6);
+                final long x = cursorExactType.getLong(0);
                 if(cursorExactType.getLong(0)==currentlyPlayingSongId){
+                 //   Log.i("MusicListAdapter","Currently playing song is my library song");
                     holder.itemView.setSelected(true);
                     currentlyPlayingSongPosition = position;
                 };

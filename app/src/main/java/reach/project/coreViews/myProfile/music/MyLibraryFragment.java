@@ -14,11 +14,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
@@ -55,6 +57,8 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class MyLibraryFragment extends Fragment implements HandOverMessage, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static long myUserId = 0;
+    private EmptyRecyclerView mRecyclerView;
+    private View emptyView;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -74,14 +78,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_myprofile, container, false);
-        final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View rootView = inflater.inflate(R.layout.fragment_mylibrary_music, container, false);
+         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
         parentAdapter = new MusicListAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
-        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+         emptyView = rootView.findViewById(R.id.empty_imageView);
+
+        //mRecyclerView.setEmptyView();
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -92,6 +100,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         return rootView;
     }
+
+
 
     @Override
     public void onDestroyView() {
@@ -181,6 +191,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                 parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
+        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount()-1);
     }
 
     @Override

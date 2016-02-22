@@ -66,7 +66,38 @@
         android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_marginBottom="-20dp" />
 
-    <RelativeLayout
+    <RelativeLayout android:id="@+id/music_list_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@+id/albumArtContainer"
+        android:layout_above="@+id/pause_play"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:background="#88000000"
+        android:visibility="gone"
+        >
+
+        <reach.project.coreViews.myProfile.EmptyRecyclerView
+            android:id="@+id/recyclerView"
+            android:paddingTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/empty_imageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:background="@null"
+            android:text="Currently, you have no music. Download some from your friends and enjoy."
+            android:visibility="gone"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:padding="16dp"
+            />
+    </RelativeLayout>
+
+    <!--<RelativeLayout
         android:id="@+id/music_list_frag_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -75,7 +106,7 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:background="#88000000"
         android:visibility="gone"
-        ></RelativeLayout>
+        ></RelativeLayout>-->
 
     <TextView
         android:id="@+id/songNamePlaying"

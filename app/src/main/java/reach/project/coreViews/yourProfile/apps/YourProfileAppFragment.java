@@ -128,7 +128,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
         //mLoadingView=(ProgressBar)rootView.findViewById(R.id.loading_view);

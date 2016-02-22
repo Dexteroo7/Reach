@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import javax.annotation.Nonnull;
 
@@ -30,6 +31,9 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>, LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String NO_DOWNLOADS_TEXT = "No current\ndownloads!";
+    private EmptyRecyclerView mRecyclerView;
+
     public static DownloadingFragment getInstance(String header) {
 
         final Bundle args = new Bundle();
@@ -46,8 +50,10 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
-        final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
+         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(NO_DOWNLOADS_TEXT);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
@@ -100,6 +106,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 //            Log.i("Ayush", "Setting new cursor " + data.getCount());
             downloadingAdapter.setCursor(data);
         }
+        mRecyclerView.checkIfEmpty(downloadingAdapter.getItemCount());
     }
 
     @Override

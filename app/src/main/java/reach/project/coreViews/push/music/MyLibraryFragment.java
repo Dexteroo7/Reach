@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +41,9 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>,
         LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String NO_SONGS_SHARE_TEXT = "No songs\nto\nshare!";
+    private EmptyRecyclerView mRecyclerView;
+
     public static MyLibraryFragment getInstance(String header) {
 
         final Bundle args = new Bundle();
@@ -57,20 +61,22 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_push_songs, container, false);
-        final EmptyRecyclerView mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
+        mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View emptyView = rootView.findViewById(R.id.empty_imageView);
         final Context context = mRecyclerView.getContext();
-
-
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(NO_SONGS_SHARE_TEXT);
+        mRecyclerView.setEmptyView(emptyView);
         parentAdapter = new ParentAdapter(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
-        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
 
         getLoaderManager().initLoader(StaticData.PUSH_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PUSH_MY_LIBRARY_LOADER, null, this);
 
         return rootView;
     }
+
 
     @Override
     public void onDestroyView() {
@@ -146,6 +152,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>
                 parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
+        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }
 
     @Override
