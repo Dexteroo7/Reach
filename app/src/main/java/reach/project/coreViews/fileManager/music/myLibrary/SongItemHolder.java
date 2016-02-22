@@ -53,10 +53,10 @@ class SongItemHolder extends SingleItemViewHolder {
         this.userImage = (SimpleDraweeView) itemView.findViewById(R.id.userImage);
 
         final Context context = itemView.getContext();
-        final Object object = handOverMessageExtra.getExtra(position);
         final ContentResolver resolver = context.getContentResolver();
 
         this.likeButton.setOnClickListener(v -> {
+            final Object object = handOverMessageExtra.getExtra(position);
             if (object instanceof MusicData) {
                 final MusicData musicData = (MusicData) object;
                 musicData.setIsLiked(!musicData.isLiked());
@@ -102,6 +102,8 @@ class SongItemHolder extends SingleItemViewHolder {
             popupMenu.inflate(R.menu.manager_popup_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
 
+                final Object object = handOverMessageExtra.getExtra(position);
+
                 switch (item.getItemId()) {
                     case R.id.manager_menu_1:
                         //send
@@ -123,12 +125,26 @@ class SongItemHolder extends SingleItemViewHolder {
                         return false;
                 }
             });
+
             final MenuItem hideItem = popupMenu.getMenu().findItem(R.id.manager_menu_2);
-            if (visible) {
-                hideItem.setTitle("Everyone");
-            } else {
-                hideItem.setTitle("Only Me");
+            final Object object = handOverMessageExtra.getExtra(position);
+            boolean visible = false;
+            if (object instanceof MusicData) {
+                final MusicData musicData = (MusicData) object;
             }
+            else if (object instanceof Cursor) {
+                final Cursor cursor = (Cursor) object;
+                if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length)
+                    visible = cursor.getShort(11) == 1;
+                else if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length)
+                    visible = cursor.getShort(18) == 1;
+                else
+                    throw new IllegalArgumentException("Unknown column count found");
+            }
+            else
+                throw new IllegalArgumentException("Invalid Object type detected");
+            hideItem.setTitle(visible ? "Everyone" : "Only Me");
+
             popupMenu.show();
         });
     }
