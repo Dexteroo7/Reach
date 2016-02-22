@@ -118,7 +118,8 @@ enum ExploreJSON implements EnumHelper<String> {
         SMALL_IMAGE_URL("smallImageUrl"), //userImage
         TYPE_TEXT("typeText"), //Music
 
-        SENDER_NAME("senderName");
+        SENDER_NAME("senderName"),
+        MESSAGE("message");
 
         private final String name;
 
@@ -164,6 +165,7 @@ enum ExploreJSON implements EnumHelper<String> {
         DESCRIPTION("description"),
         RATING("rating"),
         CATEGORY("category"),
+        MESSAGE("message"),
         REVIEW_USER_PHOTO("reviewUserPhoto"),
         REVIEW_USER_NAME("reviewUserName");
 
