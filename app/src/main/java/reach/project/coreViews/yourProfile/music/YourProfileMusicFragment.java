@@ -65,7 +65,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private static long hostId = 0;
     private static long myId = 0;
     private RecyclerView mRecyclerView;
-    private View emptyView;
+    //private View emptyView;
 
     public static YourProfileMusicFragment newInstance(long hostId) {
 
@@ -106,9 +106,9 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
         rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
          mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        emptyView = rootView.findViewById(R.id.empty_imageView);
-        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
-        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+        //emptyView = rootView.findViewById(R.id.empty_imageView);
+        //final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        //emptyViewText.setText(StaticData.NO_SONGS_TEXT);
         final Activity activity = getActivity();
         //mRecyclerView.setHasFixedSize(true);
 
