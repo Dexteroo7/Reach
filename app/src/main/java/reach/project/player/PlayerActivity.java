@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -76,6 +77,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     private View repeat;
     private View rwdBtn;
     private View fwdBtn;
+    public static final String TAG = PlayerActivity.class.getSimpleName();
 
     public static void openActivity(Context context) {
 
@@ -293,37 +295,37 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
             @Override
             protected Integer doInBackground(Void... params) {
+                if(currentPlaying!=null) {
+                    if (mDownloadedSongsCursor != null) {
+                        int i = 0;
+                        for (mDownloadedSongsCursor.moveToFirst(); !mDownloadedSongsCursor.isAfterLast(); mDownloadedSongsCursor.moveToNext()) {
+                            if (mDownloadedSongsCursor.getLong(20) == currentPlaying.getId()) {
 
-                if(mDownloadedSongsCursor!=null){
-                    int i = 0;
-                    for (mDownloadedSongsCursor.moveToFirst(); !mDownloadedSongsCursor.isAfterLast(); mDownloadedSongsCursor.moveToNext()) {
-                        if(mDownloadedSongsCursor.getLong(20) == currentPlaying.getId()){
-
-                            return i;
-                        }
-                        i++;
-                    }
-
-
-
-                }
-                if(mLibrarySongsCursor!=null){
-                    int i = 0;
-                    for (mLibrarySongsCursor.moveToFirst(); !mLibrarySongsCursor.isAfterLast(); mLibrarySongsCursor.moveToNext()) {
-                        if(mLibrarySongsCursor.getLong(0) == currentPlaying.getId()){
-                            if(mDownloadedSongsCursor!=null){
-                               final int count = mDownloadedSongsCursor.getCount();
-
-                                return (count+i);
+                                return i;
                             }
-                            return i;
+                            i++;
                         }
-                        i++;
+
 
                     }
-                }
+                    if (mLibrarySongsCursor != null) {
+                        int i = 0;
+                        for (mLibrarySongsCursor.moveToFirst(); !mLibrarySongsCursor.isAfterLast(); mLibrarySongsCursor.moveToNext()) {
+                            if (mLibrarySongsCursor.getLong(0) == currentPlaying.getId()) {
+                                if (mDownloadedSongsCursor != null) {
+                                    final int count = mDownloadedSongsCursor.getCount();
 
-                return 0;
+                                    return (count + i);
+                                }
+                                return i;
+                            }
+                            i++;
+
+                        }
+                    }
+                     return 0;
+                }
+                return -1;
             }
 
             @Override
@@ -331,7 +333,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                 super.onPostExecute(position);
                 Log.i("PlayerActivity","position = " + position);
                 PlayerActivity activity;
-                if(reference == null || (activity = reference.get()) == null){
+                if(reference == null || (activity = reference.get()) == null || position == -1){
                     return;
                 }
                 else{
@@ -416,13 +418,20 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
             case ProcessManager.REPLY_LATEST_MUSIC: {
                 //TODO: After next the flow comes here maybe, Check
-                Log.i("PlayerActivity", "ProcessManager.REPLY_LATEST_MUSIC");
+                Log.i(TAG, "ProcessManager.REPLY_LATEST_MUSIC");
 
-                currentPlaying = bundle.getParcelable(MUSIC_PARCEL);
-                MiscUtils.useActivity(reference, activity -> activity.updateMusic(false));
-                musicListAdapter.setCurrentlyPlayingSongId(currentPlaying.getId());
-                musicListAdapter.notifyDataSetChanged();
-                findTheSongInTheCursor();
+                    currentPlaying = bundle.getParcelable(MUSIC_PARCEL);
+                    MiscUtils.useActivity(reference, activity -> activity.updateMusic(false));
+                    Log.i(TAG, "Previously playing song id =  " + musicListAdapter.getCurrentlyPlayingSongId());
+                    musicListAdapter.setCurrentlyPlayingSongId(currentPlaying.getId());
+                    Log.i(TAG, "Current playing song id =  " + musicListAdapter.getCurrentlyPlayingSongId());
+                    musicListAdapter.notifyDataSetChanged();
+                    findTheSongInTheCursor();
+
+
+
+
+                //CursorIndexOutOfBoundsException
                 break;
             }
 
@@ -639,6 +648,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             if (currentPlaying.getType() == MusicData.DOWNLOADED) {
 
                 values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
+                Log.i("PlayerActivity", "Downloaded song liked, id = " + currentPlaying.getId());
                 return context.getContentResolver().update(
                         Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
                         values,

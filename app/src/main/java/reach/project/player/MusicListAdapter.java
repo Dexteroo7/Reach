@@ -2,6 +2,7 @@ package reach.project.player;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -48,6 +49,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    private static final String TAG = MusicListAdapter.class.getSimpleName();
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
@@ -59,7 +61,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                 handOverCursor.handOverMessage(cursor);
 
                 if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
-                    currentlyPlayingSongId = cursor.getLong(20);
+                    currentlyPlayingSongId = cursor.getLong(0);
                     notifyItemChanged(currentlyPlayingSongPosition);
                     notifyItemChanged(position);
 
@@ -79,6 +81,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     private int currentlyPlayingSongPosition;
 
 
+
     public MusicListAdapter(HandOverMessage<Cursor> handOverCursor,
                             HandOverMessage<MusicData> handOverSong,
                             Context context, long currentlyPlayingSongId) {
@@ -90,6 +93,9 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
     public void setCurrentlyPlayingSongId(long id){
         this.currentlyPlayingSongId = id;
+    }
+    public long getCurrentlyPlayingSongId(){
+        return currentlyPlayingSongId;
     }
 
     ///////////Data set ops
@@ -156,65 +162,71 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
 
         final Object friend = getItem(position);
-        if (friend instanceof Cursor) {
-            holder.itemView.setSelected(false);
-            final Cursor cursorExactType = (Cursor) friend;
-            final SongItemHolder songItemHolder = (SongItemHolder) holder;
-            //holder.itemView.setBackgroundResource(0);
+        try {
+            if (friend instanceof Cursor) {
+                holder.itemView.setSelected(false);
+                final Cursor cursorExactType = (Cursor) friend;
+                final SongItemHolder songItemHolder = (SongItemHolder) holder;
+                //holder.itemView.setBackgroundResource(0);
             /*holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.));*/
-            final String displayName, artist, album, actualName;
-            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+                final String displayName, artist, album, actualName;
+                if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
-                displayName = cursorExactType.getString(5);
-                artist = cursorExactType.getString(11);
-                album = cursorExactType.getString(16);
-                //Log.i("MusicListAdapter","downloaded song unique id = " + cursorExactType.getLong(20) +
-                //        " downloaded song id = " + cursorExactType.getLong(14) +
-                //        " currently playing song id = " + currentlyPlayingSongId );
+                    displayName = cursorExactType.getString(5);
+                    artist = cursorExactType.getString(11);
+                    album = cursorExactType.getString(16);
+                    //Log.i("MusicListAdapter","downloaded song unique id = " + cursorExactType.getLong(20) +
+                    //        " downloaded song id = " + cursorExactType.getLong(14) +
+                    //        " currently playing song id = " + currentlyPlayingSongId );
 
-                if(cursorExactType.getLong(20)==currentlyPlayingSongId){
-                 //   Log.i("MusicListAdapter","Currently playing song is downloaded song");
-                    holder.itemView.setSelected(true);
-                    currentlyPlayingSongPosition = position;
-                };
+                    if (cursorExactType.getLong(0) == currentlyPlayingSongId) {
+                        //   Log.i("MusicListAdapter","Currently playing song is downloaded song");
+                        holder.itemView.setSelected(true);
+                        currentlyPlayingSongPosition = position;
+                    }
+                    ;
 //                actualName = cursorExactType.getString(17);
-            } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-
-                displayName = cursorExactType.getString(3);
-                artist = cursorExactType.getString(4);
-                album = cursorExactType.getString(6);
-                final long x = cursorExactType.getLong(0);
-                if(cursorExactType.getLong(0)==currentlyPlayingSongId){
-                 //   Log.i("MusicListAdapter","Currently playing song is my library song");
-                    holder.itemView.setSelected(true);
-                    currentlyPlayingSongPosition = position;
-                };
+                } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+                    displayName = cursorExactType.getString(3);
+                    artist = cursorExactType.getString(4);
+                    album = cursorExactType.getString(6);
+                    final long x = cursorExactType.getLong(0);
+                    if (cursorExactType.getLong(0) == currentlyPlayingSongId) {
+                        //   Log.i("MusicListAdapter","Currently playing song is my library song");
+                        holder.itemView.setSelected(true);
+                        currentlyPlayingSongPosition = position;
+                    }
+                    ;
 //                actualName = cursorExactType.getString(9);
-            } else
-                throw new IllegalArgumentException("Unknown cursor type found");
+                } else
+                    throw new IllegalArgumentException("Unknown cursor type found");
 
-            songItemHolder.songName.setText(displayName);
-            songItemHolder.artistName.setText(artist);
+                songItemHolder.songName.setText(displayName);
+                songItemHolder.artistName.setText(artist);
 
-            final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
+                final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
 
-            if (uriOptional.isPresent()) {
+                if (uriOptional.isPresent()) {
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
-                final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                        .setResizeOptions(resizeOptions)
-                        .build();
+                    final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
+                            .setResizeOptions(resizeOptions)
+                            .build();
 
-                final DraweeController controller = Fresco.newDraweeControllerBuilder()
-                        .setOldController(songItemHolder.albumArt.getController())
-                        .setImageRequest(request)
-                        .build();
+                    final DraweeController controller = Fresco.newDraweeControllerBuilder()
+                            .setOldController(songItemHolder.albumArt.getController())
+                            .setImageRequest(request)
+                            .build();
 
-                songItemHolder.albumArt.setController(controller);
-            } else
-                songItemHolder.albumArt.setImageBitmap(null);
+                    songItemHolder.albumArt.setController(controller);
+                } else
+                    songItemHolder.albumArt.setImageBitmap(null);
 
-            //use
+                //use
+            }
+        }
+        catch(CursorIndexOutOfBoundsException e){
+            Log.e(TAG, "Exception thrown at song id = " + currentlyPlayingSongId + " and position = " + position);
         }
     }
 

@@ -72,7 +72,7 @@
         android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_above="@+id/pause_play"
         android:layout_marginTop="?attr/actionBarSize"
-        android:background="#88000000"
+        android:background="#AA000000"
         android:visibility="gone"
         >
 
