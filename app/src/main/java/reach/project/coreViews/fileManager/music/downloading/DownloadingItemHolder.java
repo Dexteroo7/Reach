@@ -48,8 +48,6 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         super(itemView, handOverMessageExtra);
 
         final Context context = itemView.getContext();
-        final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
-        final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.PAUSED_BY_USER;
 
         this.songName = (TextView) itemView.findViewById(R.id.songName);
         this.artistName = (TextView) itemView.findViewById(R.id.artistName);
@@ -62,6 +60,8 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             if (position == -1)
                 throw new IllegalArgumentException("Position not set for the view holder");
 
+            final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
+            final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.PAUSED_BY_USER;
             final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
             popupMenu.inflate(R.menu.friends_popup_menu);
             popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");

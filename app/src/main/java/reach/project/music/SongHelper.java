@@ -28,7 +28,7 @@ public class SongHelper extends SQLiteOpenHelper {
     public static final String REACH_TABLE = "reach";
     public static final String COLUMN_ID = "_id";
     public static final String COLUMN_SONG_ID = "songId";
-    public static final String COLUMN_META_HASH = "metaHash";
+    public static final String COLUMN_META_HASH = "metaHash"; //TODO use this
 
     public static final String COLUMN_DISPLAY_NAME = "displayName"; //title
     public static final String COLUMN_ACTUAL_NAME = "actualName";
@@ -50,8 +50,8 @@ public class SongHelper extends SQLiteOpenHelper {
     public static final String COLUMN_SENDER_ID = "senderId"; // in-case of uploads = myId
 
     //non song stuff
-    public static final String COLUMN_UNIQUE_ID = "uniqueId";
-    public static final String COLUMN_SENDER_NAME = "localIp";
+    public static final String COLUMN_UNIQUE_ID = "uniqueId"; //TODO do not use this
+    public static final String COLUMN_USER_NAME = "localIp";
     public static final String COLUMN_ONLINE_STATUS = "localPort";
     public static final String COLUMN_OPERATION_KIND = "operationKind";
     public static final String COLUMN_LOGICAL_CLOCK = "logicalClock";
@@ -71,7 +71,7 @@ public class SongHelper extends SQLiteOpenHelper {
                     COLUMN_OPERATION_KIND, //4
                     //strings
                     COLUMN_PATH, //5
-                    COLUMN_SENDER_NAME, //6
+                    COLUMN_USER_NAME, //6
                     COLUMN_ONLINE_STATUS, //7
                     COLUMN_ARTIST, //8
                     COLUMN_IS_LIKED, //9
@@ -150,7 +150,7 @@ public class SongHelper extends SQLiteOpenHelper {
         values.put(COLUMN_OPERATION_KIND, reachDatabase.getOperationKind());
 
         values.put(COLUMN_PATH, reachDatabase.getPath());
-        values.put(COLUMN_SENDER_NAME, reachDatabase.getSenderName());
+        values.put(COLUMN_USER_NAME, reachDatabase.getSenderName());
         values.put(COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus());
         values.put(COLUMN_ARTIST, reachDatabase.getArtistName());
         values.put(COLUMN_IS_LIKED, reachDatabase.isLiked() ? 1 : 0); //must put string
@@ -204,7 +204,7 @@ public class SongHelper extends SQLiteOpenHelper {
 
             COLUMN_PATH + " text" + "," +
 
-            COLUMN_SENDER_NAME + " text" + "," +
+            COLUMN_USER_NAME + " text" + "," +
             COLUMN_ONLINE_STATUS + " text" + "," +
             COLUMN_ARTIST + " text" + "," +
             COLUMN_ALBUM + " text" + "," +
@@ -262,7 +262,7 @@ public class SongHelper extends SQLiteOpenHelper {
 
             COLUMN_STATUS, //9
             COLUMN_OPERATION_KIND, //10
-            COLUMN_SENDER_NAME, //11
+            COLUMN_USER_NAME, //11
             COLUMN_RECEIVER_ID, //12
             COLUMN_LOGICAL_CLOCK, //13
             COLUMN_SONG_ID, //14

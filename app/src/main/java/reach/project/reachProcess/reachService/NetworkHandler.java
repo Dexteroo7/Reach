@@ -501,7 +501,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         values.put(SongHelper.COLUMN_DISPLAY_NAME, (String) setUpFile.get()[0]);
         values.put(SongHelper.COLUMN_ACTUAL_NAME, (String) setUpFile.get()[1]);
         values.put(SongHelper.COLUMN_ALBUM_ART_DATA, (byte[]) setUpFile.get()[2]);
-        values.put(SongHelper.COLUMN_SENDER_NAME, nameAndStatus.first);
+        values.put(SongHelper.COLUMN_USER_NAME, nameAndStatus.first);
         values.put(SongHelper.COLUMN_ONLINE_STATUS, nameAndStatus.second);
 
         final boolean tryRelay, tryDB, tryGCM;
