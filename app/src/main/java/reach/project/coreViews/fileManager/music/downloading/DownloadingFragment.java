@@ -18,8 +18,8 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -69,7 +69,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
     @Override
     public void handOverMessage(@Nonnull Cursor cursor) {
-        MiscUtils.playSong(ReachDatabaseHelper.getMusicData(cursor), getContext());
+        MiscUtils.playSong(SongHelper.getMusicData(cursor), getContext());
     }
 
     @Override
@@ -77,12 +77,12 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         if (id == StaticData.DOWNLOADING_LOADER)
             return new CursorLoader(getActivity(),
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.MUSIC_DATA_LIST,
-                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " + //show only non finished
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    SongProvider.CONTENT_URI,
+                    SongHelper.MUSIC_DATA_LIST,
+                    SongHelper.COLUMN_STATUS + " != ? and " + //show only non finished
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "0"},
-                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                    SongHelper.COLUMN_DATE_ADDED + " DESC");
 
         return null;
     }

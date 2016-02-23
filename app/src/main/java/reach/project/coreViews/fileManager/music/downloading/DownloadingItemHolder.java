@@ -24,8 +24,8 @@ import java.io.File;
 
 import reach.project.R;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
@@ -107,12 +107,12 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
     private static boolean pause_unpause(long reachDatabaseId, Context context) {
 
         final ContentResolver resolver = context.getContentResolver();
-        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
+        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabaseId);
 
         final Cursor cursor = resolver.query(
                 uri,
-                ReachDatabaseHelper.projection,
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                SongHelper.projection,
+                SongHelper.COLUMN_ID + " = ?",
                 new String[]{reachDatabaseId + ""}, null);
 
         if (cursor == null)
@@ -122,7 +122,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             return false;
         }
 
-        final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
+        final ReachDatabase database = SongHelper.cursorToProcess(cursor);
         final boolean paused;
 
         ///////////////
@@ -131,18 +131,18 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
 
             //pause operation (both upload/download case)
             final ContentValues values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
+            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
             paused = context.getContentResolver().update(
                     uri,
                     values,
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    SongHelper.COLUMN_ID + " = ?",
                     new String[]{reachDatabaseId + ""}) > 0;
         } else if (database.getOperationKind() == 1) {
 
             //un-paused upload operation
             paused = context.getContentResolver().delete(
                     uri,
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    SongHelper.COLUMN_ID + " = ?",
                     new String[]{reachDatabaseId + ""}) > 0;
         } else {
 
@@ -177,13 +177,13 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
 
         final ContentValues values = new ContentValues();
-        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-        values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
+        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+        values.put(SongHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
 
         final boolean updateSuccess = resolver.update(
                 uri,
                 values,
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                SongHelper.COLUMN_ID + " = ?",
                 new String[]{reachDatabase.getId() + ""}) > 0;
 
         if (updateSuccess)
@@ -212,13 +212,13 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         final AlertDialog alertDialog = (AlertDialog) dialog;
         final ContentResolver resolver = alertDialog.getContext().getContentResolver();
         final long reachDatabaseId = (long) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
+        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabaseId);
 
         //find path and delete the file
         final Cursor pathCursor = resolver.query(
                 uri,
-                new String[]{ReachDatabaseHelper.COLUMN_PATH},
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{SongHelper.COLUMN_PATH},
+                SongHelper.COLUMN_ID + " = ?",
                 new String[]{reachDatabaseId + ""}, null);
 
         if (pathCursor != null) {
@@ -240,7 +240,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 reachDatabaseId + " " +
                 resolver.delete(
                         uri,
-                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        SongHelper.COLUMN_ID + " = ?",
                         new String[]{reachDatabaseId + ""}));
         dialog.dismiss();
     };

@@ -3,12 +3,11 @@ package reach.project.coreViews;
 import android.database.Cursor;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 
 import javax.annotation.Nullable;
 
 import reach.project.music.MySongsHelper;
-import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.SongHelper;
 import reach.project.music.Song;
 
 /**
@@ -64,25 +63,25 @@ public enum CursorHelper {
     }),
 
     DOWNLOADED_HELPER(new String[]{
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_SONG_ID, //1
-            ReachDatabaseHelper.COLUMN_META_HASH, //2
+            SongHelper.COLUMN_ID, //0
+            SongHelper.COLUMN_SONG_ID, //1
+            SongHelper.COLUMN_META_HASH, //2
 
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //3
-            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //4
-            ReachDatabaseHelper.COLUMN_ARTIST, //5
-            ReachDatabaseHelper.COLUMN_ALBUM, //6
+            SongHelper.COLUMN_DISPLAY_NAME, //3
+            SongHelper.COLUMN_ACTUAL_NAME, //4
+            SongHelper.COLUMN_ARTIST, //5
+            SongHelper.COLUMN_ALBUM, //6
 
-            ReachDatabaseHelper.COLUMN_DURATION, //7
-            ReachDatabaseHelper.COLUMN_SIZE, //8
+            SongHelper.COLUMN_DURATION, //7
+            SongHelper.COLUMN_SIZE, //8
 
-            ReachDatabaseHelper.COLUMN_GENRE, //9
-            ReachDatabaseHelper.COLUMN_PATH, //10
-            ReachDatabaseHelper.COLUMN_DATE_ADDED, //11
+            SongHelper.COLUMN_GENRE, //9
+            SongHelper.COLUMN_PATH, //10
+            SongHelper.COLUMN_DATE_ADDED, //11
 
-            ReachDatabaseHelper.COLUMN_VISIBILITY, //12
-            ReachDatabaseHelper.COLUMN_IS_LIKED, //13
-            ReachDatabaseHelper.COLUMN_SENDER_NAME, //14
+            SongHelper.COLUMN_VISIBILITY, //12
+            SongHelper.COLUMN_IS_LIKED, //13
+            SongHelper.COLUMN_SENDER_NAME, //14
 
     }, new Function<Cursor, Song>() {
         @Nullable
@@ -110,32 +109,32 @@ public enum CursorHelper {
     }),
 
     DOWNLOADING_HELPER(new String[]{
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_SONG_ID, //1
-            ReachDatabaseHelper.COLUMN_META_HASH, //2
+            SongHelper.COLUMN_ID, //0
+            SongHelper.COLUMN_SONG_ID, //1
+            SongHelper.COLUMN_META_HASH, //2
 
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //3
-            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //4
-            ReachDatabaseHelper.COLUMN_ARTIST, //5
-            ReachDatabaseHelper.COLUMN_ALBUM, //6
+            SongHelper.COLUMN_DISPLAY_NAME, //3
+            SongHelper.COLUMN_ACTUAL_NAME, //4
+            SongHelper.COLUMN_ARTIST, //5
+            SongHelper.COLUMN_ALBUM, //6
 
-            ReachDatabaseHelper.COLUMN_DURATION, //7
-            ReachDatabaseHelper.COLUMN_SIZE, //8
+            SongHelper.COLUMN_DURATION, //7
+            SongHelper.COLUMN_SIZE, //8
 
-            ReachDatabaseHelper.COLUMN_GENRE, //9
-            ReachDatabaseHelper.COLUMN_PATH, //10
-            ReachDatabaseHelper.COLUMN_DATE_ADDED, //11
+            SongHelper.COLUMN_GENRE, //9
+            SongHelper.COLUMN_PATH, //10
+            SongHelper.COLUMN_DATE_ADDED, //11
 
-            ReachDatabaseHelper.COLUMN_VISIBILITY, //12
-            ReachDatabaseHelper.COLUMN_IS_LIKED,//13
+            SongHelper.COLUMN_VISIBILITY, //12
+            SongHelper.COLUMN_IS_LIKED,//13
 
             //non-song stuff
 
-            COLUMN_SENDER_ID, //2
-            COLUMN_PROCESSED, //3
-            COLUMN_STATUS, //9
-            COLUMN_SENDER_NAME, //11
-            COLUMN_LOGICAL_CLOCK, //13
+//            COLUMN_SENDER_ID, //2
+//            COLUMN_PROCESSED, //3
+//            COLUMN_STATUS, //9
+//            COLUMN_SENDER_NAME, //11
+//            COLUMN_LOGICAL_CLOCK, //13
 
 
     }, new Function<Cursor, Song>() {

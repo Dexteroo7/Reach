@@ -16,7 +16,7 @@ import reach.project.utils.MiscUtils;
 /**
  * Created by Dexter on 2/14/2015.
  */
-public class ReachDatabaseHelper extends SQLiteOpenHelper {
+public class SongHelper extends SQLiteOpenHelper {
 
     /**
      * COLUMN_ID : local dataBase table id, used exclusively for referencing locally
@@ -186,7 +186,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
         return values;
     }
 
-    public ReachDatabaseHelper(Context context) {
+    public SongHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -233,7 +233,7 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
 
-        Log.w(ReachDatabaseHelper.class.getName(),
+        Log.w(SongHelper.class.getName(),
                 "Upgrading database from version " + oldVersion + " to "
                         + newVersion + ", which will destroy all old data");
 //        database.execSQL("DROP TABLE IF EXISTS " + REACH_TABLE);
@@ -293,21 +293,21 @@ public class ReachDatabaseHelper extends SQLiteOpenHelper {
 
     private final String[] projectionDownloaded =
             {
-                    ReachDatabaseHelper.COLUMN_ID, //0
+                    SongHelper.COLUMN_ID, //0
 
-                    ReachDatabaseHelper.COLUMN_UNIQUE_ID, //1
+                    SongHelper.COLUMN_UNIQUE_ID, //1
 
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
-                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
+                    SongHelper.COLUMN_DISPLAY_NAME, //2
+                    SongHelper.COLUMN_ACTUAL_NAME, //3
 
-                    ReachDatabaseHelper.COLUMN_ARTIST, //4
-                    ReachDatabaseHelper.COLUMN_ALBUM, //5
+                    SongHelper.COLUMN_ARTIST, //4
+                    SongHelper.COLUMN_ALBUM, //5
 
-                    ReachDatabaseHelper.COLUMN_DURATION, //6
-                    ReachDatabaseHelper.COLUMN_SIZE, //7
+                    SongHelper.COLUMN_DURATION, //6
+                    SongHelper.COLUMN_SIZE, //7
 
-                    ReachDatabaseHelper.COLUMN_VISIBILITY, //8
-                    ReachDatabaseHelper.COLUMN_GENRE, //9
+                    SongHelper.COLUMN_VISIBILITY, //8
+                    SongHelper.COLUMN_GENRE, //9
             };
 
     public static MusicData getMusicData(final Cursor cursor) {

@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.music.MySongsHelper;
-import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.SongHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -150,7 +150,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             holder.itemView.setBackgroundResource(0);
 
             final String displayName, artist, album, actualName;
-            if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+            if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
 
                 displayName = cursorExactType.getString(5);
                 artist = cursorExactType.getString(11);

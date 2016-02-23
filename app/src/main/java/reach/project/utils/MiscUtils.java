@@ -86,8 +86,8 @@ import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.music.Song;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
@@ -403,15 +403,15 @@ public enum MiscUtils {
 
         //sanity check
 //            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
-        if (musicData.getLength() == 0 || TextUtils.isEmpty(musicData.getPath())) {
-            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        if (musicData.getProcessed() == 0) {
-            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
-            return false;
-        }
+//        if (musicData.getLength() == 0 || TextUtils.isEmpty(musicData.getPath())) {
+//            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
+//            return false;
+//        }
+//
+//        if (musicData.getProcessed() == 0) {
+//            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
+//            return false;
+//        }
 
         ProcessManager.submitMusicRequest(context,
                 Optional.of(musicData),
@@ -1161,16 +1161,16 @@ public enum MiscUtils {
                 status = ReachDatabase.NOT_WORKING;
             }
 
-            final String condition = ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                    ReachDatabaseHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
+            final String condition = SongHelper.COLUMN_ID + " = ? and " +
+                    SongHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
             final String[] arguments = new String[]{databaseId + "", ReachDatabase.PAUSED_BY_USER + ""};
             final ContentValues values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_STATUS, status);
+            values.put(SongHelper.COLUMN_STATUS, status);
 
             MiscUtils.useContextFromContext(contextReference, context -> {
 
                 Log.i("Downloader", "Updating DB on GCM sent " + (context.getContentResolver().update(
-                        Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + databaseId),
+                        Uri.parse(SongProvider.CONTENT_URI + "/" + databaseId),
                         values, condition, arguments) > 0));
                 return null;
             });
@@ -1272,24 +1272,24 @@ public enum MiscUtils {
 
         //this cursor can be used to play if entry exists
         cursor = contentResolver.query(
-                ReachDatabaseProvider.CONTENT_URI,
+                SongProvider.CONTENT_URI,
                 new String[]{
 
-                        ReachDatabaseHelper.COLUMN_ID, //0
-                        ReachDatabaseHelper.COLUMN_PROCESSED, //1
-                        ReachDatabaseHelper.COLUMN_PATH, //2
+                        SongHelper.COLUMN_ID, //0
+                        SongHelper.COLUMN_PROCESSED, //1
+                        SongHelper.COLUMN_PATH, //2
 
-                        ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                        ReachDatabaseHelper.COLUMN_SENDER_ID, //4
-                        ReachDatabaseHelper.COLUMN_RECEIVER_ID, //5
-                        ReachDatabaseHelper.COLUMN_SIZE, //6
-                        ReachDatabaseHelper.COLUMN_META_HASH //7
+                        SongHelper.COLUMN_IS_LIKED, //3
+                        SongHelper.COLUMN_SENDER_ID, //4
+                        SongHelper.COLUMN_RECEIVER_ID, //5
+                        SongHelper.COLUMN_SIZE, //6
+                        SongHelper.COLUMN_META_HASH //7
                 },
 
-                ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                        SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                        SongHelper.COLUMN_SIZE + " = ? and " +
+                        SongHelper.COLUMN_DURATION + " = ?",
                 new String[]{reachDatabase.getDisplayName(), reachDatabase.getActualName(),
                         reachDatabase.getLength() + "", reachDatabase.getDuration() + ""},
                 null);
@@ -1330,8 +1330,8 @@ public enum MiscUtils {
 
         //new song
         //We call bulk starter always
-        final Uri uri = contentResolver.insert(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.contentValuesCreator(reachDatabase));
+        final Uri uri = contentResolver.insert(SongProvider.CONTENT_URI,
+                SongHelper.contentValuesCreator(reachDatabase));
         if (uri == null) {
 
             ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()

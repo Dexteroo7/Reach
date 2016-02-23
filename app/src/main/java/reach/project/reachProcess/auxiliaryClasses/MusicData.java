@@ -41,7 +41,7 @@ public class MusicData implements Parcelable {
         throw new IllegalAccessError("Fuck off");
     }
 
-    private MusicData(long id,
+    public MusicData(long id,
                       String metaHash,
                       long size,
                       long senderId,

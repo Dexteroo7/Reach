@@ -18,7 +18,7 @@ import reach.backend.entities.userApi.UserApi;
 import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
-import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.SongHelper;
 import reach.project.music.MySongsHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
@@ -55,17 +55,17 @@ public final class StaticData {
     }
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_SIZE, //1
-            ReachDatabaseHelper.COLUMN_SENDER_ID, //2
-            ReachDatabaseHelper.COLUMN_PROCESSED, //3
-            ReachDatabaseHelper.COLUMN_PATH, //4
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
-            ReachDatabaseHelper.COLUMN_IS_LIKED, //6
-            ReachDatabaseHelper.COLUMN_SONG_ID, //7
-            ReachDatabaseHelper.COLUMN_ARTIST, //8
-            ReachDatabaseHelper.COLUMN_DURATION, //9
-            ReachDatabaseHelper.COLUMN_META_HASH}; //10
+            SongHelper.COLUMN_ID, //0
+            SongHelper.COLUMN_SIZE, //1
+            SongHelper.COLUMN_SENDER_ID, //2
+            SongHelper.COLUMN_PROCESSED, //3
+            SongHelper.COLUMN_PATH, //4
+            SongHelper.COLUMN_DISPLAY_NAME, //5
+            SongHelper.COLUMN_IS_LIKED, //6
+            SongHelper.COLUMN_SONG_ID, //7
+            SongHelper.COLUMN_ARTIST, //8
+            SongHelper.COLUMN_DURATION, //9
+            SongHelper.COLUMN_META_HASH}; //10
 
     public static final String[] DISK_PARTIAL = new String[]{
             MySongsHelper.COLUMN_ARTIST, //0
@@ -76,7 +76,7 @@ public final class StaticData {
             MySongsHelper.COLUMN_ID, //5
             MySongsHelper.COLUMN_DURATION, //6
             MySongsHelper.COLUMN_IS_LIKED, //7
-            ReachDatabaseHelper.COLUMN_META_HASH}; //8
+            SongHelper.COLUMN_META_HASH}; //8
 
 
     public static byte i = 0;

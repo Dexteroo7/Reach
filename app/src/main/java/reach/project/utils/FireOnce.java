@@ -36,8 +36,8 @@ import reach.backend.entities.userApi.model.MyString;
 import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
@@ -359,13 +359,13 @@ public enum FireOnce implements Closeable {
          */
         private ContentProviderOperation getUpdateOperation(ContentValues contentValues, long id) {
             return ContentProviderOperation
-                    .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
+                    .newUpdate(Uri.parse(SongProvider.CONTENT_URI + "/" + id))
                     .withValues(contentValues)
-                    .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                    .withSelection(SongHelper.COLUMN_ID + " = ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ?",
                             new String[]{
                                     id + "",
                                     ReachDatabase.PAUSED_BY_USER + "",
@@ -377,9 +377,9 @@ public enum FireOnce implements Closeable {
 
         private ContentProviderOperation getForceUpdateOperation(ContentValues contentValues, long id) {
             return ContentProviderOperation
-                    .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
+                    .newUpdate(Uri.parse(SongProvider.CONTENT_URI + "/" + id))
                     .withValues(contentValues)
-                    .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    .withSelection(SongHelper.COLUMN_ID + " = ?",
                             new String[]{id + ""})
                     .build();
         }
@@ -428,8 +428,8 @@ public enum FireOnce implements Closeable {
                     //mark finished
                     if (reachDatabase.getStatus() != ReachDatabase.FINISHED) {
 
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                        values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getLength());
+                        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
+                        values.put(SongHelper.COLUMN_PROCESSED, reachDatabase.getLength());
                         operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
                     }
                     continue;
@@ -457,16 +457,16 @@ public enum FireOnce implements Closeable {
 
                 if (myBoolean == null) {
                     Log.i("Ayush", "GCM sending resulted in shit");
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
                 } else if (myBoolean.getGcmexpired()) {
                     Log.i("Ayush", "GCM re-registry needed");
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
                 } else if (myBoolean.getOtherGCMExpired()) {
                     Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
                 } else {
                     Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
                 }
                 operations.add(getUpdateOperation(values, reachDatabase.getId()));
             }
@@ -479,10 +479,10 @@ public enum FireOnce implements Closeable {
             final Cursor cursor = MiscUtils.useContextFromContext(reference, activity -> {
 
                 return activity.getContentResolver().query(
-                        ReachDatabaseProvider.CONTENT_URI,
-                        ReachDatabaseHelper.projection,
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                        SongProvider.CONTENT_URI,
+                        SongHelper.projection,
+                        SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                SongHelper.COLUMN_STATUS + " != ?",
                         new String[]{
                                 "0", //only downloads
                                 ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
@@ -493,7 +493,7 @@ public enum FireOnce implements Closeable {
 
             final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext())
-                reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
+                reachDatabaseList.add(SongHelper.cursorToProcess(cursor));
             cursor.close();
 
             if (reachDatabaseList.size() > 0) {
@@ -505,7 +505,7 @@ public enum FireOnce implements Closeable {
 
                         try {
                             Log.i("Downloader", "Starting Download op " + operations.size());
-                            context.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+                            context.getContentResolver().applyBatch(SongProvider.AUTHORITY, operations);
                         } catch (RemoteException | OperationApplicationException e) {
                             e.printStackTrace();
                         }

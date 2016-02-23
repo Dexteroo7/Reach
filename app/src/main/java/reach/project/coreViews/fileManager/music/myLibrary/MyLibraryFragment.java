@@ -24,8 +24,8 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -96,9 +96,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
                 final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
                 MiscUtils.playSong(musicData, getContext());
-            } else if (count == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+            } else if (count == SongHelper.MUSIC_DATA_LIST.length) {
 
-                final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
+                final MusicData musicData = SongHelper.getMusicData(cursor);
                 MiscUtils.playSong(musicData, getContext());
             } else
                 throw new IllegalArgumentException("Unknown column count found");
@@ -120,12 +120,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                     MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"); //show all songs !
         else if (id == StaticData.DOWNLOAD_LOADER)
             return new CursorLoader(getActivity(),
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.MUSIC_DATA_LIST,
-                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    SongProvider.CONTENT_URI,
+                    SongHelper.MUSIC_DATA_LIST,
+                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "0"},
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
     }
@@ -172,20 +172,20 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @NonNull
     private List<MusicData> getRecentDownloaded() {
 
-        final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.MUSIC_DATA_LIST,
-                ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+        final Cursor cursor = getContext().getContentResolver().query(SongProvider.CONTENT_URI,
+                SongHelper.MUSIC_DATA_LIST,
+                SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
+                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
 
         if (cursor == null)
             return Collections.emptyList();
 
         final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext())
-            latestDownloaded.add(ReachDatabaseHelper.getMusicData(cursor));
+            latestDownloaded.add(SongHelper.getMusicData(cursor));
 
         cursor.close();
 

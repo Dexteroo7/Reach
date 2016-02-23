@@ -105,7 +105,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
     @Override
     public long getItemId(MusicData item) {
-        return item.getId();
+        return item.getColumnId();
     }
 
     @Override

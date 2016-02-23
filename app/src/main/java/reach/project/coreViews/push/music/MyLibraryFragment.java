@@ -25,8 +25,8 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
@@ -110,13 +110,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>
                     MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"); //show all songs !
         else if (id == StaticData.PUSH_DOWNLOADED_LOADER)
             return new CursorLoader(getActivity(),
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.SONG_LIST,
-                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                            ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    SongProvider.CONTENT_URI,
+                    SongHelper.SONG_LIST,
+                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                            SongHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "1", "0"},
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
     }
@@ -160,21 +160,21 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage<Song>
     @NonNull
     private List<Song> getRecentDownloaded() {
 
-        final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
-                ReachDatabaseHelper.SONG_LIST,
-                ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                        ReachDatabaseHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+        final Cursor cursor = getContext().getContentResolver().query(SongProvider.CONTENT_URI,
+                SongHelper.SONG_LIST,
+                SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                        SongHelper.COLUMN_VISIBILITY + " = ? and " + //show only visible
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "1", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
+                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
 
         if (cursor == null)
             return Collections.emptyList();
 
         final List<Song> latestDownloaded = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext())
-            latestDownloaded.add(ReachDatabaseHelper.getSong(cursor));
+            latestDownloaded.add(SongHelper.getSong(cursor));
 
         cursor.close();
 

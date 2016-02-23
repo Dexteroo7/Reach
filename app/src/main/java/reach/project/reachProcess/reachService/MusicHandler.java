@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
-import reach.project.music.ReachDatabaseProvider;
-import reach.project.music.ReachDatabaseHelper;
+import reach.project.music.SongProvider;
+import reach.project.music.SongHelper;
 import reach.project.reachProcess.auxiliaryClasses.AudioFocusHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.MusicFocusable;
@@ -408,10 +408,10 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     public long getProcessed() {
         //if this gets called current song HAS to be reachDatabase
         final Cursor cursor = handlerInterface.getContext().getContentResolver().query(
-                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentSong.getId()),
-                new String[]{ReachDatabaseHelper.COLUMN_PROCESSED},
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                new String[]{currentSong.getId() + ""}, null);
+                Uri.parse(SongProvider.CONTENT_URI + "/" + currentSong.getColumnId()),
+                new String[]{SongHelper.COLUMN_PROCESSED},
+                SongHelper.COLUMN_ID + " = ?",
+                new String[]{currentSong.getColumnId() + ""}, null);
         if (cursor == null) {
             return 0;
         }

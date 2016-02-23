@@ -38,8 +38,8 @@ import reach.backend.music.musicVisibilityApi.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
@@ -142,12 +142,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         else if (id == StaticData.PRIVACY_DOWNLOADED_LOADER)
             return new CursorLoader(getActivity(),
-                    ReachDatabaseProvider.CONTENT_URI,
+                    SongProvider.CONTENT_URI,
                     projectionDownloaded,
-                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.FINISHED + "", "0"},
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
     }
@@ -211,33 +211,33 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
     private final String[] projectionDownloaded =
             {
-                    ReachDatabaseHelper.COLUMN_ID, //0
+                    SongHelper.COLUMN_ID, //0
 
-                    ReachDatabaseHelper.COLUMN_UNIQUE_ID, //1
+                    SongHelper.COLUMN_UNIQUE_ID, //1
 
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
-                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
+                    SongHelper.COLUMN_DISPLAY_NAME, //2
+                    SongHelper.COLUMN_ACTUAL_NAME, //3
 
-                    ReachDatabaseHelper.COLUMN_ARTIST, //4
-                    ReachDatabaseHelper.COLUMN_ALBUM, //5
+                    SongHelper.COLUMN_ARTIST, //4
+                    SongHelper.COLUMN_ALBUM, //5
 
-                    ReachDatabaseHelper.COLUMN_DURATION, //6
-                    ReachDatabaseHelper.COLUMN_SIZE, //7
+                    SongHelper.COLUMN_DURATION, //6
+                    SongHelper.COLUMN_SIZE, //7
 
-                    ReachDatabaseHelper.COLUMN_VISIBILITY, //8
-                    ReachDatabaseHelper.COLUMN_GENRE, //9
+                    SongHelper.COLUMN_VISIBILITY, //8
+                    SongHelper.COLUMN_GENRE, //9
             };
 
     @NonNull
     private List<PrivacySongItem> getRecentDownloaded() {
 
-        final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
+        final Cursor cursor = getContext().getContentResolver().query(SongProvider.CONTENT_URI,
                 projectionDownloaded,
-                ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                 new String[]{ReachDatabase.FINISHED + "", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
+                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
 
         if (cursor == null)
             return Collections.emptyList();
@@ -368,11 +368,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (updated == 0) {
 
             values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_VISIBILITY, visibility);
+            values.put(SongHelper.COLUMN_VISIBILITY, visibility);
             updated = resolver.update(
-                    ReachDatabaseProvider.CONTENT_URI,
+                    SongProvider.CONTENT_URI,
                     values,
-                    ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " + ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?",
+                    SongHelper.COLUMN_UNIQUE_ID + " = ? and " + SongHelper.COLUMN_RECEIVER_ID + " = ?",
                     new String[]{songId + "", userId + ""});
         }
 

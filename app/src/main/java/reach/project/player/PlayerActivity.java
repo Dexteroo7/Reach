@@ -31,8 +31,8 @@ import java.util.Map;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -344,12 +344,12 @@ public class PlayerActivity extends AppCompatActivity {
             //CARE WE USE SQL TABLE ID HERE
             if (currentPlaying.getType() == MusicData.Type.DOWNLOADED) {
 
-                values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
+                values.put(SongHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
                 return context.getContentResolver().update(
-                        Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
+                        Uri.parse(SongProvider.CONTENT_URI + "/" + currentPlaying.getColumnId()),
                         values,
-                        ReachDatabaseHelper.COLUMN_ID + " = ?",
-                        new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
+                        SongHelper.COLUMN_ID + " = ?",
+                        new String[]{currentPlaying.getColumnId() + ""}) > 0 && !currentPlaying.isLiked();
             } else if (currentPlaying.getType() == MusicData.Type.MY_LIBRARY) {
 
                 values.put(MySongsHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
@@ -357,7 +357,7 @@ public class PlayerActivity extends AppCompatActivity {
                         MySongsProvider.CONTENT_URI,
                         values,
                         MySongsHelper.COLUMN_SONG_ID + " = ?",
-                        new String[]{currentPlaying.getId() + ""}) > 0 && !currentPlaying.isLiked();
+                        new String[]{currentPlaying.getColumnId() + ""}) > 0 && !currentPlaying.isLiked();
             } else
                 throw new IllegalStateException("current playing has invalid type " + currentPlaying.getType());
         }
@@ -387,7 +387,7 @@ public class PlayerActivity extends AppCompatActivity {
                 simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
                 final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
-                complexParams.put(SongMetadata.SONG_ID, currentPlaying.getId() + "");
+                complexParams.put(SongMetadata.SONG_ID, currentPlaying.getColumnId() + "");
                 complexParams.put(SongMetadata.META_HASH, currentPlaying.getMetaHash());
                 complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
                 complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());

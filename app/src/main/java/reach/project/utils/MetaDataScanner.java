@@ -43,8 +43,8 @@ import reach.project.apps.App;
 import reach.project.apps.AppList;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.music.AlbumArtData;
 import reach.project.music.MusicList;
 import reach.project.music.MySongsHelper;
@@ -67,18 +67,18 @@ public class MetaDataScanner extends IntentService {
             MediaStore.Audio.Media.DATE_MODIFIED}; //10
 
     private static final String[] reachDatabaseProjection = {
-            ReachDatabaseHelper.COLUMN_UNIQUE_ID, //0
-            ReachDatabaseHelper.COLUMN_ALBUM_ART_DATA, //1
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
-            ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
-            ReachDatabaseHelper.COLUMN_ARTIST, //4
-            ReachDatabaseHelper.COLUMN_ALBUM, //5
-            ReachDatabaseHelper.COLUMN_DURATION,//6
-            ReachDatabaseHelper.COLUMN_SIZE, //7
-            ReachDatabaseHelper.COLUMN_GENRE, //8
-            ReachDatabaseHelper.COLUMN_PATH, //9
-            ReachDatabaseHelper.COLUMN_DATE_ADDED, //10
-            ReachDatabaseHelper.COLUMN_VISIBILITY}; //11
+            SongHelper.COLUMN_UNIQUE_ID, //0
+            SongHelper.COLUMN_ALBUM_ART_DATA, //1
+            SongHelper.COLUMN_DISPLAY_NAME, //2
+            SongHelper.COLUMN_ACTUAL_NAME, //3
+            SongHelper.COLUMN_ARTIST, //4
+            SongHelper.COLUMN_ALBUM, //5
+            SongHelper.COLUMN_DURATION,//6
+            SongHelper.COLUMN_SIZE, //7
+            SongHelper.COLUMN_GENRE, //8
+            SongHelper.COLUMN_PATH, //9
+            SongHelper.COLUMN_DATE_ADDED, //10
+            SongHelper.COLUMN_VISIBILITY}; //11
 
     public enum ScanMusic {
         ;
@@ -347,10 +347,10 @@ public class MetaDataScanner extends IntentService {
 
             final ImmutableList.Builder<Song> downloadBuilder = new ImmutableList.Builder<>();
             final Cursor reachDatabaseCursor = resolver.query(
-                    ReachDatabaseProvider.CONTENT_URI,
+                    SongProvider.CONTENT_URI,
                     reachDatabaseProjection,
-                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_STATUS + " = ?",
+                    SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                            SongHelper.COLUMN_STATUS + " = ?",
                     new String[]{"0", ReachDatabase.FINISHED + ""}, null);
 
             if (reachDatabaseCursor != null) {

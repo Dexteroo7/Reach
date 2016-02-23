@@ -22,8 +22,8 @@ import com.google.gson.Gson;
 
 import reach.project.R;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
@@ -273,7 +273,7 @@ public class GcmIntentService extends IntentService {
                 friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
                 friend.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis()); //online
 
-                database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                database.put(SongHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
                 /**
                  * It is important to only update the required data
                  */
@@ -285,11 +285,11 @@ public class GcmIntentService extends IntentService {
                         new String[]{hostId + "", ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""});
                 try {
                     getContentResolver().update(
-                            ReachDatabaseProvider.CONTENT_URI,
+                            SongProvider.CONTENT_URI,
                             database,
-                            "(" + ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? or " +
-                                    ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?) and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                            "(" + SongHelper.COLUMN_SENDER_ID + " = ? or " +
+                                    SongHelper.COLUMN_RECEIVER_ID + " = ?) and " +
+                                    SongHelper.COLUMN_STATUS + " != ?",
                             new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
                 } catch (IllegalArgumentException e) {return;}
             }
@@ -338,11 +338,11 @@ public class GcmIntentService extends IntentService {
                 }
 
                 final Cursor isPaused = getContentResolver().query(
-                        ReachDatabaseProvider.CONTENT_URI,
-                        new String[]{ReachDatabaseHelper.COLUMN_STATUS},
-                        ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_SONG_ID + " = ?",
+                        SongProvider.CONTENT_URI,
+                        new String[]{SongHelper.COLUMN_STATUS},
+                        SongHelper.COLUMN_SENDER_ID + " = ? and " +
+                                SongHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                                SongHelper.COLUMN_SONG_ID + " = ?",
                         new String[]{connection.getSenderId() + "",
                                 connection.getReceiverId() + "",
                                 connection.getSongId() + ""}, null);

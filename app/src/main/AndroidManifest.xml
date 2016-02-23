@@ -234,8 +234,8 @@
         <!-- Things on process :remote -->
 
         <provider
-            android:name=".music.ReachDatabaseProvider"
-            android:authorities="reach.project.music.ReachDatabaseProvider"
+            android:name=".music.SongProvider"
+            android:authorities="reach.project.music.SongProvider"
             android:exported="false"
             android:process=":remote" />
 

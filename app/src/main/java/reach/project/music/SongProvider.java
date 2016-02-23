@@ -15,12 +15,12 @@ import java.util.HashSet;
 /**
  * Created by Dexter on 2/14/2015.
  */
-public class ReachDatabaseProvider extends ContentProvider {
+public class SongProvider extends ContentProvider {
 
     public static final int DATABASE = 12;
     private static final int DATABASE_ID = 22; //+10
-    private static final String BASE_PATH = "database/contentProvider/ReachDatabaseProvider";
-    public static final String AUTHORITY = "reach.project.music.ReachDatabaseProvider";
+    private static final String BASE_PATH = "database/contentProvider/SongProvider";
+    public static final String AUTHORITY = "reach.project.music.SongProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
     static {
@@ -29,11 +29,11 @@ public class ReachDatabaseProvider extends ContentProvider {
         sURIMatcher.addURI(AUTHORITY, BASE_PATH + "/#", DATABASE_ID);
     }
 
-    private ReachDatabaseHelper reachDatabaseHelper;
+    private SongHelper songHelper;
 
     @Override
     public boolean onCreate() {
-        reachDatabaseHelper = new ReachDatabaseHelper(getContext());
+        songHelper = new SongHelper(getContext());
         return false;
     }
 
@@ -44,7 +44,7 @@ public class ReachDatabaseProvider extends ContentProvider {
         // check if the caller has requested a column which does not exists
         checkColumns(projection);
         // Set the table
-        queryBuilder.setTables(ReachDatabaseHelper.REACH_TABLE);
+        queryBuilder.setTables(SongHelper.REACH_TABLE);
         int uriType = sURIMatcher.match(uri);
         switch (uriType) {
 
@@ -52,14 +52,14 @@ public class ReachDatabaseProvider extends ContentProvider {
                 break;
             case DATABASE_ID:
                 // adding the ID to the original query
-                queryBuilder.appendWhere(ReachDatabaseHelper.COLUMN_ID + "="
+                queryBuilder.appendWhere(SongHelper.COLUMN_ID + "="
                         + uri.getLastPathSegment());
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
 
-        final SQLiteDatabase db = reachDatabaseHelper.getWritableDatabase();
+        final SQLiteDatabase db = songHelper.getWritableDatabase();
         final Cursor cursor = queryBuilder.query(db, projection, selection,
                 selectionArgs, null, null, sortOrder);
         // make sure that potential listeners are getting notified
@@ -76,11 +76,11 @@ public class ReachDatabaseProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
 
         int uriType = sURIMatcher.match(uri);
-        SQLiteDatabase sqlDB = reachDatabaseHelper.getWritableDatabase();
+        SQLiteDatabase sqlDB = songHelper.getWritableDatabase();
         long id;
         switch (uriType) {
             case DATABASE:
-                id = sqlDB.insert(ReachDatabaseHelper.REACH_TABLE, null, values);
+                id = sqlDB.insert(SongHelper.REACH_TABLE, null, values);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -98,22 +98,22 @@ public class ReachDatabaseProvider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs) {
 
         int uriType = sURIMatcher.match(uri);
-        SQLiteDatabase sqlDB = reachDatabaseHelper.getWritableDatabase();
+        SQLiteDatabase sqlDB = songHelper.getWritableDatabase();
         int rowsDeleted;
         switch (uriType) {
             case DATABASE:
-                rowsDeleted = sqlDB.delete(ReachDatabaseHelper.REACH_TABLE, selection,
+                rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE, selection,
                         selectionArgs);
                 break;
             case DATABASE_ID:
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
-                    rowsDeleted = sqlDB.delete(ReachDatabaseHelper.REACH_TABLE,
-                            ReachDatabaseHelper.COLUMN_ID + "=" + id,
+                    rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE,
+                            SongHelper.COLUMN_ID + "=" + id,
                             null);
                 } else {
-                    rowsDeleted = sqlDB.delete(ReachDatabaseHelper.REACH_TABLE,
-                            ReachDatabaseHelper.COLUMN_ID + "=" + id
+                    rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE,
+                            SongHelper.COLUMN_ID + "=" + id
                                     + " and " + selection,
                             selectionArgs);
                 }
@@ -128,11 +128,11 @@ public class ReachDatabaseProvider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
         int uriType = sURIMatcher.match(uri);
-        SQLiteDatabase sqlDB = reachDatabaseHelper.getWritableDatabase();
+        SQLiteDatabase sqlDB = songHelper.getWritableDatabase();
         int rowsUpdated;
         switch (uriType) {
             case DATABASE:
-                rowsUpdated = sqlDB.update(ReachDatabaseHelper.REACH_TABLE,
+                rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
                         values,
                         selection,
                         selectionArgs);
@@ -140,14 +140,14 @@ public class ReachDatabaseProvider extends ContentProvider {
             case DATABASE_ID:
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
-                    rowsUpdated = sqlDB.update(ReachDatabaseHelper.REACH_TABLE,
+                    rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
                             values,
-                            ReachDatabaseHelper.COLUMN_ID + "=" + id,
+                            SongHelper.COLUMN_ID + "=" + id,
                             null);
                 } else {
-                    rowsUpdated = sqlDB.update(ReachDatabaseHelper.REACH_TABLE,
+                    rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
                             values,
-                            ReachDatabaseHelper.COLUMN_ID + "=" + id
+                            SongHelper.COLUMN_ID + "=" + id
                                     + " and "
                                     + selection,
                             selectionArgs);
@@ -165,7 +165,7 @@ public class ReachDatabaseProvider extends ContentProvider {
         if (projection != null) {
 
             HashSet<String> requestedColumns = new HashSet<>(Arrays.asList(projection));
-            HashSet<String> availableColumns = new HashSet<>(Arrays.asList(ReachDatabaseHelper.projection));
+            HashSet<String> availableColumns = new HashSet<>(Arrays.asList(SongHelper.projection));
             // check if all columns which are requested are available
             if (!availableColumns.containsAll(requestedColumns)) {
                 throw new IllegalArgumentException("Unknown columns in projection");

@@ -61,8 +61,8 @@ import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
-import reach.project.music.ReachDatabaseHelper;
-import reach.project.music.ReachDatabaseProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.MySongsHelper;
@@ -243,9 +243,9 @@ public class ProcessManager extends Service implements
     private void pushSongToStack(MusicData musicData) {
 
         if (!musicStack.isEmpty() &&
-                musicStack.peek().id == musicData.getId() &&
+                musicStack.peek().id == musicData.getColumnId() &&
                 musicStack.peek().type == musicData.getType()) return;
-        musicStack.push(new MusicId(musicData.getId(), musicData.getType()));
+        musicStack.push(new MusicId(musicData.getColumnId(), musicData.getType()));
     }
 
     private Optional<MusicData> shufflePrevious() {
@@ -262,10 +262,10 @@ public class ProcessManager extends Service implements
         final Cursor cursor;
         if (lastSong.type == MusicData.Type.DOWNLOADED)
             cursor = getContentResolver().query(
-                    Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + lastSong.id),
+                    Uri.parse(SongProvider.CONTENT_URI + "/" + lastSong.id),
                     StaticData.DOWNLOADED_PARTIAL,
-                    ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_PROCESSED + " > ?",
+                    SongHelper.COLUMN_ID + " = ? and " +
+                            SongHelper.COLUMN_PROCESSED + " > ?",
                     new String[]{lastSong.id + "", "0"}, null);
         else
             cursor = getContentResolver().query(
@@ -283,10 +283,10 @@ public class ProcessManager extends Service implements
         final Cursor reachSongCursor, myLibraryCursor;
         if (type == MusicData.Type.DOWNLOADED) {
             reachSongCursor = getContentResolver().query(
-                    ReachDatabaseProvider.CONTENT_URI,
+                    SongProvider.CONTENT_URI,
                     StaticData.DOWNLOADED_PARTIAL,
-                    ReachDatabaseHelper.COLUMN_ID + " != ? and " +
-                            ReachDatabaseHelper.COLUMN_PROCESSED + " > ?", //all except that id
+                    SongHelper.COLUMN_ID + " != ? and " +
+                            SongHelper.COLUMN_PROCESSED + " > ?", //all except that id
                     new String[]{id + "", "0"}, null);
             myLibraryCursor = getMyLibraryCursor();
         } else {
@@ -329,20 +329,20 @@ public class ProcessManager extends Service implements
 
     private synchronized int getTotalDownloads() {
         return getContentResolver().query(
-                ReachDatabaseProvider.CONTENT_URI,
-                new String[]{ReachDatabaseHelper.COLUMN_ID},
-                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_STATUS + " = ?",
+                SongProvider.CONTENT_URI,
+                new String[]{SongHelper.COLUMN_ID},
+                SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                        SongHelper.COLUMN_STATUS + " = ?",
                 new String[]{"0", ReachDatabase.RELAY + ""}, null).getCount();
     }
 
     //RETURNS TOTAL NUMBER OF PEOPLE WHO ARE UPLOADING
     private synchronized int getTotalUploads() {
         return getContentResolver().query(
-                ReachDatabaseProvider.CONTENT_URI,
-                new String[]{ReachDatabaseHelper.COLUMN_ID},
-                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_STATUS + " = ?",
+                SongProvider.CONTENT_URI,
+                new String[]{SongHelper.COLUMN_ID},
+                SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                        SongHelper.COLUMN_STATUS + " = ?",
                 new String[]{"1", ReachDatabase.RELAY + ""}, null).getCount();
     }
 
@@ -351,12 +351,12 @@ public class ProcessManager extends Service implements
         if (totalDownloads > 0 && totalUploads == 0) {
             //only download
             final Cursor songNameCursor = getContentResolver().query(
-                    ReachDatabaseProvider.CONTENT_URI,
-                    new String[]{ReachDatabaseHelper.COLUMN_DISPLAY_NAME},
-                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_STATUS + " = ?",
+                    SongProvider.CONTENT_URI,
+                    new String[]{SongHelper.COLUMN_DISPLAY_NAME},
+                    SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                            SongHelper.COLUMN_STATUS + " = ?",
                     new String[]{"0", ReachDatabase.RELAY + ""},
-                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                    SongHelper.COLUMN_DATE_ADDED + " DESC");
 
             if (songNameCursor == null)
                 return totalDownloads + " songs are being downloaded";
@@ -375,10 +375,10 @@ public class ProcessManager extends Service implements
         } else if (totalUploads > 0 && totalDownloads == 0) {
             //only upload
             final Cursor receiverIdCursor = getContentResolver().query(
-                    ReachDatabaseProvider.CONTENT_URI,
-                    new String[]{ReachDatabaseHelper.COLUMN_RECEIVER_ID},
-                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_STATUS + " = ?",
+                    SongProvider.CONTENT_URI,
+                    new String[]{SongHelper.COLUMN_RECEIVER_ID},
+                    SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                            SongHelper.COLUMN_STATUS + " = ?",
                     new String[]{"1", ReachDatabase.RELAY + ""}, null);
 
             if (receiverIdCursor == null)
@@ -615,7 +615,7 @@ public class ProcessManager extends Service implements
         simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
         final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
-        complexParams.put(SongMetadata.SONG_ID, musicData.getId() + "");
+        complexParams.put(SongMetadata.SONG_ID, musicData.getColumnId() + "");
         complexParams.put(SongMetadata.META_HASH, musicData.getMetaHash());
         complexParams.put(SongMetadata.ARTIST, musicData.getArtistName());
         complexParams.put(SongMetadata.TITLE, musicData.getDisplayName());
@@ -879,7 +879,7 @@ public class ProcessManager extends Service implements
                 final Optional<MusicData> currentSong = musicHandler.getCurrentSong();
                 final boolean shuffle = SharedPrefUtils.getShuffle(this);
                 if (shuffle && currentSong.isPresent())
-                    pushNextSong(shuffleNext(currentSong.get().getId(), currentSong.get().getType()));
+                    pushNextSong(shuffleNext(currentSong.get().getColumnId(), currentSong.get().getType()));
                 else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
                 break;
             }
@@ -906,7 +906,7 @@ public class ProcessManager extends Service implements
                     if (repeat && currentSong.isPresent())
                         pushNextSong(currentSong);
                     else if (shuffle && currentSong.isPresent())
-                        pushNextSong(shuffleNext(currentSong.get().getId(), currentSong.get().getType()));
+                        pushNextSong(shuffleNext(currentSong.get().getColumnId(), currentSong.get().getType()));
                     else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
                 }
                 break;
@@ -922,7 +922,7 @@ public class ProcessManager extends Service implements
                 if (repeat && currentSong.isPresent())
                     pushNextSong(currentSong);
                 else if (shuffle && currentSong.isPresent())
-                    pushNextSong(shuffleNext(currentSong.get().getId(), currentSong.get().getType()));
+                    pushNextSong(shuffleNext(currentSong.get().getColumnId(), currentSong.get().getType()));
                 else pushNextSong(nextSong(musicHandler.getCurrentSong(), false));
                 break;
             }
@@ -945,12 +945,12 @@ public class ProcessManager extends Service implements
     private Cursor getReachDatabaseCursor() {
 
         return getContentResolver().query(
-                ReachDatabaseProvider.CONTENT_URI,
+                SongProvider.CONTENT_URI,
                 StaticData.DOWNLOADED_PARTIAL,
-                ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                        ReachDatabaseHelper.COLUMN_PROCESSED + " > ?",
+                SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                        SongHelper.COLUMN_PROCESSED + " > ?",
                 new String[]{"0", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                SongHelper.COLUMN_DATE_ADDED + " DESC");
     }
 
     private Cursor getMyLibraryCursor() {
@@ -1073,7 +1073,7 @@ public class ProcessManager extends Service implements
 
             final Cursor reachDatabaseCursor = getReachDatabaseCursor();
             if (reachDatabaseCursor == null ||
-                    !positionCursor(reachDatabaseCursor, currentSong.get().getId(), 0) ||
+                    !positionCursor(reachDatabaseCursor, currentSong.get().getColumnId(), 0) ||
                     !reachDatabaseCursor.moveToPrevious()) {
 
                 final Cursor myLibraryCursor = getMyLibraryCursor();
@@ -1087,7 +1087,7 @@ public class ProcessManager extends Service implements
 
             final Cursor myLibraryCursor = getMyLibraryCursor();
             if (myLibraryCursor == null ||
-                    !positionCursor(myLibraryCursor, currentSong.get().getId(), 1) ||
+                    !positionCursor(myLibraryCursor, currentSong.get().getColumnId(), 1) ||
                     !myLibraryCursor.moveToPrevious()) {
 
                 final Cursor reachDatabaseCursor = getReachDatabaseCursor();
@@ -1112,7 +1112,7 @@ public class ProcessManager extends Service implements
 
             final Cursor reachDatabaseCursor = getReachDatabaseCursor();
             if (reachDatabaseCursor == null ||
-                    !positionCursor(reachDatabaseCursor, currentSong.get().getId(), 0) ||
+                    !positionCursor(reachDatabaseCursor, currentSong.get().getColumnId(), 0) ||
                     !reachDatabaseCursor.moveToNext()) {
                 final Cursor myLibraryCursor = getMyLibraryCursor();
                 if (myLibraryCursor != null)
@@ -1125,7 +1125,7 @@ public class ProcessManager extends Service implements
 
             final Cursor myLibraryCursor = getMyLibraryCursor();
             if (myLibraryCursor == null ||
-                    !positionCursor(myLibraryCursor, currentSong.get().getId(), 1) ||
+                    !positionCursor(myLibraryCursor, currentSong.get().getColumnId(), 1) ||
                     !myLibraryCursor.moveToNext()) {
                 final Cursor reachDatabaseCursor = getReachDatabaseCursor();
                 if (reachDatabaseCursor != null)
