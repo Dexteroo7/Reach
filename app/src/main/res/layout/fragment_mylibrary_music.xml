@@ -10,10 +10,11 @@
         android:layout_height="match_parent" />
 
 
-    <include layout="@layout/empty_view_layout"
+    <include layout="@layout/empty_view_layout_extra_margin"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="180dp"
+        android:layout_marginTop="220dp"
+        android:layout_centerInParent="true"
         />
 
 

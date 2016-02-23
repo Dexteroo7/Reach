@@ -13,22 +13,26 @@
         android:layout_centerVertical="true"
         fresco:placeholderImage="@drawable/default_music_icon" />
 
-    <ImageView
+    <!--<ImageView
         android:id="@+id/downButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/icon_play_circle_pink"
+        android:visibility="gone"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"/>
+        android:layout_centerVertical="true"/>-->
 
     <TextView
         android:id="@+id/songName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_alignTop="@+id/albumArt"
         android:layout_marginTop="8dp"
-        android:layout_toLeftOf="@id/downButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_toRightOf="@id/albumArt"
         android:ellipsize="marquee"
         android:lines="1"
@@ -44,7 +48,10 @@
         android:layout_alignLeft="@id/songName"
         android:layout_below="@id/songName"
         android:layout_marginTop="4dp"
-        android:layout_toLeftOf="@id/downButton"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:ellipsize="marquee"
         android:lines="1"
         android:text="Test"

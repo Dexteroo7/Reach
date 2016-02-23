@@ -89,7 +89,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         emptyViewText.setText(StaticData.NO_SONGS_TEXT);
          emptyView = rootView.findViewById(R.id.empty_imageView);
 
-        //mRecyclerView.setEmptyView();
+        mRecyclerView.setEmptyView(emptyView);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);

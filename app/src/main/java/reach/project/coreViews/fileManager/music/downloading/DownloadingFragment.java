@@ -1,6 +1,7 @@
 package reach.project.coreViews.fileManager.music.downloading;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,9 +10,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import javax.annotation.Nonnull;
@@ -65,6 +68,16 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         getLoaderManager().initLoader(StaticData.DOWNLOADING_LOADER, null, this);
 
         return rootView;
+    }
+
+    private int convertDpToPixels(Context context, float dp){
+        Resources r = context.getResources();
+        int px = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                r.getDisplayMetrics()
+        );
+        return px;
     }
 
     @Override

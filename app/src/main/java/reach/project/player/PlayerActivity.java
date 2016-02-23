@@ -337,7 +337,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                     return;
                 }
                 else{
-                    activity.layoutManager.scrollToPosition(position);
+                    activity.layoutManager.scrollToPositionWithOffset(position,2);
                 }
 
                 //mMusicRecyclerView.scrollToPosition(position);
@@ -648,7 +648,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             if (currentPlaying.getType() == MusicData.DOWNLOADED) {
 
                 values.put(ReachDatabaseHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
-                Log.i("PlayerActivity", "Downloaded song liked, id = " + currentPlaying.getId());
+                Log.i(TAG, " song liked, id = " + currentPlaying.getId() + " song type = " + currentPlaying.getType() );
                 return context.getContentResolver().update(
                         Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentPlaying.getId()),
                         values,
