@@ -383,7 +383,7 @@ public class ScanFragment extends Fragment {
 
                 if (message.what == MetaDataScanner.FINISHED) {
 
-                    next.setText("CLICK TO PROCEED");
+                    next.setText("MANAGE PRIVACY");
                     MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
                         @Override
                         public void work(Context context) {

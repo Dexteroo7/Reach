@@ -112,10 +112,11 @@
                 android:stepSize="0.1" />
             <LinearLayout
                 android:id="@+id/handle"
-                android:gravity="center_vertical"
                 app:layout_marginTopPercent="1.5%"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/rating"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
@@ -128,6 +129,8 @@
                     android:layout_height="25dp" />
                 <TextView
                     android:id="@+id/userHandle"
+                    android:gravity="center"
+                    android:layout_marginTop="2dp"
                     android:text="handle"
                     android:textSize="16sp"
                     android:textColor="@color/reach_color"

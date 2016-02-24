@@ -81,7 +81,7 @@ public class InviteFragment extends Fragment {
 
         final ListView inviteList = (ListView) rootView.findViewById(R.id.listView);
         final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};
+        final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};s
         final String [] packageNames = {"com.whatsapp","com.facebook.orca","com.twitter.android","com.google.android.apps.plus"};
 
         inviteList.setAdapter(new InviteListAdapter(getActivity(),R.layout.invite_list_item,inviteOptions));
@@ -96,8 +96,8 @@ public class InviteFragment extends Fragment {
             final Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_TEXT,
-                    "Hey! Checkout and download my phone Music collection with just a click!" +
-                            ".\nhttp://msg.mn/reach\n--\n"+SharedPrefUtils.getUserName(preferences));
+                    "Oye! Join me on Reach! It'll let us discover each other's music, apps and games. Now checkout my phone's collection from " +
+                            "http://msg.mn/reach\n--\n"+SharedPrefUtils.getUserName(preferences));
             sendIntent.setType("text/plain");
             sendIntent.setPackage(packageNames[position]);
             try{
