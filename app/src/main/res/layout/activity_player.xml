@@ -11,8 +11,7 @@
         android:layout_height="match_parent"
         android:background="@null"
         android:id="@+id/albumArtContainer"
-        android:layout_above="@+id/songNamePlaying"
-        >
+        android:layout_above="@+id/songNamePlaying" >
 
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/albumArt"
@@ -28,9 +27,7 @@
             android:layout_below="@id/albumArt"
             android:background="@drawable/shadow_bottom" />
 
-
     </RelativeLayout>
-
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/toolbarLayout"
@@ -49,15 +46,6 @@
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
     </android.support.design.widget.AppBarLayout>
 
-
-
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/like_selector"
-        />
-
     <ImageView
         android:id="@+id/likeBtn"
         android:layout_width="50dp"
@@ -66,12 +54,11 @@
         android:background="@drawable/circular_background"
         android:elevation="6dp"
         android:padding="10dp"
-        android:src="@drawable/push_tab_selector"
+        android:src="@drawable/like_selector"
         android:visibility="visible"
         android:layout_marginRight="16dp"
         android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_marginBottom="-20dp" />
-
 
     <RelativeLayout android:id="@+id/music_list_container"
         android:layout_width="match_parent"
