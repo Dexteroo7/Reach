@@ -17,5 +17,6 @@
     <string name="title_activity_profile">ProfileActivity</string>
     <string name="title_splash">Discover Stories That Matter</string>
     <string name="music_list">List</string>
+    <string name="facebook_app_id">1506078176373024</string>
 
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="reach.project"
-    android:installLocation="auto" >
+    android:installLocation="auto">
 
     <permission
         android:name="reach.project.permission.C2D_MESSAGE"
@@ -30,17 +30,21 @@
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        ...
 
         <activity
             android:name=".core.ReachActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan" >
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="process_multiple" />
             </intent-filter>
@@ -51,7 +55,7 @@
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme"
-            android:windowSoftInputMode="adjustPan" >
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -72,7 +76,7 @@
             android:label="@string/title_activity_edit_profile"
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -83,7 +87,7 @@
             android:label="@string/title_activity_settings"
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -94,7 +98,7 @@
             android:label="@string/title_activity_terms"
             android:launchMode="singleTask"
             android:parentActivityName=".ancillaryViews.SettingsActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.ancillaryViews.SettingsActivity" />
@@ -105,7 +109,7 @@
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" >
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -116,7 +120,7 @@
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" >
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -126,7 +130,7 @@
             android:label="@string/title_activity_profile"
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -136,7 +140,7 @@
             android:label="@string/title_activity_your_profile"
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -162,7 +166,7 @@
             android:launchMode="singleTask"
             android:parentActivityName=".core.ReachActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" >
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
@@ -170,7 +174,7 @@
 
         <receiver
             android:name=".core.GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND" >
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
@@ -180,7 +184,7 @@
         </receiver>
         <receiver
             android:name=".core.InstallReferrerReceiver"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
@@ -190,7 +194,7 @@
             android:exported="false" />
         <receiver
             android:name=".core.UpdateReceiver"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -200,7 +204,7 @@
         </receiver>
         <receiver
             android:name=".apps.InterceptAppInstall"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
 
@@ -252,7 +256,7 @@
             android:launchMode="singleInstance"
             android:parentActivityName=".core.ReachActivity"
             android:process=":remote"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />

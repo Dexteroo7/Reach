@@ -7,6 +7,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.multidex.MultiDexApplication;
 
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.facebook.common.memory.MemoryTrimType;
 import com.facebook.common.memory.MemoryTrimmable;
 import com.facebook.common.memory.MemoryTrimmableRegistry;
@@ -99,6 +101,11 @@ public class ReachApplication extends MultiDexApplication implements MemoryTrimm
         tracker.send(SCREEN_VIEW_BUILDER.build());
     }
 
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+    }
+
     public synchronized void track(@NonNull Optional<String> category,
                                    @NonNull Optional<String> action,
                                    @NonNull Optional<String> label,
@@ -161,6 +168,8 @@ public class ReachApplication extends MultiDexApplication implements MemoryTrimm
             configBuilder.setDownsampleEnabled(true);
 
         Fresco.initialize(this, configBuilder.build());
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
     }
 
     @Override
@@ -169,6 +178,8 @@ public class ReachApplication extends MultiDexApplication implements MemoryTrimm
         super.onLowMemory();
         Fresco.getImagePipeline().clearMemoryCaches();
     }
+
+
 
     @Override
     public void onTrimMemory(int level) {

@@ -53,18 +53,25 @@
 
 
     <ImageView
-        android:id="@+id/likeBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/like_selector"
+        />
+
+    <ImageView
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_alignParentRight="true"
         android:background="@drawable/circular_background"
         android:elevation="6dp"
         android:padding="10dp"
-        android:src="@drawable/like_selector"
+        android:src="@drawable/push_tab_selector"
         android:visibility="visible"
         android:layout_marginRight="16dp"
         android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_marginBottom="-20dp" />
+
+    <!--android:id="@+id/likeBtn"-->
 
     <RelativeLayout android:id="@+id/music_list_container"
         android:layout_width="match_parent"
