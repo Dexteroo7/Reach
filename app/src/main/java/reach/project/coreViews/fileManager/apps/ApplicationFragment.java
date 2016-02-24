@@ -57,7 +57,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
 

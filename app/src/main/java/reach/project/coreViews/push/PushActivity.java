@@ -14,6 +14,11 @@ import reach.project.coreViews.push.friends.ContactChooserFragment;
 import reach.project.coreViews.push.friends.MessageWriterFragment;
 import reach.project.utils.StringCompress;
 
+
+
+/**
+ * Called after the user selects songs in the push.music.MyLibraryFragment
+ */
 public class PushActivity extends AppCompatActivity implements ContactChooserInterface {
 
     public static final String PUSH_CONTAINER = "PUSH_CONTAINER";
@@ -62,6 +67,7 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
         switchToContactChooser();
     }
 
+    //Opens a fragment to select which friends the user wants to share the song with
     @Override
     public void switchToContactChooser() {
 
@@ -72,6 +78,7 @@ public class PushActivity extends AppCompatActivity implements ContactChooserInt
                     .replace(R.id.container, ContactChooserFragment.getInstance(), "contact_chooser").commit();
     }
 
+    //Opens message writing fragment. Called after you have chosen contacts to push
     @Override
     public void switchToMessageWriter(long[] serverIds) {
 

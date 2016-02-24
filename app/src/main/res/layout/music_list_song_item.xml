@@ -3,36 +3,42 @@
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/border_shadow1"
-    android:padding="15dp">
+    android:background="@drawable/music_list_background_selector"
+    android:padding="8dp">
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_centerVertical="true"
         fresco:placeholderImage="@drawable/default_music_icon" />
 
-    <ImageView
+    <!--<ImageView
         android:id="@+id/downButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/icon_play_circle_pink"
+        android:visibility="gone"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"/>
+        android:layout_centerVertical="true"/>-->
 
     <TextView
         android:id="@+id/songName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_toLeftOf="@id/downButton"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignTop="@+id/albumArt"
+        android:layout_marginTop="8dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_toRightOf="@id/albumArt"
         android:ellipsize="marquee"
         android:lines="1"
         android:text="Test"
         android:background="@null"
-        android:textColor="#f33b5b"
+        android:textColor="#BBFFFFFF"
         android:textSize="16sp" />
 
     <TextView
@@ -41,11 +47,14 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/songName"
         android:layout_below="@id/songName"
-        android:layout_marginTop="10dp"
-        android:layout_toLeftOf="@id/downButton"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:ellipsize="marquee"
         android:lines="1"
         android:text="Test"
         android:background="@null"
-        android:textColor="@color/reach_grey" />
+        android:textColor="#66FFFFFF" />
 </RelativeLayout>

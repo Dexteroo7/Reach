@@ -81,7 +81,7 @@ public class InviteFragment extends Fragment {
 
         final ListView inviteList = (ListView) rootView.findViewById(R.id.listView);
         final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};s
+        final String[] inviteOptions = {"Whatsapp","Facebook Messenger","Twitter","Google+"};
         final String [] packageNames = {"com.whatsapp","com.facebook.orca","com.twitter.android","com.google.android.apps.plus"};
 
         inviteList.setAdapter(new InviteListAdapter(getActivity(),R.layout.invite_list_item,inviteOptions));
