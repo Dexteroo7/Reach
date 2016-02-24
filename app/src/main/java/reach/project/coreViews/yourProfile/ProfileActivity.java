@@ -139,7 +139,7 @@ public class ProfileActivity extends AppCompatActivity {
                     startActivity(new Intent(this, PlayerActivity.class));
                     return true;
                 case R.id.notif_button:
-                    startActivity(new Intent(this, NotificationActivity.class));
+                    NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;
                 case R.id.settings_button:
                     startActivity(new Intent(this, SettingsActivity.class));

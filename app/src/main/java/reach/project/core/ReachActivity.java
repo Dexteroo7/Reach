@@ -183,9 +183,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                final Intent notificationIntent = new Intent(this, NotificationActivity.class);
-                notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(notificationIntent);
+                NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
             case R.id.settings_button:
                 final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);

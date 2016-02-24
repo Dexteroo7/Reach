@@ -58,6 +58,8 @@ public class GcmIntentService extends IntentService {
     @Override
     protected void onHandleIntent(final Intent intent) {
 
+        if (intent == null)
+            return;
         final Bundle extras = intent.getExtras();
         final String messageType = GoogleCloudMessaging.getInstance(this).getMessageType(intent);
 
@@ -87,7 +89,7 @@ public class GcmIntentService extends IntentService {
                 final PendingIntent viewPendingIntent = PendingIntent.getActivity(
                         this,
                         NOTIFICATION_ID_FRIEND,
-                        NotificationActivity.getIntent(this),
+                        NotificationActivity.getIntent(this, NotificationActivity.OPEN_REQUESTS),
                         PendingIntent.FLAG_CANCEL_CURRENT);
 
                 final NotificationCompat.Builder notificationBuilder =
@@ -119,7 +121,7 @@ public class GcmIntentService extends IntentService {
                 final PendingIntent viewPendingIntent = PendingIntent.getActivity(
                         this,
                         NOTIFICATION_ID_FRIEND,
-                        NotificationActivity.getIntent(this),
+                        NotificationActivity.getIntent(this, NotificationActivity.OPEN_NOTIFICATIONS),
                         PendingIntent.FLAG_CANCEL_CURRENT);
 
                 /*MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {
@@ -169,7 +171,7 @@ public class GcmIntentService extends IntentService {
                 final PendingIntent viewPendingIntent = PendingIntent.getActivity(
                         this,
                         NOTIFICATION_ID_SYNC,
-                        NotificationActivity.getIntent(this),
+                        NotificationActivity.getIntent(this, NotificationActivity.OPEN_NOTIFICATIONS),
                         PendingIntent.FLAG_CANCEL_CURRENT);
 
                 /*MiscUtils.useFragment(NotificationFragment.getReference(), fragment -> {

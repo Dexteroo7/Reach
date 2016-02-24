@@ -10,23 +10,30 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.view.MenuItem;
 
 import reach.project.R;
 import reach.project.utils.MiscUtils;
 
 public class NotificationActivity extends AppCompatActivity {
 
-    public static void openActivity(Context context) {
+    public static final String OPEN_REQUESTS = "OPEN_REQUESTS";
+    public static final String OPEN_NOTIFICATIONS = "OPEN_NOTIFICATIONS";
+
+    public static void openActivity(Context context, String tab) {
 
         final Intent intent = new Intent(context, NotificationActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.putExtra("tab", tab);
         context.startActivity(intent);
     }
 
-    public static Intent getIntent(Context context) {
+    public static Intent getIntent(Context context, String tab) {
 
         final Intent intent = new Intent(context, NotificationActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.putExtra("tab", tab);
         return intent;
     }
 
@@ -42,7 +49,7 @@ public class NotificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_invite);
 
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
-        mToolbar.setTitle("Notifications");
+        mToolbar.setTitle("Notification Center");
         mToolbar.setNavigationOnClickListener(v -> onBackPressed());
         mToolbar.inflateMenu(R.menu.notification_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
@@ -57,7 +64,31 @@ public class NotificationActivity extends AppCompatActivity {
 
         final ViewPager viewPager = (ViewPager) findViewById(R.id.invitePager);
         viewPager.setAdapter(pagerAdapter);
-        ((TabLayout) findViewById(R.id.inviteTabLayout)).setupWithViewPager(viewPager);
+        final TabLayout tabLayout = (TabLayout) findViewById(R.id.inviteTabLayout);
+        tabLayout.setupWithViewPager(viewPager);
+        final MenuItem clearIcon = mToolbar.getMenu().findItem(R.id.clear_button);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout) {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                clearIcon.setVisible(position == 0);
+            }
+        });
+
+        final Intent intent = getIntent();
+        if (intent == null)
+            return;
+        final String tab = intent.getStringExtra("tab");
+        if (TextUtils.isEmpty(tab))
+            return;
+        switch (tab) {
+            case OPEN_NOTIFICATIONS:
+                viewPager.setCurrentItem(0);
+                break;
+            case OPEN_REQUESTS:
+                viewPager.setCurrentItem(1);
+                break;
+        }
     }
 
     private final FragmentPagerAdapter pagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -65,9 +96,9 @@ public class NotificationActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    return FriendRequestFragment.newInstance();
-                case 1:
                     return NotificationFragment.newInstance();
+                case 1:
+                    return FriendRequestFragment.newInstance();
                 default:
                     throw new IllegalStateException("Only size of 2 expected");
             }
@@ -82,9 +113,9 @@ public class NotificationActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "Requests";
-                case 1:
                     return "Notifications";
+                case 1:
+                    return "Requests";
                 default:
                     throw new IllegalStateException("Only size of 2 expected");
             }
