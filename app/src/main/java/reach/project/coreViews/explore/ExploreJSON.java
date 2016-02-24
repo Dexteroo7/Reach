@@ -14,6 +14,7 @@ enum ExploreJSON implements EnumHelper<String> {
     TIME_STAMP("timeStamp"),
     TYPE("type"),
     PACKAGE_NAME("packageName"),
+    DONE("done"),
 
     //meta info (used when acted upon)
     META_INFO("metaInfo"),

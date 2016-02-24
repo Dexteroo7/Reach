@@ -26,7 +26,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -35,11 +34,11 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.core.StaticData;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -386,34 +385,40 @@ public enum FireOnce implements Closeable {
 
         private String generateRequest(ReachDatabase reachDatabase) {
 
-            return "CONNECT" + new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "REQ",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
+            final Connection connection = new Connection.Builder()
+                    .setSongId(reachDatabase.getSongId())
+                    .setMetaHash(reachDatabase.getMetaHash())
+                    .setSenderId(reachDatabase.getSenderId())
+                    .setReceiverId(reachDatabase.getReceiverId())
+                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setLogicalClock(reachDatabase.getLogicalClock())
+                    .setOffset(reachDatabase.getProcessed())
+                    .setLength(reachDatabase.getLength())
+                    .setUrl("")
+                    .setSenderIp("")
+                    .setMessageType("REQ").build();
+
+            return "CONNECT" + new Gson().toJson(connection);
         }
 
         private String fakeResponse(ReachDatabase reachDatabase) {
 
-            return new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "RELAY",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
+            final Connection connection = new Connection.Builder()
+                    .setSongId(reachDatabase.getSongId())
+                    .setMetaHash(reachDatabase.getMetaHash())
+                    .setSenderId(reachDatabase.getSenderId())
+                    .setReceiverId(reachDatabase.getReceiverId())
+                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setLogicalClock(reachDatabase.getLogicalClock())
+                    .setOffset(reachDatabase.getProcessed())
+                    .setLength(reachDatabase.getLength())
+                    .setUrl("")
+                    .setSenderIp("")
+                    .setMessageType("RELAY").build();
+
+            return new Gson().toJson(connection);
         }
 
         private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {

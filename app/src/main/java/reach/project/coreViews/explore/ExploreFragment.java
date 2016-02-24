@@ -266,6 +266,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             return Collections.emptyList();
 
         final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
+        if (receivedData.size() == 0) {
+
+            ExploreBuffer.DONE_FOR_TODAY.set(true);
+            return Collections.emptyList();
+        }
+
         final ImagePipeline imagePipeline = Fresco.getImagePipeline();
 
         final List<JsonObject> containers = new ArrayList<>();
@@ -418,6 +424,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         Log.d("Ayush", "ExploreFragment - onCreate");
     }
@@ -442,7 +449,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public boolean isDoneForToday() {
-        return buffer == null;
+        return buffer == null || ExploreBuffer.DONE_FOR_TODAY.get();
     }
 
     @Override

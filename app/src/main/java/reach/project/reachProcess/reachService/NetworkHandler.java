@@ -456,6 +456,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         reachDatabase.setSenderId(connection.getSenderId());
         reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
 
+        reachDatabase.setMetaHash(connection.getMetaHash());
         reachDatabase.setLength(connection.getLength());
         reachDatabase.setProcessed(connection.getOffset());
         reachDatabase.setLastActive(System.currentTimeMillis());
@@ -471,13 +472,9 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
         Log.i("Downloader", "Upload op inserted " + reachDatabase.getId());
 
-        final Optional<Object[]> setUpFile = LocalUtils.prepareUploadFile(
-                handlerInterface,
-                connection.getSongId(),
-                connection.getSenderId(),
-                connection.getLength());
+        final boolean setUpFile = LocalUtils.prepareUploadFile(handlerInterface, reachDatabase);
 
-        if (!setUpFile.isPresent()) {
+        if (!setUpFile) {
 
             connection.setMessageType("404");
             MiscUtils.sendGCM("CONNECT" + new Gson().toJson(connection, Connection.class),
@@ -497,11 +494,10 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         reachDatabase.setStatus(nameAndStatus.second);
 
         final ContentValues values = new ContentValues();
-        reachDatabase.setDisplayName((String) setUpFile.get()[0]);
-        reachDatabase.setActualName((String) setUpFile.get()[1]);
-        values.put(SongHelper.COLUMN_DISPLAY_NAME, (String) setUpFile.get()[0]);
-        values.put(SongHelper.COLUMN_ACTUAL_NAME, (String) setUpFile.get()[1]);
-        values.put(SongHelper.COLUMN_ALBUM_ART_DATA, (byte[]) setUpFile.get()[2]);
+        values.put(SongHelper.COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
+        values.put(SongHelper.COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
+        values.put(SongHelper.COLUMN_META_HASH, reachDatabase.getMetaHash());
+        values.put(SongHelper.COLUMN_ALBUM_ART_DATA, reachDatabase.getAlbumArtData());
         values.put(SongHelper.COLUMN_USER_NAME, nameAndStatus.first);
         values.put(SongHelper.COLUMN_ONLINE_STATUS, nameAndStatus.second.getValue());
 
@@ -1170,14 +1166,10 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
          * Prepares the fileChannel needed for upload
          *
          * @param handlerInterface the handlerInterface
-         * @param songId           the id of the song requested
-         * @param myId             my own id
          * @return display name and actual name of the song
          */
-        public static Optional<Object[]> prepareUploadFile(NetworkHandlerInterface handlerInterface,
-                                                           long songId,
-                                                           long myId,
-                                                           long length) {
+        public static boolean prepareUploadFile(NetworkHandlerInterface handlerInterface,
+                                                ReachDatabase reachDatabase) {
 
             /**
              * We do not know which DB the request should look into. Problem ?
@@ -1193,13 +1185,14 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                             MySongsHelper.COLUMN_ACTUAL_NAME, //2
                             MySongsHelper.COLUMN_PATH, //3
                             MySongsHelper.COLUMN_VISIBILITY, //4
-                            MySongsHelper.COLUMN_ALBUM_ART_DATA}, //5
+                            MySongsHelper.COLUMN_ALBUM_ART_DATA, //5
+                            MySongsHelper.COLUMN_DURATION}, //6
 
                     MySongsHelper.COLUMN_SONG_ID + " = ? and " +
                             MySongsHelper.COLUMN_SIZE + " = ?",
-                    new String[]{songId + "", length + ""}, null);
+                    new String[]{reachDatabase.getSongId() + "", reachDatabase.getLength() + ""}, null);
 
-            Log.i("Downloader", myId + " " + songId + " " + length);
+//            Log.i("Downloader", myId + " " + songId + " " + length);
 
             if (cursor == null || !cursor.moveToFirst()) {
 
@@ -1215,11 +1208,12 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                                 SongHelper.COLUMN_ACTUAL_NAME, //2
                                 SongHelper.COLUMN_PATH, //3
                                 SongHelper.COLUMN_VISIBILITY, //4
-                                SongHelper.COLUMN_ALBUM_ART_DATA}, //5
+                                SongHelper.COLUMN_ALBUM_ART_DATA, //5
+                                SongHelper.COLUMN_DURATION}, //6
 
                         SongHelper.COLUMN_UNIQUE_ID + " = ? and " +
                                 SongHelper.COLUMN_SIZE + " = ?",
-                        new String[]{songId + "", length + ""}, null);
+                        new String[]{reachDatabase.getSongId() + "", reachDatabase.getLength() + ""}, null);
             }
 
             if (cursor == null || !cursor.moveToFirst()) {
@@ -1237,36 +1231,44 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                                 SongHelper.COLUMN_ACTUAL_NAME, //2
                                 SongHelper.COLUMN_PATH, //3
                                 SongHelper.COLUMN_VISIBILITY, //4
-                                SongHelper.COLUMN_ALBUM_ART_DATA}, //5
+                                SongHelper.COLUMN_ALBUM_ART_DATA, //5
+                                SongHelper.COLUMN_DURATION}, //6
+
 
                         SongHelper.COLUMN_SONG_ID + " = ? and " +
                                 SongHelper.COLUMN_SIZE + " = ?",
-                        new String[]{songId + "", length + ""}, null);
+                        new String[]{reachDatabase.getSongId() + "", reachDatabase.getLength() + ""}, null);
             }
 
-            if (cursor == null || !cursor.moveToFirst() || cursor.getShort(4) == 0) {
-
-                //TODO tell invisible
-                Log.i("Downloader", "Requested song path invalid");
-                if (cursor == null)
-                    Log.i("Downloader", "Song not found cursor null");
-                else if (!cursor.moveToFirst())
-                    Log.i("Downloader", "Cursor could not be moved");
-                else
-                    Log.i("Downloader", cursor.getShort(4) + " visibility");
-                return Optional.absent();
+            //TODO tell invisible
+            Log.i("Downloader", "Requested song path invalid");
+            if (cursor == null) {
+                Log.i("Downloader", "Song not found cursor null");
+                return false;
+            }
+            if (!cursor.moveToFirst()) {
+                Log.i("Downloader", "Cursor could not be moved");
+                return false;
+            } else if (cursor.getShort(4) == 0) {
+                Log.i("Downloader", cursor.getShort(4) + " visibility");
+                return false;
             }
 
-            final Object[] toSend = new Object[]{
-                    cursor.getString(1),  //display name
-                    cursor.getString(2), //actual name
-                    cursor.getBlob(5)}; //albumArtData
+            reachDatabase.setDisplayName(cursor.getString(1));
+            reachDatabase.setActualName(cursor.getString(2));
+            reachDatabase.setAlbumArtData(cursor.getBlob(5));
+            reachDatabase.setDuration(cursor.getLong(6));
+
             final String filePath = cursor.getString(3);
             cursor.close();
             if (TextUtils.isEmpty(filePath))
-                return Optional.absent();
+                return false;
+
             //song found, continuing
-            final long fileChannelIndex = getFileChannelIndex((String) toSend[1], (String) toSend[0], songId);
+            final long fileChannelIndex = getFileChannelIndex(
+                    reachDatabase.getActualName(),
+                    reachDatabase.getDisplayName(),
+                    reachDatabase.getSongId());
             final Channel channel = openChannels.get(fileChannelIndex, null);
             if (channel == null || !channel.isOpen()) { //not present or not open
 
@@ -1275,17 +1277,18 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     file = new RandomAccessFile(filePath, "r");
                     Log.i("Downloader", "Requested song file invalid");
                     if (file.length() == 0)
-                        return Optional.absent();
+                        return false;
                 } catch (IOException e) {
                     e.printStackTrace();
-                    return Optional.absent();
+                    return false;
                 }
+
                 openChannels.put(fileChannelIndex, file.getChannel());
-                Log.i("Downloader", "Index for " + toSend[0] + " = " + fileChannelIndex);
+                Log.i("Downloader", "Index for " + reachDatabase.getDisplayName() + " = " + fileChannelIndex);
             }
             //else channel already loaded
 
-            return Optional.of(toSend);
+            return true;
         }
 
         /**

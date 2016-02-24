@@ -20,6 +20,7 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.utils.MiscUtils;
 
@@ -29,6 +30,7 @@ import reach.project.utils.MiscUtils;
 class ExploreBuffer<T> implements Closeable {
 
     private static final String EXPLORE_CACHE_FILE = "EXPLORE_CACHE_FILE";
+    public static final AtomicBoolean DONE_FOR_TODAY = new AtomicBoolean(false);
 
     @Nullable
     private static WeakReference<ExploreBuffer> bufferWeakReference;
@@ -239,7 +241,7 @@ class ExploreBuffer<T> implements Closeable {
 
             Log.i("Ayush", "Fetching next batch of stories");
 
-            if (params == null || params.length == 0)
+            if (params == null || params.length == 0 || DONE_FOR_TODAY.get())
                 return Collections.emptyList();
 
             //cast to exact type
@@ -252,7 +254,7 @@ class ExploreBuffer<T> implements Closeable {
 
             super.onPostExecute(stories);
             if (stories == null || stories.isEmpty()) {
-                Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
+//                Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
                 return;
             }
 

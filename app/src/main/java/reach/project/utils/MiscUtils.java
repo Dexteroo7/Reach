@@ -72,7 +72,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -86,9 +85,9 @@ import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
+import reach.project.music.Song;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.music.Song;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -100,11 +99,11 @@ import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.ancillaryClasses.DoWork;
 import reach.project.utils.ancillaryClasses.UseActivity;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
-import reach.project.utils.ancillaryClasses.UseContextWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
+import reach.project.utils.ancillaryClasses.UseContextWithResult;
+import reach.project.utils.ancillaryClasses.UseFragment;
 import reach.project.utils.ancillaryClasses.UseFragmentAndActivity;
 import reach.project.utils.ancillaryClasses.UseFragmentWithResult;
-import reach.project.utils.ancillaryClasses.UseFragment;
 import reach.project.utils.ancillaryClasses.UseReference;
 import reach.project.utils.ancillaryClasses.UseReferenceWithResult;
 import reach.project.utils.viewHelpers.RetryHook;
@@ -1092,34 +1091,40 @@ public enum MiscUtils {
 
         private String generateRequest(ReachDatabase reachDatabase) {
 
-            return "CONNECT" + new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "REQ",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
+            final Connection connection = new Connection.Builder()
+                    .setSongId(reachDatabase.getSongId())
+                    .setMetaHash(reachDatabase.getMetaHash())
+                    .setSenderId(reachDatabase.getSenderId())
+                    .setReceiverId(reachDatabase.getReceiverId())
+                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setLogicalClock(reachDatabase.getLogicalClock())
+                    .setOffset(reachDatabase.getProcessed())
+                    .setLength(reachDatabase.getLength())
+                    .setUrl("")
+                    .setSenderIp("")
+                    .setMessageType("REQ").build();
+
+            return "CONNECT" + new Gson().toJson(connection);
         }
 
         private String fakeResponse(ReachDatabase reachDatabase) {
 
-            return new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "RELAY",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
+            final Connection connection = new Connection.Builder()
+                    .setSongId(reachDatabase.getSongId())
+                    .setMetaHash(reachDatabase.getMetaHash())
+                    .setSenderId(reachDatabase.getSenderId())
+                    .setReceiverId(reachDatabase.getReceiverId())
+                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setLogicalClock(reachDatabase.getLogicalClock())
+                    .setOffset(reachDatabase.getProcessed())
+                    .setLength(reachDatabase.getLength())
+                    .setUrl("")
+                    .setSenderIp("")
+                    .setMessageType("RELAY").build();
+
+            return new Gson().toJson(connection);
         }
 
         @Override
