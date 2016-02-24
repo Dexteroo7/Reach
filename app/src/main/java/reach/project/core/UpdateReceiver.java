@@ -19,6 +19,7 @@ import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.utils.MiscUtils;
 
+// For updating db on app update
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override

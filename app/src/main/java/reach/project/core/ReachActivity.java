@@ -104,6 +104,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     public static final String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
     public static final String OPEN_PUSH = "OPEN_PUSH";
+    public static final String OPEN_EXPLORE = "OPEN_EXPLORE";
     public static final String OPEN_MANAGER_APPS = "OPEN_MANAGER_APPS";
     public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     public static final String OPEN_MY_PROFILE_APPS_FIRST = "OPEN_MY_PROFILE_APPS_FIRST";
@@ -183,9 +184,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                final Intent notificationIntent = new Intent(this, NotificationActivity.class);
-                notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(notificationIntent);
+                NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
             case R.id.settings_button:
                 final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
@@ -575,6 +574,33 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 return;
                             mTabHost.setCurrentTab(4);
                             MyProfileFragment.setItem(1);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_EXPLORE:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(2);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_MY_FRIENDS:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(0);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_PUSH:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(1);
                         }, 1000L);
                     }
                     break;

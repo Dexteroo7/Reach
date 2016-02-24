@@ -31,6 +31,7 @@
         android:ellipsize="marquee"
         android:lines="1"
         android:text="Test"
+        android:background="@null"
         android:textColor="#f33b5b"
         android:textSize="16sp" />
 
@@ -45,5 +46,6 @@
         android:ellipsize="marquee"
         android:lines="1"
         android:text="Test"
+        android:background="@null"
         android:textColor="@color/reach_grey" />
 </RelativeLayout>

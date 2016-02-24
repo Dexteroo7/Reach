@@ -57,6 +57,8 @@ final class LockedFriendsAdapter extends ReachCursorAdapter<FriendsViewHolder> i
         }
     }
 
+
+
     @Override
     public long getItemId(@Nonnull Cursor cursor) {
 

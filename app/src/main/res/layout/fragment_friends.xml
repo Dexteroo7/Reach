@@ -22,7 +22,7 @@
         <RelativeLayout
             android:id="@+id/inviteContainer"
             app:layout_scrollFlags="scroll|enterAlways"
-            android:background="#f5f5f5"
+            android:background="@color/reach_grey_bg1"
             android:layout_width="match_parent"
             android:layout_height="60dp">
             <View

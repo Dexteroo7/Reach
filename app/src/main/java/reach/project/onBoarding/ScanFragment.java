@@ -150,6 +150,8 @@ public class ScanFragment extends Fragment {
             profilePic.setController(draweeController);
         }
 
+        final ProgressBar indeterminateProgress = (ProgressBar)rootView.findViewById(R.id.indeterminateProgress);
+        indeterminateProgress.getIndeterminateDrawable().setColorFilter(ContextCompat.getColor(getActivity(),R.color.reach_color),android.graphics.PorterDuff.Mode.SRC_IN);
         new SaveUserData()
                 .executeOnExecutor(accountUploader,
 
@@ -163,7 +165,8 @@ public class ScanFragment extends Fragment {
                         rootView.findViewById(R.id.scan2),
                         profilePicDecodeStream,
                         profilePicOptionsStream,
-                        userName, phoneNumber, SharedPrefUtils.getEmailId(sharedPreferences));
+                        userName, phoneNumber, SharedPrefUtils.getEmailId(sharedPreferences),
+                        indeterminateProgress);
 
         return rootView;
     }
@@ -177,6 +180,7 @@ public class ScanFragment extends Fragment {
         ProgressBar progress;
         String deviceId, emailId;
         LinearLayout scan1, scan2;
+        ProgressBar indeterminateProgress;
 
         @Override
         protected ReachUser doInBackground(Object... objects) {
@@ -197,6 +201,7 @@ public class ScanFragment extends Fragment {
             userName = (String) objects[10];
             phoneNumber = (String) objects[11];
             emailId = (String) objects[12];
+            indeterminateProgress = (ProgressBar) objects[13];
 
             final String gcmId;
             final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
@@ -269,7 +274,6 @@ public class ScanFragment extends Fragment {
         protected void onPostExecute(final ReachUser user) {
 
             super.onPostExecute(user);
-
             //set serverId here
             MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, ScanFragment>() {
 
@@ -359,6 +363,7 @@ public class ScanFragment extends Fragment {
                     intent.putExtra("first", true);
                     activity.startService(intent);
 
+
                     FireOnce.contactSync(
                             new WeakReference<>(activity.getApplicationContext()),
                             user.getId(),
@@ -383,7 +388,7 @@ public class ScanFragment extends Fragment {
 
                 if (message.what == MetaDataScanner.FINISHED) {
 
-                    next.setText("CLICK TO PROCEED");
+                    next.setText("MANAGE PRIVACY");
                     MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
                         @Override
                         public void work(Context context) {
@@ -392,6 +397,8 @@ public class ScanFragment extends Fragment {
                     });
                     next.setOnClickListener(PROCEED);
                     next.setVisibility(View.VISIBLE);
+                    indeterminateProgress.setVisibility(View.GONE);
+
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
                     totalMusic = message.arg1;
@@ -429,6 +436,8 @@ public class ScanFragment extends Fragment {
                     scan1.setVisibility(View.INVISIBLE);
                     scan2.setVisibility(View.VISIBLE);
                     progress.setProgress(100);
+                    //TODO: Progress
+                    indeterminateProgress.setVisibility(View.VISIBLE);
 
                 } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
 
