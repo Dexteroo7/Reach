@@ -1,8 +1,12 @@
 package reach.project.music;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.google.common.hash.Hashing;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 import reach.project.utils.MiscUtils;
 
@@ -11,61 +15,130 @@ import reach.project.utils.MiscUtils;
  */
 public final class ReachDatabase {
 
-    private long id = -1; //0
-    private long songId = 0; //1
-    private long receiverId = 0; //2
-    private long senderId = 0; //3
+    public enum OperationKind {
+        DOWNLOAD_OP(0),
+        UPLOAD_OP(1);
+
+        private final int value;
+
+        OperationKind(int value) {
+            this.value = value;
+        }
+
+        public static OperationKind getFromValue(short value) {
+
+            switch (value) {
+
+                case 0:
+                    return DOWNLOAD_OP;
+                case 1:
+                    return UPLOAD_OP;
+                default:
+                    throw new IllegalArgumentException("Operation king can not have this value " + value);
+            }
+        }
+
+        @NonNull
+        public Integer getValue() {
+            return value;
+        }
+
+        public String getString() {
+            return value + "";
+        }
+    }
+
+    public enum Status {
+
+        NOT_WORKING(0),
+        RELAY(1),
+        WORKING(2),
+        GCM_FAILED(3),
+        FILE_NOT_FOUND(4),
+        FILE_NOT_CREATED(5),
+        FINISHED(6),
+        PAUSED_BY_USER(7),
+        PAUSED_BY_HOST(8),
+        HOST_GONE(9);
+
+        private final int value;
+
+        Status(int value) {
+            this.value = value;
+        }
+
+        public static Status getFromValue(short value) {
+
+            switch (value) {
+
+                case 0:
+                    return NOT_WORKING;
+                case 1:
+                    return RELAY;
+                case 2:
+                    return WORKING;
+                case 3:
+                    return GCM_FAILED;
+                case 4:
+                    return FILE_NOT_FOUND;
+                case 5:
+                    return FILE_NOT_CREATED;
+                case 6:
+                    return FINISHED;
+                case 7:
+                    return PAUSED_BY_USER;
+                case 8:
+                    return PAUSED_BY_HOST;
+                case 9:
+                    return HOST_GONE;
+                default:
+                    throw new IllegalArgumentException("Operation king can not have this value " + value);
+            }
+        }
+
+        @NonNull
+        public Integer getValue() {
+            return value;
+        }
+
+        public String getString() {
+            return value + "";
+        }
+    }
+
+    private long id = -1;
+    private long songId = 0;
     private long uniqueId = 0;
-
-    private short operationKind = 0;//4 (0 = download, 1 = upload)
-
-    private String path = "hello_world"; //5
-    private String senderName = "hello_world"; //6
-    private String onlineStatus = "hello_world"; //7
-    private String artistName = "hello_world"; //8
-
-    private boolean isLiked = false; //9
-
-    private String displayName = "hello_world"; //10
-    private String actualName = "hello_world"; //11
     private String metaHash;
 
-    private long length = 0; //12
-    private long processed = 0; //13
-    private long added = 0; //14
-    private long duration = 0; //15
+    private String displayName = "hello_world";
+    private String actualName = "hello_world";
+    private String artistName = "hello_world";
+    private String albumName = "hello_world";
 
-    private short logicalClock = 0; //16
-    private short status = 0; //17
+    private long duration = 0;
+    private long length = 0;
 
-    private String albumName = "hello_world"; //18
-    private String genre = "hello_world"; //19
-    private byte[] albumArtData; //20
-    private short visibility = 0; //21
+    private String genre = "hello_world";
+    private byte[] albumArtData;
+    private String path = "hello_world";
+    private DateTime dateAdded = DateTime.now();
 
-    private long lastActive = 0; //not in sql
-    private long reference = 0; //not in sql
+    private boolean visibility = false;
+    private boolean isLiked = false;
 
-    //types of status
-    public static final short NOT_WORKING = 0;
+    private long receiverId = 0;
+    private long senderId = 0;
+    private String userName = "hello_world";
+    private String onlineStatus = "hello_world";
+    private OperationKind operationKind = OperationKind.DOWNLOAD_OP;
+    private int logicalClock = 0;
+    private long processed = 0;
+    private Status status = Status.NOT_WORKING;
 
-    public static final short RELAY = 1;
-    public static final short WORKING = 2;
-
-    public static final short GCM_FAILED = 3;        //only applicable for download
-    public static final short FILE_NOT_FOUND = 4;    //404 from host
-    public static final short FILE_NOT_CREATED = 5;  //weird error
-
-    public static final short FINISHED = 6;
-    public static final short PAUSED_BY_USER = 7;    //paused by client
-//    public static final short PAUSED_BY_HOST = 8;    //paused by host
-//    public static final short HOST_GONE = 9;    //paused by host
-
-    public static void isPresent(short status) throws IllegalArgumentException {
-        if (status < 0 || status > 7)
-            throw new IllegalArgumentException("Wrong status !");
-        //else all good
-    }
+    //not in sql
+    private long lastActive = 0;
+    private long reference = 0;
 
     public String getArtistName() {
         return artistName;
@@ -84,12 +157,12 @@ public final class ReachDatabase {
         this.onlineStatus = onlineStatus;
     }
 
-    public String getSenderName() {
-        return senderName;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setSenderName(String senderName) {
-        this.senderName = senderName;
+    public void setUserName(String senderName) {
+        this.userName = senderName;
     }
 
     public long getId() {
@@ -100,11 +173,11 @@ public final class ReachDatabase {
         this.id = id;
     }
 
-    public short getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(short status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
@@ -156,19 +229,19 @@ public final class ReachDatabase {
         this.length = length;
     }
 
-    public long getAdded() {
-        return added;
+    public DateTime getDateAdded() {
+        return dateAdded;
     }
 
-    public void setAdded(long added) {
-        this.added = added;
+    public void setDateAdded(DateTime added) {
+        this.dateAdded = added;
     }
 
-    public short getLogicalClock() {
+    public int getLogicalClock() {
         return logicalClock;
     }
 
-    public void setLogicalClock(short logicalClock) {
+    public void setLogicalClock(int logicalClock) {
         this.logicalClock = logicalClock;
     }
 
@@ -188,11 +261,11 @@ public final class ReachDatabase {
         this.processed = processed;
     }
 
-    public short getOperationKind() {
+    public OperationKind getOperationKind() {
         return operationKind;
     }
 
-    public void setOperationKind(short operationKind) {
+    public void setOperationKind(OperationKind operationKind) {
         this.operationKind = operationKind;
     }
 
@@ -214,7 +287,7 @@ public final class ReachDatabase {
                 ", displayName='" + displayName + '\'' +
                 ", actualName='" + actualName + '\'' +
                 ", length=" + length +
-                ", added=" + added +
+                ", added=" + dateAdded.toString(DateTimeFormat.fullTime()) +
                 '}';
     }
 
@@ -224,7 +297,7 @@ public final class ReachDatabase {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         final ReachDatabase that = (ReachDatabase) o;
-        return added == that.added &&
+        return dateAdded == that.dateAdded &&
                 length == that.length &&
                 operationKind == that.operationKind &&
                 receiverId == that.receiverId &&
@@ -237,9 +310,9 @@ public final class ReachDatabase {
         int result = (int) (songId ^ (songId >>> 32));
         result = 31 * result + (int) (receiverId ^ (receiverId >>> 32));
         result = 31 * result + (int) (senderId ^ (senderId >>> 32));
-        result = 31 * result + (int) operationKind;
+        result = 31 * result + operationKind.hashCode();
         result = 31 * result + (int) (length ^ (length >>> 32));
-        result = 31 * result + (int) (added ^ (added >>> 32));
+        result = 31 * result + dateAdded.hashCode();
         return result;
     }
 
@@ -291,11 +364,11 @@ public final class ReachDatabase {
         this.albumArtData = albumArtData;
     }
 
-    public short getVisibility() {
+    public boolean getVisibility() {
         return visibility;
     }
 
-    public void setVisibility(short visibility) {
+    public void setVisibility(boolean visibility) {
         this.visibility = visibility;
     }
 
@@ -309,7 +382,7 @@ public final class ReachDatabase {
 
     public String getMetaHash() {
 
-        if (TextUtils.isEmpty(metaHash)                                                                                                                                                                                                                                                   )
+        if (TextUtils.isEmpty(metaHash))
             metaHash = MiscUtils.calculateSongHash(
                     receiverId, duration, length, displayName, Hashing.sipHash24());
 

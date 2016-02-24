@@ -186,7 +186,7 @@ public enum CloudStorageUtils {
 //        }
 //        if (objects != null) {
 //            for (StorageObject o : objects) {
-//                list.add(o.getName());
+//                list.add(o.getValue());
 //            }
 //        }
 //        return list;
@@ -204,7 +204,7 @@ public enum CloudStorageUtils {
 //        }
 //        if(buckets != null) {
 //            for(Bucket b : buckets) {
-//                list.add(b.getName());
+//                list.add(b.getValue());
 //            }
 //        }
 //        return list;

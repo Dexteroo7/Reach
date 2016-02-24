@@ -146,7 +146,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     projectionDownloaded,
                     SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
                             SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"},
+                    new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
@@ -235,7 +235,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                 projectionDownloaded,
                 SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
                         SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                new String[]{ReachDatabase.FINISHED + "", "0"},
+                new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
                 SongHelper.COLUMN_DATE_ADDED + " DESC, " +
                         SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
 

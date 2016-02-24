@@ -434,9 +434,9 @@ public enum MiscUtils {
 //        final ViewParent parent = gridView.getParent();
 //        if (parent == null ||
 //                parent.getClass() == null ||
-//                TextUtils.isEmpty(parent.getClass().getName()))
+//                TextUtils.isEmpty(parent.getClass().getValue()))
 //            return;
-//        final String parentType = parent.getClass().getName();
+//        final String parentType = parent.getClass().getValue();
 //
 //        if (parentType.equals("android.widget.FrameLayout")) {
 //            emptyTextView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
@@ -513,7 +513,7 @@ public enum MiscUtils {
 //        final ProgressBar loading = new ProgressBar(gridView.getContext());
 //        loading.setIndeterminate(true);
 //        final ViewParent parent = gridView.getParent();
-//        final String parentType = parent.getClass().getName();
+//        final String parentType = parent.getClass().getValue();
 //        if (parentType.equals("android.widget.FrameLayout")) {
 //            loading.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
 //            gridView.setEmptyView(loading);
@@ -1138,11 +1138,11 @@ public enum MiscUtils {
                 myBoolean = sendGCM(generateRequest(reachDatabase), senderId, receiverId);
             }
 
-            final short status;
+            final ReachDatabase.Status status;
 
             if (myBoolean == null) {
                 Log.i("Ayush", "GCM sending resulted in shit");
-                status = ReachDatabase.GCM_FAILED;
+                status = ReachDatabase.Status.GCM_FAILED;
             } else if (myBoolean.getGcmexpired()) {
 
                 //TODO test
@@ -1152,20 +1152,20 @@ public enum MiscUtils {
 //                final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
 //                MiscUtils.updateGCM(SharedPrefUtils.getServerId(preferences), contextReference);
                 Log.i("Ayush", "GCM re-registry needed");
-                status = ReachDatabase.GCM_FAILED;
+                status = ReachDatabase.Status.GCM_FAILED;
             } else if (myBoolean.getOtherGCMExpired()) {
                 Log.i("Downloader", "SENDING GCM FAILED " + senderId);
-                status = ReachDatabase.GCM_FAILED;
+                status = ReachDatabase.Status.GCM_FAILED;
             } else {
                 Log.i("Downloader", "GCM SENT " + senderId);
-                status = ReachDatabase.NOT_WORKING;
+                status = ReachDatabase.Status.NOT_WORKING;
             }
 
             final String condition = SongHelper.COLUMN_ID + " = ? and " +
                     SongHelper.COLUMN_STATUS + " != ?"; //operation should not be paused !
-            final String[] arguments = new String[]{databaseId + "", ReachDatabase.PAUSED_BY_USER + ""};
+            final String[] arguments = new String[]{databaseId + "", ReachDatabase.Status.PAUSED_BY_USER.getString()};
             final ContentValues values = new ContentValues();
-            values.put(SongHelper.COLUMN_STATUS, status);
+            values.put(SongHelper.COLUMN_STATUS, status.getValue());
 
             MiscUtils.useContextFromContext(contextReference, context -> {
 

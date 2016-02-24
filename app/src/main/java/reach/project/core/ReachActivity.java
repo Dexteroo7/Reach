@@ -26,6 +26,7 @@ import android.widget.Toast;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
+import org.joda.time.DateTime;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -710,9 +711,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setReceiverId(serverId);
         reachDatabase.setSenderId(senderId);
 
-        reachDatabase.setOperationKind((short) 0);
+        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
         reachDatabase.setPath("hello_world");
-        reachDatabase.setSenderName(userName);
+        reachDatabase.setUserName(userName);
         reachDatabase.setOnlineStatus(onlineStatus);
 
         reachDatabase.setArtistName(artistName);
@@ -721,12 +722,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setActualName(actualName);
         reachDatabase.setLength(size);
         reachDatabase.setProcessed(0);
-        reachDatabase.setAdded(System.currentTimeMillis());
+        reachDatabase.setDateAdded(DateTime.now());
         reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(duration);
         reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
@@ -734,7 +735,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         reachDatabase.setAlbumName(albumName);
         reachDatabase.setGenre(genre);
 
-        reachDatabase.setVisibility((short) 1);
+        reachDatabase.setVisibility(true);
 
         //We call bulk starter always
         MiscUtils.startDownload(reachDatabase, this, null, "PUSH");

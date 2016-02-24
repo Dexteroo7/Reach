@@ -87,7 +87,7 @@ public class SettingsActivity extends AppCompatActivity {
                                 SongProvider.CONTENT_URI,
                                 SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                                         SongHelper.COLUMN_STATUS + " != ?",
-                                new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
+                                new String[]{"1", ReachDatabase.Status.PAUSED_BY_USER.getString()});
                     }
                     break;
                 case 1:

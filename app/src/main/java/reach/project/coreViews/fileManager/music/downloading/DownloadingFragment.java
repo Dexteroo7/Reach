@@ -81,7 +81,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
                     SongHelper.MUSIC_DATA_LIST,
                     SongHelper.COLUMN_STATUS + " != ? and " + //show only non finished
                             SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"},
+                    new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
                     SongHelper.COLUMN_DATE_ADDED + " DESC");
 
         return null;

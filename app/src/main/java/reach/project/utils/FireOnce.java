@@ -368,10 +368,10 @@ public enum FireOnce implements Closeable {
                                     SongHelper.COLUMN_STATUS + " != ?",
                             new String[]{
                                     id + "",
-                                    ReachDatabase.PAUSED_BY_USER + "",
-                                    ReachDatabase.WORKING + "",
-                                    ReachDatabase.RELAY + "",
-                                    ReachDatabase.FINISHED + ""})
+                                    ReachDatabase.Status.PAUSED_BY_USER.getString(),
+                                    ReachDatabase.Status.WORKING.getString(),
+                                    ReachDatabase.Status.RELAY.getString(),
+                                    ReachDatabase.Status.FINISHED.getString()})
                     .build();
         }
 
@@ -426,9 +426,9 @@ public enum FireOnce implements Closeable {
                 if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
 
                     //mark finished
-                    if (reachDatabase.getStatus() != ReachDatabase.FINISHED) {
+                    if (reachDatabase.getStatus() != ReachDatabase.Status.FINISHED) {
 
-                        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
+                        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
                         values.put(SongHelper.COLUMN_PROCESSED, reachDatabase.getLength());
                         operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
                     }
@@ -457,16 +457,16 @@ public enum FireOnce implements Closeable {
 
                 if (myBoolean == null) {
                     Log.i("Ayush", "GCM sending resulted in shit");
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
                 } else if (myBoolean.getGcmexpired()) {
                     Log.i("Ayush", "GCM re-registry needed");
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
                 } else if (myBoolean.getOtherGCMExpired()) {
                     Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
                 } else {
                     Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
                 }
                 operations.add(getUpdateOperation(values, reachDatabase.getId()));
             }
@@ -485,7 +485,7 @@ public enum FireOnce implements Closeable {
                                 SongHelper.COLUMN_STATUS + " != ?",
                         new String[]{
                                 "0", //only downloads
-                                ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
+                                ReachDatabase.Status.PAUSED_BY_USER.getString()}, null); //should not be paused
             }).orNull();
 
             if (cursor == null)

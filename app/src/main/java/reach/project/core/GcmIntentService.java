@@ -290,7 +290,7 @@ public class GcmIntentService extends IntentService {
                             "(" + SongHelper.COLUMN_SENDER_ID + " = ? or " +
                                     SongHelper.COLUMN_RECEIVER_ID + " = ?) and " +
                                     SongHelper.COLUMN_STATUS + " != ?",
-                            new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
+                            new String[]{hostId + "", hostId + "", ReachDatabase.Status.FINISHED.getString()});
                 } catch (IllegalArgumentException e) {return;}
             }
 
@@ -347,7 +347,8 @@ public class GcmIntentService extends IntentService {
                                 connection.getReceiverId() + "",
                                 connection.getSongId() + ""}, null);
 
-                if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.PAUSED_BY_USER) {
+                if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.Status.PAUSED_BY_USER.getValue()) {
+
                     isPaused.close();
                     GcmBroadcastReceiver.completeWakefulIntent(intent);
                     return;

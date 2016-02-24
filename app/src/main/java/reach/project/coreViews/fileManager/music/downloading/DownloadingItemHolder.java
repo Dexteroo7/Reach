@@ -61,7 +61,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 throw new IllegalArgumentException("Position not set for the view holder");
 
             final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
-            final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.PAUSED_BY_USER;
+            final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.Status.PAUSED_BY_USER.getValue();
             final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
             popupMenu.inflate(R.menu.friends_popup_menu);
             popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
@@ -127,17 +127,17 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
 
         ///////////////
 
-        if (database.getStatus() != ReachDatabase.PAUSED_BY_USER) {
+        if (database.getStatus() != ReachDatabase.Status.PAUSED_BY_USER) {
 
             //pause operation (both upload/download case)
             final ContentValues values = new ContentValues();
-            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
+            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.PAUSED_BY_USER.getValue());
             paused = context.getContentResolver().update(
                     uri,
                     values,
                     SongHelper.COLUMN_ID + " = ?",
                     new String[]{reachDatabaseId + ""}) > 0;
-        } else if (database.getOperationKind() == 1) {
+        } else if (database.getOperationKind() == ReachDatabase.OperationKind.UPLOAD_OP) {
 
             //un-paused upload operation
             paused = context.getContentResolver().delete(
@@ -174,10 +174,10 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                                             Uri uri) {
 
         reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
 
         final ContentValues values = new ContentValues();
-        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
         values.put(SongHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
 
         final boolean updateSuccess = resolver.update(
@@ -244,5 +244,4 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                         new String[]{reachDatabaseId + ""}));
         dialog.dismiss();
     };
-
 }

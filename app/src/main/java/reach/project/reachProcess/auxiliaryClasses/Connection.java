@@ -13,7 +13,7 @@ public class Connection {
      **/
     private final long uniqueIdReceiver;
     private final long uniqueIdSender;
-    private final short logicalClock;
+    private final int logicalClock;
     private final long offset;
     private final long length;
     private final String url;
@@ -49,7 +49,7 @@ public class Connection {
         return offset;
     }
 
-    public short getLogicalClock() {
+    public int getLogicalClock() {
         return logicalClock;
     }
 
@@ -76,7 +76,7 @@ public class Connection {
     public Connection(String messageType, long senderId, long receiverId,
                       long songId, long offset,
                       long length, long uniqueIdReceiver,
-                      long uniqueIdSender, short logicalClock,
+                      long uniqueIdSender, int logicalClock,
                       String url) {
 
         this.messageType = messageType;

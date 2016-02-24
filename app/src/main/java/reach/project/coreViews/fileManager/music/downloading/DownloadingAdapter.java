@@ -87,7 +87,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 
         ///////////////
 
-        final short status = cursorExact.getShort(9);
+        final ReachDatabase.Status status = ReachDatabase.Status.getFromValue(cursorExact.getShort(9));
 //        final short operationKind = cursorExact.getShort(10);
 //        final String userName = cursorExact.getString(11);
 
@@ -108,8 +108,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //        final short logicalClock = cursor.getShort(9);
 //        final long songId = cursor.getLong(10);
 
-        final boolean finished = (processed + 1400 >= length) ||
-                status == ReachDatabase.FINISHED;
+        final boolean finished = (processed + 1400 >= length) || status == ReachDatabase.Status.FINISHED;
         ///////////////////////////////////
         /**
          * If download has finished no need to display pause button
@@ -135,37 +134,37 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 
             switch (status) {
 
-                case ReachDatabase.FILE_NOT_CREATED: {
+                case FILE_NOT_CREATED: {
                     holder.downProgress.setText("File not found");
                     //The file for this song was moved / deleted from local storage
                     break;
                 }
 
-                case ReachDatabase.GCM_FAILED: {
+                case GCM_FAILED: {
                     holder.downProgress.setText("User deleted the app");
                     //Sender could not be notified to initiate upload
                     break;
                 }
 
-                case ReachDatabase.PAUSED_BY_USER: {
+                case PAUSED_BY_USER: {
                     holder.downProgress.setText("Paused");
                     //The download has been paused
                     break;
                 }
 
-                case ReachDatabase.FILE_NOT_FOUND: {
+                case FILE_NOT_FOUND: {
                     holder.downProgress.setText("User deleted the file");
                     //The file could not be found on sender's side
                     break;
                 }
 
-                case ReachDatabase.NOT_WORKING: {
+                case NOT_WORKING: {
 
                     //Download has not started yet
                     break;
                 }
 
-                case ReachDatabase.RELAY: {
+                case RELAY: {
 
                     //Download is working
                     break;

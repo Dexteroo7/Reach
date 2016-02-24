@@ -351,7 +351,7 @@ public class MetaDataScanner extends IntentService {
                     reachDatabaseProjection,
                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             SongHelper.COLUMN_STATUS + " = ?",
-                    new String[]{"0", ReachDatabase.FINISHED + ""}, null);
+                    new String[]{"0", ReachDatabase.Status.FINISHED.getString()}, null);
 
             if (reachDatabaseCursor != null) {
 

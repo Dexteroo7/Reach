@@ -24,6 +24,7 @@ import com.google.common.primitives.Longs;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import org.joda.time.DateTime;
 import org.json.JSONException;
 
 import java.io.File;
@@ -51,13 +52,13 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.Friend;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.music.ReachDatabase;
-import reach.project.music.SongHelper;
-import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.usageTracking.PostParams;
@@ -312,10 +313,10 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     break;
                 }
 
-                if (reachDatabase.getStatus() == ReachDatabase.WORKING ||
-                        reachDatabase.getStatus() == ReachDatabase.RELAY ||
-                        reachDatabase.getStatus() == ReachDatabase.FINISHED ||
-                        reachDatabase.getStatus() == ReachDatabase.PAUSED_BY_USER) {
+                if (reachDatabase.getStatus() == ReachDatabase.Status.WORKING ||
+                        reachDatabase.getStatus() == ReachDatabase.Status.RELAY ||
+                        reachDatabase.getStatus() == ReachDatabase.Status.FINISHED ||
+                        reachDatabase.getStatus() == ReachDatabase.Status.PAUSED_BY_USER) {
                     Log.i("Downloader", "Dropping RELAY " + reachDatabase.getStatus());
                     break;
                 } else if (reachDatabase.getProcessed() != connection.getOffset()) {
@@ -334,7 +335,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                 }
             }
 
-            case "404" : {
+            case "404": {
 
                 if (reachDatabase == null) {
                     Log.i("Downloader", "download deleted");
@@ -342,7 +343,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                 }
 
                 final ContentValues contentValues = new ContentValues(1);
-                contentValues.put(SongHelper.COLUMN_STATUS, ReachDatabase.FILE_NOT_FOUND);
+                contentValues.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FILE_NOT_FOUND.getValue());
                 LocalUtils.updateReachDatabase(contentValues, handlerInterface, reachDatabase.getId());
             }
 
@@ -365,8 +366,8 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
         Log.i("Downloader", "Trying to put RELAY OP " + reachDatabase.getId());
         final ContentValues values = new ContentValues();
-        reachDatabase.setStatus(ReachDatabase.RELAY);
-        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.RELAY);
+        reachDatabase.setStatus(ReachDatabase.Status.RELAY);
+        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.RELAY.getValue());
         //setUp file
         switch (LocalUtils.prepareDownloadFile(reachDatabase, reachDirectory)) {
 
@@ -382,8 +383,8 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
                 reachDatabase.setPath("");
                 reachDatabase.setProcessed(0); //reset
-                reachDatabase.setStatus(ReachDatabase.FILE_NOT_CREATED); //file not created
-                values.put(SongHelper.COLUMN_STATUS, ReachDatabase.FILE_NOT_CREATED);
+                reachDatabase.setStatus(ReachDatabase.Status.FILE_NOT_CREATED); //file not created
+                values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FILE_NOT_CREATED.getValue());
                 values.put(SongHelper.COLUMN_PATH, "");
                 values.put(SongHelper.COLUMN_PROCESSED, 0);
 
@@ -453,15 +454,15 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         reachDatabase.setSongId(connection.getSongId()); // id
         reachDatabase.setReceiverId(connection.getReceiverId());
         reachDatabase.setSenderId(connection.getSenderId());
-        reachDatabase.setOperationKind((short) 1);
+        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
 
         reachDatabase.setLength(connection.getLength());
         reachDatabase.setProcessed(connection.getOffset());
         reachDatabase.setLastActive(System.currentTimeMillis());
-        reachDatabase.setAdded(System.currentTimeMillis());
+        reachDatabase.setDateAdded(DateTime.now());
 
         reachDatabase.setLogicalClock(connection.getLogicalClock());
-        reachDatabase.setStatus(ReachDatabase.RELAY);
+        reachDatabase.setStatus(ReachDatabase.Status.RELAY);
 
         final String[] splitter = handlerInterface.getContentResolver().insert(SongProvider.CONTENT_URI,
                 SongHelper.contentValuesCreator(reachDatabase)).toString().split("/");
@@ -487,12 +488,12 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         }
 
         //////////////////////////////////
-        final Pair<String, Short> nameAndStatus =
+        final Pair<String, ReachDatabase.Status> nameAndStatus =
                 LocalUtils.getNameAndStatus(connection.getReceiverId(), connection.getSenderId(), handlerInterface);
         if (nameAndStatus == null)
             return false;
 
-        reachDatabase.setSenderName(nameAndStatus.first);
+        reachDatabase.setUserName(nameAndStatus.first);
         reachDatabase.setStatus(nameAndStatus.second);
 
         final ContentValues values = new ContentValues();
@@ -502,7 +503,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         values.put(SongHelper.COLUMN_ACTUAL_NAME, (String) setUpFile.get()[1]);
         values.put(SongHelper.COLUMN_ALBUM_ART_DATA, (byte[]) setUpFile.get()[2]);
         values.put(SongHelper.COLUMN_USER_NAME, nameAndStatus.first);
-        values.put(SongHelper.COLUMN_ONLINE_STATUS, nameAndStatus.second);
+        values.put(SongHelper.COLUMN_ONLINE_STATUS, nameAndStatus.second.getValue());
 
         final boolean tryRelay, tryDB, tryGCM;
 
@@ -561,12 +562,12 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         /**
          * Safety check for paused operation
          */
-        if (database.getStatus() == ReachDatabase.PAUSED_BY_USER) {
+        if (database.getStatus() == ReachDatabase.Status.PAUSED_BY_USER) {
 
             Log.i("Ayush", "Pausing operation");
             LocalUtils.closeSocket(database.getReference());
             LocalUtils.keyCleanUp(selectionKey);
-            if (database.getOperationKind() == 0) //close fileChannel if download
+            if (database.getOperationKind() == ReachDatabase.OperationKind.DOWNLOAD_OP) //close fileChannel if download
                 MiscUtils.closeQuietly(openChannels.get(LocalUtils.getFileChannelIndex(database)));
             return; //nothing more to do
         }
@@ -583,7 +584,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
             Log.i("Downloader", "InvalidKey detected");
             LocalUtils.keyCleanUp(selectionKey);
             LocalUtils.closeSocket(database.getReference());
-            if (database.getOperationKind() == 0) { //reset
+            if (database.getOperationKind() == ReachDatabase.OperationKind.DOWNLOAD_OP) { //reset
 
                 final Optional<Runnable> optional = LocalUtils.reset(database, handlerInterface);
                 if (optional.isPresent())
@@ -706,7 +707,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
             case SelectionKey.OP_READ: {
 
                 database.setProcessed(database.getLength());
-                database.setStatus(ReachDatabase.FINISHED); //download finished
+                database.setStatus(ReachDatabase.Status.FINISHED); //download finished
                 Log.i("Downloader", "Download ended " + database.getProcessed() + " " + database.getLength());
 
                 //clean up
@@ -717,7 +718,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                 //sync into database
                 final ContentValues contentValues = new ContentValues();
                 contentValues.put(SongHelper.COLUMN_PROCESSED, database.getLength());
-                contentValues.put(SongHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
+                contentValues.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
 
                 LocalUtils.forceUpdateReachDatabase(contentValues, handlerInterface, database.getId());
                 //Sync upload success to server
@@ -809,7 +810,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
             final ReachDatabase diskReach = new ReachDatabase();
             diskReach.setProcessed(cursor.getLong(1));
-            diskReach.setStatus(cursor.getShort(2));
+            diskReach.setStatus(ReachDatabase.Status.getFromValue(cursor.getShort(2)));
             tempDiskHolder.append(cursor.getLong(0), diskReach); //append for later use
         }
 
@@ -825,16 +826,16 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
              * First perform sync related operations
              */
             //deleted or paused operation
-            if (diskReach == null || diskReach.getStatus() == ReachDatabase.PAUSED_BY_USER) {
+            if (diskReach == null || diskReach.getStatus() == ReachDatabase.Status.PAUSED_BY_USER) {
 
                 LocalUtils.closeSocket(memoryReach.getReference());
                 LocalUtils.keyCleanUp(selectionKey);
-                if (memoryReach.getOperationKind() == 0) //close fileChannel if download
+                if (memoryReach.getOperationKind() == ReachDatabase.OperationKind.DOWNLOAD_OP) //close fileChannel if download
                     MiscUtils.closeQuietly(openChannels.get(LocalUtils.getFileChannelIndex(memoryReach)));
                 needToUpdate = true;
 
                 if (diskReach != null) //mark paused
-                    memoryReach.setStatus(ReachDatabase.PAUSED_BY_USER);
+                    memoryReach.setStatus(ReachDatabase.Status.PAUSED_BY_USER);
                 continue; //nothing more to do
             } else if (memoryReach.getProcessed() != diskReach.getProcessed()) {
 
@@ -846,7 +847,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
                 //update status
                 final ContentValues contentValues = new ContentValues();
-                contentValues.put(SongHelper.COLUMN_STATUS, memoryReach.getStatus());
+                contentValues.put(SongHelper.COLUMN_STATUS, memoryReach.getStatus().getValue());
                 operations.add(LocalUtils.getUpdateOperation(contentValues, memoryReach.getId()));
             }
 
@@ -857,7 +858,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
                 Log.i("Downloader", "Running keyKiller");
                 try {
-                    if (memoryReach.getOperationKind() == 0) {
+                    if (memoryReach.getOperationKind() == ReachDatabase.OperationKind.DOWNLOAD_OP) {
 
                         //for download, attempt reset
                         final Optional<Runnable> optional = LocalUtils.reset(memoryReach, handlerInterface);
@@ -912,7 +913,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     SongProvider.CONTENT_URI,
                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             SongHelper.COLUMN_STATUS + " != ?",
-                    new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
+                    new String[]{"1", ReachDatabase.Status.PAUSED_BY_USER + ""});
             //////////////////////////////////refresh reachDatabase : handle directory invalidation
             final Cursor cursor = handlerInterface.getContentResolver().query
                     (SongProvider.CONTENT_URI,
@@ -928,9 +929,9 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
                 final ReachDatabase reachDatabase = SongHelper.cursorToProcess(cursor);
                 if (reachDatabase.getProcessed() > 0) //mask only those which have associated file
-                    reachDatabase.setStatus(ReachDatabase.FILE_NOT_CREATED);
+                    reachDatabase.setStatus(ReachDatabase.Status.FILE_NOT_CREATED);
                 else //has not started, obviously no file !
-                    reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+                    reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
                 temp.append(reachDatabase.getId(), reachDatabase);
             }
             cursor.close();
@@ -942,9 +943,9 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     continue;
 
                 if (reachDatabase.getProcessed() == reachDatabase.getLength())
-                    reachDatabase.setStatus(ReachDatabase.FINISHED);  //completed
+                    reachDatabase.setStatus(ReachDatabase.Status.FINISHED);  //completed
                 else
-                    reachDatabase.setStatus(ReachDatabase.NOT_WORKING); //not working (file found, can continue download)
+                    reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING); //not working (file found, can continue download)
             }
 
             final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
@@ -955,7 +956,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     continue;
 
                 final ContentValues values = new ContentValues();
-                values.put(SongHelper.COLUMN_STATUS, database.getStatus());
+                values.put(SongHelper.COLUMN_STATUS, database.getStatus().getValue());
                 operations.add(LocalUtils.getUpdateOperation(values, database.getId()));
             }
 
@@ -1380,10 +1381,10 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                                                NetworkHandlerInterface handlerInterface) {
 
             reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
-            reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+            reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
 
             final ContentValues values = new ContentValues();
-            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
             values.put(SongHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
             //pass and empty list and update
             //noinspection unchecked
@@ -1408,7 +1409,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
          * @param id id of the user
          * @return name and status
          */
-        public static Pair<String, Short> getNameAndStatus(long id, long myId, NetworkHandlerInterface handlerInterface) {
+        public static Pair<String, ReachDatabase.Status> getNameAndStatus(long id, long myId, NetworkHandlerInterface handlerInterface) {
 
             final Cursor receiverName = handlerInterface.getContentResolver().query(
                     Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + id),
@@ -1444,7 +1445,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                 status = friend.getStatus().shortValue();
             }
 
-            return new Pair<>(name, status);
+            return new Pair<>(name, ReachDatabase.Status.getFromValue(status));
         }
 
         /**
@@ -1477,7 +1478,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     .withValues(contentValues)
                     .withSelection(SongHelper.COLUMN_ID + " = ? and " +
                                     SongHelper.COLUMN_STATUS + " != ?",
-                            new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER})
+                            new String[]{id + "", ReachDatabase.Status.PAUSED_BY_USER.getString()})
                     .build();
         }
 
@@ -1499,7 +1500,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                     contentValues,
                     SongHelper.COLUMN_ID + " = ? and " +
                             SongHelper.COLUMN_STATUS + " != ?",
-                    new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER}) > 0;
+                    new String[]{id + "", ReachDatabase.Status.PAUSED_BY_USER.getString()}) > 0;
         }
 
         /**
@@ -1545,7 +1546,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                         Uri.parse(SongProvider.CONTENT_URI + "/" + id),
                         SongHelper.COLUMN_ID + " = ? and " +
                                 SongHelper.COLUMN_STATUS + " != ?",
-                        new String[]{id + "", "" + ReachDatabase.PAUSED_BY_USER}) > 0)
+                        new String[]{id + "", ReachDatabase.Status.PAUSED_BY_USER.getString()}) > 0)
                     handlerInterface.updateNetworkDetails();
             }
         }

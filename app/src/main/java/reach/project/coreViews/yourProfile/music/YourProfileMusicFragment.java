@@ -21,6 +21,8 @@ import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 
+import org.joda.time.DateTime;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -226,9 +228,9 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setReceiverId(myId);
         reachDatabase.setSenderId(hostId);
 
-        reachDatabase.setOperationKind((short) 0);
+        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
         reachDatabase.setPath("hello_world");
-        reachDatabase.setSenderName(senderCursor.getString(0));
+        reachDatabase.setUserName(senderCursor.getString(0));
         reachDatabase.setOnlineStatus(senderCursor.getShort(1) + "");
 
         reachDatabase.setArtistName(song.artist);
@@ -237,12 +239,12 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setActualName(song.actualName);
         reachDatabase.setLength(song.size);
         reachDatabase.setProcessed(0);
-        reachDatabase.setAdded(System.currentTimeMillis());
+        reachDatabase.setDateAdded(DateTime.now());
         reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(song.duration);
         reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
@@ -250,7 +252,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setAlbumName(song.album);
         reachDatabase.setGenre(song.genre);
 
-        reachDatabase.setVisibility((short) 1);
+        reachDatabase.setVisibility(true);
 
         MiscUtils.startDownload(reachDatabase, activity, rootView, "YOUR_PROFILE");
         senderCursor.close();

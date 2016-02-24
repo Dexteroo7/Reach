@@ -333,7 +333,7 @@ public class ProcessManager extends Service implements
                 new String[]{SongHelper.COLUMN_ID},
                 SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         SongHelper.COLUMN_STATUS + " = ?",
-                new String[]{"0", ReachDatabase.RELAY + ""}, null).getCount();
+                new String[]{"0", ReachDatabase.Status.RELAY.getString()}, null).getCount();
     }
 
     //RETURNS TOTAL NUMBER OF PEOPLE WHO ARE UPLOADING
@@ -343,7 +343,7 @@ public class ProcessManager extends Service implements
                 new String[]{SongHelper.COLUMN_ID},
                 SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         SongHelper.COLUMN_STATUS + " = ?",
-                new String[]{"1", ReachDatabase.RELAY + ""}, null).getCount();
+                new String[]{"1", ReachDatabase.Status.RELAY.getString()}, null).getCount();
     }
 
     private String generateNotificationText(int totalDownloads, int totalUploads) {
@@ -355,7 +355,7 @@ public class ProcessManager extends Service implements
                     new String[]{SongHelper.COLUMN_DISPLAY_NAME},
                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             SongHelper.COLUMN_STATUS + " = ?",
-                    new String[]{"0", ReachDatabase.RELAY + ""},
+                    new String[]{"0", ReachDatabase.Status.RELAY.getString()},
                     SongHelper.COLUMN_DATE_ADDED + " DESC");
 
             if (songNameCursor == null)
@@ -379,7 +379,7 @@ public class ProcessManager extends Service implements
                     new String[]{SongHelper.COLUMN_RECEIVER_ID},
                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             SongHelper.COLUMN_STATUS + " = ?",
-                    new String[]{"1", ReachDatabase.RELAY + ""}, null);
+                    new String[]{"1", ReachDatabase.Status.RELAY.getString()}, null);
 
             if (receiverIdCursor == null)
                 return totalUploads + " songs are being uploaded";

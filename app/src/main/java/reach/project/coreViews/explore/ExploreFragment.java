@@ -40,6 +40,8 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import org.joda.time.DateTime;
+
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -537,9 +539,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setReceiverId(myServerId);
         reachDatabase.setSenderId(senderId);
 
-        reachDatabase.setOperationKind((short) 0);
+        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
         reachDatabase.setPath("hello_world");
-        reachDatabase.setSenderName(userName);
+        reachDatabase.setUserName(userName);
         reachDatabase.setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "");
 
         reachDatabase.setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString());
@@ -550,19 +552,19 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setIsLiked(false);
         reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
         reachDatabase.setProcessed(0);
-        reachDatabase.setAdded(System.currentTimeMillis());
+        reachDatabase.setDateAdded(DateTime.now());
         reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
 
         reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
         reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
 
         reachDatabase.setGenre("hello_world");
 
-        reachDatabase.setVisibility((short) 1);
+        reachDatabase.setVisibility(true);
 
         MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");
     }
