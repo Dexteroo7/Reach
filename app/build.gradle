@@ -10,10 +10,10 @@ android {
 
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 15
+        minSdkVersion 21
         versionCode 87
         versionName "1.0.3"
-        //multiDexEnabled true
+        multiDexEnabled true
     }
 
     compileOptions {
@@ -56,11 +56,11 @@ android {
 
 dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
-//    compile 'com.google.android.gms:play-services-gcm:8.4.0'
-//    compile 'com.google.android.gms:play-services-analytics:8.4.0'
-//    compile 'com.android.support:multidex:1.0.1'
 //    compile 'com.firebase:firebase-client-android:2.4.0'
-    compile 'com.google.android.gms:play-services:6.1.11'
+//    compile 'com.android.support:multidex:1.0.1'
+//    compile 'com.google.android.gms:play-services:6.1.11'
+    compile 'com.google.android.gms:play-services-gcm:8.4.0'
+    compile 'com.google.android.gms:play-services-analytics:8.4.0'
     compile 'com.google.apis:google-api-services-storage:v1-rev58-1.21.0'
     compile 'com.google.api-client:google-api-client-android:1.21.0'
     compile 'com.google.code.gson:gson:2.4'

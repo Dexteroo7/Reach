@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.crittercism.app.Crittercism;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -262,8 +261,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         } catch (JSONException ignored) {
         }
 
-        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
-                SharedPrefUtils.getPhoneNumber(preferences));
+//        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
+//                SharedPrefUtils.getPhoneNumber(preferences));
 
         ////////////////////////////////////////
 
