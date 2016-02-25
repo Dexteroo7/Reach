@@ -10,7 +10,7 @@ android {
 
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 19
+        minSdkVersion 23
         versionCode 85
         versionName "1.0.1"
         multiDexEnabled true
@@ -59,7 +59,7 @@ dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
     //android core
     //    compile 'com.google.android.gms:play-services:6.1.11'
-        compile 'com.android.support:multidex:1.0.1'
+//        compile 'com.android.support:multidex:1.0.1'
 
     // non-google stuff
     //    compile 'com.crittercism:crittercism-android-agent:5.5.1'
