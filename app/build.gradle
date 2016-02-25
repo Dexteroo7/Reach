@@ -10,7 +10,7 @@ android {
 
         applicationId "reach.project"
         targetSdkVersion 23
-        minSdkVersion 23
+        minSdkVersion 22
         versionCode 85
         versionName "1.0.1"
         multiDexEnabled true

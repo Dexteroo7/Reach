@@ -5,7 +5,7 @@
     android:id="@+id/empty_imageView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:visibility="gone"
+    android:visibility="visible"
     >
 
 <RelativeLayout
@@ -13,13 +13,11 @@
     android:layout_height="match_parent"
     android:alpha="0.8"
     android:background="@null"
-
-    android:padding="72dp"
     >
 
     <ImageView
         android:id="@+id/empty_imageView_child"
-        android:layout_width="wrap_content"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:adjustViewBounds="true"
@@ -32,10 +30,10 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/empty_imageView_child"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="52dp"
         android:background="#cbcbcb"
         android:gravity="center_horizontal"
-        android:padding="12dp"
+        android:padding="8dp"
         android:text="hellllloooooo\nsnsajcnjk"
         android:textColor="@android:color/white"
         android:textSize="16sp" />

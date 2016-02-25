@@ -5,7 +5,7 @@
     android:id="@+id/empty_imageView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:visibility="gone"
+    android:visibility="visible"
     >
 
 <RelativeLayout
@@ -13,18 +13,20 @@
     android:layout_height="match_parent"
     android:alpha="0.8"
     android:background="@null"
-    android:padding="72dp"
+
 
     >
 
     <ImageView
         android:id="@+id/empty_imageView_child"
-        android:layout_width="wrap_content"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
-        android:src="@drawable/mascot_big_edited_1" />
+        android:src="@drawable/mascot_big_edited_1"
+
+        />
 
     <TextView
         android:id="@+id/empty_textView"
@@ -32,11 +34,11 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/empty_imageView_child"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="42dp"
+        android:layout_marginTop="38dp"
         android:background="#cbcbcb"
         android:gravity="center_horizontal"
-        android:padding="12dp"
-        android:text="hellllloooooo\nsnsajcnjka"
+        android:padding="10dp"
+        android:text="hellllloooooo"
         android:textColor="@android:color/white"
         android:textSize="16sp" />
 

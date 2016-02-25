@@ -4,6 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -12,14 +13,14 @@ import android.widget.TextView;
 public class EmptyTextViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
 
-    public final TextView mEmptyImageView;
+    public final ImageView mEmptyImageView;
 
     public EmptyTextViewHolder(ViewGroup parent,
                                int itemViewResourceId,
                                int emptyImageViewResourceId) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
-        this.mEmptyImageView = (TextView) itemView.findViewById(emptyImageViewResourceId);
+        this.mEmptyImageView = (ImageView) itemView.findViewById(emptyImageViewResourceId);
         itemView.setOnClickListener(this);
     }
 

@@ -143,8 +143,8 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 return moreListHolder;
             }
             case VIEW_TYPE_EMPTY_OR_ERROR:{
-                final EmptyTextViewHolder emptyViewHolder = new EmptyTextViewHolder(parent,R.layout.friends_emptyview, R.id.empty_view);
-                emptyViewHolder.mEmptyImageView.setText(EMPTY_VIEW_TEXT);
+                final EmptyTextViewHolder emptyViewHolder = new EmptyTextViewHolder(parent,R.layout.general_emptyview, R.id.empty_view);
+                emptyViewHolder.mEmptyImageView.setImageResource(R.drawable.friends_empty_view_owl);
                 return emptyViewHolder;
             }
 
