@@ -6,19 +6,19 @@
     android:layout_height="match_parent"
     android:background="#4B5B67"
     tools:context="reach.project.player.PlayerActivity">
+
     <RelativeLayout
+        android:id="@+id/albumArtContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@null"
-        android:id="@+id/albumArtContainer"
         android:layout_above="@+id/songNamePlaying"
-        >
+        android:background="@null">
 
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/albumArt"
             android:layout_width="match_parent"
-            android:background="#333c45"
             android:layout_height="match_parent"
+            android:background="#333c45"
             fresco:placeholderImage="@drawable/default_album_art" />
 
         <View
@@ -50,58 +50,49 @@
     </android.support.design.widget.AppBarLayout>
 
 
-
-
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/like_selector"
-        />
-
-    <ImageView
+        android:id="@+id/push_button"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_alignParentRight="true"
+        android:layout_marginBottom="-20dp"
+        android:layout_marginRight="16dp"
         android:background="@drawable/circular_background"
         android:elevation="6dp"
         android:padding="10dp"
         android:src="@drawable/push_tab_selector"
-        android:visibility="visible"
-        android:layout_marginRight="16dp"
-        android:layout_alignBottom="@+id/albumArtContainer"
-        android:layout_marginBottom="-20dp" />
+        android:visibility="visible" />
 
-    <!--android:id="@+id/likeBtn"-->
 
-    <RelativeLayout android:id="@+id/music_list_container"
+    <RelativeLayout
+        android:id="@+id/music_list_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_above="@+id/pause_play"
+        android:layout_alignBottom="@+id/albumArtContainer"
         android:layout_marginTop="?attr/actionBarSize"
         android:background="#AA000000"
-        android:visibility="gone"
-        >
+        android:visibility="gone">
 
         <reach.project.coreViews.myProfile.EmptyRecyclerView
             android:id="@+id/recyclerView"
-            android:paddingTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingBottom="8dp"/>
+            android:paddingBottom="8dp"
+            android:paddingTop="8dp" />
 
         <TextView
             android:id="@+id/empty_imageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
             android:background="@null"
+            android:gravity="center"
+            android:padding="16dp"
             android:text="Currently, you have no music. Download some from your friends and enjoy."
-            android:visibility="gone"
             android:textColor="@android:color/white"
             android:textSize="16sp"
-            android:padding="16dp"
-            />
+            android:visibility="gone" />
     </RelativeLayout>
 
     <!--<RelativeLayout
@@ -119,48 +110,62 @@
         android:id="@+id/songNamePlaying"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/artistName"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="32dp"
         android:layout_marginRight="72dp"
+        android:layout_marginTop="8dp"
+        android:background="@null"
         android:ellipsize="marquee"
         android:lines="1"
-        android:background="@null"
         android:text="Song Title"
         android:textColor="#fff"
-        android:textSize="18sp"
-        android:layout_above="@+id/artistName"
-        android:layout_marginTop="8dp"
-        />
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/artistName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/seekBar"
+        android:layout_alignParentRight="true"
         android:layout_centerHorizontal="true"
-        android:background="@null"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="72dp"
         android:layout_marginTop="2dp"
+        android:layout_toRightOf="@+id/likeBtn"
+        android:background="@null"
         android:ellipsize="marquee"
+        android:gravity="center_horizontal"
         android:lines="1"
         android:text="Artist Name"
         android:textColor="#fff" />
 
+    <ImageView
+        android:id="@+id/likeBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/artistName"
+        android:layout_alignLeft="@+id/seekBar"
+        android:layout_alignStart="@+id/seekBar"
+        android:layout_marginBottom="-4dp"
+        android:layout_marginLeft="8dp"
+        android:background="@null"
+        android:padding="0dp"
+        android:src="@drawable/like_selector" />
+
     <SeekBar
         android:id="@+id/seekBar"
-        android:layout_height="wrap_content"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_above="@+id/pause_play"
         android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_toLeftOf="@+id/songDuration"
+        android:layout_toRightOf="@+id/playerPos"
         android:progressDrawable="@drawable/player_progressbar"
         android:thumb="@drawable/thumb"
-        android:thumbOffset="5dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        android:layout_toRightOf="@+id/playerPos"
-        android:layout_toLeftOf="@+id/songDuration"
-        />
+        android:thumbOffset="5dp" />
 
     <TextView
         android:id="@+id/playerPos"
@@ -168,26 +173,25 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignTop="@id/seekBar"
-        android:layout_marginTop="-2dp"
         android:layout_marginLeft="16dp"
+        android:layout_marginTop="-2dp"
+        android:background="@null"
         android:text="00:00"
         android:textColor="#fff"
-        android:textSize="12sp"
-        android:background="@null"
-        />
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/songDuration"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
         android:layout_alignTop="@id/seekBar"
+        android:layout_marginRight="16dp"
         android:layout_marginTop="-2dp"
+        android:background="@null"
         android:text="00:00"
         android:textColor="#fff"
         android:textSize="12sp"
-        android:background="@null"
 
         />
 
@@ -197,10 +201,10 @@
         android:layout_height="40dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginBottom="12dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:src="@drawable/play_white_selector"
-        android:layout_marginBottom="12dp" />
+        android:src="@drawable/play_white_selector" />
 
     <ImageView
         android:id="@+id/rwdBtn"

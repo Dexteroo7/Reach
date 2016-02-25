@@ -30,26 +30,28 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
-
 import org.json.JSONException;
-
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Map;
-
+import java.util.Set;
 import javax.annotation.Nonnull;
-
 import reach.project.R;
+import reach.project.apps.App;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
+import reach.project.coreViews.push.PushActivity;
+import reach.project.coreViews.push.PushContainer;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.music.Song;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
@@ -125,6 +127,10 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     private SeekBar seekBar = null;
     @Nullable
     private View likeButton = null;
+    @Nullable
+    private View pushButton = null;
+    private Set<Song> selectedSongs;
+    private Set<App> selectedApps;
 
     //private boolean mMusicFragmentVisible;
 
@@ -219,6 +225,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         });
 
                 (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
+                (pushButton = findViewById(R.id.push_button)).setOnClickListener(pushButtonClickListener);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
@@ -277,6 +284,51 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         rwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
         fwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
     }
+
+    View.OnClickListener pushButtonClickListener = new View.OnClickListener(){
+
+        @Override
+        public void onClick(View v) {
+
+            if(currentPlaying == null){
+                Toast.makeText(PlayerActivity.this, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            selectedSongs = MiscUtils.getSet(1);
+            selectedApps = MiscUtils.getSet(1);
+            final Song song = MySongsHelper.convertMusicDataToSong(currentPlaying);
+            Log.i(TAG,"Name of the song to push = " + song.displayName);
+            selectedSongs.add(song);
+
+            if (selectedSongs.isEmpty() && selectedApps.isEmpty()) {
+                Toast.makeText(PlayerActivity.this, "First select some songs", Toast.LENGTH_SHORT).show();
+            }
+
+            final SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            final PushContainer pushContainer = new PushContainer.Builder()
+                    .senderId(SharedPrefUtils.getServerId(preferences))
+                    .userName(SharedPrefUtils.getUserName(preferences))
+                    .userImage(SharedPrefUtils.getImageId(preferences))
+                    .firstSongName(selectedSongs.isEmpty() ? "" : selectedSongs.iterator().next().displayName)
+                    .firstAppName(selectedApps.isEmpty() ? "" : selectedApps.iterator().next().applicationName)
+                    .song(ImmutableList.copyOf(selectedSongs))
+                    .app(ImmutableList.copyOf(selectedApps))
+                    .songCount(selectedSongs.size())
+                    .appCount(selectedApps.size())
+                    .build();
+
+            try {
+                PushActivity.startPushActivity(pushContainer, PlayerActivity.this);
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                //TODO Track
+                Toast.makeText(PlayerActivity.this, "Could not push", Toast.LENGTH_SHORT).show();
+            }
+
+        }
+    };
 
     private synchronized void togglePlayPause(final boolean pause) {
 
@@ -511,9 +563,9 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             return new CursorLoader(this,
                     ReachDatabaseProvider.CONTENT_URI,
                     ReachDatabaseHelper.MUSIC_DATA_LIST,
-                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                    /*ReachDatabaseHelper.COLUMN_STATUS + " = ? and " +*/ //show only finished
                             ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"},
+                    new String[]{/*ReachDatabase. + "",*/ "0"},
                     ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;

@@ -78,7 +78,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         }
     };
     private long currentlyPlayingSongId;
-    private int currentlyPlayingSongPosition;
+    public int currentlyPlayingSongPosition;
 
 
 
@@ -237,7 +237,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
      * @return object
      */
     @Nonnull
-    private Object getItem(int position) {
+    public Object getItem(int position) {
         //account for recent shit
 
             if (position < downloadedCount) {

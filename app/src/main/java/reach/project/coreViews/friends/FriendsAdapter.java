@@ -145,7 +145,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 return moreListHolder;
             }
             case VIEW_TYPE_EMPTY_OR_ERROR:{
-                final EmptyTextViewHolder emptyViewHolder = new EmptyTextViewHolder(parent,R.layout.friends_emptyview,R.id.empty_view);
+                final EmptyViewHolder emptyViewHolder = new EmptyViewHolder(parent,R.layout.friends_emptyview,R.id.empty_view);
                 return emptyViewHolder;
             }
 
@@ -256,8 +256,9 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             }
         }
         else if (getItemViewType(position) == VIEW_TYPE_EMPTY_OR_ERROR){
-            EmptyTextViewHolder emptyViewHolder = (EmptyTextViewHolder) holder;
-            emptyViewHolder.mEmptyImageView.setText(EMPTY_VIEW_TEXT);
+            // For empty image view case
+            /*EmptyTextViewHolder emptyViewHolder = (EmptyTextViewHolder) holder;
+            emptyViewHolder.mEmptyImageView.setText(EMPTY_VIEW_TEXT);*/
         }
 
     }

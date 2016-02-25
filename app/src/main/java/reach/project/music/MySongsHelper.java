@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
 /**
@@ -86,6 +87,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
                     COLUMN_VISIBILITY,
                     COLUMN_META_HASH
             };
+    private static final String BLANK = "";
 
     public static ContentValues contentValuesCreator(Song song) {
 
@@ -130,7 +132,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
             COLUMN_DATE_ADDED, //10
             COLUMN_VISIBILITY, //11
             COLUMN_IS_LIKED, //12
-            COLUMN_META_HASH //13
+            COLUMN_META_HASH, //13
+            COLUMN_GENRE //14
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -176,6 +179,78 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 .songId(cursor.getLong(0)).build();
     }
 
+    public static Song convertMusicDataToSong(final MusicData data){
+
+        return new Song.Builder()
+                .size(data.getLength())
+                .visibility(true) //TODO: Change musicData to getVisibility as well
+                .path(data.getPath())
+                .duration(data.getDuration())
+                .actualName(BLANK)
+                .album(data.getAlbumName())
+                .albumArtData(new AlbumArtData.Builder().build())
+                .artist(data.getArtistName())
+                .dateAdded(data.getDateAdded())
+                .displayName(data.getDisplayName())
+                .fileHash(BLANK)
+                .genre(BLANK)
+                .isLiked(data.isLiked())
+                .songId(data.getId()).build();
+
+    }
+
+    public static Song getSongForPlayerActivity(final Cursor cursor) {
+
+        if (cursor.getColumnCount() == DISK_LIST.length){
+
+
+        final String liked = cursor.getString(12);
+        final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
+
+        return new Song.Builder()
+                .size(cursor.getLong(1))
+                .visibility(cursor.getShort(11) == 1)
+                .path(cursor.getString(2))
+                .duration(cursor.getLong(5))
+                .actualName(cursor.getString(9))
+                .album(cursor.getString(6))
+                .albumArtData(new AlbumArtData.Builder().build())
+                .artist(cursor.getString(4))
+                .dateAdded(cursor.getLong(10))
+                .displayName(cursor.getString(3))
+                .fileHash("")
+                .genre(cursor.getString(14))
+                .isLiked(isLiked)
+                .songId(cursor.getLong(0)).build();
+
+        }
+        else if( cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+
+            final String liked = cursor.getString(7);
+            final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
+
+            return new Song.Builder()
+                    .size(cursor.getLong(1))
+                    .visibility(cursor.getShort(18) == 1)
+                    .path(cursor.getString(4))
+                    .duration(cursor.getLong(8))
+                    .actualName(cursor.getString(16))
+                    .album(cursor.getString(15))
+                    .albumArtData(new AlbumArtData.Builder().build())
+                    .artist(cursor.getString(6))
+                    .dateAdded(cursor.getLong(17))
+                    .displayName(cursor.getString(5))
+                    .fileHash("")
+                    .genre(cursor.getString(21))
+                    .isLiked(isLiked)
+                    .songId(cursor.getLong(14)).build();
+
+        }
+        else{
+            throw new IllegalArgumentException("Provided cursor of invalid length");
+        }
+    }
+
     //DISK_LIST specific !
     public static MusicData getMusicData(final Cursor cursor, final long serverId) {
 
@@ -194,6 +269,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 cursor.getLong(5), //duration
                 (byte) 1); //type
     }
+
 
     public MySongsHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
