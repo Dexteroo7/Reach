@@ -146,7 +146,7 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
 
         super.onCreate();
         //initialize bug tracking
-        //Crittercism.initialize(this, "552eac3c8172e25e67906922");
+//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //initialize fresco
         final ImagePipelineConfig.Builder configBuilder = ImagePipelineConfig.newBuilder(this)
                 .setDecodeFileDescriptorEnabled(true)
