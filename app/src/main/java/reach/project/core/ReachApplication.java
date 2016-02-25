@@ -149,12 +149,10 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
 //        Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //initialize fresco
         final ImagePipelineConfig.Builder configBuilder = ImagePipelineConfig.newBuilder(this)
-
                 .setDecodeFileDescriptorEnabled(true)
                 .setDecodeMemoryFileEnabled(true)
                 .setResizeAndRotateEnabledForNetwork(true)
                 .setWebpSupportEnabled(true)
-
                 .setBitmapsConfig(Bitmap.Config.RGB_565)
                 .setMemoryTrimmableRegistry(this);
 
@@ -172,8 +170,6 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
         super.onLowMemory();
         Fresco.getImagePipeline().clearMemoryCaches();
     }
-
-
 
     @Override
     public void onTrimMemory(int level) {
