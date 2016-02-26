@@ -1189,9 +1189,8 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                             MySongsHelper.COLUMN_ALBUM_ART_DATA, //5
                             MySongsHelper.COLUMN_DURATION}, //6
 
-                    MySongsHelper.COLUMN_SONG_ID + " = ? and " +
-                            MySongsHelper.COLUMN_SIZE + " = ?",
-                    new String[]{builder.getSongId() + "", builder.getLength() + ""}, null);
+                    MySongsHelper.COLUMN_SIZE + " = ?",
+                    new String[]{builder.getLength() + ""}, null);
 
 //            Log.i("Downloader", myId + " " + songId + " " + length);
 
@@ -1212,33 +1211,8 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                                 SongHelper.COLUMN_ALBUM_ART_DATA, //5
                                 SongHelper.COLUMN_DURATION}, //6
 
-                        SongHelper.COLUMN_UNIQUE_ID + " = ? and " +
-                                SongHelper.COLUMN_SIZE + " = ?",
-                        new String[]{builder.getSongId() + "", builder.getLength() + ""}, null);
-            }
-
-            if (cursor == null || !cursor.moveToFirst()) {
-
-                //TODO temporary // FIXME: 08/01/16
-                Log.i("Ayush", "Hacking from reachDatabase table");
-
-                if (cursor != null)
-                    cursor.close();
-                cursor = handlerInterface.getContentResolver().query(
-                        SongProvider.CONTENT_URI,
-                        new String[]{
-                                SongHelper.COLUMN_UNIQUE_ID, //0
-                                SongHelper.COLUMN_DISPLAY_NAME, //1
-                                SongHelper.COLUMN_ACTUAL_NAME, //2
-                                SongHelper.COLUMN_PATH, //3
-                                SongHelper.COLUMN_VISIBILITY, //4
-                                SongHelper.COLUMN_ALBUM_ART_DATA, //5
-                                SongHelper.COLUMN_DURATION}, //6
-
-
-                        SongHelper.COLUMN_SONG_ID + " = ? and " +
-                                SongHelper.COLUMN_SIZE + " = ?",
-                        new String[]{builder.getSongId() + "", builder.getLength() + ""}, null);
+                        SongHelper.COLUMN_SIZE + " = ?",
+                        new String[]{builder.getLength() + ""}, null);
             }
 
             //TODO tell invisible
