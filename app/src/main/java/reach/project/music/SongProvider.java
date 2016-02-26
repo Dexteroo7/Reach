@@ -165,7 +165,7 @@ public class SongProvider extends ContentProvider {
         if (projection != null) {
 
             HashSet<String> requestedColumns = new HashSet<>(Arrays.asList(projection));
-            HashSet<String> availableColumns = new HashSet<>(Arrays.asList(SongHelper.projection));
+            HashSet<String> availableColumns = new HashSet<>(Arrays.asList(SongCursorHelper.DOWNLOADING_HELPER.getProjection()));
             // check if all columns which are requested are available
             if (!availableColumns.containsAll(requestedColumns)) {
                 throw new IllegalArgumentException("Unknown columns in projection");

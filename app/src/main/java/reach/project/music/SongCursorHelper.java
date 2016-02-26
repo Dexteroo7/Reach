@@ -1,8 +1,11 @@
 package reach.project.music;
 
 import android.database.Cursor;
+import android.text.TextUtils;
 
 import com.google.common.base.Function;
+
+import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
 
@@ -86,30 +89,47 @@ public enum SongCursorHelper {
             SongHelper.COLUMN_OPERATION_KIND, //19
             SongHelper.COLUMN_LOGICAL_CLOCK, //20
             SongHelper.COLUMN_PROCESSED, //21
-            SongHelper.COLUMN_STATUS //22
+            SongHelper.COLUMN_STATUS, //22
+            SongHelper.COLUMN_ALBUM_ART_DATA
 
-    }, new Function<Cursor, Song>() {
+    }, new Function<Cursor, ReachDatabase>() {
         @Nullable
         @Override
-        public Song apply(@Nullable Cursor cursor) {
+        public ReachDatabase apply(@Nullable Cursor cursor) {
 
             if (cursor == null || cursor.isClosed())
                 throw new IllegalArgumentException("Invalid cursor found");
 
-            return new Song.Builder()
-                    .songId(cursor.getLong(1))
-                    .fileHash(cursor.getString(2))
-                    .displayName(cursor.getString(3))
-                    .actualName(cursor.getString(4))
-                    .artist(cursor.getString(5))
-                    .album(cursor.getString(6))
-                    .duration(cursor.getLong(7))
-                    .size(cursor.getLong(8))
-                    .genre(cursor.getString(9))
-                    .path(cursor.getString(10))
-                    .dateAdded(cursor.getLong(11))
-                    .visibility(cursor.getShort(12) == 1)
-                    .isLiked(cursor.getString(13).equals("1") || cursor.getString(13).equals("true")).build();
+            final String liked = cursor.getString(14);
+            final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                    .setId(cursor.getLong(0))
+                    .setSongId(cursor.getLong(1))
+                    .setUniqueId(cursor.getLong(2))
+                    .setDisplayName(cursor.getString(4))
+                    .setActualName(cursor.getString(5))
+                    .setArtistName(cursor.getString(6))
+                    .setAlbumName(cursor.getString(7))
+                    .setDuration(cursor.getLong(8))
+                    .setLength(cursor.getLong(9))
+                    .setGenre(cursor.getString(10))
+                    .setDateAdded(new DateTime(cursor.getLong(12)))
+                    .setReceiverId(cursor.getLong(15))
+                    .setSenderId(cursor.getLong(16))
+                    .setUserName(cursor.getString(17))
+                    .setOperationKind(ReachDatabase.OperationKind.getFromValue(cursor.getShort(19)))
+                    .setAlbumArtData(new byte[0])
+                    .setLiked(!TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true")))
+                    .setOnlineStatus(cursor.getString(18))
+                    .setVisibility(cursor.getShort(13) == 1)
+                    .setLogicalClock(cursor.getShort(20))
+                    .setPath(cursor.getString(11))
+                    .setProcessed(cursor.getLong(21))
+                    .setStatus(ReachDatabase.Status.getFromValue(cursor.getShort(22))).build();
+
+            reachDatabase.setLastActive(0);
+            reachDatabase.setReference(0);
+
+            return reachDatabase;
         }
     }),
 
@@ -170,10 +190,18 @@ public enum SongCursorHelper {
     });
 
     private final String[] projection;
-    private final Function<Cursor, Song> parser;
+    private final Function<Cursor, ?> parser;
 
-    SongCursorHelper(String[] projection, Function<Cursor, Song> parser) {
+    SongCursorHelper(String[] projection, Function<Cursor, ?> parser) {
         this.projection = projection;
         this.parser = parser;
+    }
+
+    public String[] getProjection() {
+        return projection;
+    }
+
+    public Function<Cursor, ?> getParser() {
+        return parser;
     }
 }

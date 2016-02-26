@@ -539,39 +539,33 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             cursor.close();
         }
 
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(-1);
-        reachDatabase.setSongId(MiscUtils.get(metaInfo, MusicMetaInfo.SONG_ID).getAsLong());
-        reachDatabase.setReceiverId(myServerId);
-        reachDatabase.setSenderId(senderId);
-
-        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setUserName(userName);
-        reachDatabase.setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "");
-
-        reachDatabase.setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString());
-        reachDatabase.setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME).getAsString());
-        reachDatabase.setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST, "").getAsString());
-        reachDatabase.setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM, "").getAsString());
-
-        reachDatabase.setIsLiked(false);
-        reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
-        reachDatabase.setProcessed(0);
-        reachDatabase.setDateAdded(DateTime.now());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-
-        reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
-        reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
+        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                .setId(-1)
+                .setSongId(MiscUtils.get(metaInfo, MusicMetaInfo.SONG_ID).getAsLong())
+                .setReceiverId(myServerId)
+                .setSenderId(senderId)
+                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+                .setUserName(userName)
+                .setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST, "").getAsString())
+                .setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString())
+                .setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME).getAsString())
+                .setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong())
+                .setDateAdded(DateTime.now())
+                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                .setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong())
+                .setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM, "").getAsString())
+                .setAlbumArtData(new byte[0])
+                .setGenre("")
+                .setLiked(false)
+                .setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "")
+                .setVisibility(true)
+                .setPath("hello_world")
+                .setProcessed(0)
+                .setLogicalClock((short) 0)
+                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
-
-        reachDatabase.setGenre("hello_world");
-
-        reachDatabase.setVisibility(true);
 
         MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");
     }

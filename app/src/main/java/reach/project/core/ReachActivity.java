@@ -704,38 +704,33 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         //new song
 
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(-1);
-        reachDatabase.setSongId(songId);
-        reachDatabase.setReceiverId(serverId);
-        reachDatabase.setSenderId(senderId);
-
-        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setUserName(userName);
-        reachDatabase.setOnlineStatus(onlineStatus);
-
-        reachDatabase.setArtistName(artistName);
-        reachDatabase.setIsLiked(false);
-        reachDatabase.setDisplayName(displayName);
-        reachDatabase.setActualName(actualName);
-        reachDatabase.setLength(size);
-        reachDatabase.setProcessed(0);
-        reachDatabase.setDateAdded(DateTime.now());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-
-        reachDatabase.setDuration(duration);
-        reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
+        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                .setId(-1)
+                .setSongId(songId)
+                .setReceiverId(serverId)
+                .setSenderId(senderId)
+                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+                .setUserName(userName)
+                .setArtistName(artistName)
+                .setDisplayName(displayName)
+                .setActualName(actualName)
+                .setLength(size)
+                .setDateAdded(DateTime.now())
+                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                .setDuration(duration)
+                .setAlbumName(albumName)
+                .setAlbumArtData(new byte[0])
+                .setGenre(genre)
+                .setLiked(false)
+                .setOnlineStatus(onlineStatus)
+                .setVisibility(true)
+                .setPath("hello_world")
+                .setProcessed(0)
+                .setLogicalClock((short) 0)
+                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
-
-        reachDatabase.setAlbumName(albumName);
-        reachDatabase.setGenre(genre);
-
-        reachDatabase.setVisibility(true);
 
         //We call bulk starter always
         MiscUtils.startDownload(reachDatabase, this, null, "PUSH");

@@ -221,38 +221,33 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             return;
         }
 
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(-1);
-        reachDatabase.setSongId(song.songId);
-        reachDatabase.setReceiverId(myId);
-        reachDatabase.setSenderId(hostId);
-
-        reachDatabase.setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setUserName(senderCursor.getString(0));
-        reachDatabase.setOnlineStatus(senderCursor.getShort(1) + "");
-
-        reachDatabase.setArtistName(song.artist);
-        reachDatabase.setIsLiked(false);
-        reachDatabase.setDisplayName(song.displayName);
-        reachDatabase.setActualName(song.actualName);
-        reachDatabase.setLength(song.size);
-        reachDatabase.setProcessed(0);
-        reachDatabase.setDateAdded(DateTime.now());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-
-        reachDatabase.setDuration(song.duration);
-        reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
+        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                .setId(-1)
+                .setSongId(song.songId)
+                .setReceiverId(myId)
+                .setSenderId(hostId)
+                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+                .setUserName(senderCursor.getString(0))
+                .setArtistName(song.artist)
+                .setDisplayName(song.displayName)
+                .setActualName(song.actualName)
+                .setLength(song.size)
+                .setDateAdded(DateTime.now())
+                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                .setDuration(song.duration)
+                .setAlbumName(song.album)
+                .setAlbumArtData(new byte[0])
+                .setGenre(song.genre)
+                .setLiked(false)
+                .setOnlineStatus(senderCursor.getShort(1) + "")
+                .setVisibility(true)
+                .setPath("hello_world")
+                .setProcessed(0)
+                .setLogicalClock((short) 0)
+                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
-
-        reachDatabase.setAlbumName(song.album);
-        reachDatabase.setGenre(song.genre);
-
-        reachDatabase.setVisibility(true);
 
         MiscUtils.startDownload(reachDatabase, activity, rootView, "YOUR_PROFILE");
         senderCursor.close();

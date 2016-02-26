@@ -37,6 +37,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
@@ -485,7 +486,7 @@ public enum FireOnce implements Closeable {
 
                 return activity.getContentResolver().query(
                         SongProvider.CONTENT_URI,
-                        SongHelper.projection,
+                        SongCursorHelper.DOWNLOADING_HELPER.getProjection(),
                         SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                                 SongHelper.COLUMN_STATUS + " != ?",
                         new String[]{
@@ -498,7 +499,7 @@ public enum FireOnce implements Closeable {
 
             final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext())
-                reachDatabaseList.add(SongHelper.cursorToProcess(cursor));
+                reachDatabaseList.add((ReachDatabase) SongCursorHelper.DOWNLOADING_HELPER.getParser().apply(cursor));
             cursor.close();
 
             if (reachDatabaseList.size() > 0) {

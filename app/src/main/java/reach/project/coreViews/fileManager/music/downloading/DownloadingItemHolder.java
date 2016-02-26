@@ -24,6 +24,7 @@ import java.io.File;
 
 import reach.project.R;
 import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.HandOverMessageExtra;
@@ -111,7 +112,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
 
         final Cursor cursor = resolver.query(
                 uri,
-                SongHelper.projection,
+                SongCursorHelper.DOWNLOADING_HELPER.getProjection(),
                 SongHelper.COLUMN_ID + " = ?",
                 new String[]{reachDatabaseId + ""}, null);
 
@@ -122,7 +123,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             return false;
         }
 
-        final ReachDatabase database = SongHelper.cursorToProcess(cursor);
+        final ReachDatabase database = (ReachDatabase) SongCursorHelper.DOWNLOADING_HELPER.getParser().apply(cursor);
         final boolean paused;
 
         ///////////////

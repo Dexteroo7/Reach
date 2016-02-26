@@ -10,8 +10,6 @@ import android.util.Log;
 
 import com.google.common.hash.Hashing;
 
-import org.joda.time.DateTime;
-
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 
@@ -63,83 +61,6 @@ public class SongHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "reach.database.sql.ReachDatabaseHelper";
     private static final int DATABASE_VERSION = 4;
 
-    public static final String[] projection =
-            {
-                    COLUMN_ID, //0
-
-                    COLUMN_SONG_ID, //1
-                    COLUMN_RECEIVER_ID, //2
-                    COLUMN_SENDER_ID, //3
-                    COLUMN_OPERATION_KIND, //4
-                    //strings
-                    COLUMN_PATH, //5
-                    COLUMN_USER_NAME, //6
-                    COLUMN_ONLINE_STATUS, //7
-                    COLUMN_ARTIST, //8
-                    COLUMN_IS_LIKED, //9
-                    //strings
-                    COLUMN_DISPLAY_NAME, //10
-                    COLUMN_ACTUAL_NAME, //11
-                    //longs
-                    COLUMN_SIZE, //12
-                    COLUMN_PROCESSED, //13
-                    COLUMN_DATE_ADDED, //14
-                    COLUMN_DURATION, //15
-                    //shorts
-                    COLUMN_LOGICAL_CLOCK, //16
-                    COLUMN_STATUS, //17
-                    COLUMN_ALBUM, //18
-                    COLUMN_GENRE, //19
-                    COLUMN_ALBUM_ART_DATA, //20
-                    COLUMN_VISIBILITY, //21
-                    COLUMN_UNIQUE_ID, //22
-                    COLUMN_META_HASH //23
-            };
-
-    /**
-     * Operation kind :
-     * 0 = download;
-     * 1 = upload;
-     */
-    public static ReachDatabase cursorToProcess(Cursor cursor) {
-
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(cursor.getLong(0));
-        reachDatabase.setSongId(cursor.getLong(1));
-        reachDatabase.setReceiverId(cursor.getLong(2));
-        reachDatabase.setSenderId(cursor.getLong(3));
-
-        reachDatabase.setOperationKind(ReachDatabase.OperationKind.getFromValue(cursor.getShort(4)));
-
-        reachDatabase.setPath(cursor.getString(5));
-        reachDatabase.setUserName(cursor.getString(6));
-        reachDatabase.setOnlineStatus(cursor.getString(7));
-        reachDatabase.setArtistName(cursor.getString(8));
-
-        final String liked = cursor.getString(9);
-        if (TextUtils.isEmpty(liked))
-            reachDatabase.setIsLiked(false);
-        else
-            reachDatabase.setIsLiked(liked.equals("1") || liked.equals("true"));
-
-        reachDatabase.setDisplayName(cursor.getString(10));
-        reachDatabase.setActualName(cursor.getString(11));
-
-        reachDatabase.setLength(cursor.getLong(12));
-        reachDatabase.setProcessed(cursor.getLong(13));
-        reachDatabase.setDateAdded(new DateTime(cursor.getLong(14)));
-        reachDatabase.setDuration(cursor.getLong(15));
-
-        reachDatabase.setLogicalClock(cursor.getShort(16));
-        reachDatabase.setStatus(ReachDatabase.Status.getFromValue(cursor.getShort(17)));
-
-        reachDatabase.setLastActive(0); //reset
-        reachDatabase.setReference(0);  //reset
-
-        return reachDatabase;
-    }
-
     public static ContentValues contentValuesCreator(ReachDatabase reachDatabase) {
 
         final ContentValues values = new ContentValues();
@@ -162,11 +83,12 @@ public class SongHelper extends SQLiteOpenHelper {
 
         //set the metaHash if absent
         if (TextUtils.isEmpty(reachDatabase.getMetaHash()))
-            reachDatabase.setMetaHash(MiscUtils.calculateSongHash(
+            values.put(COLUMN_META_HASH, MiscUtils.calculateSongHash(
                     reachDatabase.getReceiverId(), reachDatabase.getDuration(),
                     reachDatabase.getLength(), reachDatabase.getDisplayName(),
                     Hashing.sipHash24()));
-        values.put(COLUMN_META_HASH, reachDatabase.getMetaHash());
+        else
+            values.put(COLUMN_META_HASH, reachDatabase.getMetaHash());
 
         Log.i("Ayush", "Saving reach database with hash " + reachDatabase.getMetaHash());
 
@@ -181,7 +103,7 @@ public class SongHelper extends SQLiteOpenHelper {
         values.put(COLUMN_ALBUM_ART_DATA, reachDatabase.getAlbumArtData());
         values.put(COLUMN_ALBUM, reachDatabase.getAlbumName());
         values.put(COLUMN_GENRE, reachDatabase.getGenre());
-        values.put(COLUMN_VISIBILITY, reachDatabase.getVisibility());
+        values.put(COLUMN_VISIBILITY, reachDatabase.isVisibility());
 
         values.put(COLUMN_UNIQUE_ID, reachDatabase.getUniqueId());
 
@@ -292,25 +214,6 @@ public class SongHelper extends SQLiteOpenHelper {
             COLUMN_GENRE, //10
             COLUMN_IS_LIKED, //11
     };
-
-    private final String[] projectionDownloaded =
-            {
-                    SongHelper.COLUMN_ID, //0
-
-                    SongHelper.COLUMN_UNIQUE_ID, //1
-
-                    SongHelper.COLUMN_DISPLAY_NAME, //2
-                    SongHelper.COLUMN_ACTUAL_NAME, //3
-
-                    SongHelper.COLUMN_ARTIST, //4
-                    SongHelper.COLUMN_ALBUM, //5
-
-                    SongHelper.COLUMN_DURATION, //6
-                    SongHelper.COLUMN_SIZE, //7
-
-                    SongHelper.COLUMN_VISIBILITY, //8
-                    SongHelper.COLUMN_GENRE, //9
-            };
 
     public static MusicData getMusicData(final Cursor cursor) {
 

@@ -1351,14 +1351,15 @@ public enum MiscUtils {
         final String[] splitter = uri.toString().split("/");
         if (splitter.length == 0)
             return;
-        reachDatabase.setId(Long.parseLong(splitter[splitter.length - 1].trim()));
+
+        final long dbId = Long.parseLong(splitter[splitter.length - 1].trim());
         //start this operation
         new Thread(MiscUtils.startDownloadOperation(
                 activity,
                 reachDatabase,
                 reachDatabase.getReceiverId(), //myID
                 reachDatabase.getSenderId(),   //the uploaded
-                reachDatabase.getId())).start();
+                dbId)).start();
 
         ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
                 .setCategory("Transaction - Add SongBrainz")
@@ -1464,6 +1465,9 @@ public enum MiscUtils {
                                            long size,
                                            @NonNull String title,
                                            @NonNull HashFunction hashFunction) {
+
+        if (userId == 0 || duration == 0 || size == 0 || TextUtils.isEmpty(title))
+            throw new IllegalArgumentException("Invalid parameters found");
 
         return hashFunction.newHasher()
                 .putLong(userId)

@@ -6,7 +6,6 @@ import android.text.TextUtils;
 import com.google.common.hash.Hashing;
 
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 
 import reach.project.utils.MiscUtils;
 
@@ -14,6 +13,164 @@ import reach.project.utils.MiscUtils;
  * Created by dexter on 14/9/14.
  */
 public final class ReachDatabase {
+
+    private ReachDatabase(long id, long songId, long uniqueId, String metaHash, long receiverId, long senderId, OperationKind operationKind, String userName, String artistName, String albumName,
+                          String genre, String displayName, String actualName, byte[] albumArtData, long length, DateTime dateAdded, long duration, boolean isLiked, String onlineStatus,
+                          boolean visibility) {
+
+        this.id = id;
+        this.songId = songId;
+        this.uniqueId = uniqueId;
+        this.metaHash = metaHash;
+        this.receiverId = receiverId;
+        this.senderId = senderId;
+        this.operationKind = operationKind;
+        this.userName = userName;
+        this.artistName = artistName;
+        this.albumName = albumName;
+        this.genre = genre;
+        this.displayName = displayName;
+        this.actualName = actualName;
+        this.albumArtData = albumArtData;
+        this.length = length;
+        this.dateAdded = dateAdded;
+        this.duration = duration;
+        this.isLiked = isLiked;
+        this.onlineStatus = onlineStatus;
+        this.visibility = visibility;
+    }
+
+    private ReachDatabase() {
+        throw new IllegalAccessError("Can not access");
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public long getSongId() {
+        return songId;
+    }
+
+    public String getMetaHash() {
+        return metaHash;
+    }
+
+    public long getReceiverId() {
+        return receiverId;
+    }
+
+    public long getSenderId() {
+        return senderId;
+    }
+
+    public OperationKind getOperationKind() {
+        return operationKind;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getOnlineStatus() {
+        return onlineStatus;
+    }
+
+    public String getArtistName() {
+        return artistName;
+    }
+
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    public boolean isLiked() {
+        return isLiked;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getActualName() {
+        return actualName;
+    }
+
+    public byte[] getAlbumArtData() {
+        return albumArtData;
+    }
+
+    public long getLength() {
+        return length;
+    }
+
+    public long getProcessed() {
+        return processed;
+    }
+
+    public void setProcessed(long processed) {
+        this.processed = processed;
+    }
+
+    public DateTime getDateAdded() {
+        return dateAdded;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public long getUniqueId() {
+        return uniqueId;
+    }
+
+    public int getLogicalClock() {
+        return logicalClock;
+    }
+
+    public void setLogicalClock(int logicalClock) {
+        this.logicalClock = logicalClock;
+    }
+
+    public boolean isVisibility() {
+        return visibility;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public long getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(long lastActive) {
+        this.lastActive = lastActive;
+    }
+
+    public long getReference() {
+        return reference;
+    }
+
+    public void setReference(long reference) {
+        this.reference = reference;
+    }
 
     public enum OperationKind {
         DOWNLOAD_OP(0),
@@ -106,290 +263,296 @@ public final class ReachDatabase {
         }
     }
 
-    private long id = -1;
-    private long songId = 0;
-    private long uniqueId = 0;
-    private String metaHash;
+    private final long id;
+    private final long songId;
+    private final String metaHash;
 
-    private String displayName = "hello_world";
-    private String actualName = "hello_world";
-    private String artistName = "hello_world";
-    private String albumName = "hello_world";
+    private final long receiverId;
+    private final long senderId;
+    private final OperationKind operationKind;
 
-    private long duration = 0;
-    private long length = 0;
-
-    private String genre = "hello_world";
-    private byte[] albumArtData;
     private String path = "hello_world";
-    private DateTime dateAdded = DateTime.now();
 
-    private boolean visibility = false;
-    private boolean isLiked = false;
+    private final String userName;
+    private final String onlineStatus;
+    private final String artistName;
+    private final String albumName;
+    private final boolean isLiked;
+    private final String genre;
 
-    private long receiverId = 0;
-    private long senderId = 0;
-    private String userName = "hello_world";
-    private String onlineStatus = "hello_world";
-    private OperationKind operationKind = OperationKind.DOWNLOAD_OP;
-    private int logicalClock = 0;
+    private final String displayName;
+    private final String actualName;
+    private final byte[] albumArtData;
+
+    private final long length;
     private long processed = 0;
+    private final DateTime dateAdded;
+    private final long duration;
+    private final long uniqueId;
+
+    private int logicalClock = 0;
+    private final boolean visibility;
     private Status status = Status.NOT_WORKING;
 
     //not in sql
     private long lastActive = 0;
     private long reference = 0;
 
-    public String getArtistName() {
-        return artistName;
-    }
+    public static final class Builder {
 
-    public void setArtistName(String artistName) {
-        this.artistName = artistName;
-    }
+        private long id;
+        private long songId;
+        private String metaHash;
 
+        private long receiverId;
+        private long senderId;
+        private OperationKind operationKind;
 
-    public String getOnlineStatus() {
-        return onlineStatus;
-    }
+        private String path = "hello_world";
 
-    public void setOnlineStatus(String onlineStatus) {
-        this.onlineStatus = onlineStatus;
-    }
+        private String userName;
+        private String onlineStatus;
+        private String artistName;
+        private String albumName;
+        private boolean isLiked;
+        private String genre;
 
-    public String getUserName() {
-        return userName;
-    }
+        private String displayName;
+        private String actualName;
+        private byte[] albumArtData;
 
-    public void setUserName(String senderName) {
-        this.userName = senderName;
-    }
+        private long length;
+        private long processed = 0;
+        private DateTime dateAdded;
+        private long duration;
+        private long uniqueId;
 
-    public long getId() {
-        return id;
-    }
+        private int logicalClock = 0;
+        private boolean visibility;
+        private Status status = Status.NOT_WORKING;
 
-    public void setId(long id) {
-        this.id = id;
-    }
+        public Builder setVisibility(boolean visibility) {
+            this.visibility = visibility;
+            return this;
+        }
 
-    public Status getStatus() {
-        return status;
-    }
+        public Builder setSongId(long songId) {
+            this.songId = songId;
+            return this;
+        }
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+        public Builder setReceiverId(long receiverId) {
+            this.receiverId = receiverId;
+            return this;
+        }
 
-    public String getActualName() {
-        return actualName;
-    }
+        public Builder setSenderId(long senderId) {
+            this.senderId = senderId;
+            return this;
+        }
 
-    public void setActualName(String actualName) {
-        this.actualName = actualName;
-    }
+        public Builder setOperationKind(OperationKind operationKind) {
+            this.operationKind = operationKind;
+            return this;
+        }
 
-    public String getDisplayName() {
-        return displayName;
-    }
+        public Builder setUserName(String userName) {
+            this.userName = userName;
+            return this;
+        }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
+        public Builder setArtistName(String artistName) {
+            this.artistName = artistName;
+            return this;
+        }
 
-    public long getReceiverId() {
-        return receiverId;
-    }
+        public Builder setAlbumName(String albumName) {
+            this.albumName = albumName;
+            return this;
+        }
 
-    public void setReceiverId(long receiverId) {
-        this.receiverId = receiverId;
-    }
+        public Builder setGenre(String genre) {
+            this.genre = genre;
+            return this;
+        }
 
-    public long getSenderId() {
-        return senderId;
-    }
+        public Builder setDisplayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
 
-    public void setSenderId(long senderId) {
-        this.senderId = senderId;
-    }
+        public Builder setActualName(String actualName) {
+            this.actualName = actualName;
+            return this;
+        }
 
-    public long getSongId() {
-        return songId;
-    }
+        public Builder setAlbumArtData(byte[] albumArtData) {
+            this.albumArtData = albumArtData;
+            return this;
+        }
 
-    public void setSongId(long songId) {
-        this.songId = songId;
-    }
+        public Builder setLength(long length) {
+            this.length = length;
+            return this;
+        }
 
-    public long getLength() {
-        return length;
-    }
+        public Builder setDateAdded(DateTime dateAdded) {
+            this.dateAdded = dateAdded;
+            return this;
+        }
 
-    public void setLength(long length) {
-        this.length = length;
-    }
+        public Builder setDuration(long duration) {
+            this.duration = duration;
+            return this;
+        }
 
-    public DateTime getDateAdded() {
-        return dateAdded;
-    }
+        public ReachDatabase build() {
 
-    public void setDateAdded(DateTime added) {
-        this.dateAdded = added;
-    }
+            if (TextUtils.isEmpty(metaHash))
+                metaHash = MiscUtils.calculateSongHash(receiverId, duration, length, displayName, Hashing.sipHash24());
+            return new ReachDatabase(id, songId, uniqueId, metaHash, receiverId, senderId, operationKind, userName, artistName, albumName,
+                    genre, displayName, actualName, albumArtData, length, dateAdded, duration, isLiked, onlineStatus, visibility);
+        }
 
-    public int getLogicalClock() {
-        return logicalClock;
-    }
+        public Builder setUniqueId(long uniqueId) {
+            this.uniqueId = uniqueId;
+            return this;
+        }
 
-    public void setLogicalClock(int logicalClock) {
-        this.logicalClock = logicalClock;
-    }
+        public long getSongId() {
+            return songId;
+        }
 
-    public long getLastActive() {
-        return lastActive;
-    }
+        public long getUniqueId() {
+            return uniqueId;
+        }
 
-    public void setLastActive(long lastActive) {
-        this.lastActive = lastActive;
-    }
+        public long getReceiverId() {
+            return receiverId;
+        }
 
-    public long getProcessed() {
-        return processed;
-    }
+        public long getSenderId() {
+            return senderId;
+        }
 
-    public void setProcessed(long processed) {
-        this.processed = processed;
-    }
+        public OperationKind getOperationKind() {
+            return operationKind;
+        }
 
-    public OperationKind getOperationKind() {
-        return operationKind;
-    }
+        public String getUserName() {
+            return userName;
+        }
 
-    public void setOperationKind(OperationKind operationKind) {
-        this.operationKind = operationKind;
-    }
+        public String getArtistName() {
+            return artistName;
+        }
 
-    public String getPath() {
-        return path;
-    }
+        public String getAlbumName() {
+            return albumName;
+        }
 
-    public void setPath(String path) {
-        this.path = path;
-    }
+        public String getGenre() {
+            return genre;
+        }
 
-    @Override
-    public String toString() {
-        return "ReachDatabase{" +
-                ", songId=" + songId +
-                ", receiverId=" + receiverId +
-                ", senderId=" + senderId +
-                ", operationKind=" + operationKind +
-                ", displayName='" + displayName + '\'' +
-                ", actualName='" + actualName + '\'' +
-                ", length=" + length +
-                ", added=" + dateAdded.toString(DateTimeFormat.fullTime()) +
-                '}';
-    }
+        public String getDisplayName() {
+            return displayName;
+        }
 
-    @Override
-    public boolean equals(Object o) {
+        public String getActualName() {
+            return actualName;
+        }
 
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final ReachDatabase that = (ReachDatabase) o;
-        return dateAdded == that.dateAdded &&
-                length == that.length &&
-                operationKind == that.operationKind &&
-                receiverId == that.receiverId &&
-                senderId == that.senderId &&
-                songId == that.songId;
-    }
+        public byte[] getAlbumArtData() {
+            return albumArtData;
+        }
 
-    @Override
-    public int hashCode() {
-        int result = (int) (songId ^ (songId >>> 32));
-        result = 31 * result + (int) (receiverId ^ (receiverId >>> 32));
-        result = 31 * result + (int) (senderId ^ (senderId >>> 32));
-        result = 31 * result + operationKind.hashCode();
-        result = 31 * result + (int) (length ^ (length >>> 32));
-        result = 31 * result + dateAdded.hashCode();
-        return result;
-    }
+        public long getLength() {
+            return length;
+        }
 
-    public long getReference() {
-        return reference;
-    }
+        public DateTime getDateAdded() {
+            return dateAdded;
+        }
 
-    public void setReference(long reference) {
-        this.reference = reference;
-    }
+        public long getDuration() {
+            return duration;
+        }
 
-    public boolean isLiked() {
-        return isLiked;
-    }
+        public Builder setLiked(boolean liked) {
+            isLiked = liked;
+            return this;
+        }
 
-    public void setIsLiked(boolean isLiked) {
-        this.isLiked = isLiked;
-    }
+        public Builder setId(long id) {
+            this.id = id;
+            return this;
+        }
 
-    public long getDuration() {
-        return duration;
-    }
+        public Builder setOnlineStatus(String onlineStatus) {
+            this.onlineStatus = onlineStatus;
+            return this;
+        }
 
-    public void setDuration(long duration) {
-        this.duration = duration;
-    }
+        public Builder setMetaHash(String metaHash) {
+            this.metaHash = metaHash;
+            return this;
+        }
 
-    public String getAlbumName() {
-        return albumName;
-    }
+        public long getId() {
+            return id;
+        }
 
-    public void setAlbumName(String albumName) {
-        this.albumName = albumName;
-    }
+        public String getMetaHash() {
+            return metaHash;
+        }
 
-    public String getGenre() {
-        return genre;
-    }
+        public String getPath() {
+            return path;
+        }
 
-    public void setGenre(String genre) {
-        this.genre = genre;
-    }
+        public Builder setPath(String path) {
+            this.path = path;
+            return this;
+        }
 
-    public byte[] getAlbumArtData() {
-        return albumArtData;
-    }
+        public String getOnlineStatus() {
+            return onlineStatus;
+        }
 
-    public void setAlbumArtData(byte[] albumArtData) {
-        this.albumArtData = albumArtData;
-    }
+        public boolean isLiked() {
+            return isLiked;
+        }
 
-    public boolean getVisibility() {
-        return visibility;
-    }
+        public long getProcessed() {
+            return processed;
+        }
 
-    public void setVisibility(boolean visibility) {
-        this.visibility = visibility;
-    }
+        public Builder setProcessed(long processed) {
+            this.processed = processed;
+            return this;
+        }
 
-    public long getUniqueId() {
-        return uniqueId;
-    }
+        public int getLogicalClock() {
+            return logicalClock;
+        }
 
-    public void setUniqueId(long uniqueId) {
-        this.uniqueId = uniqueId;
-    }
+        public Builder setLogicalClock(int logicalClock) {
+            this.logicalClock = logicalClock;
+            return this;
+        }
 
-    public String getMetaHash() {
+        public boolean isVisibility() {
+            return visibility;
+        }
 
-        if (TextUtils.isEmpty(metaHash))
-            metaHash = MiscUtils.calculateSongHash(
-                    receiverId, duration, length, displayName, Hashing.sipHash24());
+        public Status getStatus() {
+            return status;
+        }
 
-        return metaHash;
-    }
-
-    public void setMetaHash(String metaHash) {
-        this.metaHash = metaHash;
+        public Builder setStatus(Status status) {
+            this.status = status;
+            return this;
+        }
     }
 }
