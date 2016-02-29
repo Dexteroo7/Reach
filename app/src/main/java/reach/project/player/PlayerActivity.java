@@ -229,7 +229,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
-        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "Currently there is no music." : currentPlaying.getArtistName());
+        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "Currently there is no music playing." : currentPlaying.getArtistName());
         (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setImageURI(albumArtUri);
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 

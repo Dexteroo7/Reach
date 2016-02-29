@@ -114,7 +114,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="32dp"
         android:layout_marginRight="72dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:background="@null"
         android:ellipsize="marquee"
         android:lines="1"
@@ -127,31 +127,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/seekBar"
-        android:layout_alignParentRight="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginLeft="8dp"
+        android:layout_marginLeft="32dp"
         android:layout_marginRight="72dp"
         android:layout_marginTop="2dp"
-        android:layout_toRightOf="@+id/likeBtn"
         android:background="@null"
         android:ellipsize="marquee"
         android:gravity="center_horizontal"
         android:lines="1"
         android:text="Artist Name"
         android:textColor="#fff" />
-
-    <ImageView
-        android:id="@+id/likeBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/artistName"
-        android:layout_alignLeft="@+id/seekBar"
-        android:layout_alignStart="@+id/seekBar"
-        android:layout_marginBottom="-4dp"
-        android:layout_marginLeft="8dp"
-        android:background="@null"
-        android:padding="0dp"
-        android:src="@drawable/like_selector" />
 
     <SeekBar
         android:id="@+id/seekBar"
@@ -160,7 +145,7 @@
         android:layout_above="@+id/pause_play"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="8dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_toLeftOf="@+id/songDuration"
         android:layout_toRightOf="@+id/playerPos"
         android:progressDrawable="@drawable/player_progressbar"
@@ -243,4 +228,16 @@
         android:layout_toRightOf="@id/fwdBtn"
         android:padding="10dp"
         android:src="@drawable/repeat_selector" />
+
+     <ImageView
+        android:id="@+id/likeBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_alignTop="@id/songNamePlaying"
+        android:layout_marginLeft="10dp"
+        android:background="@null"
+        android:src="@drawable/like_selector" />
 </RelativeLayout>

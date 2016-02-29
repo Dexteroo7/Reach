@@ -116,7 +116,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
-    public static final String CURRENT_TAB_KEY = "CURRENT_TAB";
+    //public static final String CURRENT_TAB_KEY = "CURRENT_TAB";
 
     ////////////////////////////////////////private static final
 
@@ -236,7 +236,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt(CURRENT_TAB_KEY,mTabHost.getCurrentTab());
+        //outState.putInt(CURRENT_TAB_KEY,mTabHost.getCurrentTab());
         super.onSaveInstanceState(outState);
     }
 
@@ -329,12 +329,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.my_profile_tab_selector)),
                 MyProfileFragment.class, null);
-        if(savedInstanceState == null) {
+
             mTabHost.setCurrentTab(2);
-        }
-        else{
-            mTabHost.setCurrentTab(savedInstanceState.getInt(CURRENT_TAB_KEY,2));
-        }
+
 
         /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));
@@ -732,4 +729,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             coachView.setOnClickListener(v -> viewGroup.removeView(coachView));
         }, 1000L);
     }
+
+
+
 }

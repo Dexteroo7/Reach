@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/headerRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal">
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/coverPic"
+        fresco:placeholderImageScaleType="centerCrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        fresco:placeholderImage="@drawable/cover_large" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#70000000" />
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/profilePic"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_centerHorizontal="true"
+        fresco:placeholderImage="@drawable/default_profile_circle"
+        fresco:roundAsCircle="true" />
+
+    <TextView
+        android:id="@+id/userName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/profilePic"
+        android:layout_centerHorizontal="true"
+        android:textSize="15sp"
+        android:layout_marginTop="2dp"
+        android:text="User Name"
+        android:textColor="#fff" />
+
+    <TextView
+        android:id="@+id/userHandle"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userName"
+        android:layout_centerHorizontal="true"
+        android:text="user"
+        android:textColor="#fff"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:id="@+id/countContainer"
+        android:orientation="horizontal"
+        android:layout_below="@id/userHandle"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/musicIcon"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:src="@drawable/icon_song_indicator_gray" />
+        <TextView
+            android:id="@+id/musicCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:text="0"
+            android:layout_marginRight="5dp"
+            android:textColor="#fff"
+            android:textSize="12sp" />
+        <ImageView
+            android:id="@+id/appIcon"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:src="@drawable/icon_apps_indicator_gray" />
+        <TextView
+            android:id="@+id/appCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:text="0"
+            android:textColor="#fff"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/countContainer"
+        android:gravity="center"
+        android:layout_marginTop="2dp"
+        >
+
+        <ImageView
+            android:id="@+id/reachIcon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:padding="4dp"
+            android:src="@drawable/icon_reach_magnet_white"
+            android:background="@drawable/circular_background_pink"
+            />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reach Team"
+        android:layout_marginLeft="4dp"
+        android:textColor="@android:color/white"
+        android:layout_toRightOf="@+id/reachIcon"
+        android:layout_alignTop="@+id/reachIcon"
+        android:layout_alignBottom="@+id/reachIcon"
+        android:gravity="center"
+        />
+
+    </RelativeLayout>
+
+</RelativeLayout>

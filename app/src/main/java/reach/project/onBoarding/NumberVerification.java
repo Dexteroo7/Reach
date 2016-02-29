@@ -13,13 +13,34 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import reach.project.R;
 import reach.project.utils.SharedPrefUtils;
 
 public class NumberVerification extends Fragment {
+
+    final static CountryCodeModel [] countryCodeData = {new CountryCodeModel("+91","India"),new CountryCodeModel("+81","Pakistan"),
+            new CountryCodeModel("+21","Canada"),
+            new CountryCodeModel("+41","USA"),
+            new CountryCodeModel("+51","USA"),
+            new CountryCodeModel("+61","USA"),
+            new CountryCodeModel("+71","USA"),
+            new CountryCodeModel("+81","USA"),
+            new CountryCodeModel("+82","USA"),
+            new CountryCodeModel("+42","USA"),
+            new CountryCodeModel("+43","USA"),
+            new CountryCodeModel("+44","USA"),
+            new CountryCodeModel("+44","USA"),
+            new CountryCodeModel("+44","USA"),
+            new CountryCodeModel("+44","USA"),
+            new CountryCodeModel("+44","USA"),
+            new CountryCodeModel("+44","USA")
+    };
 
     private static final byte ENFORCED_LENGTH = 4;
 
@@ -34,6 +55,7 @@ public class NumberVerification extends Fragment {
     };
 
     private static final InputFilter LENGTH_FILTER = new InputFilter.LengthFilter(14);
+    private Spinner spinner;
 
     public static NumberVerification newInstance() {
         return new NumberVerification();
@@ -52,10 +74,15 @@ public class NumberVerification extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
 
         telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber);
-        telephoneNumber.setText("+91-");
-        telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
+        //telephoneNumber.setText("+91-");
+        spinner = (Spinner) rootView.findViewById(R.id.countryCodeSpinner);
+        spinner.setAdapter(new CustomSpinnerAdapter(getActivity(),android.R.layout.simple_list_item_1,countryCodeData));
+        //telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
+
+        //spinner.requestFocus();
         telephoneNumber.requestFocus();
-        Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
+        //Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
+        //Selection.setSelection(" ", ENFORCED_LENGTH);
 
         //clear the shared pref
         final SharedPreferences preferences = getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -93,14 +120,21 @@ public class NumberVerification extends Fragment {
 
     private final View.OnClickListener clickListener = view -> {
 
-        final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
+        StringBuilder sb = new StringBuilder();
+        CountryCodeModel spinnerItem;
+        if(telephoneNumber !=null && (spinnerItem = (CountryCodeModel) spinner.getSelectedItem())!=null){
+            sb.append(spinnerItem.getCountryCode());
+            sb.append(telephoneNumber.getText().toString());
 
+        }
+        //final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
+        final String phoneNumber = sb.toString();
         Log.i("Ayush", "PhoneNumber = " + phoneNumber);
 
         final String parsed;
         //replace every non-digit, will retain a minimum of 2 digits (91)
         if (TextUtils.isEmpty(phoneNumber) ||
-                phoneNumber.length() < 14 ||
+                phoneNumber.length() < 13 ||
                 TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) ||
                 parsed.length() < 10) {
 
@@ -130,5 +164,34 @@ public class NumberVerification extends Fragment {
         final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
         final int length = cleansedNumber.length();
         return cleansedNumber.substring(length - 10, length);
+    }
+
+    static class CustomSpinnerAdapter extends ArrayAdapter<CountryCodeModel> {
+
+        private final LayoutInflater inflater;
+
+        public CustomSpinnerAdapter(Context context, int resource, CountryCodeModel[] objects) {
+            super(context, resource, objects);
+            inflater = LayoutInflater.from(context);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = inflater.inflate(android.R.layout.simple_list_item_1,parent,false);
+            TextView view = (TextView) v.findViewById(android.R.id.text1);
+            view.setText(getItem(position).getCountryCode());
+
+            return v;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            View v = inflater.inflate(android.R.layout.simple_list_item_1,parent,false);
+            TextView view = (TextView) v.findViewById(android.R.id.text1);
+            view.setText(getItem(position).getCountryName() +", " +getItem(position).getCountryCode());
+
+            return v;
+        }
+
     }
 }
