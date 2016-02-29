@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -54,8 +55,8 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
                     }
 
                     @Override
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
                     }
                 }
         };
