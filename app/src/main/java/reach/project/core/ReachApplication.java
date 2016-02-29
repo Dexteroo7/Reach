@@ -15,7 +15,6 @@ import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
-import com.squareup.okhttp.OkHttpClient;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -30,6 +29,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import okhttp3.OkHttpClient;
 import reach.project.R;
 
 /**
@@ -37,7 +37,7 @@ import reach.project.R;
  */
 public class ReachApplication extends Application implements MemoryTrimmableRegistry {
 
-    public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+    public static OkHttpClient OK_HTTP_CLIENT;
 
     static {
 
@@ -60,6 +60,7 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
                 }
         };
 
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
         /////////////////ignore ssl errors
         try {
             // Install the all-trusting trust manager
@@ -67,25 +68,28 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
             // Create an ssl socket factory with our all-trusting manager
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-            OK_HTTP_CLIENT.setSslSocketFactory(sslSocketFactory);
+            clientBuilder.sslSocketFactory(sslSocketFactory);
         } catch (NoSuchAlgorithmException | KeyManagementException ignored) {
             //ignore !!
         }
 
-        OK_HTTP_CLIENT.setHostnameVerifier((hostname, session) -> true);
+        clientBuilder.hostnameVerifier((hostname, session) -> true);
         /////////////////no http response cache
-        OK_HTTP_CLIENT.setCache(null);
+        clientBuilder.cache(null);
         /////////////////redirects and retries
-        OK_HTTP_CLIENT.setFollowRedirects(true);
-        OK_HTTP_CLIENT.setRetryOnConnectionFailure(true);
-        OK_HTTP_CLIENT.setFollowSslRedirects(true);
+        clientBuilder.followRedirects(true);
+        clientBuilder.retryOnConnectionFailure(true);
+        clientBuilder.followSslRedirects(true);
+        OK_HTTP_CLIENT = clientBuilder.build();
+        clientBuilder = OK_HTTP_CLIENT.newBuilder();
         /////////////////double the timeouts
-        final long connectionTimeOut = OK_HTTP_CLIENT.getConnectTimeout();
-        final long readTimeOut = OK_HTTP_CLIENT.getReadTimeout();
-        final long writeTimeOut = OK_HTTP_CLIENT.getWriteTimeout();
-        OK_HTTP_CLIENT.setConnectTimeout(connectionTimeOut * 2, TimeUnit.MILLISECONDS);
-        OK_HTTP_CLIENT.setReadTimeout(readTimeOut * 2, TimeUnit.MILLISECONDS);
-        OK_HTTP_CLIENT.setWriteTimeout(writeTimeOut * 2, TimeUnit.MILLISECONDS);
+        final long connectionTimeOut = OK_HTTP_CLIENT.connectTimeoutMillis();
+        final long readTimeOut = OK_HTTP_CLIENT.readTimeoutMillis();
+        final long writeTimeOut = OK_HTTP_CLIENT.writeTimeoutMillis();
+        clientBuilder.connectTimeout(connectionTimeOut * 2, TimeUnit.MILLISECONDS);
+        clientBuilder.readTimeout(readTimeOut * 2, TimeUnit.MILLISECONDS);
+        clientBuilder.writeTimeout(writeTimeOut * 2, TimeUnit.MILLISECONDS);
+        OK_HTTP_CLIENT = clientBuilder.build();
     }
 
     private static final HitBuilders.EventBuilder EVENT_BUILDER = new HitBuilders.EventBuilder();
