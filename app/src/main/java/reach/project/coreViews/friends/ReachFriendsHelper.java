@@ -83,6 +83,7 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
     public static final short OFFLINE_REQUEST_GRANTED = 1;
     public static final short REQUEST_SENT_NOT_GRANTED = 2;
     public static final short REQUEST_NOT_SENT = 3;
+    public static final short UPLOADS_DISABLED = 5;
 
     /**
      * Use this when inserting a fresh new friend

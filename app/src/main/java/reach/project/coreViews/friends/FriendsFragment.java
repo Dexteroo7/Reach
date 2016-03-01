@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -171,14 +170,10 @@ public class FriendsFragment extends Fragment implements
         if (rootView == null)
             return;
 
-        if (clickData.status < ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
-
-            Log.i("Ayush", "Detected status" + clickData.status);
+        Log.i("Ayush", "Detected status" + clickData.status);
+        if (clickData.status < ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
             YourProfileActivity.openProfile(clickData.friendId, getActivity());
-            if ((clickData.friendId!=StaticData.DEVIKA) && clickData.networkType == 5)
-                Snackbar.make(rootView, "The user has disabled Uploads", Snackbar.LENGTH_LONG).show();
-
-        } else
+        else
             ProfileActivity.openProfile(clickData.friendId, getActivity());
     }
 

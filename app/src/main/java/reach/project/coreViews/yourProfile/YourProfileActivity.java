@@ -13,6 +13,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -111,8 +112,13 @@ public class YourProfileActivity extends AppCompatActivity {
             final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
             final short status = cursor.getShort(5);
-            if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED)
-                Snackbar.make(findViewById(R.id.root_layout), uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
+            if (userId != StaticData.DEVIKA) {
+                final View rootView = findViewById(R.id.root_layout);
+                if (status == ReachFriendsHelper.UPLOADS_DISABLED)
+                    Snackbar.make(rootView, uName + " has disabled uploads. You will be only be able to transfer music when the user enables it", Snackbar.LENGTH_INDEFINITE).show();
+                else if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED)
+                    Snackbar.make(rootView, uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
+            }
 
             final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
