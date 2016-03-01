@@ -384,7 +384,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
-        explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
+        explorePager.setClipToPadding(false);
+        explorePager.setPadding((MiscUtils.dpToPx(16)),0,(MiscUtils.dpToPx(16)),(MiscUtils.dpToPx(-16)));
+        //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
