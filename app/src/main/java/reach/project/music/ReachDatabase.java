@@ -7,6 +7,7 @@ import com.google.common.hash.Hashing;
 
 import org.joda.time.DateTime;
 
+import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.utils.MiscUtils;
 
 /**
@@ -15,7 +16,7 @@ import reach.project.utils.MiscUtils;
 public final class ReachDatabase {
 
     private ReachDatabase(long id, long songId, long uniqueId, String metaHash, long receiverId, long senderId, OperationKind operationKind, String userName, String artistName, String albumName,
-                          String genre, String displayName, String actualName, byte[] albumArtData, long length, DateTime dateAdded, long duration, boolean isLiked, String onlineStatus,
+                          String genre, String displayName, String actualName, byte[] albumArtData, long length, DateTime dateAdded, long duration, boolean isLiked, ReachFriendsHelper.Status onlineStatus,
                           boolean visibility) {
 
         this.id = id;
@@ -80,7 +81,7 @@ public final class ReachDatabase {
         return userName;
     }
 
-    public String getOnlineStatus() {
+    public ReachFriendsHelper.Status getOnlineStatus() {
         return onlineStatus;
     }
 
@@ -173,6 +174,7 @@ public final class ReachDatabase {
     }
 
     public enum OperationKind {
+
         DOWNLOAD_OP(0),
         UPLOAD_OP(1);
 
@@ -274,7 +276,7 @@ public final class ReachDatabase {
     private String path = "hello_world";
 
     private final String userName;
-    private final String onlineStatus;
+    private final ReachFriendsHelper.Status onlineStatus;
     private final String artistName;
     private final String albumName;
     private final boolean isLiked;
@@ -311,7 +313,7 @@ public final class ReachDatabase {
         private String path = "hello_world";
 
         private String userName;
-        private String onlineStatus;
+        private ReachFriendsHelper.Status onlineStatus;
         private String artistName;
         private String albumName;
         private boolean isLiked;
@@ -423,20 +425,8 @@ public final class ReachDatabase {
             return songId;
         }
 
-        public long getUniqueId() {
-            return uniqueId;
-        }
-
-        public long getReceiverId() {
-            return receiverId;
-        }
-
         public long getSenderId() {
             return senderId;
-        }
-
-        public OperationKind getOperationKind() {
-            return operationKind;
         }
 
         public String getUserName() {
@@ -447,24 +437,12 @@ public final class ReachDatabase {
             return artistName;
         }
 
-        public String getAlbumName() {
-            return albumName;
-        }
-
-        public String getGenre() {
-            return genre;
-        }
-
         public String getDisplayName() {
             return displayName;
         }
 
         public String getActualName() {
             return actualName;
-        }
-
-        public byte[] getAlbumArtData() {
-            return albumArtData;
         }
 
         public long getLength() {
@@ -489,7 +467,7 @@ public final class ReachDatabase {
             return this;
         }
 
-        public Builder setOnlineStatus(String onlineStatus) {
+        public Builder setOnlineStatus(ReachFriendsHelper.Status onlineStatus) {
             this.onlineStatus = onlineStatus;
             return this;
         }
@@ -503,10 +481,6 @@ public final class ReachDatabase {
             return id;
         }
 
-        public String getMetaHash() {
-            return metaHash;
-        }
-
         public String getPath() {
             return path;
         }
@@ -516,25 +490,13 @@ public final class ReachDatabase {
             return this;
         }
 
-        public String getOnlineStatus() {
-            return onlineStatus;
-        }
-
         public boolean isLiked() {
             return isLiked;
-        }
-
-        public long getProcessed() {
-            return processed;
         }
 
         public Builder setProcessed(long processed) {
             this.processed = processed;
             return this;
-        }
-
-        public int getLogicalClock() {
-            return logicalClock;
         }
 
         public Builder setLogicalClock(int logicalClock) {

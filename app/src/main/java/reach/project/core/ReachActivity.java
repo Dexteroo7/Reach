@@ -480,7 +480,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                         song.actualName,
                                         true,
                                         pushContainer.userName,
-                                        ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                        ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED,
                                         "0",
                                         song.artist,
                                         song.duration,
@@ -619,7 +619,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     @Override
     public void addSongToQueue(long songId, long senderId, long size,
                                String displayName, String actualName,
-                               boolean multiple, String userName, String onlineStatus,
+                               boolean multiple, String userName, ReachFriendsHelper.Status onlineStatus,
                                String networkType, String artistName, long duration,
                                String albumName, String genre) {
 

@@ -219,7 +219,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     },
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
                     new String[]{
-                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""
+                            ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString()
                     }, null);
 
             if (cursor == null)
@@ -374,7 +374,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         toolbar.setTitle("Discover");
         toolbar.inflateMenu(R.menu.explore_menu);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-
         exploreAdapter = new ExploreAdapter(this, this);
         /*final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
         final PopupMenu popupMenu = new PopupMenu(getActivity(), exploreToolbarText);
@@ -385,6 +384,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
+
 //        explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -557,7 +557,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 .setAlbumArtData(new byte[0])
                 .setGenre("")
                 .setLiked(false)
-                .setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "")
+                .setOnlineStatus(ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED)
                 .setVisibility(true)
                 .setPath("hello_world")
                 .setProcessed(0)

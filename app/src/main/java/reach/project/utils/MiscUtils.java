@@ -10,6 +10,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -38,6 +40,7 @@ import android.widget.Toast;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.controller.AbstractDraweeController;
 import com.facebook.drawee.interfaces.DraweeController;
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.android.gms.analytics.HitBuilders;
@@ -55,6 +58,7 @@ import org.json.JSONException;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -72,6 +76,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -297,6 +305,21 @@ public enum MiscUtils {
                         .setResizeOptions(resizeOptions)
                         .build())
                 .build();
+    }
+
+    //TODO use this....
+    public static void setUriToView(@Nonnull SimpleDraweeView simpleDraweeView,
+                                    @Nonnull Uri uri,
+                                    @Nullable ResizeOptions resizeOptions) {
+
+        final DraweeController draweeController = Fresco.newDraweeControllerBuilder()
+                .setOldController(simpleDraweeView.getController())
+                .setImageRequest(ImageRequestBuilder.newBuilderWithSource(uri)
+                        .setResizeOptions(resizeOptions)
+                        .build())
+                .build();
+
+        simpleDraweeView.setController(draweeController);
     }
 
     public static <T, E> Map<T, E> getMap(int capacity) {
@@ -975,12 +998,74 @@ public enum MiscUtils {
         return new StartDownloadOperation(context, reachDatabase, receiverId, senderId, databaseId);
     }
 
+    public static List<ApplicationInfo> fastGetApps(PackageManager packageManager) {
+
+        final Process process;
+        try {
+            process = Runtime.getRuntime().exec("pm list packages");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        final ExecutorService executorService = Executors.newFixedThreadPool(20);
+        final ExecutorCompletionService<ApplicationInfo> completionService = new ExecutorCompletionService<>(executorService);
+
+        int counter = 0;
+        while (true) {
+
+            final String line;
+            try {
+                line = bufferedReader.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+                break;
+            }
+
+            if (TextUtils.isEmpty(line))
+                continue;
+            final String packageName = line.substring(line.indexOf(':') + 1);
+            if (TextUtils.isEmpty(packageName))
+                continue;
+
+            //load on thread
+            completionService.submit(() -> {
+
+                final ApplicationInfo toReturn = packageManager.getApplicationInfo(packageName, 0);
+                return SYSTEM_APP_REMOVER.apply(toReturn) ? toReturn : null;
+            });
+            counter++;
+        }
+
+        process.destroy();
+        MiscUtils.closeQuietly(bufferedReader);
+
+        final List<ApplicationInfo> finalList = new ArrayList<>(counter);
+        for (int index = 0; index < counter; index++) {
+            try {
+                finalList.add(completionService.take().get());
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        executorService.shutdownNow();
+
+        return finalList;
+    }
+
+    public static final Predicate<ApplicationInfo> SYSTEM_APP_REMOVER =
+            input -> input != null &&
+                    (input.flags & ApplicationInfo.FLAG_SYSTEM) == 0 &&
+                    (input.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0 &&
+                    (input.flags & ApplicationInfo.FLAG_TEST_ONLY) == 0;
+
     public static List<ApplicationInfo> getInstalledApps(PackageManager packageManager) {
 
-        List<ApplicationInfo> applications;
         try {
 
-            applications = packageManager.getInstalledApplications(0);
+            final List<ApplicationInfo> applications = packageManager.getInstalledApplications(0);
             final Iterator<ApplicationInfo> iterator = applications.iterator();
             while (iterator.hasNext()) {
 
@@ -990,40 +1075,12 @@ public enum MiscUtils {
                         || (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0)
                     iterator.remove();
             }
-
             return applications;
-        } catch (Exception ignored) {
 
-        }
-
-        applications = new ArrayList<>();
-        BufferedReader bufferedReader = null;
-
-        try {
-            final Process process = Runtime.getRuntime().exec("pm list packages");
-            bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                final String packageName = line.substring(line.indexOf(':') + 1);
-                final ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
-                if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0
-                        && (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0
-                        && (applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) == 0)
-                    applications.add(applicationInfo);
-            }
-            process.waitFor();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (bufferedReader != null) {
-                try {
-                    bufferedReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            return fastGetApps(packageManager);
         }
-        return applications;
     }
 
     public static void openAppInPlayStore(Activity activity, String packageName, Long senderId, String page) {
@@ -1483,4 +1540,100 @@ public enum MiscUtils {
         return hashFunction.hashUnencodedChars(packageName).toString();
     }
 
+    /**
+     * If bitmap could not be returned use the original image as is, this should not happen normally
+     *
+     * @param inputStream the inputStream for the image
+     * @return the resized bitmap
+     */
+    @NonNull
+    public static BitmapFactory.Options getRequiredOptions(final InputStream inputStream) {
+
+        // Decode just the boundaries
+        final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
+        mBitmapOptions.inJustDecodeBounds = true;
+
+        final Bitmap temporary = BitmapFactory.decodeStream(inputStream, null, mBitmapOptions);
+        if (temporary != null)
+            temporary.recycle();
+        if (mBitmapOptions.outHeight == 0 || mBitmapOptions.outWidth == 0)
+            return mBitmapOptions; //illegal
+
+        // Calculate inSampleSize
+        // Raw height and width of image
+        final int height = mBitmapOptions.outHeight;
+        final int width = mBitmapOptions.outWidth;
+        final int sideLength = 1000;
+
+        int reqHeight = height;
+        int reqWidth = width;
+        final int inDensity;
+        final int inTargetDensity;
+
+        if (height > width) {
+
+            if (height > sideLength) {
+
+                reqHeight = sideLength;
+                reqWidth = (width * sideLength) / height;
+            }
+            inDensity = height;
+            inTargetDensity = reqHeight;
+
+        } else if (width > height) {
+
+            if (width > sideLength) {
+                reqWidth = sideLength;
+                reqHeight = (height * sideLength) / width;
+            }
+            inDensity = width;
+            inTargetDensity = reqWidth;
+
+        } else {
+
+            reqWidth = sideLength;
+            reqHeight = sideLength;
+            inDensity = height;
+            inTargetDensity = reqHeight;
+        }
+
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth)
+                inSampleSize *= 2;
+        }
+
+        //now go resize the image to the size you want
+        mBitmapOptions.inSampleSize = inSampleSize;
+        mBitmapOptions.inDither = true;
+        mBitmapOptions.inPreferQualityOverSpeed = true;
+        mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
+        mBitmapOptions.inJustDecodeBounds = false;
+        mBitmapOptions.inScaled = true;
+        mBitmapOptions.inDensity = inDensity;
+        mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
+
+        /**
+         * Generate the compressed image
+         * Will load & resize the image to be 1/inSampleSize dimensions
+         */
+        Log.i("Ayush", "Starting compression");
+        return mBitmapOptions;
+    }
+
+//    final HttpTransport transport = new NetHttpTransport();
+//    final JsonFactory factory = new JacksonFactory();
+//    final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(activity, StaticData.SCOPE);
+//    credential.setSelectedAccountName(SharedPrefUtils.getEmailId(fragment.sharedPreferences));
+//    Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
+//
+//    final BlahApi businessApi = CloudEndPointsUtils.updateBuilder(new BlahApi.Builder(transport, factory, credential)
+//            .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
 }

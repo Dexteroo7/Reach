@@ -142,11 +142,11 @@ public class GcmIntentService extends IntentService {
                 if (mType.equals("PERMISSION_GRANTED")) {
                     notificationBuilder.setTicker(hostName + " accepted your request");
                     notificationBuilder.setContentText("accepted your request");
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
                 } else if (mType.equals("PERMISSION_REJECTED")) {
                     notificationBuilder.setTicker(hostName + " rejected your request");
                     notificationBuilder.setContentText("rejected your request");
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
                 }
                 /**
                  * It is important to only update the required data
@@ -269,11 +269,11 @@ public class GcmIntentService extends IntentService {
 
 //                Log.i("Ayush", hostId + " Got PONG");
 
-                friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
                 friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
                 friend.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis()); //online
 
-                database.put(SongHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                database.put(SongHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
                 /**
                  * It is important to only update the required data
                  */
@@ -282,7 +282,7 @@ public class GcmIntentService extends IntentService {
                         friend,
                         ReachFriendsHelper.COLUMN_ID + " = ? and " +
                                 ReachFriendsHelper.COLUMN_STATUS + " < ?",
-                        new String[]{hostId + "", ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""});
+                        new String[]{hostId + "", ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getString()});
                 try {
                     getContentResolver().update(
                             SongProvider.CONTENT_URI,

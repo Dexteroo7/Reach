@@ -103,7 +103,7 @@ public enum FireOnce implements Closeable {
              * Invalidate everyone
              */
             final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue());
             contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
 
             resolver.update(
@@ -111,7 +111,7 @@ public enum FireOnce implements Closeable {
                     contentValues,
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                    new String[]{ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString(),
                             (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + ""});
             contentValues.clear();
         }
@@ -316,7 +316,7 @@ public enum FireOnce implements Closeable {
              * and send PING
              */
             final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue());
             contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
 
             final ContentResolver resolver = resolverWeakReference.get();
@@ -329,7 +329,7 @@ public enum FireOnce implements Closeable {
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
                             ReachFriendsHelper.COLUMN_ID + " != ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                    new String[]{ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString(),
                             (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + "", StaticData.DEVIKA + ""});
             contentValues.clear();
 

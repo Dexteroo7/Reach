@@ -126,14 +126,14 @@ public class FriendsFragment extends Fragment implements
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
+                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()},
                     ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
+                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()}, null);
 
         else
             return null;
@@ -171,7 +171,7 @@ public class FriendsFragment extends Fragment implements
         if (rootView == null)
             return;
 
-        if (clickData.status < ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+        if (clickData.status < ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
 
             Log.i("Ayush", "Detected status" + clickData.status);
             YourProfileActivity.openProfile(clickData.friendId, getActivity());

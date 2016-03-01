@@ -16,7 +16,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import reach.backend.entities.userApi.model.ReachUser;
+import reach.project.onBoarding.OnboardingData;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
 /**
@@ -27,15 +27,20 @@ public enum SharedPrefUtils {
 
     //TODO centralize all keys,
 
-    public synchronized static void storeReachUser(SharedPreferences sharedPreferences, ReachUser reachUserDatabase) {
+    public synchronized static void storeReachUser(SharedPreferences sharedPreferences,
+                                                   OnboardingData onboardingData,
+                                                   String chatToken,
+                                                   long serverId) {
 
-        sharedPreferences.edit().putString("phoneNumber", reachUserDatabase.getPhoneNumber())
-                .putString("userName", reachUserDatabase.getUserName())
-                .putString("deviceId", reachUserDatabase.getDeviceId())
-                .putString("imageId", reachUserDatabase.getImageId())
-                .putString("coverImageId", reachUserDatabase.getCoverPicId())
-                .putString("chatToken", reachUserDatabase.getChatToken())
-                .putLong("serverId", reachUserDatabase.getId())
+        sharedPreferences.edit().putString("phoneNumber", onboardingData.phoneNumber)
+                .putString("userName", onboardingData.userName)
+                .putString("deviceId", onboardingData.deviceId)
+                .putString("imageId", onboardingData.profilePicUri)
+                .putString("coverImageId", onboardingData.coverPicUri)
+                .putString("promoCode", onboardingData.promoCode)
+                .putString("emailId", onboardingData.emailId)
+                .putString("chatToken", chatToken)
+                .putLong("serverId", serverId)
                 .apply();
     }
 

@@ -72,7 +72,8 @@ public final class Song extends Message {
   @ProtoField(tag = 19)
   public final AlbumArtData albumArtData;
 
-  public Song(Long songId, Long size, Boolean visibility, Integer year, Long dateAdded, Long duration, String genre, String displayName, String actualName, String artist, String album, String fileHash, String path, Boolean isLiked, AlbumArtData albumArtData) {
+  public Song(Long songId, Long size, Boolean visibility, Integer year, Long dateAdded, Long duration, String genre, String displayName,
+              String actualName, String artist, String album, String fileHash, String path, Boolean isLiked, AlbumArtData albumArtData) {
     this.songId = songId;
     this.size = size;
     this.visibility = visibility;

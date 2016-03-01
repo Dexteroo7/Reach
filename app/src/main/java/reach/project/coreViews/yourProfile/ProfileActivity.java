@@ -70,7 +70,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         //update locally
         final ContentValues values = new ContentValues();
-        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED);
+        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue());
         getContentResolver().update(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                 values,
@@ -87,7 +87,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         //update locally
         final ContentValues values = new ContentValues();
-        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+        values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
         getContentResolver().update(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
                 values,
@@ -202,7 +202,7 @@ public class ProfileActivity extends AppCompatActivity {
         text2 = (TextView) findViewById(R.id.text2);
         sendButton = (TextView) findViewById(R.id.sendButton);
 
-        if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+        if (status == ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
             sendButton.setOnClickListener(cancelRequest);
             setRequestSent();
         } else
@@ -268,7 +268,7 @@ public class ProfileActivity extends AppCompatActivity {
             if (response != null && response > 0) {
 
                 final ContentValues values = new ContentValues();
-                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
 
                 //response becomes the id of failed person
                 MiscUtils.useActivity(reference, activity -> {

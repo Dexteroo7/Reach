@@ -175,7 +175,6 @@ public enum UsageTracker {
         Log.i("Ayush", "Posting " + toPost);
 
         synchronized (requests) {
-
             requests.push(new Request.Builder()
                     .url("http://52.74.175.56:8080/analytics/events")
                     .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))

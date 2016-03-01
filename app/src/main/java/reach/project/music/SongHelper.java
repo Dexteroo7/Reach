@@ -74,7 +74,7 @@ public class SongHelper extends SQLiteOpenHelper {
 
         values.put(COLUMN_PATH, reachDatabase.getPath());
         values.put(COLUMN_USER_NAME, reachDatabase.getUserName());
-        values.put(COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus());
+        values.put(COLUMN_ONLINE_STATUS, reachDatabase.getOnlineStatus().getString());
         values.put(COLUMN_ARTIST, reachDatabase.getArtistName());
         values.put(COLUMN_IS_LIKED, reachDatabase.isLiked() ? 1 : 0); //must put string
 

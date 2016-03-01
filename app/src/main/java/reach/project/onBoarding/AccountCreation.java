@@ -54,7 +54,7 @@ public class AccountCreation extends Fragment {
     static final int IMAGE_PICKER_SELECT = 999;
 
     @Nullable
-    private Uri profilePicUri = null;
+    private Uri profilePicUri = null, coverPicUri = null;
     @Nullable
     private SplashInterface mListener = null;
     @Nullable
@@ -84,7 +84,6 @@ public class AccountCreation extends Fragment {
         profilePhotoSelector.setOnClickListener(imagePicker);
         userName.requestFocus();
 
-        final String oldImageId, oldCoverPicId;
         final FragmentActivity activity = getActivity();
         final Bundle arguments;
         final String[] oldData;
@@ -101,18 +100,14 @@ public class AccountCreation extends Fragment {
                 userName.setSelection(oldData[0].length());
             }
 
-            oldCoverPicId = oldData[1];
-            oldImageId = oldData[2];
-            if (!TextUtils.isEmpty(oldImageId) && !oldImageId.equals("hello_world")) {
+            if (!TextUtils.isEmpty(oldData[1]) && !oldData[1].equals("hello_world"))
+                coverPicUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldData[1]);
+            if (!TextUtils.isEmpty(oldData[2]) && !oldData[2].equals("hello_world")) {
 
-                final Uri uriToDisplay = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldImageId);
+                profilePicUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + oldData[2]);
                 profilePhotoSelector.setController(MiscUtils.getControllerResize(profilePhotoSelector.getController(),
-                        uriToDisplay, PROFILE_PHOTO_RESIZE));
+                        profilePicUri, PROFILE_PHOTO_RESIZE));
             }
-        } else {
-
-            oldCoverPicId = "";
-            oldImageId = "";
         }
 
         rootView.findViewById(R.id.verify).setOnClickListener(view -> {
@@ -131,8 +126,7 @@ public class AccountCreation extends Fragment {
 
             final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             final String phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
-            //TODO temp cover solution
-            mListener.onOpenScan(name, profilePicUri, oldImageId, oldCoverPicId, phoneNumber); //not possible to be null
+            mListener.onOpenScan(name, profilePicUri, coverPicUri, phoneNumber); //not possible to be null
 
             //TODO track
             /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);

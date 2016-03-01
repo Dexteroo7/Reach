@@ -138,7 +138,7 @@ public class ContactChooserFragment extends Fragment implements HandOverMessage<
                     ReachFriendsProvider.CONTENT_URI,
                     contactChooserAdapter.requiredProjection,
                     ReachFriendsHelper.COLUMN_STATUS + " < ?",
-                    new String[]{ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""},
+                    new String[]{ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getString()},
                     ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
         return null;
     }

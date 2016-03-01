@@ -213,9 +213,9 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
-        <service
-            android:name=".utils.MetaDataScanner"
-            android:exported="false" />
+        <!--<service-->
+            <!--android:name=".utils.MetaDataScanner"-->
+            <!--android:exported="false" />-->
         <service
             android:name=".onBoarding.smsRelated.SmsListener"
             android:exported="false" />

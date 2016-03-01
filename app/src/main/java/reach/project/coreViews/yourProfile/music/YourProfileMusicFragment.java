@@ -239,7 +239,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 .setAlbumArtData(new byte[0])
                 .setGenre(song.genre)
                 .setLiked(false)
-                .setOnlineStatus(senderCursor.getShort(1) + "")
+                .setOnlineStatus(ReachFriendsHelper.Status.getFromValue(senderCursor.getShort(1)))
                 .setVisibility(true)
                 .setPath("hello_world")
                 .setProcessed(0)

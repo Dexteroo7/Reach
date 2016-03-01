@@ -82,7 +82,7 @@ public enum CloudStorageUtils {
                                      long myId) {
 
         //first calculate the original size
-        final BitmapFactory.Options options = getRequiredOptions(optionsStream);
+        final BitmapFactory.Options options = MiscUtils.getRequiredOptions(optionsStream);
         if (options.outHeight == 0 || options.outWidth == 0)
             return ""; //failed
         MiscUtils.closeQuietly(optionsStream);
@@ -102,7 +102,7 @@ public enum CloudStorageUtils {
             }
 
             @Override
-            public void writeTo(BufferedSink sink) throws IOException {
+            public void writeTo(BufferedSink sink) {
                 //write the final compressed image
                 resizedBitmap.compress(Bitmap.CompressFormat.WEBP, 80, sink.outputStream());
             }
@@ -402,10 +402,16 @@ public enum CloudStorageUtils {
 
             Log.i("Ayush", "Md5 hash = ? " + serverHash);
 
-            final BufferedInputStream bufferedInputStream = new BufferedInputStream(httpResponse.getContent());
+            final InputStream actualStream = get.executeMediaAsInputStream();
+            final BufferedInputStream bufferedInputStream;
+            if (actualStream instanceof BufferedInputStream)
+                bufferedInputStream = (BufferedInputStream) actualStream;
+            else
+                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+
             final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
             musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
-            MiscUtils.closeQuietly(bufferedInputStream, compressedData);
+            MiscUtils.closeQuietly(actualStream, bufferedInputStream, compressedData);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -558,6 +564,76 @@ public enum CloudStorageUtils {
         return apps;
     }
 
+    public static List<Song> fetchMySongs(long userId, InputStream key) {
+
+        final String fileName = MiscUtils.getMusicStorageKey(userId);
+        final Optional<Storage> optional = getStorage(key);
+        if (!optional.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        final Storage storage = optional.get();
+        final MusicList musicList;
+
+        try {
+
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
+            get.getRequestHeaders().setCacheControl("no-cache");
+            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+
+            final InputStream actualStream = get.executeMediaAsInputStream();
+            final BufferedInputStream bufferedInputStream;
+            if (actualStream instanceof BufferedInputStream)
+                bufferedInputStream = (BufferedInputStream) actualStream;
+            else
+                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+
+            final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
+            musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+            MiscUtils.closeQuietly(actualStream, bufferedInputStream, compressedData);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        return musicList == null || musicList.song == null ? Collections.emptyList() : musicList.song;
+    }
+
+    public static List<App> fetchMyApps(long userId, InputStream key) {
+
+        final String fileName = MiscUtils.getAppStorageKey(userId);
+        final Optional<Storage> optional = getStorage(key);
+        if (!optional.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        final Storage storage = optional.get();
+        final AppList appList;
+
+        try {
+
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_APP_DATA, fileName);
+            get.getRequestHeaders().setCacheControl("no-cache");
+            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+
+            final InputStream actualStream = get.executeMediaAsInputStream();
+            final BufferedInputStream bufferedInputStream;
+            if (actualStream instanceof BufferedInputStream)
+                bufferedInputStream = (BufferedInputStream) actualStream;
+            else
+                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+
+            final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
+            appList = new Wire(AppList.class).parseFrom(compressedData, AppList.class);
+            MiscUtils.closeQuietly(actualStream, bufferedInputStream, compressedData);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        return appList == null || appList.app == null ? Collections.emptyList() : appList.app;
+    }
+
     private static Optional<Storage> getStorage(@Nullable InputStream stream) {
 
         if (stream == null)
@@ -605,93 +681,5 @@ public enum CloudStorageUtils {
         return Optional.of(storage = new Storage.Builder(transport, factory, googleCredential)
                 .setApplicationName(APPLICATION_NAME_PROPERTY)
                 .build());
-    }
-
-    /**
-     * If bitmap could not be returned use the original image as is, this should not happen normally
-     *
-     * @param inputStream the inputStream for the image
-     * @return the resized bitmap
-     */
-    @NonNull
-    private static BitmapFactory.Options getRequiredOptions(final InputStream inputStream) {
-
-        // Decode just the boundaries
-        final BitmapFactory.Options mBitmapOptions = new BitmapFactory.Options();
-        mBitmapOptions.inJustDecodeBounds = true;
-
-        final Bitmap temporary = BitmapFactory.decodeStream(inputStream, null, mBitmapOptions);
-        if (temporary != null)
-            temporary.recycle();
-        if (mBitmapOptions.outHeight == 0 || mBitmapOptions.outWidth == 0)
-            return mBitmapOptions; //illegal
-
-        // Calculate inSampleSize
-        // Raw height and width of image
-        final int height = mBitmapOptions.outHeight;
-        final int width = mBitmapOptions.outWidth;
-        final int sideLength = 1000;
-
-        int reqHeight = height;
-        int reqWidth = width;
-        final int inDensity;
-        final int inTargetDensity;
-
-        if (height > width) {
-
-            if (height > sideLength) {
-
-                reqHeight = sideLength;
-                reqWidth = (width * sideLength) / height;
-            }
-            inDensity = height;
-            inTargetDensity = reqHeight;
-
-        } else if (width > height) {
-
-            if (width > sideLength) {
-                reqWidth = sideLength;
-                reqHeight = (height * sideLength) / width;
-            }
-            inDensity = width;
-            inTargetDensity = reqWidth;
-
-        } else {
-
-            reqWidth = sideLength;
-            reqHeight = sideLength;
-            inDensity = height;
-            inTargetDensity = reqHeight;
-        }
-
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth)
-                inSampleSize *= 2;
-        }
-
-        //now go resize the image to the size you want
-        mBitmapOptions.inSampleSize = inSampleSize;
-        mBitmapOptions.inDither = true;
-        mBitmapOptions.inPreferQualityOverSpeed = true;
-        mBitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
-        mBitmapOptions.inJustDecodeBounds = false;
-        mBitmapOptions.inScaled = true;
-        mBitmapOptions.inDensity = inDensity;
-        mBitmapOptions.inTargetDensity = inTargetDensity * mBitmapOptions.inSampleSize;
-
-        /**
-         * Generate the compressed image
-         * Will load & resize the image to be 1/inSampleSize dimensions
-         */
-        Log.i("Ayush", "Starting compression");
-        return mBitmapOptions;
     }
 }

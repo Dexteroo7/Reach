@@ -36,7 +36,6 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.utils.FireOnce;
-import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
@@ -193,10 +192,10 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 FireOnce.checkGCM(contextWeakReference, serverId);
                 //refresh download ops
                 FireOnce.refreshOperations(contextWeakReference);
-                //MetaDataScanner
-                final Intent intent = new Intent(this, MetaDataScanner.class);
-                intent.putExtra("first", false);
-                startService(intent);
+                //TODO MetaDataScanner
+//                final Intent intent = new Intent(this, MetaDataScanner.class);
+//                intent.putExtra("first", false);
+//                startService(intent);
 
             } else
                 Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();
@@ -248,12 +247,12 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
+    public void onOpenScan(String name, Uri profilePicUri, Uri coverPicUri, String phoneNumber) {
         if (isFinishing())
             return;
         try {
             getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                    ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
+                    ScanFragment.newInstance(name, profilePicUri, coverPicUri, phoneNumber)).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }

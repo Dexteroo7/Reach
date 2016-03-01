@@ -86,7 +86,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
                 }
             });
 
-            if (handOverMessageExtra.getExtra(position).getShort(6) == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
+            if (handOverMessageExtra.getExtra(position).getShort(6) == ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue())
                 popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Cancel Request");
 
             popupMenu.show();
@@ -144,7 +144,7 @@ final class FriendsViewHolder extends SingleItemViewHolder {
             else {
 
                 final ContentValues values = new ContentValues();
-                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
                 MiscUtils.useReference(resolverWeakReference, contentResolver -> {
 
                     contentResolver.update(
