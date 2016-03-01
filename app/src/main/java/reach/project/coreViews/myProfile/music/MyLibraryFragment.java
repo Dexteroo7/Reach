@@ -14,12 +14,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
@@ -40,6 +40,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
@@ -50,9 +51,13 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 25/11/15.
  */
+
+// Fragment which displays songs of the user
 public class MyLibraryFragment extends Fragment implements HandOverMessage, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static long myUserId = 0;
+    private EmptyRecyclerView mRecyclerView;
+    private View emptyView;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -65,20 +70,25 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
     @Nullable
     private ParentAdapter parentAdapter;
-    //handle 2 at a time
+    //handle 2 at a time, for thread queue
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View rootView = inflater.inflate(R.layout.fragment_mylibrary_music, container, false);
+         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
         parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+         emptyView = rootView.findViewById(R.id.empty_imageView);
+
+        mRecyclerView.setEmptyView(emptyView);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -89,6 +99,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         return rootView;
     }
+
+
 
     @Override
     public void onDestroyView() {
@@ -165,6 +177,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 //            Log.i("Ayush", "MyLibrary my profile " + count);
 
             parentAdapter.setNewMyLibraryCursor(data);
+
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
@@ -177,6 +190,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                 parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
+        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount()-1);
     }
 
     @Override

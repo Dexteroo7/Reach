@@ -79,6 +79,8 @@ public class ScanFragment extends Fragment {
     private static WeakReference<ScanFragment> reference = null;
     private static long serverId = 0;
 
+    private SharedPreferences sharedPreferences;
+
     public static ScanFragment newInstance(String name, Uri profilePicUri,
                                            String oldImageId, String oldCoverPicId,
                                            String phoneNumber) {
@@ -105,6 +107,8 @@ public class ScanFragment extends Fragment {
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_scan, container, false);
+
+        sharedPreferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
 
         oldImageId = getArguments().getString(OLD_IMAGE_ID, null);
         oldCoverId = getArguments().getString(OLD_COVER_ID, null);
@@ -146,6 +150,8 @@ public class ScanFragment extends Fragment {
             profilePic.setController(draweeController);
         }
 
+        final ProgressBar indeterminateProgress = (ProgressBar)rootView.findViewById(R.id.indeterminateProgress);
+        indeterminateProgress.getIndeterminateDrawable().setColorFilter(ContextCompat.getColor(getActivity(),R.color.reach_color),android.graphics.PorterDuff.Mode.SRC_IN);
         new SaveUserData()
                 .executeOnExecutor(accountUploader,
 
@@ -159,7 +165,8 @@ public class ScanFragment extends Fragment {
                         rootView.findViewById(R.id.scan2),
                         profilePicDecodeStream,
                         profilePicOptionsStream,
-                        userName, phoneNumber);
+                        userName, phoneNumber, SharedPrefUtils.getEmailId(sharedPreferences),
+                        indeterminateProgress);
 
         return rootView;
     }
@@ -171,8 +178,9 @@ public class ScanFragment extends Fragment {
         TextView musicCount;
         TextView appCount;
         ProgressBar progress;
-        String deviceId;
+        String deviceId, emailId;
         LinearLayout scan1, scan2;
+        ProgressBar indeterminateProgress;
 
         @Override
         protected ReachUser doInBackground(Object... objects) {
@@ -192,6 +200,8 @@ public class ScanFragment extends Fragment {
             profilePicDecodeStream = (InputStream) objects[9];
             userName = (String) objects[10];
             phoneNumber = (String) objects[11];
+            emailId = (String) objects[12];
+            indeterminateProgress = (ProgressBar) objects[13];
 
             final String gcmId;
             final GoogleCloudMessaging messagingInstance = MiscUtils.useContextFromFragment
@@ -224,6 +234,7 @@ public class ScanFragment extends Fragment {
             user.setPhoneNumber(phoneNumber);
             user.setImageId(oldImageId);
             user.setCoverPicId(oldCoverId);
+            user.setEmailId(emailId);
 
             //insert User-object and get the userID
             final InsertContainer dataAfterWork = MiscUtils.autoRetry(() -> StaticData.USER_API.insertNew(user).execute(), Optional.absent()).orNull();
@@ -263,7 +274,6 @@ public class ScanFragment extends Fragment {
         protected void onPostExecute(final ReachUser user) {
 
             super.onPostExecute(user);
-
             //set serverId here
             MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, ScanFragment>() {
 
@@ -287,8 +297,6 @@ public class ScanFragment extends Fragment {
                     final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
                     tracker.setScreenName(AccountCreation.class.getPackage().getName());
 
-                    final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
                     final long userId = user.getId();
                     if (userId != 0) {
 
@@ -296,19 +304,19 @@ public class ScanFragment extends Fragment {
                             final HttpTransport transport = new NetHttpTransport();
                             final JsonFactory factory = new JacksonFactory();
                             final GoogleAccountCredential credential = GoogleAccountCredential.usingAudience(activity, StaticData.SCOPE);
-                            credential.setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
+                            credential.setSelectedAccountName(SharedPrefUtils.getEmailId(fragment.sharedPreferences));
                             Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
 
                             final BlahApi businessApi = CloudEndPointsUtils.updateBuilder(new BlahApi.Builder(transport, factory, credential)
                                     .setRootUrl("https://1-dot-business-module-dot-able-door-616.appspot.com/_ah/api/")).build();
 
                             try {
-                                final String code = sharedPreferences.getString("code", "");
-                                final String utm_source = sharedPreferences.getString("utm_source", "");
-                                final String utm_medium = sharedPreferences.getString("utm_medium", "");
-                                final String utm_campaign = sharedPreferences.getString("utm_campaign", "");
-                                final String utm_content = sharedPreferences.getString("utm_content", "");
-                                final String utm_term = sharedPreferences.getString("utm_term", "");
+                                final String code = fragment.sharedPreferences.getString("code", "");
+                                final String utm_source = fragment.sharedPreferences.getString("utm_source", "");
+                                final String utm_medium = fragment.sharedPreferences.getString("utm_medium", "");
+                                final String utm_campaign = fragment.sharedPreferences.getString("utm_campaign", "");
+                                final String utm_content = fragment.sharedPreferences.getString("utm_content", "");
+                                final String utm_term = fragment.sharedPreferences.getString("utm_term", "");
 
                                 if (!TextUtils.isEmpty(code) && !TextUtils.isEmpty(utm_source)) {
                                     final JsonMap jsonMap = new JsonMap();
@@ -349,11 +357,12 @@ public class ScanFragment extends Fragment {
                         tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, userId + "").build());
                     }
 
-                    SharedPrefUtils.storeReachUser(sharedPreferences, user);
+                    SharedPrefUtils.storeReachUser(fragment.sharedPreferences, user);
                     final Intent intent = new Intent(activity, MetaDataScanner.class);
                     intent.putExtra("messenger", messenger);
                     intent.putExtra("first", true);
                     activity.startService(intent);
+
 
                     FireOnce.contactSync(
                             new WeakReference<>(activity.getApplicationContext()),
@@ -379,7 +388,7 @@ public class ScanFragment extends Fragment {
 
                 if (message.what == MetaDataScanner.FINISHED) {
 
-                    next.setText("CLICK TO PROCEED");
+                    next.setText("MANAGE PRIVACY");
                     MiscUtils.useContextFromFragment(reference, new UseContext2<Context>() {
                         @Override
                         public void work(Context context) {
@@ -388,6 +397,8 @@ public class ScanFragment extends Fragment {
                     });
                     next.setOnClickListener(PROCEED);
                     next.setVisibility(View.VISIBLE);
+                    indeterminateProgress.setVisibility(View.GONE);
+
                 } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 
                     totalMusic = message.arg1;
@@ -425,6 +436,8 @@ public class ScanFragment extends Fragment {
                     scan1.setVisibility(View.INVISIBLE);
                     scan2.setVisibility(View.VISIBLE);
                     progress.setProgress(100);
+                    //TODO: Progress
+                    indeterminateProgress.setVisibility(View.VISIBLE);
 
                 } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
 

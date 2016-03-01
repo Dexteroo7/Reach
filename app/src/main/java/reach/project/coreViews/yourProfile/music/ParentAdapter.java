@@ -107,6 +107,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.song_list_item, parent, false), position -> {
 
+                    if (position < 1)
+                        throw new IllegalArgumentException(" Invalid position: " + (position-1)
+                                + " provided in HandOverMessage of YourProfile->SongItemHolder");
+
                     final T message = cacheAdapterInterface.getItem(position - 1);
                     if (message instanceof Song)
                         cacheAdapterInterface.handOverMessage((Song) message);

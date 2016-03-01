@@ -24,7 +24,7 @@ import android.widget.Toast;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
@@ -65,6 +65,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
 
+        // Checking if the user has given permission to read contacts on API 23(marshmallow) or greater
         if (Build.VERSION.SDK_INT >= 23) {
 
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != 0) {
@@ -162,6 +163,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         final String phoneNumber = SharedPrefUtils.getPhoneNumber(preferences);
         final long serverId = SharedPrefUtils.getServerId(preferences);
 
+        //For google analytics
         //track screen
         final Tracker tracker = ((ReachApplication) getApplication()).getTracker();
         tracker.setScreenName("reach.project.onBoarding.SplashActivity");
@@ -261,14 +263,14 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
      */
     public static boolean checkPlayServices(Activity activity) {
 
-        final GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
-
-        final int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(activity);
+        final int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
         if (resultCode == ConnectionResult.SUCCESS)
             return true;
 
-        if (googleApiAvailability.isUserResolvableError(resultCode)) {
-            googleApiAvailability.getErrorDialog(activity, resultCode, StaticData.PLAY_SERVICES_RESOLUTION_REQUEST);
+        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+
+            GooglePlayServicesUtil.getErrorDialog(resultCode, activity,
+                    StaticData.PLAY_SERVICES_RESOLUTION_REQUEST).show();
         } else {
 
             Toast.makeText(activity, "This device is not supported", Toast.LENGTH_LONG).show();

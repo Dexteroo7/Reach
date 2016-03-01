@@ -37,6 +37,8 @@ import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
+
+// If a friend is not added, then this activity is displayed
 public class ProfileActivity extends AppCompatActivity {
 
     private static long userId = 0;
@@ -139,7 +141,7 @@ public class ProfileActivity extends AppCompatActivity {
                     startActivity(new Intent(this, PlayerActivity.class));
                     return true;
                 case R.id.notif_button:
-                    startActivity(new Intent(this, NotificationActivity.class));
+                    NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;
                 case R.id.settings_button:
                     startActivity(new Intent(this, SettingsActivity.class));

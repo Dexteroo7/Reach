@@ -10,10 +10,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +26,7 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -41,6 +42,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private static long userId = 0;
+
+    private EmptyRecyclerView mRecyclerView;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -58,10 +61,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View rootView = inflater.inflate(R.layout.fragment_filemanager_music_mylibrary, container, false);
+        mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
-
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
         parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
@@ -75,6 +80,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         return rootView;
     }
 
+
     @Override
     public void onDestroyView() {
 
@@ -85,24 +91,30 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             parentAdapter.close();
     }
 
+    // The song is being played here
     @Override
     public void handOverMessage(@Nonnull Object message) {
-
+        // Cursor is used for full list songs
         if (message instanceof Cursor) {
 
             final Cursor cursor = (Cursor) message;
             final int count = cursor.getColumnCount();
+
+            // To play songs of the user (not the downloaded ones)
             if (count == MySongsHelper.DISK_LIST.length) {
 
                 final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
                 MiscUtils.playSong(musicData, getContext());
-            } else if (count == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+
+            }
+            //To play the songs downloaded from reach
+            else if (count == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
 
                 final MusicData musicData = ReachDatabaseHelper.getMusicData(cursor);
                 MiscUtils.playSong(musicData, getContext());
             } else
                 throw new IllegalArgumentException("Unknown column count found");
-
+        // Music Data is used for recent list songs
         } else if (message instanceof MusicData) {
             MiscUtils.playSong((MusicData) message, getContext());
         } else
@@ -155,6 +167,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 parentAdapter.updateRecentMusic(getRecentDownloaded());
 
         }
+        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }
 
     @Override

@@ -45,8 +45,8 @@ public class AllContactsFragment extends Fragment implements
 
     public static void showAlert(String name, String number, Context context) {
 
-        final String msg = "Hey! Checkout and download my phone Music collection with just a click!" +
-                ".\nhttp://letsreach.co/app\n--\n" +
+        final String msg = "Oye! Join me on Reach! It'll let us discover each other's music, apps and games. Now checkout my phone's collection from " +
+                "http://msg.mn/reach\n--\n"+
                 SharedPrefUtils.getUserName(context.getSharedPreferences("Reach", Context.MODE_PRIVATE));
 
         final LinearLayout input = new LinearLayout(context);
