@@ -9,12 +9,12 @@ import android.widget.ImageView;
 /**
  * Created by adminReach on 16/02/16.
  */
-public class EmptyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class EmptyTextViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
 
     public final ImageView mEmptyImageView;
 
-    public EmptyViewHolder(ViewGroup parent,
+    public EmptyTextViewHolder(ViewGroup parent,
                            int itemViewResourceId,
                            int emptyImageViewResourceId) {
 

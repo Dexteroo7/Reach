@@ -43,7 +43,6 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.apps.App;
 import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
@@ -283,6 +282,9 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                 .firstSongName(selectedSongs.isEmpty() ? "" : selectedSongs.iterator().next().displayName)
                 .song(ImmutableList.copyOf(selectedSongs))
                 .songCount(selectedSongs.size())
+                .app(Collections.emptyList())
+                .appCount(0)
+                .firstAppName("")
                 .build();
 
         try {

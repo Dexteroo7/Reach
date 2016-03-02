@@ -3,6 +3,7 @@ package reach.project.onBoarding;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -24,45 +25,44 @@ import reach.project.utils.SharedPrefUtils;
 public class NumberVerification extends Fragment {
 
     private static final Pair[] countryCodeData = {
-            new Pair<>("","Åland Islands"),
-            new Pair<>("","Anguilla"),
-            new Pair<>("","Austria"),
-            new Pair<>("","Bangladesh"),
-            new Pair<>("","Barbados"),
-            new Pair<>("","Bermuda"),
-            new Pair<>("","British Virgin Islands"),
-            new Pair<>("","Canada"),
-            new Pair<>("","Cayman Islands"),
-            new Pair<>("","Colombia"),
-            new Pair<>("","Dominica"),
-            new Pair<>("","Dominican Republic"),
-            new Pair<>("","Egypt"),
-            new Pair<>("","United Kingdom"),
-            new Pair<>("","Finland"),
-            new Pair<>("","Germany"),
-            new Pair<>("","Greece"),
-            new Pair<>("","Grenada"),
-            new Pair<>("","Guam"),
-            new Pair<>("","Guernsey"),
+            new Pair<>("+358","Åland Islands"),
+            new Pair<>("+1","Anguilla"),
+            new Pair<>("+43","Austria"),
+            new Pair<>("+880","Bangladesh"),
+            new Pair<>("+1","Barbados"),
+            new Pair<>("+1","Bermuda"),
+            new Pair<>("+1","British Virgin Islands"),
+            new Pair<>("+1","Canada"),
+            new Pair<>("+1","Cayman Islands"),
+            new Pair<>("+57","Colombia"),
+            new Pair<>("+1","Dominica"),
+            new Pair<>("+1","Dominican Republic"),
+            new Pair<>("+20","Egypt"),
+            new Pair<>("+44","United Kingdom"),
+            new Pair<>("+358","Finland"),
+            new Pair<>("+49","Germany"),
+            new Pair<>("+30","Greece"),
+            new Pair<>("+1","Grenada"),
+            new Pair<>("+1","Guam"),
+            new Pair<>("+44","Guernsey"),
             new Pair<>("+91","India"),
-            new Pair<>("","Indonesia"),
-            new Pair<>("","Italy"),
-            new Pair<>("","Montserrat"),
-            new Pair<>("","New Zealand"),
-            new Pair<>("","Northern Ireland"),
-            new Pair<>("","Northern Mariana Islands"),
-            new Pair<>("","Pakistan"),
-            new Pair<>("","Philippines"),
-            new Pair<>("","Puerto Rico"),
-            new Pair<>("","Russia"),
-            new Pair<>("","Saint Vincent and the Grenadines"),
-            new Pair<>("","Scotland"),
-            new Pair<>("","Turks and Caicos Islands"),
-            new Pair<>("","United Arab Emirates"),
-            new Pair<>("","United Kingdom"),
-            new Pair<>("","Vatican City"),
-            new Pair<>("","British Virgin Islands"),
-            new Pair<>("","Wales")
+            new Pair<>("+62","Indonesia"),
+            new Pair<>("+39","Italy"),
+            new Pair<>("+1","Montserrat"),
+            new Pair<>("+64","New Zealand"),
+            new Pair<>("+44","Northern Ireland"),
+            new Pair<>("+1","Northern Mariana Islands"),
+            new Pair<>("+92","Pakistan"),
+            new Pair<>("+63","Philippines"),
+            new Pair<>("+1","Puerto Rico"),
+            new Pair<>("+7","Russia"),
+            new Pair<>("+1","Saint Vincent and the Grenadines"),
+            new Pair<>("+44","Scotland"),
+            new Pair<>("+1","Turks and Caicos Islands"),
+            new Pair<>("+971","United Arab Emirates"),
+            new Pair<>("+44","United Kingdom"),
+            new Pair<>("+379","Vatican City"),
+            new Pair<>("+44","Wales")
     };
 
     private static final byte ENFORCED_LENGTH = 4;
@@ -143,21 +143,21 @@ public class NumberVerification extends Fragment {
 
     private final View.OnClickListener clickListener = view -> {
 
-        final StringBuilder sb = new StringBuilder();
-        final Pair<String, String> pair;
-        if(telephoneNumber !=null && (pair = (Pair<String, String>) spinner.getSelectedItem())!=null){
-            sb.append(pair.first);
-            sb.append(telephoneNumber.getText().toString());
-
+        final Pair<String, String> pair = (Pair<String, String>) spinner.getSelectedItem();
+        final String countryCode;
+        if (pair == null || TextUtils.isEmpty(countryCode = pair.first)) {
+            Toast.makeText(view.getContext(), "Select Country Code", Toast.LENGTH_SHORT).show();
+            return;
         }
-        //final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
-        final String phoneNumber = sb.toString();
+        final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
+        final String parsed;
         Log.i("Ayush", "PhoneNumber = " + phoneNumber);
-
-        if (TextUtils.isEmpty(phoneNumber)) {
+        if (TextUtils.isEmpty(phoneNumber) || phoneNumber.length() < 10 ||
+                TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) || parsed.length() < 10) {
             Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
             return;
         }
+
         //TODO track
         /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
         simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
@@ -169,8 +169,17 @@ public class NumberVerification extends Fragment {
         final Context context = view.getContext();
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         SharedPrefUtils.storePhoneNumber(preferences, phoneNumber); //store the phoneNumber
-        mListener.onOpenCodeVerification(phoneNumber);
+        mListener.onOpenCodeVerification(phoneNumber, countryCode);
     };
+
+
+    @Nullable
+    public static String parsePhoneNumber(@NonNull String enteredPhoneNumber) {
+
+        final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
+        final int length = cleansedNumber.length();
+        return cleansedNumber.substring(length - 10, length);
+    }
 
     private class CustomSpinnerAdapter extends ArrayAdapter<Pair<String, String>> {
 
