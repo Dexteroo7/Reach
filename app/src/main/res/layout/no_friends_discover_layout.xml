@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/exploreNoFriendsContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp"
+    android:visibility="gone"
+    >
+
+    <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="-10dp"
+        android:descendantFocusability="blocksDescendants"
+        card_view:cardCornerRadius="2dp"
+        card_view:cardElevation="4dp"
+        card_view:cardUseCompatPadding="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@null"
+            android:orientation="vertical"
+            android:weightSum="11">
+
+            <!-- TODO: Change the background, use the images used as background in profile views -->
+            <!--<RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="7"
+                android:visibility="gone"
+                android:background="@drawable/cover_large">
+
+                <com.facebook.drawee.view.SimpleDraweeView
+                    android:id="@+id/manager_profile_pic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/manager_name"
+                    android:layout_centerInParent="true"
+                    android:background="@null"
+                    fresco:placeholderImage="@drawable/default_profile_circle" />
+
+                <TextView
+                    android:id="@+id/manager_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/manager_designation"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="8dp"
+                    android:background="@null"
+                    android:textColor="#222222"
+                    android:textSize="20sp"
+                    tools:text="Veronica" />
+
+                <TextView
+                    android:id="@+id/manager_designation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="16dp"
+                    android:background="@null"
+                    android:textColor="#555555"
+                    android:textSize="20sp"
+                    tools:text="(Manager, Reach)" />
+
+            </RelativeLayout>-->
+            <include
+                layout="@layout/header_devika_discover_page"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="8" />
+
+            <!--<LinearLayout
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:weightSum="2">
+
+                <RelativeLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:background="@null"
+                    >
+
+                    <ImageView
+                        android:id="@+id/no_of_songs_image"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:src="@drawable/icon_song_indicator_gray" />
+
+                    <TextView
+                        android:id="@+id/no_of_songs_txt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@id/no_of_songs_image"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="8dp"
+                        android:background="@null"
+                        android:gravity="center"
+                        android:textSize="16sp"
+                        android:textColor="#222222"
+                        tools:text="300 songs" />
+
+                </RelativeLayout>
+
+
+                <RelativeLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:background="@null"
+                    >
+
+                    <ImageView
+                        android:id="@+id/no_of_apps_image"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignBottom="@+id/no_of_apps_txt"
+                        android:background="@null"
+                        android:src="@drawable/icon_apps_indicator_gray" />
+
+                    <TextView
+                        android:id="@+id/no_of_apps_txt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        android:textSize="16sp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_toRightOf="@+id/no_of_apps_image"
+                        tools:text="200 apps"
+                        android:textColor="#222222"
+                        />
+
+                </RelativeLayout>
+
+
+            </LinearLayout>
+        -->
+            <TextView
+                android:id="@+id/display_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="Hey! Currently, you have no friends.\n\nSend me a friend request and\ndiscover my collection."
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/sendRequestButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:background="@color/reach_color"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:text="Send Request"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+</FrameLayout>

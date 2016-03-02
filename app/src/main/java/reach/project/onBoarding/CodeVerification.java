@@ -105,11 +105,14 @@ public class CodeVerification extends Fragment {
         phoneNumber = getArguments().getString(PHONE_NUMBER, "");
         finalAuthKey = getArguments().getString(AUTH_KEY, "");
 
-        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(finalAuthKey)) {
+        final String parsed;
+        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber))
+                || TextUtils.isEmpty(finalAuthKey)) {
             //should never happen
             activity.finish();
             return rootView;
         }
+        Log.i("Ayush", "Final phoneNumber = " + parsed);
 
         verificationCode = (EditText) rootView.findViewById(R.id.verificationCode);
         verificationCode.addTextChangedListener(verificationWatcher);
@@ -123,9 +126,17 @@ public class CodeVerification extends Fragment {
 
         //meanWhile fetch old account
         containerNewFuture = oldAccountFetcher.submit(() -> MiscUtils.autoRetry(() ->
-                StaticData.USER_API.isAccountPresentNew(phoneNumber).execute(), Optional.absent()).orNull());
+                StaticData.USER_API.isAccountPresentNew(parsed).execute(), Optional.absent()).orNull());
 
         return rootView;
+    }
+
+    @Nullable
+    public static String parsePhoneNumber(@NonNull String enteredPhoneNumber) {
+
+        final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
+        final int length = cleansedNumber.length();
+        return cleansedNumber.substring(length - 10, length);
     }
 
     @Override

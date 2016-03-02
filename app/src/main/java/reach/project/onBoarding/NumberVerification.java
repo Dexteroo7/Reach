@@ -3,23 +3,67 @@ package reach.project.onBoarding;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.text.InputFilter;
-import android.text.Selection;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import reach.project.R;
 import reach.project.utils.SharedPrefUtils;
 
 public class NumberVerification extends Fragment {
+
+    private static final Pair[] countryCodeData = {
+            new Pair<>("","Åland Islands"),
+            new Pair<>("","Anguilla"),
+            new Pair<>("","Austria"),
+            new Pair<>("","Bangladesh"),
+            new Pair<>("","Barbados"),
+            new Pair<>("","Bermuda"),
+            new Pair<>("","British Virgin Islands"),
+            new Pair<>("","Canada"),
+            new Pair<>("","Cayman Islands"),
+            new Pair<>("","Colombia"),
+            new Pair<>("","Dominica"),
+            new Pair<>("","Dominican Republic"),
+            new Pair<>("","Egypt"),
+            new Pair<>("","United Kingdom"),
+            new Pair<>("","Finland"),
+            new Pair<>("","Germany"),
+            new Pair<>("","Greece"),
+            new Pair<>("","Grenada"),
+            new Pair<>("","Guam"),
+            new Pair<>("","Guernsey"),
+            new Pair<>("+91","India"),
+            new Pair<>("","Indonesia"),
+            new Pair<>("","Italy"),
+            new Pair<>("","Montserrat"),
+            new Pair<>("","New Zealand"),
+            new Pair<>("","Northern Ireland"),
+            new Pair<>("","Northern Mariana Islands"),
+            new Pair<>("","Pakistan"),
+            new Pair<>("","Philippines"),
+            new Pair<>("","Puerto Rico"),
+            new Pair<>("","Russia"),
+            new Pair<>("","Saint Vincent and the Grenadines"),
+            new Pair<>("","Scotland"),
+            new Pair<>("","Turks and Caicos Islands"),
+            new Pair<>("","United Arab Emirates"),
+            new Pair<>("","United Kingdom"),
+            new Pair<>("","Vatican City"),
+            new Pair<>("","British Virgin Islands"),
+            new Pair<>("","Wales")
+    };
 
     private static final byte ENFORCED_LENGTH = 4;
 
@@ -34,6 +78,7 @@ public class NumberVerification extends Fragment {
     };
 
     private static final InputFilter LENGTH_FILTER = new InputFilter.LengthFilter(14);
+    private Spinner spinner;
 
     public static NumberVerification newInstance() {
         return new NumberVerification();
@@ -52,10 +97,15 @@ public class NumberVerification extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
 
         telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber);
-        telephoneNumber.setText("+91-");
-        telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
+        //telephoneNumber.setText("+91-");
+        spinner = (Spinner) rootView.findViewById(R.id.countryCodeSpinner);
+        spinner.setAdapter(new CustomSpinnerAdapter(getActivity(),android.R.layout.simple_list_item_1,countryCodeData));
+        //telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
+
+        //spinner.requestFocus();
         telephoneNumber.requestFocus();
-        Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
+        //Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
+        //Selection.setSelection(" ", ENFORCED_LENGTH);
 
         /*//clear the shared pref
         final SharedPreferences preferences = getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -93,42 +143,79 @@ public class NumberVerification extends Fragment {
 
     private final View.OnClickListener clickListener = view -> {
 
-        final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
+        final StringBuilder sb = new StringBuilder();
+        final Pair<String, String> pair;
+        if(telephoneNumber !=null && (pair = (Pair<String, String>) spinner.getSelectedItem())!=null){
+            sb.append(pair.first);
+            sb.append(telephoneNumber.getText().toString());
 
+        }
+        //final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
+        final String phoneNumber = sb.toString();
         Log.i("Ayush", "PhoneNumber = " + phoneNumber);
 
-        final String parsed;
-        //replace every non-digit, will retain a minimum of 2 digits (91)
-        if (TextUtils.isEmpty(phoneNumber) ||
-                phoneNumber.length() < 14 ||
-                TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) ||
-                parsed.length() < 10) {
-
+        if (TextUtils.isEmpty(phoneNumber)) {
             Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        Log.i("Ayush", "Final phoneNumber = " + parsed);
-
         //TODO track
-            /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
-            simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
-            try {
-                UsageTracker.trackLogEvent(simpleParams, UsageTracker.NUM_ENTERED);
-            } catch (JSONException ignored) {}*/
+        /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
+        simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
+        try {
+            UsageTracker.trackLogEvent(simpleParams, UsageTracker.NUM_ENTERED);
+        } catch (JSONException ignored) {}*/
 
         Log.i("Verification", "Code sent");
         final Context context = view.getContext();
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        SharedPrefUtils.storePhoneNumber(preferences, parsed); //store the phoneNumber
-        mListener.onOpenCodeVerification(parsed);
+        SharedPrefUtils.storePhoneNumber(preferences, phoneNumber); //store the phoneNumber
+        mListener.onOpenCodeVerification(phoneNumber);
     };
 
-    @Nullable
-    public static String parsePhoneNumber(@NonNull String enteredPhoneNumber) {
+    private class CustomSpinnerAdapter extends ArrayAdapter<Pair<String, String>> {
 
-        final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
-        final int length = cleansedNumber.length();
-        return cleansedNumber.substring(length - 10, length);
+        private final LayoutInflater inflater;
+
+        public CustomSpinnerAdapter(Context context, int resource, Pair<String, String>[] objects) {
+            super(context, resource, objects);
+            inflater = LayoutInflater.from(context);
+        }
+
+        private final class ViewHolder {
+            private final TextView textView;
+            private ViewHolder(TextView textView) {
+                this.textView = textView;
+            }
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final ViewHolder viewHolder;
+            if(convertView==null){
+                convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+                viewHolder = new ViewHolder((TextView) convertView.findViewById(android.R.id.text1));
+                convertView.setTag(viewHolder);
+            }
+            else
+                viewHolder = (ViewHolder) convertView.getTag();
+            viewHolder.textView.setText(getItem(position).first);
+            return convertView;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            final ViewHolder viewHolder;
+            if(convertView==null){
+                convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+                viewHolder = new ViewHolder((TextView) convertView.findViewById(android.R.id.text1));
+                convertView.setTag(viewHolder);
+            }
+            else
+                viewHolder = (ViewHolder) convertView.getTag();
+            final Pair<String, String> pair = getItem(position);
+            viewHolder.textView.setText(pair.second +", " +pair.first);
+            return convertView;
+        }
+
     }
 }

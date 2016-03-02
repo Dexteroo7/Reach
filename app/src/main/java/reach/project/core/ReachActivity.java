@@ -746,4 +746,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             coachView.setOnClickListener(v -> viewGroup.removeView(coachView));
         }, 1000L);
     }
+
+
+
 }
