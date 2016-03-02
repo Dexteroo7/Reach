@@ -10,7 +10,9 @@ import android.view.View;
  * Created by adminReach on 15/02/16.
  */
 public class EmptyRecyclerView extends RecyclerView {
+
     private View emptyView;
+
     public EmptyRecyclerView(Context context) {
         super(context);
     }
@@ -21,7 +23,6 @@ public class EmptyRecyclerView extends RecyclerView {
 
     public EmptyRecyclerView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
     }
 
     public void checkIfEmpty(int count ) {
@@ -34,18 +35,7 @@ public class EmptyRecyclerView extends RecyclerView {
         }
     }
 
-    @Override
-    public void setAdapter(Adapter adapter) {
-
-        super.setAdapter(adapter);
-
-
-        //checkIfEmpty();
-    }
-
-
     public void setEmptyView(View emptyView) {
         this.emptyView = emptyView;
-        //checkIfEmpty();
     }
 }

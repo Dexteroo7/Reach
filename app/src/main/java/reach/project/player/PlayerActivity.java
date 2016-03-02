@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -14,15 +13,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -30,20 +26,25 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
+
 import org.json.JSONException;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.Nonnull;
+
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
@@ -101,7 +102,6 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     public static final String PRIMARY_PROGRESS = "reach.project.player.PlayerActivity.PRIMARY_PROGRESS";
     public static final String SECONDARY_PROGRESS = "reach.project.player.PlayerActivity.SECONDARY_PROGRESS";
     public static final String PLAYER_POSITION = "reach.project.player.PlayerActivity.PLAYER_POSITION";
-    public static final String MUSIC_LIST_FRAGMENT_TAG = "music_list_fragment";
     public static final float EMPTY_VIEW_ITEM_ALPHA = 0.4f;
 
     public static final String PLAY_SONG = "reach.project.player.PlayerActivity.PLAY_SONG";
@@ -127,10 +127,6 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     private SeekBar seekBar = null;
     @Nullable
     private View likeButton = null;
-    @Nullable
-    private View pushButton = null;
-    private Set<Song> selectedSongs;
-    private Set<App> selectedApps;
 
     //private boolean mMusicFragmentVisible;
 
@@ -186,46 +182,23 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         userId = SharedPrefUtils.getServerId(preferences);
 
         toolbar.inflateMenu(R.menu.player_activity_menu);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                int id = item.getItemId();
+        toolbar.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
 
-                //noinspection SimplifiableIfStatement
-                if (id == R.id.action_music_list) {
-                    if(mMusicListViewContainer.getVisibility() == View.VISIBLE){
-                        mMusicListViewContainer.setVisibility(View.GONE);
-                    }
-                    else if (mMusicListViewContainer.getVisibility() == View.GONE){
-                        mMusicListViewContainer.setVisibility(View.VISIBLE);
-                    }
-
-                    /*if(!mMusicFragmentVisible) {
-                        musicListFragContainer.setVisibility(View.VISIBLE);
-                        frag.setCurrentSongId(currentPlaying.getId());
-                        getSupportFragmentManager().beginTransaction()*//*.setCustomAnimations(
-                                R.animator.card_flip_right_in,
-                                R.animator.card_flip_right_out,
-                                R.animator.card_flip_left_in,
-                                R.animator.card_flip_left_out)*//*.replace(R.id.music_list_frag_container,frag *//*MusicListFragment.getInstance("Songs",currentPlaying==null?null:currentPlaying.getId())*//*, MUSIC_LIST_FRAGMENT_TAG ).commit();
-                        mMusicFragmentVisible = true;
-                        return true;
-                    }
-                    else{
-                        final Fragment music_list_frag = getSupportFragmentManager().findFragmentByTag(MUSIC_LIST_FRAGMENT_TAG);
-                        if(music_list_frag !=null){
-                            getSupportFragmentManager().beginTransaction().remove(music_list_frag).commit();
-                            //musicListFragContainer.setVisibility(View.GONE);
-                            mMusicFragmentVisible = false;
-                        }
-                    }*/
+            //noinspection SimplifiableIfStatement
+            if (id == R.id.action_music_list) {
+                if(mMusicListViewContainer.getVisibility() == View.VISIBLE){
+                    mMusicListViewContainer.setVisibility(View.GONE);
                 }
-                return false;
+                else if (mMusicListViewContainer.getVisibility() == View.GONE){
+                    mMusicListViewContainer.setVisibility(View.VISIBLE);
+                }
             }
+            return false;
         });
 
-                (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
-                (pushButton = findViewById(R.id.push_button)).setOnClickListener(pushButtonClickListener);
+        (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
+        findViewById(R.id.push_button).setOnClickListener(pushButtonClickListener);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
@@ -285,49 +258,42 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         fwdBtn.setAlpha(EMPTY_VIEW_ITEM_ALPHA);
     }
 
-    View.OnClickListener pushButtonClickListener = new View.OnClickListener(){
+    View.OnClickListener pushButtonClickListener = v -> {
 
-        @Override
-        public void onClick(View v) {
-
-            if(currentPlaying == null){
-                Toast.makeText(PlayerActivity.this, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            selectedSongs = MiscUtils.getSet(1);
-            selectedApps = MiscUtils.getSet(1);
-            final Song song = MySongsHelper.convertMusicDataToSong(currentPlaying);
-            Log.i(TAG,"Name of the song to push = " + song.displayName);
-            selectedSongs.add(song);
-
-            if (selectedSongs.isEmpty() && selectedApps.isEmpty()) {
-                Toast.makeText(PlayerActivity.this, "First select some songs", Toast.LENGTH_SHORT).show();
-            }
-
-            final SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
-            final PushContainer pushContainer = new PushContainer.Builder()
-                    .senderId(SharedPrefUtils.getServerId(preferences))
-                    .userName(SharedPrefUtils.getUserName(preferences))
-                    .userImage(SharedPrefUtils.getImageId(preferences))
-                    .firstSongName(selectedSongs.isEmpty() ? "" : selectedSongs.iterator().next().displayName)
-                    .firstAppName(selectedApps.isEmpty() ? "" : selectedApps.iterator().next().applicationName)
-                    .song(ImmutableList.copyOf(selectedSongs))
-                    .app(ImmutableList.copyOf(selectedApps))
-                    .songCount(selectedSongs.size())
-                    .appCount(selectedApps.size())
-                    .build();
-
-            try {
-                PushActivity.startPushActivity(pushContainer, PlayerActivity.this);
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                //TODO Track
-                Toast.makeText(PlayerActivity.this, "Could not push", Toast.LENGTH_SHORT).show();
-            }
-
+        if(currentPlaying == null) {
+            Toast.makeText(PlayerActivity.this, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        final Set<Song> selectedSongs = MiscUtils.getSet(1);
+        final Song song = MySongsHelper.convertMusicDataToSong(currentPlaying);
+        Log.i(TAG,"Name of the song to push = " + song.displayName);
+        selectedSongs.add(song);
+
+        if (selectedSongs.isEmpty()) {
+            Toast.makeText(PlayerActivity.this, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final PushContainer pushContainer = new PushContainer.Builder()
+                .senderId(SharedPrefUtils.getServerId(preferences))
+                .userName(SharedPrefUtils.getUserName(preferences))
+                .userImage(SharedPrefUtils.getImageId(preferences))
+                .firstSongName(selectedSongs.isEmpty() ? "" : selectedSongs.iterator().next().displayName)
+                .song(ImmutableList.copyOf(selectedSongs))
+                .songCount(selectedSongs.size())
+                .build();
+
+        try {
+            PushActivity.startPushActivity(pushContainer, PlayerActivity.this);
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            //TODO Track
+            Toast.makeText(PlayerActivity.this, "Could not push", Toast.LENGTH_SHORT).show();
+        }
+
     };
 
     private synchronized void togglePlayPause(final boolean pause) {
@@ -564,7 +530,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                     ReachDatabaseProvider.CONTENT_URI,
                     ReachDatabaseHelper.MUSIC_DATA_LIST,
                     /*ReachDatabaseHelper.COLUMN_STATUS + " = ? and " +*/ //show only finished
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{/*ReachDatabase. + "",*/ "0"},
                     ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 

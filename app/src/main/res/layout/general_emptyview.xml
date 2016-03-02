@@ -10,6 +10,6 @@
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/common_full_open_on_phone" />
+        />
 
 </FrameLayout>

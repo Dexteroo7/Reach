@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -23,7 +22,6 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.EmptyTextViewHolder;
 import reach.project.utils.viewHelpers.EmptyViewHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
@@ -43,7 +41,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     private final long lockedId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private final long emptyViewId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private static final String EMPTY_VIEW_TEXT = "No Friends to Reach! \nMake friends and checkout their collection !";
-    private static final String SUGGESTED_FRIENDS_TEXT = "Suggested Friends";
+    private static final String LOCKED_TEXT = "People on Reach";
 
     ///////////Horizontal Cursor
     private final LockedFriendsAdapter lockedFriendsAdapter = new LockedFriendsAdapter(this, R.layout.friend_locked_item);
@@ -139,14 +137,13 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             case VIEW_TYPE_LOCKED: {
 
                 final MoreListHolder moreListHolder = new MoreListHolder(parent);
-                moreListHolder.headerText.setText(SUGGESTED_FRIENDS_TEXT);
+                moreListHolder.headerText.setText(LOCKED_TEXT);
                 moreListHolder.listOfItems.setLayoutManager(new CustomLinearLayoutManager(moreListHolder.listOfItems.getContext(), LinearLayoutManager.HORIZONTAL, false));
                 moreListHolder.listOfItems.setAdapter(lockedFriendsAdapter);
                 return moreListHolder;
             }
             case VIEW_TYPE_EMPTY_OR_ERROR:{
-                final EmptyViewHolder emptyViewHolder = new EmptyViewHolder(parent,R.layout.friends_emptyview,R.id.empty_view);
-                return emptyViewHolder;
+                return new EmptyViewHolder(parent,R.layout.friends_emptyview,R.id.empty_view);
             }
 
             default:
@@ -255,11 +252,6 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 viewHolder.lockText.setVisibility(View.VISIBLE);
             }
         }
-        else if (getItemViewType(position) == VIEW_TYPE_EMPTY_OR_ERROR){
-            // For empty image view case
-            /*EmptyTextViewHolder emptyViewHolder = (EmptyTextViewHolder) holder;
-            emptyViewHolder.mEmptyImageView.setText(EMPTY_VIEW_TEXT);*/
-        }
 
     }
 
@@ -314,14 +306,12 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
     public int getItemViewType(int position) {
 
         final Object item = getItem(position);
-        if (item instanceof Cursor) {
+        if (item instanceof Cursor)
             return VIEW_TYPE_FRIEND;
-        } else if (item instanceof Integer ) {
+        else if (item instanceof Integer)
             return VIEW_TYPE_EMPTY_OR_ERROR;
-
-        } else {
+        else
             return VIEW_TYPE_LOCKED;
-        }
     }
 
     @Override
@@ -330,18 +320,16 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         final Object item = getItem(position);
         if (item instanceof Cursor)
             return ((Cursor) item).getLong(0); //_id
-        else if (item instanceof Integer ){
+        else if (item instanceof Integer)
             return emptyViewId;
-        }
-        else {
+        else
             return lockedId;
-        }
     }
 
     @Override
     public int getItemCount() {
         final Cursor lockedFriendsCursor = lockedFriendsAdapter.getCursor();
-        int count = 0;
+        int count;
         if (verticalCursor == null) {
             if (lockedFriendsCursor == null) {
                 count =  0;

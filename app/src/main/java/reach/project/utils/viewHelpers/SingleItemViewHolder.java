@@ -19,7 +19,6 @@ public class SingleItemViewHolder extends RecyclerView.ViewHolder implements Vie
 
     @Override
     public final void onClick(View v) {
-
         handOverMessage.handOverMessage(getAdapterPosition());
     }
 }

@@ -12,6 +12,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -34,7 +36,8 @@ import reach.project.utils.MiscUtils;
 // If a friend is added, then this activity is displayed
 public class YourProfileActivity extends AppCompatActivity {
 
-    //private static final String OPEN_PROFILE = "OPEN_PROFILE";
+    private static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
+    private static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
 
     public static void openProfile(long userId, Context context) {
 
@@ -70,7 +73,7 @@ public class YourProfileActivity extends AppCompatActivity {
                     startActivity(new Intent(this, PlayerActivity.class));
                     return true;
                 case R.id.notif_button:
-                    startActivity(new Intent(this, NotificationActivity.class));
+                    NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                     return true;
                 case R.id.settings_button:
                     startActivity(new Intent(this, SettingsActivity.class));
@@ -109,8 +112,13 @@ public class YourProfileActivity extends AppCompatActivity {
             final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
             final short status = cursor.getShort(5);
-            if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED)
-                Snackbar.make(findViewById(R.id.root_layout), uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
+            if (userId != StaticData.DEVIKA) {
+                final View rootView = findViewById(R.id.root_layout);
+                if (status == ReachFriendsHelper.UPLOADS_DISABLED)
+                    Snackbar.make(rootView, uName + " has disabled uploads. You will be only be able to transfer music when the user enables it", Snackbar.LENGTH_INDEFINITE).show();
+                else if (status == ReachFriendsHelper.OFFLINE_REQUEST_GRANTED)
+                    Snackbar.make(rootView, uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
+            }
 
             final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
             final TextView userName = (TextView) headerRoot.findViewById(R.id.userName);
@@ -203,6 +211,14 @@ public class YourProfileActivity extends AppCompatActivity {
             }
         });*/
         materialViewPager.getPagerTitleStrip().setViewPager(viewPager);
+
+        final String action = intent.getAction();
+        if (TextUtils.isEmpty(action))
+            return;
+        if (action.equals(OPEN_MY_PROFILE_APPS))
+            viewPager.setCurrentItem(0);
+        else if (action.equals(OPEN_MY_PROFILE_SONGS))
+            viewPager.setCurrentItem(1);
 
     }
 }

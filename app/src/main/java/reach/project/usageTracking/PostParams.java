@@ -16,6 +16,7 @@ public enum PostParams {
     OS_VERSION("osVersion"), //fixed
     APP_VERSION("appVersion"), //fixed
     USER_NAME("userName"),
+    UPLOADER_ID("uploaderId"),
     USER_NUMBER("phoneNumber");
 
     private final String value;

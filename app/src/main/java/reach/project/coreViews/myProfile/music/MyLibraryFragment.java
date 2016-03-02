@@ -14,7 +14,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -70,7 +69,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     }
 
     @Nullable
-    private MusicListAdapter parentAdapter;
+    private ParentAdapter parentAdapter;
     //handle 2 at a time, for thread queue
     private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
@@ -82,7 +81,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
          mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
-        parentAdapter = new MusicListAdapter(this, this);
+        parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);

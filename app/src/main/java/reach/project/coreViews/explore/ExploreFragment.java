@@ -188,25 +188,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     static final ResizeOptions FULL_IMAGE_SIZE = new ResizeOptions(450, 450);
     static final ResizeOptions SMALL_IMAGE_SIZE = new ResizeOptions(200, 200);
 
-    private static final ViewPager.PageTransformer PAGE_TRANSFORMER = (page, position) -> {
-
-        if (position <= 1) {
-
-            // Modify the default slide transition to shrink the page as well
-            final float scaleFactor = Math.max(0.85f, 1 - Math.abs(position));
-            final float vertMargin = page.getHeight() * (1 - scaleFactor) / 2;
-            final float horzMargin = page.getWidth() * (1 - scaleFactor) / 2;
-            if (position < 0)
-                page.setTranslationX(horzMargin - vertMargin / 2);
-            else
-                page.setTranslationX(-horzMargin + vertMargin / 2);
-
-            // Scale the page down (between MIN_SCALE and 1)
-            page.setScaleX(scaleFactor);
-            page.setScaleY(scaleFactor);
-        }
-    };
-
     /*
         Fetch new batch of Explore items
      */
@@ -385,7 +366,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setClipToPadding(false);
-        explorePager.setPadding((MiscUtils.dpToPx(16)),0,(MiscUtils.dpToPx(16)),(MiscUtils.dpToPx(-16)));
+        final int size = MiscUtils.dpToPx(16);
+        explorePager.setPadding(size, 0, size, (size*-1));
         //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -407,12 +389,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         });
         noFriendsDiscoverLayoutContainer = rootView.findViewById(R.id.exploreNoFriendsContainer);
         final Button sendRequestToDevikaButton = (Button) rootView.findViewById(R.id.sendRequestButton);
-        sendRequestToDevikaButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new SendRequest().executeOnExecutor(requestSender,StaticData.DEVIKA, SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-            }
-        });
+        sendRequestToDevikaButton.setOnClickListener(v ->
+                new SendRequest().executeOnExecutor(requestSender,StaticData.DEVIKA,
+                        SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE))));
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
 
         /*final LinearLayout exploreToolbarText = (LinearLayout) toolbar.findViewById(R.id.exploreToolbarText);
@@ -456,12 +435,15 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private void showDiscoverAdapter(){
 
         exploreAdapter = new ExploreAdapter(this, this);
+        if (explorePager == null)
+            return;
         explorePager.setAdapter(exploreAdapter);
 //        explorePager.setOffscreenPageLimit(1);
 
 
         if (!SharedPrefUtils.getExploreCoach1Seen(preferences)) {
-            mListener.showSwipeCoach();
+            if (mListener != null)
+                mListener.showSwipeCoach();
             SharedPrefUtils.setExploreCoach1Seen(preferences);
         }
         noFriendsDiscoverLayoutContainer.setVisibility(View.GONE);
@@ -708,14 +690,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        //if (id == StaticData.FRIENDS_VERTICAL_LOADER)
-        return new CursorLoader(getActivity(),
-                ReachFriendsProvider.CONTENT_URI,
-                null,
-                ReachFriendsHelper.COLUMN_STATUS + " < ?",
-                new String[]{ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""},
-                null);
-        //return null;
+        if (id == StaticData.FRIENDS_VERTICAL_LOADER)
+            return new CursorLoader(getActivity(),
+                    ReachFriendsProvider.CONTENT_URI, null,
+                    ReachFriendsHelper.COLUMN_STATUS + " < ?",
+                    new String[]{ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""}, null);
+        return null;
     }
 
 

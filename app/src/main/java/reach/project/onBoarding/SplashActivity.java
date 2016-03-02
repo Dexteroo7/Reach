@@ -24,7 +24,7 @@ import android.widget.Toast;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
@@ -263,14 +263,14 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
      */
     public static boolean checkPlayServices(Activity activity) {
 
-        final GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
-
-        final int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(activity);
+        final int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
         if (resultCode == ConnectionResult.SUCCESS)
             return true;
 
-        if (googleApiAvailability.isUserResolvableError(resultCode)) {
-            googleApiAvailability.getErrorDialog(activity, resultCode, StaticData.PLAY_SERVICES_RESOLUTION_REQUEST);
+        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+
+            GooglePlayServicesUtil.getErrorDialog(resultCode, activity,
+                    StaticData.PLAY_SERVICES_RESOLUTION_REQUEST).show();
         } else {
 
             Toast.makeText(activity, "This device is not supported", Toast.LENGTH_LONG).show();

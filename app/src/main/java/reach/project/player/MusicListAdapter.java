@@ -4,9 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,8 +18,6 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.annotation.Nonnull;
 
@@ -31,10 +27,7 @@ import reach.project.music.MySongsHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.ThreadLocalRandom;
-import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
-import reach.project.utils.viewHelpers.MoreListHolder;
 
 /**
  * Created by dexter on 25/11/15.
@@ -48,7 +41,6 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     public static final byte VIEW_TYPE_ALL = 1;
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
-    private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private static final String TAG = MusicListAdapter.class.getSimpleName();
 
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
@@ -143,16 +135,13 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
 
         switch (viewType) {
-
-            case VIEW_TYPE_ALL: {
-
+            case VIEW_TYPE_ALL:
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.music_list_song_item, parent, false), handOverMessage);
-            }
-
             default:
                 return null;
         }
+
     }
 
 
@@ -162,6 +151,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
 
         final Object friend = getItem(position);
+        //TODO: avoid CursorIndexOutOfBoundsException
         try {
             if (friend instanceof Cursor) {
                 holder.itemView.setSelected(false);
@@ -258,22 +248,12 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
     @Override
     public int getItemViewType(int position) {
-
-        /*final Object item = getItem(position);
-        if (item instanceof Cursor)*/
             return VIEW_TYPE_ALL;
-        /*else
-            return VIEW_TYPE_RECENT;*/
     }
 
     @Override
     public long getItemId(int position) {
-
-        final Object item = getItem(position);
-        /*if (item instanceof Cursor) {*/
-            return ((Cursor)item).getLong(0); //_id || song_id
-        /*} else
-            return recentHolderId;*/
+        return ((Cursor)getItem(position)).getLong(0); //_id || song_id
     }
 
     @Override

@@ -27,7 +27,6 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
-import reach.project.utils.viewHelpers.EmptyViewHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
@@ -35,10 +34,11 @@ import reach.project.utils.viewHelpers.RecyclerViewMaterialAdapter;
 /**
  * Created by dexter on 25/11/15.
  */
-class MusicListAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements Closeable {
+class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder> implements Closeable {
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
+
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
@@ -51,8 +51,8 @@ class MusicListAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHold
         }
     };
 
-    public MusicListAdapter(HandOverMessage<Cursor> handOverCursor,
-                            HandOverMessage<PrivacySongItem> handOverSong) {
+    public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
+                         HandOverMessage<PrivacySongItem> handOverSong) {
 
         this.handOverCursor = handOverCursor;
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_mylibrary_grid_item);
@@ -89,7 +89,6 @@ class MusicListAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHold
         //set
         myLibraryCursor = newMyLibraryCursor;
 //        Log.i("Ayush", "Setting new library cursor");
-
         notifyDataSetChanged();
     }
 
@@ -245,12 +244,10 @@ class MusicListAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHold
 
 //        Log.i("Ayush", "Total size = " + (myLibraryCount + downloadedCount + 1));
 
-        if(myLibraryCount + downloadedCount == 0){
+        if (myLibraryCount + downloadedCount == 0)
             return 0;
-        }
-        else {
+        else
             return myLibraryCount + downloadedCount + 1; //adjust for recent list
-        }
     }
 
     @Override
@@ -278,6 +275,4 @@ class MusicListAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHold
         return new RecyclerView.ViewHolder(view) {
         };
     }
-
-
 }

@@ -727,6 +727,10 @@ public class MetaDataScanner extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
+        if (intent == null) {
+            sendMessage(FINISHED, -1);
+            return;
+        }
         messenger = intent.getParcelableExtra("messenger");
         Log.i("Ayush", "Starting Scan");
 

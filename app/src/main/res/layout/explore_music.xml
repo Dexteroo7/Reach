@@ -99,10 +99,11 @@
                 android:layout_height="wrap_content" />
             <LinearLayout
                 android:id="@+id/handle"
-                android:gravity="center_vertical"
                 app:layout_marginTopPercent="1%"
                 android:layout_centerHorizontal="true"
                 android:layout_below="@id/subtitle"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
@@ -116,6 +117,8 @@
                 <TextView
                     android:id="@+id/userHandle"
                     android:text="handle"
+                    android:gravity="center"
+                    android:layout_marginTop="2dp"
                     android:textSize="16sp"
                     android:textColor="@color/reach_color"
                     android:layout_width="wrap_content"

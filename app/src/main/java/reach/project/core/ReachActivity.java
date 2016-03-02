@@ -11,7 +11,6 @@ import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.ContextCompat;
@@ -25,7 +24,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-//import com.crittercism.app.Crittercism;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -106,6 +104,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     public static final String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
     public static final String OPEN_PUSH = "OPEN_PUSH";
+    public static final String OPEN_EXPLORE = "OPEN_EXPLORE";
     public static final String OPEN_MANAGER_APPS = "OPEN_MANAGER_APPS";
     public static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     public static final String OPEN_MY_PROFILE_APPS_FIRST = "OPEN_MY_PROFILE_APPS_FIRST";
@@ -117,7 +116,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
-    //public static final String CURRENT_TAB_KEY = "CURRENT_TAB";
 
     ////////////////////////////////////////private static final
 
@@ -186,9 +184,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                final Intent notificationIntent = new Intent(this, NotificationActivity.class);
-                notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(notificationIntent);
+                NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
             case R.id.settings_button:
                 final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
@@ -233,12 +229,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         Log.d("Ayush", "Received new Intent");
         processIntent(intent);
         super.onNewIntent(intent);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        //outState.putInt(CURRENT_TAB_KEY,mTabHost.getCurrentTab());
-        super.onSaveInstanceState(outState);
     }
 
     @SuppressLint("RtlHardcoded")
@@ -330,9 +320,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.my_profile_tab_selector)),
                 MyProfileFragment.class, null);
-
-            mTabHost.setCurrentTab(2);
-
+        mTabHost.setCurrentTab(2);
 
         /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));
@@ -454,6 +442,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     Log.i("Ayush", "FOUND PUSH DATA");
 
                     final String compressed = intent.getStringExtra("data");
+                    if (compressed == null)
+                        return;
 
                     byte[] unCompressed;
                     try {
@@ -584,6 +574,33 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 return;
                             mTabHost.setCurrentTab(4);
                             MyProfileFragment.setItem(1);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_EXPLORE:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(2);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_MY_FRIENDS:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(0);
+                        }, 1000L);
+                    }
+                    break;
+                case OPEN_PUSH:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(1);
                         }, 1000L);
                     }
                     break;

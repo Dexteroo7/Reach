@@ -40,6 +40,10 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
         @Override
         public void handOverMessage(@Nonnull Integer position) {
 
+            if (position < 1)
+                throw new IllegalArgumentException(" Invalid position: " + (position-1)
+                        + " provided in HandOverMessage of YourProfile->Apps->ParentAdapter");
+
             final T message = cacheAdapterInterface.getItem(position - 1);
             if (message instanceof App)
                 cacheAdapterInterface.handOverMessage((App) message);
