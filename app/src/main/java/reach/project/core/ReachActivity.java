@@ -324,6 +324,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             if (getDownloadedCountFromSharedPref()+2 < data.getCount()) {
                                 Log.d(TAG, "Show Rating Dialog Called");
                                 showRatingDialog();
+                                putDownloadedCountInSharedPref(data.getCount());
+
                             }
                             Log.d(TAG, "Inside OnLoadFinished, cursor count = " + data.getCount());
 
