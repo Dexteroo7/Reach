@@ -44,6 +44,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         super(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_with_more_button, parent, false));
         this.headerText = (TextView) itemView.findViewById(R.id.headerText);
         this.listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
+        this.listOfItems.setNestedScrollingEnabled(false);
         itemView.findViewById(R.id.moreButton).setOnClickListener(this);
     }
 
