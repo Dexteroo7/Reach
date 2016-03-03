@@ -48,14 +48,18 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.hash.HashFunction;
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.squareup.wire.Message;
 
 import org.json.JSONException;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,6 +88,8 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Nonnull;
 
@@ -1626,6 +1632,44 @@ public enum MiscUtils {
          */
         Log.i("Ayush", "Starting compression");
         return mBitmapOptions;
+    }
+
+    public static byte [] compressProto(Message message) {
+
+        final ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+        GZIPOutputStream compressor = null;
+        try {
+            compressor = new GZIPOutputStream(arrayOutputStream);
+            compressor.write(message.toByteArray());
+            compressor.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0]; //failed
+        } finally {
+            MiscUtils.closeQuietly(compressor, arrayOutputStream);
+        }
+
+        return arrayOutputStream.toByteArray();
+    }
+
+    public static byte [] unCompressBytes(byte [] bytes) {
+
+        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        GZIPInputStream unCompressor = null;
+        try {
+            unCompressor = new GZIPInputStream(byteArrayInputStream);
+            ByteStreams.copy(unCompressor, byteArrayOutputStream);
+            unCompressor.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0]; //failed
+        } finally {
+            MiscUtils.closeQuietly(unCompressor, byteArrayInputStream, byteArrayOutputStream);
+        }
+
+        return byteArrayOutputStream.toByteArray();
     }
 
 //    final HttpTransport transport = new NetHttpTransport();

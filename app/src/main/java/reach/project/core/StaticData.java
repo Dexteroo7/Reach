@@ -10,16 +10,13 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 import java.util.Comparator;
 
-import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
-import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
-import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
-import reach.project.music.SongHelper;
 import reach.project.music.MySongsHelper;
+import reach.project.music.SongHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -30,10 +27,7 @@ public final class StaticData {
     public static final UserApi USER_API;
     public static final FeedBackApi FEED_BACK_API;
     public static final Messaging.MessagingEndpoint MESSAGING_API;
-    public static final MusicVisibilityApi MUSIC_VISIBILITY_API;
     public static final NotificationApi NOTIFICATION_API;
-    public static final AppVisibilityApi APP_VISIBILITY_API;
-    public static final ClassifiedAppsApi CLASSIFIED_APPS_API;
 
     static {
 
@@ -49,9 +43,6 @@ public final class StaticData {
         MESSAGING_API = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
         FEED_BACK_API = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         NOTIFICATION_API = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
-        MUSIC_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
-        APP_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
-        CLASSIFIED_APPS_API = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
     }
 
     public static final String[] DOWNLOADED_PARTIAL = new String[]{

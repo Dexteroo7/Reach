@@ -21,15 +21,16 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.appspot.able_door_616.userApi.model.UserDataPersistence;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.common.base.Optional;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 
-import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
@@ -233,7 +234,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
+    public void onOpenAccountCreation(Optional<UserDataPersistence> container) {
         if (isFinishing())
             return;
         try {
@@ -247,12 +248,26 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenScan(String name, Uri profilePicUri, Uri coverPicUri, String phoneNumber) {
+    public void onOpenScan(String name,
+                           long oldUserId,
+                           String oldProfilePicId,
+                           String oldCoverPicId,
+                           Uri newProfilePicUri,
+                           Uri newCoverPicUri,
+                           Serializable contentState) {
+
         if (isFinishing())
             return;
         try {
             getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                    ScanFragment.newInstance(name, profilePicUri, coverPicUri, phoneNumber)).commit();
+                    ScanFragment.newInstance(
+                            name,
+                            oldUserId,
+                            oldProfilePicId,
+                            oldCoverPicId,
+                            newProfilePicUri,
+                            newCoverPicUri,
+                            contentState)).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }

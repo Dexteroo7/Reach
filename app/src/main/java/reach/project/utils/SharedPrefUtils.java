@@ -30,15 +30,17 @@ public enum SharedPrefUtils {
     public synchronized static void storeReachUser(SharedPreferences sharedPreferences,
                                                    OnboardingData onboardingData,
                                                    String chatToken,
+                                                   String imageId,
                                                    long serverId) {
 
-        sharedPreferences.edit().putString("phoneNumber", onboardingData.phoneNumber)
+        sharedPreferences.edit()
+                .putString("phoneNumber", onboardingData.phoneNumber)
                 .putString("userName", onboardingData.userName)
                 .putString("deviceId", onboardingData.deviceId)
-                .putString("imageId", onboardingData.profilePicUri)
                 .putString("coverImageId", onboardingData.coverPicUri)
                 .putString("promoCode", onboardingData.promoCode)
                 .putString("emailId", onboardingData.emailId)
+                .putString("imageId", imageId)
                 .putString("chatToken", chatToken)
                 .putLong("serverId", serverId)
                 .apply();

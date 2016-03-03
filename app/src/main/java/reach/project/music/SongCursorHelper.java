@@ -1,21 +1,32 @@
 package reach.project.music;
 
+import android.content.ContentResolver;
 import android.database.Cursor;
 import android.provider.MediaStore;
-import android.support.v4.util.Pair;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.hash.Hashing;
 
 import org.joda.time.DateTime;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.utils.ContentType;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 23/02/16.
@@ -297,6 +308,29 @@ public enum SongCursorHelper {
         }
     });
 
+    private final String[] projection;
+    private final Function<Cursor, ?> parser;
+
+    SongCursorHelper(String[] projection, Function<Cursor, ?> parser) {
+        this.projection = projection;
+        this.parser = parser;
+    }
+
+    public String[] getProjection() {
+        return projection;
+    }
+
+    public <T> Function<Cursor, T> getParser() {
+        return (Function<Cursor, T>) parser;
+    }
+
+    @Nonnull
+    public <T> T parse(@Nonnull Cursor cursor) {
+        return (T) parser.apply(cursor);
+    }
+
+    /////////////////////////////////////////
+
     private static boolean isFileValid(String songPath) {
 
         final File file = new File(songPath);
@@ -312,69 +346,59 @@ public enum SongCursorHelper {
                         MiscUtils.containsIgnoreCase(name, "WhatsApp"));
     }
 
-//    public static final Function<Pair<Song.Builder, ContentResolver>, Song.Builder> SET_GENRE = new Function<Pair<Song.Builder, ContentResolver>, Song.Builder>() {
-//
-//        private final String[] genresProjection = {
-//                MediaStore.Audio.Genres.NAME,
-//                MediaStore.Audio.Genres._ID};
-//
-//        @Nullable
-//        @Override
-//        public Song.Builder apply(@Nullable Pair<Song.Builder, ContentResolver> input) {
-//
-//            if (input == null)
-//                return null;
-//
-//            final Song.Builder songBuilder = input.first;
-//            final ContentResolver resolver = input.second;
-//
-//            if (songBuilder == null || resolver == null)
-//                return songBuilder;
-//
-//            final Cursor genresCursor = resolver.query(
-//                    MediaStore.Audio.Genres.getContentUriForAudioId("external", songBuilder.songId.intValue()),
-//                    genresProjection, null, null, null);
-//
-//            if (genresCursor != null && genresCursor.moveToFirst()) {
-//
-//                String listString = "";
-//                while (genresCursor.moveToNext()) {
-//                    final String genre = genresCursor.getString(0);
-//                    if (!TextUtils.isEmpty(genre))
-//                        listString += genre + "\t";
-//                }
-//                songBuilder.genre(listString);
-//            }
-//
-//            if (genresCursor != null)
-//                genresCursor.close();
-//
-//            return songBuilder;
-//        }
-//    };
+    /////////////////////////////////////////
 
-    public static final Function<Pair<Song.Builder, Long>, Song.Builder> GENERATE_HASH = new Function<Pair<Song.Builder, Long>, Song.Builder>() {
-        @Nullable
-        @Override
-        public Song.Builder apply(@Nullable Pair<Song.Builder, Long> input) {
+    public static List<Song.Builder> getSongs(@Nullable Cursor musicCursor,
+                                              @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
+                                              long serverId,
 
-            if (input == null)
-                return null;
+                                              @Nonnull ContentResolver contentResolver,
+                                              @Nonnull Set<String> fillGenres,
+                                              @Nonnull HandOverMessage<Integer> handOverMessage) {
 
-            final Song.Builder songBuilder = input.first;
-            final long serverId = input.second;
+        if (musicCursor == null) {
 
-            //generate the fileHash
-            songBuilder.fileHash(MiscUtils.calculateSongHash(
-                    serverId,
-                    songBuilder.duration,
-                    songBuilder.size,
-                    songBuilder.displayName,
-                    Hashing.sipHash24()));
+            Log.i("Ayush", "Meta-data sync failed");
+            return Collections.emptyList();
+        } else {
 
-            return songBuilder;
+            //set up the function
+            final Function<Song.Builder, Song.Builder> songHashFixer;
+            final Function<Song.Builder, Song.Builder> oldStatePersister;
+            if (serverId > 0)
+                songHashFixer = getSongHashFixer(serverId);
+            else
+                songHashFixer = Functions.identity();
+            if (serverId > 0 && oldStates != null && oldStates.size() > 0)
+                oldStatePersister = getOldStatePersister(oldStates);
+            else
+                oldStatePersister = Functions.identity();
+
+            int counter = 0;
+            final List<Song.Builder> toReturn = new ArrayList<>(musicCursor.getCount());
+            while (musicCursor.moveToNext()) {
+
+                //get the songBuilder
+                Song.Builder songBuilder = SongCursorHelper.ANDROID_SONG_HELPER.parse(musicCursor);
+                //apply default visibility
+                songBuilder = DEFAULT_VISIBILITY.apply(songBuilder);
+                //fix song hash
+                songBuilder = songHashFixer.apply(songBuilder);
+                //apply oldState
+                songBuilder = oldStatePersister.apply(songBuilder);
+
+                if (songBuilder != null) {
+
+                    setGenres(songBuilder, fillGenres, contentResolver);
+                    toReturn.add(songBuilder);
+                    handOverMessage.handOverMessage(++counter);
+                }
+            }
+
+            musicCursor.close();
+            return toReturn;
         }
-    };
+    }
 
     public static final Function<Song.Builder, Song.Builder> DEFAULT_VISIBILITY = new Function<Song.Builder, Song.Builder>() {
 
@@ -409,6 +433,88 @@ public enum SongCursorHelper {
         }
     };
 
+    public static Function<Song.Builder, Song.Builder> getSongHashFixer(final long serverId) {
+
+        return new Function<Song.Builder, Song.Builder>() {
+            @Nullable
+            @Override
+            public Song.Builder apply(@Nullable Song.Builder song) {
+
+                //set only if not present
+                if (song == null || TextUtils.isEmpty(song.fileHash) || song.fileHash.equals("hello_world"))
+                    return null;
+
+                return song.fileHash(MiscUtils.calculateSongHash(serverId, song.duration, song.size, song.displayName, Hashing.sipHash24()));
+            }
+        };
+    }
+
+    private static Function<Song.Builder, Song.Builder> getOldStatePersister(final Map<String, EnumSet<ContentType.State>> persistStates) {
+
+        return new Function<Song.Builder, Song.Builder>() {
+            @Nullable
+            @Override
+            public Song.Builder apply(@Nullable Song.Builder input) {
+
+                if (input == null)
+                    return null;
+
+                final String metaHash = input.fileHash;
+                if (TextUtils.isEmpty(metaHash))
+                    throw new IllegalStateException("Plz set all metaHashes");
+
+                final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
+                if (oldStates != null) {
+                    input.visibility(oldStates.contains(ContentType.State.VISIBLE));
+                    input.isLiked(oldStates.contains(ContentType.State.LIKED));
+                }
+                return input;
+            }
+        };
+    }
+
+    /**
+     * This method will set the required genres in the builder
+     * and return the found genres in a list
+     *
+     * @param resolver ContentResolver
+     */
+    public static void setGenres(@Nonnull Song.Builder songBuilder,
+                                  @Nonnull Set<String> fillHere,
+                                  @Nonnull ContentResolver resolver) {
+
+        final String[] genresProjection = {
+                MediaStore.Audio.Genres.NAME,
+                MediaStore.Audio.Genres._ID};
+        final Set<String> totalGenres = MiscUtils.getSet(5);
+
+        final Cursor genresCursor = resolver.query(
+                MediaStore.Audio.Genres.getContentUriForAudioId("external", songBuilder.songId.intValue()),
+                genresProjection, null, null, null);
+
+        if (genresCursor != null && genresCursor.moveToFirst()) {
+
+            String currentGenres = "";
+            while (genresCursor.moveToNext()) {
+
+                String genre = genresCursor.getString(0);
+                if (genre != null)
+                    genre = genre.trim();
+                if (!TextUtils.isEmpty(genre)) {
+
+                    totalGenres.add(genre);
+                    currentGenres += genre + "\t";
+                }
+            }
+            songBuilder.genre(currentGenres);
+        }
+
+        if (genresCursor != null)
+            genresCursor.close();
+
+        fillHere.addAll(totalGenres);
+    }
+
     public static final Function<Song.Builder, Song> SONG_BUILDER = new Function<Song.Builder, Song>() {
         @Nullable
         @Override
@@ -416,20 +522,4 @@ public enum SongCursorHelper {
             return input != null ? input.build() : null;
         }
     };
-
-    private final String[] projection;
-    private final Function<Cursor, ?> parser;
-
-    SongCursorHelper(String[] projection, Function<Cursor, ?> parser) {
-        this.projection = projection;
-        this.parser = parser;
-    }
-
-    public String[] getProjection() {
-        return projection;
-    }
-
-    public Function<Cursor, ?> getParser() {
-        return parser;
-    }
 }

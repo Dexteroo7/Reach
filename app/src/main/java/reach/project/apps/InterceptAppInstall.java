@@ -13,20 +13,14 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import com.google.common.base.Optional;
-
 import java.lang.ref.WeakReference;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import reach.backend.applications.appVisibilityApi.model.JsonMap;
-import reach.backend.applications.classifiedAppsApi.model.StringList;
 import reach.project.R;
 import reach.project.core.ReachActivity;
-import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
@@ -132,32 +126,33 @@ public class InterceptAppInstall extends BroadcastReceiver {
 
             if (status == NOT_DEFINED) {
 
+                visibility = true;
                 /*
                  *first try from online persistence
                  */
-                final JsonMap visibilityMap = MiscUtils.autoRetry(() ->
-                        StaticData.APP_VISIBILITY_API.get(serverId).execute().getVisibility(), Optional.absent()).orNull();
+                //TODO
+//                final JsonMap visibilityMap = MiscUtils.autoRetry(() ->
+//                        StaticData.APP_VISIBILITY_API.get(serverId).execute().getVisibility(), Optional.absent()).orNull();
+//
+//                if (visibilityMap != null && visibilityMap.containsKey(packageName))
+//                    visibility = (boolean) visibilityMap.get(packageName);
+//                else {
+//
+//                    /**
+//                     * new package, get the default visibility
+//                     */
+//                    final StringList stringList = new StringList();
+//                    stringList.setUserId(serverId);
+//                    stringList.setStringList(Collections.singletonList(appBuilder.packageName));
+//
+//                    final List<String> hiddenPackageList;
+//                    final StringList hiddenPackages = MiscUtils.autoRetry(() -> StaticData.CLASSIFIED_APPS_API.getDefaultState(
+//                            stringList).execute(), Optional.absent()).orNull();
+//                    visibility = !(hiddenPackages != null &&
+//                            (hiddenPackageList = hiddenPackages.getStringList()) != null &&
+//                            !hiddenPackageList.isEmpty() && hiddenPackageList.contains(appBuilder.packageName));
+//                }
 
-                if (visibilityMap != null && visibilityMap.containsKey(packageName))
-                    visibility = (boolean) visibilityMap.get(packageName);
-                else {
-
-                    /**
-                     * new package, get the default visibility
-                     */
-                    final StringList stringList = new StringList();
-                    stringList.setUserId(serverId);
-                    stringList.setStringList(Collections.singletonList(appBuilder.packageName));
-
-                    final List<String> hiddenPackageList;
-                    final StringList hiddenPackages = MiscUtils.autoRetry(() -> StaticData.CLASSIFIED_APPS_API.getDefaultState(
-                            stringList).execute(), Optional.absent()).orNull();
-                    visibility = !(hiddenPackages != null &&
-                            (hiddenPackageList = hiddenPackages.getStringList()) != null &&
-                            !hiddenPackageList.isEmpty() && hiddenPackageList.contains(appBuilder.packageName));
-                }
-
-                Log.i("Ayush", "Fetching visibility from server " + visibility);
 
             } else if (status == VISIBLE)
                 visibility = true;
@@ -166,14 +161,13 @@ public class InterceptAppInstall extends BroadcastReceiver {
             else
                 throw new IllegalArgumentException("Unexpected byte constant found " + status);
 
-            Log.i("Ayush", "Final visibility " + visibility);
-
             appBuilder.visible(visibility);
 
-            MiscUtils.autoRetry(() -> StaticData.APP_VISIBILITY_API.update(
-                    serverId,
-                    appBuilder.packageName,
-                    appBuilder.visible).execute(), Optional.absent());
+            //TODO
+//            MiscUtils.autoRetry(() -> StaticData.APP_VISIBILITY_API.update(
+//                    serverId,
+//                    appBuilder.packageName,
+//                    appBuilder.visible).execute(), Optional.absent());
 
             //TODO add the new package
 

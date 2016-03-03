@@ -1,7 +1,6 @@
 package reach.project.onBoarding;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +15,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
 import android.util.Log;
@@ -32,68 +32,74 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
-import com.google.common.base.Function;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
+import com.google.common.primitives.Ints;
 import com.squareup.okhttp.CacheControl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
-import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.zip.GZIPOutputStream;
+
+import javax.annotation.Nonnull;
 
 import okio.BufferedSink;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.apps.AppCursorHelper;
-import reach.project.apps.AppList;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
-import reach.project.music.MusicList;
+import reach.project.core.StaticData;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
+import reach.project.utils.ContentType;
 import reach.project.utils.FireOnce;
 import reach.project.utils.KeyValuePair;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
+import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class ScanFragment extends Fragment {
 
     private static final String USER_NAME = "USER_NAME";
-    private static final String PROFILE_PHOTO_URI = "PROFILE_PHOTO_URI";
+    private static final String OLD_USER_ID = "OLD_USER_ID";
+    private static final String COVER_PHOTO_ID = "COVER_PHOTO_ID";
+    private static final String PROFILE_PHOTO_ID = "PROFILE_PHOTO_ID";
     private static final String COVER_PHOTO_URI = "COVER_PHOTO_URI";
-    private static final String PHONE_NUMBER = "PHONE_NUMBER";
+    private static final String PROFILE_PHOTO_URI = "PROFILE_PHOTO_URI";
+    private static final String OLD_USER_STATES = "OLD_USER_STATES";
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
     private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
 
     @Nullable
     private static WeakReference<ScanFragment> reference = null;
-    private static long serverId = 0;
-    private static Uri profilePicUri = null;
 
-    private SharedPreferences sharedPreferences;
-
-    public static ScanFragment newInstance(String name, Uri profilePicUri, Uri coverPicUri, String phoneNumber) {
+    public static ScanFragment newInstance(String name,
+                                           long oldUserId,
+                                           String oldProfilePicId,
+                                           String oldCoverPicId,
+                                           Uri newProfilePicUri,
+                                           Uri newCoverPicUri,
+                                           Serializable contentState) {
 
         final Bundle args;
         final ScanFragment fragment;
@@ -102,9 +108,12 @@ public class ScanFragment extends Fragment {
         fragment.setArguments(args = new Bundle());
 
         args.putString(USER_NAME, name);
-        args.putString(PHONE_NUMBER, phoneNumber);
-        args.putParcelable(PROFILE_PHOTO_URI, profilePicUri);
-        args.putParcelable(COVER_PHOTO_URI, coverPicUri);
+        args.putLong(OLD_USER_ID, oldUserId);
+        args.putString(PROFILE_PHOTO_ID, oldProfilePicId);
+        args.putString(COVER_PHOTO_ID, oldCoverPicId);
+        args.putParcelable(PROFILE_PHOTO_URI, newProfilePicUri);
+        args.putParcelable(COVER_PHOTO_URI, newCoverPicUri);
+        args.putSerializable(OLD_USER_STATES, contentState);
         return fragment;
     }
 
@@ -113,24 +122,24 @@ public class ScanFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // Inflate the layout for this fragment
         final Activity activity = getActivity();
+        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final String phoneNumber = SharedPrefUtils.getPhoneNumber(sharedPreferences);
+        final Bundle arguments = getArguments();
+        final String userName = arguments.getString(USER_NAME);
+        final String coverPicId = arguments.getParcelable(COVER_PHOTO_ID);
+        final Uri profilePicUri = arguments.getParcelable(PROFILE_PHOTO_URI);
+        // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_scan, container, false);
-        final String phoneNumber = getArguments().getString(PHONE_NUMBER);
-        final String userName = getArguments().getString(USER_NAME);
-        final Uri coverPicUri = getArguments().getParcelable(COVER_PHOTO_URI);
-        profilePicUri = getArguments().getParcelable(PROFILE_PHOTO_URI);
-        sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
         rootView.findViewById(R.id.countContainer).setVisibility(View.INVISIBLE);
         ((TextView) rootView.findViewById(R.id.userName)).setText(userName);
         final SimpleDraweeView coverPic = (SimpleDraweeView) rootView.findViewById(R.id.coverPic);
         final SimpleDraweeView profilePic = (SimpleDraweeView) rootView.findViewById(R.id.profilePic);
 
-        if (coverPicUri != null) {
+        if (coverPicId != null) {
 
-            final DraweeController draweeController = MiscUtils.getControllerResize(coverPic.getController(), coverPicUri, COVER_PHOTO_RESIZE);
+            final DraweeController draweeController = MiscUtils.getControllerResize(coverPic.getController(), Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + coverPicId), COVER_PHOTO_RESIZE);
             coverPic.setController(draweeController);
         }
 
@@ -146,9 +155,7 @@ public class ScanFragment extends Fragment {
         try {
             versionCode = packageManager.getPackageInfo(packageName, 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            //TODO fail
-            return rootView;
+            throw new RuntimeException(e); //let the app crash
         }
 
         //TODO read this info in bulk to reduce disk I/O on UI thread.....
@@ -174,12 +181,11 @@ public class ScanFragment extends Fragment {
             utm.add(new KeyValuePair.Builder().key("code").value(code).build());
 
         final OnboardingData onboardingData = new OnboardingData.Builder()
-                .version(86) //TODO
+                .version(versionCode)
                 .deviceId(MiscUtils.getDeviceId(activity).trim().replace(" ", "-"))
                 .userName(userName)
+                .coverPicUri(coverPicId)
                 .phoneNumber(phoneNumber)
-                .profilePicUri(profilePicUri != null ? profilePicUri.toString() : null)
-                .coverPicUri(coverPicUri != null ? coverPicUri.toString() : null)
                 .emailId(SharedPrefUtils.getEmailId(sharedPreferences))
                 .promoCode("hello_world")
                 .utmPairs(utm).build();
@@ -194,7 +200,10 @@ public class ScanFragment extends Fragment {
                         rootView.findViewById(R.id.scanProgress), //4
                         rootView.findViewById(R.id.scan1), //5
                         rootView.findViewById(R.id.scan2), //6
-                        onboardingData); //7
+                        onboardingData,//7
+                        arguments.getSerializable(OLD_USER_STATES), //8
+                        arguments.getLong(OLD_USER_ID, 0), //9
+                        profilePicUri); //10
 
         return rootView;
     }
@@ -208,6 +217,29 @@ public class ScanFragment extends Fragment {
         private ProgressBar scanProgress;
         private LinearLayout switchLayout1, switchLayout2;
 
+        private int totalFiles = 0;
+        private int totalMusic = 0;
+        private int totalApps = 0;
+        private int totalExpected = 0;
+
+        //call back for counting songs
+        final HandOverMessage<Integer> songProcessCounter = new HandOverMessage<Integer>() {
+            @Override
+            public void handOverMessage(@Nonnull Integer message) {
+
+                //TODO increment song count
+            }
+        };
+
+        //call back for counting apps
+        final HandOverMessage<Integer> appProcessCounter = new HandOverMessage<Integer>() {
+            @Override
+            public void handOverMessage(@Nonnull Integer message) {
+                //TODO increment app count
+            }
+        };
+
+        @SuppressWarnings("StaticPseudoFunctionalStyleMethod")
         @Override
         protected Long doInBackground(Object... objects) {
 
@@ -220,70 +252,88 @@ public class ScanFragment extends Fragment {
             this.switchLayout2 = (LinearLayout) objects[6];
 
             final OnboardingData onboardingData = (OnboardingData) objects[7];
-            //generate and post new data
+            final EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>> stateTable = (EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>>) objects[8];
+            final long olderUserId = (long) objects[9];
+            final Uri profilePhotoUri = (Uri) objects[10];
+
+            //get song cursor
+            final Cursor musicCursor = MiscUtils.useContextFromFragment(reference, activity -> {
+                return activity.getContentResolver().query(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        SongCursorHelper.ANDROID_SONG_HELPER.getProjection(), null, null, null);
+            }).orNull();
+
+            //get installedApps
+            final List<ApplicationInfo> installedApps = MiscUtils.useContextFromFragment(reference, activity -> {
+                return MiscUtils.getInstalledApps(activity.getPackageManager());
+            }).or(Collections.emptyList());
+
+            //get total file count
+            final int totalFiles = (musicCursor != null ? musicCursor.getCount() : 0) + installedApps.size();
+
+            //genres get filled here
+            final Set<String> genres = MiscUtils.getSet(100);
+
+            //get the song builders
+            final List<Song.Builder> songBuilders = MiscUtils.useContextFromFragment(reference, activity -> {
+                return SongCursorHelper.getSongs(
+                        musicCursor,
+                        stateTable == null ? Collections.emptyMap() : stateTable.get(ContentType.MUSIC),
+                        olderUserId,
+                        activity.getContentResolver(),
+                        genres,
+                        songProcessCounter);
+            }).or(Collections.emptyList());
+
+            //get the app builders
+            final List<App.Builder> appBuilders = MiscUtils.useContextFromFragment(reference, activity -> {
+                return AppCursorHelper.getApps(
+                        installedApps,
+                        activity.getPackageManager(),
+                        appProcessCounter,
+                        stateTable == null ? Collections.emptyMap() : stateTable.get(ContentType.APP));
+            }).or(Collections.emptyList());
+
+            //we will post this
+            final AccountCreationData accountCreationData = new AccountCreationData.Builder()
+                    .onboardingData(onboardingData)
+                    .apps(ImmutableList.copyOf(Iterables.transform(appBuilders, AppCursorHelper.BUILDER_APP_FUNCTION)))
+                    .songs(ImmutableList.copyOf(Iterables.transform(songBuilders, SongCursorHelper.SONG_BUILDER)))
+                    .genres(ImmutableList.copyOf(genres)).build();
+
+            final byte[] toPost = MiscUtils.compressProto(accountCreationData);
+            Log.i("Ayush",
+                    "Found, Songs:" + accountCreationData.songs.size() +
+                            " Apps:" + accountCreationData.apps.size() +
+                            " kBs:" + toPost.length / 1024);
+
+            final Pair<String, Bitmap> imageHashBitmapPair = getImageHashBitmapPair(profilePhotoUri);
 
             final RequestBody requestBody = new RequestBody() {
-
                 @Override
                 public MediaType contentType() {
-                    return MediaType.parse("application/gzip");
+                    return MediaType.parse("application/octet-stream");
                 }
 
                 @Override
                 public void writeTo(BufferedSink sink) throws IOException {
 
-                    final ExecutorService executorService = Executors.newFixedThreadPool(2);
-                    final Future<List<App.Builder>> appFuture = executorService.submit(GET_APP_BUILDER);
-                    final Future<Pair<String, Bitmap>> imageFuture = executorService.submit(GET_IMAGE_AND_HASH);
-
-                    final DataOutputStream outputStream = new DataOutputStream(new GZIPOutputStream(sink.outputStream()));
-                    Log.i("Ayush", "Writing onboardingData" + onboardingData.toString());
-                    final byte[] onBoardingBytes = onboardingData.toByteArray();
-                    outputStream.writeInt(onBoardingBytes.length);
-                    outputStream.write(onBoardingBytes);
-
-                    try {
-
-                        //write songs
-                        final MusicList musicList = new MusicList.Builder()
-                                .clientId(0L)
-                                .genres(Collections.emptyList())
-                                .song(Lists.transform(getSongs(), SongCursorHelper.SONG_BUILDER)).build();
-                        final byte[] musicBytes = musicList.toByteArray();
-                        outputStream.writeInt(musicBytes.length);
-                        outputStream.write(musicBytes);
-                        Log.i("Ayush", "Music written " + musicList.song.size());
-
-                        //write apps
-                        final AppList appList = new AppList.Builder()
-                                .clientId(0L)
-                                .app(Lists.transform(appFuture.get(), AppCursorHelper.BUILDER_APP_FUNCTION)).build();
-                        final byte[] appBytes = appList.toByteArray();
-                        outputStream.writeInt(appBytes.length);
-                        outputStream.write(appBytes);
-                        Log.i("Ayush", "Apps written " + appList.app.size());
-
-                        //write photo
-                        final Pair<String, Bitmap> imageAndHash = imageFuture.get();
-                        if (imageAndHash != null && !TextUtils.isEmpty(imageAndHash.first) && imageAndHash.second != null) {
-
-                            outputStream.writeUTF(imageAndHash.first);
-                            imageAndHash.second.compress(Bitmap.CompressFormat.WEBP, 80, outputStream);
-                            Log.i("Ayush", "Image written");
-                        }
-
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    } finally {
-                        executorService.shutdownNow();
+                    //write count of accountCreationData bytes
+                    sink.write(Ints.toByteArray(toPost.length));
+                    //write accountCreationData
+                    sink.write(toPost);
+                    if (imageHashBitmapPair != null) {
+                        //write image hash
+                        sink.write(imageHashBitmapPair.first.getBytes(Charset.forName("UTF-8")));
+                        //write image
+                        imageHashBitmapPair.second.compress(Bitmap.CompressFormat.WEBP, 80, sink.outputStream());
                     }
                 }
             };
 
             final Request request = new Request.Builder()
                     .cacheControl(CacheControl.FORCE_NETWORK)
-                    .header("Content-Encoding", "gzip")
-                    .url("https://1-dot-client-module-dot-able-door-616.appspot.com/client-module/onBoarding/createAccount") //TODO
+                    .url("https://1-dot-client-module-dot-able-door-616.appspot.com/client-module/onBoarding/createAccount")
                     .post(requestBody)
                     .build();
 
@@ -306,45 +356,62 @@ public class ScanFragment extends Fragment {
 
             //TODO insert songs, apps and imageId into DB
 
-            MiscUtils.useContextAndFragment(reference, (activity, fragment) -> {
+            final WeakReference<Context> contextWeakReference =
+                    MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, WeakReference<Context>>) activity -> new WeakReference<>(activity)).orNull();
 
-                SharedPrefUtils.storeReachUser(fragment.sharedPreferences, onboardingData, "", serverId);
-                final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
-                tracker.setScreenName(AccountCreation.class.getPackage().getName());
-                if (serverId != 0) {
+            //sync up contacts
+            FireOnce.contactSync(
+                    contextWeakReference,
+                    serverId,
+                    onboardingData.phoneNumber);
 
-                    tracker.set("&uid", serverId + "");
-                    tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
-                }
-                //sync up contacts
-                final WeakReference<Context> contextWeakReference = new WeakReference<>(activity.getApplicationContext());
-                FireOnce.contactSync(
-                        contextWeakReference,
-                        serverId,
-                        onboardingData.phoneNumber);
-
-                //sync up gcmId
-                FireOnce.checkGCM(
-                        contextWeakReference,
-                        serverId);
-            });
+            //sync up gcmId
+            FireOnce.checkGCM(
+                    contextWeakReference,
+                    serverId);
 
             Log.i("Ayush", "Id received = " + serverId);
+
+            //store the user details
+            MiscUtils.useContextFromFragment(reference, activity -> {
+
+                final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                SharedPrefUtils.storeReachUser(
+                        preferences,
+                        accountCreationData.onboardingData,
+                        "",
+                        imageHashBitmapPair != null ? imageHashBitmapPair.first : "",
+                        serverId);
+
+            });
+
             return serverId;
         }
 
         @Override
         protected void onPostExecute(final Long userId) {
 
-            Log.i("Ayush", "Final Id " + userId);
             super.onPostExecute(userId);
+            final long serverId = userId == null ? 0 : userId;
+            Log.i("Ayush", "Final Id " + serverId);
 
             //set serverId here
             MiscUtils.useContextAndFragment(reference, (activity, fragment) -> {
 
-                if (userId == null || userId == 0) {
+                final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
+                tracker.setScreenName(AccountCreation.class.getPackage().getName());
+                if (serverId != 0) {
 
-                    ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                    tracker.set("&uid", serverId + "");
+                    tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
+
+                    finishOnBoarding.setText("CLICK TO PROCEED");
+                    finishOnBoarding.setTextColor(ContextCompat.getColor(activity, R.color.reach_color));
+                    finishOnBoarding.setOnClickListener(PROCEED);
+                    finishOnBoarding.setVisibility(View.VISIBLE);
+                } else {
+
+                    tracker.send(new HitBuilders.EventBuilder()
                             .setCategory("SEVERE ERROR, account creation failed")
                             .setAction("User Id - " + serverId)
                             .setValue(1)
@@ -361,11 +428,6 @@ public class ScanFragment extends Fragment {
             super.onProgressUpdate(values);
         }
 
-//        private int totalFiles = 0;
-//        private int totalMusic = 0;
-//        private int totalApps = 0;
-//        private int totalExpected = 0;
-//
 //        //TODO make static :(
 //        private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
 //
@@ -377,13 +439,7 @@ public class ScanFragment extends Fragment {
 //
 //                if (message.what == MetaDataScanner.FINISHED) {
 //
-//                    finishOnBoarding.setText("CLICK TO PROCEED");
-//                    MiscUtils.useContextFromFragment(reference, activity -> {
-//                        finishOnBoarding.setTextColor(ContextCompat.getColor(activity, R.color.reach_color));
 //
-//                    });
-//                    finishOnBoarding.setOnClickListener(PROCEED);
-//                    finishOnBoarding.setVisibility(View.VISIBLE);
 //                } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
 //
 //                    totalMusic = message.arg1;
@@ -441,87 +497,49 @@ public class ScanFragment extends Fragment {
         activity.finish();
     });
 
-    private static List<Song.Builder> getSongs() {
+    private static Pair<String, Bitmap> getImageHashBitmapPair(@Nullable Uri profilePhotoUri) {
 
-        final String[] projection = SongCursorHelper.ANDROID_SONG_HELPER.getProjection();
-        final Function<Cursor, Song.Builder> parser = (Function<Cursor, Song.Builder>) SongCursorHelper.ANDROID_SONG_HELPER.getParser();
+        //if its a network uri then obviously not new
+        final boolean isProfileUriNew = profilePhotoUri != null && !profilePhotoUri.toString().startsWith("http");
+        if (isProfileUriNew) {
 
-        final Cursor musicCursor = MiscUtils.useContextFromFragment(reference, context -> {
-            return context.getContentResolver().query(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    projection, null, null, null);
-        }).orNull();
+            final InputStream optionsStream = MiscUtils.useContextFromFragment(reference, activity -> {
+                try {
+                    return activity.getContentResolver().openInputStream(profilePhotoUri);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }).orNull();
 
-        if (musicCursor == null) {
+            final InputStream decodeStream = MiscUtils.useContextFromFragment(reference, activity -> {
+                try {
+                    return activity.getContentResolver().openInputStream(profilePhotoUri);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }).orNull();
 
-            Log.i("Ayush", "Meta-data sync failed");
-            return Collections.emptyList();
-        } else {
-
-            final List<Song.Builder> toReturn = new ArrayList<>(musicCursor.getCount());
-            while (musicCursor.moveToNext()) {
-
-                Song.Builder builder = parser.apply(musicCursor);
-                builder = SongCursorHelper.DEFAULT_VISIBILITY.apply(builder);
-                if (builder != null)
-                    toReturn.add(builder);
-            }
-            return toReturn;
-        }
-    }
-
-    private static final Callable<List<App.Builder>> GET_APP_BUILDER = () -> MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, List<App.Builder>>) activity -> {
-
-        final PackageManager packageManager = activity.getPackageManager();
-        final List<ApplicationInfo> applicationInfos = MiscUtils.getInstalledApps(packageManager);
-        Log.i("Ayush", "Reading apps " + applicationInfos.size());
-        final Iterable<App.Builder> builders = FluentIterable.from(applicationInfos)
-                .transform(AppCursorHelper.getParser(packageManager, Collections.emptySet()))
-                .filter(Predicates.notNull());
-        final List<App.Builder> toReturn = ImmutableList.copyOf(builders);
-        Log.i("Ayush", "Total apps " + toReturn.size());
-        return toReturn;
-    }).or(Collections.emptyList());
-
-    private static final Callable<Pair<String, Bitmap>> GET_IMAGE_AND_HASH = () -> {
-
-        final InputStream profilePicOptionsStream = MiscUtils.useContextFromFragment(reference, activity -> {
-
-            final ContentResolver contentResolver = activity.getContentResolver();
-            try {
-                return contentResolver.openInputStream(profilePicUri);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            if (optionsStream == null || decodeStream == null)
                 return null;
-            }
-        }).orNull();
 
-        final InputStream profilePicDecodeStream = MiscUtils.useContextFromFragment(reference, activity -> {
+            //first calculate the original size
+            final BitmapFactory.Options options = MiscUtils.getRequiredOptions(optionsStream);
+            if (options.outHeight == 0 || options.outWidth == 0)
+                return null; //failed
+            MiscUtils.closeQuietly(optionsStream);
 
-            final ContentResolver contentResolver = activity.getContentResolver();
-            try {
-                return contentResolver.openInputStream(profilePicUri);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }).orNull();
+            //resize and calculate the hash as well
+            final HashingInputStream hashingInputStream = new HashingInputStream(
+                    Hashing.md5(), decodeStream);
+            final Bitmap resizedBitmap = BitmapFactory.decodeStream(hashingInputStream, null, options);
+            MiscUtils.closeQuietly(decodeStream, hashingInputStream);
+            final String imageHash = hashingInputStream.hash().toString();
 
-        if (profilePicDecodeStream == null || profilePicOptionsStream == null)
+            return new Pair<>(imageHash, resizedBitmap);
+
+        } else
             return null;
-
-        //first calculate the original size
-        final BitmapFactory.Options options = MiscUtils.getRequiredOptions(profilePicOptionsStream);
-        if (options.outHeight == 0 || options.outWidth == 0)
-            return null; //failed
-        MiscUtils.closeQuietly(profilePicOptionsStream);
-
-        //resize and calculate the hash as well
-        final HashingInputStream hashingInputStream = new HashingInputStream(
-                Hashing.md5(), profilePicDecodeStream);
-        final Bitmap resizedBitmap = BitmapFactory.decodeStream(hashingInputStream, null, options);
-        MiscUtils.closeQuietly(profilePicDecodeStream, hashingInputStream);
-        final String imageHash = hashingInputStream.hash().toString();
-        return new Pair<>(imageHash, resizedBitmap); //failed
-    };
+    }
 }

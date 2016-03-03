@@ -15,7 +15,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +23,6 @@ import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,14 +32,13 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
-import reach.backend.music.musicVisibilityApi.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.music.MySongsHelper;
+import reach.project.music.MySongsProvider;
 import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -314,17 +311,18 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         protected Boolean doInBackground(Long... params) {
 
             boolean failed = false;
-            try {
-                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
-                        params[2], //serverId
-                        params[1], //songId
-                        params[0] == 1).execute(); //translate to boolean
-                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
-                    failed = true; //mark failed
-            } catch (IOException e) {
-                e.printStackTrace();
-                failed = true; //mark failed
-            }
+            //TODO
+//            try {
+//                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
+//                        params[2], //serverId
+//                        params[1], //songId
+//                        params[0] == 1).execute(); //translate to boolean
+//                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+//                    failed = true; //mark failed
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                failed = true; //mark failed
+//            }
 
             if (failed) {
                 MiscUtils.useFragment(myLibraryFragmentWeakReference, fragment -> {
