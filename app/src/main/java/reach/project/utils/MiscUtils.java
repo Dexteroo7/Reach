@@ -130,6 +130,8 @@ import reach.project.utils.viewHelpers.RetryHook;
 public enum MiscUtils {
     ;
 
+    private static final String FIRST_TIME_DOWNLOAD_KEY = "first_time_download";
+
     @NonNull
     public static String combinationFormatter(final long millis) {
 
@@ -1642,23 +1644,44 @@ public enum MiscUtils {
         } catch (JSONException ignored) {
         }
 
+       if( isItFirstTimeDownload(sharedPreferences)){
+           final Intent foreGround = new Intent(activity, ReachActivity.class);
+           foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+           foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+           activity.startActivity(foreGround);
+           putFirstTimeDownload(sharedPreferences,false);
+       }
+        else {
 
 
-        if (snackView != null) {
-            final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
+           if (snackView != null) {
+               final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
 
-            snack_bar.getView().setOnClickListener(v -> {
-                snack_bar.dismiss();
-            });
-            snack_bar.setAction("Open manager", v -> {
-                final Intent foreGround = new Intent(activity, ReachActivity.class);
-                foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
-                foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                activity.startActivity(foreGround);
-            }).show();
-        }
+               snack_bar.getView().setOnClickListener(v -> {
+                   snack_bar.dismiss();
+               });
+               snack_bar.setAction("Open manager", v -> {
+                   final Intent foreGround = new Intent(activity, ReachActivity.class);
+                   foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+                   foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                   activity.startActivity(foreGround);
+               }).show();
+           }
+       }
 
     }
+
+    private static boolean isItFirstTimeDownload(SharedPreferences preferences){
+       return preferences.getBoolean(FIRST_TIME_DOWNLOAD_KEY,true);
+    }
+
+    private static void putFirstTimeDownload(SharedPreferences preferences, boolean value){
+       SharedPreferences.Editor editor =  preferences.edit();
+        editor.putBoolean(FIRST_TIME_DOWNLOAD_KEY, value);
+        editor.apply();
+    }
+
+
 
     @NonNull
     public static JsonElement get(JsonObject jsonObject, EnumHelper<String> enumHelper, String defaultValue) {

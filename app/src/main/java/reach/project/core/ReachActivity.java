@@ -108,7 +108,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final int DOWNLOADED_COUNT_LOADER_ID = 2222;
     public static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
     public static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
-    public static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded";
+    public static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
@@ -315,16 +315,18 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             if(getValueFirstTimeDownloadedCountCalled()){
                                 putDownloadedCountInSharedPref(data.getCount());
                                 putValueFirstTimeDownloadedCountCalled(false);
+                                return;
                             }
 
                             if (!showRatingDialogOrNot()) {
                                 return;
                             }
 
-                            if (getDownloadedCountFromSharedPref()+2 < data.getCount()) {
+                            if (getDownloadedCountFromSharedPref() < data.getCount()) {
                                 Log.d(TAG, "Show Rating Dialog Called");
-                                showRatingDialog();
                                 putDownloadedCountInSharedPref(data.getCount());
+                                showRatingDialog();
+
 
                             }
                             Log.d(TAG, "Inside OnLoadFinished, cursor count = " + data.getCount());
@@ -378,6 +380,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
     private void showRatingDialog() {
+        if(alertDialog!=null){
+            if(alertDialog.isShowing()){
+                return;
+            }
+        }
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -404,7 +411,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     return;
                 }
                 final long serverId = SharedPrefUtils.getServerId(preferences);
-                FeedBack feedback = new FeedBack();
+                final FeedBack feedback = new FeedBack();
                 feedback.setClientId(serverId);
                 feedback.setReply3(feebackText);
 
@@ -424,6 +431,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 if (alertDialog != null) {
                     alertDialog.dismiss();
                 }
+                putRatingValueInSharedPref(false);
             }
         });
 
