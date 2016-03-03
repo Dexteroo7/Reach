@@ -1,7 +1,6 @@
 package reach.project.core;
 
 import android.annotation.SuppressLint;
-import android.app.LoaderManager;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -105,10 +104,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_MANAGER_SONGS_DOWNLOADING = "OPEN_MANAGER_SONGS_DOWNLOADING";
     public static final String OPEN_MANAGER_SONGS_LIBRARY = "OPEN_MANAGER_SONGS_LIBRARY";
     public static final String ADD_PUSH_SONG = "ADD_PUSH_SONG";
-    public static final int DOWNLOADED_COUNT_LOADER_ID = 2222;
-    public static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
-    public static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
-    public static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
+    private static final int DOWNLOADED_COUNT_LOADER_ID = 2222;
+    private static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
+    private static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
+    private static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
