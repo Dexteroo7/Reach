@@ -4,9 +4,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Optional;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +16,9 @@ import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import reach.project.core.ReachApplication;
 import reach.project.utils.MiscUtils;
 

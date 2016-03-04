@@ -184,9 +184,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                final Intent notificationIntent = new Intent(this, NotificationActivity.class);
-                notificationIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(notificationIntent);
+                NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
             case R.id.settings_button:
                 final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
@@ -304,17 +302,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
         mTabHost.addTab(
-                mTabHost.newTabSpec("friends_page").setIndicator("",
-                        ContextCompat.getDrawable(this, R.drawable.friends_tab_selector)),
-                FriendsFragment.class, null);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("push_page").setIndicator("",
-                        ContextCompat.getDrawable(this, R.drawable.push_tab_selector)),
-                PagerFragment.class, PUSH_PAGER_BUNDLE);
-        mTabHost.addTab(
                 mTabHost.newTabSpec("explore_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.explore_tab_selector)),
                 ExploreFragment.class, null);
+        mTabHost.addTab(
+                mTabHost.newTabSpec("friends_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.friends_tab_selector)),
+                FriendsFragment.class, null);
+        /*mTabHost.addTab(
+                mTabHost.newTabSpec("push_page").setIndicator("",
+                        ContextCompat.getDrawable(this, R.drawable.push_tab_selector)),
+                PagerFragment.class, PUSH_PAGER_BUNDLE);*/
         mTabHost.addTab(
                 mTabHost.newTabSpec("manager_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.manager_tab_selector)),
@@ -323,7 +321,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.my_profile_tab_selector)),
                 MyProfileFragment.class, null);
-        mTabHost.setCurrentTab(2);
+        mTabHost.setCurrentTab(0);
 
         /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("1"));

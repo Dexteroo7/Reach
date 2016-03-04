@@ -8,10 +8,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import javax.annotation.Nonnull;
 
@@ -20,6 +20,7 @@ import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
+import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -28,6 +29,9 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  * Created by dexter on 25/11/15.
  */
 public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>, LoaderManager.LoaderCallbacks<Cursor> {
+
+    private static final String NO_DOWNLOADS_TEXT = "No current\ndownloads!";
+    private EmptyRecyclerView mRecyclerView;
 
     public static DownloadingFragment getInstance(String header) {
 
@@ -45,10 +49,13 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
+         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
         downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
+        final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        emptyViewText.setText(NO_DOWNLOADS_TEXT);
+        mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
 
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(downloadingAdapter);
@@ -98,6 +105,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 //            Log.i("Ayush", "Setting new cursor " + data.getCount());
             downloadingAdapter.setCursor(data);
         }
+        mRecyclerView.checkIfEmpty(downloadingAdapter.getItemCount());
     }
 
     @Override

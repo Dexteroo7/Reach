@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -58,53 +59,58 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         this.optionsIcon = (ImageView) itemView.findViewById(R.id.optionsIcon);
         this.optionsIcon.setOnClickListener(view -> {
 
-            if (position == -1)
-                throw new IllegalArgumentException("Position not set for the view holder");
+                    if (position == -1)
+                        throw new IllegalArgumentException("Position not set for the view holder");
 
-            final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
-            final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.Status.PAUSED_BY_USER.getValue();
-            final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
-            popupMenu.inflate(R.menu.friends_popup_menu);
-            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
-            final String status;
-            status = isPaused ? "Resume Download" : "Pause Download";
-            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
+                    final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
+                    final boolean isPaused = handOverMessageExtra.getExtra(position).getShort(9) == ReachDatabase.Status.PAUSED_BY_USER.getValue();
+                    final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
+                    popupMenu.inflate(R.menu.friends_popup_menu);
+                    popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
+                    final String status;
+                    status = isPaused ? "Resume Download" : "Pause Download";
+                    popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
 
-            popupMenu.setOnMenuItemClickListener(item -> {
+                        popupMenu.setOnMenuItemClickListener(item -> {
 
-                switch (item.getItemId()) {
-                    case R.id.friends_menu_1:
-                        //pause
-                        if (pause_unpause(reachDatabaseId, context))
-                            item.setTitle("Resume Download");
-                        else
-                            item.setTitle("Pause Download");
-                        return true;
-                    case R.id.friends_menu_2:
-                        //delete
-                        final AlertDialog alertDialog = new AlertDialog.Builder(context)
-                                .setMessage("Are you sure you want to delete it?")
-                                .setPositiveButton("Yes", handleClick)
-                                .setNegativeButton("No", handleClick)
-                                .setIcon(R.drawable.up_icon)
-                                .create();
+                            switch (item.getItemId()) {
+                                case R.id.friends_menu_1:
+                                    //pause
+                                    if (pause_unpause(reachDatabaseId, context))
+                                        item.setTitle("Resume Download");
+                                    else
+                                        item.setTitle("Pause Download");
+                                    return true;
+                                case R.id.manager_menu_3:
+                                    //delete
+                                    final AlertDialog alertDialog = new AlertDialog.Builder(context)
+                                            .setMessage("Are you sure you want to delete it?")
+                                            .setPositiveButton("Yes", handleClick)
+                                            .setNegativeButton("No", handleClick)
+                                            .setIcon(R.drawable.up_icon)
+                                            .create();
 
-                        alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabaseId));
-                        alertDialog.show();
-                        return true;
-                    default:
-                        return false;
+                                    alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabaseId));
+                                    alertDialog.show();
+                                    return true;
+                                case R.id.manager_menu_4:
+                                    //pause
+                                    pause_unpause(reachDatabaseId, context);
+                                    return true;
+                                default:
+                                    return false;
+                            }
+                        });
+                        popupMenu.show();
+                    });
                 }
-            });
-            popupMenu.show();
-        });
-    }
 
-    //////////////////////////////
+                //////////////////////////////
 
-    /**
-     * Pause / Unpause transaction
-     */
+                /**
+                 * Pause / Unpause transaction
+                 */
+
     private static boolean pause_unpause(long reachDatabaseId, Context context) {
 
         final ContentResolver resolver = context.getContentResolver();

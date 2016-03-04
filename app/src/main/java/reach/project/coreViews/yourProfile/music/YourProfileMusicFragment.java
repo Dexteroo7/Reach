@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.google.common.base.Optional;
@@ -65,6 +66,8 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     private static WeakReference<YourProfileMusicFragment> reference = null;
     private static long hostId = 0;
     private static long myId = 0;
+    private RecyclerView mRecyclerView;
+    //private View emptyView;
 
     public static YourProfileMusicFragment newInstance(long hostId) {
 
@@ -104,7 +107,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-        final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        //emptyView = rootView.findViewById(R.id.empty_imageView);
+        //final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
+        //emptyViewText.setText(StaticData.NO_SONGS_TEXT);
         final Activity activity = getActivity();
         //mRecyclerView.setHasFixedSize(true);
 
@@ -256,8 +262,15 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void injectElements(List<Message> elements, boolean overWrite, boolean loadingDone) {
 
-        if (elements == null || elements.isEmpty())
+        if (elements == null || elements.isEmpty()){
+            /*emptyView.setVisibility(View.VISIBLE);
+            mRecyclerView.setVisibility(View.GONE);*/
             return;
+
+        }
+
+       /* emptyView.setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.VISIBLE);*/
 
         final Message typeCheckerInstance = elements.get(0);
         final Class typeChecker;

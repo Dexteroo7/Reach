@@ -32,6 +32,7 @@
         android:layout_toRightOf="@id/albumArt"
         android:layout_marginTop="15dp"
         android:ellipsize="marquee"
+        android:background="@null"
         android:lines="1"
         android:text="Test"
         android:textColor="#f33b5b"
@@ -46,6 +47,7 @@
         android:layout_marginTop="10dp"
         android:layout_toLeftOf="@id/checkBox"
         android:ellipsize="marquee"
+        android:background="@null"
         android:lines="1"
         android:text="Test"
         android:textColor="@color/reach_grey" />

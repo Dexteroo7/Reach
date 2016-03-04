@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.google.common.base.Optional;
@@ -51,6 +52,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     @Nullable
     private static WeakReference<YourProfileAppFragment> reference = null;
     private static long hostId = 0;
+    //private ProgressBar mLoadingView;
 
     public static YourProfileAppFragment newInstance(long hostId) {
 
@@ -126,9 +128,10 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
             }
         };
 
-        final View rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
+        //mLoadingView=(ProgressBar)rootView.findViewById(R.id.loading_view);
 
         parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
@@ -215,6 +218,9 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         Log.i("Ayush", "Reloading list " + appData.size());
         if (parentAdapter != null)
             parentAdapter.notifyDataSetChanged();
+        //TODO: Uncomment when needed
+        //mLoadingView.setVisibility(View.GONE);
+
 
         /**
          * If loading has finished request a full injection of smart lists

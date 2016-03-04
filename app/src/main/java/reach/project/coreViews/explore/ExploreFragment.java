@@ -35,10 +35,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
 import org.joda.time.DateTime;
 
@@ -53,6 +49,10 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nonnull;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.coreViews.friends.ReachFriendsHelper;

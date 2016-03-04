@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+// For updating db on app update
 public class UpdateReceiver extends BroadcastReceiver {
 
     @Override

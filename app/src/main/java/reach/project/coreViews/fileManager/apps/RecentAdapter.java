@@ -9,7 +9,10 @@ import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import reach.project.apps.App;
+import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -20,15 +23,35 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements MoreQualifier, Closeable {
 
     private final PackageManager packageManager;
+    private final VisibilityHook visibilityHook;
+
 
     public RecentAdapter(List<App> messageList,
                          HandOverMessage<App> handOverMessage,
                          PackageManager packageManager,
-                         int resourceId) {
+                         int resourceId, VisibilityHook visibilityHook) {
 
         super(messageList, handOverMessage, resourceId);
+        this.visibilityHook = visibilityHook;
         this.packageManager = packageManager;
     }
+
+    private final HandOverMessageExtra<App> handOverMessageExtra = new HandOverMessageExtra<App>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+            RecentAdapter.this.handOverMessage(position);
+        }
+
+        @Override
+        public App getExtra(@Nonnull Integer position) {
+
+            final App app = getItem(position);
+            if (app != null)
+                return app;
+            else
+                throw new IllegalStateException("App has been corrupted");
+        }
+    };
 
     @Override
     public int getItemCount() {
@@ -60,7 +83,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     @Override
     public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new AppItemHolder(itemView, handOverMessage);
+        return new AppItemHolder(itemView, handOverMessageExtra);
     }
 
     @Override
@@ -71,12 +94,23 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
+        holder.position = holder.getAdapterPosition();
         holder.appName.setText(item.applicationName);
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));
         } catch (PackageManager.NameNotFoundException ignored) {
             holder.appIcon.setImageDrawable(null);
         }
+
+        /*//if contains and is true
+        if (visibilityHook.isVisible(item.packageName)) {
+            holder.toggleButton.setImageResource(R.drawable.icon_everyone);
+            holder.toggleText.setText("Everyone");
+        }
+        else {
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
+            holder.toggleText.setText("Only Me");
+        }*/
     }
 
     @Override
@@ -87,5 +121,10 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public void close() {
         getMessageList().clear();
+    }
+
+    public interface VisibilityHook {
+
+        boolean isVisible(String packageName);
     }
 }

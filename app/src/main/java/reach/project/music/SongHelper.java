@@ -194,7 +194,8 @@ public class SongHelper extends SQLiteOpenHelper {
             COLUMN_ACTUAL_NAME, //16
             COLUMN_DATE_ADDED, //17
             COLUMN_VISIBILITY, //18
-            COLUMN_META_HASH //19
+            COLUMN_META_HASH, //19
+            COLUMN_UNIQUE_ID //20
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -219,8 +220,10 @@ public class SongHelper extends SQLiteOpenHelper {
 
         final String temp = cursor.getString(7);
 
+        // Previously wrong id was being passed, so changing it to get the unique id
         return new MusicData(
-                cursor.getLong(0), //id
+                //cursor.getLong(0), //id
+                cursor.getLong(0),
                 cursor.getString(19), //meta-hash
                 cursor.getLong(1), //length
                 cursor.getLong(2), //senderId

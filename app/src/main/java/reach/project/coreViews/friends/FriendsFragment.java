@@ -95,7 +95,7 @@ public class FriendsFragment extends Fragment implements
             @Override
             public int getSpanSize(int position) {
                 int itemType = friendsAdapter.getItemViewType(position);
-                if (itemType == FriendsAdapter.VIEW_TYPE_LOCKED)
+                if (itemType == FriendsAdapter.VIEW_TYPE_LOCKED || itemType == FriendsAdapter.VIEW_TYPE_EMPTY_OR_ERROR)
                     return 2;
                 else
                     return 1;

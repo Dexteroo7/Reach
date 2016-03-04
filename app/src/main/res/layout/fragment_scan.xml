@@ -23,12 +23,28 @@
         <RelativeLayout
             android:gravity="center_horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:background="@null"
+            >
+
+            <ProgressBar
+                android:id="@+id/indeterminateProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:indeterminate="true"
+                android:layout_alignParentBottom="true"
+                android:padding="0dp"
+                android:layout_marginBottom="-8dp"
+                android:visibility="gone"
+                />
+
             <TextView
                 android:id="@+id/sendButton"
                 android:textStyle="bold"
                 android:padding="15dp"
                 android:gravity="center"
+                android:background="@null"
                 android:textSize="16sp"
                 android:layout_alignParentBottom="true"
                 android:visibility="visible"
@@ -53,6 +69,7 @@
                     android:id="@+id/scan1"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:background="@null"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
@@ -61,6 +78,7 @@
                         android:textColor="#000"
                         android:gravity="center"
                         android:textSize="18sp"
+                        android:background="@null"
                         android:layout_margin="15dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
@@ -69,6 +87,7 @@
                         android:text="Please wait while we search your phone for songs and apps"
                         android:textColor="@color/reach_blue"
                         android:gravity="center"
+                        android:background="@null"
                         android:layout_marginLeft="20dp"
                         android:layout_marginRight="20dp"
                         android:layout_marginBottom="20dp"
@@ -81,16 +100,21 @@
                     android:layout_gravity="center"
                     android:orientation="horizontal"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    >
                     <RelativeLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        >
                         <TextView
                             android:id="@+id/totalSongs"
                             android:text="0"
                             android:layout_centerHorizontal="true"
                             android:textColor="@color/reach_grey"
                             android:textSize="36sp"
+                            android:background="@null"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                         <ImageView
@@ -98,14 +122,18 @@
                             android:layout_below="@id/totalSongs"
                             android:src="@drawable/icon_song_indicator_gray"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:background="@null"
+                            />
                         <TextView
                             android:text="songs"
                             android:layout_toRightOf="@id/songIcon"
                             android:layout_alignBottom="@id/songIcon"
                             android:textColor="@color/reach_grey"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:background="@null"
+                            />
                     </RelativeLayout>
                     <View
                         android:background="@color/reach_grey"
@@ -145,19 +173,22 @@
                 android:layout_above="@id/frame1"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
+
                 <ProgressBar
                     android:id="@+id/scanProgress"
                     android:layout_margin="10dp"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:progressDrawable="@drawable/circle_loading"
-                    android:progress="0"
+                    android:progress="1"
                     android:layout_centerInParent="true"
                     android:secondaryProgress="100"
                     android:layout_width="140dp"
-                    android:layout_height="140dp" />
+                    android:layout_height="140dp"
+                    />
                 <LinearLayout
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:background="@null"
                     android:layout_centerInParent="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
@@ -167,12 +198,15 @@
                         android:textColor="@color/reach_grey"
                         android:textSize="32sp"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:background="@null"
+                        />
                     <TextView
                         android:text="FILES FOUND"
                         android:textSize="12sp"
                         android:textColor="@color/reach_grey"
                         android:layout_width="wrap_content"
+                        android:background="@null"
                         android:layout_height="wrap_content" />
                 </LinearLayout>
             </RelativeLayout>

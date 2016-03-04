@@ -127,9 +127,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             Log.d("Ashish", "tourGuide.playOn");
             final ToolTip toolTip = new ToolTip()
                     .setTextColor(Color.WHITE)
-                    .setTitle("Manage your privacy")
+                    .setTitle("Manage privacy")
                     .setShadow(false)
-                    .setDescription("Tap on a file to hide/un-hide it from your friends");
+                    .setDescription("Tap to hide/unhide from friends. By default, your personal files are hidden!");
             final Overlay overlay = new Overlay()
                     .setBackgroundColor(Color.parseColor("#BF000000"))
                     .setStyle(Overlay.Style.Rectangle);
