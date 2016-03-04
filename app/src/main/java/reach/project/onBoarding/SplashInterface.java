@@ -14,7 +14,7 @@ public interface SplashInterface {
 
     void onOpenNumberVerification();
 
-    void onOpenCodeVerification(String phoneNumber);
+    void onOpenCodeVerification(String phoneNumber, String countryCode);
 
     void onOpenAccountCreation(Optional<UserDataPersistence> container);
 

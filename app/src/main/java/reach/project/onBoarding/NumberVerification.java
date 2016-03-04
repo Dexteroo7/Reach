@@ -7,19 +7,61 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.InputFilter;
-import android.text.Selection;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import reach.project.R;
 import reach.project.utils.SharedPrefUtils;
 
 public class NumberVerification extends Fragment {
+
+    private static final CountryData[] countryDatas = {
+            //new CountryData("ALA","+358","Åland Islands"),
+            //new CountryData("AIA","+1","Anguilla"),
+            new CountryData("AUT","+43","Austria"),
+            new CountryData("BGD","+880","Bangladesh"),
+            //new CountryData("BRB","+1","Barbados"),
+            new CountryData("BMU","+1","Bermuda"),
+            new CountryData("VGB","+1","British Virgin Islands"),
+            new CountryData("CAN","+1","Canada"),
+            //new CountryData("CYM","+1","Cayman Islands"),
+            new CountryData("COL","+57","Columbia"),
+            //new CountryData("DMA","+1","Dominica"),
+            new CountryData("DOM","+1","Dominican Republic"),
+            new CountryData("EGY","+20","Egypt"),
+            new CountryData("FIN","+358","Finland"),
+            new CountryData("DEU","+49","Germany"),
+            new CountryData("GRC","+30","Greece"),
+            //new CountryData("GRD","+1","Grenada"),
+            //new CountryData("GUM","+1","Guam"),
+            new CountryData("GGY","+44","Guernsey"),
+            new CountryData("IN","+91","India"),
+            new CountryData("IDN","+62","Indonesia"),
+            new CountryData("ITA","+39","Italy"),
+            //new CountryData("MSR","+1","Montserrat"),
+            new CountryData("NZL","+64","New Zealand"),
+            //new CountryData("GB-NIR","+44","Northern Ireland"),
+            //new CountryData("MNP","+1","Northern Mariana Islands"),
+            new CountryData("PAK","+92","Pakistan"),
+            new CountryData("PHL","+63","Philippines"),
+            new CountryData("PRI","+1","Puerto Rico"),
+            new CountryData("RUS","+7","Russia"),
+            new CountryData("VCT","+1","Saint Vincent and the Grenadines"),
+            //new CountryData("GB-SCT","+44","Scotland"),
+            //new CountryData("TCA","+1","Turks and Caicos Islands"),
+            new CountryData("ARE","+971","United Arab Emirates"),
+            new CountryData("GBR","+44","United Kingdom")
+            //new CountryData("VAT","+379","Vatican City"),
+            //new CountryData("GB-WLS","+44","Wales")
+    };
 
     private static final byte ENFORCED_LENGTH = 4;
 
@@ -34,6 +76,7 @@ public class NumberVerification extends Fragment {
     };
 
     private static final InputFilter LENGTH_FILTER = new InputFilter.LengthFilter(14);
+    private Spinner spinner;
 
     public static NumberVerification newInstance() {
         return new NumberVerification();
@@ -52,10 +95,20 @@ public class NumberVerification extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_number_verification, container, false);
 
         telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber);
-        telephoneNumber.setText("+91-");
-        telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
+        //telephoneNumber.setText("+91-");
+        spinner = (Spinner) rootView.findViewById(R.id.countryCodeSpinner);
+        spinner.setAdapter(new CustomSpinnerAdapter(getActivity(),android.R.layout.simple_list_item_1,countryDatas));
+        String localeCountry = getContext().getResources().getConfiguration().locale.getCountry();
+        for (int i = 0; i < countryDatas.length; i++)
+            if (countryDatas[i].isoCode.equals(localeCountry))
+                spinner.setSelection(i);
+
+        //telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
+
+        //spinner.requestFocus();
         telephoneNumber.requestFocus();
-        Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
+        //Selection.setSelection(telephoneNumber.getText(), ENFORCED_LENGTH);
+        //Selection.setSelection(" ", ENFORCED_LENGTH);
 
         /*//clear the shared pref
         final SharedPreferences preferences = getContext().getSharedPreferences("Reach", Context.MODE_PRIVATE);
@@ -93,36 +146,34 @@ public class NumberVerification extends Fragment {
 
     private final View.OnClickListener clickListener = view -> {
 
+        final CountryData countryData = (CountryData) spinner.getSelectedItem();
+        if (countryData == null || TextUtils.isEmpty(countryData.diallingCode)) {
+            Toast.makeText(view.getContext(), "Select Country Code", Toast.LENGTH_SHORT).show();
+            return;
+        }
         final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
-
-        Log.i("Ayush", "PhoneNumber = " + phoneNumber);
-
         final String parsed;
-        //replace every non-digit, will retain a minimum of 2 digits (91)
-        if (TextUtils.isEmpty(phoneNumber) ||
-                phoneNumber.length() < 14 ||
-                TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) ||
-                parsed.length() < 10) {
-
+        Log.i("Ayush", "PhoneNumber = " + phoneNumber);
+        if (TextUtils.isEmpty(phoneNumber) || phoneNumber.length() < 10 ||
+                TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) || parsed.length() < 10) {
             Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Log.i("Ayush", "Final phoneNumber = " + parsed);
-
         //TODO track
-            /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
-            simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
-            try {
-                UsageTracker.trackLogEvent(simpleParams, UsageTracker.NUM_ENTERED);
-            } catch (JSONException ignored) {}*/
+        /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
+        simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
+        try {
+            UsageTracker.trackLogEvent(simpleParams, UsageTracker.NUM_ENTERED);
+        } catch (JSONException ignored) {}*/
 
         Log.i("Verification", "Code sent");
         final Context context = view.getContext();
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        SharedPrefUtils.storePhoneNumber(preferences, parsed); //store the phoneNumber
-        mListener.onOpenCodeVerification(parsed);
+        SharedPrefUtils.storePhoneNumber(preferences, phoneNumber); //store the phoneNumber
+        mListener.onOpenCodeVerification(phoneNumber, countryData.diallingCode);
     };
+
 
     @Nullable
     public static String parsePhoneNumber(@NonNull String enteredPhoneNumber) {
@@ -130,5 +181,52 @@ public class NumberVerification extends Fragment {
         final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
         final int length = cleansedNumber.length();
         return cleansedNumber.substring(length - 10, length);
+    }
+
+    private class CustomSpinnerAdapter extends ArrayAdapter<CountryData> {
+
+        private final LayoutInflater inflater;
+
+        public CustomSpinnerAdapter(Context context, int resource, CountryData[] countryDatas) {
+            super(context, resource, countryDatas);
+            inflater = LayoutInflater.from(context);
+        }
+
+        private final class ViewHolder {
+            private final TextView textView;
+            private ViewHolder(TextView textView) {
+                this.textView = textView;
+            }
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final ViewHolder viewHolder;
+            if(convertView==null){
+                convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+                viewHolder = new ViewHolder((TextView) convertView.findViewById(android.R.id.text1));
+                convertView.setTag(viewHolder);
+            }
+            else
+                viewHolder = (ViewHolder) convertView.getTag();
+            viewHolder.textView.setText(getItem(position).diallingCode);
+            return convertView;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            final ViewHolder viewHolder;
+            if(convertView==null){
+                convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+                viewHolder = new ViewHolder((TextView) convertView.findViewById(android.R.id.text1));
+                convertView.setTag(viewHolder);
+            }
+            else
+                viewHolder = (ViewHolder) convertView.getTag();
+            final CountryData countryData = getItem(position);
+            viewHolder.textView.setText(countryData.countryName +", " +countryData.diallingCode);
+            return convertView;
+        }
+
     }
 }

@@ -1461,19 +1461,30 @@ public enum MiscUtils {
         } catch (JSONException ignored) {
         }
 
-        if (snackView != null) {
-            final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
+       if( SharedPrefUtils.isItFirstTimeDownload(sharedPreferences)){
+           final Intent foreGround = new Intent(activity, ReachActivity.class);
+           foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+           foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+           activity.startActivity(foreGround);
+           SharedPrefUtils.putFirstTimeDownload(sharedPreferences,false);
+       }
+        else {
 
-            snack_bar.getView().setOnClickListener(v -> {
-                snack_bar.dismiss();
-            });
-            snack_bar.setAction("Open manager", v -> {
-                final Intent foreGround = new Intent(activity, ReachActivity.class);
-                foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
-                foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                activity.startActivity(foreGround);
-            }).show();
-        }
+
+           if (snackView != null) {
+               final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
+
+               snack_bar.getView().setOnClickListener(v -> {
+                   snack_bar.dismiss();
+               });
+               snack_bar.setAction("Open manager", v -> {
+                   final Intent foreGround = new Intent(activity, ReachActivity.class);
+                   foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+                   foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                   activity.startActivity(foreGround);
+               }).show();
+           }
+       }
     }
 
     @NonNull

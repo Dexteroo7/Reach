@@ -221,7 +221,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     }
 
     @Override
-    public void onOpenCodeVerification(String phoneNumber) {
+    public void onOpenCodeVerification(String phoneNumber, String countryCode) {
         if (isFinishing())
             return;
         try {
@@ -229,7 +229,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             Log.i("Ayush", randomCode + " code");
             getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                     R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                    .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber)).commit();
+                    .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber, countryCode)).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }

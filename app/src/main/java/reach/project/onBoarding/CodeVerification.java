@@ -60,11 +60,12 @@ public class CodeVerification extends Fragment {
     private static final int MY_PERMISSIONS_RECEIVE_SMS = 33;
     private static final String AUTH_KEY = "AUTH_KEY";
     private static final String PHONE_NUMBER = "PHONE_NUMBER";
+    private static final String COUNTRY_CODE = "COUNTRY_CODE";
 
     private static WeakReference<CodeVerification> reference;
 
     public static CodeVerification newInstance(String authKey,
-                                               String phoneNumber) {
+                                               String phoneNumber, String countryCode) {
 
         final Bundle args;
         CodeVerification fragment;
@@ -74,6 +75,7 @@ public class CodeVerification extends Fragment {
 
         args.putString(AUTH_KEY, authKey);
         args.putString(PHONE_NUMBER, phoneNumber);
+        args.putString(COUNTRY_CODE, countryCode);
 
         return fragment;
     }
@@ -88,7 +90,7 @@ public class CodeVerification extends Fragment {
     @Nullable
     private Future<UserDataPersistence> containerNewFuture = null;
     @Nullable
-    private String phoneNumber = null, finalAuthKey = null;
+    private String phoneNumber = null, finalAuthKey = null, countryCode = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -111,13 +113,17 @@ public class CodeVerification extends Fragment {
             activity.registerReceiver(SMS_RECEIVER, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 
         phoneNumber = getArguments().getString(PHONE_NUMBER, "");
+        countryCode = getArguments().getString(COUNTRY_CODE, "");
         finalAuthKey = getArguments().getString(AUTH_KEY, "");
+        final String fullNumber = countryCode + phoneNumber;
 
-        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(finalAuthKey)) {
+        if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(countryCode)
+                || TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(finalAuthKey)) {
             //should never happen
             activity.finish();
             return rootView;
         }
+        Log.i("Ayush", "Final fullNumber = " + fullNumber);
 
         verificationCode = (EditText) rootView.findViewById(R.id.verificationCode);
         verificationCode.addTextChangedListener(verificationWatcher);
@@ -127,7 +133,7 @@ public class CodeVerification extends Fragment {
 
         //send sms and wait
         SmsListener.forceQuit.set(true); //quit current
-        SmsListener.sendSms(phoneNumber, finalAuthKey, MESSENGER, getContext());
+        SmsListener.sendSms(fullNumber, finalAuthKey, MESSENGER, getContext());
 
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final HttpTransport transport = new NetHttpTransport();

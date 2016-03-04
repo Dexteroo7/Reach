@@ -37,11 +37,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 import com.google.common.primitives.Ints;
-import com.squareup.okhttp.CacheControl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -60,6 +55,11 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nonnull;
 
+import okhttp3.CacheControl;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import okio.BufferedSink;
 import reach.project.R;
 import reach.project.apps.App;

@@ -1,19 +1,26 @@
 package reach.project.core;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -21,8 +28,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.RatingBar;
 import android.widget.Toast;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
@@ -34,6 +44,7 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.Set;
 
+import reach.backend.entities.feedBackApi.model.FeedBack;
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.apps.App;
@@ -65,6 +76,9 @@ import reach.project.utils.viewHelpers.PagerFragment;
 
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
+    private static final String TAG = ReachActivity.class.getSimpleName();
+    private AlertDialog alertDialog;
+
     public static void openActivity(Context context) {
 
         final Intent intent = new Intent(context, ReachActivity.class);
@@ -79,27 +93,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return intent;
     }
 
-    /*public static void openDownloading() {
-
-        MiscUtils.useActivity(reference, activity -> {
-
-            if (activity.mTabHost == null)
-                return;
-
-            activity.mTabHost.postDelayed(() -> {
-                activity.mTabHost.setCurrentTab(3);
-                activity.mTabHost.postDelayed(() -> {
-                    final PagerFragment pagerFragment = (PagerFragment) activity.getSupportFragmentManager()
-                            .findFragmentByTag("manager_page");
-                    pagerFragment.setInnerItem(0, 1);
-                }, 500L);
-
-            }, 1000L);
-            //activity.viewPager.setCurrentItem(3, true);
-            //DOWNLOAD_PAGER.setItem(1);
-        });
-    }*/
-
     ////////////////////////////////////////public static final
 
     public static final String OPEN_MY_FRIENDS = "OPEN_MY_FRIENDS";
@@ -112,11 +105,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_MANAGER_SONGS_DOWNLOADING = "OPEN_MANAGER_SONGS_DOWNLOADING";
     public static final String OPEN_MANAGER_SONGS_LIBRARY = "OPEN_MANAGER_SONGS_LIBRARY";
     public static final String ADD_PUSH_SONG = "ADD_PUSH_SONG";
+    private static final int DOWNLOADED_COUNT_LOADER_ID = 2222;
+    private static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
+    private static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
+    private static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
-
+    SharedPreferences preferences;
     ////////////////////////////////////////private static final
 
     @SuppressWarnings("unchecked")
@@ -153,8 +150,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     Toast.makeText(this, "First select some songs", Toast.LENGTH_SHORT).show();
                     return false;
                 }
-
-                final SharedPreferences preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
                 final PushContainer pushContainer = new PushContainer.Builder()
                         .senderId(SharedPrefUtils.getServerId(preferences))
                         .userName(SharedPrefUtils.getUserName(preferences))
@@ -241,7 +236,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         reference = new WeakReference<>(this);
 
-        final SharedPreferences preferences = getSharedPreferences("Reach", MODE_PRIVATE);
+        preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
 
         //track app open event
@@ -268,37 +263,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         ////////////////////////////////////////
 
-        /*viewPager = (CustomViewPager) findViewById(R.id.mainViewPager);
-        viewPager.setPagingEnabled(false);
-        viewPager.setOffscreenPageLimit(4);
-        viewPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
-            @Override
-            public Fragment getItem(int position) {
-
-                switch (position) {
-
-                    case 0:
-                        return FriendsFragment.getInstance();
-                    case 1:
-                        return PUSH_PAGER;
-                    case 2:
-                        return ExploreFragment.newInstance(serverId);
-                    case 3:
-                        return DOWNLOAD_PAGER;
-                    case 4:
-                        return MyProfileFragment.newInstance();
-
-                    default:
-                        throw new IllegalStateException("only 5 tabs expected");
-                }
-            }
-
-            @Override
-            public int getCount() {
-                return 5;
-            }
-        });*/
-
         mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
         mTabHost.addTab(
@@ -323,109 +287,200 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 MyProfileFragment.class, null);
         mTabHost.setCurrentTab(0);
 
-        /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
-        tabLayout.addTab(tabLayout.newTab().setText("1"));
-        tabLayout.addTab(tabLayout.newTab().setText("2"));
-        tabLayout.addTab(tabLayout.newTab().setText("3"));
-        tabLayout.addTab(tabLayout.newTab().setText("4"));
-        tabLayout.addTab(tabLayout.newTab().setText("5"));
-        for (int index = 1; index < tabLayout.getTabCount(); index++) {
+        if (showRatingDialogOrNot()) {
+            Log.d(TAG, "Created Downloaded Loader");
+            getSupportLoaderManager().initLoader(DOWNLOADED_COUNT_LOADER_ID,
+                    null,
+                    new android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>() {
+                        @Override
+                        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+                            return new CursorLoader(ReachActivity.this,
+                                    ReachDatabaseProvider.CONTENT_URI,
+                                    ReachDatabaseHelper.MUSIC_DATA_LIST,
+                                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                                    new String[]{ReachDatabase.FINISHED + "", "0"},
+                                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                        }
 
-            final TabLayout.Tab tab = tabLayout.getTabAt(index);
-            if (tab != null) {
-                tab.setCustomView(UNSELECTED_ICONS[index]);
-            }
+                        @Override
+                        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+
+
+                            if (data == null) {
+                                Log.d(TAG, "Inside OnLoadFinished, cursor == null");
+                                return;
+                            }
+
+                            if(getValueFirstTimeDownloadedCountCalled()){
+                                putDownloadedCountInSharedPref(data.getCount());
+                                putValueFirstTimeDownloadedCountCalled(false);
+                                return;
+                            }
+
+                            if (!showRatingDialogOrNot()) {
+                                return;
+                            }
+
+                            if (getDownloadedCountFromSharedPref() < data.getCount()) {
+                                Log.d(TAG, "Show Rating Dialog Called");
+                                putDownloadedCountInSharedPref(data.getCount());
+                                showRatingDialog();
+
+
+                            }
+                            Log.d(TAG, "Inside OnLoadFinished, cursor count = " + data.getCount());
+
+
+                        }
+
+                        @Override
+                        public void onLoaderReset(Loader<Cursor> loader) {
+
+                        }
+                    });
+
         }
-
-        final int selectedTabPosition = tabLayout.getSelectedTabPosition();
-        final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
-        if (selectedTab != null)
-            selectedTab.setCustomView(SELECTED_ICONS[selectedTabPosition]);
-
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                final int pos = tabLayout.getSelectedTabPosition();
-                tab.setCustomView(null);
-                tab.setCustomView(SELECTED_ICONS[pos]);
-                switch (pos) {
-                    case 0:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, FriendsFragment.getInstance()).commit();
-                        return;
-                    case 1:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, PUSH_PAGER).commit();
-                        return;
-                    case 2:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, ExploreFragment.newInstance(serverId)).commit();
-                        return;
-                    case 3:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, DOWNLOAD_PAGER).commit();
-                        return;
-                    case 4:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container, MyProfileFragment.newInstance()).commit();
-                        return;
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                tab.setCustomView(null);
-                tab.setCustomView(UNSELECTED_ICONS[tab.getPosition()]);
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-                tab.setCustomView(null);
-                tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
-            }
-        });
-
-        tabLayout.getTabAt(2).select();*/
-
-        /*final TabLayout tabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
-        tabLayout.setupWithViewPager(viewPager);
-        for (int index = 1; index < tabLayout.getTabCount(); index++) {
-            final TabLayout.Tab tab = tabLayout.getTabAt(index);
-            if (tab != null) {
-                tab.setCustomView(UNSELECTED_ICONS[index]);
-            }
-        }
-
-        final int selectedTabPosition = tabLayout.getSelectedTabPosition();
-        final TabLayout.Tab selectedTab = tabLayout.getTabAt(selectedTabPosition);
-        if (selectedTab != null)
-            selectedTab.setCustomView(SELECTED_ICONS[selectedTabPosition]);
-
-        tabLayout.setOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager) {
-
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                super.onTabSelected(tab);
-                tab.setCustomView(null);
-                tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                super.onTabUnselected(tab);
-                tab.setCustomView(null);
-                tab.setCustomView(UNSELECTED_ICONS[tab.getPosition()]);
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-                super.onTabReselected(tab);
-                tab.setCustomView(null);
-                tab.setCustomView(SELECTED_ICONS[tab.getPosition()]);
-            }
-        });
-
-        viewPager.setCurrentItem(2);*/
 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);
     }
+
+
+    private void putRatingValueInSharedPref(boolean value) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(SHOW_RATING_DIALOG_SHARED_PREF_KEY, value);
+        editor.commit();
+    }
+
+    private boolean showRatingDialogOrNot() {
+        return preferences.getBoolean(SHOW_RATING_DIALOG_SHARED_PREF_KEY, true);
+    }
+
+    private void putValueFirstTimeDownloadedCountCalled(boolean value) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY, value);
+        editor.commit();
+    }
+
+    private boolean getValueFirstTimeDownloadedCountCalled() {
+        return preferences.getBoolean(FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY, true);
+    }
+
+
+
+    private int getDownloadedCountFromSharedPref() {
+        return preferences.getInt(DOWNLOADED_COUNT_SHARED_PREF_KEY, 0);
+    }
+
+    private void putDownloadedCountInSharedPref(int value) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(DOWNLOADED_COUNT_SHARED_PREF_KEY, value);
+        editor.commit();
+    }
+
+    private void showRatingDialog() {
+        if(alertDialog!=null){
+            if(alertDialog.isShowing()){
+                return;
+            }
+        }
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View vv = inflater.inflate(R.layout.rating_dialog_custom_view, null, false);
+        //final View vv2 =inflater.inflate(R.layout.feedback_custom_layout,container,false);
+        final RatingBar rating = (RatingBar) vv.findViewById(R.id.ratingBar);
+        rating.getProgressDrawable().setColorFilter(Color.parseColor("#FFD700"), PorterDuff.Mode.SRC_ATOP);
+        final View feedbackContainer = vv.findViewById(R.id.feedbackContainer);
+        final View ratingContainer = vv.findViewById(R.id.ratingContainer);
+        final EditText feedbackEditText = (EditText) vv.findViewById(R.id.feedback_edt);
+        final View submitBtn = vv.findViewById(R.id.submit_btn);
+        final View cancelBtn = vv.findViewById(R.id.cancel_btn);
+
+
+        //vv.findViewById(R.id.feedbackEditText);
+
+        submitBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                final String feebackText = feedbackEditText.getText().toString();
+                if ((feebackText.trim()).length() == 0) {
+                    Toast.makeText(ReachActivity.this, "Please enter a feedback", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                final long serverId = SharedPrefUtils.getServerId(preferences);
+                final FeedBack feedback = new FeedBack();
+                feedback.setClientId(serverId);
+                feedback.setReply3(feebackText);
+
+                MiscUtils.autoRetryAsync(() -> StaticData.FEED_BACK_API.insert(feedback).execute(),
+                        Optional.absent());
+                //TODO: Only change the value in shared pref if the feedback gets submitted
+                if(alertDialog!=null) {
+                    alertDialog.dismiss();
+                }
+                putRatingValueInSharedPref(false);
+
+            }
+        });
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (alertDialog != null) {
+                    alertDialog.dismiss();
+                }
+                putRatingValueInSharedPref(false);
+            }
+        });
+
+        vv.findViewById(R.id.rateNow).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Uri uri = Uri.parse("market://details?id=" + /*getActivity().getPackageName()*/"reach.project");
+                Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+                // To count with Play market backstack, After pressing back button,
+                // to taken back to our application, we need to add following flags to intent.
+                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                        Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET |
+                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                try {
+                    startActivity(goToMarket);
+                } catch (ActivityNotFoundException e) {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("http://play.google.com/store/apps/details?id=" + /*getActivity().getPackageName()*/ "reach.project")));
+                } finally {
+                    putRatingValueInSharedPref(false);
+                    if (alertDialog != null) {
+                        alertDialog.dismiss();
+                    }
+                }
+
+
+            }
+        });
+        vv.findViewById(R.id.later).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                            /*alertDialogBuilder.setView(vv2);
+                            alertDialogBuilder.show();*/
+                ratingContainer.setVisibility(View.GONE);
+                feedbackContainer.setVisibility(View.VISIBLE);
+
+
+            }
+        });
+
+
+        alertDialogBuilder.setView(vv);
+        alertDialog = alertDialogBuilder.show();
+
+
+    }
+
 
     private synchronized void processIntent(Intent intent) {
 
@@ -606,7 +661,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     }
                     break;
             }
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
     }
 
     @Override
@@ -743,4 +799,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             coachView.setOnClickListener(v -> viewGroup.removeView(coachView));
         }, 1000L);
     }
+
+
 }
