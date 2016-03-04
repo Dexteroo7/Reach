@@ -86,6 +86,7 @@ public class MySongsHelper extends SQLiteOpenHelper {
                     COLUMN_VISIBILITY,
                     COLUMN_META_HASH
             };
+    private static final String BLANK = "";
 
     public static ContentValues contentValuesCreator(Song song) {
 
@@ -130,7 +131,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
             COLUMN_DATE_ADDED, //10
             COLUMN_VISIBILITY, //11
             COLUMN_IS_LIKED, //12
-            COLUMN_META_HASH //13
+            COLUMN_META_HASH, //13
+            COLUMN_GENRE //14
     };
 
     public static final String[] SONG_LIST = new String[]{
@@ -174,6 +176,24 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 .genre(cursor.getString(10))
                 .isLiked(isLiked)
                 .songId(cursor.getLong(0)).build();
+    }
+
+    public static Song convertMusicDataToSong(final MusicData data){
+
+        return new Song.Builder()
+                .album(data.getAlbumName())
+                .artist(data.getArtistName())
+                .dateAdded(data.getDateAdded())
+                .displayName(data.getDisplayName())
+                .duration(data.getDuration())
+                .fileHash(data.getMetaHash())
+                .isLiked(data.isLiked())
+                .path(data.getPath())
+                .songId(data.getId())
+                .size(data.getLength())
+                .actualName("hello_world")
+                .build();
+
     }
 
     //DISK_LIST specific !

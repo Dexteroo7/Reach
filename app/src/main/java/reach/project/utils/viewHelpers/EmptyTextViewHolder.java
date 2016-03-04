@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 /**
  * Created by adminReach on 16/02/16.
@@ -16,8 +15,8 @@ public class EmptyTextViewHolder extends RecyclerView.ViewHolder implements View
     public final ImageView mEmptyImageView;
 
     public EmptyTextViewHolder(ViewGroup parent,
-                               int itemViewResourceId,
-                               int emptyImageViewResourceId) {
+                           int itemViewResourceId,
+                           int emptyImageViewResourceId) {
 
         super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
         this.mEmptyImageView = (ImageView) itemView.findViewById(emptyImageViewResourceId);

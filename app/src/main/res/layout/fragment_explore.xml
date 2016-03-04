@@ -1,8 +1,9 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical">
+    android:background="@null"
+    >
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/exploreToolbar"
@@ -14,5 +15,15 @@
     <android.support.v4.view.ViewPager
         android:id="@+id/explorer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:layout_below="@+id/exploreToolbar"
+        android:background="@null"
+        />
+
+    <include layout="@layout/no_friends_discover_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/exploreToolbar"
+        />
+
+</RelativeLayout>
