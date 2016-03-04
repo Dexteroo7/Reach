@@ -208,7 +208,7 @@ public enum SongCursorHelper {
             SongHelper.COLUMN_LOGICAL_CLOCK, //20
             SongHelper.COLUMN_PROCESSED, //21
             SongHelper.COLUMN_STATUS, //22
-            SongHelper.COLUMN_ALBUM_ART_DATA
+            SongHelper.COLUMN_ALBUM_ART_DATA //23
 
     }, new Function<Cursor, ReachDatabase>() {
         @Nullable
@@ -231,19 +231,19 @@ public enum SongCursorHelper {
                     .setDuration(cursor.getLong(8))
                     .setLength(cursor.getLong(9))
                     .setGenre(cursor.getString(10))
+                    .setPath(cursor.getString(11))
                     .setDateAdded(new DateTime(cursor.getLong(12)))
+                    .setVisibility(cursor.getShort(13) == 1)
+                    .setLiked(!TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true")))
                     .setReceiverId(cursor.getLong(15))
                     .setSenderId(cursor.getLong(16))
                     .setUserName(cursor.getString(17))
-                    .setOperationKind(ReachDatabase.OperationKind.getFromValue(cursor.getShort(19)))
-                    .setAlbumArtData(new byte[0])
-                    .setLiked(!TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true")))
                     .setOnlineStatus(ReachFriendsHelper.Status.getFromValue(Short.parseShort(cursor.getString(18))))
-                    .setVisibility(cursor.getShort(13) == 1)
+                    .setOperationKind(ReachDatabase.OperationKind.getFromValue(cursor.getShort(19)))
                     .setLogicalClock(cursor.getShort(20))
-                    .setPath(cursor.getString(11))
                     .setProcessed(cursor.getLong(21))
-                    .setStatus(ReachDatabase.Status.getFromValue(cursor.getShort(22))).build();
+                    .setStatus(ReachDatabase.Status.getFromValue(cursor.getShort(22)))
+                    .setAlbumArtData(new byte[0]).build();
 
             reachDatabase.setLastActive(0);
             reachDatabase.setReference(0);
@@ -281,7 +281,8 @@ public enum SongCursorHelper {
             SongHelper.COLUMN_OPERATION_KIND, //19
             SongHelper.COLUMN_LOGICAL_CLOCK, //20
             SongHelper.COLUMN_PROCESSED, //21
-            SongHelper.COLUMN_STATUS //22
+            SongHelper.COLUMN_STATUS, //22
+            SongHelper.COLUMN_ALBUM_ART_DATA //23
 
     }, new Function<Cursor, Song>() {
         @Nullable

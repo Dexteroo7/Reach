@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 
 import java.util.ArrayList;
@@ -68,7 +69,8 @@ public class MetaDataScanner extends IntentService {
 
             //build and return
             return FluentIterable.from(toReturn)
-                    .transform(SongCursorHelper.SONG_BUILDER).toList();
+                    .transform(SongCursorHelper.SONG_BUILDER)
+                    .filter(Predicates.notNull()).toList();
         } else
             return Collections.emptyList();
     }
