@@ -30,14 +30,14 @@ public class SendSMS {
 
     @Nullable
     private static SendSMS sendSMS = null;
-    public static SendSMS getInstance() {
+    public static SendSMS getInstance(String apiUrl, String senderId, String apiKey) {
 
         if (sendSMS == null)
             sendSMS = new SendSMS(
-                    "alerts.sinfini.com", //api_url
+                    apiUrl, //api_url
                     "sms", //method
-                    "A6f5d83ea6aa5984be995761f221c8a9a", //api_key
-                    "REACHA", //sender_id
+                    apiKey, //api_key
+                    senderId, //sender_id
                     "https://"); //start
 
         return sendSMS;

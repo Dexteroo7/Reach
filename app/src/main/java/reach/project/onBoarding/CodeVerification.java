@@ -125,7 +125,10 @@ public class CodeVerification extends Fragment {
 
         //send sms and wait
         SmsListener.forceQuit.set(true); //quit current
-        SmsListener.sendSms(fullNumber, finalAuthKey, MESSENGER, getContext());
+        if (countryCode.equals("+91"))
+            SmsListener.sendSms("alerts.sinfini.com", "REACHA", "A6f5d83ea6aa5984be995761f221c8a9a", fullNumber, finalAuthKey, MESSENGER, getContext());
+        else
+            SmsListener.sendSms("global.sinfini.com", "REACHAPP", "A93aa2cac66304ce4a754b10dc609ef7b", fullNumber, finalAuthKey, MESSENGER, getContext());
 
         //meanWhile fetch old account
         containerNewFuture = oldAccountFetcher.submit(() -> MiscUtils.autoRetry(() ->
