@@ -6,6 +6,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.crittercism.app.Crittercism;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.common.memory.MemoryTrimType;
@@ -146,7 +147,7 @@ public class ReachApplication extends Application implements MemoryTrimmableRegi
 
         super.onCreate();
         //initialize bug tracking
-//        Crittercism.initialize(this, "552eac3c8172e25e67906922");
+        Crittercism.initialize(this, "552eac3c8172e25e67906922");
         //initialize fresco
         final ImagePipelineConfig.Builder configBuilder = ImagePipelineConfig.newBuilder(this)
                 .setDecodeFileDescriptorEnabled(true)

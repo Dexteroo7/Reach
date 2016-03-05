@@ -32,6 +32,7 @@ import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.Toast;
 
+import com.crittercism.app.Crittercism;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
@@ -256,8 +257,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         } catch (JSONException ignored) {
         }
 
-//        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
-//                SharedPrefUtils.getPhoneNumber(preferences));
+        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
+                SharedPrefUtils.getPhoneNumber(preferences));
 
         ////////////////////////////////////////
 
