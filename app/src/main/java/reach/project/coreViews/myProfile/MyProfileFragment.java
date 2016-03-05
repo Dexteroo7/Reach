@@ -1,6 +1,7 @@
 package reach.project.coreViews.myProfile;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -19,11 +21,13 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
@@ -34,6 +38,10 @@ import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
+import reach.project.ancillaryViews.TermsActivity;
+import reach.project.coreViews.fileManager.ReachDatabase;
+import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
 import reach.project.music.MySongsHelper;
@@ -69,8 +77,48 @@ public class MyProfileFragment extends Fragment {
                 PlayerActivity.openActivity(getContext());
                 return true;
             case R.id.settings_button:
-                startActivity(new Intent(getContext(), SettingsActivity.class));
+                //startActivity(new Intent(getContext(), SettingsActivity.class));
                 return true;
+            case R.id.useMobileData:
+                final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                if(item.isChecked()){
+                    item.setChecked(false);
+                    SharedPrefUtils.setDataOff(preferences);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            getContext().getContentResolver().delete(
+                                    ReachDatabaseProvider.CONTENT_URI,
+                                    ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                            ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                                    new String[]{"1", ReachDatabase.PAUSED_BY_USER + ""});
+                        }
+                    }).start();
+                }
+                else{
+                    item.setChecked(true);
+                    SharedPrefUtils.setDataOn(preferences);
+                }
+                return true;
+
+            case R.id.conditions:{
+                startActivity(new Intent(getContext(), TermsActivity.class));
+                return true;
+            }
+
+            case R.id.rateOurApp:{
+
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=reach.project")));
+                } catch (ActivityNotFoundException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getContext(), "Play store app not installed", Toast.LENGTH_SHORT).show();
+                }
+                finally {
+                    return true;
+                }
+
+            }
         }
         return false;
     };
@@ -145,9 +193,19 @@ public class MyProfileFragment extends Fragment {
         final Toolbar toolbar = materialViewPager.getToolbar();
         final Activity activity = getActivity();
 
+        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
         toolbar.setTitleTextColor(Color.WHITE);
         toolbar.setTitle("My Profile");
         toolbar.inflateMenu(R.menu.myprofile_menu);
+        final Menu menu = toolbar.getMenu();
+        final MenuItem useMobileData =  menu.findItem(R.id.useMobileData);
+        if(SharedPrefUtils.getMobileData(preferences)) {
+            useMobileData.setChecked(true);
+        }
+        else{
+            useMobileData.setChecked(false);
+        }
 
         final MenuItem menuItem = toolbar.getMenu().findItem(R.id.edit_button);
         MenuItemCompat.setActionView(menuItem, R.layout.edit_profile_button);
@@ -157,7 +215,6 @@ public class MyProfileFragment extends Fragment {
         toolbar.setOnMenuItemClickListener(menuItemClickListener);
 
         final RelativeLayout headerRoot = (RelativeLayout) materialViewPager.findViewById(R.id.headerRoot);
-        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final String userName = SharedPrefUtils.getUserName(preferences);
 
         ((TextView) headerRoot.findViewById(R.id.userName)).setText(userName);

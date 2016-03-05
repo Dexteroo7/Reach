@@ -186,6 +186,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 settingsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(settingsIntent);
                 return true;
+
         }
 
         return false;

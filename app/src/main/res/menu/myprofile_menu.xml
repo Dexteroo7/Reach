@@ -25,7 +25,25 @@
         android:title="Settings"
         app:showAsAction="always"
         android:icon="@drawable/icon_settings_white"
-        />
+        >
+
+        <menu>
+
+            <item
+                android:id="@+id/useMobileData"
+                android:checkable="true"
+                android:checked="false"
+                android:title="Enable Sharing On Mobile Data" />
+            <item
+                android:id="@+id/conditions"
+                android:title="Terms and Conditions" />
+            <item
+                android:id="@+id/rateOurApp"
+                android:title="Rate Our App" />
+
+        </menu>
+
+        </item>
     <group
         android:visible="false"
         android:checkableBehavior="single">
