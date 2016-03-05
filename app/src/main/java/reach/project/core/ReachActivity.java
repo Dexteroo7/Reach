@@ -1,7 +1,6 @@
 package reach.project.core;
 
 import android.annotation.SuppressLint;
-import android.app.LoaderManager;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -30,7 +29,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
@@ -105,10 +106,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final String OPEN_MANAGER_SONGS_DOWNLOADING = "OPEN_MANAGER_SONGS_DOWNLOADING";
     public static final String OPEN_MANAGER_SONGS_LIBRARY = "OPEN_MANAGER_SONGS_LIBRARY";
     public static final String ADD_PUSH_SONG = "ADD_PUSH_SONG";
-    public static final int DOWNLOADED_COUNT_LOADER_ID = 2222;
-    public static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
-    public static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
-    public static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
+    private static final int DOWNLOADED_COUNT_LOADER_ID = 2222;
+    private static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
+    private static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
+    private static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
@@ -179,7 +180,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
+                //NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
             case R.id.settings_button:
                 final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
@@ -265,27 +266,53 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("friends_page").setIndicator("",
+
+        final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View exploreTabView = LayoutInflater.from(ReachActivity.this).inflate(R.layout.tab_view,null);
+        TextView text=(TextView)exploreTabView.findViewById(R.id.tab_text);
+        ImageView image = (ImageView)exploreTabView.findViewById(R.id.tab_image);
+        text.setText("Explore");
+        image.setImageResource(R.drawable.explore_tab_selector);
+
+        mTabHost.addTab(mTabHost.newTabSpec("explore_page").setIndicator(exploreTabView),ExploreFragment.class,null);
+
+        /*text.setText("Friends");
+        image.setImageResource(R.drawable.friends_tab_selector);*/
+
+        mTabHost.addTab(mTabHost.newTabSpec("manager_page").setIndicator(setUpTabView(
+                inflater,
+                "File Manager",
+                R.drawable.manager_tab_selector
+                ))
+                ,PagerFragment.class,DOWNLOAD_PAGER_BUNDLE);
+
+        mTabHost.addTab(mTabHost.newTabSpec("friends_page").setIndicator(setUpTabView(
+                inflater,
+                "Friends",
+                R.drawable.friends_tab_selector
+        ))
+                ,FriendsFragment.class,null);
+
+
+
+        /*mTabHost.addTab(
+                mTabHost.newTabSpec("friends_page").setIndicator("Friends",
                         ContextCompat.getDrawable(this, R.drawable.friends_tab_selector)),
-                FriendsFragment.class, null);
-        mTabHost.addTab(
+                FriendsFragment.class, null);*/
+        /*mTabHost.addTab(
                 mTabHost.newTabSpec("push_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.push_tab_selector)),
-                PagerFragment.class, PUSH_PAGER_BUNDLE);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("explore_page").setIndicator("",
-                        ContextCompat.getDrawable(this, R.drawable.explore_tab_selector)),
-                ExploreFragment.class, null);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("manager_page").setIndicator("",
+                PagerFragment.class, PUSH_PAGER_BUNDLE);*/
+        /*mTabHost.addTab(
+                mTabHost.newTabSpec("manager_page").setIndicator("File Manager",
                         ContextCompat.getDrawable(this, R.drawable.manager_tab_selector)),
-                PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
-        mTabHost.addTab(
+                PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);*/
+        /*mTabHost.addTab(
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.my_profile_tab_selector)),
-                MyProfileFragment.class, null);
-        mTabHost.setCurrentTab(2);
+                MyProfileFragment.class, null);*/
+        mTabHost.setCurrentTab(0);
 
         if (showRatingDialogOrNot()) {
             Log.d(TAG, "Created Downloaded Loader");
@@ -347,6 +374,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         FireOnce.checkUpdate(reference);
     }
 
+
+    private View setUpTabView( final LayoutInflater inflater, final String tab_text, final int tab_drawable_res){
+        View tabView = inflater.inflate(R.layout.tab_view,null);
+        TextView text= (TextView) tabView.findViewById(R.id.tab_text);
+        ImageView image = (ImageView) tabView.findViewById(R.id.tab_image);
+        text.setText(tab_text);
+        image.setImageResource(tab_drawable_res);
+
+        return tabView;
+
+    }
 
     private void putRatingValueInSharedPref(boolean value) {
         SharedPreferences.Editor editor = preferences.edit();

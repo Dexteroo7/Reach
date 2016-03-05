@@ -3,9 +3,9 @@ package reach.project.onBoarding;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.Pair;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,46 +23,44 @@ import reach.project.utils.SharedPrefUtils;
 
 public class NumberVerification extends Fragment {
 
-    private static final Pair[] countryCodeData = {
-            new Pair<>("","Åland Islands"),
-            new Pair<>("","Anguilla"),
-            new Pair<>("","Austria"),
-            new Pair<>("","Bangladesh"),
-            new Pair<>("","Barbados"),
-            new Pair<>("","Bermuda"),
-            new Pair<>("","British Virgin Islands"),
-            new Pair<>("","Canada"),
-            new Pair<>("","Cayman Islands"),
-            new Pair<>("","Colombia"),
-            new Pair<>("","Dominica"),
-            new Pair<>("","Dominican Republic"),
-            new Pair<>("","Egypt"),
-            new Pair<>("","United Kingdom"),
-            new Pair<>("","Finland"),
-            new Pair<>("","Germany"),
-            new Pair<>("","Greece"),
-            new Pair<>("","Grenada"),
-            new Pair<>("","Guam"),
-            new Pair<>("","Guernsey"),
-            new Pair<>("+91","India"),
-            new Pair<>("","Indonesia"),
-            new Pair<>("","Italy"),
-            new Pair<>("","Montserrat"),
-            new Pair<>("","New Zealand"),
-            new Pair<>("","Northern Ireland"),
-            new Pair<>("","Northern Mariana Islands"),
-            new Pair<>("","Pakistan"),
-            new Pair<>("","Philippines"),
-            new Pair<>("","Puerto Rico"),
-            new Pair<>("","Russia"),
-            new Pair<>("","Saint Vincent and the Grenadines"),
-            new Pair<>("","Scotland"),
-            new Pair<>("","Turks and Caicos Islands"),
-            new Pair<>("","United Arab Emirates"),
-            new Pair<>("","United Kingdom"),
-            new Pair<>("","Vatican City"),
-            new Pair<>("","British Virgin Islands"),
-            new Pair<>("","Wales")
+    private static final CountryData[] countryDatas = {
+            //new CountryData("ALA","+358","Åland Islands"),
+            //new CountryData("AIA","+1","Anguilla"),
+            new CountryData("AUT","+43","Austria"),
+            new CountryData("BGD","+880","Bangladesh"),
+            //new CountryData("BRB","+1","Barbados"),
+            new CountryData("BMU","+1","Bermuda"),
+            new CountryData("VGB","+1","British Virgin Islands"),
+            new CountryData("CAN","+1","Canada"),
+            //new CountryData("CYM","+1","Cayman Islands"),
+            new CountryData("COL","+57","Columbia"),
+            //new CountryData("DMA","+1","Dominica"),
+            new CountryData("DOM","+1","Dominican Republic"),
+            new CountryData("EGY","+20","Egypt"),
+            new CountryData("FIN","+358","Finland"),
+            new CountryData("DEU","+49","Germany"),
+            new CountryData("GRC","+30","Greece"),
+            //new CountryData("GRD","+1","Grenada"),
+            //new CountryData("GUM","+1","Guam"),
+            new CountryData("GGY","+44","Guernsey"),
+            new CountryData("IN","+91","India"),
+            new CountryData("IDN","+62","Indonesia"),
+            new CountryData("ITA","+39","Italy"),
+            //new CountryData("MSR","+1","Montserrat"),
+            new CountryData("NZL","+64","New Zealand"),
+            //new CountryData("GB-NIR","+44","Northern Ireland"),
+            //new CountryData("MNP","+1","Northern Mariana Islands"),
+            new CountryData("PAK","+92","Pakistan"),
+            new CountryData("PHL","+63","Philippines"),
+            new CountryData("PRI","+1","Puerto Rico"),
+            new CountryData("RUS","+7","Russia"),
+            new CountryData("VCT","+1","Saint Vincent and the Grenadines"),
+            //new CountryData("GB-SCT","+44","Scotland"),
+            //new CountryData("TCA","+1","Turks and Caicos Islands"),
+            new CountryData("ARE","+971","United Arab Emirates"),
+            new CountryData("GBR","+44","United Kingdom")
+            //new CountryData("VAT","+379","Vatican City"),
+            //new CountryData("GB-WLS","+44","Wales")
     };
 
     private static final byte ENFORCED_LENGTH = 4;
@@ -99,7 +97,12 @@ public class NumberVerification extends Fragment {
         telephoneNumber = (EditText) rootView.findViewById(R.id.telephoneNumber);
         //telephoneNumber.setText("+91-");
         spinner = (Spinner) rootView.findViewById(R.id.countryCodeSpinner);
-        spinner.setAdapter(new CustomSpinnerAdapter(getActivity(),android.R.layout.simple_list_item_1,countryCodeData));
+        spinner.setAdapter(new CustomSpinnerAdapter(getActivity(),android.R.layout.simple_list_item_1,countryDatas));
+        String localeCountry = getContext().getResources().getConfiguration().locale.getCountry();
+        for (int i = 0; i < countryDatas.length; i++)
+            if (countryDatas[i].isoCode.equals(localeCountry))
+                spinner.setSelection(i);
+
         //telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
 
         //spinner.requestFocus();
@@ -143,21 +146,20 @@ public class NumberVerification extends Fragment {
 
     private final View.OnClickListener clickListener = view -> {
 
-        final StringBuilder sb = new StringBuilder();
-        final Pair<String, String> pair;
-        if(telephoneNumber !=null && (pair = (Pair<String, String>) spinner.getSelectedItem())!=null){
-            sb.append(pair.first);
-            sb.append(telephoneNumber.getText().toString());
-
+        final CountryData countryData = (CountryData) spinner.getSelectedItem();
+        if (countryData == null || TextUtils.isEmpty(countryData.diallingCode)) {
+            Toast.makeText(view.getContext(), "Select Country Code", Toast.LENGTH_SHORT).show();
+            return;
         }
-        //final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
-        final String phoneNumber = sb.toString();
+        final String phoneNumber = telephoneNumber != null ? telephoneNumber.getText().toString() : null;
+        final String parsed;
         Log.i("Ayush", "PhoneNumber = " + phoneNumber);
-
-        if (TextUtils.isEmpty(phoneNumber)) {
+        if (TextUtils.isEmpty(phoneNumber) || phoneNumber.length() < 10 ||
+                TextUtils.isEmpty(parsed = parsePhoneNumber(phoneNumber)) || parsed.length() < 10) {
             Toast.makeText(view.getContext(), "Enter Valid Number", Toast.LENGTH_SHORT).show();
             return;
         }
+
         //TODO track
         /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(1);
         simpleParams.put(PostParams.USER_NUMBER, parsed.substring(length - 10, length) + "");
@@ -169,15 +171,24 @@ public class NumberVerification extends Fragment {
         final Context context = view.getContext();
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         SharedPrefUtils.storePhoneNumber(preferences, phoneNumber); //store the phoneNumber
-        mListener.onOpenCodeVerification(phoneNumber);
+        mListener.onOpenCodeVerification(phoneNumber, countryData.diallingCode);
     };
 
-    private class CustomSpinnerAdapter extends ArrayAdapter<Pair<String, String>> {
+
+    @Nullable
+    public static String parsePhoneNumber(@NonNull String enteredPhoneNumber) {
+
+        final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
+        final int length = cleansedNumber.length();
+        return cleansedNumber.substring(length - 10, length);
+    }
+
+    private class CustomSpinnerAdapter extends ArrayAdapter<CountryData> {
 
         private final LayoutInflater inflater;
 
-        public CustomSpinnerAdapter(Context context, int resource, Pair<String, String>[] objects) {
-            super(context, resource, objects);
+        public CustomSpinnerAdapter(Context context, int resource, CountryData[] countryDatas) {
+            super(context, resource, countryDatas);
             inflater = LayoutInflater.from(context);
         }
 
@@ -198,7 +209,7 @@ public class NumberVerification extends Fragment {
             }
             else
                 viewHolder = (ViewHolder) convertView.getTag();
-            viewHolder.textView.setText(getItem(position).first);
+            viewHolder.textView.setText(getItem(position).diallingCode);
             return convertView;
         }
 
@@ -212,8 +223,8 @@ public class NumberVerification extends Fragment {
             }
             else
                 viewHolder = (ViewHolder) convertView.getTag();
-            final Pair<String, String> pair = getItem(position);
-            viewHolder.textView.setText(pair.second +", " +pair.first);
+            final CountryData countryData = getItem(position);
+            viewHolder.textView.setText(countryData.countryName +", " +countryData.diallingCode);
             return convertView;
         }
 

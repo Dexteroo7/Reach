@@ -22,7 +22,7 @@ import reach.project.utils.AlbumArtUri;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
-import reach.project.utils.viewHelpers.EmptyViewHolder;
+import reach.project.utils.viewHelpers.EmptyTextViewHolder;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreListHolder;
 import reach.project.utils.viewHelpers.tourguide.Overlay;
@@ -143,7 +143,9 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
                 return moreListHolder;
             }
             case VIEW_TYPE_EMPTY_OR_ERROR:{
-                return new EmptyViewHolder(parent,R.layout.friends_emptyview,R.id.empty_view);
+                final EmptyTextViewHolder emptyViewHolder = new EmptyTextViewHolder(parent,R.layout.general_emptyview, R.id.empty_view);
+                emptyViewHolder.mEmptyImageView.setImageResource(R.drawable.friends_empty_view_owl);
+                return emptyViewHolder;
             }
 
             default:

@@ -12,7 +12,7 @@ import reach.backend.entities.userApi.model.OldUserContainerNew;
 public interface SplashInterface {
 
     void onOpenNumberVerification();
-    void onOpenCodeVerification(String phoneNumber);
+    void onOpenCodeVerification(String phoneNumber, String countryCode);
     void onOpenAccountCreation(Optional<OldUserContainerNew> container);
     void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverPicId, String phoneNumber);
 }

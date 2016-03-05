@@ -1,51 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:background="@drawable/border_shadow1"
-    android:padding="15dp">
-
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        fresco:placeholderImage="@drawable/default_music_icon" />
-
+        fresco:placeholderImage="@color/reach_grey"
+        fresco:roundedCornerRadius="2dp"
+        android:layout_margin="10dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp" />
     <ImageView
-        android:id="@+id/downButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/icon_play_circle_pink"
+        android:id="@+id/extraButton"
+        android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"/>
-
-    <TextView
-        android:id="@+id/songName"
+        android:paddingRight="5dp"
+        android:paddingLeft="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="5dp"
-        android:layout_toLeftOf="@id/downButton"
+        android:src="@drawable/icon_extra_dots_light_gray" />
+    <ImageView
+        android:id="@+id/likeButton"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@id/extraButton"
+        android:padding="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_heart_outline_grayer" />
+    <LinearLayout
         android:layout_toRightOf="@id/albumArt"
-        android:ellipsize="marquee"
-        android:lines="1"
-        android:text="Test"
-        android:background="@null"
-        android:textColor="#f33b5b"
-        android:textSize="16sp" />
-
-    <TextView
-        android:id="@+id/artistName"
+        android:orientation="vertical"
+        android:layout_toLeftOf="@id/likeButton"
+        android:layout_centerVertical="true"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@id/songName"
-        android:layout_below="@id/songName"
-        android:layout_marginTop="10dp"
-        android:layout_toLeftOf="@id/downButton"
-        android:ellipsize="marquee"
-        android:lines="1"
-        android:text="Test"
-        android:background="@null"
-        android:textColor="@color/reach_grey" />
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/songName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:lines="1"
+            android:text="Test"
+            android:textColor="#000"
+            android:textSize="16sp" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_below="@id/songName"
+            android:layout_marginTop="2dp"
+            android:layout_alignLeft="@id/songName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <com.facebook.drawee.view.SimpleDraweeView
+                android:id="@+id/userImage"
+                android:visibility="gone"
+                android:layout_marginRight="5dp"
+                fresco:roundAsCircle="true"
+                fresco:placeholderImage="@drawable/default_profile_circle"
+                android:layout_width="20dp"
+                android:layout_height="20dp" />
+            <TextView
+                android:id="@+id/artistName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:textSize="13sp"
+                android:lines="1"
+                android:text="Test"
+                android:textColor="#878691" />
+        </LinearLayout>
+    </LinearLayout>
 </RelativeLayout>

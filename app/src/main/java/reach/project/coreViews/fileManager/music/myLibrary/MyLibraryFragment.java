@@ -67,7 +67,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyViewText.setText(StaticData.NO_SONGS_TEXT);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
-        parentAdapter = new ParentAdapter(this, this, context);
+        parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 

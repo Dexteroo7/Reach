@@ -130,8 +130,6 @@ import reach.project.utils.viewHelpers.RetryHook;
 public enum MiscUtils {
     ;
 
-    private static final String FIRST_TIME_DOWNLOAD_KEY = "first_time_download";
-
     @NonNull
     public static String combinationFormatter(final long millis) {
 
@@ -1644,12 +1642,12 @@ public enum MiscUtils {
         } catch (JSONException ignored) {
         }
 
-       if( isItFirstTimeDownload(sharedPreferences)){
+       if( SharedPrefUtils.isItFirstTimeDownload(sharedPreferences)){
            final Intent foreGround = new Intent(activity, ReachActivity.class);
            foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
            foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
            activity.startActivity(foreGround);
-           putFirstTimeDownload(sharedPreferences,false);
+           SharedPrefUtils.putFirstTimeDownload(sharedPreferences,false);
        }
         else {
 
@@ -1670,18 +1668,6 @@ public enum MiscUtils {
        }
 
     }
-
-    private static boolean isItFirstTimeDownload(SharedPreferences preferences){
-       return preferences.getBoolean(FIRST_TIME_DOWNLOAD_KEY,true);
-    }
-
-    private static void putFirstTimeDownload(SharedPreferences preferences, boolean value){
-       SharedPreferences.Editor editor =  preferences.edit();
-        editor.putBoolean(FIRST_TIME_DOWNLOAD_KEY, value);
-        editor.apply();
-    }
-
-
 
     @NonNull
     public static JsonElement get(JsonObject jsonObject, EnumHelper<String> enumHelper, String defaultValue) {

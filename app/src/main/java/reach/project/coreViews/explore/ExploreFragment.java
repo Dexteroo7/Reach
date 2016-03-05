@@ -47,10 +47,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -64,6 +60,10 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nonnull;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.ReachApplication;

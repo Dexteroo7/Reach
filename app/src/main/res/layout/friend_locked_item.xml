@@ -5,12 +5,8 @@
     android:layout_width="130dp"
     android:layout_height="165dp"
     android:layout_marginLeft="5dp"
-    android:descendantFocusability="blocksDescendants"
-    card_view:cardBackgroundColor="#fff"
-    card_view:cardCornerRadius="0dp"
-    card_view:cardElevation="4dp"
-    card_view:cardUseCompatPadding="true">
-
+    card_view:cardUseCompatPadding="true"
+    android:descendantFocusability="blocksDescendants">
     <android.support.percent.PercentRelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

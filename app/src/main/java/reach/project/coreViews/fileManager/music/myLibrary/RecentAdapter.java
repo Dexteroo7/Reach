@@ -1,7 +1,11 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -18,8 +22,15 @@ import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
+import reach.project.R;
+import reach.project.coreViews.friends.HandOverMessageExtra;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -34,6 +45,23 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
+
+    private final HandOverMessageExtra<Object> handOverMessageExtra = new HandOverMessageExtra<Object>() {
+        @Override
+        public void handOverMessage(@Nonnull Integer position) {
+            RecentAdapter.this.handOverMessage(position);
+        }
+
+        @Override
+        public MusicData getExtra(@Nonnull Integer position) {
+
+            final MusicData musicData = getItem(position);
+            if (musicData != null)
+                return musicData;
+            else
+                throw new IllegalStateException("Music data has been corrupted");
+        }
+    };
 
     private static final Comparator<MusicData> PRIMARY = (left, right) -> {
 
@@ -100,7 +128,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
 
-        return new SongItemHolder(itemView, handOverMessage);
+        return new SongItemHolder(itemView, handOverMessageExtra);
     }
 
     @Override
@@ -113,8 +141,43 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
 
+        holder.position = holder.getAdapterPosition();
         holder.songName.setText(item.getDisplayName());
-        holder.artistName.setText(item.getArtistName());
+        if (item.getType() == MusicData.MY_LIBRARY) {
+            holder.userImage.setVisibility(View.GONE);
+            holder.artistName.setTextColor(Color.parseColor("#878691"));
+            holder.artistName.setText(item.getArtistName());
+        }
+        else if (item.getType() == MusicData.DOWNLOADED) {
+            final Context context = holder.itemView.getContext();
+            holder.userImage.setVisibility(View.VISIBLE);
+            holder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+            final long senderId = item.getSenderId();
+            final Cursor cursor = context.getContentResolver().query(
+                    Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
+                    new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
+                            ReachFriendsHelper.COLUMN_IMAGE_ID},
+                    ReachFriendsHelper.COLUMN_ID + " = ?",
+                    new String[]{senderId + ""}, null);
+            if (cursor == null)
+                return;
+            if (!cursor.moveToFirst()) {
+                cursor.close();
+                return;
+            }
+            holder.artistName.setText(cursor.getString(0));
+            final int length = MiscUtils.dpToPx(20);
+            holder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                    senderId,
+                    "imageId",
+                    "rw",
+                    true,
+                    length,
+                    length));
+        }
+        else
+            throw new IllegalArgumentException("Invalid MusicData type");
+
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.getAlbumName(),
                 item.getArtistName(),
@@ -136,6 +199,20 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
             holder.albumArt.setController(controller);
         } else
             holder.albumArt.setImageBitmap(null);
+
+        holder.likeButton.setImageResource(item.isLiked()
+                ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
+
+        //TODO introduce visibility in MusicData
+        /*if (item.visible) {
+
+            holder.toggleButton.setImageResource(R.drawable.icon_everyone);
+            holder.toggleText.setText("Everyone");
+        } else {
+
+            holder.toggleButton.setImageResource(R.drawable.icon_locked);
+            holder.toggleText.setText("Only Me");
+        }*/
     }
 
     @Override

@@ -302,4 +302,12 @@ public enum SharedPrefUtils {
     public synchronized static String getEmailId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("emailId", "");
     }
+
+    public synchronized static boolean isItFirstTimeDownload(SharedPreferences sharedPreferences){
+        return sharedPreferences.getBoolean("first_time_download",true);
+    }
+
+    public synchronized static void putFirstTimeDownload(SharedPreferences sharedPreferences, boolean value){
+        sharedPreferences.edit().putBoolean("first_time_download", value).apply();
+    }
 }
