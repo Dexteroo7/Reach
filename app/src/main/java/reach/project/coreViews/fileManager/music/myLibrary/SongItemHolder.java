@@ -20,11 +20,11 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import java.io.File;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
@@ -71,19 +71,19 @@ class SongItemHolder extends SingleItemViewHolder {
                         resolver.update(
                                 Uri.parse(MySongsProvider.CONTENT_URI+"/"+dbId),
                                 mySong,
-                                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                SongHelper.COLUMN_ID + " = ?",
                                 new String[]{dbId + ""});
                     }
 
-                } else if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+                } else if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
                     if (cursor.getString(7).equalsIgnoreCase("TRUE")) {
                         final long dbId = cursor.getLong(0);
                         final ContentValues mySong = new ContentValues();
-                        mySong.put(ReachDatabaseHelper.COLUMN_IS_LIKED, cursor.getString(7).equalsIgnoreCase("FALSE") ? 1 : 0);
+                        mySong.put(SongHelper.COLUMN_IS_LIKED, cursor.getString(7).equalsIgnoreCase("FALSE") ? 1 : 0);
                         resolver.update(
-                                Uri.parse(ReachDatabaseProvider.CONTENT_URI+"/"+dbId),
+                                Uri.parse(SongProvider.CONTENT_URI+"/"+dbId),
                                 mySong,
-                                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                                SongHelper.COLUMN_ID + " = ?",
                                 new String[]{dbId + ""});
                     }
 
@@ -136,7 +136,7 @@ class SongItemHolder extends SingleItemViewHolder {
                 final Cursor cursor = (Cursor) object;
                 if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length)
                     visible = cursor.getShort(11) == 1;
-                else if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length)
+                else if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length)
                     visible = cursor.getShort(18) == 1;
                 else
                     throw new IllegalArgumentException("Unknown column count found");
@@ -168,21 +168,21 @@ class SongItemHolder extends SingleItemViewHolder {
         long reachDatabaseId = 0;
         if (object instanceof MusicData) {
             final MusicData musicData = (MusicData) object;
-            if (musicData.getType() == MusicData.DOWNLOADED)
-                contentUri = ReachDatabaseProvider.CONTENT_URI;
-            else if (musicData.getType() == MusicData.MY_LIBRARY)
+            if (musicData.getType() == MusicData.Type.DOWNLOADED)
+                contentUri = SongProvider.CONTENT_URI;
+            else if (musicData.getType() == MusicData.Type.MY_LIBRARY)
                 contentUri = MySongsProvider.CONTENT_URI;
             else
                 throw new IllegalArgumentException("Invalid MusicData type detected");
-            reachDatabaseId = musicData.getId();
+            reachDatabaseId = musicData.getColumnId();
         }
         else if (object instanceof Cursor) {
             final Cursor cursor = (Cursor) object;
             if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
                 contentUri = MySongsProvider.CONTENT_URI;
                 reachDatabaseId = cursor.getLong(7);
-            } else if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
-                contentUri = ReachDatabaseProvider.CONTENT_URI;
+            } else if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
+                contentUri = SongProvider.CONTENT_URI;
                 reachDatabaseId = cursor.getLong(0);
             } else
                 throw new IllegalArgumentException("Unknown column count found");
@@ -197,8 +197,8 @@ class SongItemHolder extends SingleItemViewHolder {
         //find path and delete the file
         final Cursor pathCursor = resolver.query(
                 uri,
-                new String[]{ReachDatabaseHelper.COLUMN_PATH},
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{SongHelper.COLUMN_PATH},
+                SongHelper.COLUMN_ID + " = ?",
                 new String[]{reachDatabaseId + ""}, null);
 
         if (pathCursor != null) {
@@ -220,7 +220,7 @@ class SongItemHolder extends SingleItemViewHolder {
                 reachDatabaseId + " " +
                 resolver.delete(
                         uri,
-                        ReachDatabaseHelper.COLUMN_ID + " = ?",
+                        SongHelper.COLUMN_ID + " = ?",
                         new String[]{reachDatabaseId + ""}));
         dialog.dismiss();
     };

@@ -143,12 +143,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         holder.position = holder.getAdapterPosition();
         holder.songName.setText(item.getDisplayName());
-        if (item.getType() == MusicData.MY_LIBRARY) {
+        if (item.getType() == MusicData.Type.MY_LIBRARY) {
             holder.userImage.setVisibility(View.GONE);
             holder.artistName.setTextColor(Color.parseColor("#878691"));
             holder.artistName.setText(item.getArtistName());
         }
-        else if (item.getType() == MusicData.DOWNLOADED) {
+        else if (item.getType() == MusicData.Type.DOWNLOADED) {
+
             final Context context = holder.itemView.getContext();
             holder.userImage.setVisibility(View.VISIBLE);
             holder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));

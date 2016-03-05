@@ -295,18 +295,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         @Override
                         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
                             return new CursorLoader(ReachActivity.this,
-                                    ReachDatabaseProvider.CONTENT_URI,
-                                    ReachDatabaseHelper.MUSIC_DATA_LIST,
-                                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                                    new String[]{ReachDatabase.FINISHED + "", "0"},
-                                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                                    SongProvider.CONTENT_URI,
+                                    SongHelper.MUSIC_DATA_LIST,
+                                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                                    new String[]{ReachDatabase.Status.FINISHED.getString(),
+                                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString()},
+                                    SongHelper.COLUMN_DATE_ADDED + " DESC");
                         }
 
                         @Override
                         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
-
 
                             if (data == null) {
                                 Log.d(TAG, "Inside OnLoadFinished, cursor == null");

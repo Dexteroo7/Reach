@@ -442,10 +442,12 @@ public enum SongCursorHelper {
             public Song.Builder apply(@Nullable Song.Builder song) {
 
                 //set only if not present
-                if (song == null || TextUtils.isEmpty(song.fileHash) || song.fileHash.equals("hello_world"))
+                if (song == null)
                     return null;
 
-                return song.fileHash(MiscUtils.calculateSongHash(serverId, song.duration, song.size, song.displayName, Hashing.sipHash24()));
+                if (TextUtils.isEmpty(song.fileHash) || song.fileHash.equals("hello_world"))
+                    song.fileHash(MiscUtils.calculateSongHash(serverId, song.duration, song.size, song.displayName, Hashing.sipHash24()));
+                return song;
             }
         };
     }
@@ -481,8 +483,8 @@ public enum SongCursorHelper {
      * @param resolver ContentResolver
      */
     public static void setGenres(@Nonnull Song.Builder songBuilder,
-                                  @Nonnull Set<String> fillHere,
-                                  @Nonnull ContentResolver resolver) {
+                                 @Nonnull Set<String> fillHere,
+                                 @Nonnull ContentResolver resolver) {
 
         final String[] genresProjection = {
                 MediaStore.Audio.Genres.NAME,

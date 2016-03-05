@@ -183,8 +183,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 .fileHash(data.getMetaHash())
                 .isLiked(data.isLiked())
                 .path(data.getPath())
-                .songId(data.getId())
-                .size(data.getLength())
+                .songId(data.getColumnId())
+                .size(data.getSize())
                 .actualName("hello_world")
                 .build();
 

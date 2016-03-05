@@ -82,7 +82,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
-        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+        emptyViewText.setText("Dawg");
          emptyView = rootView.findViewById(R.id.empty_imageView);
 
         mRecyclerView.setEmptyView(emptyView);

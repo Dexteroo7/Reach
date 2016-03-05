@@ -22,8 +22,8 @@ import java.io.Closeable;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
 import reach.project.music.MySongsHelper;
+import reach.project.music.SongHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -52,7 +52,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                 Cursor cursor = (Cursor) object;
                 handOverCursor.handOverMessage(cursor);
 
-                if (cursor.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+                if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
                     currentlyPlayingSongId = cursor.getLong(0);
                     notifyItemChanged(currentlyPlayingSongPosition);
                     notifyItemChanged(position);
@@ -160,7 +160,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                 //holder.itemView.setBackgroundResource(0);
             /*holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.));*/
                 final String displayName, artist, album, actualName;
-                if (cursorExactType.getColumnCount() == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
+                if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
 
                     displayName = cursorExactType.getString(5);
                     artist = cursorExactType.getString(11);

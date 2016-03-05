@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.google.common.hash.Hashing;
 
+import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 
@@ -106,6 +107,100 @@ public class SongHelper extends SQLiteOpenHelper {
         values.put(COLUMN_VISIBILITY, reachDatabase.isVisibility());
 
         values.put(COLUMN_UNIQUE_ID, reachDatabase.getUniqueId());
+
+        return values;
+    }
+
+    public static ContentValues contentValuesCreator(Song song, long serverId) {
+
+        final ContentValues values = new ContentValues();
+
+        values.put(COLUMN_SONG_ID, song.songId);
+        values.put(COLUMN_RECEIVER_ID, serverId);
+        values.put(COLUMN_SENDER_ID, serverId);
+        values.put(COLUMN_OPERATION_KIND, ReachDatabase.OperationKind.OWN.getValue());
+
+        values.put(COLUMN_PATH, song.path);
+        values.put(COLUMN_USER_NAME, ""); //own song
+        values.put(COLUMN_ONLINE_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
+        values.put(COLUMN_ARTIST, song.artist);
+        values.put(COLUMN_IS_LIKED, song.isLiked); //must put string
+
+        values.put(COLUMN_DISPLAY_NAME, song.displayName);
+        values.put(COLUMN_ACTUAL_NAME, song.actualName);
+
+        //set the metaHash if absent
+        if (TextUtils.isEmpty(song.fileHash))
+            values.put(COLUMN_META_HASH, MiscUtils.calculateSongHash(
+                    serverId, song.duration,
+                    song.size, song.displayName,
+                    Hashing.sipHash24()));
+        else
+            values.put(COLUMN_META_HASH, song.fileHash);
+
+        Log.i("Ayush", "Saving reach database with hash " + song.fileHash);
+
+        values.put(COLUMN_SIZE, song.size);
+        values.put(COLUMN_PROCESSED, song.size);
+        values.put(COLUMN_DATE_ADDED, song.dateAdded);
+        values.put(COLUMN_DURATION, song.duration);
+
+        values.put(COLUMN_LOGICAL_CLOCK, 0);
+        values.put(COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
+
+        values.put(COLUMN_ALBUM_ART_DATA, new byte[0]);
+        values.put(COLUMN_ALBUM, song.album);
+        values.put(COLUMN_GENRE, song.genre);
+        values.put(COLUMN_VISIBILITY, song.visibility);
+
+        values.put(COLUMN_UNIQUE_ID, song.songId);
+
+        return values;
+    }
+
+    public static ContentValues contentValuesCreator(Song.Builder song, long serverId) {
+
+        final ContentValues values = new ContentValues();
+
+        values.put(COLUMN_SONG_ID, song.songId);
+        values.put(COLUMN_RECEIVER_ID, serverId);
+        values.put(COLUMN_SENDER_ID, serverId);
+        values.put(COLUMN_OPERATION_KIND, ReachDatabase.OperationKind.OWN.getValue());
+
+        values.put(COLUMN_PATH, song.path);
+        values.put(COLUMN_USER_NAME, ""); //own song
+        values.put(COLUMN_ONLINE_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
+        values.put(COLUMN_ARTIST, song.artist);
+        values.put(COLUMN_IS_LIKED, song.isLiked); //must put string
+
+        values.put(COLUMN_DISPLAY_NAME, song.displayName);
+        values.put(COLUMN_ACTUAL_NAME, song.actualName);
+
+        //set the metaHash if absent
+        if (TextUtils.isEmpty(song.fileHash))
+            values.put(COLUMN_META_HASH, MiscUtils.calculateSongHash(
+                    serverId, song.duration,
+                    song.size, song.displayName,
+                    Hashing.sipHash24()));
+        else
+            values.put(COLUMN_META_HASH, song.fileHash);
+
+        Log.i("Ayush", "Saving reach database with hash " + song.fileHash);
+
+        values.put(COLUMN_SIZE, song.size);
+        values.put(COLUMN_PROCESSED, song.size);
+        values.put(COLUMN_DATE_ADDED, song.dateAdded);
+        values.put(COLUMN_DURATION, song.duration);
+
+        values.put(COLUMN_LOGICAL_CLOCK, 0);
+        values.put(COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
+
+        values.put(COLUMN_ALBUM_ART_DATA, new byte[0]);
+        values.put(COLUMN_ALBUM, song.album);
+        values.put(COLUMN_GENRE, song.genre);
+        values.put(COLUMN_VISIBILITY, song.visibility);
+
+        values.put(COLUMN_UNIQUE_ID, song.songId);
 
         return values;
     }

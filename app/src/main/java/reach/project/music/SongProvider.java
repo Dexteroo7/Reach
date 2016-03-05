@@ -89,10 +89,34 @@ public class SongProvider extends ContentProvider {
         return Uri.parse(BASE_PATH + "/" + id);
     }
 
-//    @Override
-//    public int bulkInsert(Uri uri, ContentValues[] values) {
-//        return super.bulkInsert(uri, values);
-//    }
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+
+        int done = 0;
+        int uriType = sURIMatcher.match(uri);
+        SQLiteDatabase sqlDB = songHelper.getWritableDatabase();
+        switch (uriType) {
+            case DATABASE:
+                sqlDB.beginTransaction();
+                try {
+                    //delete everything
+                    sqlDB.delete(SongHelper.REACH_TABLE, null, null);
+                    //bulk insert
+                    for(ContentValues contentValues : values) {
+                        sqlDB.insert(SongHelper.REACH_TABLE, null, contentValues);
+                        done++;
+                    }
+                    sqlDB.setTransactionSuccessful();
+                } finally {
+                    sqlDB.endTransaction();
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return done;
+    }
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {

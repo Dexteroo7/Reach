@@ -186,14 +186,6 @@ public class MetaDataScanner extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-<<<<<<< HEAD
-=======
-        if (intent == null) {
-            sendMessage(FINISHED, -1);
-            return;
-        }
-        messenger = intent.getParcelableExtra("messenger");
->>>>>>> 52ce5f8180e868baf2ae31e89006dc664243cb0d
         Log.i("Ayush", "Starting Scan");
 
         final SharedPreferences sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);

@@ -176,7 +176,8 @@ public final class ReachDatabase {
     public enum OperationKind {
 
         DOWNLOAD_OP(0),
-        UPLOAD_OP(1);
+        UPLOAD_OP(1),
+        OWN(2);
 
         private final int value;
 
@@ -192,6 +193,8 @@ public final class ReachDatabase {
                     return DOWNLOAD_OP;
                 case 1:
                     return UPLOAD_OP;
+                case 2:
+                    return OWN;
                 default:
                     throw new IllegalArgumentException("Operation king can not have this value " + value);
             }

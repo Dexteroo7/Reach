@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +24,11 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.music.ReachDatabase;
-import reach.project.music.SongHelper;
-import reach.project.music.SongProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -65,7 +65,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
-        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
+        emptyViewText.setText("Dawg");
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
         parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
@@ -74,7 +74,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
 
-        getLoaderManager().initLoader(StaticData.DOWNLOAD_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
 
         return rootView;
@@ -85,7 +84,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     public void onDestroyView() {
 
         super.onDestroyView();
-        getLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
         if (parentAdapter != null)
             parentAdapter.close();
@@ -115,7 +113,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 MiscUtils.playSong(musicData, getContext());
             } else
                 throw new IllegalArgumentException("Unknown column count found");
-        // Music Data is used for recent list songs
+            // Music Data is used for recent list songs
         } else if (message instanceof MusicData) {
             MiscUtils.playSong((MusicData) message, getContext());
         } else
@@ -127,19 +125,17 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         if (id == StaticData.MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
-                    MySongsProvider.CONTENT_URI,
-                    MySongsHelper.DISK_LIST,
-                    null, null,
-                    MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"); //show all songs !
-        else if (id == StaticData.DOWNLOAD_LOADER)
-            return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
                     SongHelper.MUSIC_DATA_LIST,
-                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
+                    null, null,
+//                    SongHelper.COLUMN_STATUS + " = ? and (" + //show only finished
+//                            SongHelper.COLUMN_OPERATION_KIND + " = ? or " + //show only finished downloads
+//                    SongHelper.COLUMN_OPERATION_KIND + " = ?)",  //and own songs
+//                    new String[]{
+//                            ReachDatabase.Status.FINISHED.getString(),
+//                    ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+//                    ReachDatabase.OperationKind.OWN.getString()},
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
-
         return null;
     }
 
@@ -152,21 +148,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final int count = data.getCount();
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
-//            Log.i("Ayush", "MyLibrary file manager " + count);
+            Log.i("Ayush", "MyLibrary file manager " + count);
 
             parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
-
-
-        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
-
-//            Log.i("Ayush", "Downloaded file manager " + count);
-
-            parentAdapter.setNewDownLoadCursor(data);
-            if (count != parentAdapter.downloadedCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentDownloaded());
-
         }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }
@@ -179,31 +165,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
-        else if (loader.getId() == StaticData.DOWNLOAD_LOADER)
-            parentAdapter.setNewDownLoadCursor(null);
-    }
-
-    @NonNull
-    private List<MusicData> getRecentDownloaded() {
-
-        final Cursor cursor = getContext().getContentResolver().query(SongProvider.CONTENT_URI,
-                SongHelper.MUSIC_DATA_LIST,
-                SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
-                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
-
-        if (cursor == null)
-            return Collections.emptyList();
-
-        final List<MusicData> latestDownloaded = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext())
-            latestDownloaded.add(SongHelper.getMusicData(cursor));
-
-        cursor.close();
-
-        return latestDownloaded;
     }
 
     @NonNull

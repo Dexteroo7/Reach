@@ -1,6 +1,7 @@
 package reach.project.onBoarding;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -36,14 +37,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-import com.google.common.primitives.Ints;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -69,6 +68,8 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.utils.ContentType;
 import reach.project.utils.FireOnce;
 import reach.project.utils.KeyValuePair;
@@ -269,6 +270,8 @@ public class ScanFragment extends Fragment {
             }).or(Collections.emptyList());
 
             //get total file count
+            Log.i("Ayush", "Scanning  " + (musicCursor != null ? musicCursor.getCount() : 0) + " songs");
+            Log.i("Ayush", "Scanning  " + installedApps.size() + " apps");
             final int totalFiles = (musicCursor != null ? musicCursor.getCount() : 0) + installedApps.size();
 
             //genres get filled here
@@ -319,12 +322,12 @@ public class ScanFragment extends Fragment {
                 public void writeTo(BufferedSink sink) throws IOException {
 
                     //write count of accountCreationData bytes
-                    sink.write(Ints.toByteArray(toPost.length));
+                    sink.writeInt(toPost.length);
                     //write accountCreationData
                     sink.write(toPost);
                     if (imageHashBitmapPair != null) {
                         //write image hash
-                        sink.write(imageHashBitmapPair.first.getBytes(Charset.forName("UTF-8")));
+                        sink.writeUtf8(imageHashBitmapPair.first);
                         //write image
                         imageHashBitmapPair.second.compress(Bitmap.CompressFormat.WEBP, 80, sink.outputStream());
                     }
@@ -354,10 +357,31 @@ public class ScanFragment extends Fragment {
                 return 0L; //fail
             }
 
-            //TODO insert songs, apps and imageId into DB
+            final ContentValues[] contentValues = new ContentValues[songBuilders.size()];
+            for (int index = 0; index < songBuilders.size(); index++)
+                contentValues[index] = SongHelper.contentValuesCreator(songBuilders.get(index), serverId);
 
             final WeakReference<Context> contextWeakReference =
-                    MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, WeakReference<Context>>) activity -> new WeakReference<>(activity)).orNull();
+                    MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, WeakReference<Context>>) activity -> {
+
+                        //save the songs
+                        final int count = activity.getContentResolver().bulkInsert(
+                                SongProvider.CONTENT_URI,
+                                contentValues);
+                        Log.i("Ayush", "Inserted " + count + " songs");
+
+                        //store the user details
+                        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                        SharedPrefUtils.storeReachUser(
+                                preferences,
+                                accountCreationData.onboardingData,
+                                "",
+                                imageHashBitmapPair != null ? imageHashBitmapPair.first : "",
+                                serverId);
+
+                        return new WeakReference<>(activity);
+
+                    }).orNull();
 
             //sync up contacts
             FireOnce.contactSync(
@@ -371,20 +395,6 @@ public class ScanFragment extends Fragment {
                     serverId);
 
             Log.i("Ayush", "Id received = " + serverId);
-
-            //store the user details
-            MiscUtils.useContextFromFragment(reference, activity -> {
-
-                final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                SharedPrefUtils.storeReachUser(
-                        preferences,
-                        accountCreationData.onboardingData,
-                        "",
-                        imageHashBitmapPair != null ? imageHashBitmapPair.first : "",
-                        serverId);
-
-            });
-
             return serverId;
         }
 

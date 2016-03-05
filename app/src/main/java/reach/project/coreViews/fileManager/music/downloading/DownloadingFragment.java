@@ -97,10 +97,10 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed())
+        if (data == null || data.isClosed() || downloadingAdapter == null)
             return;
 
-        if (loader.getId() == StaticData.DOWNLOADING_LOADER && downloadingAdapter != null) {
+        if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
 
 //            Log.i("Ayush", "Setting new cursor " + data.getCount());
             downloadingAdapter.setCursor(data);
