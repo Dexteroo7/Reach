@@ -26,13 +26,19 @@ public class SmsListener extends IntentService {
     private static String PHONE_NUMBER = "PHONE_NUMBER";
     private static String VERIFICATION_CODE = "VERIFICATION_CODE";
     private static String MESSENGER = "MESSENGER";
+    private static String API_URL = "API_URL";
+    private static String SENDER_ID = "SENDER_ID";
+    private static String API_KEY = "API_KEY";
 
-    public static void sendSms(String phoneNumber, String verificationCode, Messenger messenger, Context context) {
+    public static void sendSms(String apiUrl, String senderId, String apiKey, String phoneNumber, String verificationCode, Messenger messenger, Context context) {
 
         final Intent intent = new Intent(context, SmsListener.class);
         intent.putExtra(PHONE_NUMBER, phoneNumber);
         intent.putExtra(VERIFICATION_CODE, verificationCode);
         intent.putExtra(MESSENGER, messenger);
+        intent.putExtra(API_URL, apiUrl);
+        intent.putExtra(SENDER_ID, senderId);
+        intent.putExtra(API_KEY, apiKey);
         context.startService(intent);
     }
 
@@ -59,12 +65,15 @@ public class SmsListener extends IntentService {
         final String phoneNumber = intent.getStringExtra(PHONE_NUMBER);
         final String verificationCode = intent.getStringExtra(VERIFICATION_CODE);
         final Messenger messenger = intent.getParcelableExtra(MESSENGER);
+        final String apiUrl = intent.getStringExtra(API_URL);
+        final String senderId = intent.getStringExtra(SENDER_ID);
+        final String apiKey = intent.getStringExtra(API_KEY);
 
         if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(verificationCode) || messenger == null)
             throw new IllegalArgumentException("Expected parameters not found");
 
         forceQuit.set(false);
-        final SendSMS smsObj = SendSMS.getInstance();
+        final SendSMS smsObj = SendSMS.getInstance(apiUrl, senderId, apiKey);
 
         final SendResponse sendResponse = smsObj.send_sms(
                 phoneNumber, //number
