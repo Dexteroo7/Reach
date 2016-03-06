@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.telephony.TelephonyManager;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -96,10 +97,15 @@ public class NumberVerification extends Fragment {
         //telephoneNumber.setText("+91-");
         spinner = (Spinner) rootView.findViewById(R.id.countryCodeSpinner);
         spinner.setAdapter(new CustomSpinnerAdapter(getActivity(),android.R.layout.simple_list_item_1,countryDatas));
-        String localeCountry = getContext().getResources().getConfiguration().locale.getCountry();
-        for (int i = 0; i < countryDatas.length; i++)
-            if (countryDatas[i].isoCode.equals(localeCountry))
-                spinner.setSelection(i);
+
+        final String userCountry = getUserCountry(getContext());
+        Log.d("Ashish", "userCountry = " + userCountry);
+        if (userCountry != null && userCountry.length() == 2) {
+            for (int i = 0; i < countryDatas.length; i++) {
+                if (countryDatas[i].isoCode.equalsIgnoreCase(userCountry))
+                    spinner.setSelection(i);
+            }
+        }
 
         //telephoneNumber.setFilters(new InputFilter[]{LENGTH_FILTER, SEXY_FILTER});
 
@@ -122,6 +128,26 @@ public class NumberVerification extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         telephoneNumber = null;
+    }
+
+    @Nullable
+    private static String getUserCountry(Context context) {
+        try {
+            final TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            String country = tm.getSimCountryIso();
+            if (country != null && country.length() == 2)
+                return country;
+            if (tm.getPhoneType() != TelephonyManager.PHONE_TYPE_CDMA) {
+                country = tm.getNetworkCountryIso();
+                if (country != null && country.length() == 2)
+                    return country;
+            }
+            country = context.getResources().getConfiguration().locale.getCountry();
+            if (country != null && country.length() == 2)
+                return country;
+        }
+        catch (Exception ignore) {}
+        return null;
     }
 
     @Override
