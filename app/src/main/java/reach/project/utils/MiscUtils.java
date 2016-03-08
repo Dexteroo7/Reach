@@ -1461,30 +1461,29 @@ public enum MiscUtils {
         } catch (JSONException ignored) {
         }
 
-       if( SharedPrefUtils.isItFirstTimeDownload(sharedPreferences)){
-           final Intent foreGround = new Intent(activity, ReachActivity.class);
-           foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
-           foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-           activity.startActivity(foreGround);
-           SharedPrefUtils.putFirstTimeDownload(sharedPreferences,false);
-       }
-        else {
+        if (SharedPrefUtils.isItFirstTimeDownload(sharedPreferences)) {
+            final Intent foreGround = new Intent(activity, ReachActivity.class);
+            foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+            foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            activity.startActivity(foreGround);
+            SharedPrefUtils.putFirstTimeDownload(sharedPreferences, false);
+        } else {
 
 
-           if (snackView != null) {
-               final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
+            if (snackView != null) {
+                final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
 
-               snack_bar.getView().setOnClickListener(v -> {
-                   snack_bar.dismiss();
-               });
-               snack_bar.setAction("Open manager", v -> {
-                   final Intent foreGround = new Intent(activity, ReachActivity.class);
-                   foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
-                   foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                   activity.startActivity(foreGround);
-               }).show();
-           }
-       }
+                snack_bar.getView().setOnClickListener(v -> {
+                    snack_bar.dismiss();
+                });
+                snack_bar.setAction("Open manager", v -> {
+                    final Intent foreGround = new Intent(activity, ReachActivity.class);
+                    foreGround.setAction(ReachActivity.OPEN_MANAGER_SONGS_DOWNLOADING);
+                    foreGround.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    activity.startActivity(foreGround);
+                }).show();
+            }
+        }
     }
 
     @NonNull
@@ -1650,7 +1649,7 @@ public enum MiscUtils {
         return mBitmapOptions;
     }
 
-    public static byte [] compressProto(Message message) {
+    public static byte[] compressProto(Message message) {
 
         final ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         GZIPOutputStream compressor = null;
@@ -1668,7 +1667,7 @@ public enum MiscUtils {
         return arrayOutputStream.toByteArray();
     }
 
-    public static byte [] unCompressBytes(byte [] bytes) {
+    public static byte[] unCompressBytes(byte[] bytes) {
 
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
