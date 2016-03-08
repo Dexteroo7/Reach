@@ -444,9 +444,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     private void showDiscoverAdapter(){
 
-        exploreAdapter = new ExploreAdapter(this, this);
-        if (explorePager == null)
+        if (explorePager == null || exploreAdapter != null || explorePager.getAdapter() != null)
             return;
+
+        exploreAdapter = new ExploreAdapter(this, this);
         explorePager.setAdapter(exploreAdapter);
 //        explorePager.setOffscreenPageLimit(1);
 
