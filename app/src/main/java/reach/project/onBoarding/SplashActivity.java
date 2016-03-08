@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Display;
 import android.widget.Toast;
 
 import com.appspot.able_door_616.userApi.model.UserDataPersistence;
@@ -64,6 +66,14 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int height = size.y;
+        StaticData.deviceHeight = height;
+        StaticData.deviceWidth = width;
 
         // Checking if the user has given permission to read contacts on API 23(marshmallow) or greater
         if (Build.VERSION.SDK_INT >= 23) {

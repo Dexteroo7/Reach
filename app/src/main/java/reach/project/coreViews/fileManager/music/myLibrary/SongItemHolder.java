@@ -60,8 +60,7 @@ class SongItemHolder extends SingleItemViewHolder {
             if (object instanceof MusicData) {
                 final MusicData musicData = (MusicData) object;
                 musicData.setIsLiked(!musicData.isLiked());
-            }
-            else if (object instanceof Cursor) {
+            } else if (object instanceof Cursor) {
                 final Cursor cursor = (Cursor) object;
                 if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
                     if (cursor.getShort(12) == 1) {
@@ -69,7 +68,7 @@ class SongItemHolder extends SingleItemViewHolder {
                         final ContentValues mySong = new ContentValues();
                         mySong.put(MySongsHelper.COLUMN_IS_LIKED, cursor.getShort(12) == 0 ? 1 : 0);
                         resolver.update(
-                                Uri.parse(MySongsProvider.CONTENT_URI+"/"+dbId),
+                                Uri.parse(MySongsProvider.CONTENT_URI + "/" + dbId),
                                 mySong,
                                 SongHelper.COLUMN_ID + " = ?",
                                 new String[]{dbId + ""});
@@ -81,7 +80,19 @@ class SongItemHolder extends SingleItemViewHolder {
                         final ContentValues mySong = new ContentValues();
                         mySong.put(SongHelper.COLUMN_IS_LIKED, cursor.getString(7).equalsIgnoreCase("FALSE") ? 1 : 0);
                         resolver.update(
-                                Uri.parse(SongProvider.CONTENT_URI+"/"+dbId),
+                                Uri.parse(SongProvider.CONTENT_URI + "/" + dbId),
+                                mySong,
+                                SongHelper.COLUMN_ID + " = ?",
+                                new String[]{dbId + ""});
+                    }
+
+                } else if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
+                    if (cursor.getString(7).equalsIgnoreCase("TRUE")) {
+                        final long dbId = cursor.getLong(0);
+                        final ContentValues mySong = new ContentValues();
+                        mySong.put(SongHelper.COLUMN_IS_LIKED, cursor.getString(7).equalsIgnoreCase("FALSE") ? 1 : 0);
+                        resolver.update(
+                                Uri.parse(SongProvider.CONTENT_URI + "/" + dbId),
                                 mySong,
                                 SongHelper.COLUMN_ID + " = ?",
                                 new String[]{dbId + ""});
@@ -89,8 +100,7 @@ class SongItemHolder extends SingleItemViewHolder {
 
                 } else
                     throw new IllegalArgumentException("Unknown column count found");
-            }
-            else
+            } else
                 throw new IllegalArgumentException("Invalid Object type detected");
         });
         this.likeButton.setOnClickListener(v -> ((ImageView) v).setImageResource(R.drawable.icon_heart_pink));
@@ -131,8 +141,7 @@ class SongItemHolder extends SingleItemViewHolder {
             boolean visible = false;
             if (object instanceof MusicData) {
                 final MusicData musicData = (MusicData) object;
-            }
-            else if (object instanceof Cursor) {
+            } else if (object instanceof Cursor) {
                 final Cursor cursor = (Cursor) object;
                 if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length)
                     visible = cursor.getShort(11) == 1;
@@ -140,8 +149,7 @@ class SongItemHolder extends SingleItemViewHolder {
                     visible = cursor.getShort(18) == 1;
                 else
                     throw new IllegalArgumentException("Unknown column count found");
-            }
-            else
+            } else
                 throw new IllegalArgumentException("Invalid Object type detected");
             hideItem.setTitle(visible ? "Everyone" : "Only Me");
 
@@ -167,6 +175,7 @@ class SongItemHolder extends SingleItemViewHolder {
         Uri contentUri = null;
         long reachDatabaseId = 0;
         if (object instanceof MusicData) {
+
             final MusicData musicData = (MusicData) object;
             if (musicData.getType() == MusicData.Type.DOWNLOADED)
                 contentUri = SongProvider.CONTENT_URI;
@@ -175,8 +184,9 @@ class SongItemHolder extends SingleItemViewHolder {
             else
                 throw new IllegalArgumentException("Invalid MusicData type detected");
             reachDatabaseId = musicData.getColumnId();
-        }
-        else if (object instanceof Cursor) {
+
+        } else if (object instanceof Cursor) {
+
             final Cursor cursor = (Cursor) object;
             if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
                 contentUri = MySongsProvider.CONTENT_URI;
@@ -186,13 +196,12 @@ class SongItemHolder extends SingleItemViewHolder {
                 reachDatabaseId = cursor.getLong(0);
             } else
                 throw new IllegalArgumentException("Unknown column count found");
-        }
-        else
+        } else
             throw new IllegalArgumentException("Invalid Object type detected");
 
         if (contentUri == null || reachDatabaseId == 0)
             return;
-        final Uri uri = Uri.parse(contentUri+ "/" + reachDatabaseId);
+        final Uri uri = Uri.parse(contentUri + "/" + reachDatabaseId);
 
         //find path and delete the file
         final Cursor pathCursor = resolver.query(

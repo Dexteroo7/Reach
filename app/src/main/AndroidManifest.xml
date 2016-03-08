@@ -74,7 +74,7 @@
             android:excludeFromRecents="true"
             android:label="@string/title_activity_edit_profile"
             android:launchMode="singleTask"
-            android:parentActivityName=".core.ReachActivity"
+            android:parentActivityName=".core.MyProfileActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -166,6 +166,16 @@
             android:parentActivityName=".core.ReachActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
+        <activity
+            android:name=".core.MyProfileActivity"
+            android:launchMode="singleTask"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppThemeTry">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />

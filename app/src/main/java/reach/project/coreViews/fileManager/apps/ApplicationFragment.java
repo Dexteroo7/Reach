@@ -108,6 +108,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         protected void onPostExecute(Pair<List<App>, List<App>> pair) {
 
             super.onPostExecute(pair);
+            StaticData.appsCount = pair.first.size();
             MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllAppCount(pair.first);

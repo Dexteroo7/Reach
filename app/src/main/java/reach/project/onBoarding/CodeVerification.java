@@ -133,6 +133,7 @@ public class CodeVerification extends Fragment {
 
         //send sms and wait
         SmsListener.forceQuit.set(true); //quit current
+
         if (countryCode.equals("+91"))
             SmsListener.sendSms("alerts.sinfini.com", "REACHA", "A6f5d83ea6aa5984be995761f221c8a9a", fullNumber, finalAuthKey, MESSENGER, getContext());
         else

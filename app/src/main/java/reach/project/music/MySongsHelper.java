@@ -185,6 +185,8 @@ public class MySongsHelper extends SQLiteOpenHelper {
                 .path(data.getPath())
                 .songId(data.getColumnId())
                 .size(data.getSize())
+                .songId(data.getColumnId())
+                .size(data.getSize())
                 .actualName("hello_world")
                 .build();
 

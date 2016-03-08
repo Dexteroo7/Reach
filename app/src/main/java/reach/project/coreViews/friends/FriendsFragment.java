@@ -17,6 +17,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -72,7 +75,7 @@ public class FriendsFragment extends Fragment implements
 
         Log.d("Ashish", "FriendsFragment - onCreateView");
         final Activity activity = getActivity();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         rootView = inflater.inflate(R.layout.fragment_friends, container, false);
@@ -144,8 +147,10 @@ public class FriendsFragment extends Fragment implements
         if (data == null || data.isClosed() || friendsAdapter == null)
             return;
 
-        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
+            StaticData.friendsCount = data.getCount();
             friendsAdapter.setVerticalCursor(data);
+        }
 
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(data);
@@ -195,4 +200,18 @@ public class FriendsFragment extends Fragment implements
         super.onDetach();
         mListener = null;
     }
+
+    /*@Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+
+        inflater.inflate(R.menu.pager_menu,menu);
+        MenuItem useOnlyWifi =  menu.findItem(R.id.hello);
+        if(SharedPrefUtils.getMobileData(sharedPreferences)) {
+            useOnlyWifi.setChecked(true);
+        }
+        else{
+            useOnlyWifi.setChecked(false);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
+    }*/
 }

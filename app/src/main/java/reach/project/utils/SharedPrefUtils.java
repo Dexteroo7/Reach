@@ -25,6 +25,8 @@ import reach.project.reachProcess.auxiliaryClasses.MusicData;
 public enum SharedPrefUtils {
     ;
 
+
+
     //TODO centralize all keys,
 
     public synchronized static void storeReachUser(SharedPreferences sharedPreferences,

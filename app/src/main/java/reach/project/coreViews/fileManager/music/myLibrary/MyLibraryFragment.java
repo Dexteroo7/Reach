@@ -64,7 +64,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_filemanager_music_mylibrary, container, false);
-        final Context context = mRecyclerView.getContext();
+        final Context context = rootView.getContext();
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyViewText.setText("Dawg");
 
@@ -151,10 +151,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
             Log.i("Ayush", "MyLibrary file manager " + count);
-
+            StaticData.librarySongsCount = count;
             parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
+
+        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
+
+//            Log.i("Ayush", "Downloaded file manager " + count);
+            StaticData.downloadedSongsCount = count;
         }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }

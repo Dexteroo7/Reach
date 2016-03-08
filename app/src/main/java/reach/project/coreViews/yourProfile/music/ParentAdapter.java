@@ -56,7 +56,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             songSongItemHolder.songName.setText(song.displayName);
             songSongItemHolder.artistName.setText(song.artist);
-            songSongItemHolder.downButton.setImageResource(R.drawable.icon_download_gray);
+            //TODO: Figure Out The Error
+            //songSongItemHolder.downButton.setImageResource(R.drawable.icon_download_gray);
 
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(song.album, song.artist, song.displayName, false);
 

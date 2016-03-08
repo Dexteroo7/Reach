@@ -29,6 +29,14 @@ public final class StaticData {
     public static final Messaging.MessagingEndpoint MESSAGING_API;
     public static final NotificationApi NOTIFICATION_API;
 
+    public static final String NO_SONGS_TEXT = "No songs!";
+    public static int deviceWidth=0;
+    public static int deviceHeight=0;
+    public static int downloadedSongsCount=0;
+    public static int librarySongsCount=0;
+    public static int appsCount=0;
+    public static int friendsCount=0;
+
     static {
 
         final HttpTransport transport = new NetHttpTransport();

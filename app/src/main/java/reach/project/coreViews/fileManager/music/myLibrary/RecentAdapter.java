@@ -143,12 +143,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
 
         holder.position = holder.getAdapterPosition();
         holder.songName.setText(item.getDisplayName());
+
         if (item.getType() == MusicData.Type.MY_LIBRARY) {
+
             holder.userImage.setVisibility(View.GONE);
             holder.artistName.setTextColor(Color.parseColor("#878691"));
             holder.artistName.setText(item.getArtistName());
-        }
-        else if (item.getType() == MusicData.Type.DOWNLOADED) {
+        } else if (item.getType() == MusicData.Type.DOWNLOADED) {
 
             final Context context = holder.itemView.getContext();
             holder.userImage.setVisibility(View.VISIBLE);
@@ -166,6 +167,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
                 cursor.close();
                 return;
             }
+
             holder.artistName.setText(cursor.getString(0));
             final int length = MiscUtils.dpToPx(20);
             holder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
@@ -175,8 +177,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
                     true,
                     length,
                     length));
-        }
-        else
+        } else
             throw new IllegalArgumentException("Invalid MusicData type");
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(

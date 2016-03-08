@@ -2,6 +2,7 @@ package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,6 +30,10 @@ import reach.project.R;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.music.MySongsHelper;
+import reach.project.music.SongHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -151,21 +156,58 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             songItemHolder.position = cursorExactType.getPosition() + 1;
             holder.itemView.setBackgroundResource(0);
 
-//            final long senderId = cursorExactType.getLong(2);
+            final String displayName, artist, album, actualName;
+            final boolean visible;
+            if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
 
-            final Context context = holder.itemView.getContext();
-            songItemHolder.userImage.setVisibility(View.VISIBLE);
-            songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
-            songItemHolder.artistName.setText(song.artist);
-            final int length = MiscUtils.dpToPx(20);
-//            songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
-//                    song.,
-//                    "imageId",
-//                    "rw",
-//                    true,
-//                    length,
-//                    length));
-            songItemHolder.likeButton.setImageResource(song.isLiked ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
+                displayName = cursorExactType.getString(5);
+                artist = cursorExactType.getString(11);
+                album = cursorExactType.getString(16);
+                visible = cursorExactType.getShort(18) == 1;
+//                actualName = cursorExactType.getString(17);
+                final long senderId = cursorExactType.getLong(2);
+
+                final Context context = holder.itemView.getContext();
+                songItemHolder.userImage.setVisibility(View.VISIBLE);
+                songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+                final Cursor cursor = context.getContentResolver().query(
+                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
+                        new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
+                                ReachFriendsHelper.COLUMN_IMAGE_ID},
+                        ReachFriendsHelper.COLUMN_ID + " = ?",
+                        new String[]{senderId + ""}, null);
+                if (cursor == null)
+                    return;
+                if (!cursor.moveToFirst()) {
+                    cursor.close();
+                    return;
+                }
+                songItemHolder.artistName.setText(cursor.getString(0));
+                final int length = MiscUtils.dpToPx(20);
+                songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                        senderId,
+                        "imageId",
+                        "rw",
+                        true,
+                        length,
+                        length));
+                songItemHolder.likeButton.setImageResource(cursorExactType.getString(7).equalsIgnoreCase("TRUE")
+                        ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
+            } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+
+                displayName = cursorExactType.getString(3);
+                artist = cursorExactType.getString(4);
+                album = cursorExactType.getString(6);
+                visible = cursorExactType.getShort(11) == 1;
+//                actualName = cursorExactType.getString(9);
+
+                songItemHolder.userImage.setVisibility(View.GONE);
+                songItemHolder.artistName.setTextColor(Color.parseColor("#878691"));
+                songItemHolder.artistName.setText(artist);
+                songItemHolder.likeButton.setImageResource(cursorExactType.getShort(12) == 1
+                        ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
+            } else
+                throw new IllegalArgumentException("Unknown cursor type found");
 
             /*if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
@@ -175,7 +217,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 songItemHolder.toggleText.setText("Only Me");
             }*/
 
-            songItemHolder.songName.setText(song.displayName);
+            songItemHolder.songName.setText(displayName);
 
             final Optional<Uri> uriOptional = AlbumArtUri.getUri(song.album, song.artist, song.displayName, false);
 
