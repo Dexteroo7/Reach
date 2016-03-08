@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
+    <!--<item
         android:id="@+id/search_button"
         android:title="Search"
         android:visible="false"
@@ -14,11 +14,12 @@
         android:title="Player"
         app:showAsAction="always"
         android:icon="@drawable/ic_equalizer_white"
-        />
+        />-->
     <item
         android:id="@+id/edit_button"
         android:title="Edit"
         app:showAsAction="always"
+        android:icon="@drawable/icon_edit_profile_white"
         />
     <item
         android:id="@+id/settings_button"
@@ -44,7 +45,7 @@
         </menu>
 
         </item>
-    <group
+    <!--<group
         android:visible="false"
         android:checkableBehavior="single">
         <item
@@ -63,5 +64,5 @@
             android:title="Show invisible files"
             app:showAsAction="never"
             />
-    </group>
+    </group>-->
 </menu>

@@ -35,6 +35,12 @@ public final class StaticData {
     public static final AppVisibilityApi APP_VISIBILITY_API;
     public static final ClassifiedAppsApi CLASSIFIED_APPS_API;
     public static final String NO_SONGS_TEXT = "No songs!";
+    public static int deviceWidth=0;
+    public static int deviceHeight=0;
+    public static int downloadedSongsCount=0;
+    public static int librarySongsCount=0;
+    public static int appsCount=0;
+    public static int friendsCount=0;
 
     static {
 

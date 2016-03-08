@@ -152,7 +152,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
 //            Log.i("Ayush", "MyLibrary file manager " + count);
-
+            StaticData.librarySongsCount = count;
             parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
@@ -161,7 +161,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
 
 //            Log.i("Ayush", "Downloaded file manager " + count);
-
+            StaticData.downloadedSongsCount = count;
             parentAdapter.setNewDownLoadCursor(data);
             if (count != parentAdapter.downloadedCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentDownloaded());

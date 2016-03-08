@@ -180,12 +180,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 startActivity(playerIntent);
                 return true;
             case R.id.notif_button:
-                //NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
+                NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
-            case R.id.settings_button:
-                final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
-                settingsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(settingsIntent);
+            case R.id.my_profile_button:
+                final Intent myProfileIntent = new Intent(ReachActivity.this, MyProfileActivity.class);
+                //settingsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(myProfileIntent);
                 return true;
 
         }
@@ -275,14 +275,16 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         text.setText("Explore");
         image.setImageResource(R.drawable.explore_tab_selector);
 
-        mTabHost.addTab(mTabHost.newTabSpec("explore_page").setIndicator(exploreTabView),ExploreFragment.class,null);
+        mTabHost.addTab(mTabHost.newTabSpec("explore_page").setIndicator(setUpTabView(inflater,
+                "Explore",
+                R.drawable.explore_tab_selector)), ExploreFragment.class,null);
 
         /*text.setText("Friends");
         image.setImageResource(R.drawable.friends_tab_selector);*/
 
         mTabHost.addTab(mTabHost.newTabSpec("manager_page").setIndicator(setUpTabView(
                 inflater,
-                "File Manager",
+                "My Files",
                 R.drawable.manager_tab_selector
                 ))
                 ,PagerFragment.class,DOWNLOAD_PAGER_BUNDLE);

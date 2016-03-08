@@ -147,8 +147,10 @@ public class FriendsFragment extends Fragment implements
         if (data == null || data.isClosed() || friendsAdapter == null)
             return;
 
-        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
+            StaticData.friendsCount = data.getCount();
             friendsAdapter.setVerticalCursor(data);
+        }
 
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(data);

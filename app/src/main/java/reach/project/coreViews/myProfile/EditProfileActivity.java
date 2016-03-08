@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
+import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.CloudStorageUtils;
@@ -321,8 +322,10 @@ public class EditProfileActivity extends AppCompatActivity {
 
             MiscUtils.useActivity(EditProfileActivity.reference, activity -> {
 
-                if (success != null && success)
+                if (success != null && success) {
                     Toast.makeText(activity, "Changes saved successfully!!", Toast.LENGTH_SHORT).show();
+                    MyProfileActivity.profileEdited = true;
+                }
                 else {
 
                     Toast.makeText(activity, "Failed, try again", Toast.LENGTH_SHORT).show();
