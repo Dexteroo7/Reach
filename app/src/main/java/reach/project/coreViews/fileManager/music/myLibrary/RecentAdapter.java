@@ -28,7 +28,7 @@ import reach.project.R;
 import reach.project.coreViews.friends.HandOverMessageExtra;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
+import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -38,11 +38,11 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
 /**
  * Created by dexter on 18/11/15.
  */
-class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> implements MoreQualifier {
+class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements MoreQualifier {
 
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
 
-    public RecentAdapter(List<MusicData> recentMusic, HandOverMessage<MusicData> handOverMessage, int resourceId) {
+    public RecentAdapter(List<Song> recentMusic, HandOverMessage<Song> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
     }
 
@@ -53,28 +53,28 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         }
 
         @Override
-        public MusicData getExtra(@Nonnull Integer position) {
+        public Song getExtra(@Nonnull Integer position) {
 
-            final MusicData musicData = getItem(position);
-            if (musicData != null)
-                return musicData;
+            final Song Song = getItem(position);
+            if (Song != null)
+                return Song;
             else
                 throw new IllegalStateException("Music data has been corrupted");
         }
     };
 
-    private static final Comparator<MusicData> PRIMARY = (left, right) -> {
+    private static final Comparator<Song> PRIMARY = (left, right) -> {
 
-        final Long lhs = left == null ? 0 : left.getDateAdded();
-        final Long rhs = right == null ? 0 : right.getDateAdded();
+        final Long lhs = left == null ? 0 : left.dateAdded;
+        final Long rhs = right == null ? 0 : right.dateAdded;
 
         return lhs.compareTo(rhs);
     };
 
-    private static final Comparator<MusicData> SECONDARY = (left, right) -> {
+    private static final Comparator<Song> SECONDARY = (left, right) -> {
 
-        final String lhs = left == null ? "" : left.getDisplayName();
-        final String rhs = right == null ? "" : right.getDisplayName();
+        final String lhs = left == null ? "" : left.displayName;
+        final String rhs = right == null ? "" : right.displayName;
 
         return lhs.compareTo(rhs);
     };
@@ -87,7 +87,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
      *
      * @param newMessages the new collection to display
      */
-    public void updateRecent(List<MusicData> newMessages) {
+    public void updateRecent(List<Song> newMessages) {
 
         if (newMessages.isEmpty()) {
 
@@ -108,7 +108,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
                 getMessageList().addAll(newMessages);
 
                 //pick top 20
-                final List<MusicData> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
+                final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
 
                 //remove all
                 getMessageList().clear();
@@ -132,24 +132,24 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
     }
 
     @Override
-    public long getItemId(MusicData item) {
-        return item.getColumnId();
+    public long getItemId(Song item) {
+        return item.fileHash.hashCode();
     }
 
     @Override
-    public void onBindViewHolder(SongItemHolder holder, MusicData item) {
+    public void onBindViewHolder(SongItemHolder holder, Song item) {
 
         Log.i("Ayush", "Binding ViewHolder " + getClass().getName());
 
         holder.position = holder.getAdapterPosition();
-        holder.songName.setText(item.getDisplayName());
+        holder.songName.setText(item.displayName);
 
-        if (item.getType() == MusicData.Type.MY_LIBRARY) {
+        if (item.getType() == Song.Type.MY_LIBRARY) {
 
             holder.userImage.setVisibility(View.GONE);
             holder.artistName.setTextColor(Color.parseColor("#878691"));
-            holder.artistName.setText(item.getArtistName());
-        } else if (item.getType() == MusicData.Type.DOWNLOADED) {
+            holder.artistName.setText(item.artist);
+        } else if (item.getType() == Song.Type.DOWNLOADED) {
 
             final Context context = holder.itemView.getContext();
             holder.userImage.setVisibility(View.VISIBLE);
@@ -178,12 +178,12 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
                     length,
                     length));
         } else
-            throw new IllegalArgumentException("Invalid MusicData type");
+            throw new IllegalArgumentException("Invalid Song type");
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
-                item.getAlbumName(),
-                item.getArtistName(),
-                item.getDisplayName(),
+                item.album,
+                item.artist,
+                item.displayName,
                 false);
 
         if (uriOptional.isPresent()) {
@@ -202,10 +202,10 @@ class RecentAdapter extends SimpleRecyclerAdapter<MusicData, SongItemHolder> imp
         } else
             holder.albumArt.setImageBitmap(null);
 
-        holder.likeButton.setImageResource(item.isLiked()
+        holder.likeButton.setImageResource(item.isLiked
                 ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
 
-        //TODO introduce visibility in MusicData
+        //TODO introduce visibility in Song
         /*if (item.visible) {
 
             holder.toggleButton.setImageResource(R.drawable.icon_everyone);

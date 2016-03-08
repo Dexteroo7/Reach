@@ -28,6 +28,7 @@ import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.ReachDatabase;
+import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
@@ -130,12 +131,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
                     SongCursorHelper.SONG_HELPER.getProjection(),
-                    SongHelper.COLUMN_STATUS + " = ? and (" + //show only finished
-                            SongHelper.COLUMN_OPERATION_KIND + " = ? or " + //show only finished downloads
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?)",  //and own songs
+                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
                     new String[]{
-                            ReachDatabase.Status.FINISHED.getString(),
                             ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                            ReachDatabase.Status.FINISHED.getString(),
                             ReachDatabase.OperationKind.OWN.getString()},
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         return null;
@@ -175,20 +175,46 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     }
 
     @NonNull
-    private List<MusicData> getRecentMyLibrary() {
+    private List<Song> getRecentMyLibrary() {
 
-        final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
-                MySongsHelper.DISK_LIST,
+        /*final Cursor cursor = new CursorLoader(getActivity(),
+                SongProvider.CONTENT_URI,
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{
+                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()},
+                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");*/
+
+        final Cursor cursor = getContext().getContentResolver().query(
+                SongProvider.CONTENT_URI,
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{
+                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()}, //all songs
+                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
+
+        /*final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
+                SongCuHelper.DISK_LIST,
                 null, null, //all songs
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
                         MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
-
+*/
         if (cursor == null)
             return Collections.emptyList();
 
-        final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext())
-            latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));
+        /*final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());*/
+        final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
+        while (cursor.moveToNext()) {
+            /*latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));*/
+            latestMyLibrary.add(SongCursorHelper.SONG_HELPER.parse(cursor));
+        }
 
         cursor.close();
 

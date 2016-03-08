@@ -101,7 +101,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         notifyDataSetChanged();
     }
 
-    public void updateRecentMusic(@NonNull List<MusicData> newRecent) {
+    public void updateRecentMusic(@NonNull List<Song> newRecent) {
         recentAdapter.updateRecent(newRecent);
     }
 

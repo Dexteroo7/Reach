@@ -145,9 +145,10 @@ public class CodeVerification extends Fragment {
         final GoogleAccountCredential credential = GoogleAccountCredential
                 .usingAudience(activity, StaticData.SCOPE)
                 .setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+        Log.d("CodeVerification", credential.getSelectedAccountName());
         final UserApi userApi = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
                 .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
-
+        Log.d("CodeVerification", "Phone Number = " + phoneNumber);
         //meanWhile fetch old account
         containerNewFuture = oldAccountFetcher.submit(
                 () -> MiscUtils.autoRetry(() -> userApi.fetchOldAccountData(phoneNumber).execute(), Optional.absent()).orNull());

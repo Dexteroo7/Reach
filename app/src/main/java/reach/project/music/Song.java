@@ -91,7 +91,69 @@ public final class Song extends Message {
     this.albumArtData = albumArtData;
   }
 
-  private Song(Builder builder) {
+    public enum Type {
+        DOWNLOADED,
+        MY_LIBRARY
+    }
+    private Type type = Type.MY_LIBRARY;
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public Type getType() {
+
+        return type;
+    }
+
+    private long processed; //get updated
+
+    public long getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(long senderId) {
+        this.senderId = senderId;
+    }
+
+    private int currentPosition; //get updated
+    private int primaryProgress; //get updated
+    private String senderName;
+    private long senderId;
+
+    public long getProcessed() {
+        return processed;
+    }
+
+    public void setProcessed(long processed) {
+        this.processed = processed;
+    }
+
+    public int getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setCurrentPosition(int currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+
+    public int getPrimaryProgress() {
+        return primaryProgress;
+    }
+
+    public void setPrimaryProgress(int primaryProgress) {
+        this.primaryProgress = primaryProgress;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
+
+    private Song(Builder builder) {
     this(builder.songId, builder.size, builder.visibility, builder.year, builder.dateAdded, builder.duration, builder.genre, builder.displayName, builder.actualName, builder.artist, builder.album, builder.fileHash, builder.path, builder.isLiked, builder.albumArtData);
     setBuilder(builder);
   }
