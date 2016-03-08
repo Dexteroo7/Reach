@@ -37,7 +37,6 @@
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
-        ...
 
         <activity
             android:name=".core.ReachActivity"
@@ -189,6 +188,7 @@
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name=".pacemaker.HeartbeatReceiver"
             android:exported="false" />
@@ -218,8 +218,8 @@
             android:name=".core.GcmIntentService"
             android:exported="false" />
         <!--<service-->
-            <!--android:name=".utils.MetaDataScanner"-->
-            <!--android:exported="false" />-->
+        <!--android:name=".utils.MetaDataScanner"-->
+        <!--android:exported="false" />-->
         <service
             android:name=".onBoarding.smsRelated.SmsListener"
             android:exported="false" />

@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
@@ -43,7 +44,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     }
 
     @Nullable
-    private DownloadingAdapter downloadingAdapter;
+    private DownloadingAdapter downloadingAdapter = null;
 
     @Nullable
     @Override
@@ -85,10 +86,11 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         if (id == StaticData.DOWNLOADING_LOADER)
             return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
-                    SongHelper.MUSIC_DATA_LIST,
+                    SongCursorHelper.DOWNLOADING_HELPER.getProjection(),
                     SongHelper.COLUMN_STATUS + " != ? and " + //show only non finished
                             SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
+                    new String[]{ReachDatabase.Status.FINISHED.getString(),
+                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString()},
                     SongHelper.COLUMN_DATE_ADDED + " DESC");
 
         return null;

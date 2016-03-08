@@ -16,6 +16,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.music.ReachDatabase;
 import reach.project.coreViews.friends.HandOverMessageExtra;
+import reach.project.music.SongCursorHelper;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.ReachCursorAdapter;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -70,45 +71,13 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
     public void onBindViewHolder(DownloadingItemHolder holder, Cursor cursorExact) {
 
         holder.position = cursorExact.getPosition();
-//        final long id = cursorExact.getLong(0);
-        final long length = cursorExact.getLong(1);
-//        final long senderId = cursor.getLong(2);
-        final long processed = cursorExact.getLong(3);
-//        final String path = cursor.getString(4);
-        final String displayName = cursorExact.getString(5);
-        final String artistName = cursorExact.getString(11);
-        final String albumName = cursorExact.getString(15);
 
-//        final boolean liked;
-//        final String temp = cursor.getString(7);
-//        liked = !TextUtils.isEmpty(temp) && temp.equals("1");
-
-//        final long duration = cursor.getLong(8);
+        final ReachDatabase reachDatabase = SongCursorHelper.DOWNLOADING_HELPER.parse(cursorExact);
 
         ///////////////
 
-        final ReachDatabase.Status status = ReachDatabase.Status.getFromValue(cursorExact.getShort(9));
-//        final short operationKind = cursorExact.getShort(10);
-//        final String userName = cursorExact.getString(11);
-
-//        final byte[] albumArtData = cursor.getBlob(15);
-//
-//        if (albumArtData != null && albumArtData.length > 0) {
-//
-//            final AlbumArtData artData;
-//            try {
-//                artData = new Wire(AlbumArtData.class).parseFrom(albumArtData, AlbumArtData.class);
-//                if (artData != null)
-//                    Log.i("Ayush", "ReachQueue Adapter " + artData.toString());
-//            } catch (IOException ignored) {
-//            }
-//        }
-
-//        final long receiverId = cursor.getLong(2);
-//        final short logicalClock = cursor.getShort(9);
-//        final long songId = cursor.getLong(10);
-
-        final boolean finished = (processed + 1400 >= length) || status == ReachDatabase.Status.FINISHED;
+        final boolean finished = (reachDatabase.getProcessed() + 1400 >= reachDatabase.getLength()) ||
+                reachDatabase.getStatus() == ReachDatabase.Status.FINISHED;
         ///////////////////////////////////
         /**
          * If download has finished no need to display pause button
@@ -127,12 +96,12 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //            viewHolder.songSize.setText(String.format("%.1f", (float) (length / 1024000.0f)) + " MB");
         } else {
 
-            int prog = (int) ((processed * 100) / length);
+            int prog = (int) ((reachDatabase.getProcessed() * 100) / reachDatabase.getLength());
             holder.progressBar.setProgress(prog);
             holder.downProgress.setText(prog + "%");
             holder.progressBar.setVisibility(View.VISIBLE);
 
-            switch (status) {
+            switch (reachDatabase.getStatus()) {
 
                 case FILE_NOT_CREATED: {
                     holder.downProgress.setText("File not found");
@@ -203,7 +172,10 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //            viewHolder.songSize.setText("404, file not found");
 //        else if (status == ReachDatabase.FILE_NOT_CREATED)
 //            viewHolder.songSize.setText("Disk Error, retry");
-        final Optional<Uri> uriOptional = AlbumArtUri.getUri(albumName, artistName, displayName, false);
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(
+                reachDatabase.getAlbumName(),
+                reachDatabase.getArtistName(),
+                reachDatabase.getDisplayName(), false);
 
         if (uriOptional.isPresent()) {
 
@@ -221,7 +193,7 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
             holder.albumArt.setController(controller);
         } else
             holder.albumArt.setImageBitmap(null);
-        holder.songName.setText(displayName);
-        holder.artistName.setText(artistName);
+        holder.songName.setText(reachDatabase.getDisplayName());
+        holder.artistName.setText(reachDatabase.getArtistName());
     }
 }

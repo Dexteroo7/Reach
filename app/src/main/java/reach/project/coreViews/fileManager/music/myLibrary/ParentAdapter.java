@@ -2,7 +2,6 @@ package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,10 +27,8 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.coreViews.friends.HandOverMessageExtra;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.music.MySongsHelper;
-import reach.project.music.SongHelper;
+import reach.project.music.Song;
+import reach.project.music.SongCursorHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -47,6 +44,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     public static final byte VIEW_TYPE_RECENT = 0;
     public static final byte VIEW_TYPE_ALL = 1;
+    public static final byte VIEW_TYPE_DOWNLOADING = 2;
 
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
@@ -85,23 +83,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     ///////////Data set ops
     @Nullable
-    private Cursor downloadCursor = null;
-    @Nullable
     private Cursor myLibraryCursor = null;
-
-    public int myLibraryCount = 0;
-    public int downloadedCount = 0;
-
-    public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
-
-        //destroy
-        if (this.downloadCursor != null)
-            downloadCursor.close();
-
-        //set
-        this.downloadCursor = newDownloadCursor;
-        notifyDataSetChanged();
-    }
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
 
@@ -121,8 +103,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public void close() {
 
-        MiscUtils.closeQuietly(downloadCursor, myLibraryCursor);
-        downloadCursor = myLibraryCursor = null;
+        MiscUtils.closeQuietly(myLibraryCursor);
+        myLibraryCursor = null;
     }
     ///////////
 
@@ -163,63 +145,27 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         if (friend instanceof Cursor) {
 
             final Cursor cursorExactType = (Cursor) friend;
+            final Song song = SongCursorHelper.SONG_HELPER.parse((Cursor) friend);
             final SongItemHolder songItemHolder = (SongItemHolder) holder;
+
             songItemHolder.position = cursorExactType.getPosition() + 1;
             holder.itemView.setBackgroundResource(0);
 
-            final String displayName, artist, album, actualName;
-            if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
-                final boolean visible;
-                if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
+//            final long senderId = cursorExactType.getLong(2);
 
-                    displayName = cursorExactType.getString(5);
-                    artist = cursorExactType.getString(11);
-                    album = cursorExactType.getString(16);
-                    visible = cursorExactType.getShort(18) == 1;
-//                actualName = cursorExactType.getString(17);
-                    final long senderId = cursorExactType.getLong(2);
-
-                    final Context context = holder.itemView.getContext();
-                    songItemHolder.userImage.setVisibility(View.VISIBLE);
-                    songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
-                    final Cursor cursor = context.getContentResolver().query(
-                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
-                            new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
-                                    ReachFriendsHelper.COLUMN_IMAGE_ID},
-                            ReachFriendsHelper.COLUMN_ID + " = ?",
-                            new String[]{senderId + ""}, null);
-                    if (cursor == null)
-                        return;
-                    if (!cursor.moveToFirst()) {
-                        cursor.close();
-                        return;
-                    }
-                    songItemHolder.artistName.setText(cursor.getString(0));
-                    final int length = MiscUtils.dpToPx(20);
-                    songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
-                            senderId,
-                            "imageId",
-                            "rw",
-                            true,
-                            length,
-                            length));
-                    songItemHolder.likeButton.setImageResource(cursorExactType.getString(7).equalsIgnoreCase("TRUE")
-                            ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
-                } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-
-                    displayName = cursorExactType.getString(3);
-                    artist = cursorExactType.getString(4);
-                    album = cursorExactType.getString(6);
-                    visible = cursorExactType.getShort(11) == 1;
-//                actualName = cursorExactType.getString(9);
-
-                    songItemHolder.userImage.setVisibility(View.GONE);
-                    songItemHolder.artistName.setTextColor(Color.parseColor("#878691"));
-                    songItemHolder.artistName.setText(artist);
-                    songItemHolder.likeButton.setImageResource(cursorExactType.getShort(12) == 1
-                            ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
-                } else
-                    throw new IllegalArgumentException("Unknown cursor type found");
+            final Context context = holder.itemView.getContext();
+            songItemHolder.userImage.setVisibility(View.VISIBLE);
+            songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+            songItemHolder.artistName.setText(song.artist);
+            final int length = MiscUtils.dpToPx(20);
+//            songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
+//                    song.,
+//                    "imageId",
+//                    "rw",
+//                    true,
+//                    length,
+//                    length));
+            songItemHolder.likeButton.setImageResource(song.isLiked ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
 
             /*if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
@@ -229,28 +175,26 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 songItemHolder.toggleText.setText("Only Me");
             }*/
 
-                songItemHolder.songName.setText(displayName);
+            songItemHolder.songName.setText(song.displayName);
 
-                final Optional<Uri> uriOptional = AlbumArtUri.getUri(album, artist, displayName, false);
+            final Optional<Uri> uriOptional = AlbumArtUri.getUri(song.album, song.artist, song.displayName, false);
 
-                if (uriOptional.isPresent()) {
+            if (uriOptional.isPresent()) {
 
 //            Log.i("Ayush", "Url found = " + uriOptional.get().toString());
-                    final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
-                            .setResizeOptions(resizeOptions)
-                            .build();
+                final ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uriOptional.get())
+                        .setResizeOptions(resizeOptions)
+                        .build();
 
-                    final DraweeController controller = Fresco.newDraweeControllerBuilder()
-                            .setOldController(songItemHolder.albumArt.getController())
-                            .setImageRequest(request)
-                            .build();
+                final DraweeController controller = Fresco.newDraweeControllerBuilder()
+                        .setOldController(songItemHolder.albumArt.getController())
+                        .setImageRequest(request)
+                        .build();
 
-                    songItemHolder.albumArt.setController(controller);
-                } else
-                    songItemHolder.albumArt.setImageBitmap(null);
+                songItemHolder.albumArt.setController(controller);
+            } else
+                songItemHolder.albumArt.setImageBitmap(null);
 
-                //use
-            }
         }
     }
 
@@ -270,19 +214,9 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             position--; //account for recent shit
 
-            if (position < downloadedCount) {
-
-                if (downloadCursor == null || downloadCursor.isClosed() || !downloadCursor.moveToPosition(position))
-                    throw new IllegalStateException("Resource cursor has been corrupted");
-                return downloadCursor;
-
-            } else {
-
-                position -= downloadedCount; //adjust fot myLibrary
-                if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
-                    throw new IllegalStateException("Resource cursor has been corrupted");
-                return myLibraryCursor;
-            }
+            if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
+                throw new IllegalStateException("Resource cursor has been corrupted");
+            return myLibraryCursor;
         }
     }
 
@@ -309,21 +243,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Override
     public int getItemCount() {
 
-        if (downloadCursor != null && !downloadCursor.isClosed())
-            downloadedCount = downloadCursor.getCount();
-        else
-            downloadedCount = 0;
-
         if (myLibraryCursor != null && !myLibraryCursor.isClosed())
-            myLibraryCount = myLibraryCursor.getCount();
-        else
-            myLibraryCount = 0;
-
-        //return myLibraryCount + downloadedCount + 1; //adjust for recent list
-        if (myLibraryCount + downloadedCount == 0)
-            return 0;
-        else
-            return myLibraryCount + downloadedCount + 1; //adjust for recent list
-
+            return myLibraryCursor.getCount() + 1;//adjust for recent list
+        return 1;
     }
 }

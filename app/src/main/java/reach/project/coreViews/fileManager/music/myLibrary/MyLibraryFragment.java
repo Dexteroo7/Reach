@@ -27,6 +27,8 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.MusicData;
@@ -62,10 +64,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_filemanager_music_mylibrary, container, false);
-        mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyViewText.setText("Dawg");
+
+        mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
         parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
@@ -126,15 +129,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (id == StaticData.MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
-                    SongHelper.MUSIC_DATA_LIST,
-                    null, null,
-//                    SongHelper.COLUMN_STATUS + " = ? and (" + //show only finished
-//                            SongHelper.COLUMN_OPERATION_KIND + " = ? or " + //show only finished downloads
-//                    SongHelper.COLUMN_OPERATION_KIND + " = ?)",  //and own songs
-//                    new String[]{
-//                            ReachDatabase.Status.FINISHED.getString(),
-//                    ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-//                    ReachDatabase.OperationKind.OWN.getString()},
+                    SongCursorHelper.SONG_HELPER.getProjection(),
+                    SongHelper.COLUMN_STATUS + " = ? and (" + //show only finished
+                            SongHelper.COLUMN_OPERATION_KIND + " = ? or " + //show only finished downloads
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?)",  //and own songs
+                    new String[]{
+                            ReachDatabase.Status.FINISHED.getString(),
+                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                            ReachDatabase.OperationKind.OWN.getString()},
                     SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         return null;
     }
@@ -151,7 +153,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
             Log.i("Ayush", "MyLibrary file manager " + count);
 
             parentAdapter.setNewMyLibraryCursor(data);
-            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+            if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
         }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());

@@ -161,6 +161,9 @@ public enum SongCursorHelper {
             if (cursor == null || cursor.isClosed())
                 throw new IllegalArgumentException("Invalid cursor found");
 
+            final String liked = cursor.getString(13);
+            final boolean isLiked = !TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true"));
+
             return new Song.Builder()
                     .songId(cursor.getLong(1))
                     .fileHash(cursor.getString(2))
@@ -174,7 +177,7 @@ public enum SongCursorHelper {
                     .path(cursor.getString(10))
                     .dateAdded(cursor.getLong(11))
                     .visibility(cursor.getShort(12) == 1)
-                    .isLiked(cursor.getString(13).equals("1") || cursor.getString(13).equals("true")).build();
+                    .isLiked(isLiked).build();
         }
     }),
 
