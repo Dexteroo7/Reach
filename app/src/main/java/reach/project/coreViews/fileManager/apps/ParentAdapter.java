@@ -2,6 +2,7 @@ package reach.project.coreViews.fileManager.apps;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -16,6 +17,8 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.friends.HandOverMessageExtra;
+import reach.project.music.Song;
+import reach.project.music.SongCursorHelper;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
@@ -31,7 +34,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     private static final byte VIEW_TYPE_ALL = 1;
     public final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
 
+    /*{
 
+        final String [] projectionSong = SongCursorHelper.SONG_HELPER.getProjection();
+        Cursor cursor;
+        Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
+
+    }*/
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private final HandOverMessage<App> handOverApp;
     private final PackageManager packageManager;

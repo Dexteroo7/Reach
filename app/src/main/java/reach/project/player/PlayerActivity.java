@@ -146,9 +146,13 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         setContentView(R.layout.activity_player);
 
         reference = new WeakReference<>(this);
-        currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
 
-
+        try {
+            currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
+        }
+        catch (RuntimeException e ){
+            currentPlaying = null;
+        }
 
         mMusicRecyclerView = (EmptyRecyclerView) findViewById(R.id.recyclerView);
 

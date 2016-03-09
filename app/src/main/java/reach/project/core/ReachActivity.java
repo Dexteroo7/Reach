@@ -775,6 +775,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     final String temp = cursor.getString(3);
                     liked = !TextUtils.isEmpty(temp) && temp.equals("1");
 
+                    final Song song = new Song.Builder()
+                            .songId
+
+                            .build();
+
                     final MusicData musicData = new MusicData(
                             cursor.getLong(0), //id
                             cursor.getString(7), //meta-hash
