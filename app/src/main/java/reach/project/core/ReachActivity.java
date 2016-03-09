@@ -779,11 +779,22 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     liked = !TextUtils.isEmpty(temp) && temp.equals("1");
 
                     final Song song = new Song.Builder()
-                            .songId
-
+                            .actualName(actualName)
+                            .album(albumName)
+                            .artist(artistName)
+                            .dateAdded(0l)
+                            .displayName(displayName)
+                            .duration(duration)
+                            .fileHash(cursor.getString(7))
+                            .path(cursor.getString(2))
+                            .isLiked(liked)
                             .build();
 
-                    final MusicData musicData = new MusicData(
+                    song.setProcessed(cursor.getLong(1));
+                    song.setType(Song.Type.DOWNLOADED);
+                    song.setSenderId(senderId);
+
+                    /*final MusicData musicData = new MusicData(
                             cursor.getLong(0), //id
                             cursor.getString(7), //meta-hash
                             size,
@@ -796,8 +807,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             "",
                             liked,
                             duration,
-                            MusicData.Type.DOWNLOADED);
-                    MiscUtils.playSong(musicData, this);
+                            MusicData.Type.DOWNLOADED);*/
+                    MiscUtils.playSong(song, this);
                 }
                 //in both cases close and continue
                 cursor.close();

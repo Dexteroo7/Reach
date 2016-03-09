@@ -1,4 +1,4 @@
-package reach.project.coreViews.friends;
+package reach.project.coreViews.fileManager;
 
 import javax.annotation.Nonnull;
 
@@ -6,7 +6,7 @@ import reach.project.music.Song;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
- * Created by dexter on 19/01/16.
+ * Created by Gaurav Sobti on 09/03/16.
  */
 public interface HandOverMessageExtra<T> extends HandOverMessage<Integer> {
 
@@ -14,4 +14,8 @@ public interface HandOverMessageExtra<T> extends HandOverMessage<Integer> {
     void handOverMessage(@Nonnull Integer position);
 
     T getExtra(@Nonnull Integer position);
+
+
+    void putExtra(@Nonnull Integer position, Song song);
+
 }

@@ -101,14 +101,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
             final Cursor cursor = (Cursor) message;
             final int count = cursor.getColumnCount();
+            final Song musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
+            //musicData.setProcessed(musicData.size);
+            MiscUtils.playSong(musicData, getContext());
 
             // To play songs of the user (not the downloaded ones)
-            if (count == MySongsHelper.DISK_LIST.length) {
+            /*if (count == MySongsHelper.DISK_LIST.length) {*//*
 
-                final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
+                final Song musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
                 MiscUtils.playSong(musicData, getContext());
-            } else if (count == SongHelper.MUSIC_DATA_LIST.length) {
-
             }
             //To play the songs downloaded from reach
             else if (count == SongHelper.MUSIC_DATA_LIST.length) {
@@ -116,10 +117,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
                 final MusicData musicData = SongHelper.getMusicData(cursor);
                 MiscUtils.playSong(musicData, getContext());
             } else
-                throw new IllegalArgumentException("Unknown column count found");
+                throw new IllegalArgumentException("Unknown column count found");*/
             // Music Data is used for recent list songs
-        } else if (message instanceof MusicData) {
-            MiscUtils.playSong((MusicData) message, getContext());
+        } else if (message instanceof Song) {
+
+            final Song musicData = (Song) message;
+            //musicData.setProcessed(musicData.size);
+            MiscUtils.playSong(musicData, getContext());
         } else
             throw new IllegalArgumentException("Unknown type handed over");
     }
@@ -152,14 +156,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
             Log.i("Ayush", "MyLibrary file manager " + count);
             StaticData.librarySongsCount = count;
-            parentAdapter.setNewMyLibraryCursor(data);
             if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
-
-        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
-
-//            Log.i("Ayush", "Downloaded file manager " + count);
-            StaticData.downloadedSongsCount = count;
+            parentAdapter.setNewMyLibraryCursor(data);
         }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }

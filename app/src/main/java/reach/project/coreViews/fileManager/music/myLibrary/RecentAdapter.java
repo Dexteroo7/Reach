@@ -25,7 +25,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.coreViews.friends.HandOverMessageExtra;
+
+import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.Song;
@@ -60,6 +61,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
                 return Song;
             else
                 throw new IllegalStateException("Music data has been corrupted");
+        }
+
+        @Override
+        public void putExtra(@Nonnull Integer position, Song song) {
+
+            getMessageList().set(position, song);
+            notifyItemChanged(position);
+
         }
     };
 
@@ -143,19 +152,24 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         holder.position = holder.getAdapterPosition();
         holder.songName.setText(item.displayName);
+        if (!item.isLiked) {
+            holder.likeButton.setSelected(false);
+        } else {
+            holder.likeButton.setSelected(true);
+        }
 
-        if (item.getType() == Song.Type.MY_LIBRARY) {
+        /*if (item.getType() == Song.Type.MY_LIBRARY) {
 
             holder.userImage.setVisibility(View.GONE);
             holder.artistName.setTextColor(Color.parseColor("#878691"));
             holder.artistName.setText(item.artist);
         } else if (item.getType() == Song.Type.DOWNLOADED) {
-
-            final Context context = holder.itemView.getContext();
-            holder.userImage.setVisibility(View.VISIBLE);
-            holder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
-            final long senderId = item.getSenderId();
-            final Cursor cursor = context.getContentResolver().query(
+*/
+        final Context context = holder.itemView.getContext();
+        holder.userImage.setVisibility(View.VISIBLE);
+        holder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+        final long senderId = item.getSenderId();
+            /*final Cursor cursor = context.getContentResolver().query(
                     Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
                     new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
                             ReachFriendsHelper.COLUMN_IMAGE_ID},
@@ -166,19 +180,19 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             if (!cursor.moveToFirst()) {
                 cursor.close();
                 return;
-            }
+            }*/
 
-            holder.artistName.setText(cursor.getString(0));
-            final int length = MiscUtils.dpToPx(20);
-            holder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
-                    senderId,
-                    "imageId",
-                    "rw",
-                    true,
-                    length,
-                    length));
-        } else
-            throw new IllegalArgumentException("Invalid Song type");
+        holder.artistName.setText(item.artist == null ? "" : item.artist);
+        final int length = MiscUtils.dpToPx(20);
+        holder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                senderId,
+                "imageId",
+                "rw",
+                true,
+                length,
+                length));
+        /*} else
+            throw new IllegalArgumentException("Invalid Song type");*/
 
         final Optional<Uri> uriOptional = AlbumArtUri.getUri(
                 item.album,
@@ -202,8 +216,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         } else
             holder.albumArt.setImageBitmap(null);
 
-        holder.likeButton.setImageResource(item.isLiked
-                ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
+        /*holder.likeButton.setImageResource(item.isLiked
+                ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);*/
 
         //TODO introduce visibility in Song
         /*if (item.visible) {

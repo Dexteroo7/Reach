@@ -152,6 +152,9 @@ public enum SongCursorHelper {
             SongHelper.COLUMN_VISIBILITY, //12
             SongHelper.COLUMN_IS_LIKED, //13
             SongHelper.COLUMN_USER_NAME, //14
+            SongHelper.COLUMN_PROCESSED, //15
+            SongHelper.COLUMN_SENDER_ID, //16
+            SongHelper.COLUMN_USER_NAME //17
 
     }, new Function<Cursor, Song>() {
         @Nullable
@@ -164,7 +167,7 @@ public enum SongCursorHelper {
             final String liked = cursor.getString(13);
             final boolean isLiked = !TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true"));
 
-            return new Song.Builder()
+            final Song song =  new Song.Builder()
                     .songId(cursor.getLong(1))
                     .fileHash(cursor.getString(2))
                     .displayName(cursor.getString(3))
@@ -178,6 +181,12 @@ public enum SongCursorHelper {
                     .dateAdded(cursor.getLong(11))
                     .visibility(cursor.getShort(12) == 1)
                     .isLiked(isLiked).build();
+            song.setProcessed(cursor.getLong(15));
+            song.setSenderId(cursor.getLong(16));
+            song.setSenderName(cursor.getString(17));
+
+            return song;
+
         }
     }),
 

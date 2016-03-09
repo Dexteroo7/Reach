@@ -27,7 +27,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.coreViews.friends.HandOverMessageExtra;
+
+import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.coreViews.friends.ReachFriendsHelper;
@@ -50,6 +51,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     public static final byte VIEW_TYPE_RECENT = 0;
     public static final byte VIEW_TYPE_ALL = 1;
     public static final byte VIEW_TYPE_DOWNLOADING = 2;
+    private static final String TAG = ParentAdapter.class.getSimpleName();
 
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
@@ -76,10 +78,15 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             else
                 throw new IllegalStateException("Resource cursor has been corrupted");
         }
+
+        @Override
+        public void putExtra(@Nonnull Integer position, Song song) {
+
+        }
     };
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<MusicData> handOverSong) {
+                         HandOverMessage<Song> handOverSong) {
 
         this.handOverCursor = handOverCursor;
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item);
@@ -158,19 +165,20 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             final String displayName, artist, album, actualName;
             final boolean visible;
-            if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
+            //if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
 
-                displayName = cursorExactType.getString(5);
-                artist = cursorExactType.getString(11);
-                album = cursorExactType.getString(16);
-                visible = cursorExactType.getShort(18) == 1;
+                displayName = cursorExactType.getString(3);
+                artist = cursorExactType.getString(5);
+                album = cursorExactType.getString(6);
+                visible = cursorExactType.getShort(12) == 1;
 //                actualName = cursorExactType.getString(17);
-                final long senderId = cursorExactType.getLong(2);
+                final long senderId = cursorExactType.getLong(16);
+                final String senderName = cursorExactType.getString(17);
 
                 final Context context = holder.itemView.getContext();
                 songItemHolder.userImage.setVisibility(View.VISIBLE);
                 songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
-                final Cursor cursor = context.getContentResolver().query(
+                /*final Cursor cursor = context.getContentResolver().query(
                         Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
                         new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
                                 ReachFriendsHelper.COLUMN_IMAGE_ID},
@@ -181,8 +189,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 if (!cursor.moveToFirst()) {
                     cursor.close();
                     return;
-                }
-                songItemHolder.artistName.setText(cursor.getString(0));
+                }*/
+                songItemHolder.artistName.setText(artist);
                 final int length = MiscUtils.dpToPx(20);
                 songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
                         senderId,
@@ -191,15 +199,23 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                         true,
                         length,
                         length));
-                songItemHolder.likeButton.setImageResource(cursorExactType.getString(7).equalsIgnoreCase("TRUE")
-                        ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
-            } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+            final String liked = cursorExactType.getString(13);
+            Log.d(TAG, "Position = " + position + " liked = " + liked);
+            if (liked== null || liked.equals("0")){
+                songItemHolder.likeButton.setSelected(false);
+            }
+            else{
+                songItemHolder.likeButton.setSelected(true);
+            }
+
+                /*songItemHolder.likeButton.setImageResource(cursorExactType.getString(13).equalsIgnoreCase("TRUE")
+                        ? R.drawable.icon_heart_pink : R.drawable.icon_heart_outline_pink);*/
+            /*} else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
                 displayName = cursorExactType.getString(3);
                 artist = cursorExactType.getString(4);
                 album = cursorExactType.getString(6);
                 visible = cursorExactType.getShort(11) == 1;
-//                actualName = cursorExactType.getString(9);
 
                 songItemHolder.userImage.setVisibility(View.GONE);
                 songItemHolder.artistName.setTextColor(Color.parseColor("#878691"));
@@ -207,7 +223,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 songItemHolder.likeButton.setImageResource(cursorExactType.getShort(12) == 1
                         ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
             } else
-                throw new IllegalArgumentException("Unknown cursor type found");
+                throw new IllegalArgumentException("Unknown cursor type found");*/
 
             /*if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);

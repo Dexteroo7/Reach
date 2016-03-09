@@ -27,7 +27,7 @@
             android:layout_alignBottom="@id/albumArt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/icon_heart_outline_grayer" />
+            android:src="@drawable/like_selector" />
         <ImageView
             android:id="@+id/extraButton"
             android:layout_alignParentRight="true"
