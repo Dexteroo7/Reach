@@ -50,56 +50,59 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
             final Object object = getItem(position);
             if (object instanceof Cursor) {
                 Cursor cursor = (Cursor) object;
+                if(cursor == null ){
+                    return;
+                }
                 handOverCursor.handOverMessage(cursor);
 
-                if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
-                    currentlyPlayingSongId = cursor.getLong(0);
+                //if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
+                    currentlyPlayingSongId = cursor.getString(2);
                     notifyItemChanged(currentlyPlayingSongPosition);
                     notifyItemChanged(position);
-
+/*
                 } else if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-                    currentlyPlayingSongId = cursor.getLong(0);
+                    currentlyPlayingSongId = cursor.getString(2);
                     notifyItemChanged(currentlyPlayingSongPosition);
                     notifyItemChanged(position);
 
                 } else
-                    throw new IllegalArgumentException("Unknown cursor type found");
+                    throw new IllegalArgumentException("Unknown cursor type found");*/
             }
             else
                 throw new IllegalStateException("Position must correspond with a cursor");
         }
     };
-    private long currentlyPlayingSongId;
+    private String currentlyPlayingSongId;
     public int currentlyPlayingSongPosition;
 
 
 
     public MusicListAdapter(HandOverMessage<Cursor> handOverCursor,
                             HandOverMessage<MusicData> handOverSong,
-                            Context context, long currentlyPlayingSongId) {
+                            Context context, String currentlyPlayingSongId) {
 
         this.handOverCursor = handOverCursor;
         this.currentlyPlayingSongId = currentlyPlayingSongId;
         setHasStableIds(true);
     }
 
-    public void setCurrentlyPlayingSongId(long id){
+    public void setCurrentlyPlayingSongId(String id){
         this.currentlyPlayingSongId = id;
     }
-    public long getCurrentlyPlayingSongId(){
+    public String getCurrentlyPlayingSongId(){
         return currentlyPlayingSongId;
     }
 
     ///////////Data set ops
-    @Nullable
-    private Cursor downloadCursor = null;
+    /*@Nullable
+    private Cursor downloadCursor = null;*/
     @Nullable
     private Cursor myLibraryCursor = null;
 
     public int myLibraryCount = 0;
-    public int downloadedCount = 0;
+    /*public int downloadedCount = 0;*/
 
-    public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
+    /*public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
 
         //destroy
         if (this.downloadCursor != null)
@@ -108,7 +111,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         //set
         this.downloadCursor = newDownloadCursor;
         //notifyDataSetChanged();
-    }
+    }*/
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
 
@@ -124,8 +127,8 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     @Override
     public void close() {
 
-        MiscUtils.closeQuietly(downloadCursor, myLibraryCursor);
-        downloadCursor = myLibraryCursor = null;
+        MiscUtils.closeQuietly(/*downloadCursor,*/ myLibraryCursor);
+        /*downloadCursor = */myLibraryCursor = null;
     }
     ///////////
 
@@ -153,35 +156,36 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
         final Object friend = getItem(position);
         //TODO: avoid CursorIndexOutOfBoundsException
         try {
-            if (friend instanceof Cursor) {
+            //if (friend instanceof Cursor) {
                 holder.itemView.setSelected(false);
                 final Cursor cursorExactType = (Cursor) friend;
                 final SongItemHolder songItemHolder = (SongItemHolder) holder;
                 //holder.itemView.setBackgroundResource(0);
             /*holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.));*/
                 final String displayName, artist, album, actualName;
-                if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
+                /*if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {*/
 
-                    displayName = cursorExactType.getString(5);
-                    artist = cursorExactType.getString(11);
-                    album = cursorExactType.getString(16);
+                    displayName = cursorExactType.getString(3);
+                    artist = cursorExactType.getString(5);
+                    album = cursorExactType.getString(6);
                     //Log.i("MusicListAdapter","downloaded song unique id = " + cursorExactType.getLong(20) +
                     //        " downloaded song id = " + cursorExactType.getLong(14) +
                     //        " currently playing song id = " + currentlyPlayingSongId );
 
-                    if (cursorExactType.getLong(0) == currentlyPlayingSongId) {
+                    //MetaHash is a String with cursor index of 2. Checkout SongHelper.Projection
+                    if (cursorExactType.getString(2).equals(currentlyPlayingSongId)) {
                         //   Log.i("MusicListAdapter","Currently playing song is downloaded song");
                         holder.itemView.setSelected(true);
                         currentlyPlayingSongPosition = position;
                     }
                     ;
 //                actualName = cursorExactType.getString(17);
-                } else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
+                /*} else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
                     displayName = cursorExactType.getString(3);
                     artist = cursorExactType.getString(4);
                     album = cursorExactType.getString(6);
                     final long x = cursorExactType.getLong(0);
-                    if (cursorExactType.getLong(0) == currentlyPlayingSongId) {
+                    if (cursorExactType.getString(2) == currentlyPlayingSongId) {
                         //   Log.i("MusicListAdapter","Currently playing song is my library song");
                         holder.itemView.setSelected(true);
                         currentlyPlayingSongPosition = position;
@@ -189,7 +193,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                     ;
 //                actualName = cursorExactType.getString(9);
                 } else
-                    throw new IllegalArgumentException("Unknown cursor type found");
+                    throw new IllegalArgumentException("Unknown cursor type found");*/
 
                 songItemHolder.songName.setText(displayName);
                 songItemHolder.artistName.setText(artist);
@@ -213,7 +217,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
                     songItemHolder.albumArt.setImageBitmap(null);
 
                 //use
-            }
+            //}
         }
         catch(CursorIndexOutOfBoundsException e){
             Log.e(TAG, "Exception thrown at song id = " + currentlyPlayingSongId + " and position = " + position);
@@ -230,7 +234,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     public Object getItem(int position) {
         //account for recent shit
 
-            if (position < downloadedCount) {
+            /*if (position < downloadedCount) {
 
                 if (downloadCursor == null || downloadCursor.isClosed() || !downloadCursor.moveToPosition(position))
                     throw new IllegalStateException("Resource cursor has been corrupted");
@@ -238,12 +242,12 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
             } else {
 
-                position -= downloadedCount; //adjust fot myLibrary
+                position -= downloadedCount; //adjust fot myLibrary*/
                 if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
                     throw new IllegalStateException("Resource cursor has been corrupted");
                 return myLibraryCursor;
 
-        }
+        //}
     }
 
     @Override
@@ -259,17 +263,17 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
     @Override
     public int getItemCount() {
 
-        if (downloadCursor != null && !downloadCursor.isClosed())
+        /*if (downloadCursor != null && !downloadCursor.isClosed())
             downloadedCount = downloadCursor.getCount();
         else
-            downloadedCount = 0;
+            downloadedCount = 0;*/
 
         if (myLibraryCursor != null && !myLibraryCursor.isClosed())
             myLibraryCount = myLibraryCursor.getCount();
         else
             myLibraryCount = 0;
 
-            return myLibraryCount + downloadedCount; //adjust for recent list
+            return myLibraryCount /*+ downloadedCount*/; //adjust for recent list
 
     }
 }

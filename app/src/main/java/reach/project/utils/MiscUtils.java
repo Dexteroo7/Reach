@@ -441,6 +441,16 @@ public enum MiscUtils {
 //            return false;
 //        }
 
+        if (musicData.size == 0 || TextUtils.isEmpty(musicData.path)) {
+            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (musicData.getProcessed() == 0) {
+            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
         ProcessManager.submitMusicRequest(context,
                 Optional.of(musicData),
                 ProcessManager.ACTION_NEW_SONG);

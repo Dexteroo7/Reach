@@ -106,7 +106,6 @@ public final class Song extends Message {
         return type;
     }
 
-    private long processed; //get updated
 
     public long getSenderId() {
         return senderId;
@@ -116,10 +115,20 @@ public final class Song extends Message {
         this.senderId = senderId;
     }
 
+    private long processed; //get updated
     private int currentPosition; //get updated
     private int primaryProgress; //get updated
     private String senderName;
     private long senderId;
+    private int secondaryProgress;
+
+    public int getSecondaryProgress() {
+        return secondaryProgress;
+    }
+
+    public void setSecondaryProgress(int secondaryProgress) {
+        this.secondaryProgress = secondaryProgress;
+    }
 
     public long getProcessed() {
         return processed;
@@ -180,7 +189,69 @@ public final class Song extends Message {
         && equals(albumArtData, o.albumArtData);
   }
 
-  @Override
+    public Long getSongId() {
+        return songId;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public Boolean getVisibility() {
+        return visibility;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public Long getDateAdded() {
+        return dateAdded;
+    }
+
+    public Long getDuration() {
+        return duration;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getActualName() {
+        return actualName;
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public String getAlbum() {
+        return album;
+    }
+
+    public String getFileHash() {
+        return fileHash;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public Boolean getLiked() {
+        return isLiked;
+    }
+
+    public AlbumArtData getAlbumArtData() {
+        return albumArtData;
+    }
+
+
+
+    @Override
   public int hashCode() {
     int result = hashCode;
     if (result == 0) {

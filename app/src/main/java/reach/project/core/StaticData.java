@@ -36,6 +36,8 @@ public final class StaticData {
     public static int librarySongsCount=0;
     public static int appsCount=0;
     public static int friendsCount=0;
+    public static final String zero = "0";
+    public static final String one = "1";
 
     static {
 
@@ -53,7 +55,7 @@ public final class StaticData {
         NOTIFICATION_API = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
     }
 
-    public static final String[] DOWNLOADED_PARTIAL = new String[]{
+    /*public static final String[] DOWNLOADED_PARTIAL = new String[]{
             SongHelper.COLUMN_ID, //0
             SongHelper.COLUMN_SIZE, //1
             SongHelper.COLUMN_SENDER_ID, //2
@@ -64,9 +66,9 @@ public final class StaticData {
             SongHelper.COLUMN_SONG_ID, //7
             SongHelper.COLUMN_ARTIST, //8
             SongHelper.COLUMN_DURATION, //9
-            SongHelper.COLUMN_META_HASH}; //10
+            SongHelper.COLUMN_META_HASH}; //10*/
 
-    public static final String[] DISK_PARTIAL = new String[]{
+    /*public static final String[] DISK_PARTIAL = new String[]{
             MySongsHelper.COLUMN_ARTIST, //0
             MySongsHelper.COLUMN_SONG_ID, //1
             MySongsHelper.COLUMN_SIZE, //2
@@ -76,7 +78,7 @@ public final class StaticData {
             MySongsHelper.COLUMN_DURATION, //6
             MySongsHelper.COLUMN_IS_LIKED, //7
             SongHelper.COLUMN_META_HASH}; //8
-
+*/
 
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;

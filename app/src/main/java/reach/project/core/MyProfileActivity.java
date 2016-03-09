@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
 
 import reach.project.R;
 import reach.project.ancillaryViews.TermsActivity;
@@ -34,11 +35,14 @@ import reach.project.utils.SharedPrefUtils;
  */
 public class MyProfileActivity extends AppCompatActivity {
 
+    private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
+    private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
     private SharedPreferences preferences;
     public static boolean profileEdited;
     private ActionBar actionBar;
     private SimpleDraweeView profilePic;
     private static final String TAG = MyProfileActivity.class.getSimpleName();
+    private SimpleDraweeView coverPic;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,6 +69,7 @@ public class MyProfileActivity extends AppCompatActivity {
 
         //toolbar.setOnMenuItemClickListener(menuItemClickListener);
         profilePic = (SimpleDraweeView) findViewById(R.id.profilePic);
+        coverPic = (SimpleDraweeView) findViewById(R.id.coverPic);
 
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
@@ -85,13 +90,38 @@ public class MyProfileActivity extends AppCompatActivity {
     private void setUpProfile(){
         Log.d(TAG,"SetUp Profile Called");
         actionBar.setTitle(SharedPrefUtils.getUserName(preferences));
+
+        Log.d(TAG,"profile pic uri = " + AlbumArtUri.getUserImageUri(
+                SharedPrefUtils.getServerId(preferences),
+                "imageId",
+                "rw", //webP
+                true, //circular
+                PROFILE_PHOTO_RESIZE.width,
+                PROFILE_PHOTO_RESIZE.height));
+
+        Log.d(TAG,"cover pic uri = " + AlbumArtUri.getUserImageUri(
+                SharedPrefUtils.getServerId(preferences),
+                "coverPicId",
+                "rw", //webP
+                false, //simple crop
+                COVER_PHOTO_RESIZE.width,
+                COVER_PHOTO_RESIZE.height));
+
         profilePic.setImageURI(AlbumArtUri.getUserImageUri(
                 SharedPrefUtils.getServerId(preferences),
                 "imageId",
                 "rw", //webP
-                false, //circular
-                StaticData.deviceWidth,
-                MiscUtils.dpToPx(256)));
+                true, //circular
+                PROFILE_PHOTO_RESIZE.width,
+                PROFILE_PHOTO_RESIZE.height));
+
+        coverPic.setImageURI(AlbumArtUri.getUserImageUri(
+                SharedPrefUtils.getServerId(preferences),
+                "coverPicId",
+                "rw", //webP
+                false, //simple crop
+                COVER_PHOTO_RESIZE.width,
+                COVER_PHOTO_RESIZE.height));
         
     }
     

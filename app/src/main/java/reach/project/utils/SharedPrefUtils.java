@@ -16,8 +16,8 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import reach.project.music.Song;
 import reach.project.onBoarding.OnboardingData;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -28,6 +28,10 @@ public enum SharedPrefUtils {
 
 
     //TODO centralize all keys,
+
+    private static final String TAG = SharedPrefUtils.class.getSimpleName();
+    private static final String IS_A_SONG_CURRENTLY_PLAYING_KEY = "is_a_song_currently_playing";
+
 
     public synchronized static void storeReachUser(SharedPreferences sharedPreferences,
                                                    OnboardingData onboardingData,
@@ -152,15 +156,16 @@ public enum SharedPrefUtils {
         return sharedPreferences.getBoolean("reachQueueSeen", false);
     }
 
-    public synchronized static Optional<MusicData> getLastPlayed(Context context) {
+    public synchronized static Optional<Song> getLastPlayed(Context context) {
 
         final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
         final String unParsed = sharedPreferences.getString("last_played", "");
+        Log.d(TAG, "UnParsed string = " + unParsed==null?"null":unParsed);
         if (TextUtils.isEmpty(unParsed))
             return Optional.absent();
-        final MusicData toReturn;
+        final Song toReturn;
         try {
-            toReturn = new Gson().fromJson(unParsed, MusicData.class);
+            toReturn = new Gson().fromJson(unParsed, Song.class);
         } catch (IllegalStateException | JsonSyntaxException e) {
             e.printStackTrace();
             return Optional.absent();
@@ -316,5 +321,13 @@ public enum SharedPrefUtils {
 
     public synchronized static void putFirstTimeDownload(SharedPreferences sharedPreferences, boolean value){
         sharedPreferences.edit().putBoolean("first_time_download", value).apply();
+    }
+
+    public synchronized static void putIsASongCurrentlyPlaying(SharedPreferences sharedPreferences, boolean b) {
+        sharedPreferences.edit().putBoolean(IS_A_SONG_CURRENTLY_PLAYING_KEY, b).apply();
+    }
+
+    public synchronized static boolean getIsASongCurrentlyPlaying(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean(IS_A_SONG_CURRENTLY_PLAYING_KEY, false);
     }
 }

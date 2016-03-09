@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,14 +20,18 @@ public class SongProvider extends ContentProvider {
 
     public static final int DATABASE = 12;
     private static final int DATABASE_ID = 22; //+10
+    private static final int DATABASE_META_HASH = 32; //+10
     private static final String BASE_PATH = "database/contentProvider/SongProvider";
     public static final String AUTHORITY = "reach.project.music.SongProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
+    private static final String TAG = SongProvider.class.getSimpleName();
+
     static {
         sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sURIMatcher.addURI(AUTHORITY, BASE_PATH, DATABASE);
         sURIMatcher.addURI(AUTHORITY, BASE_PATH + "/#", DATABASE_ID);
+        sURIMatcher.addURI(AUTHORITY, BASE_PATH + "/*", DATABASE_META_HASH);
     }
 
     private SongHelper songHelper;
@@ -55,10 +60,15 @@ public class SongProvider extends ContentProvider {
                 queryBuilder.appendWhere(SongHelper.COLUMN_ID + "="
                         + uri.getLastPathSegment());
                 break;
+            case DATABASE_META_HASH:
+                queryBuilder.appendWhere(SongHelper.COLUMN_META_HASH + "="+uri.getLastPathSegment());
+                break;
+
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
 
+        //TODO: Check whether it should be readable database
         final SQLiteDatabase db = songHelper.getWritableDatabase();
         final Cursor cursor = queryBuilder.query(db, projection, selection,
                 selectionArgs, null, null, sortOrder);
@@ -129,7 +139,7 @@ public class SongProvider extends ContentProvider {
                 rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE, selection,
                         selectionArgs);
                 break;
-            case DATABASE_ID:
+            case DATABASE_ID: {
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
                     rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE,
@@ -142,6 +152,22 @@ public class SongProvider extends ContentProvider {
                             selectionArgs);
                 }
                 break;
+            }
+
+            case DATABASE_META_HASH: {
+                String id = uri.getLastPathSegment();
+                if (TextUtils.isEmpty(selection)) {
+                    rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE,
+                            SongHelper.COLUMN_META_HASH + "=" + id,
+                            null);
+                } else {
+                    rowsDeleted = sqlDB.delete(SongHelper.REACH_TABLE,
+                            SongHelper.COLUMN_META_HASH + "=" + id
+                                    + " and " + selection,
+                            selectionArgs);
+                }
+                break;
+            }
             default: rowsDeleted =0;
         }
         getContext().getContentResolver().notifyChange(uri, null);
@@ -156,12 +182,14 @@ public class SongProvider extends ContentProvider {
         int rowsUpdated;
         switch (uriType) {
             case DATABASE:
+                Log.d(TAG, "Updating database with no parameter");
                 rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
                         values,
                         selection,
                         selectionArgs);
                 break;
-            case DATABASE_ID:
+            case DATABASE_ID: {
+                Log.d(TAG, "Updating database with id in URI");
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
                     rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
@@ -177,6 +205,25 @@ public class SongProvider extends ContentProvider {
                             selectionArgs);
                 }
                 break;
+            }
+            case DATABASE_META_HASH: {
+                Log.d(TAG, "Updating database with meta hash in URI");
+                String id = uri.getLastPathSegment();
+                if (TextUtils.isEmpty(selection)) {
+                    rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
+                            values,
+                            SongHelper.COLUMN_META_HASH + "=" + id,
+                            null);
+                } else {
+                    rowsUpdated = sqlDB.update(SongHelper.REACH_TABLE,
+                            values,
+                            SongHelper.COLUMN_META_HASH + "=" + id
+                                    + " and "
+                                    + selection,
+                            selectionArgs);
+                }
+                break;
+            }
             default: rowsUpdated = 0;
         }
         getContext().getContentResolver().notifyChange(uri, null);

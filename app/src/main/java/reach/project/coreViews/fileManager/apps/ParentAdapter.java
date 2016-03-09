@@ -66,6 +66,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             else
                 throw new IllegalStateException("Position must correspond with an App");
         }
+
+
     };
 
     public ParentAdapter(HandOverMessage<App> handOverApp, Context context) {

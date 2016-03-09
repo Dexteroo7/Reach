@@ -44,6 +44,8 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
@@ -52,7 +54,6 @@ import reach.project.coreViews.push.PushContainer;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.Song;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.SongMetadata;
@@ -70,7 +71,6 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     private MusicListAdapter musicListAdapter;
     private RelativeLayout mMusicListViewContainer;
     private Cursor mLibrarySongsCursor;
-    private Cursor mDownloadedSongsCursor;
     private EmptyRecyclerView mMusicRecyclerView;
     private int count=0;
     private CustomLinearLayoutManager layoutManager;
@@ -108,7 +108,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     @Nullable
     private static WeakReference<PlayerActivity> reference = null;
     @Nullable
-    private static MusicData currentPlaying = null;
+    private static Song currentPlaying = null;
 
     @Nullable
     private SimpleDraweeView albumArt = null;
@@ -125,7 +125,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     @Nullable
     private SeekBar seekBar = null;
     @Nullable
-    private View likeButton = null;
+    private ImageView likeButton = null;
 
     //private boolean mMusicFragmentVisible;
 
@@ -159,7 +159,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         /*final long current_playing_song_id = getArguments().getLong(CURRENT_SONG_ID_KEY);*/
         //TODO: Check where in the adapter there is current song and scroll to that position
         mMusicListViewContainer = (RelativeLayout) findViewById(R.id.music_list_container);
-        musicListAdapter = new MusicListAdapter(this, this, this,currentPlaying == null ? 0 : currentPlaying.getColumnId());
+        musicListAdapter = new MusicListAdapter(this, this, this,currentPlaying == null ? "0" : currentPlaying.fileHash);
         layoutManager = new CustomLinearLayoutManager(this);
         mMusicRecyclerView.setLayoutManager(layoutManager);
         mMusicRecyclerView.setAdapter(musicListAdapter);
@@ -168,8 +168,8 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         getSupportLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
 
         final String duration = currentPlaying == null ? "00:00" : MiscUtils.combinationFormatter(currentPlaying.getDuration());
-        final Uri albumArtUri = currentPlaying == null ? null : AlbumArtUri.getUri(currentPlaying.getAlbumName(),
-                currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true).orNull();
+        final Uri albumArtUri = currentPlaying == null ? null : AlbumArtUri.getUri(currentPlaying.getAlbum(),
+                currentPlaying.getArtist(), currentPlaying.getDisplayName(), true).orNull();
 
         playerPos = (TextView) findViewById(R.id.playerPos);
 
@@ -194,26 +194,41 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                     mMusicListViewContainer.setVisibility(View.GONE);
                 }
                 else if (mMusicListViewContainer.getVisibility() == View.GONE){
+                    findTheSongInTheCursor();
                     mMusicListViewContainer.setVisibility(View.VISIBLE);
                 }
             }
             return false;
         });
 
-        (likeButton = findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
+        (likeButton = (ImageView)findViewById(R.id.likeBtn)).setOnClickListener(LocalUtils.LIKE_BUTTON_CLICK);
         findViewById(R.id.push_button).setOnClickListener(pushButtonClickListener);
         (seekBar = (SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(LocalUtils.PLAYER_SEEK_LISTENER);
         (pause_play = (ImageView) findViewById(R.id.pause_play)).setOnClickListener(LocalUtils.PAUSE_CLICK);
         (songNamePlaying = (TextView) findViewById(R.id.songNamePlaying)).setText(currentPlaying == null ? "" : currentPlaying.getDisplayName());
-        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "Currently there is no music playing." : currentPlaying.getArtistName());
+        (artistName = (TextView) findViewById(R.id.artistName)).setText(currentPlaying == null ? "Currently there is no music playing." : currentPlaying.getArtist());
         (albumArt = (SimpleDraweeView) findViewById(R.id.albumArt)).setImageURI(albumArtUri);
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
-        if (currentPlaying != null) {
+        if (currentPlaying!= null) {
+            pause_play.setImageResource(R.drawable.play_white_selector);
+        }
+
+
+        if(currentPlaying.isLiked!=null && currentPlaying.isLiked){
+            likeButton.setSelected(true);
+        }
+        else{
+            likeButton.setSelected(false);
+        }
+
+        if(SharedPrefUtils.getIsASongCurrentlyPlaying(preferences)){
+            pause_play.setImageResource(R.drawable.pause_white_selector);
+        }
+        else{
             pause_play.setImageResource(R.drawable.play_white_selector);
         }
         // Empty view modifications
-
         rwdBtn.setOnClickListener(LocalUtils.PREVIOUS_CLICK);
         fwdBtn.setOnClickListener(LocalUtils.NEXT_CLICK);
 
@@ -234,12 +249,12 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     protected void onResume() {
         super.onResume();
         ProcessManager.installMessenger(new Messenger(handler));
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mDownloadedSongsCursor = null;
         mLibrarySongsCursor = null;
         getSupportLoaderManager().destroyLoader(StaticData.DOWNLOAD_LOADER);
         getSupportLoaderManager().destroyLoader(StaticData.MY_LIBRARY_LOADER);
@@ -269,8 +284,12 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         }
 
         final Set<Song> selectedSongs = MiscUtils.getSet(1);
-        final Song song = MySongsHelper.convertMusicDataToSong(currentPlaying);
+        //final Song song = MySongsHelper.convertMusicDataToSong(currentPlaying);
+        final Song song = currentPlaying;
+
         Log.i(TAG,"Name of the song to push = " + song.displayName);
+        Log.i(TAG,"Id of the song to push = " + song.songId);
+        Log.i(TAG,"Size of the song to push = " + song.size);
         selectedSongs.add(song);
 
         if (selectedSongs.isEmpty()) {
@@ -320,10 +339,11 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             @Override
             protected Integer doInBackground(Void... params) {
                 if(currentPlaying!=null) {
-                    if (mDownloadedSongsCursor != null) {
+                    //TODO: Calculate Position
+                    /*if (mDownloadedSongsCursor != null) {
                         int i = 0;
                         for (mDownloadedSongsCursor.moveToFirst(); !mDownloadedSongsCursor.isAfterLast(); mDownloadedSongsCursor.moveToNext()) {
-                            if (mDownloadedSongsCursor.getLong(20) == currentPlaying.getColumnId()) {
+                            if (mDownloadedSongsCursor.getLong(20) == currentPlaying.getFileHash()) {
 
                                 return i;
                             }
@@ -346,8 +366,29 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                             i++;
 
                         }
+                    }*/
+
+                    if (mLibrarySongsCursor != null) {
+                        int i = 0;
+                        try {
+                            for (mLibrarySongsCursor.moveToFirst(); !mLibrarySongsCursor.isAfterLast(); mLibrarySongsCursor.moveToNext()) {
+                                if (mLibrarySongsCursor.getString(2).equals(currentPlaying.getFileHash())) {
+
+                                    return i;
+                                }
+                                i++;
+
+                            }
+                        }
+                        catch (Exception e){
+                            return -1;
+                        }
+
+
+
                     }
-                     return 0;
+                    return -1;
+
                 }
                 return -1;
             }
@@ -361,7 +402,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                     return;
                 }
                 else{
-                    activity.layoutManager.scrollToPositionWithOffset(position,2);
+                    activity.mMusicRecyclerView.smoothScrollToPosition(position);
                 }
 
                 //mMusicRecyclerView.scrollToPosition(position);
@@ -387,18 +428,18 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         if (songDuration != null)
             songDuration.setText(MiscUtils.combinationFormatter(currentPlaying.getDuration()));
         if (artistName != null)
-            artistName.setText(currentPlaying.getArtistName());
+            artistName.setText(currentPlaying.getArtist());
 
         if (likeButton != null) {
 
-            if (currentPlaying.isLiked())
+            if (currentPlaying.isLiked)
                 likeButton.setSelected(true);
             else
                 likeButton.setSelected(false);
         }
 
-        final Optional<Uri> uriOptional = AlbumArtUri.getUri(currentPlaying.getAlbumName(),
-                currentPlaying.getArtistName(), currentPlaying.getDisplayName(), true);
+        final Optional<Uri> uriOptional = AlbumArtUri.getUri(currentPlaying.getAlbum(),
+                currentPlaying.getArtist(), currentPlaying.getDisplayName(), true);
         if (albumArt != null && uriOptional != null) {
             Uri albumUri = null;
             if (uriOptional.isPresent())
@@ -444,11 +485,11 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                 //TODO: After next the flow comes here maybe, Check
                 Log.i(TAG, "ProcessManager.REPLY_LATEST_MUSIC");
 
-                    currentPlaying = bundle.getParcelable(MUSIC_PARCEL);
+                    currentPlaying = (Song) bundle.getSerializable(MUSIC_PARCEL);
                     MiscUtils.useActivity(reference, activity -> activity.updateMusic(false));
-                    Log.i(TAG, "Previously playing song id =  " + musicListAdapter.getCurrentlyPlayingSongId());
-                    musicListAdapter.setCurrentlyPlayingSongId(currentPlaying.getColumnId());
-                    Log.i(TAG, "Current playing song id =  " + musicListAdapter.getCurrentlyPlayingSongId());
+//                    Log.i(TAG, "Previously playing song id =  " + musicListAdapter.getCurrentlyPlayingSongId());
+                    musicListAdapter.setCurrentlyPlayingSongId(currentPlaying.getFileHash());
+//                    Log.i(TAG, "Current playing song id =  " + musicListAdapter.getCurrentlyPlayingSongId());
                     musicListAdapter.notifyDataSetChanged();
                     findTheSongInTheCursor();
 
@@ -527,6 +568,17 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         //TODO
+
+        return new CursorLoader(this,
+                SongProvider.CONTENT_URI,
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{
+                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()},
+                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 //        if (id == StaticData.MY_LIBRARY_LOADER)
 //            return new CursorLoader(this,
 //                    MySongsProvider.CONTENT_URI,
@@ -558,7 +610,6 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 //                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 //>>>>>>> 013f62ff4d5e354f78c732f8cf38387e3009038d
 
-        return null;
     }
 
     @Override
@@ -568,7 +619,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             return;
 
        // final int count = data.getCount();
-        if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
+        //if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
 //            Log.i("Ayush", "MyLibrary file manager " + count);
 
@@ -576,16 +627,13 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             mLibrarySongsCursor = data;
 
 
-        } else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
+        //} else if (loader.getId() == StaticData.DOWNLOAD_LOADER) {
 
 //            Log.i("Ayush", "Downloaded file manager " + count);
 
-            musicListAdapter.setNewDownLoadCursor(data);
-            mDownloadedSongsCursor = data;
-
-        }
-        count++;
-        if(count == 2){
+        //}
+        //count++;
+        //if(count == 2){
             Log.d("PlayerActivity", "AsyncTAsk called");
             musicListAdapter.notifyDataSetChanged();
             if(musicListAdapter.getItemCount()==0){
@@ -593,7 +641,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             }
             findTheSongInTheCursor();
             mMusicRecyclerView.checkIfEmpty(musicListAdapter.getItemCount());
-        }
+        //}
 
     }
 
@@ -605,8 +653,9 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER)
             musicListAdapter.setNewMyLibraryCursor(null);
-        else if (loader.getId() == StaticData.DOWNLOAD_LOADER)
-            musicListAdapter.setNewDownLoadCursor(null);
+        //mLibrarySongsCursor = null;
+        /*else if (loader.getId() == StaticData.DOWNLOAD_LOADER)
+            musicListAdapter.setNewDownLoadCursor(null);*/
 
     }
 
@@ -619,12 +668,12 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             final int count = cursor.getColumnCount();
 
             // To play songs of the user (not the downloaded ones)
-            if (count == MySongsHelper.DISK_LIST.length) {
+            //if (count == MySongsHelper.DISK_LIST.length) {
 
-                final MusicData musicData = MySongsHelper.getMusicData(cursor, userId);
+                final Song musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
                 MiscUtils.playSong(musicData, this);
 
-            }
+            //}
             //TODO
             //To play the songs downloaded from reach
 //            else if (count == ReachDatabaseHelper.MUSIC_DATA_LIST.length) {
@@ -634,8 +683,8 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 //            } else
 //                throw new IllegalArgumentException("Unknown column count found");
             // Music Data is used for recent list songs
-        } else if (message instanceof MusicData) {
-            MiscUtils.playSong((MusicData) message, this);
+        } else if (message instanceof Song) {
+            MiscUtils.playSong((Song) message, this);
         } else
             throw new IllegalArgumentException("Unknown type handed over");
 
@@ -688,17 +737,20 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
             final ContentValues values = new ContentValues();
             //CARE WE USE SQL TABLE ID HERE
-            if (currentPlaying.getType() == MusicData.Type.DOWNLOADED) {
 
-                values.put(SongHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
-                values.put(SongHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
-                Log.i(TAG, " song liked, id = " + currentPlaying.getColumnId() + " song type = " + currentPlaying.getType() );
+            //TODO: Check if this is a correct query
+            //if (currentPlaying.getType() == Song.Type.DOWNLOADED) {
+
+                values.put(SongHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked ? 1 : 0);
+                //values.put(SongHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked ? 1 : 0);
+                Log.i(TAG, " song liked, id = " + currentPlaying.fileHash + " song type = " + currentPlaying.getType() );
+
                 return context.getContentResolver().update(
-                        Uri.parse(SongProvider.CONTENT_URI + "/" + currentPlaying.getColumnId()),
+                        /*Uri.parse(SongProvider.CONTENT_URI + "/" + currentPlaying.fileHash)*/SongProvider.CONTENT_URI,
                         values,
-                        SongHelper.COLUMN_ID + " = ?",
-                        new String[]{currentPlaying.getColumnId() + ""}) > 0 && !currentPlaying.isLiked();
-            } else if (currentPlaying.getType() == MusicData.Type.MY_LIBRARY) {
+                        MySongsHelper.COLUMN_META_HASH + " = ?",
+                        new String[]{currentPlaying.getFileHash() + ""}) > 0 && !currentPlaying.isLiked;
+            /*} else if (currentPlaying.getType() == MusicData.Type.MY_LIBRARY) {
 
                 values.put(MySongsHelper.COLUMN_IS_LIKED, !currentPlaying.isLiked() ? 1 : 0);
                 return context.getContentResolver().update(
@@ -706,8 +758,8 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                         values,
                         MySongsHelper.COLUMN_SONG_ID + " = ?",
                         new String[]{currentPlaying.getColumnId() + ""}) > 0 && !currentPlaying.isLiked();
-            } else
-                throw new IllegalStateException("current playing has invalid type " + currentPlaying.getType());
+            }else
+                throw new IllegalStateException("current playing has invalid type " + currentPlaying.getType());*/
         }
 
         public static final AdapterView.OnClickListener LIKE_BUTTON_CLICK = view -> {
@@ -735,14 +787,15 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                 simpleParams.put(PostParams.SCREEN_NAME, "unknown");
 
                 final Map<SongMetadata, String> complexParams = MiscUtils.getMap(9);
-                complexParams.put(SongMetadata.SONG_ID, currentPlaying.getColumnId() + "");
-                complexParams.put(SongMetadata.META_HASH, currentPlaying.getMetaHash());
-                complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtistName());
+                //complexParams.put(SongMetadata.SONG_ID, currentPlaying.getColumnId() + "");
+                complexParams.put(SongMetadata.META_HASH, currentPlaying.getFileHash());
+                complexParams.put(SongMetadata.ARTIST, currentPlaying.getArtist());
                 complexParams.put(SongMetadata.TITLE, currentPlaying.getDisplayName());
                 complexParams.put(SongMetadata.DURATION, currentPlaying.getDuration() + "");
                 complexParams.put(SongMetadata.SIZE, currentPlaying.getSize() + "");
+                Log.d(TAG, "Sender Id = " + currentPlaying.getSenderId() );
                 complexParams.put(SongMetadata.UPLOADER_ID, currentPlaying.getSenderId() + "");
-                complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbumName());
+                complexParams.put(SongMetadata.ALBUM, currentPlaying.getAlbum());
 
                 try {
                     UsageTracker.trackSong(simpleParams, complexParams, UsageTracker.LIKE_SONG);
@@ -753,15 +806,20 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
                         currentPlaying.getSenderId(),
                         serverId,
                         currentPlaying.getDisplayName()).execute(), Optional.absent());
-                currentPlaying.setIsLiked(true);
+
+                currentPlaying = new Song.Builder(currentPlaying).isLiked(true).build();
             } else {
-                currentPlaying.setIsLiked(false);
+                currentPlaying = new Song.Builder(currentPlaying).isLiked(false).build();
             }
 
-            if (currentPlaying.isLiked())
+            if (currentPlaying.isLiked)
                 view.setSelected(true);
             else
                 view.setSelected(false);
+
+            final String toSend = new Gson().toJson(currentPlaying, Song.class);
+
+            SharedPrefUtils.storeLastPlayed(context,toSend);
         };
 
         public static final View.OnClickListener PAUSE_CLICK = v -> {
@@ -769,7 +827,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             if (currentPlaying != null)
                 ProcessManager.submitMusicRequest(
                         v.getContext(),
-                        Optional.of(new Gson().toJson(currentPlaying, MusicData.class)),
+                        Optional.of(currentPlaying),
                         ProcessManager.ACTION_PLAY_PAUSE);
             else
                 ProcessManager.submitMusicRequest(
