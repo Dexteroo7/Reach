@@ -204,7 +204,7 @@ public class NumberVerification extends Fragment {
 
         final String cleansedNumber = enteredPhoneNumber.replaceAll("[^0-9]", "");
         final int length = cleansedNumber.length();
-        return cleansedNumber.substring(length - 10, length);
+        return length >= 10 ? cleansedNumber.substring(length - 10, length) : null;
     }
 
     private class CustomSpinnerAdapter extends ArrayAdapter<CountryData> {
