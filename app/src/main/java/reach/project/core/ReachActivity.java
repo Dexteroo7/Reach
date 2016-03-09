@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
@@ -48,7 +47,6 @@ import java.util.Set;
 
 import reach.backend.entities.feedBackApi.model.FeedBack;
 import reach.project.R;
-import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.apps.App;
 import reach.project.coreViews.explore.ExploreFragment;
 import reach.project.coreViews.fileManager.apps.ApplicationFragment;
@@ -715,7 +713,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return menuClickListener;
     }
 
-    @Override
     public void addSongToQueue(long songId, long senderId, long size,
                                String displayName, String actualName,
                                boolean multiple, String userName, ReachFriendsHelper.Status onlineStatus,
