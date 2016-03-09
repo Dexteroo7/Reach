@@ -54,7 +54,7 @@ import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.myProfile.MyProfileFragment;
+//import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
 import reach.project.music.ReachDatabase;
@@ -63,7 +63,6 @@ import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.FireOnce;
@@ -127,16 +126,16 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     new String[]{"My Applications"},
                     "Apps"));
 
-    @SuppressWarnings("unchecked")
-    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Share",
+//    @SuppressWarnings("unchecked")
+//    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Share",
+////            new PagerFragment.Pages(
+////                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
+////                    new String[]{"My Applications"},
+////                    "Apps"),
 //            new PagerFragment.Pages(
-//                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
-//                    new String[]{"My Applications"},
-//                    "Apps"),
-            new PagerFragment.Pages(
-                    new Class[]{reach.project.coreViews.push.music.MyLibraryFragment.class},
-                    new String[]{"My Library"},
-                    "Songs"));
+//                    new Class[]{reach.project.coreViews.push.music.MyLibraryFragment.class},
+//                    new String[]{"My Library"},
+//                    "Songs"));
 
     ////////////////////////////////////////
 
@@ -269,15 +268,15 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        View exploreTabView = LayoutInflater.from(ReachActivity.this).inflate(R.layout.tab_view,null);
-        TextView text=(TextView)exploreTabView.findViewById(R.id.tab_text);
-        ImageView image = (ImageView)exploreTabView.findViewById(R.id.tab_image);
+        View exploreTabView = LayoutInflater.from(ReachActivity.this).inflate(R.layout.tab_view, null);
+        TextView text = (TextView) exploreTabView.findViewById(R.id.tab_text);
+        ImageView image = (ImageView) exploreTabView.findViewById(R.id.tab_image);
         text.setText("Explore");
         image.setImageResource(R.drawable.explore_tab_selector);
 
         mTabHost.addTab(mTabHost.newTabSpec("explore_page").setIndicator(setUpTabView(inflater,
                 "Explore",
-                R.drawable.explore_tab_selector)), ExploreFragment.class,null);
+                R.drawable.explore_tab_selector)), ExploreFragment.class, null);
 
         /*text.setText("Friends");
         image.setImageResource(R.drawable.friends_tab_selector);*/
@@ -287,14 +286,14 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 "My Files",
                 R.drawable.manager_tab_selector
                 ))
-                ,PagerFragment.class,DOWNLOAD_PAGER_BUNDLE);
+                , PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
 
         mTabHost.addTab(mTabHost.newTabSpec("friends_page").setIndicator(setUpTabView(
                 inflater,
                 "Friends",
                 R.drawable.friends_tab_selector
-        ))
-                ,FriendsFragment.class,null);
+                ))
+                , FriendsFragment.class, null);
 
 
 
@@ -345,7 +344,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 return;
                             }
 
-                            if(getValueFirstTimeDownloadedCountCalled()){
+                            if (getValueFirstTimeDownloadedCountCalled()) {
                                 putDownloadedCountInSharedPref(data.getCount());
                                 putValueFirstTimeDownloadedCountCalled(false);
                                 return;
@@ -380,9 +379,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
 
-    private View setUpTabView( final LayoutInflater inflater, final String tab_text, final int tab_drawable_res){
-        View tabView = inflater.inflate(R.layout.tab_view,null);
-        TextView text= (TextView) tabView.findViewById(R.id.tab_text);
+    private View setUpTabView(final LayoutInflater inflater, final String tab_text, final int tab_drawable_res) {
+        View tabView = inflater.inflate(R.layout.tab_view, null);
+        TextView text = (TextView) tabView.findViewById(R.id.tab_text);
         ImageView image = (ImageView) tabView.findViewById(R.id.tab_image);
         text.setText(tab_text);
         image.setImageResource(tab_drawable_res);
@@ -412,7 +411,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
 
-
     private int getDownloadedCountFromSharedPref() {
         return preferences.getInt(DOWNLOADED_COUNT_SHARED_PREF_KEY, 0);
     }
@@ -424,8 +422,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
     private void showRatingDialog() {
-        if(alertDialog!=null){
-            if(alertDialog.isShowing()){
+        if (alertDialog != null) {
+            if (alertDialog.isShowing()) {
                 return;
             }
         }
@@ -462,7 +460,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 MiscUtils.autoRetryAsync(() -> StaticData.FEED_BACK_API.insert(feedback).execute(),
                         Optional.absent());
                 //TODO: Only change the value in shared pref if the feedback gets submitted
-                if(alertDialog!=null) {
+                if (alertDialog != null) {
                     alertDialog.dismiss();
                 }
                 putRatingValueInSharedPref(false);
@@ -520,10 +518,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         alertDialogBuilder.setView(vv);
         alertDialog = alertDialogBuilder.show();
-
-
     }
-
 
     private synchronized void processIntent(Intent intent) {
 
@@ -650,32 +645,32 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         }, 1000L);
                     }
                     break;
-                case OPEN_MY_PROFILE_APPS:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(4);
-                            MyProfileFragment.setItem(0);
-                        }, 1000L);
-                    }
-                    break;
-                case OPEN_MY_PROFILE_APPS_FIRST:
-                    if (mTabHost != null && !isFinishing()) {
-                        mTabHost.setCurrentTab(4);
-                        MyProfileFragment.setItem(0);
-                    }
-                    break;
-                case OPEN_MY_PROFILE_SONGS:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(4);
-                            MyProfileFragment.setItem(1);
-                        }, 1000L);
-                    }
-                    break;
+//                case OPEN_MY_PROFILE_APPS:
+//                    if (mTabHost != null) {
+//                        mTabHost.postDelayed(() -> {
+//                            if (mTabHost == null || isFinishing())
+//                                return;
+//                            mTabHost.setCurrentTab(4);
+//                            MyProfileFragment.setItem(0);
+//                        }, 1000L);
+//                    }
+//                    break;
+//                case OPEN_MY_PROFILE_APPS_FIRST:
+//                    if (mTabHost != null && !isFinishing()) {
+//                        mTabHost.setCurrentTab(4);
+//                        MyProfileFragment.setItem(0);
+//                    }
+//                    break;
+//                case OPEN_MY_PROFILE_SONGS:
+//                    if (mTabHost != null) {
+//                        mTabHost.postDelayed(() -> {
+//                            if (mTabHost == null || isFinishing())
+//                                return;
+//                            mTabHost.setCurrentTab(4);
+//                            MyProfileFragment.setItem(1);
+//                        }, 1000L);
+//                    }
+//                    break;
                 case OPEN_EXPLORE:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
@@ -779,7 +774,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             .actualName(actualName)
                             .album(albumName)
                             .artist(artistName)
-                            .dateAdded(0l)
+                            .dateAdded(0L)
                             .displayName(displayName)
                             .duration(duration)
                             .fileHash(cursor.getString(7))

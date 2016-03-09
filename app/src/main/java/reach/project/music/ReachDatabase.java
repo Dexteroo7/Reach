@@ -415,8 +415,16 @@ public final class ReachDatabase {
 
             if (TextUtils.isEmpty(metaHash))
                 metaHash = MiscUtils.calculateSongHash(receiverId, duration, length, displayName, Hashing.sipHash24());
-            return new ReachDatabase(id, songId, uniqueId, metaHash, receiverId, senderId, operationKind, userName, artistName, albumName,
+            final ReachDatabase reachDatabase = new ReachDatabase(id, songId, uniqueId, metaHash, receiverId, senderId, operationKind, userName, artistName, albumName,
                     genre, displayName, actualName, albumArtData, length, dateAdded, duration, isLiked, onlineStatus, visibility);
+
+            //variable stuff does not go in constructor
+            reachDatabase.setStatus(status);
+            reachDatabase.setPath(path);
+            reachDatabase.setProcessed(processed);
+            reachDatabase.setLogicalClock(logicalClock);
+
+            return reachDatabase;
         }
 
         public Builder setUniqueId(long uniqueId) {

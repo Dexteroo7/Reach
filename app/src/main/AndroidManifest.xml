@@ -251,7 +251,7 @@
             android:name=".music.SongProvider"
             android:authorities="reach.project.music.SongProvider"
             android:exported="false"
-            android:process=":remote" />
+            android:multiprocess="true"/>
 
         <service
             android:name=".reachProcess.reachService.ProcessManager"

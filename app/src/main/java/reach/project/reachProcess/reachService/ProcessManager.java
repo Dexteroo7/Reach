@@ -40,7 +40,6 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import org.json.JSONException;
@@ -51,6 +50,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -60,15 +60,13 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.coreViews.friends.ReachFriendsHelper;
+import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.usageTracking.PostParams;
@@ -268,12 +266,12 @@ public class ProcessManager extends Service implements
         final Cursor cursor;
         //if (lastSong.type == Song.Type.DOWNLOADED)
         //TODO: Previous logic is wrong
-            cursor = getContentResolver().query(
+        cursor = getContentResolver().query(
                     /*Uri.parse(SongProvider.CONTENT_URI + "/" + lastSong.fileHash)*/SongProvider.CONTENT_URI,
-                    SongCursorHelper.SONG_HELPER.getProjection(),
-                    SongHelper.COLUMN_META_HASH + " = ? and " +
-                            SongHelper.COLUMN_PROCESSED + " > ?",
-                    new String[]{lastSong.fileHash, "0"}, null);
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                SongHelper.COLUMN_META_HASH + " = ? and " +
+                        SongHelper.COLUMN_PROCESSED + " > ?",
+                new String[]{lastSong.fileHash, "0"}, null);
         /*else
             cursor = getContentResolver().query(
                     MySongsProvider.CONTENT_URI,
@@ -343,7 +341,7 @@ public class ProcessManager extends Service implements
                 new String[]{SongHelper.COLUMN_ID},
                 SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         SongHelper.COLUMN_STATUS + " = ?",
-                new String[]{"0", ReachDatabase.Status.RELAY.getString()}, null).getCount();
+                new String[]{ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), ReachDatabase.Status.RELAY.getString()}, null).getCount();
     }
 
     //RETURNS TOTAL NUMBER OF PEOPLE WHO ARE UPLOADING
@@ -353,7 +351,7 @@ public class ProcessManager extends Service implements
                 new String[]{SongHelper.COLUMN_ID},
                 SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         SongHelper.COLUMN_STATUS + " = ?",
-                new String[]{"1", ReachDatabase.Status.RELAY.getString()}, null).getCount();
+                new String[]{ReachDatabase.OperationKind.UPLOAD_OP.getString(), ReachDatabase.Status.RELAY.getString()}, null).getCount();
     }
 
     private String generateNotificationText(int totalDownloads, int totalUploads) {
@@ -365,7 +363,7 @@ public class ProcessManager extends Service implements
                     new String[]{SongHelper.COLUMN_DISPLAY_NAME},
                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             SongHelper.COLUMN_STATUS + " = ?",
-                    new String[]{"0", ReachDatabase.Status.RELAY.getString()},
+                    new String[]{ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), ReachDatabase.Status.RELAY.getString()},
                     SongHelper.COLUMN_DATE_ADDED + " DESC");
 
             if (songNameCursor == null)
@@ -389,7 +387,7 @@ public class ProcessManager extends Service implements
                     new String[]{SongHelper.COLUMN_RECEIVER_ID},
                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                             SongHelper.COLUMN_STATUS + " = ?",
-                    new String[]{"1", ReachDatabase.Status.RELAY.getString()}, null);
+                    new String[]{ReachDatabase.OperationKind.UPLOAD_OP.getString(), ReachDatabase.Status.RELAY.getString()}, null);
 
             if (receiverIdCursor == null)
                 return totalUploads + " songs are being uploaded";
@@ -599,9 +597,8 @@ public class ProcessManager extends Service implements
         bundle.putSerializable(PlayerActivity.MUSIC_PARCEL, musicData);
         sendMessage(bundle);
 
-        final String toSend = new Gson().toJson(musicData, Song.class);
-        Log.d(TAG, "Song details being stored into shared pref are " + toSend);
-        SharedPrefUtils.storeLastPlayed(this, toSend);
+        Log.d(TAG, "Song details being stored into shared pref are " + musicData);
+        SharedPrefUtils.storeLastPlayed(this, musicData);
         /**
          * GA stuff
          */
@@ -811,7 +808,7 @@ public class ProcessManager extends Service implements
                 e.printStackTrace();
                 Log.i("Downloader", "INTERRUPTED EXCEPTION IN REACH TASK");
                 close(); //shut down process
-            } catch (Throwable e) {
+            } catch (ExecutionException e) {
 
                 switch (task.getType()) {
 
@@ -961,8 +958,8 @@ public class ProcessManager extends Service implements
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
                 "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                        SongHelper.COLUMN_PROCESSED + " > ?)"  + " or " + SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), "0", ReachDatabase.OperationKind.OWN.getString() },
+                        SongHelper.COLUMN_PROCESSED + " > ?)" + " or " + SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), "0", ReachDatabase.OperationKind.OWN.getString()},
                 SongHelper.COLUMN_DATE_ADDED + " DESC");
     }
 
@@ -982,7 +979,7 @@ public class ProcessManager extends Service implements
         final Cursor cursor = optional.get();
 
         if (cursor.getCount() == 0 || cursor.getColumnCount() == 0) {
-            Log.d("ProcessManager", "playFromCursor, music = absent" );
+            Log.d("ProcessManager", "playFromCursor, music = absent");
             return Optional.absent();
         }
 
@@ -996,7 +993,7 @@ public class ProcessManager extends Service implements
         liked = !TextUtils.isEmpty(temp) && temp.equals("1");
         musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
         //musicData.setProcessed(musicData.getSize());
-        Log.d("ProcessManager", "playFromCursor, music = " + musicData.displayName );
+        Log.d("ProcessManager", "playFromCursor, music = " + musicData.displayName);
 
             /*musicData = new Song(
                     cursor.getLong(0), //id
@@ -1088,19 +1085,19 @@ public class ProcessManager extends Service implements
 
         //if (currentSong.get().getType() == Song.Type.DOWNLOADED) {
 
-            final Cursor reachDatabaseCursor = getReachDatabaseCursor();
-            if (reachDatabaseCursor == null ||
-                    !positionCursor(reachDatabaseCursor, currentSong.get().fileHash) ||
-                    !reachDatabaseCursor.moveToPrevious()) {
+        final Cursor reachDatabaseCursor = getReachDatabaseCursor();
+        if (reachDatabaseCursor == null ||
+                !positionCursor(reachDatabaseCursor, currentSong.get().fileHash) ||
+                !reachDatabaseCursor.moveToPrevious()) {
 
                 /*final Cursor myLibraryCursor = getMyLibraryCursor();
                 if (myLibraryCursor != null)
                     myLibraryCursor.moveToLast();
                 closeCursor(Optional.fromNullable(reachDatabaseCursor));
                 return playFromCursor(Optional.fromNullable(myLibraryCursor), Song.Type.MY_LIBRARY);*/
-                return Optional.absent();
-            }
-            return playFromCursor(Optional.of(reachDatabaseCursor), Song.Type.DOWNLOADED);
+            return Optional.absent();
+        }
+        return playFromCursor(Optional.of(reachDatabaseCursor), Song.Type.DOWNLOADED);
         /*} else {
 
             final Cursor myLibraryCursor = getMyLibraryCursor();
@@ -1129,8 +1126,8 @@ public class ProcessManager extends Service implements
         //if (currentSong.get().getType() == Song.Type.DOWNLOADED) {
 
         final Cursor reachDatabaseCursor = getReachDatabaseCursor();
-        if(reachDatabaseCursor == null || !positionCursor(reachDatabaseCursor, currentSong.get().getFileHash()) ||
-                !reachDatabaseCursor.moveToNext()){
+        if (reachDatabaseCursor == null || !positionCursor(reachDatabaseCursor, currentSong.get().getFileHash()) ||
+                !reachDatabaseCursor.moveToNext()) {
             return Optional.absent();
         }
         /*if (reachDatabaseCursor == null ||

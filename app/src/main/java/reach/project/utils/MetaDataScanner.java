@@ -53,13 +53,12 @@ public class MetaDataScanner extends IntentService {
         if (reachDatabaseCursor != null) {
 
             final List<Song.Builder> toReturn = new ArrayList<>(reachDatabaseCursor.getCount());
-            final Function<Cursor, Song.Builder> parser = SongCursorHelper.SONG_HELPER.getParser();
             final Function<Song.Builder, Song.Builder> songHashFixer = SongCursorHelper.getSongHashFixer(serverId);
 
             while (reachDatabaseCursor.moveToNext()) {
 
                 //read the song object
-                Song.Builder songBuilder = parser.apply(reachDatabaseCursor);
+                Song.Builder songBuilder = SongCursorHelper.SONG_HELPER.parse(reachDatabaseCursor);
                 //set the metaHash if not found
                 songBuilder = songHashFixer.apply(songBuilder);
                 if (songBuilder != null)

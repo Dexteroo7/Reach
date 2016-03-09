@@ -428,6 +428,7 @@ public enum FireOnce implements Closeable {
 
             for (ReachDatabase reachDatabase : reachDatabases) {
 
+//                Log.i("Downloader", "Scanning " + reachDatabase.getId() + " " + reachDatabase.getProcessed() + " " + reachDatabase.getLength());
                 final ContentValues values = new ContentValues();
                 if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
 
@@ -490,7 +491,7 @@ public enum FireOnce implements Closeable {
                         SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                                 SongHelper.COLUMN_STATUS + " != ?",
                         new String[]{
-                                "0", //only downloads
+                                ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), //only downloads
                                 ReachDatabase.Status.PAUSED_BY_USER.getString()}, null); //should not be paused
             }).orNull();
 
@@ -499,7 +500,7 @@ public enum FireOnce implements Closeable {
 
             final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext())
-                reachDatabaseList.add((ReachDatabase) SongCursorHelper.DOWNLOADING_HELPER.getParser().apply(cursor));
+                reachDatabaseList.add(SongCursorHelper.DOWNLOADING_HELPER.parse(cursor));
             cursor.close();
 
             if (reachDatabaseList.size() > 0) {

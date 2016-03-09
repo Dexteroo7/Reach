@@ -27,7 +27,6 @@ import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.utils.AlbumArtUri;
-import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
 /**
@@ -167,7 +166,7 @@ public class MyProfileActivity extends AppCompatActivity {
                                     SongProvider.CONTENT_URI,
                                     SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                                             SongHelper.COLUMN_STATUS + " != ?",
-                                    new String[]{"1", ReachDatabase.Status.PAUSED_BY_USER.getString()});
+                                    new String[]{ReachDatabase.OperationKind.UPLOAD_OP.getString(), ReachDatabase.Status.PAUSED_BY_USER.getString()});
                         }
                     }).start();
                 }

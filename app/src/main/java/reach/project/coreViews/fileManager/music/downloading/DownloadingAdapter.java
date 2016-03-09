@@ -96,9 +96,9 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
 //            viewHolder.songSize.setText(String.format("%.1f", (float) (length / 1024000.0f)) + " MB");
         } else {
 
-            int prog = (int) ((reachDatabase.getProcessed() * 100) / reachDatabase.getLength());
-            holder.progressBar.setProgress(prog);
-            holder.downProgress.setText(prog + "%");
+            final int progress = (int) ((reachDatabase.getProcessed() * 100) / reachDatabase.getLength());
+            holder.progressBar.setProgress(progress);
+            holder.downProgress.setText(progress + "%");
             holder.progressBar.setVisibility(View.VISIBLE);
 
             switch (reachDatabase.getStatus()) {

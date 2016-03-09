@@ -2,13 +2,10 @@ package reach.project.music;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
-
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 
 /**
  * Created by Dexter on 2/14/2015.
@@ -92,124 +89,124 @@ public class MySongsHelper extends SQLiteOpenHelper {
         return values;
     }
 
-    public static final String[] DISK_LIST = new String[]{ //count = 8
-            COLUMN_SONG_ID, //0
-            COLUMN_SIZE, //1
-            COLUMN_PATH, //2
-            COLUMN_DISPLAY_NAME, //3
-            COLUMN_ARTIST, //4
-            COLUMN_DURATION, //5
-            COLUMN_ALBUM, //6
-            COLUMN_ID, //7
-            COLUMN_ALBUM_ART_DATA, //8
-            COLUMN_ACTUAL_NAME, //9
-            COLUMN_DATE_ADDED, //10
-            COLUMN_VISIBILITY, //11
-            COLUMN_IS_LIKED, //12
-            COLUMN_META_HASH, //13
-            COLUMN_GENRE //14
-    };
+//    public static final String[] DISK_LIST = new String[]{ //count = 8
+//            COLUMN_SONG_ID, //0
+//            COLUMN_SIZE, //1
+//            COLUMN_PATH, //2
+//            COLUMN_DISPLAY_NAME, //3
+//            COLUMN_ARTIST, //4
+//            COLUMN_DURATION, //5
+//            COLUMN_ALBUM, //6
+//            COLUMN_ID, //7
+//            COLUMN_ALBUM_ART_DATA, //8
+//            COLUMN_ACTUAL_NAME, //9
+//            COLUMN_DATE_ADDED, //10
+//            COLUMN_VISIBILITY, //11
+//            COLUMN_IS_LIKED, //12
+//            COLUMN_META_HASH, //13
+//            COLUMN_GENRE //14
+//    };
 
-    public static final String[] SONG_LIST = new String[]{
+//    public static final String[] SONG_LIST = new String[]{
+//
+//            COLUMN_SONG_ID, //0
+//
+//            COLUMN_DISPLAY_NAME, //1
+//            COLUMN_ACTUAL_NAME, //2
+//            COLUMN_ALBUM, //3
+//            COLUMN_ARTIST, //4
+//
+//            COLUMN_SIZE, //5
+//            COLUMN_DURATION, //6
+//            COLUMN_VISIBILITY, //7
+//            COLUMN_PATH, //8
+//            COLUMN_DATE_ADDED, //9
+//            COLUMN_GENRE, //10
+//            COLUMN_IS_LIKED, //11
+//    };
 
-            COLUMN_SONG_ID, //0
+//    private final String[] projectionMyLibrary =
+//            {
+//                    MySongsHelper.COLUMN_ID, //0
+//
+//                    MySongsHelper.COLUMN_SONG_ID, //1
+//
+//                    MySongsHelper.COLUMN_DISPLAY_NAME, //2
+//                    MySongsHelper.COLUMN_ACTUAL_NAME, //3
+//
+//                    MySongsHelper.COLUMN_ARTIST, //4
+//                    MySongsHelper.COLUMN_ALBUM, //5
+//
+//                    MySongsHelper.COLUMN_DURATION, //6
+//                    MySongsHelper.COLUMN_SIZE, //7
+//
+//                    MySongsHelper.COLUMN_VISIBILITY, //8
+//                    MySongsHelper.COLUMN_GENRE //9
+//            };
 
-            COLUMN_DISPLAY_NAME, //1
-            COLUMN_ACTUAL_NAME, //2
-            COLUMN_ALBUM, //3
-            COLUMN_ARTIST, //4
+//    public static Song getSong(final Cursor cursor) {
+//
+//        if (cursor.getColumnCount() != SONG_LIST.length)
+//            throw new IllegalArgumentException("Provided cursor of invalid length");
+//
+//        final String liked = cursor.getString(11);
+//        final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
+//
+//        return new Song.Builder()
+//                .size(cursor.getLong(5))
+//                .visibility(cursor.getShort(7) == 1)
+//                .path(cursor.getString(8))
+//                .duration(cursor.getLong(6))
+//                .actualName(cursor.getString(2))
+//                .album(cursor.getString(3))
+//                .albumArtData(new AlbumArtData.Builder().build())
+//                .artist(cursor.getString(4))
+//                .dateAdded(cursor.getLong(9))
+//                .displayName(cursor.getString(1))
+//                .fileHash("")
+//                .genre(cursor.getString(10))
+//                .isLiked(isLiked)
+//                .songId(cursor.getLong(0)).build();
+//    }
 
-            COLUMN_SIZE, //5
-            COLUMN_DURATION, //6
-            COLUMN_VISIBILITY, //7
-            COLUMN_PATH, //8
-            COLUMN_DATE_ADDED, //9
-            COLUMN_GENRE, //10
-            COLUMN_IS_LIKED, //11
-    };
+//    public static Song convertMusicDataToSong(final MusicData data){
+//
+//        return new Song.Builder()
+//                .album(data.getAlbumName())
+//                .artist(data.getArtistName())
+//                .dateAdded(data.getDateAdded())
+//                .displayName(data.getDisplayName())
+//                .duration(data.getDuration())
+//                .fileHash(data.getMetaHash())
+//                .isLiked(data.isLiked())
+//                .path(data.getPath())
+//                .songId(data.getColumnId())
+//                .size(data.getSize())
+//                .songId(data.getColumnId())
+//                .size(data.getSize())
+//                .actualName("hello_world")
+//                .build();
+//
+//    }
 
-    private final String[] projectionMyLibrary =
-            {
-                    MySongsHelper.COLUMN_ID, //0
-
-                    MySongsHelper.COLUMN_SONG_ID, //1
-
-                    MySongsHelper.COLUMN_DISPLAY_NAME, //2
-                    MySongsHelper.COLUMN_ACTUAL_NAME, //3
-
-                    MySongsHelper.COLUMN_ARTIST, //4
-                    MySongsHelper.COLUMN_ALBUM, //5
-
-                    MySongsHelper.COLUMN_DURATION, //6
-                    MySongsHelper.COLUMN_SIZE, //7
-
-                    MySongsHelper.COLUMN_VISIBILITY, //8
-                    MySongsHelper.COLUMN_GENRE //9
-            };
-
-    public static Song getSong(final Cursor cursor) {
-
-        if (cursor.getColumnCount() != SONG_LIST.length)
-            throw new IllegalArgumentException("Provided cursor of invalid length");
-
-        final String liked = cursor.getString(11);
-        final boolean isLiked = !TextUtils.isEmpty(liked) && liked.equals("1");
-
-        return new Song.Builder()
-                .size(cursor.getLong(5))
-                .visibility(cursor.getShort(7) == 1)
-                .path(cursor.getString(8))
-                .duration(cursor.getLong(6))
-                .actualName(cursor.getString(2))
-                .album(cursor.getString(3))
-                .albumArtData(new AlbumArtData.Builder().build())
-                .artist(cursor.getString(4))
-                .dateAdded(cursor.getLong(9))
-                .displayName(cursor.getString(1))
-                .fileHash("")
-                .genre(cursor.getString(10))
-                .isLiked(isLiked)
-                .songId(cursor.getLong(0)).build();
-    }
-
-    public static Song convertMusicDataToSong(final MusicData data){
-
-        return new Song.Builder()
-                .album(data.getAlbumName())
-                .artist(data.getArtistName())
-                .dateAdded(data.getDateAdded())
-                .displayName(data.getDisplayName())
-                .duration(data.getDuration())
-                .fileHash(data.getMetaHash())
-                .isLiked(data.isLiked())
-                .path(data.getPath())
-                .songId(data.getColumnId())
-                .size(data.getSize())
-                .songId(data.getColumnId())
-                .size(data.getSize())
-                .actualName("hello_world")
-                .build();
-
-    }
-
-    //DISK_LIST specific !
-    public static MusicData getMusicData(final Cursor cursor, final long serverId) {
-
-        return new MusicData(
-                cursor.getLong(0), //songId
-                cursor.getString(13), //meta-hash
-                cursor.getLong(1), //length
-                serverId, //senderId
-                cursor.getLong(1), //processed = length
-                cursor.getLong(9), //date added
-                cursor.getString(2), //path
-                cursor.getString(3), //displayName
-                cursor.getString(4), //artistName
-                cursor.getString(6), //albumName
-                cursor.getShort(12) == 1, //liked
-                cursor.getLong(5), //duration
-                MusicData.Type.MY_LIBRARY); //type
-    }
+//    //DISK_LIST specific !
+//    public static MusicData getMusicData(final Cursor cursor, final long serverId) {
+//
+//        return new MusicData(
+//                cursor.getLong(0), //songId
+//                cursor.getString(13), //meta-hash
+//                cursor.getLong(1), //length
+//                serverId, //senderId
+//                cursor.getLong(1), //processed = length
+//                cursor.getLong(9), //date added
+//                cursor.getString(2), //path
+//                cursor.getString(3), //displayName
+//                cursor.getString(4), //artistName
+//                cursor.getString(6), //albumName
+//                cursor.getShort(12) == 1, //liked
+//                cursor.getLong(5), //duration
+//                MusicData.Type.MY_LIBRARY); //type
+//    }
 
     public MySongsHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
