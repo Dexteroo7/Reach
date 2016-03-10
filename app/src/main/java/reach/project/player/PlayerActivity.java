@@ -206,14 +206,13 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         (songDuration = (TextView) findViewById(R.id.songDuration)).setText(duration);
 
         if (currentPlaying != null) {
+
             pause_play.setImageResource(R.drawable.play_white_selector);
-        }
-
-
-        if (currentPlaying.isLiked != null && currentPlaying.isLiked) {
-            likeButton.setSelected(true);
-        } else {
-            likeButton.setSelected(false);
+            if (currentPlaying.isLiked != null && currentPlaying.isLiked) {
+                likeButton.setSelected(true);
+            } else {
+                likeButton.setSelected(false);
+            }
         }
 
         if (SharedPrefUtils.getIsASongCurrentlyPlaying(preferences)) {
