@@ -210,17 +210,23 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         }
 
 
-        if (currentPlaying.isLiked != null && currentPlaying.isLiked) {
+        if (currentPlaying !=null && currentPlaying.isLiked != null && currentPlaying.isLiked) {
             likeButton.setSelected(true);
         } else {
             likeButton.setSelected(false);
         }
 
-        if (SharedPrefUtils.getIsASongCurrentlyPlaying(preferences)) {
+        if(SharedPrefUtils.getPlaying(this)){
+            togglePlayPause(true);
+        }
+        else{
+            togglePlayPause(false);
+        }
+        /*if (SharedPrefUtils.getIsASongCurrentlyPlaying(preferences)) {
             pause_play.setImageResource(R.drawable.pause_white_selector);
         } else {
             pause_play.setImageResource(R.drawable.play_white_selector);
-        }
+        }*/
         // Empty view modifications
         rwdBtn.setOnClickListener(LocalUtils.PREVIOUS_CLICK);
         fwdBtn.setOnClickListener(LocalUtils.NEXT_CLICK);

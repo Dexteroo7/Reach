@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.multidex.MultiDexApplication;
 
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
@@ -38,7 +39,7 @@ import reach.project.R;
 /**
  * Created by ashish on 23/3/15.
  */
-public class ReachApplication extends Application implements MemoryTrimmableRegistry {
+public class ReachApplication extends MultiDexApplication implements MemoryTrimmableRegistry {
 
     public static OkHttpClient OK_HTTP_CLIENT;
 

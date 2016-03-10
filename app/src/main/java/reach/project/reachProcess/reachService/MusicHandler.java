@@ -94,6 +94,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
         Log.i("Downloader", "Sanitizing music handler");
         currentSong = null;
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         userPaused.set(false);
         playerState = State.Playing;
         Log.i("Downloader", "Sanitizing player");
@@ -289,7 +290,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     synchronized void processPlayRequest() {
-        SharedPrefUtils.putIsASongCurrentlyPlaying(handlerInterface.getSharedPreferences(),true);
+        //SharedPrefUtils.putIsASongCurrentlyPlaying(handlerInterface.getSharedPreferences(),true);
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),true);
 
         tryToGetAudioFocus();
         //pause reason don't matter
@@ -299,7 +301,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     synchronized void processPauseRequest() {
-        SharedPrefUtils.putIsASongCurrentlyPlaying(handlerInterface.getSharedPreferences(),false);
+        //SharedPrefUtils.putIsASongCurrentlyPlaying(handlerInterface.getSharedPreferences(),false);
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         playerState = State.Paused;
         userPaused.set(true);
         Log.i("Downloader", "PAUSING !!!!");
