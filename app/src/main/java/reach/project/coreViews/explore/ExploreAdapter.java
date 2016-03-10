@@ -16,7 +16,13 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.SearchResult;
 import com.google.gson.JsonObject;
+
+import java.io.IOException;
+import java.util.List;
 
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
@@ -69,6 +75,33 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
+
+            try {
+                YouTube youTube = new YouTube.Builder();
+                // Define the API request for retrieving search results.
+                YouTube.Search.List search = youTube.search().list("id,snippet");
+
+                // Set your developer key from the Google Developers Console for
+                // non-authenticated requests. See:
+                // https://console.developers.google.com/
+                String apiKey = KEY;
+                search.setKey(apiKey);
+                search.setQ("hymn for the weekend");
+
+                // Restrict the search results to only include videos. See:
+                // https://developers.google.com/youtube/v3/docs/search/list#type
+                search.setType("video");
+
+                // To increase efficiency, only retrieve the fields that the
+                // application uses.
+                search.setFields("items(id/kind,id/videoId,snippet/title,snippet/thumbnails/default/url)");
+                search.setMaxResults(6L);
+
+                // Call the API and print results.
+                SearchListResponse searchResponse = search.execute();
+                List<SearchResult> searchResultList = searchResponse.getItems();
+            } catch (IOException e) {e.printStackTrace();}
+
 
             switch (exploreTypes) {
 
