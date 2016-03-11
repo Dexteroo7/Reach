@@ -851,6 +851,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 .setSongId(songId)
                 .setReceiverId(serverId)
                 .setSenderId(senderId)
+                .setOnlineStatus(ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED)
                 .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
                 .setUserName(userName)
                 .setArtistName(artistName)

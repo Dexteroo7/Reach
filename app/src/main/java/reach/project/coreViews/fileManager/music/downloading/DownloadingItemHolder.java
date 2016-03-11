@@ -192,6 +192,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
 
     private static final DialogInterface.OnClickListener handleClick = (dialog, which) -> {
 
+        //if click on negative button, exit
         if (which == AlertDialog.BUTTON_NEGATIVE) {
             dialog.dismiss();
             return;

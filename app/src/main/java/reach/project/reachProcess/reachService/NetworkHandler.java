@@ -451,6 +451,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
         final ReachDatabase.Builder builder = new ReachDatabase.Builder()
                 .setId(-1)
+                .setOnlineStatus(ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED)
                 .setSongId(connection.getSongId())
                 .setReceiverId(connection.getReceiverId())
                 .setSenderId(connection.getSenderId())
@@ -1185,7 +1186,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
              * Probability of ID and SIZE, both being same. Low.
              */
 
-            Cursor cursor = handlerInterface.getContentResolver().query(
+            final Cursor cursor = handlerInterface.getContentResolver().query(
                     SongProvider.CONTENT_URI,
                     new String[]{
                             SongHelper.COLUMN_UNIQUE_ID, //0

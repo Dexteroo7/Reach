@@ -2,7 +2,6 @@ package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,15 +26,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.music.MySongsHelper;
-import reach.project.music.SongHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
@@ -48,10 +41,11 @@ import reach.project.utils.viewHelpers.MoreListHolder;
  */
 class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
 
-    public static final byte VIEW_TYPE_RECENT = 0;
-    public static final byte VIEW_TYPE_ALL = 1;
-    public static final byte VIEW_TYPE_DOWNLOADING = 2;
     private static final String TAG = ParentAdapter.class.getSimpleName();
+
+    private static final byte VIEW_TYPE_RECENT = 0;
+    private static final byte VIEW_TYPE_ALL = 1;
+    private static final byte VIEW_TYPE_DOWNLOADING = 2;
 
     private final RecentAdapter recentAdapter;
     private final HandOverMessage<Cursor> handOverCursor;
