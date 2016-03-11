@@ -88,7 +88,7 @@ public enum ContentType {
                         if (object.toString().equals(State.LIKED.name()))
                             setToInsert.add(LIKED);
                     }
-g
+
                     Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
                     appMapFinal.put(metaHash, setToInsert);
                 }
