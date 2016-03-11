@@ -248,6 +248,12 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     protected void onResume() {
         super.onResume();
         ProcessManager.installMessenger(new Messenger(handler));
+        /*if(SharedPrefUtils.getPlaying(this)){
+            togglePlayPause(true);
+        }
+        else{
+            togglePlayPause(false);
+        }*/
 
     }
 

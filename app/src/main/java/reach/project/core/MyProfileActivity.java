@@ -10,16 +10,23 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,7 +42,9 @@ import reach.project.R;
 import reach.project.ancillaryViews.TermsActivity;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.myProfile.EditProfileActivity;
+import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
@@ -46,21 +55,29 @@ import reach.project.utils.SharedPrefUtils;
 /**
  * Created by gauravsobti on 05/03/16.
  */
-public class MyProfileActivity extends AppCompatActivity {
+public class MyProfileActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(200, 200);
     private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
     private SharedPreferences preferences;
     public static boolean profileEdited;
+    public static boolean countChanged = true;
     private ActionBar actionBar;
     private SimpleDraweeView profilePic;
     private static final String TAG = MyProfileActivity.class.getSimpleName();
     private SimpleDraweeView coverPic;
+    public static final String APP_COUNT_KEY = "app_count";
+    public static final String MUSIC_COUNT_KEY = "music_count";
+    public static final String FRIEND_COUNT_KEY = "friend_count";
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
+    private TextView appCount;
+    private TextView songsCount;
+    private TextView friendsCount;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,11 +111,14 @@ public class MyProfileActivity extends AppCompatActivity {
         actionBar.setDisplayHomeAsUpEnabled(true);
         setUpProfile();
 
-        final TextView appCount = (TextView) findViewById(R.id.appCount);
-        final TextView songsCount = (TextView) findViewById(R.id.songsCount);
+        appCount = (TextView) findViewById(R.id.appCount);
+        appCount.setOnClickListener(this);
+        songsCount = (TextView) findViewById(R.id.songsCount);
         final TextView userName = (TextView) findViewById(R.id.userName);
-        final TextView friendsCount = (TextView) findViewById(R.id.friendsCount);
-        new CountUpdater(songsCount, appCount, friendsCount).execute(this);
+        friendsCount = (TextView) findViewById(R.id.friendsCount);
+        final Button inviteFriendsBtn = (Button) findViewById(R.id.invite_more_friends);
+        inviteFriendsBtn.setOnClickListener(this);
+        friendsCount.setOnClickListener(this);
         userName.setText(SharedPrefUtils.getUserName(preferences));
         //friendsCount.setText(StaticData.friendsCount+"");
 
@@ -130,17 +150,33 @@ public class MyProfileActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-
-    }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onClick(View v) {
+        int id = v.getId();
 
+        switch (id) {
+            case R.id.invite_more_friends: {
+                startActivity(new Intent(MyProfileActivity.this, InviteActivity.class));
+                break;
+            }
+            case R.id.friendsCount: {
+                ReachActivity.openActivityOnParticularTab(this, 2);
+                break;
+            }
+            case R.id.appCount: {
+                final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View vv = inflater.inflate(R.layout.privacy_fragment_container,null);
+                alertDialogBuilder.setView(vv);
+                alertDialogBuilder.show();
+
+                break;
+            }
+            default:
+                break;
+
+        }
 
     }
 
@@ -196,16 +232,26 @@ public class MyProfileActivity extends AppCompatActivity {
         protected void onPostExecute(int[] counts) {
             super.onPostExecute(counts);
 
+            if (counts == null || counts.length == 0) {
+                return;
+            }
+
             MiscUtils.useReference(musicCountReference, textView -> {
-                textView.setText(counts[0] + "");
+                textView.setText(counts[0] + " songs");
             });
 
             MiscUtils.useReference(appCountReference, textView -> {
-                textView.setText(counts[1]+ "");
+                textView.setText(counts[1] + " applications");
             });
             MiscUtils.useReference(friendsCountReference, textView -> {
-                textView.setText(counts[2]+" friends");
+                textView.setText(counts[2] + " friends");
             });
+            StaticData.librarySongsCount = counts[0];
+            StaticData.appsCount = counts[1];
+            StaticData.friendsCount = counts[2];
+
+            countChanged = false;
+
         }
     }
 
@@ -218,6 +264,17 @@ public class MyProfileActivity extends AppCompatActivity {
             setUpProfile();
             profileEdited = false;
         }
+
+        if (countChanged) {
+            new CountUpdater(songsCount, appCount, friendsCount).execute(this);
+
+        } else {
+            appCount.setText(StaticData.appsCount + " applications");
+            songsCount.setText(StaticData.librarySongsCount + " songs");
+            friendsCount.setText(StaticData.friendsCount + " friends");
+        }
+
+
     }
 
     @Override
@@ -232,6 +289,25 @@ public class MyProfileActivity extends AppCompatActivity {
             useMobileData.setChecked(false);
         }
         return true;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        outState.putString(APP_COUNT_KEY, appCount.getText().toString());
+        outState.putString(FRIEND_COUNT_KEY, friendsCount.getText().toString());
+        outState.putString(MUSIC_COUNT_KEY, songsCount.getText().toString());
+
+        super.onSaveInstanceState(outState, outPersistentState);
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        friendsCount.setText(savedInstanceState.getString(FRIEND_COUNT_KEY, ""));
+        appCount.setText(savedInstanceState.getString(APP_COUNT_KEY, ""));
+        songsCount.setText(savedInstanceState.getString(MUSIC_COUNT_KEY, ""));
+
     }
 
     @Override

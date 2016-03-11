@@ -58,7 +58,9 @@
         android:background="@drawable/circular_background"
         android:elevation="6dp"
         android:padding="10dp"
-        android:src="@drawable/push_tab_selector"
+        tools:src="@drawable/icon_send_pink"
+        app:srcCompat="@drawable/icon_send_pink"
+
         android:visibility="visible" />
 
 

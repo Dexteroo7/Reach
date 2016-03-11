@@ -27,6 +27,7 @@ import android.widget.RelativeLayout;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
@@ -148,7 +149,10 @@ public class FriendsFragment extends Fragment implements
             return;
 
         if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
-            StaticData.friendsCount = data.getCount();
+            //if(StaticData.friendsCount < data.getCount()){
+              //  MyProfileActivity.countChanged = true;
+                StaticData.friendsCount = data.getCount();
+            //}
             friendsAdapter.setVerticalCursor(data);
         }
 

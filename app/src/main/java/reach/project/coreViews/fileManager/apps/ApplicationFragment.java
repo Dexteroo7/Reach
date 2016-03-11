@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -108,7 +109,10 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         protected void onPostExecute(Pair<List<App>, List<App>> pair) {
 
             super.onPostExecute(pair);
-            StaticData.appsCount = pair.first.size();
+            //if(StaticData.appsCount < pair.first.size()){
+              //  MyProfileActivity.countChanged = true;
+                StaticData.appsCount = pair.first.size();
+            //}
             MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllAppCount(pair.first);
