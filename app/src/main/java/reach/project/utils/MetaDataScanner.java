@@ -1,23 +1,34 @@
 package reach.project.utils;
 
 import android.app.IntentService;
+import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
+import com.appspot.able_door_616.userApi.UserApi;
+import com.appspot.able_door_616.userApi.model.BulkMetaDataUpdate;
+import com.appspot.able_door_616.userApi.model.SimpleApp;
+import com.appspot.able_door_616.userApi.model.SimpleSong;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.common.collect.ImmutableList;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +36,7 @@ import java.util.Set;
 
 import reach.project.apps.App;
 import reach.project.apps.AppCursorHelper;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
+import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
@@ -35,43 +45,40 @@ import reach.project.music.SongProvider;
 
 public class MetaDataScanner extends IntentService {
 
-
     @NonNull
-    private static List<Song> getCurrentSongs(ContentResolver resolver,
-                                              long serverId) {
+    private static Map<String, Song> getCurrentSongs(ContentResolver resolver,
+                                                     long serverId) {
 
         final Cursor reachDatabaseCursor = resolver.query(
+
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
-                SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                        SongHelper.COLUMN_STATUS + " = ?",
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
                 new String[]{
                         ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                        ReachDatabase.Status.FINISHED.getString()}, null);
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()},
+                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
 
         if (reachDatabaseCursor != null) {
 
-            final List<Song.Builder> toReturn = new ArrayList<>(reachDatabaseCursor.getCount());
-            final Function<Song.Builder, Song.Builder> songHashFixer = SongCursorHelper.getSongHashFixer(serverId);
+            final Map<String, Song> toReturn = MiscUtils.getMap(reachDatabaseCursor.getCount());
 
             while (reachDatabaseCursor.moveToNext()) {
 
                 //read the song object
-                Song.Builder songBuilder = SongCursorHelper.SONG_HELPER.parse(reachDatabaseCursor);
+                final Song song = SongCursorHelper.SONG_HELPER.parse(reachDatabaseCursor);
                 //set the metaHash if not found
-                songBuilder = songHashFixer.apply(songBuilder);
-                if (songBuilder != null)
-                    toReturn.add(songBuilder);
+                if (!TextUtils.isEmpty(song.fileHash))
+                    toReturn.put(song.fileHash, song);
             }
             reachDatabaseCursor.close();
 
-            //build and return
-            return FluentIterable.from(toReturn)
-                    .transform(SongCursorHelper.SONG_BUILDER)
-                    .filter(Predicates.notNull()).toList();
+            return toReturn;
         } else
-            return Collections.emptyList();
+            return Collections.emptyMap();
     }
 
     public MetaDataScanner() {
@@ -165,23 +172,6 @@ public class MetaDataScanner extends IntentService {
 //        }
 //    }
 
-    private static void bulkInsertSongs(Collection<Song> reachSongs,
-                                        ContentResolver contentResolver) {
-
-        //Add all songs
-        final ContentValues[] songs = new ContentValues[reachSongs.size()];
-
-        int i = 0;
-        if (reachSongs.size() > 0) {
-
-            for (Song song : reachSongs)
-                songs[i++] = MySongsHelper.contentValuesCreator(song);
-            i = 0; //reset counter
-            Log.i("Ayush", "Songs Inserted " + contentResolver.bulkInsert(MySongsProvider.CONTENT_URI, songs));
-        } else
-            contentResolver.delete(MySongsProvider.CONTENT_URI, null, null);
-    }
-
     @Override
     protected void onHandleIntent(Intent intent) {
 
@@ -204,8 +194,8 @@ public class MetaDataScanner extends IntentService {
         //genres get filled here
         final Set<String> genres = MiscUtils.getSet(100);
 
-        //get the song builders
-        final List<Song.Builder> songBuilders = SongCursorHelper.getSongs(
+        //get the deviceSongs
+        final List<Song> deviceSongs = SongCursorHelper.getSongs(
                 musicCursor,
                 Collections.emptyMap(),
                 serverId,
@@ -214,33 +204,79 @@ public class MetaDataScanner extends IntentService {
                 message -> {//ignored
                 });
 
-        //get the current songs
-        final List<Song> currentSongs = getCurrentSongs(contentResolver, serverId);
+        final Map<String, Song> currentSongs = getCurrentSongs(contentResolver, serverId);
+        final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
 
-        //get the app builders
-        final List<App.Builder> appBuilders = AppCursorHelper.getApps(
+        for (Song song : deviceSongs)
+            if (!currentSongs.containsKey(song.fileHash)) {
+
+                Log.i("Ayush", "Found new song " + song.displayName);
+                final ContentValues contentValues = SongHelper.contentValuesCreator(song, serverId);
+                final ContentProviderOperation insert = ContentProviderOperation
+                        .newInsert(SongProvider.CONTENT_URI)
+                        .withValues(contentValues)
+                        .build();
+                operations.add(insert);
+                currentSongs.put(song.fileHash, song);
+            }
+
+        //insert new songs into DB
+        try {
+            if (operations.size() > 0)
+                contentResolver.applyBatch(SongProvider.AUTHORITY, operations);
+        } catch (RemoteException | OperationApplicationException ignored) {
+        }
+
+        //get current visible apps
+        final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(sharedPreferences);
+        final Set<Map.Entry<String, Boolean>> packageEntries = packageVisibility.entrySet();
+        final Set<String> visiblePackages = MiscUtils.getSet(50);
+        for (Map.Entry<String, Boolean> entry : packageEntries)
+            if (entry.getValue())
+                visiblePackages.add(entry.getKey());
+
+
+        //get the deviceApps
+        final List<App> deviceApps = AppCursorHelper.getApps(
                 installedApps,
                 packageManager,
                 message -> { //ignored
                 },
-                Collections.emptyMap());
+                visiblePackages);
 
-        //get current app package visibilities
-        final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(sharedPreferences);
+        final List<SimpleSong> simpleSongs = new ArrayList<>(currentSongs.size());
+        final List<SimpleApp> simpleApps = new ArrayList<>(deviceApps.size());
 
-        //TODO apply app visibility
-        //TODO add new songs to final list
+        final Set<Map.Entry<String, Song>> entries = currentSongs.entrySet();
+        for (Map.Entry<String, Song> entry : entries)
+            simpleSongs.add(new Song.Builder(entry.getValue()).buildSimple());
 
-//        saveMetaData(
-//                songs, //myLibrary music
-//                downloaded, //downloaded music
-//                appList, //apps
-//                ScanMusic.GENRE_HASH_SET, //genres
-//                intent.getBooleanExtra("first", true),
-//                serverId,
-//                this);
+        for (App app : deviceApps)
+            simpleApps.add(new App.Builder(app).buildSimple());
 
-        //locally store the genres
+        final BulkMetaDataUpdate bulkMetaDataUpdate = new BulkMetaDataUpdate();
+        bulkMetaDataUpdate.setGenres(ImmutableList.copyOf(genres));
+        bulkMetaDataUpdate.setSimpleApps(simpleApps);
+        bulkMetaDataUpdate.setSimpleSongs(simpleSongs);
+
+        Log.i("Ayush", "BulkMetaDataUpdate " + simpleApps.size() + " apps and " + simpleSongs.size() + " songs");
+
+        final HttpTransport transport = new NetHttpTransport();
+        final JsonFactory factory = new JacksonFactory();
+        final GoogleAccountCredential credential = GoogleAccountCredential
+                .usingAudience(this, StaticData.SCOPE)
+                .setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
+        Log.d("CodeVerification", credential.getSelectedAccountName());
+
+        final UserApi userApi = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
+                .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+
+        try {
+            userApi.updateMetaData(serverId, bulkMetaDataUpdate).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         SharedPrefUtils.storeGenres(sharedPreferences, genres);
     }
 }

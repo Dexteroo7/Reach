@@ -11,7 +11,6 @@ import java.io.IOException;
 
 import reach.project.R;
 import reach.project.coreViews.push.friends.ContactChooserFragment;
-import reach.project.coreViews.push.friends.MessageWriterFragment;
 import reach.project.utils.StringCompress;
 
 

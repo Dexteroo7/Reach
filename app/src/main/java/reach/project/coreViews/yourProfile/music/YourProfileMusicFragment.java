@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.google.common.base.Optional;
@@ -39,13 +38,13 @@ import java.util.concurrent.ExecutorService;
 import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.music.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.coreViews.yourProfile.blobCache.CacheType;
+import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
@@ -232,6 +231,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                 .setSongId(song.songId)
                 .setReceiverId(myId)
                 .setSenderId(hostId)
+                .setOnlineStatus(ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED)
                 .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
                 .setUserName(senderCursor.getString(0))
                 .setArtistName(song.artist)

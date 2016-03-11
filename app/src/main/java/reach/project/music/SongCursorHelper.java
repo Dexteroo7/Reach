@@ -133,6 +133,7 @@ public enum SongCursorHelper {
     }),
 
     SONG_HELPER(new String[]{
+
             SongHelper.COLUMN_ID, //0
             SongHelper.COLUMN_UNIQUE_ID, //1
             SongHelper.COLUMN_META_HASH, //2
@@ -167,7 +168,7 @@ public enum SongCursorHelper {
             final String liked = cursor.getString(13);
             final boolean isLiked = !TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true"));
 
-            final Song song =  new Song.Builder()
+            final Song song = new Song.Builder()
                     .songId(cursor.getLong(1))
                     .fileHash(cursor.getString(2))
                     .displayName(cursor.getString(3))
@@ -231,6 +232,7 @@ public enum SongCursorHelper {
                 throw new IllegalArgumentException("Invalid cursor found");
 
             final String liked = cursor.getString(14);
+
             final ReachDatabase reachDatabase = new ReachDatabase.Builder()
                     .setId(cursor.getLong(0))
                     .setSongId(cursor.getLong(1))
@@ -333,10 +335,6 @@ public enum SongCursorHelper {
         return projection;
     }
 
-    public <T> Function<Cursor, T> getParser() {
-        return (Function<Cursor, T>) parser;
-    }
-
     @Nonnull
     public <T> T parse(@Nonnull Cursor cursor) {
         return (T) parser.apply(cursor);
@@ -361,13 +359,13 @@ public enum SongCursorHelper {
 
     /////////////////////////////////////////
 
-    public static List<Song.Builder> getSongs(@Nullable Cursor musicCursor,
-                                              @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
-                                              long serverId,
+    public static List<Song> getSongs(@Nullable Cursor musicCursor,
+                                      @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
+                                      long serverId,
 
-                                              @Nonnull ContentResolver contentResolver,
-                                              @Nonnull Set<String> fillGenres,
-                                              @Nonnull HandOverMessage<Integer> handOverMessage) {
+                                      @Nonnull ContentResolver contentResolver,
+                                      @Nonnull Set<String> fillGenres,
+                                      @Nonnull HandOverMessage<Integer> handOverMessage) {
 
         if (musicCursor == null) {
 
@@ -388,7 +386,7 @@ public enum SongCursorHelper {
                 oldStatePersister = Functions.identity();
 
             int counter = 0;
-            final List<Song.Builder> toReturn = new ArrayList<>(musicCursor.getCount());
+            final List<Song> toReturn = new ArrayList<>(musicCursor.getCount());
             while (musicCursor.moveToNext()) {
 
                 //get the songBuilder
@@ -403,7 +401,7 @@ public enum SongCursorHelper {
                 if (songBuilder != null) {
 
                     setGenres(songBuilder, fillGenres, contentResolver);
-                    toReturn.add(songBuilder);
+                    toReturn.add(songBuilder.build());
                     handOverMessage.handOverMessage(++counter);
                 }
             }
@@ -479,10 +477,9 @@ public enum SongCursorHelper {
                     throw new IllegalStateException("Plz set all metaHashes");
 
                 final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
-                if (oldStates != null) {
-                    input.visibility(oldStates.contains(ContentType.State.VISIBLE));
-                    input.isLiked(oldStates.contains(ContentType.State.LIKED));
-                }
+                input.visibility(oldStates == null || oldStates.contains(ContentType.State.VISIBLE));
+                input.isLiked(oldStates != null && oldStates.contains(ContentType.State.LIKED));
+
                 return input;
             }
         };

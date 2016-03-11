@@ -1,8 +1,6 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -25,10 +23,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -48,6 +43,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
     }
 
     private final HandOverMessageExtra<Object> handOverMessageExtra = new HandOverMessageExtra<Object>() {
+
         @Override
         public void handOverMessage(@Nonnull Integer position) {
             RecentAdapter.this.handOverMessage(position);
@@ -68,7 +64,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
             getMessageList().set(position, song);
             notifyItemChanged(position);
-
         }
     };
 
@@ -98,38 +93,15 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
      */
     public void updateRecent(List<Song> newMessages) {
 
-        if (newMessages.isEmpty()) {
-
-            synchronized (getMessageList()) {
-                getMessageList().clear();
-            }
-            notifyItemRangeRemoved(0, getItemCount());
-            final RecyclerView.Adapter adapter;
-            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-                adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
-        } else {
-
-            synchronized (getMessageList()) {
-
-                //remove to prevent duplicates
-                getMessageList().removeAll(newMessages);
-                //add new items
-                getMessageList().addAll(newMessages);
-
-                //pick top 20
-                final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
-
-                //remove all
-                getMessageList().clear();
-                //add top 20
-                getMessageList().addAll(newSortedList);
-            }
-
-            notifyDataSetChanged();
-            final RecyclerView.Adapter adapter;
-            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-                adapter.notifyDataSetChanged();
+        synchronized (getMessageList()) {
+            getMessageList().clear();
+            getMessageList().addAll(newMessages);
         }
+
+        notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     @Override

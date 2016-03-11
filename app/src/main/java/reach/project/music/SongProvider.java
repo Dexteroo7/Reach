@@ -21,9 +21,11 @@ public class SongProvider extends ContentProvider {
     public static final int DATABASE = 12;
     private static final int DATABASE_ID = 22; //+10
     private static final int DATABASE_META_HASH = 32; //+10
+
     private static final String BASE_PATH = "database/contentProvider/SongProvider";
     public static final String AUTHORITY = "reach.project.music.SongProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
+
     private static final UriMatcher sURIMatcher;
     private static final String TAG = SongProvider.class.getSimpleName();
 
@@ -61,7 +63,7 @@ public class SongProvider extends ContentProvider {
                         + uri.getLastPathSegment());
                 break;
             case DATABASE_META_HASH:
-                queryBuilder.appendWhere(SongHelper.COLUMN_META_HASH + "="+uri.getLastPathSegment());
+                queryBuilder.appendWhere(SongHelper.COLUMN_META_HASH + "=" + uri.getLastPathSegment());
                 break;
 
             default:
@@ -112,7 +114,7 @@ public class SongProvider extends ContentProvider {
                     //delete everything
                     sqlDB.delete(SongHelper.REACH_TABLE, null, null);
                     //bulk insert
-                    for(ContentValues contentValues : values) {
+                    for (ContentValues contentValues : values) {
                         sqlDB.insert(SongHelper.REACH_TABLE, null, contentValues);
                         done++;
                     }
@@ -168,7 +170,8 @@ public class SongProvider extends ContentProvider {
                 }
                 break;
             }
-            default: rowsDeleted =0;
+            default:
+                rowsDeleted = 0;
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsDeleted;
@@ -224,7 +227,8 @@ public class SongProvider extends ContentProvider {
                 }
                 break;
             }
-            default: rowsUpdated = 0;
+            default:
+                rowsUpdated = 0;
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsUpdated;

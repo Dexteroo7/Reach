@@ -1,7 +1,6 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,19 +22,14 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -44,8 +38,6 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class MyLibraryFragment extends Fragment implements HandOverMessage,
         LoaderManager.LoaderCallbacks<Cursor> {
-
-    private static long userId = 0;
 
     private EmptyRecyclerView mRecyclerView;
 
@@ -76,11 +68,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 
-        final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
-
         getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
-
         return rootView;
     }
 

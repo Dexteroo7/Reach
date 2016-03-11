@@ -34,7 +34,6 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
@@ -278,7 +277,7 @@ public class ScanFragment extends Fragment {
             final Set<String> genres = MiscUtils.getSet(100);
 
             //get the song builders
-            final List<Song.Builder> songBuilders = MiscUtils.useContextFromFragment(reference, activity -> {
+            final List<Song> deviceSongs = MiscUtils.useContextFromFragment(reference, activity -> {
                 return SongCursorHelper.getSongs(
                         musicCursor,
                         stateTable == null ? Collections.emptyMap() : stateTable.get(ContentType.MUSIC),
@@ -289,7 +288,7 @@ public class ScanFragment extends Fragment {
             }).or(Collections.emptyList());
 
             //get the app builders
-            final List<App.Builder> appBuilders = MiscUtils.useContextFromFragment(reference, activity -> {
+            final List<App> deviceApps = MiscUtils.useContextFromFragment(reference, activity -> {
                 return AppCursorHelper.getApps(
                         installedApps,
                         activity.getPackageManager(),
@@ -300,8 +299,8 @@ public class ScanFragment extends Fragment {
             //we will post this
             final AccountCreationData accountCreationData = new AccountCreationData.Builder()
                     .onboardingData(onboardingData)
-                    .apps(ImmutableList.copyOf(Iterables.transform(appBuilders, AppCursorHelper.BUILDER_APP_FUNCTION)))
-                    .songs(ImmutableList.copyOf(Iterables.transform(songBuilders, SongCursorHelper.SONG_BUILDER)))
+                    .apps(deviceApps)
+                    .songs(deviceSongs)
                     .genres(ImmutableList.copyOf(genres)).build();
 
             final byte[] toPost = MiscUtils.compressProto(accountCreationData);
@@ -357,9 +356,9 @@ public class ScanFragment extends Fragment {
                 return 0L; //fail
             }
 
-            final ContentValues[] contentValues = new ContentValues[songBuilders.size()];
-            for (int index = 0; index < songBuilders.size(); index++)
-                contentValues[index] = SongHelper.contentValuesCreator(songBuilders.get(index), serverId);
+            final ContentValues[] contentValues = new ContentValues[deviceSongs.size()];
+            for (int index = 0; index < deviceSongs.size(); index++)
+                contentValues[index] = SongHelper.contentValuesCreator(deviceSongs.get(index), serverId);
 
             final WeakReference<Context> contextWeakReference =
                     MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, WeakReference<Context>>) activity -> {

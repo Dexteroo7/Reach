@@ -2,16 +2,17 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="10dp"
-    android:background="@drawable/border_shadow2">
+    android:layout_marginTop="4dp"
+    android:background="@null">
 
     <TextView
         android:id="@+id/headerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:layout_marginLeft="15dp"
+        android:layout_marginLeft="8dp"
         android:text="Test"
+        android:background="@null"
         android:layout_marginBottom="10dp"
         android:textColor="#f33b5b"
         android:textSize="18sp" />
