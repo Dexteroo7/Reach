@@ -273,13 +273,13 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putBoolean("first_time_download", value).apply();
     }
 
-    public synchronized static void putIsASongCurrentlyPlaying(SharedPreferences sharedPreferences, boolean b) {
+    /*public synchronized static void toggleIsASongCurrentlyPlaying(SharedPreferences sharedPreferences, boolean b) {
         sharedPreferences.edit().putBoolean(IS_A_SONG_CURRENTLY_PLAYING_KEY, b).apply();
     }
 
     public synchronized static boolean getIsASongCurrentlyPlaying(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean(IS_A_SONG_CURRENTLY_PLAYING_KEY, false);
-    }
+    }*/
 
     ////////////////////////////////////
 
@@ -353,16 +353,16 @@ public enum SharedPrefUtils {
 
     ////////////////////////////////////
 
-    public synchronized static boolean togglePlaying(@Nonnull Context context) {
+    public synchronized static boolean togglePlaying(@Nonnull Context context, boolean value) {
 
         RandomAccessFile randomAccessFile = null;
 
         try {
             randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "playing_boolean", "rwd");
-            final boolean newShuffle = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
+//            final boolean newShuffle = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
             randomAccessFile.setLength(0);
-            randomAccessFile.writeBoolean(newShuffle); //write new shuffle
-            return newShuffle;
+            randomAccessFile.writeBoolean(value); //write new shuffle
+            return value;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
