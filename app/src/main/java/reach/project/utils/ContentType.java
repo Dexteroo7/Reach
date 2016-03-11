@@ -29,6 +29,7 @@ public enum ContentType {
         PRESENT,
         LIKED;
 
+        @Nonnull
         public static EnumMap<ContentType, Map<String, EnumSet<State>>> parseContentStateMap(@Nonnull GenericJson jsonMap) {
 
             final Map<String, EnumSet<State>> musicMapFinal;

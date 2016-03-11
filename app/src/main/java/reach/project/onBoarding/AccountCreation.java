@@ -25,10 +25,6 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.common.base.Optional;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.Map;
-
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.ContentType;
@@ -64,9 +60,7 @@ public class AccountCreation extends Fragment {
             if (jsonMap != null && jsonMap.size() > 0) {
 
                 Log.i("Ayush", "Found old data " + jsonMap.toString());
-                final EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>> contentStates =
-                        ContentType.State.parseContentStateMap(jsonMap);
-                bundle.putSerializable(OLD_USER_STATES, contentStates);
+                bundle.putSerializable(OLD_USER_STATES, ContentType.State.parseContentStateMap(jsonMap));
             }
 
         }
