@@ -119,8 +119,8 @@ public enum AppCursorHelper {
 
                 final String metaHash = MiscUtils.calculateAppHash(input.packageName, Hashing.sipHash24());
                 final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
-                if (oldStates != null)
-                    input.visible(oldStates.contains(ContentType.State.VISIBLE));
+                input.visible(oldStates == null || oldStates.contains(ContentType.State.VISIBLE));
+
                 return input;
             }
         };

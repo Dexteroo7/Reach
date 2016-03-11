@@ -360,12 +360,12 @@ public enum SongCursorHelper {
     /////////////////////////////////////////
 
     public static List<Song> getSongs(@Nullable Cursor musicCursor,
-                                              @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
-                                              long serverId,
+                                      @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
+                                      long serverId,
 
-                                              @Nonnull ContentResolver contentResolver,
-                                              @Nonnull Set<String> fillGenres,
-                                              @Nonnull HandOverMessage<Integer> handOverMessage) {
+                                      @Nonnull ContentResolver contentResolver,
+                                      @Nonnull Set<String> fillGenres,
+                                      @Nonnull HandOverMessage<Integer> handOverMessage) {
 
         if (musicCursor == null) {
 
@@ -477,10 +477,9 @@ public enum SongCursorHelper {
                     throw new IllegalStateException("Plz set all metaHashes");
 
                 final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
-                if (oldStates != null) {
-                    input.visibility(oldStates.contains(ContentType.State.VISIBLE));
-                    input.isLiked(oldStates.contains(ContentType.State.LIKED));
-                }
+                input.visibility(oldStates == null || oldStates.contains(ContentType.State.VISIBLE));
+                input.isLiked(oldStates != null && oldStates.contains(ContentType.State.LIKED));
+
                 return input;
             }
         };
