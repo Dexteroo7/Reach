@@ -93,11 +93,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
      */
     public void updateRecent(List<Song> newMessages) {
 
+        synchronized (getMessageList()) {
+            getMessageList().clear();
+        }
+
         if (newMessages.isEmpty()) {
 
-            synchronized (getMessageList()) {
-                getMessageList().clear();
-            }
+
             notifyItemRangeRemoved(0, getItemCount());
             final RecyclerView.Adapter adapter;
             if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)

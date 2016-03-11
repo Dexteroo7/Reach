@@ -903,7 +903,8 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         /**
          * Clean up the directory, if file not found, marks as FILE_NOT_CREATED
          */
-        public static void sanitizeReachDirectory(NetworkHandlerInterface handlerInterface, File reachDirectory) {
+        public static void sanitizeReachDirectory(NetworkHandlerInterface handlerInterface,
+                                                  File reachDirectory) {
 
             //////////////////////////////////purge all upload operations, but retain paused operations
             handlerInterface.getContentResolver().delete(

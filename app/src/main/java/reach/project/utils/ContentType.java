@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.google.api.client.json.GenericJson;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -29,79 +31,73 @@ public enum ContentType {
 
         public static EnumMap<ContentType, Map<String, EnumSet<State>>> parseContentStateMap(@Nonnull GenericJson jsonMap) {
 
-            final EnumMap<ContentType, Map<String, EnumSet<State>>> toReturn = new EnumMap<>(ContentType.class);
-            toReturn.put(MUSIC, MiscUtils.getMap(100));
-            toReturn.put(APP, MiscUtils.getMap(100));
+            final Map<String, EnumSet<State>> musicMapFinal;
+            final Map<String, EnumSet<State>> appMapFinal;
 
             final Object musicMapObject = jsonMap.get(MUSIC.name());
+            final Object appMapObject = jsonMap.get(APP.name());
 
             if (musicMapObject != null && musicMapObject instanceof Map) {
 
                 Log.i("Ayush", "Found music map");
-                final Map<String, EnumSet<State>> mapToAdd = toReturn.get(MUSIC);
-                final Map musicMap = (Map) musicMapObject;
-                final Set<Map.Entry> entries = musicMap.entrySet();
-                for (Map.Entry entry : entries) {
+                final Map<String, Collection<String>> musicMap = (Map<String, Collection<String>>) musicMapObject;
+                final Set<Map.Entry<String, Collection<String>>> entries = musicMap.entrySet();
+                musicMapFinal = MiscUtils.getMap(musicMap.size());
 
-                    final Object metaHashObject = entry.getKey();
-                    final Object stateObject = entry.getValue();
+                for (Map.Entry<String, Collection<String>> entry : entries) {
 
-                    if (metaHashObject != null && stateObject != null &&
-                            metaHashObject instanceof String && stateObject instanceof Set) {
+                    final String metaHash = entry.getKey();
+                    final Collection<String> states = entry.getValue();
+                    final EnumSet<State> setToInsert = EnumSet.noneOf(State.class);
 
-                        final EnumSet<State> setToInsert = EnumSet.noneOf(State.class);
-                        final String metaHash = (String) metaHashObject;
-                        final Set states = (Set) stateObject;
+                    for (Object object : states) {
 
-                        if (states.contains(State.VISIBLE.name()))
+                        if (object.toString().equals(State.VISIBLE.name()))
                             setToInsert.add(VISIBLE);
-                        if (states.contains(State.PRESENT.name()))
+                        if (object.toString().equals(State.PRESENT.name()))
                             setToInsert.add(PRESENT);
-                        if (states.contains(State.LIKED.name()))
+                        if (object.toString().equals(State.LIKED.name()))
                             setToInsert.add(LIKED);
-
-                        Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
-                        mapToAdd.put(metaHash, setToInsert);
-                    } else {
-                        Log.i("Ayush", "Found junk data");
                     }
-                }
-            }
 
-            final Object appMapObject = jsonMap.get(APP.name());
+                    Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
+                    musicMapFinal.put(metaHash, setToInsert);
+                }
+            } else
+                musicMapFinal = Collections.emptyMap();
 
             if (appMapObject != null && appMapObject instanceof Map) {
 
                 Log.i("Ayush", "Found app map");
-                final Map<String, EnumSet<State>> mapToAdd = toReturn.get(APP);
-                final Map appMap = (Map) appMapObject;
-                final Set<Map.Entry> entries = appMap.entrySet();
-                for (Map.Entry entry : entries) {
+                final Map<String, Collection<String>> appMap = (Map<String, Collection<String>>) appMapObject;
+                final Set<Map.Entry<String, Collection<String>>> entries = appMap.entrySet();
+                appMapFinal = MiscUtils.getMap(appMap.size());
 
-                    final Object metaHashObject = entry.getKey();
-                    final Object stateObject = entry.getValue();
+                for (Map.Entry<String, Collection<String>> entry : entries) {
 
-                    if (metaHashObject != null && stateObject != null &&
-                            metaHashObject instanceof String && stateObject instanceof Set) {
+                    final String metaHash = entry.getKey();
+                    final Collection<String> states = entry.getValue();
+                    final EnumSet<State> setToInsert = EnumSet.noneOf(State.class);
 
-                        final EnumSet<State> setToInsert = EnumSet.noneOf(State.class);
-                        final String metaHash = (String) metaHashObject;
-                        final Set states = (Set) stateObject;
+                    for (Object object : states) {
 
-                        if (states.contains(State.VISIBLE.name()))
+                        if (object.toString().equals(State.VISIBLE.name()))
                             setToInsert.add(VISIBLE);
-                        if (states.contains(State.PRESENT.name()))
+                        if (object.toString().equals(State.PRESENT.name()))
                             setToInsert.add(PRESENT);
-                        if (states.contains(State.LIKED.name()))
+                        if (object.toString().equals(State.LIKED.name()))
                             setToInsert.add(LIKED);
-
-                        Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
-                        mapToAdd.put(metaHash, setToInsert);
-                    } else {
-                        Log.i("Ayush", "Found junk data");
                     }
+g
+                    Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
+                    appMapFinal.put(metaHash, setToInsert);
                 }
-            }
+            } else
+                appMapFinal = Collections.emptyMap();
+
+            final EnumMap<ContentType, Map<String, EnumSet<State>>> toReturn = new EnumMap<>(ContentType.class);
+            toReturn.put(MUSIC, musicMapFinal);
+            toReturn.put(APP, appMapFinal);
 
             return toReturn;
         }
