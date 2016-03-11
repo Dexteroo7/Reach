@@ -76,7 +76,9 @@ import reach.project.utils.viewHelpers.PagerFragment;
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     private static final String TAG = ReachActivity.class.getSimpleName();
+    private static final String TAB_POSITION_KEY = "tab_position";
     private AlertDialog alertDialog;
+    private int tabPosition = -1;
 
     public static void openActivity(Context context) {
 
@@ -84,6 +86,16 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         context.startActivity(intent);
     }
+
+    public static void openActivityOnParticularTab(Context context, int position) {
+
+        Intent intent = new Intent(context, ReachActivity.class);
+        intent.putExtra(TAB_POSITION_KEY,position);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        Log.d(TAG,"intent = " + intent.hashCode());
+        context.startActivity(intent);
+    }
+
 
     public static Intent getIntent(Context context) {
 
@@ -223,8 +235,31 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     protected void onNewIntent(Intent intent) {
 
         Log.d("Ayush", "Received new Intent");
+        tabPosition = intent.getIntExtra(TAB_POSITION_KEY,-1);
+        Log.d(TAG,"tab position to use = " + tabPosition );
         processIntent(intent);
         super.onNewIntent(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        //Log.d(TAG,"intent = " +getIntent().hashCode());
+
+        Log.d(TAG,"tab position to use = " + tabPosition );
+        if(tabPosition != -1){
+            if (mTabHost != null) {
+                mTabHost.setCurrentTab(tabPosition);
+                mTabHost.postDelayed(() -> {
+                    if (mTabHost == null || isFinishing())
+                        return;
+                    mTabHost.setCurrentTab(tabPosition);
+                }, 1000L);
+            }
+            tabPosition = -1;
+        }
+        //getIntent().putExtra(TAB_POSITION_KEY,-1);
+
+        super.onResume();
     }
 
     @SuppressLint("RtlHardcoded")
@@ -602,7 +637,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(3);
+                            mTabHost.setCurrentTab(1);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
@@ -617,7 +652,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(3);
+                            mTabHost.setCurrentTab(1);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
@@ -635,7 +670,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(3);
+                            mTabHost.setCurrentTab(1);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
@@ -676,7 +711,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(2);
+                            mTabHost.setCurrentTab(0);
                         }, 1000L);
                     }
                     break;
@@ -685,11 +720,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(0);
+                            mTabHost.setCurrentTab(2);
                         }, 1000L);
                     }
                     break;
-                case OPEN_PUSH:
+                /*case OPEN_PUSH:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
@@ -697,7 +732,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             mTabHost.setCurrentTab(1);
                         }, 1000L);
                     }
-                    break;
+                    break;*/
             }
         } catch (IllegalStateException ignored) {
         }

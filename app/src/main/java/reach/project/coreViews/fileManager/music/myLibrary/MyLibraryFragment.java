@@ -23,6 +23,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
@@ -155,7 +156,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         if (loader.getId() == StaticData.MY_LIBRARY_LOADER) {
 
             Log.i("Ayush", "MyLibrary file manager " + count);
-            StaticData.librarySongsCount = count;
+            //if(StaticData.librarySongsCount < data.getCount()){
+                //MyProfileActivity.countChanged = true;
+                StaticData.librarySongsCount = count;
+            //}
+
             if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
             parentAdapter.setNewMyLibraryCursor(data);
