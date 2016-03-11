@@ -68,20 +68,21 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             final String status = reachDatabase.getStatus() == ReachDatabase.Status.PAUSED_BY_USER ? "Resume Download" : "Pause Download";
 
             final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
-            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
-            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
-            popupMenu.inflate(R.menu.manager_popup_menu);
+            popupMenu.inflate(R.menu.downloading_menu);
+            //popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
+            popupMenu.getMenu().findItem(R.id.downloading_menu_1).setTitle(status);
+
             popupMenu.setOnMenuItemClickListener(item -> {
 
                 switch (item.getItemId()) {
 
-                    case R.id.manager_menu_1:
+                    /*case R.id.manager_menu_1:
                         //send
-                        return true;
-                    case R.id.manager_menu_3:
+                        return true;*/
+                    case R.id.downloading_menu_2:
                         //delete
                         final AlertDialog alertDialog = new AlertDialog.Builder(context)
-                                .setMessage("Are you sure you want to delete it?")
+                                .setMessage("Are you sure you want to cancel the download?")
                                 .setPositiveButton("Yes", handleClick)
                                 .setNegativeButton("No", handleClick)
                                 .setIcon(R.drawable.up_icon)
@@ -90,7 +91,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                         alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabase));
                         alertDialog.show();
                         return true;
-                    case R.id.manager_menu_4:
+                    case R.id.downloading_menu_1:
                         //pause
                         pause_unpause(reachDatabase, context);
                         return true;
@@ -99,10 +100,6 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 }
             });
 
-            final MenuItem pauseItem = popupMenu.getMenu().findItem(R.id.manager_menu_4);
-            popupMenu.getMenu().findItem(R.id.manager_menu_2).setVisible(false);
-            pauseItem.setVisible(true);
-            pauseItem.setTitle(status);
             popupMenu.show();
         });
     }
@@ -203,7 +200,8 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         final ContentResolver resolver = alertDialog.getContext().getContentResolver();
 
         final ReachDatabase reachDatabase = (ReachDatabase) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabase.getMetaHash());
+        final Uri uri = SongProvider.CONTENT_URI ;
+        /*+ "/" + reachDatabase.getMetaHash()*/
 
         //find path and delete the file
         final Cursor pathCursor = resolver.query(
