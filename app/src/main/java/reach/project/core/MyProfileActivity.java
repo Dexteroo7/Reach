@@ -12,10 +12,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +28,6 @@ import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
-import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -44,7 +39,6 @@ import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.myProfile.EditProfileActivity;
-import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
@@ -78,6 +72,9 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
     private TextView appCount;
     private TextView songsCount;
     private TextView friendsCount;
+    private AlertDialog appPrivacyAlertDialog;
+    private LayoutInflater inflater;
+    private AlertDialog songPrivacyAlertDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -118,6 +115,10 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
         friendsCount = (TextView) findViewById(R.id.friendsCount);
         final Button inviteFriendsBtn = (Button) findViewById(R.id.invite_more_friends);
         inviteFriendsBtn.setOnClickListener(this);
+        final Button appsManagePrivacyBtn = (Button) findViewById(R.id.apps_manage_privacy);
+        appsManagePrivacyBtn.setOnClickListener(this);
+        final Button songsManagePrivacyBtn = (Button) findViewById(R.id.songs_manage_privacy);
+        songsManagePrivacyBtn.setOnClickListener(this);
         friendsCount.setOnClickListener(this);
         userName.setText(SharedPrefUtils.getUserName(preferences));
         //friendsCount.setText(StaticData.friendsCount+"");
@@ -164,12 +165,39 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                 ReachActivity.openActivityOnParticularTab(this, 2);
                 break;
             }
-            case R.id.appCount: {
-                final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-                LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                View vv = inflater.inflate(R.layout.privacy_fragment_container,null);
-                alertDialogBuilder.setView(vv);
-                alertDialogBuilder.show();
+            case R.id.apps_manage_privacy: {
+                if(appPrivacyAlertDialog!=null){
+                    appPrivacyAlertDialog.show();
+                }
+                else {
+                    if(inflater == null){
+                        inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    }
+                    final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    final View vv = inflater.inflate(R.layout.apps_privacy_frag_layout, null);
+                    alertDialogBuilder.setView(vv);
+
+                    appPrivacyAlertDialog = alertDialogBuilder.show();
+                }
+
+                break;
+            }
+            case R.id.songs_manage_privacy: {
+                Log.d(TAG, "Show songs privacy");
+                if(songPrivacyAlertDialog!=null){
+                    Log.d(TAG, "songs privacy alertDialog !=null");
+                    songPrivacyAlertDialog.show();
+                }
+                else {
+                    if(inflater == null){
+                        inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    }
+                    Log.d(TAG, "songs privacy alertDialog ==null");
+                    final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    final View vvv = inflater.inflate(R.layout.songs_privacy_frag_layout, null);
+                    alertDialogBuilder.setView(vvv);
+                    songPrivacyAlertDialog = alertDialogBuilder.show();
+                }
 
                 break;
             }
@@ -260,6 +288,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "On Resume Called");
+        inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (profileEdited) {
             setUpProfile();
             profileEdited = false;

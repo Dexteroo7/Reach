@@ -238,7 +238,7 @@
                         android:id="@+id/privacySettingsText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="MANAGE PRIVACY:"
+                        android:text="PRIVACY SETTINGS:"
                         android:textSize="16sp"
                         android:textColor="#555555"
                         />
@@ -261,7 +261,7 @@
                         android:layout_toRightOf="@id/appCountImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/reach_color"
+                        android:textColor="#888888"
                         android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/appCountImage"
                         android:layout_alignTop="@id/appCountImage"
@@ -271,20 +271,20 @@
 
 
 
-                    <!--<Button
-                        android:id="@+id/apps_manage_privacy"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_gravity="right"
-                        android:background="@null"
-                        android:textColor="@color/reach_color"
-                        android:layout_alignBottom="@id/appCount"
-                        android:layout_alignTop="@id/appCount"
-                        android:layout_marginRight="8dp"
-                        android:text="MANAGE PRIVACY"
-                        android:layout_alignParentRight="true"
+                    <Button
+                    android:id="@+id/apps_manage_privacy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    android:textColor="@color/reach_color"
+                    android:layout_alignBottom="@id/appCount"
+                    android:layout_alignTop="@id/appCount"
+                    android:layout_marginRight="8dp"
+                    android:text="MANAGE PRIVACY"
+                    android:layout_alignParentRight="true"
 
-                        />-->
+                    />
 
                     <ImageView
                         android:id="@+id/songCountImage"
@@ -303,7 +303,7 @@
                         android:layout_toRightOf="@id/songCountImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/reach_color"
+                        android:textColor="#888888"
                         android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/songCountImage"
                         android:layout_alignTop="@id/songCountImage"
@@ -313,7 +313,7 @@
 
 
 
-                    <!--<Button
+                    <Button
                         android:id="@+id/songs_manage_privacy"
                         android:layout_below="@id/apps_manage_privacy"
                         android:layout_width="wrap_content"
@@ -326,7 +326,7 @@
                         android:text="MANAGE PRIVACY"
                         android:layout_alignParentRight="true"
                         android:layout_marginRight="8dp"
-                        />-->
+                        />
 
                 </RelativeLayout>
 
