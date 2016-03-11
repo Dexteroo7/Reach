@@ -18,7 +18,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import reach.project.R;
-import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
@@ -59,7 +58,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<PrivacySongItem, SongItemHolde
      *
      * @param newMessages the new collection to display
      */
-    public void updateRecent(List<Song> newMessages) {
+    public void updateRecent(List<PrivacySongItem> newMessages) {
 
         if (newMessages.isEmpty()) {
 

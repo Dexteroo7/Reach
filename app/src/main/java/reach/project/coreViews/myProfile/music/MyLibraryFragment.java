@@ -38,8 +38,6 @@ import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.music.MySongsHelper;
 import reach.project.music.MySongsProvider;
 import reach.project.music.ReachDatabase;
-import reach.project.music.Song;
-import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.utils.MiscUtils;
@@ -93,7 +91,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         myUserId = SharedPrefUtils.getServerId(preferences);
 
-        //getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
+        getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER, null, this);
 
         return rootView;
@@ -145,22 +143,10 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        if (id == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
+        if (id == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
-                    SongProvider.CONTENT_URI,
-                    SongCursorHelper.SONG_HELPER.getProjection(),
-                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                    new String[]{
-                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                            ReachDatabase.Status.FINISHED.getString(),
-                            ReachDatabase.OperationKind.OWN.getString()},
-                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
-        }
-
-            /*return new CursorLoader(getActivity(),
-                    SongProvider.CONTENT_URI,
-                    SongCursorHelper.SONG_HELPER.getProjection(),
+                    MySongsProvider.CONTENT_URI,
+                    projectionMyLibrary,
                     null, null, //show all songs !
                     MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         else if (id == StaticData.PRIVACY_DOWNLOADED_LOADER)
@@ -170,7 +156,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
                             SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
                     new String[]{ReachDatabase.Status.FINISHED.getString(), "0"},
-                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");*/
+                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
         return null;
     }
@@ -187,14 +173,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
 //            Log.i("Ayush", "MyLibrary my profile " + count);
 
-            if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentMyLibrary());
             parentAdapter.setNewMyLibraryCursor(data);
-        }
 
+            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
-
-        /*} else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
+        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
 
 //            Log.i("Ayush", "Downloaded my profile " + count);
 
@@ -202,7 +186,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             if (count != parentAdapter.downloadedCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentDownloaded());
 
-        }*/
+        }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount()-1);
     }
 
@@ -211,17 +195,11 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         if (parentAdapter == null)
             return;
-
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
-
-        /*if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
-            parentAdapter.setNewMyLibraryCursor(null);
         else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
-            parentAdapter.setNewDownLoadCursor(null);*/
+            parentAdapter.setNewDownLoadCursor(null);
     }
-
-
 
     private final String[] projectionMyLibrary =
             {
@@ -296,7 +274,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return latestDownloaded;
     }
 
-    /*@NonNull
+    @NonNull
     private List<PrivacySongItem> getRecentMyLibrary() {
 
         final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
@@ -322,53 +300,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             songItem.visible = cursor.getShort(8) == 1;
 
             latestMyLibrary.add(songItem);
-        }
-
-        cursor.close();
-
-        return latestMyLibrary;
-    }*/
-
-    @NonNull
-    private List<Song> getRecentMyLibrary() {
-
-        /*final Cursor cursor = new CursorLoader(getActivity(),
-                SongProvider.CONTENT_URI,
-                SongCursorHelper.SONG_HELPER.getProjection(),
-                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{
-                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                        ReachDatabase.Status.FINISHED.getString(),
-                        ReachDatabase.OperationKind.OWN.getString()},
-                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");*/
-
-        final Cursor cursor = getContext().getContentResolver().query(
-                SongProvider.CONTENT_URI,
-                SongCursorHelper.SONG_HELPER.getProjection(),
-                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{
-                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                        ReachDatabase.Status.FINISHED.getString(),
-                        ReachDatabase.OperationKind.OWN.getString()}, //all songs
-                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
-
-        /*final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
-                SongCuHelper.DISK_LIST,
-                null, null, //all songs
-                MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
-*/
-        if (cursor == null)
-            return Collections.emptyList();
-
-        /*final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());*/
-        final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-            /*latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));*/
-            latestMyLibrary.add(SongCursorHelper.SONG_HELPER.parse(cursor));
         }
 
         cursor.close();

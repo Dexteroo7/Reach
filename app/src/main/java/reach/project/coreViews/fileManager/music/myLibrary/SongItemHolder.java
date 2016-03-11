@@ -318,10 +318,12 @@ class SongItemHolder extends SingleItemViewHolder {
         final Uri uri = Uri.parse(contentUri + "/" + reachDatabaseId);
 
         //find path and delete the file
+
         final Cursor pathCursor = resolver.query(
                 uri,
-                new String[]{SongHelper.COLUMN_PATH},
-                SongHelper.COLUMN_ID + " = ?",
+                new String[]{SongHelper.COLUMN_PATH,
+                SongHelper.COLUMN_META_HASH},
+                /*SongHelper.COLUMN_META_HASH + " = ?"*/ null,
                 new String[]{reachDatabaseId + ""}, null);
 
         if (pathCursor != null) {
@@ -343,7 +345,7 @@ class SongItemHolder extends SingleItemViewHolder {
                 reachDatabaseId + " " +
                 resolver.delete(
                         uri,
-                        SongHelper.COLUMN_ID + " = ?",
+                        SongHelper.COLUMN_META_HASH + " = ?",
                         new String[]{reachDatabaseId + ""}));
         dialog.dismiss();
     };

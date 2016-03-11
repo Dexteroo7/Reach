@@ -23,7 +23,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
@@ -93,7 +92,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         notifyDataSetChanged();
     }
 
-    public void updateRecentMusic(@NonNull List<Song> newRecent) {
+    public void updateRecentMusic(@NonNull List<PrivacySongItem> newRecent) {
         recentAdapter.updateRecent(newRecent);
     }
 
