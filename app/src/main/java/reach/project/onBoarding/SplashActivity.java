@@ -39,6 +39,7 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.utils.FireOnce;
+import reach.project.utils.MetaDataScanner;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
@@ -205,10 +206,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 FireOnce.checkGCM(contextWeakReference, serverId);
                 //refresh download ops
                 FireOnce.refreshOperations(contextWeakReference);
-                //TODO MetaDataScanner
-//                final Intent intent = new Intent(this, MetaDataScanner.class);
-//                intent.putExtra("first", false);
-//                startService(intent);
+
+                final Intent intent = new Intent(this, MetaDataScanner.class);
+                startService(intent);
 
             } else
                 Toast.makeText(this, "No active networks detected", Toast.LENGTH_SHORT).show();

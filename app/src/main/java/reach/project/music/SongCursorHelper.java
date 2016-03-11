@@ -359,7 +359,7 @@ public enum SongCursorHelper {
 
     /////////////////////////////////////////
 
-    public static List<Song.Builder> getSongs(@Nullable Cursor musicCursor,
+    public static List<Song> getSongs(@Nullable Cursor musicCursor,
                                               @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
                                               long serverId,
 
@@ -386,7 +386,7 @@ public enum SongCursorHelper {
                 oldStatePersister = Functions.identity();
 
             int counter = 0;
-            final List<Song.Builder> toReturn = new ArrayList<>(musicCursor.getCount());
+            final List<Song> toReturn = new ArrayList<>(musicCursor.getCount());
             while (musicCursor.moveToNext()) {
 
                 //get the songBuilder
@@ -401,7 +401,7 @@ public enum SongCursorHelper {
                 if (songBuilder != null) {
 
                     setGenres(songBuilder, fillGenres, contentResolver);
-                    toReturn.add(songBuilder);
+                    toReturn.add(songBuilder.build());
                     handOverMessage.handOverMessage(++counter);
                 }
             }

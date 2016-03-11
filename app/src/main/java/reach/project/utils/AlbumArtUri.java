@@ -24,7 +24,7 @@ public enum AlbumArtUri {
 
     private static final String userImageBase = "https://able-door-616.appspot.com/userImageEndpoint?";
 
-    private static final Map<Integer, Uri> simpleCache = new HashMap<>(1000);
+    private static final Map<Integer, Uri> SIMPLE_CACHE = new HashMap<>(1000);
 
     private static final StringBuilder buffer = new StringBuilder(50);
 
@@ -45,7 +45,7 @@ public enum AlbumArtUri {
 
         final int key = hash;
 
-        Uri value = simpleCache.get(key);
+        Uri value = SIMPLE_CACHE.get(key);
         if (value != null)
             return value;
 
@@ -62,7 +62,7 @@ public enum AlbumArtUri {
 //        Log.i("Ayush", toParse);
 
         value = Uri.parse(toParse);
-        simpleCache.put(key, value);
+        SIMPLE_CACHE.put(key, value);
         return value;
     }
 
@@ -76,7 +76,7 @@ public enum AlbumArtUri {
 
         final int key = hash;
 
-        Uri value = simpleCache.get(key);
+        Uri value = SIMPLE_CACHE.get(key);
         if (value != null)
             return Optional.of(value);
 
@@ -114,7 +114,7 @@ public enum AlbumArtUri {
             return Optional.absent();
 
         value = Uri.parse(toParse);
-        simpleCache.put(key, value);
+        SIMPLE_CACHE.put(key, value);
         return Optional.of(value);
     }
 }

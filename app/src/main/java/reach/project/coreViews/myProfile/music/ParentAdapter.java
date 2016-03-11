@@ -53,7 +53,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     };
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<PrivacySongItem> handOverSong) {
+                         HandOverMessage<Song> handOverSong) {
 
         this.handOverCursor = handOverCursor;
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_mylibrary_grid_item);

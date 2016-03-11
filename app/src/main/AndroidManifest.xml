@@ -227,9 +227,11 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
-        <!--<service-->
-        <!--android:name=".utils.MetaDataScanner"-->
-        <!--android:exported="false" />-->
+
+        <service
+            android:name=".utils.MetaDataScanner"
+            android:exported="false" />
+
         <service
             android:name=".onBoarding.smsRelated.SmsListener"
             android:exported="false" />
@@ -251,7 +253,7 @@
             android:name=".music.SongProvider"
             android:authorities="reach.project.music.SongProvider"
             android:exported="false"
-            android:multiprocess="true"/>
+            android:multiprocess="true" />
 
         <service
             android:name=".reachProcess.reachService.ProcessManager"

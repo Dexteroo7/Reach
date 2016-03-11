@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
@@ -22,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.Set;
 
@@ -162,34 +162,34 @@ class SongItemHolder extends SingleItemViewHolder {
             popupMenu.setOnMenuItemClickListener(item -> {
 
                 final Object object = handOverMessageExtra.getExtra(position);
+                final Song musicData;
+                if (object instanceof Song) {
+                    musicData = (Song) object;
+//                            if(musicData == null){
+//                                Toast.makeText(context, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
+//                                return true;
+//                            }
+
+
+                } else if (object instanceof Cursor) {
+                    Cursor cursor = (Cursor) object;
+                    musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
+//                            if(musicData == null){
+//                                Toast.makeText(context, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
+//                                return true;
+//                            }
+
+                } else {
+                    //TODO throw error should not happen
+                    Toast.makeText(context, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
 
                 switch (item.getItemId()) {
 
                     case R.id.manager_menu_1: {
 
                         //send
-                        Song musicData = null;
-                        if (object instanceof Song) {
-                            musicData = (Song) object;
-//                            if(musicData == null){
-//                                Toast.makeText(context, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
-//                                return true;
-//                            }
-
-
-                        } else if (object instanceof Cursor) {
-                            Cursor cursor = (Cursor) object;
-                            musicData = SongCursorHelper.SONG_HELPER.parse(cursor);
-//                            if(musicData == null){
-//                                Toast.makeText(context, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
-//                                return true;
-//                            }
-
-                        } else {
-                            //TODO throw error should not happen
-                            Toast.makeText(context, "Sorry couldn't share!", Toast.LENGTH_SHORT).show();
-                            return true;
-                        }
 
                         final Set<Song> selectedSongs = MiscUtils.getSet(1);
                         //final Song song = MySongsHelper.convertMusicDataToSong(currentPlaying);
@@ -221,7 +221,6 @@ class SongItemHolder extends SingleItemViewHolder {
                             e.printStackTrace();
                             //TODO Track
                             Toast.makeText(context, "Could not push", Toast.LENGTH_SHORT).show();
-
                         }
 
                         return true;
@@ -230,6 +229,7 @@ class SongItemHolder extends SingleItemViewHolder {
                         //hide
                         return true;
                     }
+
                     case R.id.manager_menu_3: {
                         //delete
                         final AlertDialog alertDialog = new AlertDialog.Builder(context)
@@ -237,7 +237,7 @@ class SongItemHolder extends SingleItemViewHolder {
                                 .setPositiveButton("Yes", handleClick)
                                 .setNegativeButton("No", handleClick)
                                 .create();
-                        alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(object));
+                        alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(musicData));
                         alertDialog.show();
                         return true;
                     }
@@ -277,47 +277,15 @@ class SongItemHolder extends SingleItemViewHolder {
         final AlertDialog alertDialog = (AlertDialog) dialog;
         final ContentResolver resolver = alertDialog.getContext().getContentResolver();
 
-        final Object object = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-        Uri contentUri = null;
-        String reachDatabaseId = null;
-        if (object instanceof Song) {
-
-            final Song musicData = (Song) object;
-            //if (musicData.getType() == MusicData.Type.DOWNLOADED)
-            contentUri = SongProvider.CONTENT_URI;
-            /*else if (musicData.getType() == MusicData.Type.MY_LIBRARY)
-                contentUri = MySongsProvider.CONTENT_URI;
-            else
-                throw new IllegalArgumentException("Invalid MusicData type detected");*/
-            reachDatabaseId = musicData.fileHash;
-
-        } else if (object instanceof Cursor) {
-
-            final Cursor cursor = (Cursor) object;
-            contentUri = SongProvider.CONTENT_URI;
-            reachDatabaseId = cursor.getString(2);
-
-            /*if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length) {
-                contentUri = MySongsProvider.CONTENT_URI;
-                reachDatabaseId = cursor.getLong(7);
-            } else if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
-                contentUri = SongProvider.CONTENT_URI;
-                reachDatabaseId = cursor.getLong(0);
-            } else
-                throw new IllegalArgumentException("Unknown column count found");*/
-        } else
-            throw new IllegalArgumentException("Invalid Object type detected");
-
-        if (contentUri == null || reachDatabaseId == null)
-            return;
-        final Uri uri = Uri.parse(contentUri + "/" + reachDatabaseId);
+        final Song song = (Song) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
+//        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + song.fileHash);
 
         //find path and delete the file
         final Cursor pathCursor = resolver.query(
-                uri,
+                SongProvider.CONTENT_URI,
                 new String[]{SongHelper.COLUMN_PATH},
-                SongHelper.COLUMN_ID + " = ?",
-                new String[]{reachDatabaseId + ""}, null);
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{song.fileHash}, null);
 
         if (pathCursor != null) {
 
@@ -327,19 +295,28 @@ class SongItemHolder extends SingleItemViewHolder {
                 if (!TextUtils.isEmpty(path) && !path.equals("hello_world")) {
 
                     final File toDelete = new File(path);
-                    Log.i("Ayush", "Deleting " + toDelete.delete());
+                    try {
+                        final RandomAccessFile randomAccessFile = new RandomAccessFile(toDelete, "rws");
+                        randomAccessFile.setLength(0);
+                        randomAccessFile.close();
+                    } catch (IOException ignored) {
+                    } finally {
+
+                        toDelete.delete();
+                        toDelete.deleteOnExit();
+                    }
                 }
             }
             pathCursor.close();
         }
 
         //delete the database entry
-        Log.i("Downloader", "Deleting " +
-                reachDatabaseId + " " +
-                resolver.delete(
-                        uri,
-                        SongHelper.COLUMN_ID + " = ?",
-                        new String[]{reachDatabaseId + ""}));
+        final boolean deleted = resolver.delete(
+                SongProvider.CONTENT_URI,
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{song.fileHash}) > 0;
+
+        Log.i("Downloader", "Deleting " + song.displayName + " " + deleted);
         dialog.dismiss();
     };
 }

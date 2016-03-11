@@ -22,6 +22,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import reach.project.R;
 import reach.project.coreViews.friends.HandOverMessageExtra;
@@ -192,27 +194,23 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
 
     private static final DialogInterface.OnClickListener handleClick = (dialog, which) -> {
 
-        //if click on negative button, exit
         if (which == AlertDialog.BUTTON_NEGATIVE) {
             dialog.dismiss();
             return;
         }
 
-        /**
-         * Can not remove from memory cache just yet, because some operation might be underway
-         * in connection manager
-         **/
         final AlertDialog alertDialog = (AlertDialog) dialog;
         final ContentResolver resolver = alertDialog.getContext().getContentResolver();
+
         final ReachDatabase reachDatabase = (ReachDatabase) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabase.getId());
+        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabase.getMetaHash());
 
         //find path and delete the file
         final Cursor pathCursor = resolver.query(
                 uri,
                 new String[]{SongHelper.COLUMN_PATH},
-                SongHelper.COLUMN_ID + " = ?",
-                new String[]{reachDatabase.getId() + ""}, null);
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{reachDatabase.getMetaHash() + ""}, null);
 
         if (pathCursor != null) {
 
@@ -222,19 +220,28 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 if (!TextUtils.isEmpty(path) && !path.equals("hello_world")) {
 
                     final File toDelete = new File(path);
-                    Log.i("Ayush", "Deleting " + toDelete.delete());
+                    try {
+                        final RandomAccessFile randomAccessFile = new RandomAccessFile(toDelete, "rws");
+                        randomAccessFile.setLength(0);
+                        randomAccessFile.close();
+                    } catch (IOException ignored) {
+                    } finally {
+
+                        toDelete.delete();
+                        toDelete.deleteOnExit();
+                    }
                 }
             }
             pathCursor.close();
         }
 
         //delete the database entry
-        Log.i("Downloader", "Deleting " +
-                reachDatabase.getId() + " " +
-                resolver.delete(
-                        uri,
-                        SongHelper.COLUMN_ID + " = ?",
-                        new String[]{reachDatabase.getId() + ""}));
+        final boolean deleted = resolver.delete(
+                uri,
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{reachDatabase.getMetaHash() + ""}) > 0;
+
+        Log.i("Downloader", "Deleting " + reachDatabase.getDisplayName() + " " + deleted);
         dialog.dismiss();
     };
 }

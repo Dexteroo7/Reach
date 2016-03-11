@@ -48,10 +48,11 @@ public class AccountCreation extends Fragment {
     public static Fragment newInstance(Optional<UserDataPersistence> container) {
 
         final AccountCreation fragment = new AccountCreation();
+        final Bundle bundle = new Bundle();
+        fragment.setArguments(bundle);
 
         if (container.isPresent()) {
 
-            final Bundle bundle = new Bundle(2);
             final UserDataPersistence userContainer = container.get();
 
             bundle.putString(USER_NAME, userContainer.getUserName());
@@ -68,7 +69,6 @@ public class AccountCreation extends Fragment {
                 bundle.putSerializable(OLD_USER_STATES, contentStates);
             }
 
-            fragment.setArguments(bundle);
         }
 
         return fragment;

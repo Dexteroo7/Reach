@@ -59,11 +59,11 @@ public enum AppCursorHelper {
         };
     }
 
-    public static List<App.Builder> getApps(@Nonnull List<ApplicationInfo> installedApps,
-                                            @Nonnull PackageManager packageManager,
-                                            @Nonnull HandOverMessage<Integer> handOverMessage,
+    public static List<App> getApps(@Nonnull List<ApplicationInfo> installedApps,
+                                    @Nonnull PackageManager packageManager,
+                                    @Nonnull HandOverMessage<Integer> handOverMessage,
 
-                                            @Nullable Map<String, EnumSet<ContentType.State>> oldStates) {
+                                    @Nullable Map<String, EnumSet<ContentType.State>> oldStates) {
 
         final Function<App.Builder, App.Builder> oldStatePersister;
         if (oldStates != null && oldStates.size() > 0)
@@ -71,7 +71,7 @@ public enum AppCursorHelper {
         else
             oldStatePersister = Functions.identity();
 
-        final List<App.Builder> toReturn = new ArrayList<>();
+        final List<App> toReturn = new ArrayList<>();
         int counter = 0;
         for (ApplicationInfo applicationInfo : installedApps) {
 
@@ -79,7 +79,27 @@ public enum AppCursorHelper {
             appBuilder = oldStatePersister.apply(appBuilder);
             if (appBuilder != null) {
                 handOverMessage.handOverMessage(++counter);
-                toReturn.add(appBuilder);
+                toReturn.add(appBuilder.build());
+            }
+
+        }
+        Log.i("Ayush", "Reading apps " + installedApps.size());
+        return toReturn;
+    }
+
+    public static List<App> getApps(@Nonnull List<ApplicationInfo> installedApps,
+                                    @Nonnull PackageManager packageManager,
+                                    @Nonnull HandOverMessage<Integer> handOverMessage,
+                                    @Nonnull Set<String> visiblePackages) {
+
+        final List<App> toReturn = new ArrayList<>();
+        int counter = 0;
+        for (ApplicationInfo applicationInfo : installedApps) {
+
+            App.Builder appBuilder = getParser(packageManager, visiblePackages).apply(applicationInfo);
+            if (appBuilder != null) {
+                handOverMessage.handOverMessage(++counter);
+                toReturn.add(appBuilder.build());
             }
 
         }

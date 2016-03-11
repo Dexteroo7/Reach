@@ -1,4 +1,4 @@
-package reach.project.coreViews.push.friends;
+package reach.project.coreViews.push;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -23,7 +23,6 @@ import java.lang.ref.WeakReference;
 import reach.backend.notifications.notificationApi.model.PushContainerJSON;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.push.ContactChooserInterface;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 
