@@ -24,6 +24,8 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.music.Song;
+import reach.project.music.SongCursorHelper;
+import reach.project.music.SongHelper;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
@@ -61,15 +63,14 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     }
 
     ///////////Data-set ops
-    @Nullable
-    private Cursor downloadCursor = null;
+   /* @Nullable
+    private Cursor downloadCursor = null;*/
     @Nullable
     private Cursor myLibraryCursor = null;
 
     public int myLibraryCount = 0;
-    public int downloadedCount = 0;
 
-    public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
+    /*public void setNewDownLoadCursor(@Nullable Cursor newDownloadCursor) {
 
         //destroy
         if (downloadCursor != null)
@@ -79,7 +80,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         downloadCursor = newDownloadCursor;
 //        Log.i("Ayush", "Setting new download cursor");
         notifyDataSetChanged();
-    }
+    }*/
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
 
@@ -100,17 +101,17 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     /**
      * MUST CALL FROM UI THREAD
      *
-     * @param songId the song id to toggle visibility for
+     *
      */
-    public synchronized void updateVisibility(long songId, boolean newVisibility) {
-        recentAdapter.updateVisibility(songId, newVisibility);
+    public synchronized void updateVisibility(String metaHash, boolean newVisibility) {
+        recentAdapter.updateVisibility(metaHash, newVisibility);
     }
 
     @Override
     public void close() {
 
-        MiscUtils.closeQuietly(downloadCursor, myLibraryCursor);
-        downloadCursor = myLibraryCursor = null;
+        MiscUtils.closeQuietly( myLibraryCursor);
+        myLibraryCursor = null;
 //        getActualAdapter.getActualAdapter().notifyItemRangeRemoved(0, latestTotalCount);
     }
     ///////////
@@ -131,19 +132,9 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
 
             position--; //account for recent shit
 
-            if (position < downloadedCount) {
-
-                if (downloadCursor == null || downloadCursor.isClosed() || !downloadCursor.moveToPosition(position))
-                    throw new IllegalStateException("Resource cursor has been corrupted");
-                return downloadCursor;
-
-            } else {
-
-                position -= downloadedCount; //adjust fot myLibrary
-                if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
-                    throw new IllegalStateException("Resource cursor has been corrupted");
-                return myLibraryCursor;
-            }
+            if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
+                throw new IllegalStateException("Resource cursor has been corrupted");
+            return myLibraryCursor;
         }
     }
 
@@ -161,11 +152,38 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
             final String displayName, artist, album, actualName;
             final boolean visible;
 
-            displayName = cursorExactType.getString(2);
-            actualName = cursorExactType.getString(3);
-            artist = cursorExactType.getString(4);
-            album = cursorExactType.getString(5);
-            visible = cursorExactType.getShort(8) == 1;
+           /* {
+
+                SongHelper.COLUMN_ID, //0
+                        SongHelper.COLUMN_UNIQUE_ID, //1
+                        SongHelper.COLUMN_META_HASH, //2
+
+                        SongHelper.COLUMN_DISPLAY_NAME, //3
+                        SongHelper.COLUMN_ACTUAL_NAME, //4
+                        SongHelper.COLUMN_ARTIST, //5
+                        SongHelper.COLUMN_ALBUM, //6
+
+                        SongHelper.COLUMN_DURATION, //7
+                        SongHelper.COLUMN_SIZE, //8
+
+                        SongHelper.COLUMN_GENRE, //9
+                        SongHelper.COLUMN_PATH, //10
+                        SongHelper.COLUMN_DATE_ADDED, //11
+
+                        SongHelper.COLUMN_VISIBILITY, //12
+                        SongHelper.COLUMN_IS_LIKED, //13
+                        SongHelper.COLUMN_USER_NAME, //14
+                        SongHelper.COLUMN_PROCESSED, //15
+                        SongHelper.COLUMN_SENDER_ID, //16
+                        SongHelper.COLUMN_USER_NAME //17
+
+            }*/
+
+            displayName = cursorExactType.getString(3);
+            actualName = cursorExactType.getString(4);
+            artist = cursorExactType.getString(5);
+            album = cursorExactType.getString(6);
+            visible = cursorExactType.getShort(12) == 1;
 
             if (visible) {
                 songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
@@ -198,7 +216,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         } else {
 
             final MoreListHolder horizontalViewHolder = (MoreListHolder) holder;
-            holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
+            //holder.itemView.setBackgroundResource(R.drawable.border_shadow2);
             horizontalViewHolder.headerText.setText("Recently Added");
             if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
                 horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));
@@ -233,7 +251,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     @Override
     protected int newGetItemCount() {
 
-        if (downloadCursor != null && !downloadCursor.isClosed())
+        /*if (downloadCursor != null && !downloadCursor.isClosed())
             downloadedCount = downloadCursor.getCount();
         else
             downloadedCount = 0;
@@ -248,7 +266,12 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
         if (myLibraryCount + downloadedCount == 0)
             return 0;
         else
-            return myLibraryCount + downloadedCount + 1; //adjust for recent list
+            return myLibraryCount + downloadedCount + 1; //adjust for recent list*/
+
+        if (myLibraryCursor != null && !myLibraryCursor.isClosed())
+            return (myLibraryCount = myLibraryCursor.getCount()) + 1;//adjust for recent list
+        return 1;
+
     }
 
     @Override

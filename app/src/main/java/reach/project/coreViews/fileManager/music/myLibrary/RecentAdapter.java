@@ -14,7 +14,6 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
-import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
 import java.util.Comparator;
@@ -95,38 +94,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         synchronized (getMessageList()) {
             getMessageList().clear();
+            getMessageList().addAll(newMessages);
         }
 
-        if (newMessages.isEmpty()) {
-
-
-            notifyItemRangeRemoved(0, getItemCount());
-            final RecyclerView.Adapter adapter;
-            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-                adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
-        } else {
-
-            synchronized (getMessageList()) {
-
-                //remove to prevent duplicates
-                getMessageList().removeAll(newMessages);
-                //add new items
-                getMessageList().addAll(newMessages);
-
-                //pick top 20
-                final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
-
-                //remove all
-                getMessageList().clear();
-                //add top 20
-                getMessageList().addAll(newSortedList);
-            }
-
-            notifyDataSetChanged();
-            final RecyclerView.Adapter adapter;
-            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-                adapter.notifyDataSetChanged();
-        }
+        notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     @Override

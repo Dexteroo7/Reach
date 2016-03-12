@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
+import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
@@ -77,7 +78,8 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
     @Override
     public void handOverMessage(@Nonnull Cursor cursor) {
-        MiscUtils.playSong(SongHelper.getMusicData(cursor), getContext());
+        final Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
+        MiscUtils.playSong(song, getContext());
     }
 
     @Override

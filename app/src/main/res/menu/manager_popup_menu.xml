@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/manager_menu_1"
         android:title="Send" />
@@ -10,7 +10,7 @@
         android:id="@+id/manager_menu_3"
         android:title="Delete" />
     <item
-        android:visible="false"
         android:id="@+id/manager_menu_4"
-        android:title="Pause" />
+        android:title="Pause"
+        android:visible="false" />
 </menu>

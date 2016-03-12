@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/border_shadow4">
+    android:background="@null">
 
     <TextView
         android:id="@+id/headerText"
@@ -33,7 +33,7 @@
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/listOfItems"
-        android:layout_marginBottom="15dp"
+        android:layout_marginBottom="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/headerText" />

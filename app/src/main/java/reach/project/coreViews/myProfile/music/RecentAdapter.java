@@ -49,6 +49,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
     public RecentAdapter(List<Song> recentMusic, HandOverMessage<Song> handOverMessage, int resourceId) {
         super(recentMusic, handOverMessage, resourceId);
+        setHasStableIds(true);
     }
 
     @Nullable
@@ -61,46 +62,23 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
      */
     public void updateRecent(List<Song> newMessages) {
 
-        if (newMessages.isEmpty()) {
-
-            synchronized (getMessageList()) {
-                getMessageList().clear();
-            }
-            notifyItemRangeRemoved(0, getItemCount());
-            final RecyclerView.Adapter adapter;
-            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-                adapter.notifyItemRangeRemoved(0, adapter.getItemCount());
-        } else {
-
-            synchronized (getMessageList()) {
-
-                //remove to prevent duplicates
-                getMessageList().removeAll(newMessages);
-                //add new items
-                getMessageList().addAll(newMessages);
-
-                //pick top 20
-                final List<Song> newSortedList = Ordering.from(PRIMARY).compound(SECONDARY).greatestOf(getMessageList(), 20);
-
-                //remove all
-                getMessageList().clear();
-                //add top 20
-                getMessageList().addAll(newSortedList);
-            }
-
-            notifyDataSetChanged();
-            final RecyclerView.Adapter adapter;
-            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
-                adapter.notifyDataSetChanged();
+        synchronized (getMessageList()) {
+            getMessageList().clear();
+            getMessageList().addAll(newMessages);
         }
+
+        notifyDataSetChanged();
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyDataSetChanged();
     }
 
     /**
      * MUST CALL FROM UI THREAD
      *
-     * @param songId the song id to toggle visibility for
+     *
      */
-    public synchronized void updateVisibility(long songId, boolean newVisibility) {
+    public synchronized void updateVisibility(String metaHash, boolean newVisibility) {
 
         final List<Song> songItems = getMessageList();
 
@@ -108,7 +86,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         for (int index = 0; index < songItems.size(); index++) {
 
             final Song songItem = songItems.get(index);
-            if (songItem.songId == songId) {
+            if (songItem.getFileHash().equals(metaHash)) {
 
                 final Song newSong = new Song.Builder(songItem).visibility(newVisibility).build();
                 songItems.set(index, newSong);
@@ -133,7 +111,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
     @Override
     public long getItemId(Song item) {
-        return item.songId;
+        return item.fileHash.hashCode();
     }
 
     @Override

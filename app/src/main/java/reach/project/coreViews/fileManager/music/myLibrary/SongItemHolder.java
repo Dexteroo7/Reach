@@ -281,7 +281,9 @@ class SongItemHolder extends SingleItemViewHolder {
 //        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + song.fileHash);
 
         //find path and delete the file
+
         final Cursor pathCursor = resolver.query(
+
                 SongProvider.CONTENT_URI,
                 new String[]{SongHelper.COLUMN_PATH},
                 SongHelper.COLUMN_META_HASH + " = ?",

@@ -174,6 +174,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                         inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     }
                     final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    alertDialogBuilder.setTitle("APPS PRIVACY:");
                     final View vv = inflater.inflate(R.layout.apps_privacy_frag_layout, null);
                     alertDialogBuilder.setView(vv);
 
@@ -194,6 +195,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                     }
                     Log.d(TAG, "songs privacy alertDialog ==null");
                     final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+                    alertDialogBuilder.setTitle("SONGS PRIVACY:");
                     final View vvv = inflater.inflate(R.layout.songs_privacy_frag_layout, null);
                     alertDialogBuilder.setView(vvv);
                     songPrivacyAlertDialog = alertDialogBuilder.show();

@@ -94,7 +94,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         myUserId = SharedPrefUtils.getServerId(preferences);
 
-        //getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER, null, this);
 
         return rootView;
@@ -105,7 +104,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     public void onDestroyView() {
 
         super.onDestroyView();
-        getLoaderManager().destroyLoader(StaticData.PRIVACY_DOWNLOADED_LOADER);
         getLoaderManager().destroyLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER);
         if (parentAdapter != null)
             parentAdapter.close();
@@ -117,26 +115,31 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (message instanceof Cursor) {
 
             final Cursor cursor = (Cursor) message;
-            final boolean visible = cursor.getShort(8) == 1;
-            final long songId = cursor.getLong(1);
+            final boolean visible = cursor.getShort(12) == 1;
+            final String metaHash = cursor.getString(2);
 
-            new ToggleVisibility(MyLibraryFragment.this).executeOnExecutor(visibilityHandler,
-                    (long) (visible ? 0 : 1), //flip
-                    songId,
-                    myUserId);
+            new ToggleVisibility(MyLibraryFragment.this,
+                    (long) (visible ? 0 : 1),
+                    metaHash,
+                    myUserId
+                    ).executeOnExecutor(visibilityHandler
+                    );
             //flip
-            updateDatabase(new WeakReference<>(this), !visible, songId, myUserId);
+            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId);
 
         } else if (message instanceof Song) {
 
             final Song song = (Song) message;
 
-            new ToggleVisibility(MyLibraryFragment.this).executeOnExecutor(visibilityHandler,
-                    (long) (song.visibility ? 0 : 1), //flip
-                    song.songId,
-                    myUserId);
+            new ToggleVisibility(MyLibraryFragment.this,
+                    (long) (song.visibility ? 0 : 1),
+                    song.getFileHash(),
+                    myUserId
+                    ).executeOnExecutor(visibilityHandler
+                     //flip
+                   );
             //flip
-            updateDatabase(new WeakReference<>(this), !song.visibility, song.songId, myUserId);
+            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId);
 
         } else
             throw new IllegalArgumentException("Unknown type handed over");
@@ -165,28 +168,16 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (data == null || data.isClosed() || parentAdapter == null)
             return;
 
-        final int count = data.getCount();
-
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
 
 //            Log.i("Ayush", "MyLibrary my profile " + count);
 
-            if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentMyLibrary());
             parentAdapter.setNewMyLibraryCursor(data);
+            final int count = data.getCount();
+            if (count != parentAdapter.myLibraryCount) //update only if count has changed
+                parentAdapter.updateRecentMusic(getRecentMyLibrary());
+
         }
-
-
-
-        /*} else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
-
-//            Log.i("Ayush", "Downloaded my profile " + count);
-
-            parentAdapter.setNewDownLoadCursor(data);
-            if (count != parentAdapter.downloadedCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentDownloaded());
-
-        }*/
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount() - 1);
     }
 
@@ -195,14 +186,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         if (parentAdapter == null)
             return;
-
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
-
-        /*if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
-            parentAdapter.setNewMyLibraryCursor(null);
-        else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
-            parentAdapter.setNewDownLoadCursor(null);*/
     }
 
     @NonNull
@@ -252,12 +237,20 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return latestMyLibrary;
     }
 
-    private static class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
+    private static class ToggleVisibility extends AsyncTask<Void, Void, Boolean> {
+
+        private final long param1;
+        private final String param2;
+        private final long param3;
 
         private WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference;
 
-        public ToggleVisibility(MyLibraryFragment myLibraryFragment) {
+        public ToggleVisibility(MyLibraryFragment myLibraryFragment, long param1, String param2, long param3) {
             this.myLibraryFragmentWeakReference = new WeakReference<>(myLibraryFragment);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+
         }
 
         /**
@@ -267,7 +260,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
          */
 
         @Override
-        protected Boolean doInBackground(Long... params) {
+        protected Boolean doInBackground(Void... params) {
 
             boolean failed = false;
             //TODO
@@ -284,7 +277,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 //            }
 
             if (failed) {
-                updateDatabase(myLibraryFragmentWeakReference, params[0] != 1, params[1], params[2]);
+                updateDatabase(myLibraryFragmentWeakReference, param1 != 1, param2, param3);
             }
 
             return failed;
@@ -303,7 +296,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
     private static synchronized void updateDatabase(WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference,
                                                     final boolean visibility,
-                                                    long songId,
+                                                    String metaHash,
                                                     long userId) {
 
         final ContentResolver resolver = MiscUtils.useContextFromFragment(myLibraryFragmentWeakReference, ContextWrapper::getContentResolver).orNull();
@@ -315,14 +308,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         values.put(MySongsHelper.COLUMN_VISIBILITY, visibility);
 
         int updated = resolver.update(
-                MySongsProvider.CONTENT_URI,
+                SongProvider.CONTENT_URI,
                 values,
-                MySongsHelper.COLUMN_SONG_ID + " = ?",
-                new String[]{songId + ""});
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{metaHash + ""});
 
-        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
-
-        if (updated == 0) {
+        /*if (updated == 0) {
 
             values = new ContentValues();
             values.put(SongHelper.COLUMN_VISIBILITY, visibility);
@@ -331,14 +322,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
                     values,
                     SongHelper.COLUMN_UNIQUE_ID + " = ? and " + SongHelper.COLUMN_RECEIVER_ID + " = ?",
                     new String[]{songId + "", userId + ""});
-        }
+        }*/
 
         //flip in recent list
         MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
             if (fragment.parentAdapter != null)
-                fragment.parentAdapter.updateVisibility(songId, visibility);
+                fragment.parentAdapter.updateVisibility(metaHash, visibility);
         });
 
-        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
+        Log.i("Ayush", "Toggle Visibility " + updated + " " + metaHash + " " + visibility);
     }
 }
