@@ -2,7 +2,6 @@ package reach.project.coreViews.fileManager;
 
 import javax.annotation.Nonnull;
 
-import reach.project.music.Song;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
@@ -15,5 +14,5 @@ public interface HandOverMessageExtra<T> extends HandOverMessage<Integer> {
 
     T getExtra(@Nonnull Integer position);
 
-    void putExtra(@Nonnull Integer position, Song song);
+    void putExtra(T item);
 }

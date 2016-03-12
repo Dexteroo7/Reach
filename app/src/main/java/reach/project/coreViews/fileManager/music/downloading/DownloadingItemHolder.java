@@ -11,7 +11,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -200,7 +199,7 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
         final ContentResolver resolver = alertDialog.getContext().getContentResolver();
 
         final ReachDatabase reachDatabase = (ReachDatabase) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-        final Uri uri = SongProvider.CONTENT_URI ;
+        final Uri uri = SongProvider.CONTENT_URI;
         /*+ "/" + reachDatabase.getMetaHash()*/
 
         //find path and delete the file

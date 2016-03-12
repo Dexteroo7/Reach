@@ -166,8 +166,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 album = cursorExactType.getString(6);
                 visible = cursorExactType.getShort(12) == 1;
 //                actualName = cursorExactType.getString(17);
-                final long senderId = cursorExactType.getLong(16);
-                final String senderName = cursorExactType.getString(17);
+                final long senderId = cursorExactType.getLong(15);
 
                 final Context context = holder.itemView.getContext();
                 songItemHolder.userImage.setVisibility(View.VISIBLE);

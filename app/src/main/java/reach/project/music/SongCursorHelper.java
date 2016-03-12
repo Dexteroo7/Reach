@@ -152,10 +152,10 @@ public enum SongCursorHelper {
 
             SongHelper.COLUMN_VISIBILITY, //12
             SongHelper.COLUMN_IS_LIKED, //13
-            SongHelper.COLUMN_USER_NAME, //14
-            SongHelper.COLUMN_PROCESSED, //15
-            SongHelper.COLUMN_SENDER_ID, //16
-            SongHelper.COLUMN_USER_NAME //17
+
+            SongHelper.COLUMN_PROCESSED, //14
+            SongHelper.COLUMN_SENDER_ID, //15
+            SongHelper.COLUMN_USER_NAME //16
 
     }, new Function<Cursor, Song>() {
         @Nullable
@@ -181,10 +181,11 @@ public enum SongCursorHelper {
                     .path(cursor.getString(10))
                     .dateAdded(cursor.getLong(11))
                     .visibility(cursor.getShort(12) == 1)
-                    .isLiked(isLiked).build();
-            song.setProcessed(cursor.getLong(15));
-            song.setSenderId(cursor.getLong(16));
-            song.setSenderName(cursor.getString(17));
+                    .isLiked(isLiked).build(); //13
+
+            song.setProcessed(cursor.getLong(14));
+            song.setSenderId(cursor.getLong(15));
+            song.setSenderName(cursor.getString(16));
 
             return song;
 
@@ -221,7 +222,6 @@ public enum SongCursorHelper {
             SongHelper.COLUMN_LOGICAL_CLOCK, //20
             SongHelper.COLUMN_PROCESSED, //21
             SongHelper.COLUMN_STATUS, //22
-            SongHelper.COLUMN_ALBUM_ART_DATA //23
 
     }, new Function<Cursor, ReachDatabase>() {
         @Nullable
@@ -232,6 +232,7 @@ public enum SongCursorHelper {
                 throw new IllegalArgumentException("Invalid cursor found");
 
             final String liked = cursor.getString(14);
+            final boolean isLiked = !TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true"));
 
             final ReachDatabase reachDatabase = new ReachDatabase.Builder()
                     .setId(cursor.getLong(0))
@@ -248,7 +249,7 @@ public enum SongCursorHelper {
                     .setPath(cursor.getString(11))
                     .setDateAdded(new DateTime(cursor.getLong(12)))
                     .setVisibility(cursor.getShort(13) == 1)
-                    .setLiked(!TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true")))
+                    .setLiked(isLiked) //14
                     .setReceiverId(cursor.getLong(15))
                     .setSenderId(cursor.getLong(16))
                     .setUserName(cursor.getString(17))
@@ -296,7 +297,6 @@ public enum SongCursorHelper {
             SongHelper.COLUMN_LOGICAL_CLOCK, //20
             SongHelper.COLUMN_PROCESSED, //21
             SongHelper.COLUMN_STATUS, //22
-            SongHelper.COLUMN_ALBUM_ART_DATA //23
 
     }, new Function<Cursor, Song>() {
         @Nullable
@@ -306,7 +306,10 @@ public enum SongCursorHelper {
             if (cursor == null || cursor.isClosed())
                 throw new IllegalArgumentException("Invalid cursor found");
 
-            return new Song.Builder()
+            final String liked = cursor.getString(14);
+            final boolean isLiked = !TextUtils.isEmpty(liked) && (liked.equals("1") || liked.equals("true"));
+
+            final Song song = new Song.Builder()
                     .songId(cursor.getLong(2))
                     .fileHash(cursor.getString(3))
                     .displayName(cursor.getString(4))
@@ -319,7 +322,13 @@ public enum SongCursorHelper {
                     .path(cursor.getString(11))
                     .dateAdded(cursor.getLong(12))
                     .visibility(cursor.getShort(13) == 1)
-                    .isLiked(cursor.getString(14).equals("1") || cursor.getString(14).equals("true")).build();
+                    .isLiked(isLiked).build();
+
+            song.setProcessed(cursor.getLong(21));
+            song.setSenderId(cursor.getLong(16));
+            song.setSenderName(cursor.getString(17));
+
+            return song;
         }
     });
 

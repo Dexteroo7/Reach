@@ -427,7 +427,7 @@ public enum MiscUtils {
         return true;
     }
 
-    public static boolean playSong(Song musicData, Context context) {
+    public static boolean playSong(Song song, Context context) {
 
         //sanity check
 //            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
@@ -441,18 +441,18 @@ public enum MiscUtils {
 //            return false;
 //        }
 
-        if (musicData.size == 0 || TextUtils.isEmpty(musicData.path)) {
+        if (song.size == 0 || TextUtils.isEmpty(song.path)) {
             Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
             return false;
         }
 
-        if (musicData.getProcessed() == 0) {
+        if (song.getProcessed() == 0) {
             Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
             return false;
         }
 
         ProcessManager.submitMusicRequest(context,
-                Optional.of(musicData),
+                Optional.of(song),
                 ProcessManager.ACTION_NEW_SONG);
 
         final Intent intent = new Intent(context, PlayerActivity.class);
@@ -1655,7 +1655,6 @@ public enum MiscUtils {
          * Generate the compressed image
          * Will load & resize the image to be 1/inSampleSize dimensions
          */
-        Log.i("Ayush", "Starting compression");
         return mBitmapOptions;
     }
 

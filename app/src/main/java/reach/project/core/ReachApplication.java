@@ -1,6 +1,5 @@
 package reach.project.core;
 
-import android.app.Application;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.annotation.NonNull;

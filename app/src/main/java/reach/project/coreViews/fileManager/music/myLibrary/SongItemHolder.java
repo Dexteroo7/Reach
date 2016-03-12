@@ -158,7 +158,7 @@ class SongItemHolder extends SingleItemViewHolder {
                 throw new IllegalArgumentException("Position not set for the view holder");
 
             final PopupMenu popupMenu = new PopupMenu(context, this.extraButton);
-            popupMenu.inflate(R.menu.manager_popup_menu);
+            popupMenu.inflate(R.menu.song_manager_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
 
                 final Object object = handOverMessageExtra.getExtra(position);
@@ -187,7 +187,7 @@ class SongItemHolder extends SingleItemViewHolder {
 
                 switch (item.getItemId()) {
 
-                    case R.id.manager_menu_1: {
+                    case R.id.send: {
 
                         //send
 
@@ -225,12 +225,12 @@ class SongItemHolder extends SingleItemViewHolder {
 
                         return true;
                     }
-                    case R.id.manager_menu_2: {
+                    case R.id.hide: {
                         //hide
                         return true;
                     }
 
-                    case R.id.manager_menu_3: {
+                    case R.id.delete: {
                         //delete
                         final AlertDialog alertDialog = new AlertDialog.Builder(context)
                                 .setMessage("Are you sure you want to delete it?")
@@ -246,7 +246,7 @@ class SongItemHolder extends SingleItemViewHolder {
                 }
             });
 
-            final MenuItem hideItem = popupMenu.getMenu().findItem(R.id.manager_menu_2);
+            final MenuItem hideItem = popupMenu.getMenu().findItem(R.id.hide);
             final Object object = handOverMessageExtra.getExtra(position);
             boolean visible = false;
             if (object instanceof Song) {

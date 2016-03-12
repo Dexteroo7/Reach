@@ -78,7 +78,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
     @Override
     public void handOverMessage(@Nonnull Cursor cursor) {
-        final Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
+        final Song song = SongCursorHelper.DOWNLOADING_TO_SONG_HELPER.parse(cursor);
         MiscUtils.playSong(song, getContext());
     }
 

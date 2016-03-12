@@ -25,7 +25,6 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
-import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -67,7 +66,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
         parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(context.getSharedPreferences("Reach", Context.MODE_PRIVATE)));
-
 
         new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
 

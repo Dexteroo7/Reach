@@ -29,7 +29,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     public RecentAdapter(List<App> messageList,
                          HandOverMessage<App> handOverMessage,
                          PackageManager packageManager,
-                         int resourceId, VisibilityHook visibilityHook) {
+                         int resourceId,
+                         VisibilityHook visibilityHook) {
 
         super(messageList, handOverMessage, resourceId);
         this.visibilityHook = visibilityHook;
@@ -94,7 +95,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     @Override
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
-        holder.position = holder.getAdapterPosition();
+        holder.menuData.setPosition(holder.getAdapterPosition());
         holder.appName.setText(item.applicationName);
         try {
             holder.appIcon.setImageDrawable(packageManager.getApplicationIcon(item.packageName));

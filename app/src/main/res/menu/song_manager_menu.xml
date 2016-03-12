@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/manager_menu_1"
+        android:id="@+id/send"
         android:title="Send" />
     <item
-        android:id="@+id/manager_menu_2"
+        android:id="@+id/hide"
         android:title="Hide" />
     <item
-        android:id="@+id/manager_menu_3"
+        android:id="@+id/delete"
         android:title="Delete" />
-    <item
-        android:id="@+id/manager_menu_4"
-        android:title="Pause"
-        android:visible="false" />
 </menu>
