@@ -360,7 +360,7 @@ public enum SongCursorHelper {
     /////////////////////////////////////////
 
     public static List<Song> getSongs(@Nullable Cursor musicCursor,
-                                      @Nullable Map<String, EnumSet<ContentType.State>> oldStates,
+                                      @Nonnull Map<String, EnumSet<ContentType.State>> oldStates,
                                       long serverId,
 
                                       @Nonnull ContentResolver contentResolver,
@@ -380,7 +380,7 @@ public enum SongCursorHelper {
                 songHashFixer = getSongHashFixer(serverId);
             else
                 songHashFixer = Functions.identity();
-            if (serverId > 0 && oldStates != null && oldStates.size() > 0)
+            if (serverId > 0 && oldStates.size() > 0)
                 oldStatePersister = getOldStatePersister(oldStates);
             else
                 oldStatePersister = Functions.identity();

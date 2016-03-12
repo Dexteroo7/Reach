@@ -68,9 +68,10 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             final String status = reachDatabase.getStatus() == ReachDatabase.Status.PAUSED_BY_USER ? "Resume Download" : "Pause Download";
 
             final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
+            popupMenu.inflate(R.menu.manager_popup_menu);
+
             popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
             popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
-            popupMenu.inflate(R.menu.manager_popup_menu);
             popupMenu.setOnMenuItemClickListener(item -> {
 
                 switch (item.getItemId()) {

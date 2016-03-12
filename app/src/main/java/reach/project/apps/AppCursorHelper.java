@@ -5,7 +5,6 @@ import android.content.pm.PackageManager;
 import android.util.Log;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.hash.Hashing;
 
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public enum AppCursorHelper {
     ;
 
-    public static Function<ApplicationInfo, App.Builder> getParser(PackageManager packageManager,
+    private static Function<ApplicationInfo, App.Builder> getParser(PackageManager packageManager,
                                                                    Set<String> packageVisibility) {
 
         return new Function<ApplicationInfo, App.Builder>() {
@@ -45,6 +44,7 @@ public enum AppCursorHelper {
                 appBuilder.description(input.loadDescription(packageManager) + "");
                 appBuilder.packageName(input.packageName);
                 appBuilder.processName(input.processName);
+                appBuilder.visible(packageVisibility.contains(input.packageName));
 
                 try {
                     appBuilder.installDate(
@@ -53,7 +53,6 @@ public enum AppCursorHelper {
                     e.printStackTrace();
                 }
 
-                appBuilder.visible(packageVisibility.contains(input.packageName));
                 return appBuilder;
             }
         };
@@ -62,20 +61,26 @@ public enum AppCursorHelper {
     public static List<App> getApps(@Nonnull List<ApplicationInfo> installedApps,
                                     @Nonnull PackageManager packageManager,
                                     @Nonnull HandOverMessage<Integer> handOverMessage,
+                                    @Nonnull Map<String, EnumSet<ContentType.State>> oldStates) {
 
-                                    @Nullable Map<String, EnumSet<ContentType.State>> oldStates) {
-
+        final Function<ApplicationInfo, App.Builder> parser = getParser(packageManager, Collections.emptySet());
         final Function<App.Builder, App.Builder> oldStatePersister;
-        if (oldStates != null && oldStates.size() > 0)
+        if (oldStates.size() > 0)
             oldStatePersister = getOldStatePersister(oldStates);
-        else
-            oldStatePersister = Functions.identity();
+        else //default visibility to true
+            oldStatePersister = new Function<App.Builder, App.Builder>() {
+                @Nullable
+                @Override
+                public App.Builder apply(@Nullable App.Builder input) {
+                    return input == null ? null : input.visible(true);
+                }
+            };
 
         final List<App> toReturn = new ArrayList<>();
         int counter = 0;
         for (ApplicationInfo applicationInfo : installedApps) {
 
-            App.Builder appBuilder = getParser(packageManager, Collections.emptySet()).apply(applicationInfo);
+            App.Builder appBuilder = parser.apply(applicationInfo);
             appBuilder = oldStatePersister.apply(appBuilder);
             if (appBuilder != null) {
                 handOverMessage.handOverMessage(++counter);
@@ -91,6 +96,8 @@ public enum AppCursorHelper {
                                     @Nonnull PackageManager packageManager,
                                     @Nonnull HandOverMessage<Integer> handOverMessage,
                                     @Nonnull Set<String> visiblePackages) {
+
+        final Function<ApplicationInfo, App.Builder> parser = getParser(packageManager, Collections.emptySet());
 
         final List<App> toReturn = new ArrayList<>();
         int counter = 0;
