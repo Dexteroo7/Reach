@@ -59,9 +59,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         }
 
         @Override
-        public void putExtra(@Nonnull Integer position, Song song) {
-
-            getMessageList().set(position, song);
+        public void putExtra(int position, Object item) {
+            getMessageList().set(position, (Song) item);
             notifyItemChanged(position);
         }
     };

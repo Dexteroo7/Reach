@@ -51,8 +51,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-import javax.annotation.Nonnull;
-
 import okhttp3.CacheControl;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -217,26 +215,20 @@ public class ScanFragment extends Fragment {
         private ProgressBar scanProgress;
         private LinearLayout switchLayout1, switchLayout2;
 
-        private int totalFiles = 0;
         private int totalMusic = 0;
         private int totalApps = 0;
         private int totalExpected = 0;
 
         //call back for counting songs
-        final HandOverMessage<Integer> songProcessCounter = new HandOverMessage<Integer>() {
-            @Override
-            public void handOverMessage(@Nonnull Integer message) {
-
-                //TODO increment song count
-            }
+        final HandOverMessage<Integer> songProcessCounter = message -> {
+            totalMusic = message;
+            publishProgress();
         };
 
         //call back for counting apps
-        final HandOverMessage<Integer> appProcessCounter = new HandOverMessage<Integer>() {
-            @Override
-            public void handOverMessage(@Nonnull Integer message) {
-                //TODO increment app count
-            }
+        final HandOverMessage<Integer> appProcessCounter = message -> {
+            totalApps = message;
+            publishProgress();
         };
 
         @SuppressWarnings("StaticPseudoFunctionalStyleMethod")
@@ -271,7 +263,8 @@ public class ScanFragment extends Fragment {
             //get total file count
             Log.i("Ayush", "Scanning  " + (musicCursor != null ? musicCursor.getCount() : 0) + " songs");
             Log.i("Ayush", "Scanning  " + installedApps.size() + " apps");
-            final int totalFiles = (musicCursor != null ? musicCursor.getCount() : 0) + installedApps.size();
+            totalExpected = (musicCursor != null ? musicCursor.getCount() : 0) + installedApps.size();
+            publishProgress();
 
             //genres get filled here
             final Set<String> genres = MiscUtils.getSet(100);
@@ -435,6 +428,17 @@ public class ScanFragment extends Fragment {
         @Override
         protected void onProgressUpdate(Void... values) {
             super.onProgressUpdate(values);
+
+            final int currentTotal = totalApps + totalMusic;
+
+            scanCount.setText(currentTotal + "");
+            musicCount.setText(totalMusic + "");
+            appCount.setText(totalApps + "");
+
+            if (totalExpected > currentTotal)
+                scanProgress.setProgress((currentTotal * 100) / totalExpected);
+            else
+                scanProgress.setProgress(100); //error case
         }
 
 //        //TODO make static :(

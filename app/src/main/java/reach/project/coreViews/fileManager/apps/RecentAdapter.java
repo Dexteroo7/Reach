@@ -12,7 +12,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import reach.project.apps.App;
-import reach.project.coreViews.friends.HandOverMessageExtra;
+import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
@@ -24,7 +24,6 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
     private final PackageManager packageManager;
     private final VisibilityHook visibilityHook;
-
 
     public RecentAdapter(List<App> messageList,
                          HandOverMessage<App> handOverMessage,
@@ -51,6 +50,11 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
                 return app;
             else
                 throw new IllegalStateException("App has been corrupted");
+        }
+
+        @Override
+        public void putExtra(int position, App item) {
+
         }
     };
 

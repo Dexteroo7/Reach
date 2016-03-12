@@ -74,7 +74,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         }
 
         @Override
-        public void putExtra(@Nonnull Integer position, Song song) {
+        public void putExtra(int position, Object item) {
 
         }
     };
