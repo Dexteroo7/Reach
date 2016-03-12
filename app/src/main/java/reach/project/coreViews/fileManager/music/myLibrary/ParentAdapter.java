@@ -297,6 +297,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         if (myLibraryCursor != null && !myLibraryCursor.isClosed())
             return myLibraryCursor.getCount() + 1;//adjust for recent list
-        return 1;
+        return 0;
     }
 }

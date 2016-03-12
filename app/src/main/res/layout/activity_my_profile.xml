@@ -183,8 +183,8 @@
 
                 <ImageView
                     android:id="@+id/friendsCountImageView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="36dp"
+                    android:layout_height="24dp"
                     app:srcCompat="@drawable/ic_friends_gray"
                     tools:src="@drawable/ic_friends_gray"
                     android:layout_centerVertical="true"
@@ -248,11 +248,11 @@
                     <ImageView
                         android:id="@+id/appCountImage"
                         android:layout_below="@id/privacySettingsText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="26dp"
+                        android:layout_height="28dp"
                         android:layout_marginTop="8dp"
-                        app:srcCompat="@drawable/icon_apps_indicator_gray_big"
-                        tools:src="@drawable/icon_apps_indicator_gray_big"
+                        app:srcCompat="@drawable/icon_apps_indicator_gray1"
+                        tools:src="@drawable/icon_apps_indicator_gray1"
                         android:layout_centerVertical="true"
                         />
 
@@ -265,7 +265,7 @@
                         android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/appCountImage"
                         android:layout_alignTop="@id/appCountImage"
-                        android:gravity="center_vertical"
+                        android:gravity="bottom"
                         android:textSize="16sp"
                         tools:text="65" />
 
@@ -289,11 +289,11 @@
                     <ImageView
                         android:id="@+id/songCountImage"
                         android:layout_below="@id/appCountImage"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
                         android:layout_marginTop="16dp"
-                        app:srcCompat="@drawable/icon_song_indicator_gray_big"
-                        tools:src="@drawable/icon_song_indicator_gray_big"
+                        app:srcCompat="@drawable/icon_song_indicator_gray_dark"
+                        tools:src="@drawable/icon_song_indicator_gray_dark"
                         android:layout_centerVertical="true"
                         />
 
@@ -307,7 +307,7 @@
                         android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/songCountImage"
                         android:layout_alignTop="@id/songCountImage"
-                        android:gravity="center_vertical"
+                        android:gravity="bottom"
                         android:textSize="16sp"
                         tools:text="65" />
 

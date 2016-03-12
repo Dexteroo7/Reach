@@ -226,6 +226,7 @@ class SongItemHolder extends SingleItemViewHolder {
                         return true;
                     }
                     case R.id.manager_menu_2: {
+
                         //hide
                         return true;
                     }
