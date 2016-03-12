@@ -14,5 +14,5 @@ public interface HandOverMessageExtra<T> extends HandOverMessage<Integer> {
 
     T getExtra(@Nonnull Integer position);
 
-    void putExtra(T item);
+    void putExtra(int position, T item);
 }

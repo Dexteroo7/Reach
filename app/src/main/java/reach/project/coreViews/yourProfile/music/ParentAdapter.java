@@ -54,6 +54,8 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final Song song = (Song) message;
             final SongItemHolder songSongItemHolder = (SongItemHolder) holder;
 
+            songSongItemHolder.extraButton.setVisibility(View.INVISIBLE);
+            songSongItemHolder.likeButton.setVisibility(View.INVISIBLE);
             songSongItemHolder.songName.setText(song.displayName);
             songSongItemHolder.artistName.setText(song.artist);
             //TODO: Figure Out The Error
@@ -106,7 +108,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
 
             case SONG_ITEM_TYPE:
                 return new SongItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.song_list_item, parent, false), position -> {
+                        .inflate(R.layout.song_list_item_without_extra, parent, false), position -> {
 
                     if (position < 1)
                         throw new IllegalArgumentException(" Invalid position: " + (position-1)

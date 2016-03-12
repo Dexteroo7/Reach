@@ -59,8 +59,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         }
 
         @Override
-        public void putExtra(App item) {
-
+        public void putExtra(int position, App item) {
 
         }
     };

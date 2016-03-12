@@ -310,7 +310,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         image.setImageResource(R.drawable.explore_tab_selector);
 
         mTabHost.addTab(mTabHost.newTabSpec("explore_page").setIndicator(setUpTabView(inflater,
-                "Explore",
+                "Discover",
                 R.drawable.explore_tab_selector)), ExploreFragment.class, null);
 
         /*text.setText("Friends");

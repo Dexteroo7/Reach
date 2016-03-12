@@ -225,7 +225,9 @@ class SongItemHolder extends SingleItemViewHolder {
 
                         return true;
                     }
+
                     case R.id.hide: {
+
                         //hide
                         return true;
                     }
