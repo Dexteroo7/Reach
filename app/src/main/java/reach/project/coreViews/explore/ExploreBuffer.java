@@ -13,13 +13,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import reach.project.utils.MiscUtils;
 
@@ -29,6 +30,7 @@ import reach.project.utils.MiscUtils;
 class ExploreBuffer<T> implements Closeable {
 
     private static final String EXPLORE_CACHE_FILE = "EXPLORE_CACHE_FILE";
+    public static final AtomicBoolean DONE_FOR_TODAY = new AtomicBoolean(false);
 
     @Nullable
     private static WeakReference<ExploreBuffer> bufferWeakReference;
@@ -77,7 +79,7 @@ class ExploreBuffer<T> implements Closeable {
     private final File cacheDirectory;
 
     //holds a buffer of network objects
-    private final List<T> storyBuffer = new ArrayList<>(100);
+    private final Vector<T> storyBuffer = new Vector<>(100, 10);
 
     //interface for stuff
     private final ExplorationCallbacks<T> explorationCallbacks;
@@ -221,17 +223,13 @@ class ExploreBuffer<T> implements Closeable {
             if (stories == null || stories.isEmpty())
                 return;
 
-            final ExploreBuffer<T> buffer;
-            if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)
-                return; //buffer destroyed
+            MiscUtils.useReference(bufferWeakReference, exploreBuffer -> {
 
-            //when loading from cache we always prepend the data
-            synchronized (buffer.storyBuffer) {
-                buffer.storyBuffer.addAll(0, stories); //make the insertion
-            }
-
-            Log.i("Ayush", "Explore cache inserted, trying to notify");
-            buffer.explorationCallbacks.loadedFromCache(stories.size());
+                //when loading from cache we always prepend the data
+                exploreBuffer.storyBuffer.addAll(0, stories); //make the insertion
+                Log.i("Ayush", "Explore cache inserted, trying to notify");
+                exploreBuffer.explorationCallbacks.loadedFromCache(stories.size());
+            });
         }
     }
 
@@ -243,7 +241,7 @@ class ExploreBuffer<T> implements Closeable {
 
             Log.i("Ayush", "Fetching next batch of stories");
 
-            if (params == null || params.length == 0)
+            if (params == null || params.length == 0 || DONE_FOR_TODAY.get())
                 return Collections.emptyList();
 
             //cast to exact type
@@ -255,25 +253,17 @@ class ExploreBuffer<T> implements Closeable {
         protected final void onPostExecute(Collection<T> stories) {
 
             super.onPostExecute(stories);
-
-            final ExploreBuffer<T> buffer;
-            if (bufferWeakReference == null || (buffer = bufferWeakReference.get()) == null)
-                return; //buffer destroyed
-
             if (stories == null || stories.isEmpty()) {
-
-                Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
+//                Log.i("Ayush", "RECEIVED DONE FOR TODAY !");
                 return;
             }
 
-            //append from last
-            synchronized (buffer.storyBuffer) {
-                buffer.storyBuffer.addAll(stories); //make the insertion
-            }
-
-            Log.i("Ayush", "Stories inserted and trying to notify");
-
-            buffer.explorationCallbacks.notifyDataAvailable();
+            MiscUtils.useReference(bufferWeakReference, exploreBuffer -> {
+                //append from last
+                exploreBuffer.storyBuffer.addAll(stories); //make the insertion
+                Log.i("Ayush", "Stories inserted and trying to notify");
+                exploreBuffer.explorationCallbacks.notifyDataAvailable();
+            });
         }
     }
 

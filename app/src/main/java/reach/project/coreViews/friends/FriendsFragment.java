@@ -17,6 +17,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -24,6 +27,7 @@ import android.widget.RelativeLayout;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
+import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
@@ -72,7 +76,7 @@ public class FriendsFragment extends Fragment implements
 
         Log.d("Ashish", "FriendsFragment - onCreateView");
         final Activity activity = getActivity();
-        final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+         final SharedPreferences sharedPreferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         rootView = inflater.inflate(R.layout.fragment_friends, container, false);
@@ -125,14 +129,14 @@ public class FriendsFragment extends Fragment implements
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " != ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""},
+                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()},
                     ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
         else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
             return new CursorLoader(getActivity(),
                     ReachFriendsProvider.CONTENT_URI,
                     FriendsAdapter.REQUIRED_PROJECTION,
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{ReachFriendsHelper.REQUEST_NOT_SENT + ""}, null);
+                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()}, null);
 
         else
             return null;
@@ -144,8 +148,13 @@ public class FriendsFragment extends Fragment implements
         if (data == null || data.isClosed() || friendsAdapter == null)
             return;
 
-        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER)
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
+            //if(StaticData.friendsCount < data.getCount()){
+              //  MyProfileActivity.countChanged = true;
+                StaticData.friendsCount = data.getCount();
+            //}
             friendsAdapter.setVerticalCursor(data);
+        }
 
         else if (loader.getId() == StaticData.FRIENDS_HORIZONTAL_LOADER)
             friendsAdapter.setHorizontalCursor(data);
@@ -170,10 +179,11 @@ public class FriendsFragment extends Fragment implements
         if (rootView == null)
             return;
 
-        Log.i("Ayush", "Detected status" + clickData.status);
-        if (clickData.status < ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED)
+        if (clickData.status < ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
+
+            Log.i("Ayush", "Detected status" + clickData.status);
             YourProfileActivity.openProfile(clickData.friendId, getActivity());
-        else
+        } else
             ProfileActivity.openProfile(clickData.friendId, getActivity());
     }
 
@@ -194,4 +204,18 @@ public class FriendsFragment extends Fragment implements
         super.onDetach();
         mListener = null;
     }
+
+    /*@Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+
+        inflater.inflate(R.menu.pager_menu,menu);
+        MenuItem useOnlyWifi =  menu.findItem(R.id.hello);
+        if(SharedPrefUtils.getMobileData(sharedPreferences)) {
+            useOnlyWifi.setChecked(true);
+        }
+        else{
+            useOnlyWifi.setChecked(false);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
+    }*/
 }

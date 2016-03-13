@@ -26,12 +26,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-import com.squareup.okhttp.CacheControl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 import com.squareup.wire.Wire;
 
 import java.io.BufferedInputStream;
@@ -47,6 +41,12 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import okhttp3.CacheControl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import okio.BufferedSink;
 import reach.project.apps.App;
 import reach.project.apps.AppList;
@@ -54,13 +54,15 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.MusicList;
 import reach.project.music.Song;
-import reach.project.utils.ancillaryClasses.UseContext;
+import reach.project.utils.ancillaryClasses.UseContextWithResult;
 
 /**
  * Created by Dexter on 28-03-2015.
  */
 public enum CloudStorageUtils {
     ;
+
+    ///////////////////////////////////
 
     public static byte APP = 0;
     public static byte MUSIC = 1;
@@ -72,6 +74,7 @@ public enum CloudStorageUtils {
     private static final String ACCOUNT_ID_PROPERTY = "528178870551-a2qc6pb788d3djjmmult1lkloc65rgt4@developer.gserviceaccount.com";
     private static final String BUCKET_NAME_MUSIC_DATA = "able-door-616-music-data";
     private static final String BUCKET_NAME_APP_DATA = "able-door-616-app-data";
+
 //    private final String PROJECT_ID_PROPERTY = "able-door-616";
 
     public static String uploadImage(@NonNull InputStream optionsStream,
@@ -99,7 +102,7 @@ public enum CloudStorageUtils {
             }
 
             @Override
-            public void writeTo(BufferedSink sink) throws IOException {
+            public void writeTo(BufferedSink sink) {
                 //write the final compressed image
                 resizedBitmap.compress(Bitmap.CompressFormat.WEBP, 80, sink.outputStream());
             }
@@ -183,7 +186,7 @@ public enum CloudStorageUtils {
 //        }
 //        if (objects != null) {
 //            for (StorageObject o : objects) {
-//                list.add(o.getName());
+//                list.add(o.getValue());
 //            }
 //        }
 //        return list;
@@ -201,7 +204,7 @@ public enum CloudStorageUtils {
 //        }
 //        if(buckets != null) {
 //            for(Bucket b : buckets) {
-//                list.add(b.getName());
+//                list.add(b.getValue());
 //            }
 //        }
 //        return list;
@@ -399,10 +402,16 @@ public enum CloudStorageUtils {
 
             Log.i("Ayush", "Md5 hash = ? " + serverHash);
 
-            final BufferedInputStream bufferedInputStream = new BufferedInputStream(httpResponse.getContent());
+            final InputStream actualStream = get.executeMediaAsInputStream();
+            final BufferedInputStream bufferedInputStream;
+            if (actualStream instanceof BufferedInputStream)
+                bufferedInputStream = (BufferedInputStream) actualStream;
+            else
+                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+
             final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
             musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
-            MiscUtils.closeQuietly(bufferedInputStream, compressedData);
+            MiscUtils.closeQuietly(actualStream, bufferedInputStream, compressedData);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -410,7 +419,7 @@ public enum CloudStorageUtils {
         }
 
         //store the hash
-        final List<Song> songList = MiscUtils.useContextFromContext(reference, (UseContext<List<Song>, Context>) context -> {
+        final List<Song> songList = MiscUtils.useContextFromContext(reference, (UseContextWithResult<List<Song>>) context -> {
 
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             if (musicList.song == null || musicList.song.isEmpty()) {
@@ -531,7 +540,7 @@ public enum CloudStorageUtils {
         }
 
         //store the hash
-        final List<App> apps = MiscUtils.useContextFromContext(reference, (UseContext<List<App>, Context>) context -> {
+        final List<App> apps = MiscUtils.useContextFromContext(reference, (UseContextWithResult<List<App>>) context -> {
 
             final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
             if (appList.app == null || appList.app.isEmpty()) {
@@ -539,7 +548,6 @@ public enum CloudStorageUtils {
                 SharedPrefUtils.removeMusicHash(preferences, fileName);
                 return Collections.emptyList(); //no songs found !
             }
-
             //first update the hash
             SharedPrefUtils.storeCloudStorageFileHash(preferences, fileName, serverHash);
             //app must not be null and must be visible
@@ -554,6 +562,76 @@ public enum CloudStorageUtils {
         //sort by name and return
         Collections.sort(apps, StaticData.byName);
         return apps;
+    }
+
+    public static List<Song> fetchMySongs(long userId, InputStream key) {
+
+        final String fileName = MiscUtils.getMusicStorageKey(userId);
+        final Optional<Storage> optional = getStorage(key);
+        if (!optional.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        final Storage storage = optional.get();
+        final MusicList musicList;
+
+        try {
+
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_MUSIC_DATA, fileName);
+            get.getRequestHeaders().setCacheControl("no-cache");
+            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+
+            final InputStream actualStream = get.executeMediaAsInputStream();
+            final BufferedInputStream bufferedInputStream;
+            if (actualStream instanceof BufferedInputStream)
+                bufferedInputStream = (BufferedInputStream) actualStream;
+            else
+                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+
+            final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
+            musicList = new Wire(MusicList.class).parseFrom(compressedData, MusicList.class);
+            MiscUtils.closeQuietly(actualStream, bufferedInputStream, compressedData);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        return musicList == null || musicList.song == null ? Collections.emptyList() : musicList.song;
+    }
+
+    public static List<App> fetchMyApps(long userId, InputStream key) {
+
+        final String fileName = MiscUtils.getAppStorageKey(userId);
+        final Optional<Storage> optional = getStorage(key);
+        if (!optional.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        final Storage storage = optional.get();
+        final AppList appList;
+
+        try {
+
+            final Storage.Objects.Get get = storage.objects().get(BUCKET_NAME_APP_DATA, fileName);
+            get.getRequestHeaders().setCacheControl("no-cache");
+            get.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+
+            final InputStream actualStream = get.executeMediaAsInputStream();
+            final BufferedInputStream bufferedInputStream;
+            if (actualStream instanceof BufferedInputStream)
+                bufferedInputStream = (BufferedInputStream) actualStream;
+            else
+                bufferedInputStream = new BufferedInputStream(get.executeMediaAsInputStream());
+
+            final GZIPInputStream compressedData = new GZIPInputStream(bufferedInputStream);
+            appList = new Wire(AppList.class).parseFrom(compressedData, AppList.class);
+            MiscUtils.closeQuietly(actualStream, bufferedInputStream, compressedData);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+
+        return appList == null || appList.app == null ? Collections.emptyList() : appList.app;
     }
 
     private static Optional<Storage> getStorage(@Nullable InputStream stream) {

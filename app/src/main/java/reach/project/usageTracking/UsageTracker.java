@@ -4,9 +4,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Optional;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +16,9 @@ import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import reach.project.core.ReachApplication;
 import reach.project.utils.MiscUtils;
 
@@ -175,7 +175,6 @@ public enum UsageTracker {
         Log.i("Ayush", "Posting " + toPost);
 
         synchronized (requests) {
-
             requests.push(new Request.Builder()
                     .url("http://52.74.175.56:8080/analytics/events")
                     .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))

@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 
 import reach.backend.entities.userApi.model.ReachUser;
 import reach.project.R;
+import reach.project.core.MyProfileActivity;
 import reach.project.core.StaticData;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.CloudStorageUtils;
@@ -237,9 +238,7 @@ public class EditProfileActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... toToast) {
             super.onProgressUpdate(toToast);
-            MiscUtils.useContextFromContext(EditProfileActivity.reference, context -> {
-                Toast.makeText(context, toToast[0], Toast.LENGTH_SHORT).show();
-            });
+            MiscUtils.useActivity(EditProfileActivity.reference, context -> Toast.makeText(context, toToast[0], Toast.LENGTH_SHORT).show());
         }
 
         /**
@@ -297,7 +296,7 @@ public class EditProfileActivity extends AppCompatActivity {
             if (success) {
 
                 //locally save the values
-                MiscUtils.useContextFromContext(EditProfileActivity.reference, context -> {
+                MiscUtils.useActivity(EditProfileActivity.reference, context -> {
 
                     final SharedPreferences sharedPreferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
                     if (!TextUtils.isEmpty(reachUser.getImageId()))
@@ -321,8 +320,10 @@ public class EditProfileActivity extends AppCompatActivity {
 
             MiscUtils.useActivity(EditProfileActivity.reference, activity -> {
 
-                if (success != null && success)
+                if (success != null && success) {
                     Toast.makeText(activity, "Changes saved successfully!!", Toast.LENGTH_SHORT).show();
+                    MyProfileActivity.profileEdited = true;
+                }
                 else {
 
                     Toast.makeText(activity, "Failed, try again", Toast.LENGTH_SHORT).show();

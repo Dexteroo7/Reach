@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.LongSparseArray;
@@ -29,13 +28,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
 
+import org.joda.time.DateTime;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -45,24 +47,22 @@ import java.util.Set;
 
 import reach.backend.entities.feedBackApi.model.FeedBack;
 import reach.project.R;
-import reach.project.ancillaryViews.SettingsActivity;
 import reach.project.apps.App;
 import reach.project.coreViews.explore.ExploreFragment;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.fileManager.apps.ApplicationFragment;
 import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.myProfile.MyProfileFragment;
+//import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
+import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.FireOnce;
@@ -76,7 +76,9 @@ import reach.project.utils.viewHelpers.PagerFragment;
 public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     private static final String TAG = ReachActivity.class.getSimpleName();
+    private static final String TAB_POSITION_KEY = "tab_position";
     private AlertDialog alertDialog;
+    private int tabPosition = -1;
 
     public static void openActivity(Context context) {
 
@@ -84,6 +86,16 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         context.startActivity(intent);
     }
+
+    public static void openActivityOnParticularTab(Context context, int position) {
+
+        Intent intent = new Intent(context, ReachActivity.class);
+        intent.putExtra(TAB_POSITION_KEY,position);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        Log.d(TAG,"intent = " + intent.hashCode());
+        context.startActivity(intent);
+    }
+
 
     public static Intent getIntent(Context context) {
 
@@ -126,16 +138,16 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     new String[]{"My Applications"},
                     "Apps"));
 
-    @SuppressWarnings("unchecked")
-    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Share",
+//    @SuppressWarnings("unchecked")
+//    private static final Bundle PUSH_PAGER_BUNDLE = PagerFragment.getBundle("Share",
+////            new PagerFragment.Pages(
+////                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
+////                    new String[]{"My Applications"},
+////                    "Apps"),
 //            new PagerFragment.Pages(
-//                    new Class[]{reach.project.coreViews.push.apps.ApplicationFragment.class},
-//                    new String[]{"My Applications"},
-//                    "Apps"),
-            new PagerFragment.Pages(
-                    new Class[]{reach.project.coreViews.push.music.MyLibraryFragment.class},
-                    new String[]{"My Library"},
-                    "Songs"));
+//                    new Class[]{reach.project.coreViews.push.music.MyLibraryFragment.class},
+//                    new String[]{"My Library"},
+//                    "Songs"));
 
     ////////////////////////////////////////
 
@@ -180,11 +192,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             case R.id.notif_button:
                 NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);
                 return true;
-            case R.id.settings_button:
-                final Intent settingsIntent = new Intent(ReachActivity.this, SettingsActivity.class);
-                settingsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(settingsIntent);
+            case R.id.my_profile_button:
+                final Intent myProfileIntent = new Intent(ReachActivity.this, MyProfileActivity.class);
+                //settingsIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(myProfileIntent);
                 return true;
+
         }
 
         return false;
@@ -206,6 +219,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             reference.clear();
         reference = null;
         mTabHost = null;
+        FireOnce.INSTANCE.close(); //app is getting killed
         //viewPager = null;
     }
 
@@ -221,8 +235,31 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     protected void onNewIntent(Intent intent) {
 
         Log.d("Ayush", "Received new Intent");
+        tabPosition = intent.getIntExtra(TAB_POSITION_KEY,-1);
+        Log.d(TAG,"tab position to use = " + tabPosition );
         processIntent(intent);
         super.onNewIntent(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        //Log.d(TAG,"intent = " +getIntent().hashCode());
+
+        Log.d(TAG,"tab position to use = " + tabPosition );
+        if(tabPosition != -1){
+            if (mTabHost != null) {
+                mTabHost.setCurrentTab(tabPosition);
+                mTabHost.postDelayed(() -> {
+                    if (mTabHost == null || isFinishing())
+                        return;
+                    mTabHost.setCurrentTab(tabPosition);
+                }, 1000L);
+            }
+            tabPosition = -1;
+        }
+        //getIntent().putExtra(TAB_POSITION_KEY,-1);
+
+        super.onResume();
     }
 
     @SuppressLint("RtlHardcoded")
@@ -263,27 +300,59 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         mTabHost = (FragmentTabHost) findViewById(android.R.id.tabhost);
         mTabHost.setup(this, getSupportFragmentManager(), android.R.id.tabcontent);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("friends_page").setIndicator("",
+
+        final LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View exploreTabView = LayoutInflater.from(ReachActivity.this).inflate(R.layout.tab_view, null);
+        TextView text = (TextView) exploreTabView.findViewById(R.id.tab_text);
+        ImageView image = (ImageView) exploreTabView.findViewById(R.id.tab_image);
+        text.setText("Explore");
+        image.setImageResource(R.drawable.explore_tab_selector);
+
+        mTabHost.addTab(mTabHost.newTabSpec("explore_page").setIndicator(setUpTabView(inflater,
+                "Discover",
+                R.drawable.explore_tab_selector)), ExploreFragment.class, null);
+
+        /*text.setText("Friends");
+        image.setImageResource(R.drawable.friends_tab_selector);*/
+
+        mTabHost.addTab(mTabHost.newTabSpec("manager_page").setIndicator(setUpTabView(
+                inflater,
+                "My Files",
+                R.drawable.manager_tab_selector
+                ))
+                , PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
+
+        mTabHost.addTab(mTabHost.newTabSpec("friends_page").setIndicator(setUpTabView(
+                inflater,
+                "Friends",
+                R.drawable.friends_tab_selector
+                ))
+                , FriendsFragment.class, null);
+
+
+
+        /*mTabHost.addTab(
+                mTabHost.newTabSpec("friends_page").setIndicator("Friends",
                         ContextCompat.getDrawable(this, R.drawable.friends_tab_selector)),
-                FriendsFragment.class, null);
-        mTabHost.addTab(
+                FriendsFragment.class, null);*/
+        /*mTabHost.addTab(
                 mTabHost.newTabSpec("push_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.push_tab_selector)),
-                PagerFragment.class, PUSH_PAGER_BUNDLE);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("explore_page").setIndicator("",
-                        ContextCompat.getDrawable(this, R.drawable.explore_tab_selector)),
-                ExploreFragment.class, null);
-        mTabHost.addTab(
-                mTabHost.newTabSpec("manager_page").setIndicator("",
+                PagerFragment.class, PUSH_PAGER_BUNDLE);*/
+        /*mTabHost.addTab(
+                mTabHost.newTabSpec("manager_page").setIndicator("File Manager",
+>>>>>>> 5417a1e6a1c83c1ed8f89032f70783f78d658682
                         ContextCompat.getDrawable(this, R.drawable.manager_tab_selector)),
-                PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);
-        mTabHost.addTab(
+                PagerFragment.class, DOWNLOAD_PAGER_BUNDLE);*/
+        /*mTabHost.addTab(
                 mTabHost.newTabSpec("myprofile_page").setIndicator("",
                         ContextCompat.getDrawable(this, R.drawable.my_profile_tab_selector)),
+<<<<<<< HEAD
                 MyProfileFragment.class, null);
-        mTabHost.setCurrentTab(2);
+=======
+                MyProfileFragment.class, null);*/
+        mTabHost.setCurrentTab(0);
 
         if (showRatingDialogOrNot()) {
             Log.d(TAG, "Created Downloaded Loader");
@@ -293,25 +362,24 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         @Override
                         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
                             return new CursorLoader(ReachActivity.this,
-                                    ReachDatabaseProvider.CONTENT_URI,
-                                    ReachDatabaseHelper.MUSIC_DATA_LIST,
-                                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                                    new String[]{ReachDatabase.FINISHED + "", "0"},
-                                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                                    SongProvider.CONTENT_URI,
+                                    SongHelper.MUSIC_DATA_LIST,
+                                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                                    new String[]{ReachDatabase.Status.FINISHED.getString(),
+                                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString()},
+                                    SongHelper.COLUMN_DATE_ADDED + " DESC");
                         }
 
                         @Override
                         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
-
 
                             if (data == null) {
                                 Log.d(TAG, "Inside OnLoadFinished, cursor == null");
                                 return;
                             }
 
-                            if(getValueFirstTimeDownloadedCountCalled()){
+                            if (getValueFirstTimeDownloadedCountCalled()) {
                                 putDownloadedCountInSharedPref(data.getCount());
                                 putValueFirstTimeDownloadedCountCalled(false);
                                 return;
@@ -346,6 +414,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
 
+    private View setUpTabView(final LayoutInflater inflater, final String tab_text, final int tab_drawable_res) {
+        View tabView = inflater.inflate(R.layout.tab_view, null);
+        TextView text = (TextView) tabView.findViewById(R.id.tab_text);
+        ImageView image = (ImageView) tabView.findViewById(R.id.tab_image);
+        text.setText(tab_text);
+        image.setImageResource(tab_drawable_res);
+
+        return tabView;
+
+    }
+
     private void putRatingValueInSharedPref(boolean value) {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(SHOW_RATING_DIALOG_SHARED_PREF_KEY, value);
@@ -367,7 +446,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
 
-
     private int getDownloadedCountFromSharedPref() {
         return preferences.getInt(DOWNLOADED_COUNT_SHARED_PREF_KEY, 0);
     }
@@ -379,8 +457,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
     private void showRatingDialog() {
-        if(alertDialog!=null){
-            if(alertDialog.isShowing()){
+        if (alertDialog != null) {
+            if (alertDialog.isShowing()) {
                 return;
             }
         }
@@ -417,7 +495,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 MiscUtils.autoRetryAsync(() -> StaticData.FEED_BACK_API.insert(feedback).execute(),
                         Optional.absent());
                 //TODO: Only change the value in shared pref if the feedback gets submitted
-                if(alertDialog!=null) {
+                if (alertDialog != null) {
                     alertDialog.dismiss();
                 }
                 putRatingValueInSharedPref(false);
@@ -475,10 +553,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         alertDialogBuilder.setView(vv);
         alertDialog = alertDialogBuilder.show();
-
-
     }
-
 
     private synchronized void processIntent(Intent intent) {
 
@@ -531,7 +606,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                         song.actualName,
                                         true,
                                         pushContainer.userName,
-                                        ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                                        ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED,
                                         "0",
                                         song.artist,
                                         song.duration,
@@ -562,7 +637,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(3);
+                            mTabHost.setCurrentTab(1);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
@@ -577,7 +652,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(3);
+                            mTabHost.setCurrentTab(1);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
@@ -595,7 +670,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
                                 return;
-                            mTabHost.setCurrentTab(3);
+                            mTabHost.setCurrentTab(1);
                             mTabHost.postDelayed(() -> {
                                 final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                         .findFragmentByTag("manager_page");
@@ -605,42 +680,33 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         }, 1000L);
                     }
                     break;
-                case OPEN_MY_PROFILE_APPS:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(4);
-                            MyProfileFragment.setItem(0);
-                        }, 1000L);
-                    }
-                    break;
-                case OPEN_MY_PROFILE_APPS_FIRST:
-                    if (mTabHost != null && !isFinishing()) {
-                        mTabHost.setCurrentTab(4);
-                        MyProfileFragment.setItem(0);
-                    }
-                    break;
-                case OPEN_MY_PROFILE_SONGS:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(4);
-                            MyProfileFragment.setItem(1);
-                        }, 1000L);
-                    }
-                    break;
+//                case OPEN_MY_PROFILE_APPS:
+//                    if (mTabHost != null) {
+//                        mTabHost.postDelayed(() -> {
+//                            if (mTabHost == null || isFinishing())
+//                                return;
+//                            mTabHost.setCurrentTab(4);
+//                            MyProfileFragment.setItem(0);
+//                        }, 1000L);
+//                    }
+//                    break;
+//                case OPEN_MY_PROFILE_APPS_FIRST:
+//                    if (mTabHost != null && !isFinishing()) {
+//                        mTabHost.setCurrentTab(4);
+//                        MyProfileFragment.setItem(0);
+//                    }
+//                    break;
+//                case OPEN_MY_PROFILE_SONGS:
+//                    if (mTabHost != null) {
+//                        mTabHost.postDelayed(() -> {
+//                            if (mTabHost == null || isFinishing())
+//                                return;
+//                            mTabHost.setCurrentTab(4);
+//                            MyProfileFragment.setItem(1);
+//                        }, 1000L);
+//                    }
+//                    break;
                 case OPEN_EXPLORE:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(2);
-                        }, 1000L);
-                    }
-                    break;
-                case OPEN_MY_FRIENDS:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
@@ -649,7 +715,16 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                         }, 1000L);
                     }
                     break;
-                case OPEN_PUSH:
+                case OPEN_MY_FRIENDS:
+                    if (mTabHost != null) {
+                        mTabHost.postDelayed(() -> {
+                            if (mTabHost == null || isFinishing())
+                                return;
+                            mTabHost.setCurrentTab(2);
+                        }, 1000L);
+                    }
+                    break;
+                /*case OPEN_PUSH:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
                             if (mTabHost == null || isFinishing())
@@ -657,7 +732,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             mTabHost.setCurrentTab(1);
                         }, 1000L);
                     }
-                    break;
+                    break;*/
             }
         } catch (IllegalStateException ignored) {
         }
@@ -668,10 +743,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         return menuClickListener;
     }
 
-    @Override
     public void addSongToQueue(long songId, long senderId, long size,
                                String displayName, String actualName,
-                               boolean multiple, String userName, String onlineStatus,
+                               boolean multiple, String userName, ReachFriendsHelper.Status onlineStatus,
                                String networkType, String artistName, long duration,
                                String albumName, String genre) {
 
@@ -686,36 +760,36 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         final Cursor cursor;
         if (multiple)
             cursor = contentResolver.query(
-                    ReachDatabaseProvider.CONTENT_URI,
-                    new String[]{ReachDatabaseHelper.COLUMN_ID},
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                    SongProvider.CONTENT_URI,
+                    new String[]{SongHelper.COLUMN_ID},
+                    SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                            SongHelper.COLUMN_SIZE + " = ? and " +
+                            SongHelper.COLUMN_DURATION + " = ?",
                     new String[]{displayName, actualName, size + "", duration + ""},
                     null);
         else
             //this cursor can be used to play if entry exists
             cursor = contentResolver.query(
-                    ReachDatabaseProvider.CONTENT_URI,
+                    SongProvider.CONTENT_URI,
                     new String[]{
 
-                            ReachDatabaseHelper.COLUMN_ID, //0
-                            ReachDatabaseHelper.COLUMN_PROCESSED, //1
-                            ReachDatabaseHelper.COLUMN_PATH, //2
+                            SongHelper.COLUMN_ID, //0
+                            SongHelper.COLUMN_PROCESSED, //1
+                            SongHelper.COLUMN_PATH, //2
 
-                            ReachDatabaseHelper.COLUMN_IS_LIKED, //3
-                            ReachDatabaseHelper.COLUMN_SENDER_ID, //4
-                            ReachDatabaseHelper.COLUMN_RECEIVER_ID, //5
-                            ReachDatabaseHelper.COLUMN_SIZE, //6
-                            ReachDatabaseHelper.COLUMN_META_HASH //7
+                            SongHelper.COLUMN_IS_LIKED, //3
+                            SongHelper.COLUMN_SENDER_ID, //4
+                            SongHelper.COLUMN_RECEIVER_ID, //5
+                            SongHelper.COLUMN_SIZE, //6
+                            SongHelper.COLUMN_META_HASH //7
 
                     },
 
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_ACTUAL_NAME + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_SIZE + " = ? and " +
-                            ReachDatabaseHelper.COLUMN_DURATION + " = ?",
+                    SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                            SongHelper.COLUMN_SIZE + " = ? and " +
+                            SongHelper.COLUMN_DURATION + " = ?",
                     new String[]{displayName, actualName, size + "", duration + ""},
                     null);
 
@@ -731,7 +805,23 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     final String temp = cursor.getString(3);
                     liked = !TextUtils.isEmpty(temp) && temp.equals("1");
 
-                    final MusicData musicData = new MusicData(
+                    final Song song = new Song.Builder()
+                            .actualName(actualName)
+                            .album(albumName)
+                            .artist(artistName)
+                            .dateAdded(0L)
+                            .displayName(displayName)
+                            .duration(duration)
+                            .fileHash(cursor.getString(7))
+                            .path(cursor.getString(2))
+                            .isLiked(liked)
+                            .build();
+
+                    song.setProcessed(cursor.getLong(1));
+                    song.setType(Song.Type.DOWNLOADED);
+                    song.setSenderId(senderId);
+
+                    /*final MusicData musicData = new MusicData(
                             cursor.getLong(0), //id
                             cursor.getString(7), //meta-hash
                             size,
@@ -744,8 +834,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                             "",
                             liked,
                             duration,
-                            (byte) 0);
-                    MiscUtils.playSong(musicData, this);
+                            MusicData.Type.DOWNLOADED);*/
+                    MiscUtils.playSong(song, this);
                 }
                 //in both cases close and continue
                 cursor.close();
@@ -756,38 +846,34 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         //new song
 
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(-1);
-        reachDatabase.setSongId(songId);
-        reachDatabase.setReceiverId(serverId);
-        reachDatabase.setSenderId(senderId);
-
-        reachDatabase.setOperationKind((short) 0);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setSenderName(userName);
-        reachDatabase.setOnlineStatus(onlineStatus);
-
-        reachDatabase.setArtistName(artistName);
-        reachDatabase.setIsLiked(false);
-        reachDatabase.setDisplayName(displayName);
-        reachDatabase.setActualName(actualName);
-        reachDatabase.setLength(size);
-        reachDatabase.setProcessed(0);
-        reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-
-        reachDatabase.setDuration(duration);
-        reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                .setId(-1)
+                .setSongId(songId)
+                .setReceiverId(serverId)
+                .setSenderId(senderId)
+                .setOnlineStatus(ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED)
+                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+                .setUserName(userName)
+                .setArtistName(artistName)
+                .setDisplayName(displayName)
+                .setActualName(actualName)
+                .setLength(size)
+                .setDateAdded(DateTime.now())
+                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                .setDuration(duration)
+                .setAlbumName(albumName)
+                .setAlbumArtData(new byte[0])
+                .setGenre(genre)
+                .setLiked(false)
+                .setOnlineStatus(onlineStatus)
+                .setVisibility(true)
+                .setPath("hello_world")
+                .setProcessed(0)
+                .setLogicalClock((short) 0)
+                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
-
-        reachDatabase.setAlbumName(albumName);
-        reachDatabase.setGenre(genre);
-
-        reachDatabase.setVisibility((short) 1);
 
         //We call bulk starter always
         MiscUtils.startDownload(reachDatabase, this, null, "PUSH");

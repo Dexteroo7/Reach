@@ -2,6 +2,7 @@ package reach.project.coreViews.yourProfile.apps;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,9 +13,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 
+import com.appspot.able_door_616.userApi.UserApi;
+import com.appspot.able_door_616.userApi.model.SimpleApp;
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
@@ -31,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-import reach.backend.entities.userApi.model.SimpleApp;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
@@ -39,6 +45,7 @@ import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.coreViews.yourProfile.blobCache.CacheType;
+import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -73,7 +80,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public void onDestroyView() {
-        
+
         super.onDestroyView();
         hostId = 0;
 
@@ -175,7 +182,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public void handOverMessage(@NonNull App item) {
-        MiscUtils.openAppinPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
+        MiscUtils.openAppInPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
     }
 
     @Override
@@ -296,12 +303,25 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
-        final List<SimpleApp> simpleApps = MiscUtils.autoRetry(
-                () -> StaticData.USER_API.fetchRecentApps(hostId).execute().getItems(), Optional.absent()
-        ).or(Collections.emptyList());
+        final UserApi userApi = MiscUtils.useContextFromFragment(reference, activity -> {
 
-        if (simpleApps == null || simpleApps.isEmpty())
-            return Collections.emptyList();
+            final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            final HttpTransport transport = new NetHttpTransport();
+            final JsonFactory factory = new JacksonFactory();
+            final GoogleAccountCredential credential = GoogleAccountCredential
+                    .usingAudience(activity, StaticData.SCOPE)
+                    .setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+            Log.d("CodeVerification", credential.getSelectedAccountName());
+
+            return CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
+                    .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+        }).orNull();
+
+        final List<SimpleApp> simpleApps;
+        if (userApi == null)
+            simpleApps = Collections.emptyList();
+        else
+            simpleApps = MiscUtils.autoRetry(() -> userApi.fetchRecentApps(hostId).execute().getItems(), Optional.absent()).or(Collections.emptyList());
 
         final List<App> toReturn = new ArrayList<>(simpleApps.size());
         for (SimpleApp simpleApp : simpleApps) {

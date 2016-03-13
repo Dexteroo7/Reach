@@ -14,9 +14,9 @@
         android:icon="@drawable/icon_notification_pink"
         />
     <item
-        android:id="@+id/settings_button"
-        android:title="Settings"
+        android:id="@+id/my_profile_button"
+        android:title="My Profile"
         app:showAsAction="always"
-        android:icon="@drawable/icon_settings_pink"
+        android:icon="@drawable/ic_account_circle_pink_24dp"
         />
 </menu>

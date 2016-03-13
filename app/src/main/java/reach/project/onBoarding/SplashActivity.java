@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,17 +20,19 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Display;
 import android.widget.Toast;
 
+import com.appspot.able_door_616.userApi.model.UserDataPersistence;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.common.base.Optional;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 
-import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
@@ -64,6 +67,14 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
         activityWeakReference = new WeakReference<>(this);
         contextWeakReference = new WeakReference<>(getApplication());
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int height = size.y;
+        StaticData.deviceHeight = height;
+        StaticData.deviceWidth = width;
 
         // Checking if the user has given permission to read contacts on API 23(marshmallow) or greater
         if (Build.VERSION.SDK_INT >= 23) {
@@ -144,16 +155,17 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     private void proceedAfterChecks() {
 
-        String chosenEmail = SharedPrefUtils.getEmailId(getSharedPreferences("Reach", MODE_PRIVATE));
+        final String chosenEmail = SharedPrefUtils.getEmailId(getSharedPreferences("Reach", MODE_PRIVATE));
         if (TextUtils.isEmpty(chosenEmail)) {
-            Account[] accounts = AccountManager.get(this).getAccountsByType("com.google");
+
+            final Account[] accounts = AccountManager.get(this).getAccountsByType("com.google");
             if (accounts.length == 0) {
-                Toast.makeText(this, "You need atleast 1 Google account signed-in to use the app", Toast.LENGTH_LONG).show();
+
+                Toast.makeText(this, "You need at-least 1 Google account signed-in to use the app", Toast.LENGTH_LONG).show();
                 finish();
                 return;
             }
-            chosenEmail = accounts[0].name;
-            SharedPrefUtils.storeEmailId(getSharedPreferences("Reach", MODE_PRIVATE), chosenEmail);
+            SharedPrefUtils.storeEmailId(getSharedPreferences("Reach", MODE_PRIVATE), accounts[0].name);
         }
         Log.i("Ayush", "Chosen account = " + chosenEmail);
 
@@ -194,9 +206,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 FireOnce.checkGCM(contextWeakReference, serverId);
                 //refresh download ops
                 FireOnce.refreshOperations(contextWeakReference);
-                //Music scanner
+
                 final Intent intent = new Intent(this, MetaDataScanner.class);
-                intent.putExtra("first", false);
                 startService(intent);
 
             } else
@@ -214,7 +225,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                     R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.splashLayout, NumberVerification.newInstance()).commit();
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
 
     }
 
@@ -228,30 +240,50 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                     R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.splashLayout, CodeVerification.newInstance(randomCode, phoneNumber, countryCode)).commit();
-        } catch (IllegalStateException ignored) { finish();}
+        } catch (IllegalStateException ignored) {
+            finish();
+        }
     }
 
     @Override
-    public void onOpenAccountCreation(Optional<OldUserContainerNew> container) {
+    public void onOpenAccountCreation(Optional<UserDataPersistence> container) {
         if (isFinishing())
             return;
         try {
             getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
                     R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
                     .replace(R.id.splashLayout, AccountCreation.newInstance(container)).commit();
-        } catch (IllegalStateException ignored) { finish();}
+        } catch (IllegalStateException ignored) {
+            finish();
+        }
 
     }
 
     @Override
-    public void onOpenScan(String name, Uri profilePicUri, String oldImageId, String oldCoverId, String phoneNumber) {
-            if (isFinishing())
-                return;
-            try {
-                getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
-                        ScanFragment.newInstance(name, profilePicUri, oldImageId, oldCoverId, phoneNumber)).commit();
-            } catch (IllegalStateException ignored) { finish();}
-}
+    public void onOpenScan(String name,
+                           long oldUserId,
+                           String oldProfilePicId,
+                           String oldCoverPicId,
+                           Uri newProfilePicUri,
+                           Uri newCoverPicUri,
+                           Serializable contentState) {
+
+        if (isFinishing())
+            return;
+        try {
+            getSupportFragmentManager().beginTransaction().replace(R.id.splashLayout,
+                    ScanFragment.newInstance(
+                            name,
+                            oldUserId,
+                            oldProfilePicId,
+                            oldCoverPicId,
+                            newProfilePicUri,
+                            newCoverPicUri,
+                            contentState)).commit();
+        } catch (IllegalStateException ignored) {
+            finish();
+        }
+    }
 
     /**
      * Check the device to make sure it has the Google Play Services APK. If
@@ -312,7 +344,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
             final FragmentManager fragmentManager = activity.getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.splashLayout,
                     WelcomeFragment.newInstance()).commit();
-        } catch (IllegalStateException ignored) { activity.finish();}
+        } catch (IllegalStateException ignored) {
+            activity.finish();
+        }
 
     });
 }

@@ -7,17 +7,19 @@ import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.squareup.wire.Wire;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import reach.backend.entities.userApi.model.ReachUser;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
+import reach.project.music.Song;
+import reach.project.onBoarding.OnboardingData;
 
 /**
  * Created by Dexter on 28-03-2015.
@@ -25,17 +27,29 @@ import reach.project.reachProcess.auxiliaryClasses.MusicData;
 public enum SharedPrefUtils {
     ;
 
+
     //TODO centralize all keys,
 
-    public synchronized static void storeReachUser(SharedPreferences sharedPreferences, ReachUser reachUserDatabase) {
+    private static final String TAG = SharedPrefUtils.class.getSimpleName();
+    private static final String IS_A_SONG_CURRENTLY_PLAYING_KEY = "is_a_song_currently_playing";
 
-        sharedPreferences.edit().putString("phoneNumber", reachUserDatabase.getPhoneNumber())
-                .putString("userName", reachUserDatabase.getUserName())
-                .putString("deviceId", reachUserDatabase.getDeviceId())
-                .putString("imageId", reachUserDatabase.getImageId())
-                .putString("coverImageId", reachUserDatabase.getCoverPicId())
-                .putString("chatToken", reachUserDatabase.getChatToken())
-                .putLong("serverId", reachUserDatabase.getId())
+
+    public synchronized static void storeReachUser(SharedPreferences sharedPreferences,
+                                                   OnboardingData onboardingData,
+                                                   String chatToken,
+                                                   String imageId,
+                                                   long serverId) {
+
+        sharedPreferences.edit()
+                .putString("phoneNumber", onboardingData.phoneNumber)
+                .putString("userName", onboardingData.userName)
+                .putString("deviceId", onboardingData.deviceId)
+                .putString("coverImageId", onboardingData.coverPicUri)
+                .putString("promoCode", onboardingData.promoCode)
+                .putString("emailId", onboardingData.emailId)
+                .putString("imageId", imageId)
+                .putString("chatToken", chatToken)
+                .putLong("serverId", serverId)
                 .apply();
     }
 
@@ -125,12 +139,6 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putBoolean("mobileDataOn", false).apply();
     }
 
-    public synchronized static void storeLastPlayed(Context context, String data) {
-
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
-        sharedPreferences.edit().putString("last_played", data).apply();
-    }
-
     public synchronized static boolean getMobileData(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("mobileDataOn", true);
     }
@@ -141,22 +149,6 @@ public enum SharedPrefUtils {
 
     public synchronized static boolean getReachQueueSeen(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("reachQueueSeen", false);
-    }
-
-    public synchronized static Optional<MusicData> getLastPlayed(Context context) {
-
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
-        final String unParsed = sharedPreferences.getString("last_played", "");
-        if (TextUtils.isEmpty(unParsed))
-            return Optional.absent();
-        final MusicData toReturn;
-        try {
-            toReturn = new Gson().fromJson(unParsed, MusicData.class);
-        } catch (IllegalStateException | JsonSyntaxException e) {
-            e.printStackTrace();
-            return Optional.absent();
-        }
-        return Optional.of(toReturn);
     }
 
     public synchronized static long getServerId(SharedPreferences sharedPreferences) {
@@ -173,34 +165,6 @@ public enum SharedPrefUtils {
 
     public synchronized static String getCoverImageId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("coverImageId", "");
-    }
-
-    public synchronized static boolean toggleShuffle(Context context) {
-
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
-        final boolean currentValue = sharedPreferences.getBoolean("shuffle", false);
-        sharedPreferences.edit().putBoolean("shuffle", !currentValue).apply();
-        return !currentValue;
-    }
-
-    public synchronized static boolean getShuffle(Context context) {
-
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean("shuffle", false);
-    }
-
-    public synchronized static boolean toggleRepeat(Context context) {
-
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
-        final boolean currentValue = sharedPreferences.getBoolean("repeat", false);
-        sharedPreferences.edit().putBoolean("repeat", !currentValue).apply();
-        return !currentValue;
-    }
-
-    public synchronized static boolean getRepeat(Context context) {
-
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("reach_process", Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean("repeat", false);
     }
 
     @Nonnull
@@ -301,11 +265,166 @@ public enum SharedPrefUtils {
         return sharedPreferences.getString("emailId", "");
     }
 
-    public synchronized static boolean isItFirstTimeDownload(SharedPreferences sharedPreferences){
-        return sharedPreferences.getBoolean("first_time_download",true);
+    public synchronized static boolean isItFirstTimeDownload(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean("first_time_download", true);
     }
 
-    public synchronized static void putFirstTimeDownload(SharedPreferences sharedPreferences, boolean value){
+    public synchronized static void putFirstTimeDownload(SharedPreferences sharedPreferences, boolean value) {
         sharedPreferences.edit().putBoolean("first_time_download", value).apply();
+    }
+
+    /*public synchronized static void toggleIsASongCurrentlyPlaying(SharedPreferences sharedPreferences, boolean b) {
+        sharedPreferences.edit().putBoolean(IS_A_SONG_CURRENTLY_PLAYING_KEY, b).apply();
+    }
+
+    public synchronized static boolean getIsASongCurrentlyPlaying(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean(IS_A_SONG_CURRENTLY_PLAYING_KEY, false);
+    }*/
+
+    ////////////////////////////////////
+
+    public synchronized static boolean toggleRepeat(@Nonnull Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "repeat_boolean", "rwd");
+            final boolean newRepeat = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
+            randomAccessFile.setLength(0);
+            randomAccessFile.writeBoolean(newRepeat); //write new repeat
+            return newRepeat;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    public static boolean getRepeat(@Nonnull Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "repeat_boolean", "r");
+            return randomAccessFile.readBoolean();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    ////////////////////////////////////
+
+    public synchronized static boolean toggleShuffle(@Nonnull Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "shuffle_boolean", "rwd");
+            final boolean newShuffle = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
+            randomAccessFile.setLength(0);
+            randomAccessFile.writeBoolean(newShuffle); //write new shuffle
+            return newShuffle;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    public static boolean getShuffle(@Nonnull Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "shuffle_boolean", "r");
+            return randomAccessFile.readBoolean();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    ////////////////////////////////////
+
+    public synchronized static boolean togglePlaying(@Nonnull Context context, boolean value) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "playing_boolean", "rwd");
+//            final boolean newShuffle = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
+            randomAccessFile.setLength(0);
+            randomAccessFile.writeBoolean(value); //write new shuffle
+            return value;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    public static boolean getPlaying(@Nonnull Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+
+        try {
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "playing_boolean", "r");
+            return randomAccessFile.readBoolean();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+    }
+
+    ////////////////////////////////////
+
+    public static Optional<Song> getLastPlayed(@Nonnull Context context) {
+
+        RandomAccessFile randomAccessFile = null;
+        Song toReturn;
+
+        try {
+
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "last_played", "r");
+            final int size = randomAccessFile.readInt();
+            final byte[] stuff = new byte[size];
+            randomAccessFile.readFully(stuff); //read fully
+            toReturn = new Wire(Song.class).parseFrom(stuff, Song.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Optional.absent();
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
+
+        return Optional.fromNullable(toReturn);
+    }
+
+    public synchronized static void storeLastPlayed(@Nonnull Context context,
+                                                    @Nonnull Song currentPlaying) {
+
+        RandomAccessFile randomAccessFile = null;
+        try {
+
+            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "last_played", "rwd");
+            randomAccessFile.setLength(0);
+            final byte[] bytes = currentPlaying.toByteArray();
+            randomAccessFile.writeInt(bytes.length);
+            randomAccessFile.write(bytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            MiscUtils.closeQuietly(randomAccessFile);
+        }
     }
 }

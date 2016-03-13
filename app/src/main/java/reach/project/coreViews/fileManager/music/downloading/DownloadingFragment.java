@@ -17,9 +17,11 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.Song;
+import reach.project.music.SongCursorHelper;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -42,7 +44,8 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         return fragment;
     }
 
-    private final DownloadingAdapter downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
+    @Nullable
+    private DownloadingAdapter downloadingAdapter = null;
 
     @Nullable
     @Override
@@ -51,6 +54,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         final View rootView = inflater.inflate(R.layout.fragment_mylibrary, container, false);
          mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
+        downloadingAdapter = new DownloadingAdapter(this, R.layout.downloading_card);
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyViewText.setText(NO_DOWNLOADS_TEXT);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
@@ -58,11 +62,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(downloadingAdapter);
 
-//        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-//        userId = SharedPrefUtils.getServerId(preferences);
-
         getLoaderManager().initLoader(StaticData.DOWNLOADING_LOADER, null, this);
-
         return rootView;
     }
 
@@ -71,12 +71,15 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         super.onDestroyView();
         getLoaderManager().destroyLoader(StaticData.DOWNLOADING_LOADER);
-        downloadingAdapter.close();
+        if (downloadingAdapter != null)
+            downloadingAdapter.close();
+        downloadingAdapter = null;
     }
 
     @Override
     public void handOverMessage(@Nonnull Cursor cursor) {
-        MiscUtils.playSong(ReachDatabaseHelper.getMusicData(cursor), getContext());
+        final Song song = SongCursorHelper.DOWNLOADING_TO_SONG_HELPER.parse(cursor);
+        MiscUtils.playSong(song, getContext());
     }
 
     @Override
@@ -84,12 +87,13 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
 
         if (id == StaticData.DOWNLOADING_LOADER)
             return new CursorLoader(getActivity(),
-                    ReachDatabaseProvider.CONTENT_URI,
-                    ReachDatabaseHelper.MUSIC_DATA_LIST,
-                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " + //show only non finished
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"},
-                    ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC");
+                    SongProvider.CONTENT_URI,
+                    SongCursorHelper.DOWNLOADING_HELPER.getProjection(),
+                    SongHelper.COLUMN_STATUS + " != ? and " + //show only non finished
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                    new String[]{ReachDatabase.Status.FINISHED.getString(),
+                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString()},
+                    SongHelper.COLUMN_DATE_ADDED + " DESC");
 
         return null;
     }
@@ -97,7 +101,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        if (data == null || data.isClosed())
+        if (data == null || data.isClosed() || downloadingAdapter == null)
             return;
 
         if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
@@ -111,7 +115,7 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        if (loader.getId() == StaticData.DOWNLOADING_LOADER) {
+        if (loader.getId() == StaticData.DOWNLOADING_LOADER && downloadingAdapter != null) {
 
 //            Log.i("Ayush", "Invalidating downloading cursor");
             downloadingAdapter.setCursor(null);

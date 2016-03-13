@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -20,7 +19,6 @@ import android.widget.Toast;
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 import com.google.common.collect.Ordering;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +27,6 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
-import reach.backend.applications.appVisibilityApi.model.MyString;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
@@ -178,17 +175,18 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                 throw new IllegalArgumentException("Arguments not of expected type");
 
             boolean failed = false;
-            try {
-                final MyString response = StaticData.APP_VISIBILITY_API.update(
-                        serverId, //serverId
-                        packageName, //packageName
-                        visibility).execute(); //if 0 (false) make it true and vice-versa
-                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
-                    failed = true; //mark failed
-            } catch (IOException e) {
-                e.printStackTrace();
-                failed = true; //mark failed
-            }
+            //TODO
+//            try {
+//                final MyString response = StaticData.APP_VISIBILITY_API.update(
+//                        serverId, //serverId
+//                        packageName, //packageName
+//                        visibility).execute(); //if 0 (false) make it true and vice-versa
+//                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+//                    failed = true; //mark failed
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                failed = true; //mark failed
+//            }
 
             //reset if failed
             if (failed)

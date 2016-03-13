@@ -15,12 +15,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
+import com.appspot.able_door_616.userApi.UserApi;
+import com.appspot.able_door_616.userApi.model.SimpleSong;
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
+
+import org.joda.time.DateTime;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,17 +42,17 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-import reach.backend.entities.userApi.model.SimpleSong;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.coreViews.yourProfile.blobCache.CacheType;
+import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
+import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -225,38 +233,34 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
             return;
         }
 
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(-1);
-        reachDatabase.setSongId(song.songId);
-        reachDatabase.setReceiverId(myId);
-        reachDatabase.setSenderId(hostId);
-
-        reachDatabase.setOperationKind((short) 0);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setSenderName(senderCursor.getString(0));
-        reachDatabase.setOnlineStatus(senderCursor.getShort(1) + "");
-
-        reachDatabase.setArtistName(song.artist);
-        reachDatabase.setIsLiked(false);
-        reachDatabase.setDisplayName(song.displayName);
-        reachDatabase.setActualName(song.actualName);
-        reachDatabase.setLength(song.size);
-        reachDatabase.setProcessed(0);
-        reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-
-        reachDatabase.setDuration(song.duration);
-        reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                .setId(-1)
+                .setSongId(song.songId)
+                .setReceiverId(myId)
+                .setSenderId(hostId)
+                .setOnlineStatus(ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED)
+                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+                .setUserName(senderCursor.getString(0))
+                .setArtistName(song.artist)
+                .setDisplayName(song.displayName)
+                .setActualName(song.actualName)
+                .setLength(song.size)
+                .setDateAdded(DateTime.now())
+                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                .setDuration(song.duration)
+                .setAlbumName(song.album)
+                .setAlbumArtData(new byte[0])
+                .setGenre(song.genre)
+                .setLiked(false)
+                .setOnlineStatus(ReachFriendsHelper.Status.getFromValue(senderCursor.getShort(1)))
+                .setVisibility(true)
+                .setPath("hello_world")
+                .setProcessed(0)
+                .setLogicalClock((short) 0)
+                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
-
-        reachDatabase.setAlbumName(song.album);
-        reachDatabase.setGenre(song.genre);
-
-        reachDatabase.setVisibility((short) 1);
 
         MiscUtils.startDownload(reachDatabase, activity, rootView, "YOUR_PROFILE");
         senderCursor.close();
@@ -429,12 +433,25 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
 
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
-        final List<SimpleSong> simpleSongs = MiscUtils.autoRetry(
-                () -> StaticData.USER_API.fetchRecentSongs(hostId).execute().getItems(), Optional.absent()
-        ).or(Collections.emptyList());
+        final UserApi userApi = MiscUtils.useContextFromFragment(reference, activity -> {
 
-        if (simpleSongs == null || simpleSongs.isEmpty())
-            return Collections.emptyList();
+            final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            final HttpTransport transport = new NetHttpTransport();
+            final JsonFactory factory = new JacksonFactory();
+            final GoogleAccountCredential credential = GoogleAccountCredential
+                    .usingAudience(activity, StaticData.SCOPE)
+                    .setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+            Log.d("CodeVerification", credential.getSelectedAccountName());
+
+            return CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
+                    .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+        }).orNull();
+
+        final List<SimpleSong> simpleSongs;
+        if (userApi == null)
+            simpleSongs = Collections.emptyList();
+        else
+            simpleSongs = MiscUtils.autoRetry(() -> userApi.fetchRecentSongs(hostId).execute().getItems(), Optional.absent()).or(Collections.emptyList());
 
         final List<Song> toReturn = new ArrayList<>(simpleSongs.size());
         for (SimpleSong simpleSong : simpleSongs) {

@@ -37,7 +37,6 @@
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
-        ...
 
         <activity
             android:name=".core.ReachActivity"
@@ -75,7 +74,7 @@
             android:excludeFromRecents="true"
             android:label="@string/title_activity_edit_profile"
             android:launchMode="singleTask"
-            android:parentActivityName=".core.ReachActivity"
+            android:parentActivityName=".core.MyProfileActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -171,6 +170,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
+        <activity
+            android:name=".core.MyProfileActivity"
+            android:launchMode="singleTask"
+            android:parentActivityName=".core.ReachActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppThemeTry">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="reach.project.core.ReachActivity" />
+        </activity>
 
         <receiver
             android:name=".core.GcmBroadcastReceiver"
@@ -189,6 +198,7 @@
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name=".pacemaker.HeartbeatReceiver"
             android:exported="false" />
@@ -217,9 +227,11 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
+
         <service
             android:name=".utils.MetaDataScanner"
             android:exported="false" />
+
         <service
             android:name=".onBoarding.smsRelated.SmsListener"
             android:exported="false" />
@@ -238,10 +250,10 @@
         <!-- Things on process :remote -->
 
         <provider
-            android:name=".coreViews.fileManager.ReachDatabaseProvider"
-            android:authorities="reach.project.coreViews.fileManager.ReachDatabaseProvider"
+            android:name=".music.SongProvider"
+            android:authorities="reach.project.music.SongProvider"
             android:exported="false"
-            android:process=":remote" />
+            android:multiprocess="true" />
 
         <service
             android:name=".reachProcess.reachService.ProcessManager"

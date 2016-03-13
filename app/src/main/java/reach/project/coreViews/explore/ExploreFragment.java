@@ -22,6 +22,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -45,10 +47,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+import org.joda.time.DateTime;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -62,17 +61,22 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nonnull;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.music.ReachDatabase;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
+import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
@@ -97,7 +101,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
      * @param data the byte[] to transform from
      * @return collection of explore stories, take care to remove loading / done for today etc...
      */
-    public static Function<byte[], Collection<JsonObject>> bytesToJson = new Function<byte[], Collection<JsonObject>>() {
+    public static final Function<byte[], Collection<JsonObject>> BYTES_TO_JSON = new Function<byte[], Collection<JsonObject>>() {
         @javax.annotation.Nullable
         @Override
         public Collection<JsonObject> apply(@Nullable byte[] input) {
@@ -128,7 +132,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
      * @param data the collection to transform into byte[]
      * @return byte[] explore stories, take care to remove loading / done for today etc...
      */
-    public static Function<List<JsonObject>, byte[]> jsonToBytes = new Function<List<JsonObject>, byte[]>() {
+    public static final Function<List<JsonObject>, byte[]> JSON_TO_BYTES = new Function<List<JsonObject>, byte[]>() {
         @javax.annotation.Nullable
         @Override
         public byte[] apply(@Nullable List<JsonObject> input) {
@@ -193,11 +197,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
      */
     private static final Callable<Collection<JsonObject>> FETCH_NEXT_BATCH = () -> {
 
-        final boolean onlineStatus = MiscUtils.useContextFromFragment(reference, (UseContext<Boolean, Context>) MiscUtils::isOnline).or(false);
+        final boolean onlineStatus = MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, Boolean>) MiscUtils::isOnline).or(false);
 
         if (!onlineStatus) {
 
-            MiscUtils.runOnUiThreadFragment(reference, (Activity context) -> {
+            MiscUtils.runOnUiThreadFragment(reference, (UseContext) context -> {
                 Toast.makeText(context, "Could not connect to internet", Toast.LENGTH_SHORT).show();
             });
             return Collections.emptyList();
@@ -215,7 +219,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     },
                     ReachFriendsHelper.COLUMN_STATUS + " = ?",
                     new String[]{
-                            ReachFriendsHelper.ONLINE_REQUEST_GRANTED + ""
+                            ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString()
                     }, null);
 
             if (cursor == null)
@@ -262,6 +266,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             return Collections.emptyList();
 
         final JsonArray receivedData = new JsonParser().parse(response.body().string()).getAsJsonArray();
+        if (receivedData.size() == 0) {
+
+            ExploreBuffer.DONE_FOR_TODAY.set(true);
+            return Collections.emptyList();
+        }
+
         final ImagePipeline imagePipeline = Fresco.getImagePipeline();
 
         final List<JsonObject> containers = new ArrayList<>();
@@ -404,6 +414,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         /*exploreAdapter = new ExploreAdapter(this, this);
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setAdapter(exploreAdapter);
+
 //        explorePager.setOffscreenPageLimit(1);
         explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -515,6 +526,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         Log.d("Ayush", "ExploreFragment - onCreate");
     }
@@ -539,7 +551,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public boolean isDoneForToday() {
-        return buffer == null;
+        return buffer == null || ExploreBuffer.DONE_FOR_TODAY.get();
     }
 
     @Override
@@ -577,7 +589,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 break;
 
             case APP:
-                MiscUtils.openAppinPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                MiscUtils.openAppInPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
                         .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
                 break;
 
@@ -629,39 +641,33 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             cursor.close();
         }
 
-        final ReachDatabase reachDatabase = new ReachDatabase();
-
-        reachDatabase.setId(-1);
-        reachDatabase.setSongId(MiscUtils.get(metaInfo, MusicMetaInfo.SONG_ID).getAsLong());
-        reachDatabase.setReceiverId(myServerId);
-        reachDatabase.setSenderId(senderId);
-
-        reachDatabase.setOperationKind((short) 0);
-        reachDatabase.setPath("hello_world");
-        reachDatabase.setSenderName(userName);
-        reachDatabase.setOnlineStatus(ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "");
-
-        reachDatabase.setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString());
-        reachDatabase.setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME).getAsString());
-        reachDatabase.setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST, "").getAsString());
-        reachDatabase.setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM, "").getAsString());
-
-        reachDatabase.setIsLiked(false);
-        reachDatabase.setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong());
-        reachDatabase.setProcessed(0);
-        reachDatabase.setAdded(System.currentTimeMillis());
-        reachDatabase.setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-
-        reachDatabase.setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong());
-        reachDatabase.setLogicalClock((short) 0);
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        final ReachDatabase reachDatabase = new ReachDatabase.Builder()
+                .setId(-1)
+                .setSongId(MiscUtils.get(metaInfo, MusicMetaInfo.SONG_ID).getAsLong())
+                .setReceiverId(myServerId)
+                .setSenderId(senderId)
+                .setOperationKind(ReachDatabase.OperationKind.DOWNLOAD_OP)
+                .setUserName(userName)
+                .setArtistName(MiscUtils.get(metaInfo, MusicMetaInfo.ARTIST, "").getAsString())
+                .setDisplayName(MiscUtils.get(metaInfo, MusicMetaInfo.DISPLAY_NAME).getAsString())
+                .setActualName(MiscUtils.get(metaInfo, MusicMetaInfo.ACTUAL_NAME).getAsString())
+                .setLength(MiscUtils.get(metaInfo, MusicMetaInfo.SIZE).getAsLong())
+                .setDateAdded(DateTime.now())
+                .setUniqueId(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                .setDuration(MiscUtils.get(metaInfo, MusicMetaInfo.DURATION).getAsLong())
+                .setAlbumName(MiscUtils.get(metaInfo, MusicMetaInfo.ALBUM, "").getAsString())
+                .setAlbumArtData(new byte[0])
+                .setGenre("")
+                .setLiked(false)
+                .setOnlineStatus(ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED)
+                .setVisibility(true)
+                .setPath("hello_world")
+                .setProcessed(0)
+                .setLogicalClock((short) 0)
+                .setStatus(ReachDatabase.Status.NOT_WORKING).build();
 
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
-
-        reachDatabase.setGenre("hello_world");
-
-        reachDatabase.setVisibility((short) 1);
 
         MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");
     }
@@ -670,7 +676,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     public void onAttach(Context context) {
 
         super.onAttach(context);
-        buffer = ExploreBuffer.getInstance(this, context.getCacheDir(), bytesToJson, jsonToBytes);
+        buffer = ExploreBuffer.getInstance(this, context.getCacheDir(), BYTES_TO_JSON, JSON_TO_BYTES);
         try {
             mListener = (SuperInterface) context;
         } catch (ClassCastException e) {

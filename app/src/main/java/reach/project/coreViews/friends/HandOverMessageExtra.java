@@ -2,6 +2,7 @@ package reach.project.coreViews.friends;
 
 import javax.annotation.Nonnull;
 
+import reach.project.music.Song;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**

@@ -9,11 +9,14 @@ import android.view.ViewGroup;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.coreViews.fileManager.HandOverMessageExtra;
+import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -22,25 +25,42 @@ import reach.project.utils.viewHelpers.MoreListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Closeable {
+class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements RecentAdapter.VisibilityHook, Closeable {
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
+    public final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
 
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private final HandOverMessage<App> handOverApp;
     private final PackageManager packageManager;
     private final RecentAdapter recentAdapter;
 
-    private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
+    private final HandOverMessageExtra<App> handOverMessageExtra = new HandOverMessageExtra<App>() {
+
         @Override
         public void handOverMessage(@Nonnull Integer position) {
 
             final Object object = getItem(position);
             if (object instanceof App)
-                handOverApp.handOverMessage((App) object);
+                ParentAdapter.this.handOverApp.handOverMessage((App) object);
             else
                 throw new IllegalStateException("Position must correspond with an App");
+        }
+
+        @Override
+        public App getExtra(@Nonnull Integer position) {
+
+            final Object object = getItem(position);
+            if (object instanceof App)
+                return (App) object;
+            else
+                throw new IllegalStateException("Position must correspond with an App");
+        }
+
+        @Override
+        public void putExtra(int position, App item) {
+
         }
     };
 
@@ -49,7 +69,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         this.packageManager = context.getPackageManager();
         this.handOverApp = handOverApp;
 
-        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item);
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item, this);
         setHasStableIds(true);
     }
 
@@ -89,7 +109,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             case VIEW_TYPE_ALL: {
 
                 return new AppItemHolder(LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.app_list_item, parent, false), handOverMessage);
+                        .inflate(R.layout.app_list_item, parent, false), handOverMessageExtra);
             }
 
             case VIEW_TYPE_RECENT: {
@@ -114,6 +134,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
             final App appExactType = (App) friend;
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
+            appItemHolder.menuData.setPosition(holder.getAdapterPosition());
 
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
@@ -121,6 +142,15 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             } catch (PackageManager.NameNotFoundException ignored) {
                 appItemHolder.appIcon.setImageDrawable(null);
             }
+
+            //if contains and is true
+//            if (isVisible(appExactType.packageName)) {
+//                appItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
+//                appItemHolder.toggleText.setText("Everyone");
+//            } else {
+//                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
+//                appItemHolder.toggleText.setText("Only Me");
+//            }
 
         } else {
 
@@ -176,5 +206,10 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
         allAppCount = allAppsList.size();
         return allAppCount + 1; //adjust for recent
+    }
+
+    @Override
+    public boolean isVisible(String packageName) {
+        return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
     }
 }

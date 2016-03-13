@@ -2,6 +2,7 @@ package reach.project.reachProcess.auxiliaryClasses;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 /**
  * Created by Dexter on 15-05-2015.
@@ -9,46 +10,56 @@ import android.os.Parcelable;
 
 public class MusicData implements Parcelable {
 
-    public static byte DOWNLOADED = 0;
-    public static byte MY_LIBRARY = 1;
+    public enum Type {
+        DOWNLOADED,
+        MY_LIBRARY
+    }
 
-    private final String displayName;
-    private final String path;
-    private final String artistName;
-    private final String albumName;
+    private final Type type;
+    private final long columnId;
     private final String metaHash;
 
-    private final long dateAdded;
-    private final long id;
-    private final long length;
-    private final long senderId;
-    private final byte type;
+    private final String displayName;
+    private final String artistName;
+    private final String albumName;
 
-    private long duration; //found out by the musicHandler
-    private boolean isLiked; //toggled by User
-    private long processed; //changes
-    private int currentPosition; //changes
-    private int primaryProgress; //changes
+    private long duration = 0; //effectively final
+    private final long size;
+
+    private final String path;
+    private final long dateAdded;
+
+    private boolean isLiked = false; //toggled by User
+
+    private final long senderId;
+
+    private long processed; //get updated
+    private int currentPosition; //get updated
+    private int primaryProgress; //get updated
+
+    private MusicData() {
+        throw new IllegalAccessError("Fuck off");
+    }
 
     public MusicData(long id,
-                     String metaHash,
-                     long length,
-                     long senderId,
-                     long processed,
-                     long dateAdded,
-                     String path,
-                     String displayName,
-                     String artistName,
-                     String albumName,
-                     boolean isLiked,
-                     long duration,
-                     byte type) {
+                      String metaHash,
+                      long size,
+                      long senderId,
+                      long processed,
+                      long dateAdded,
+                      String path,
+                      String displayName,
+                      String artistName,
+                      String albumName,
+                      boolean isLiked,
+                      long duration,
+                      Type type) {
 
         this.metaHash = metaHash;
         this.displayName = displayName;
         this.path = path;
-        this.id = id;
-        this.length = length;
+        this.columnId = id;
+        this.size = size;
         this.senderId = senderId;
         this.processed = processed;
         this.artistName = artistName;
@@ -59,22 +70,9 @@ public class MusicData implements Parcelable {
         this.albumName = albumName;
     }
 
-//    public MusicData() {
-//
-//        this.displayName = "";
-//        this.path = "";
-//        this.id = 0;
-//        this.length = 0;
-//        this.senderId = 0;
-//        this.processed = 0;
-//        this.artistName = "";
-//        this.type = 0;
-//        this.isLiked = false;
-//        this.duration = 0; //for MyLibrary case
-//        this.dateAdded = 0;
-//        this.albumName = "";
-//        this.metaHash = "";
-//    }
+    public long getColumnId() {
+        return columnId;
+    }
 
     public void setDuration(long duration) {
         this.duration = duration;
@@ -96,7 +94,7 @@ public class MusicData implements Parcelable {
         return isLiked;
     }
 
-    public byte getType() {
+    public Type getType() {
         return type;
     }
 
@@ -138,12 +136,8 @@ public class MusicData implements Parcelable {
         return processed;
     }
 
-    public long getLength() {
-        return length;
-    }
-
-    public long getId() {
-        return id;
+    public long getSize() {
+        return size;
     }
 
     public String getPath() {
@@ -154,6 +148,18 @@ public class MusicData implements Parcelable {
         return displayName;
     }
 
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    public long getDateAdded() {
+        return dateAdded;
+    }
+
+    public String getMetaHash() {
+        return metaHash;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -161,8 +167,8 @@ public class MusicData implements Parcelable {
 
         MusicData musicData = (MusicData) o;
 
-        if (id != musicData.id) return false;
-        if (length != musicData.length) return false;
+        if (columnId != musicData.columnId) return false;
+        if (size != musicData.size) return false;
         if (senderId != musicData.senderId) return false;
         if (type != musicData.type) return false;
         if (duration != musicData.duration) return false;
@@ -177,22 +183,31 @@ public class MusicData implements Parcelable {
         int result = displayName.hashCode();
         result = 31 * result + path.hashCode();
         result = 31 * result + (artistName != null ? artistName.hashCode() : 0);
-        result = 31 * result + (int) (id ^ (id >>> 32));
-        result = 31 * result + (int) (length ^ (length >>> 32));
+        result = 31 * result + (int) (columnId ^ (columnId >>> 32));
+        result = 31 * result + (int) (size ^ (size >>> 32));
         result = 31 * result + (int) (senderId ^ (senderId >>> 32));
-        result = 31 * result + (int) type;
+        switch (type) {
+
+            case DOWNLOADED:
+                result = 31 * result + 0;
+                break;
+            case MY_LIBRARY:
+                result = 31 * result + 1;
+                break;
+        }
         result = 31 * result + (int) (duration ^ (duration >>> 32));
         return result;
     }
 
     protected MusicData(Parcel in) {
+
         displayName = in.readString();
         path = in.readString();
         artistName = in.readString();
-        id = in.readLong();
-        length = in.readLong();
+        columnId = in.readLong();
+        size = in.readLong();
         senderId = in.readLong();
-        type = in.readByte();
+        type = (Type) in.readSerializable();
         duration = in.readLong();
         isLiked = in.readByte() != 0;
         processed = in.readLong();
@@ -215,10 +230,10 @@ public class MusicData implements Parcelable {
         dest.writeString(displayName);
         dest.writeString(path);
         dest.writeString(artistName);
-        dest.writeLong(id);
-        dest.writeLong(length);
+        dest.writeLong(columnId);
+        dest.writeLong(size);
         dest.writeLong(senderId);
-        dest.writeByte(type);
+        dest.writeSerializable(type);
         dest.writeLong(duration);
         dest.writeByte((byte) (isLiked ? 1 : 0));
         dest.writeLong(processed);
@@ -243,15 +258,112 @@ public class MusicData implements Parcelable {
         }
     };
 
-    public String getAlbumName() {
-        return albumName;
-    }
+    public static final class Builder {
 
-    public long getDateAdded() {
-        return dateAdded;
-    }
+        //these must be set
+        private long columnId = 0;
+        private String metaHash = null;
+        private long size = 0;
+        private long senderId = 0;
+        private Long processed = null;
+        private long dateAdded = 0;
+        private String path = null;
+        private String displayName = null;
+        private String artistName = null;
+        private String albumName = null;
+        private long duration = 0;
+        private Type type = null;
 
-    public String getMetaHash() {
-        return metaHash;
+        //optional to set
+        private boolean isLiked = false;
+
+
+        public Builder setMetaHash(String metaHash) {
+            this.metaHash = metaHash;
+            return this;
+        }
+
+        public Builder setSize(long size) {
+            this.size = size;
+            return this;
+        }
+
+        public Builder setSenderId(long senderId) {
+            this.senderId = senderId;
+            return this;
+        }
+
+        public Builder setProcessed(long processed) {
+            this.processed = processed;
+            return this;
+        }
+
+        public Builder setDateAdded(long dateAdded) {
+            this.dateAdded = dateAdded;
+            return this;
+        }
+
+        public Builder setPath(String path) {
+            this.path = path;
+            return this;
+        }
+
+        public Builder setDisplayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
+
+        public Builder setArtistName(String artistName) {
+            this.artistName = artistName;
+            return this;
+        }
+
+        public Builder setAlbumName(String albumName) {
+            this.albumName = albumName;
+            return this;
+        }
+
+        public Builder setLiked(boolean liked) {
+            isLiked = liked;
+            return this;
+        }
+
+        public Builder setDuration(long duration) {
+            this.duration = duration;
+            return this;
+        }
+
+        public Builder setType(Type type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder setColumnId(long columnId) {
+            this.columnId = columnId;
+            return this;
+        }
+
+        public MusicData build() {
+
+            if (columnId == 0 || size == 0 || senderId == 0 || processed == null || dateAdded == 0 ||
+                    duration == 0 || type == null ||
+                    TextUtils.isEmpty(metaHash) || TextUtils.isEmpty(path) || TextUtils.isEmpty(displayName) ||
+                    artistName == null || albumName == null)
+                throw new IllegalArgumentException("Required parameters not found");
+
+            return new MusicData(columnId,
+                    metaHash,
+                    size,
+                    senderId,
+                    processed,
+                    dateAdded,
+                    path,
+                    displayName,
+                    artistName,
+                    albumName,
+                    isLiked,
+                    duration,
+                    type);
+        }
     }
 }

@@ -112,6 +112,8 @@ public class YourProfileActivity extends AppCompatActivity {
             final int numberOfApps = cursor.getInt(6);
             final String imageId = cursor.getString(3);
             final short status = cursor.getShort(5);
+            if (status == ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue())
+                Snackbar.make(findViewById(R.id.root_layout), uName + " is currently offline. You will be able to transfer music when the user comes online.", Snackbar.LENGTH_INDEFINITE).show();
             if (userId != StaticData.DEVIKA) {
                 final View rootView = findViewById(R.id.root_layout);
                 if (status == ReachFriendsHelper.UPLOADS_DISABLED)

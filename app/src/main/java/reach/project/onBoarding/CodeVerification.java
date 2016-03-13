@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,7 +28,14 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.appspot.able_door_616.userApi.UserApi;
+import com.appspot.able_door_616.userApi.model.UserDataPersistence;
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
@@ -37,15 +45,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import reach.backend.entities.userApi.model.OldUserContainerNew;
 import reach.project.R;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.onBoarding.smsRelated.SmsListener;
 import reach.project.onBoarding.smsRelated.Status;
+import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.ancillaryClasses.UseContextAndFragment;
+import reach.project.utils.SharedPrefUtils;
 
 public class CodeVerification extends Fragment {
 
@@ -80,7 +88,7 @@ public class CodeVerification extends Fragment {
     @Nullable
     private EditText verificationCode = null;
     @Nullable
-    private Future<OldUserContainerNew> containerNewFuture = null;
+    private Future<UserDataPersistence> containerNewFuture = null;
     @Nullable
     private String phoneNumber = null, finalAuthKey = null, countryCode = null;
 
@@ -125,14 +133,27 @@ public class CodeVerification extends Fragment {
 
         //send sms and wait
         SmsListener.forceQuit.set(true); //quit current
+
         if (countryCode.equals("+91"))
             SmsListener.sendSms("alerts.sinfini.com", "REACHA", "A6f5d83ea6aa5984be995761f221c8a9a", fullNumber, finalAuthKey, MESSENGER, getContext());
         else
             SmsListener.sendSms("global.sinfini.com", "REACHAPP", "A93aa2cac66304ce4a754b10dc609ef7b", fullNumber, finalAuthKey, MESSENGER, getContext());
 
+        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        final HttpTransport transport = new NetHttpTransport();
+        final JsonFactory factory = new JacksonFactory();
+        final GoogleAccountCredential credential = GoogleAccountCredential
+                .usingAudience(activity, StaticData.SCOPE)
+                .setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+        Log.d("CodeVerification", credential.getSelectedAccountName());
+        final UserApi userApi = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
+                .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+        Log.d("CodeVerification", "Phone Number = " + phoneNumber);
         //meanWhile fetch old account
-        containerNewFuture = oldAccountFetcher.submit(() -> MiscUtils.autoRetry(() ->
-                StaticData.USER_API.isAccountPresentNew(phoneNumber).execute(), Optional.absent()).orNull());
+        containerNewFuture = oldAccountFetcher.submit(
+                () -> MiscUtils.autoRetry(() -> userApi.fetchOldAccountData(phoneNumber).execute(), Optional.absent()).orNull());
+
+        Log.i("Ayush", "Using credential " + credential.getSelectedAccountName());
 
         return rootView;
     }
@@ -181,27 +202,27 @@ public class CodeVerification extends Fragment {
 
     private final Runnable proceedToAccountCreation = () -> {
 
-        OldUserContainerNew containerNew = null;
+        UserDataPersistence userDataPersistence = null;
         if (containerNewFuture == null)
-            containerNew = null;
+            userDataPersistence = null;
         else
             try {
-                containerNew = containerNewFuture.get(5000L, TimeUnit.SECONDS);
+                userDataPersistence = containerNewFuture.get(5000L, TimeUnit.SECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 e.printStackTrace();
             }
 
-        if (containerNew != null) {
+        if (userDataPersistence != null) {
 
-            Log.i("Ayush", containerNew.getName() + " " + containerNew.getImageId());
+            Log.i("Ayush", userDataPersistence.getUserName() + " " + userDataPersistence.getUserId());
             FireOnce.contactSync(
                     new WeakReference<>(getActivity().getApplicationContext()),
-                    containerNew.getServerId(),
+                    userDataPersistence.getUserId(),
                     phoneNumber);
         }
 
         if (mListener != null)
-            mListener.onOpenAccountCreation(Optional.fromNullable(containerNew));
+            mListener.onOpenAccountCreation(Optional.fromNullable(userDataPersistence));
     };
 
     private final View.OnClickListener verifyCodeListener = view -> {
@@ -232,7 +253,6 @@ public class CodeVerification extends Fragment {
         public void onReceive(Context context, Intent intent) {
 
             final SmsMessage[] msgs;
-
             if (Build.VERSION.SDK_INT >= 19) { //KITKAT
 
                 try {
@@ -240,16 +260,11 @@ public class CodeVerification extends Fragment {
                 } catch (NullPointerException ignored) {
 
                     //weird null pointer
-                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-                        @Override
-                        public void work(Activity activity, CodeVerification fragment) {
-                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("SEVERE ERROR, number verification intent null")
-                                    .setAction("Phone Number - " + fragment.phoneNumber)
-                                    .setValue(1)
-                                    .build());
-                        }
-                    });
+                    MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, number verification intent null")
+                            .setAction("Phone Number - " + fragment.phoneNumber)
+                            .setValue(1)
+                            .build()));
                     //fail
                     return;
                 }
@@ -259,16 +274,11 @@ public class CodeVerification extends Fragment {
                 final Bundle bundle = intent.getExtras();
                 if (bundle == null) {
 
-                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-                        @Override
-                        public void work(Activity activity, CodeVerification fragment) {
-                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("SEVERE ERROR, number verification bundle null")
-                                    .setAction("Phone Number - " + fragment.phoneNumber)
-                                    .setValue(1)
-                                    .build());
-                        }
-                    });
+                    MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, number verification bundle null")
+                            .setAction("Phone Number - " + fragment.phoneNumber)
+                            .setValue(1)
+                            .build()));
                     //fail
                     return;
                 }
@@ -277,16 +287,11 @@ public class CodeVerification extends Fragment {
 
                 if (pdusObj == null || pdusObj.length == 0) {
 
-                    MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-                        @Override
-                        public void work(Activity activity, CodeVerification fragment) {
-                            ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                    .setCategory("SEVERE ERROR, number verification pdus error")
-                                    .setAction("Phone Number - " + fragment.phoneNumber)
-                                    .setValue(1)
-                                    .build());
-                        }
-                    });//fail
+                    MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                            .setCategory("SEVERE ERROR, number verification pdus error")
+                            .setAction("Phone Number - " + fragment.phoneNumber)
+                            .setValue(1)
+                            .build()));//fail
                     return;
                 }
 
@@ -297,17 +302,11 @@ public class CodeVerification extends Fragment {
 
             if (msgs == null || msgs.length == 0) {
 
-                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-
-                    @Override
-                    public void work(Activity activity, CodeVerification fragment) {
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("SEVERE ERROR, number verification msgs null")
-                                .setAction("Phone Number - " + fragment.phoneNumber)
-                                .setValue(1)
-                                .build());
-                    }
-                });
+                MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("SEVERE ERROR, number verification msgs null")
+                        .setAction("Phone Number - " + fragment.phoneNumber)
+                        .setValue(1)
+                        .build()));
                 //fail
                 return;
             }
@@ -347,17 +346,11 @@ public class CodeVerification extends Fragment {
 
             if (!done) {
 
-                MiscUtils.useContextAndFragment(reference, new UseContextAndFragment<Activity, CodeVerification>() {
-
-                    @Override
-                    public void work(Activity activity, CodeVerification fragment) {
-                        ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
-                                .setCategory("Number verification done was false")
-                                .setAction("Phone Number - " + fragment.phoneNumber)
-                                .setValue(1)
-                                .build());
-                    }
-                });
+                MiscUtils.useContextAndFragment(reference, (activity, fragment) -> ((ReachApplication) activity.getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Number verification done was false")
+                        .setAction("Phone Number - " + fragment.phoneNumber)
+                        .setValue(1)
+                        .build()));
             }
         }
     };

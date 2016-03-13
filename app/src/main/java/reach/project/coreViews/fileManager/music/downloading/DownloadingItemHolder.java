@@ -21,12 +21,15 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.base.Optional;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.HandOverMessageExtra;
+import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
@@ -39,8 +42,6 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
     final SimpleDraweeView albumArt;
     final ProgressBar progressBar;
     final ImageView optionsIcon;
-    private static PopupMenu popupMenu;
-    private static boolean paused = false;
 
     //must set this position
     int position = -1;
@@ -62,99 +63,93 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             if (position == -1)
                 throw new IllegalArgumentException("Position not set for the view holder");
 
-            popupMenu = new PopupMenu(context, this.optionsIcon);
-            popupMenu.inflate(R.menu.friends_popup_menu);
+            final ReachDatabase reachDatabase = SongCursorHelper.DOWNLOADING_HELPER.parse(handOverMessageExtra.getExtra(position));
+            final String status = reachDatabase.getStatus() == ReachDatabase.Status.PAUSED_BY_USER ? "Resume Download" : "Pause Download";
+
+            final PopupMenu popupMenu = new PopupMenu(context, this.optionsIcon);
+            popupMenu.inflate(R.menu.downloading_menu);
+            //popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
+            popupMenu.getMenu().findItem(R.id.downloading_menu_1).setTitle(status);
+
             popupMenu.setOnMenuItemClickListener(item -> {
 
-                final long reachDatabaseId = handOverMessageExtra.getExtra(position).getLong(0);
-
                 switch (item.getItemId()) {
-                    case R.id.friends_menu_1:
-                        //pause
-                        pause_unpause(reachDatabaseId, context);
-                        return true;
-                    case R.id.friends_menu_2:
+
+                    /*case R.id.manager_menu_1:
+                        //send
+                        return true;*/
+                    case R.id.downloading_menu_2:
                         //delete
                         final AlertDialog alertDialog = new AlertDialog.Builder(context)
-                                .setMessage("Are you sure you want to delete it?")
+                                .setMessage("Are you sure you want to cancel the download?")
                                 .setPositiveButton("Yes", handleClick)
                                 .setNegativeButton("No", handleClick)
                                 .setIcon(R.drawable.up_icon)
                                 .create();
 
-                        alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabaseId));
+                        alertDialog.setOnShowListener(dialog -> alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTag(reachDatabase));
                         alertDialog.show();
+                        return true;
+                    case R.id.downloading_menu_1:
+                        //pause
+                        pause_unpause(reachDatabase, context);
                         return true;
                     default:
                         return false;
                 }
             });
 
-            final String status;
-            status = paused ? "Resume Download" : "Pause Download";
-            popupMenu.getMenu().findItem(R.id.friends_menu_1).setTitle(status);
-
-            popupMenu.getMenu().findItem(R.id.friends_menu_2).setTitle("Delete");
-
             popupMenu.show();
         });
     }
 
+    //////////////////////////////
+
     /**
      * Pause / Unpause transaction
      */
-    private static void pause_unpause(long reachDatabaseId, Context context) {
+
+    private static boolean pause_unpause(ReachDatabase reachDatabase, Context context) {
 
         final ContentResolver resolver = context.getContentResolver();
-        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
-
-        final Cursor cursor = resolver.query(
-                uri,
-                ReachDatabaseHelper.projection,
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                new String[]{reachDatabaseId + ""}, null);
-
-        if (cursor == null)
-            return;
-        if (!cursor.moveToFirst()) {
-            cursor.close();
-            return;
-        }
-
-        final ReachDatabase database = ReachDatabaseHelper.cursorToProcess(cursor);
+        final Uri uri = Uri.parse(SongProvider.CONTENT_URI + "/" + reachDatabase.getId());
+        final boolean paused;
 
         ///////////////
 
-        if (database.getStatus() != ReachDatabase.PAUSED_BY_USER) {
+        if (reachDatabase.getStatus() != ReachDatabase.Status.PAUSED_BY_USER) {
 
             //pause operation (both upload/download case)
             final ContentValues values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.PAUSED_BY_USER);
-            context.getContentResolver().update(
+            values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.PAUSED_BY_USER.getValue());
+            paused = context.getContentResolver().update(
                     uri,
                     values,
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabaseId + ""});
-            Log.i("Ayush", "Pausing");
-            paused = true;
-        } else if (database.getOperationKind() == 1) {
+                    SongHelper.COLUMN_ID + " = ?",
+                    new String[]{reachDatabase.getId() + ""}) > 0;
+        } else if (reachDatabase.getOperationKind() == ReachDatabase.OperationKind.UPLOAD_OP) {
 
             //un-paused upload operation
-            context.getContentResolver().delete(
+            paused = context.getContentResolver().delete(
                     uri,
-                    ReachDatabaseHelper.COLUMN_ID + " = ?",
-                    new String[]{reachDatabaseId + ""});
+                    SongHelper.COLUMN_ID + " = ?",
+                    new String[]{reachDatabase.getId() + ""}) > 0;
         } else {
 
             //un-paused download operation
-            final Optional<Runnable> optional = reset(database, resolver, context, uri);
-            if (optional.isPresent())
+            final Optional<Runnable> optional = reset(reachDatabase, resolver, context, uri);
+            if (optional.isPresent()) {
                 AsyncTask.SERIAL_EXECUTOR.execute(optional.get());
-            else //should never happen
+                paused = false;
+            } else { //should never happen
                 Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
+                paused = true;
+            }
             Log.i("Ayush", "Un-pausing");
-            paused = false;
         }
+
+        Log.i("Ayush", "Pause status " + paused);
+        return paused;
     }
 
     /**
@@ -169,16 +164,16 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                                             Uri uri) {
 
         reachDatabase.setLogicalClock((short) (reachDatabase.getLogicalClock() + 1));
-        reachDatabase.setStatus(ReachDatabase.NOT_WORKING);
+        reachDatabase.setStatus(ReachDatabase.Status.NOT_WORKING);
 
         final ContentValues values = new ContentValues();
-        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
-        values.put(ReachDatabaseHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
+        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
+        values.put(SongHelper.COLUMN_LOGICAL_CLOCK, reachDatabase.getLogicalClock());
 
         final boolean updateSuccess = resolver.update(
                 uri,
                 values,
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
+                SongHelper.COLUMN_ID + " = ?",
                 new String[]{reachDatabase.getId() + ""}) > 0;
 
         if (updateSuccess)
@@ -200,21 +195,19 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
             return;
         }
 
-        /**
-         * Can not remove from memory cache just yet, because some operation might be underway
-         * in connection manager
-         **/
         final AlertDialog alertDialog = (AlertDialog) dialog;
         final ContentResolver resolver = alertDialog.getContext().getContentResolver();
-        final long reachDatabaseId = (long) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
-        final Uri uri = Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + reachDatabaseId);
+
+        final ReachDatabase reachDatabase = (ReachDatabase) alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).getTag();
+        final Uri uri = SongProvider.CONTENT_URI;
+        /*+ "/" + reachDatabase.getMetaHash()*/
 
         //find path and delete the file
         final Cursor pathCursor = resolver.query(
                 uri,
-                new String[]{ReachDatabaseHelper.COLUMN_PATH},
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                new String[]{reachDatabaseId + ""}, null);
+                new String[]{SongHelper.COLUMN_PATH},
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{reachDatabase.getMetaHash() + ""}, null);
 
         if (pathCursor != null) {
 
@@ -224,20 +217,28 @@ class DownloadingItemHolder extends SingleItemViewHolder implements View.OnClick
                 if (!TextUtils.isEmpty(path) && !path.equals("hello_world")) {
 
                     final File toDelete = new File(path);
-                    Log.i("Ayush", "Deleting " + toDelete.delete());
+                    try {
+                        final RandomAccessFile randomAccessFile = new RandomAccessFile(toDelete, "rws");
+                        randomAccessFile.setLength(0);
+                        randomAccessFile.close();
+                    } catch (IOException ignored) {
+                    } finally {
+
+                        toDelete.delete();
+                        toDelete.deleteOnExit();
+                    }
                 }
             }
             pathCursor.close();
         }
 
         //delete the database entry
-        Log.i("Downloader", "Deleting " +
-                reachDatabaseId + " " +
-                resolver.delete(
-                        uri,
-                        ReachDatabaseHelper.COLUMN_ID + " = ?",
-                        new String[]{reachDatabaseId + ""}));
+        final boolean deleted = resolver.delete(
+                uri,
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{reachDatabase.getMetaHash() + ""}) > 0;
+
+        Log.i("Downloader", "Deleting " + reachDatabase.getDisplayName() + " " + deleted);
         dialog.dismiss();
     };
-
 }
