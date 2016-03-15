@@ -18,6 +18,7 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
+import com.google.common.primitives.Booleans;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -77,13 +78,30 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         public void putExtra(int position, Object item) {
 
         }
+
+        @Override
+        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+
+        }
+
+        @Override
+        public void handOverSongVisibilityMessage(int position, Object message) {
+            ParentAdapter.this.handOverVisibilityToggle.HandoverMessage(position,message);
+        }
+
+
     };
+    private final HandOverVisibilityToggle handOverVisibilityToggle;
+
 
     public ParentAdapter(HandOverMessage<Cursor> handOverCursor,
-                         HandOverMessage<Song> handOverSong) {
+                         HandOverMessage<Song> handOverSong,
+                         HandOverVisibilityToggle handOverVisibilityToggle
+    ) {
 
         this.handOverCursor = handOverCursor;
-        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item);
+        this.handOverVisibilityToggle = handOverVisibilityToggle;
+        this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverSong, R.layout.song_grid_item,handOverVisibilityToggle);
         setHasStableIds(true);
     }
 
@@ -141,6 +159,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                 return null;
         }
     }
+    //Updates recent adapter
+    public synchronized void updateVisibility(String metaHash, boolean newVisibility) {
+        recentAdapter.updateVisibility(metaHash, newVisibility);
+    }
+    public synchronized void updateVisibility(int position, boolean newVisibility) {
+        recentAdapter.updateVisibility(position, newVisibility);
+    }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
@@ -157,34 +182,43 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             songItemHolder.position = cursorExactType.getPosition() + 1;
             holder.itemView.setBackgroundResource(0);
 
-            final String displayName, artist, album, actualName;
+            final String displayName, artist, album, actualName, senderName;
             final boolean visible;
             //if (cursorExactType.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length) {
 
-                displayName = cursorExactType.getString(3);
-                artist = cursorExactType.getString(5);
-                album = cursorExactType.getString(6);
-                visible = cursorExactType.getShort(12) == 1;
-//                actualName = cursorExactType.getString(17);
-                final long senderId = cursorExactType.getLong(15);
+            displayName = cursorExactType.getString(3);
+            artist = cursorExactType.getString(5);
+            album = cursorExactType.getString(6);
+            visible = cursorExactType.getShort(12) == 1;
+            senderName = cursorExactType.getString(16);
 
-                final Context context = holder.itemView.getContext();
-                songItemHolder.userImage.setVisibility(View.VISIBLE);
-                songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
-                /*final Cursor cursor = context.getContentResolver().query(
-                        Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + senderId),
-                        new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
-                                ReachFriendsHelper.COLUMN_IMAGE_ID},
-                        ReachFriendsHelper.COLUMN_ID + " = ?",
-                        new String[]{senderId + ""}, null);
-                if (cursor == null)
-                    return;
-                if (!cursor.moveToFirst()) {
-                    cursor.close();
-                    return;
-                }*/
+
+            if (visible) {
+                songItemHolder.toggleImage.setImageResource(R.drawable.icon_everyone_white);
+                //songItemHolder.toggleText.setText("Everyone");
+            } else {
+                songItemHolder.toggleImage.setImageResource(R.drawable.icon_locked_white);
+                //songItemHolder.toggleText.setText("Only Me");
+            }
+
+//                actualName = cursorExactType.getString(17);
+            final long senderId = cursorExactType.getLong(15);
+
+            final Context context = holder.itemView.getContext();
+            //songItemHolder.userImage.setVisibility(View.VISIBLE);
+            songItemHolder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
+            //songItemHolder.artistName.setText(artist);
+            final int length = MiscUtils.dpToPx(20);
+
+
+            if(senderName == null || senderName.equals("") || senderName.equals("null")){
+                Log.d(TAG, "senderName = null, song Name = " + displayName);
+                songItemHolder.userImage.setVisibility(View.GONE);
                 songItemHolder.artistName.setText(artist);
-                final int length = MiscUtils.dpToPx(20);
+            }
+            else{
+                songItemHolder.userImage.setVisibility(View.VISIBLE);
+                songItemHolder.artistName.setText(senderName);
                 songItemHolder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
                         senderId,
                         "imageId",
@@ -192,39 +226,17 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
                         true,
                         length,
                         length));
+            }
+
             final String liked = cursorExactType.getString(13);
             Log.d(TAG, "Position = " + position + " liked = " + liked);
-            if (liked== null || liked.equals("0")){
+            if (liked == null || liked.equals("0")) {
                 songItemHolder.likeButton.setSelected(false);
-            }
-            else{
+            } else {
                 songItemHolder.likeButton.setSelected(true);
             }
 
-                /*songItemHolder.likeButton.setImageResource(cursorExactType.getString(13).equalsIgnoreCase("TRUE")
-                        ? R.drawable.icon_heart_pink : R.drawable.icon_heart_outline_pink);*/
-            /*} else if (cursorExactType.getColumnCount() == MySongsHelper.DISK_LIST.length) {
 
-                displayName = cursorExactType.getString(3);
-                artist = cursorExactType.getString(4);
-                album = cursorExactType.getString(6);
-                visible = cursorExactType.getShort(11) == 1;
-
-                songItemHolder.userImage.setVisibility(View.GONE);
-                songItemHolder.artistName.setTextColor(Color.parseColor("#878691"));
-                songItemHolder.artistName.setText(artist);
-                songItemHolder.likeButton.setImageResource(cursorExactType.getShort(12) == 1
-                        ? R.drawable.icon_heart_outline_pink : R.drawable.icon_heart_outline_grayer);
-            } else
-                throw new IllegalArgumentException("Unknown cursor type found");*/
-
-            /*if (visible) {
-                songItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
-                songItemHolder.toggleText.setText("Everyone");
-            } else {
-                songItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
-                songItemHolder.toggleText.setText("Only Me");
-            }*/
 
             songItemHolder.songName.setText(displayName);
 
@@ -298,4 +310,12 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             return myLibraryCursor.getCount() + 1;//adjust for recent list
         return 0;
     }
+
+    public static interface HandOverVisibilityToggle {
+
+        public void HandoverMessage(int position, @NonNull Object message);
+    }
+
 }
+
+

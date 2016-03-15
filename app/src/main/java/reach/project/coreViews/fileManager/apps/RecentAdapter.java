@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -54,6 +55,16 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
         @Override
         public void putExtra(int position, App item) {
+
+        }
+
+        @Override
+        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+
+        }
+
+        @Override
+        public void handOverSongVisibilityMessage(int position, Object message) {
 
         }
     };
@@ -107,20 +118,40 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             holder.appIcon.setImageDrawable(null);
         }
 
-        /*//if contains and is true
+        //if contains and is true
         if (visibilityHook.isVisible(item.packageName)) {
-            holder.toggleButton.setImageResource(R.drawable.icon_everyone);
-            holder.toggleText.setText("Everyone");
+            holder.toggleImage.setImageResource(R.drawable.icon_everyone);
+            //holder.toggleText.setText("Everyone");
         }
         else {
-            holder.toggleButton.setImageResource(R.drawable.icon_locked);
-            holder.toggleText.setText("Only Me");
-        }*/
+            holder.toggleImage.setImageResource(R.drawable.icon_locked);
+            //holder.toggleText.setText("Only Me");
+        }
     }
 
     @Override
     public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
         this.adapterWeakReference = adapterWeakReference;
+    }
+
+    public synchronized void visibilityChanged(String packageName) {
+
+        final List<App> recentApps = getMessageList();
+
+        int position = -1;
+        for (int index = 0; index < recentApps.size(); index++)
+            if (recentApps.get(index).packageName.equals(packageName)) {
+                position = index;
+                break;
+            }
+
+        //recent adapter might not contain everything, as is limited to 4
+        if (position < getItemCount())
+            notifyItemChanged(position);
+
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyItemChanged(position); //position will be same
     }
 
     @Override

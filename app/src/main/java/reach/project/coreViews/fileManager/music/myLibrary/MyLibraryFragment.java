@@ -1,7 +1,12 @@
 package reach.project.coreViews.fileManager.music.myLibrary;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,32 +19,40 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
+import reach.project.music.MySongsHelper;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 /**
  * Created by dexter on 25/11/15.
  */
-public class MyLibraryFragment extends Fragment implements HandOverMessage,
+public class MyLibraryFragment extends Fragment implements HandOverMessage,ParentAdapter.HandOverVisibilityToggle,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private EmptyRecyclerView mRecyclerView;
+    private static long myUserId = 0;
+    private static final String TAG = MyLibraryFragment.class.getSimpleName();
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -49,6 +62,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         fragment.setArguments(args);
         return fragment;
     }
+
+    private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
     @Nullable
     private ParentAdapter parentAdapter;
@@ -62,9 +77,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
         emptyViewText.setText("Dawg");
 
+        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        myUserId = SharedPrefUtils.getServerId(preferences);
+
         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         mRecyclerView.setEmptyView(rootView.findViewById(R.id.empty_imageView));
-        parentAdapter = new ParentAdapter(this, this);
+        parentAdapter = new ParentAdapter(this, this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
 
@@ -212,4 +230,152 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,
 
         return latestMyLibrary;
     }
+
+    //OnClick Visibility Toggle From Extra Button Menu
+    //Position is provided in case it's needed
+    @Override
+    public void HandoverMessage(int position, @NonNull Object message) {
+        if (message instanceof Cursor) {
+            Log.d(TAG, "Object is of Cursor type, change visibility");
+
+            final Cursor cursor = (Cursor) message;
+            final boolean visible = cursor.getShort(12) == 1;
+            final String metaHash = cursor.getString(2);
+
+            new ToggleVisibility(MyLibraryFragment.this,
+                    (long) (visible ? 0 : 1),
+                    metaHash,
+                    myUserId,
+                    position,
+                    StaticData.zeroByte
+            ).executeOnExecutor(visibilityHandler
+            );
+            //flip
+            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId,position,StaticData.zeroByte);
+
+        } else if (message instanceof Song) {
+
+            Log.d(TAG, "Object is of song type, change visibility");
+
+            final Song song = (Song) message;
+
+            new ToggleVisibility(MyLibraryFragment.this,
+                    (long) (song.visibility ? 1 : 0),
+                    song.getFileHash(),
+                    myUserId,position, StaticData.oneByte
+
+            ).executeOnExecutor(visibilityHandler
+                    //flip
+            );
+            //flip
+            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId,position,StaticData.oneByte);
+
+        } else
+            throw new IllegalArgumentException("Unknown type handed over");
+
+
+    }
+
+
+    private static class ToggleVisibility extends AsyncTask<Void, Void, Boolean> {
+
+        private final long param1;
+        private final String param2;
+        private final long param3;
+        private final int param4;
+        private final byte param5;
+
+        private WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference;
+
+        //param5 is for the type of object, 0 for cursor and 1 for song
+        public ToggleVisibility(MyLibraryFragment myLibraryFragment, long param1, String param2, long param3, int param4, byte param5) {
+            this.myLibraryFragmentWeakReference = new WeakReference<>(myLibraryFragment);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+            this.param4 = param4;
+            this.param5 = param5;
+
+        }
+
+        /**
+         * params[0] = oldVisibility
+         * params[1] = songId
+         * params[2] = userId
+         */
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            boolean failed = false;
+            //TODO
+//            try {
+//                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
+//                        params[2], //serverId
+//                        params[1], //songId
+//                        params[0] == 1).execute(); //translate to boolean
+//                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+//                    failed = true; //mark failed
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                failed = true; //mark failed
+//            }
+
+            if (failed) {
+                updateDatabase(myLibraryFragmentWeakReference, param1 != 1, param2, param3, param4, param5 );
+            }
+
+            return failed;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean failed) {
+
+            super.onPostExecute(failed);
+            if (failed)
+                MiscUtils.useContextFromFragment(myLibraryFragmentWeakReference, context -> {
+                    Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+                });
+        }
+    }
+
+
+    // type == 0 for cursor object, type == 1 for Song object
+    private static synchronized void updateDatabase(WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference,
+                                                    final boolean newVisibility,
+                                                    String metaHash,
+                                                    long userId, int position, byte type) {
+
+        final ContentResolver resolver = MiscUtils.useContextFromFragment(myLibraryFragmentWeakReference, ContextWrapper::getContentResolver).orNull();
+        //sanity check
+        if (resolver == null || userId == 0)
+            return;
+
+        ContentValues values = new ContentValues();
+        values.put(MySongsHelper.COLUMN_VISIBILITY, newVisibility);
+
+        int updated = resolver.update(
+                SongProvider.CONTENT_URI,
+                values,
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{metaHash + ""});
+
+        if(type == StaticData.zeroByte) {
+            //flip in recent list
+        MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
+            if (fragment.parentAdapter != null) {
+                //fragment.parentAdapter.updateVisibility(metaHash, visibility);
+                fragment.parentAdapter.updateVisibility(metaHash,newVisibility);
+            }
+        });
+        }
+
+        Log.i("Ayush", "Toggle Visibility " + updated + " " + metaHash + " " + newVisibility);
+    }
+
+
+
+
+
+
 }

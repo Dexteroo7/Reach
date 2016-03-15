@@ -3,10 +3,13 @@ package reach.project.coreViews.fileManager.apps;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.widget.PopupMenu;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 
@@ -14,6 +17,7 @@ import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.UseReferenceWithResult;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
@@ -25,6 +29,7 @@ class AppItemHolder extends SingleItemViewHolder {
     final ImageView appIcon, extraButton;
     final TextView appName;
     public final MenuData menuData;
+    final ImageView toggleImage;
 
     public AppItemHolder(View itemView, HandOverMessageExtra<App> handOverMessageExtra) {
 
@@ -33,6 +38,7 @@ class AppItemHolder extends SingleItemViewHolder {
 
         this.appIcon = (ImageView) itemView.findViewById(R.id.appIcon);
         this.appName = (TextView) itemView.findViewById(R.id.appName);
+        this.toggleImage = (ImageView) itemView.findViewById(R.id.toggleImage);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.extraButton.setTag(menuData);
         this.extraButton.setOnClickListener(EXTRA_CLICK);
@@ -62,6 +68,10 @@ class AppItemHolder extends SingleItemViewHolder {
             switch (item.getItemId()) {
                 case R.id.hide:
                     //hide
+                    final App app = handOver.getExtra(position);
+                    handOver.handOverAppVisibilityMessage(position, !app.visible, packageName);
+                    item.setTitle(!app.visible?"Visible":"Locked");
+
                     return true;
                 case R.id.uninstall:
                     //uninstall
@@ -86,8 +96,8 @@ class AppItemHolder extends SingleItemViewHolder {
         public MenuData(int position, HandOverMessageExtra<App> handOverMessageExtra) {
             this.position = position;
             this.handOverMessageExtra = new WeakReference<>(handOverMessageExtra);
-        }
 
+        }
         public int getPosition() {
             return position;
         }
@@ -99,5 +109,9 @@ class AppItemHolder extends SingleItemViewHolder {
         public WeakReference<HandOverMessageExtra<App>> getHandOverMessageExtra() {
             return handOverMessageExtra;
         }
+
+
     }
+
+
 }
