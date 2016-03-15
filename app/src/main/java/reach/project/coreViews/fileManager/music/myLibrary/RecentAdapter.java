@@ -35,10 +35,13 @@ import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
  */
 class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements MoreQualifier {
 
+    private static final String TAG = RecentAdapter.class.getSimpleName();
     private final ResizeOptions resizeOptions = new ResizeOptions(150, 150);
+    private final ParentAdapter.HandOverVisibilityToggle handOverVisibilityToggle;
 
-    public RecentAdapter(List<Song> recentMusic, HandOverMessage<Song> handOverMessage, int resourceId) {
+    public RecentAdapter(List<Song> recentMusic, HandOverMessage<Song> handOverMessage, int resourceId, ParentAdapter.HandOverVisibilityToggle handOverVisibilityToggle) {
         super(recentMusic, handOverMessage, resourceId);
+        this.handOverVisibilityToggle = handOverVisibilityToggle;
     }
 
     private final HandOverMessageExtra<Object> handOverMessageExtra = new HandOverMessageExtra<Object>() {
@@ -60,10 +63,85 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
         @Override
         public void putExtra(int position, Object item) {
+            Log.d(TAG, "putExtra called, new Visibility = " + ((Song) item).visibility);
             getMessageList().set(position, (Song) item);
             notifyItemChanged(position);
         }
+
+        @Override
+        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+
+        }
+
+        @Override
+        public void handOverSongVisibilityMessage(int position, Object message) {
+
+            /*getMessageList().set(position, (Song) message);
+            notifyItemChanged(position);*/
+            RecentAdapter.this.handOverVisibilityToggle.HandoverMessage(position,message);
+
+        }
     };
+
+
+    public synchronized void updateVisibility(String metaHash, boolean newVisibility) {
+
+        final List<Song> songItems = getMessageList();
+
+        int position = -1;
+        for (int index = 0; index < songItems.size(); index++) {
+
+            final Song songItem = songItems.get(index);
+            if (songItem.getFileHash().equals(metaHash)) {
+
+                final Song newSong = new Song.Builder(songItem).visibility(newVisibility).build();
+                newSong.setSecondaryProgress(songItem.getSecondaryProgress());
+                newSong.setCurrentPosition(songItem.getCurrentPosition());
+                newSong.setProcessed(songItem.getProcessed());
+                newSong.setPrimaryProgress(songItem.getPrimaryProgress());
+                newSong.setType(songItem.getType());
+                newSong.setSenderName(songItem.getSenderName());
+                newSong.setSenderId(songItem.getSenderId());
+                songItems.set(index, newSong);
+                position = index;
+                break;
+            }
+        }
+
+        //recent adapter might not contain everything, as is limited to 4
+        if (position < getItemCount())
+            notifyItemChanged(position);
+
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyItemChanged(position);
+    }
+
+    public synchronized void updateVisibility(int position, boolean newVisibility) {
+
+        final List<Song> songItems = getMessageList();
+
+        //int position = -1;
+        final Song songItem = songItems.get(position);
+                final Song newSong = new Song.Builder(songItem).visibility(newVisibility).build();
+                newSong.setSecondaryProgress(songItem.getSecondaryProgress());
+                newSong.setCurrentPosition(songItem.getCurrentPosition());
+        newSong.setProcessed(songItem.getProcessed());
+        newSong.setPrimaryProgress(songItem.getPrimaryProgress());
+        newSong.setType(songItem.getType());
+        newSong.setSenderName(songItem.getSenderName());
+        newSong.setSenderId(songItem.getSenderId());
+                songItems.set(position, newSong);
+
+        //recent adapter might not contain everything, as is limited to 4
+        if (position < getItemCount())
+            notifyItemChanged(position);
+
+        final RecyclerView.Adapter adapter;
+        if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+            adapter.notifyItemChanged(position);
+
+    }
 
     private static final Comparator<Song> PRIMARY = (left, right) -> {
 
@@ -128,6 +206,14 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             holder.likeButton.setSelected(true);
         }
 
+        if (item.visibility) {
+
+            holder.toggleImage.setImageResource(R.drawable.icon_everyone_white);
+        } else {
+
+            holder.toggleImage.setImageResource(R.drawable.icon_locked_white);
+        }
+
         /*if (item.getType() == Song.Type.MY_LIBRARY) {
 
             holder.userImage.setVisibility(View.GONE);
@@ -136,7 +222,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         } else if (item.getType() == Song.Type.DOWNLOADED) {
 */
         final Context context = holder.itemView.getContext();
-        holder.userImage.setVisibility(View.VISIBLE);
+        //holder.userImage.setVisibility(View.VISIBLE);
         holder.artistName.setTextColor(ContextCompat.getColor(context, R.color.reach_color));
         final long senderId = item.getSenderId();
             /*final Cursor cursor = context.getContentResolver().query(
@@ -152,15 +238,34 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
                 return;
             }*/
 
-        holder.artistName.setText(item.artist == null ? "" : item.artist);
         final int length = MiscUtils.dpToPx(20);
+
+        if(item.getSenderName() == null || item.getSenderName().equals("") || item.getSenderName().equals("null")){
+            Log.d(TAG, "senderName = null, song Name = " + item.getDisplayName());
+            holder.userImage.setVisibility(View.GONE);
+            holder.artistName.setText(item.getArtist());
+        }
+        else{
+            holder.userImage.setVisibility(View.VISIBLE);
+            holder.artistName.setText(item.getSenderName());
+            holder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
+                    senderId,
+                    "imageId",
+                    "rw",
+                    true,
+                    length,
+                    length));
+        }
+
+
+        /*holder.artistName.setText(item.artist == null ? "" : item.artist);
         holder.userImage.setImageURI(AlbumArtUri.getUserImageUri(
                 senderId,
                 "imageId",
                 "rw",
                 true,
                 length,
-                length));
+                length));*/
         /*} else
             throw new IllegalArgumentException("Invalid Song type");*/
 

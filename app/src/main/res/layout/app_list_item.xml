@@ -9,7 +9,10 @@
         fresco:roundedCornerRadius="2dp"
         android:layout_margin="10dp"
         android:layout_width="50dp"
-        android:layout_height="50dp" />
+        android:layout_height="50dp"
+        fresco:placeholderImage="@android:drawable/sym_def_app_icon"
+        />
+
     <ImageView
         android:id="@+id/extraButton"
         android:layout_centerVertical="true"
@@ -21,10 +24,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/icon_extra_dots_light_gray" />
+
+    <ImageView
+        android:id="@+id/toggleImage"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@id/extraButton"
+        />
+
     <TextView
         android:id="@+id/appName"
         android:layout_toRightOf="@id/appIcon"
-        android:layout_toLeftOf="@id/extraButton"
+        android:layout_toLeftOf="@id/toggleImage"
         android:layout_centerVertical="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,5 +44,8 @@
         android:lines="1"
         android:text="Test"
         android:textColor="#000"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:layout_marginRight="2dp"/>
+
+
 </RelativeLayout>

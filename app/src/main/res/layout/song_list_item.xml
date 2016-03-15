@@ -1,16 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/border_shadow1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
-        fresco:placeholderImage="@color/reach_grey"
+        fresco:placeholderImage="@drawable/default_music_icon"
         fresco:roundedCornerRadius="2dp"
         android:layout_margin="10dp"
         android:layout_width="50dp"
-        android:layout_height="50dp" />
+        android:layout_height="50dp"
+        android:background="@color/reach_grey"
+
+        />
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_alignTop="@id/albumArt"
+        android:layout_alignLeft="@id/albumArt"
+        android:id="@+id/toggleImage"
+        tools:src="@drawable/icon_everyone_white"
+        />
+
     <ImageView
         android:id="@+id/extraButton"
         android:layout_centerVertical="true"
@@ -26,8 +40,7 @@
         android:id="@+id/likeButton"
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@id/extraButton"
-        android:padding="5dp"
-        android:layout_marginRight="5dp"
+        android:padding="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/like_selector_1" />

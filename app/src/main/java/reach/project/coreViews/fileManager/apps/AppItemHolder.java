@@ -25,6 +25,7 @@ class AppItemHolder extends SingleItemViewHolder {
     final ImageView appIcon, extraButton;
     final TextView appName;
     public final MenuData menuData;
+    final ImageView toggleImage;
 
     public AppItemHolder(View itemView, HandOverMessageExtra<App> handOverMessageExtra) {
 
@@ -33,6 +34,7 @@ class AppItemHolder extends SingleItemViewHolder {
 
         this.appIcon = (ImageView) itemView.findViewById(R.id.appIcon);
         this.appName = (TextView) itemView.findViewById(R.id.appName);
+        this.toggleImage = (ImageView) itemView.findViewById(R.id.toggleImage);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);
         this.extraButton.setTag(menuData);
         this.extraButton.setOnClickListener(EXTRA_CLICK);
@@ -62,6 +64,10 @@ class AppItemHolder extends SingleItemViewHolder {
             switch (item.getItemId()) {
                 case R.id.hide:
                     //hide
+                    final App app = handOver.getExtra(position);
+                    handOver.handOverAppVisibilityMessage(position, !app.visible, packageName);
+                    item.setTitle(!app.visible?"Visible":"Locked");
+
                     return true;
                 case R.id.uninstall:
                     //uninstall
@@ -86,8 +92,8 @@ class AppItemHolder extends SingleItemViewHolder {
         public MenuData(int position, HandOverMessageExtra<App> handOverMessageExtra) {
             this.position = position;
             this.handOverMessageExtra = new WeakReference<>(handOverMessageExtra);
-        }
 
+        }
         public int getPosition() {
             return position;
         }
@@ -99,5 +105,9 @@ class AppItemHolder extends SingleItemViewHolder {
         public WeakReference<HandOverMessageExtra<App>> getHandOverMessageExtra() {
             return handOverMessageExtra;
         }
+
+
     }
+
+
 }

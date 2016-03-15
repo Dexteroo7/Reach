@@ -15,8 +15,6 @@ import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
-import reach.project.music.MySongsHelper;
-import reach.project.music.SongHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -38,6 +36,8 @@ public final class StaticData {
     public static int friendsCount=0;
     public static final String zero = "0";
     public static final String one = "1";
+    public static final byte oneByte = 1;
+    public static final byte zeroByte = 0;
 
     static {
 
