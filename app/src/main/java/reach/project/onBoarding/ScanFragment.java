@@ -73,6 +73,7 @@ import reach.project.utils.KeyValuePair;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
+import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class ScanFragment extends Fragment {
@@ -201,7 +202,9 @@ public class ScanFragment extends Fragment {
                         onboardingData,//7
                         arguments.getSerializable(OLD_USER_STATES), //8
                         arguments.getLong(OLD_USER_ID, 0), //9
-                        profilePicUri); //10
+                        profilePicUri,//10
+                        rootView.findViewById(R.id.indeterminateProgress)
+                        );
 
         return rootView;
     }
@@ -214,6 +217,7 @@ public class ScanFragment extends Fragment {
         private TextView appCount;
         private ProgressBar scanProgress;
         private LinearLayout switchLayout1, switchLayout2;
+        private ProgressBar indeterminateProgress;
 
         private int totalMusic = 0;
         private int totalApps = 0;
@@ -247,6 +251,7 @@ public class ScanFragment extends Fragment {
             final EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>> stateTable = (EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>>) objects[8];
             final long olderUserId = (long) objects[9];
             final Uri profilePhotoUri = (Uri) objects[10];
+            this.indeterminateProgress = (ProgressBar) objects[11];
 
             //get song cursor
             final Cursor musicCursor = MiscUtils.useContextFromFragment(reference, activity -> {
@@ -288,6 +293,10 @@ public class ScanFragment extends Fragment {
                         appProcessCounter,
                         stateTable == null ? Collections.emptyMap() : stateTable.get(ContentType.APP));
             }).or(Collections.emptyList());
+
+            /*totalMusic = totalApps = totalExpected;*/
+            totalExpected = totalApps +totalMusic;
+            publishProgress();
 
             //we will post this
             final AccountCreationData accountCreationData = new AccountCreationData.Builder()
@@ -332,6 +341,12 @@ public class ScanFragment extends Fragment {
                     .post(requestBody)
                     .build();
 
+            /*MiscUtils.runOnUiThreadFragment(reference, new UseContext() {
+                @Override
+                public void work(Context context) {
+                    indeterminateProgress.setVisibility(View.VISIBLE);
+                }
+            });*/
             final long serverId;
             try {
                 final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
@@ -407,12 +422,15 @@ public class ScanFragment extends Fragment {
                     tracker.set("&uid", serverId + "");
                     tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
 
+                    indeterminateProgress.setVisibility(View.INVISIBLE);
+
                     finishOnBoarding.setText("CLICK TO PROCEED");
                     finishOnBoarding.setTextColor(ContextCompat.getColor(activity, R.color.reach_color));
                     finishOnBoarding.setOnClickListener(PROCEED);
                     finishOnBoarding.setVisibility(View.VISIBLE);
                 } else {
 
+                    indeterminateProgress.setVisibility(View.INVISIBLE);
                     tracker.send(new HitBuilders.EventBuilder()
                             .setCategory("SEVERE ERROR, account creation failed")
                             .setAction("User Id - " + serverId)
@@ -437,8 +455,12 @@ public class ScanFragment extends Fragment {
 
             if (totalExpected > currentTotal)
                 scanProgress.setProgress((currentTotal * 100) / totalExpected);
-            else
-                scanProgress.setProgress(100); //error case
+           else {
+                switchLayout1.setVisibility(View.INVISIBLE);
+                switchLayout2.setVisibility(View.VISIBLE);
+                scanProgress.setProgress(100);
+                indeterminateProgress.setVisibility(View.VISIBLE);
+            }//error case
         }
 
 //        //TODO make static :(
