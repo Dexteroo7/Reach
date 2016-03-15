@@ -67,6 +67,9 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             Log.d(TAG, "putExtra called, new Visibility = " + ((Song) item).visibility);
             getMessageList().set(position, (Song) item);
             notifyItemChanged(position);
+            final RecyclerView.Adapter adapter;
+            if (adapterWeakReference != null && (adapter = adapterWeakReference.get()) != null)
+                adapter.notifyItemChanged(position);
         }
 
         @Override

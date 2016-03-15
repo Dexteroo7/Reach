@@ -10,9 +10,12 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 
 import com.appspot.able_door_616.userApi.UserApi;
 import com.appspot.able_door_616.userApi.model.SimpleApp;
@@ -59,6 +62,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     @Nullable
     private static WeakReference<YourProfileAppFragment> reference = null;
     private static long hostId = 0;
+    private ProgressBar mLoadingProgress;
     //private ProgressBar mLoadingView;
 
     public static YourProfileAppFragment newInstance(long hostId) {
@@ -136,10 +140,16 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         };
 
         final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
+        rootView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
-        //mLoadingView=(ProgressBar)rootView.findViewById(R.id.loading_view);
-
+        // TODO: Comment out when implementing loading view. currently there is no callback to detect that the app data has been loaded
+        /*mLoadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
+        FrameLayout.LayoutParams progressBarMarginParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,FrameLayout.LayoutParams.WRAP_CONTENT);
+        progressBarMarginParams.gravity = Gravity.CENTER;
+        progressBarMarginParams.setMargins(0,MiscUtils.dpToPx(240),0,0);
+        mLoadingProgress.setLayoutParams(progressBarMarginParams);
+        mLoadingProgress.setVisibility(View.VISIBLE);*/
         parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
@@ -173,9 +183,10 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         final int currentSize = appData.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 5 && fullListCache != null)
+        if (position > currentSize - 5 && fullListCache != null) {
             //request a partial load
             fullListCache.loadMoreElements(false);
+        }
 
         return appData.get(position);
     }
@@ -200,6 +211,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         if (elements == null || elements.isEmpty())
             return;
+
+
 
         final Message typeCheckerInstance = elements.get(0);
         final Class typeChecker;

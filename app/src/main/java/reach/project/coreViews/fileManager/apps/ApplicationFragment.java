@@ -13,6 +13,7 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.common.collect.Ordering;
@@ -39,6 +40,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class ApplicationFragment extends Fragment implements HandOverMessage<App>, ParentAdapter.HandOverVisibilityToggle {
 
     private static final String TAG = ApplicationFragment.class.getSimpleName();
+    ProgressBar loadingProgress;
 
     public static ApplicationFragment getInstance(String header) {
 
@@ -70,6 +72,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
+        loadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
 
         preferences =context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         userId = SharedPrefUtils.getServerId(preferences);
@@ -78,6 +81,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setAdapter(parentAdapter);
         parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
 
+        loadingProgress.setVisibility(View.VISIBLE);
         new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
 
         return rootView;
@@ -146,11 +150,19 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
               //  MyProfileActivity.countChanged = true;
                 StaticData.appsCount = pair.first.size();
             //}
+
+            ApplicationFragment context = applicationFragmentWeakReference.get();
+            if(context!=null){
+                context.loadingProgress.setVisibility(View.GONE);
+            }
+
             MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllAppCount(pair.first);
                     fragment.parentAdapter.updateRecentApps(pair.second);
                 }
+
+
             });
         }
     }
