@@ -402,14 +402,6 @@ public enum MiscUtils {
 
     public static boolean playSong(Song song, Context context) {
 
-        //sanity check
-//            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
-//        if (musicData.getLength() == 0 || TextUtils.isEmpty(musicData.getPath())) {
-//            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
-//            return false;
-//        }
-//
-
         if (song.size == 0 || song.duration == 0 || TextUtils.isEmpty(song.path)) {
             Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
             return false;
@@ -1487,7 +1479,8 @@ public enum MiscUtils {
             return;
         upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         activity.startActivity(upIntent);
-        activity.finish();
+        //TODO
+//        activity.finish();
     }
 
     public static String calculateSongHash(long userId,

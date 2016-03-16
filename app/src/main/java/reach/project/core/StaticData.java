@@ -83,33 +83,26 @@ public final class StaticData {
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;
     public static final byte FRIENDS_HORIZONTAL_LOADER;
-    public static final byte PRIVACY_MY_LIBRARY_LOADER;
-    public static final byte PRIVACY_DOWNLOADED_LOADER;
-    public static final byte DOWNLOAD_LOADER;
-    public static final byte DOWNLOADING_LOADER;
-    public static final byte UPLOAD_LOADER;
-    public static final byte MY_LIBRARY_LOADER;
-    public static final byte PUSH_MY_LIBRARY_LOADER;
-    public static final byte PUSH_DOWNLOADED_LOADER;
     public static final byte CONTACTS_CHOOSER_LOADER;
     public static final byte ALL_CONTACTS_LOADER;
 
-    public static final byte FULL_LIST_LOADER;
-    public static final byte RECENT_LIST_LOADER;
+    public static final byte MY_LIBRARY_LOADER;
+    public static final byte DOWNLOADING_LOADER;
+    public static final byte UPLOADING_LOADER;
+    public static final byte PLAYER_LOADER;
+
+    public static final byte PRIVACY_MY_LIBRARY_LOADER;
+    public static final byte PUSH_MY_LIBRARY_LOADER;
 
     static {
         FRIENDS_VERTICAL_LOADER = i++;
         FRIENDS_HORIZONTAL_LOADER = i++;
         PRIVACY_MY_LIBRARY_LOADER = i++;
-        PRIVACY_DOWNLOADED_LOADER = i++;
-        DOWNLOAD_LOADER = i++;
         DOWNLOADING_LOADER = i++;
-        UPLOAD_LOADER = i++;
+        UPLOADING_LOADER = i++;
+        PLAYER_LOADER = i++;
         MY_LIBRARY_LOADER = i++;
         PUSH_MY_LIBRARY_LOADER = i++;
-        PUSH_DOWNLOADED_LOADER = i++;
-        FULL_LIST_LOADER = i++;
-        RECENT_LIST_LOADER = i++;
         CONTACTS_CHOOSER_LOADER = i++;
         ALL_CONTACTS_LOADER = i++;
     }

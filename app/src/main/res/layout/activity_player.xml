@@ -63,7 +63,6 @@
 
         android:visibility="visible" />
 
-
     <RelativeLayout
         android:id="@+id/music_list_container"
         android:layout_width="match_parent"
