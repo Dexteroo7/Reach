@@ -264,6 +264,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             // is State.Playing. But we stay in the Playing state so that we know we have to resume
             // playback once we get the focus back.
             if (player.isPlaying()) {
+
                 player.pause();
                 handlerInterface.paused();
             }
@@ -275,6 +276,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             player.setVolume(1.0f); // we can be loud
 
         if (!player.isPlaying()) {
+
             Log.i("Downloader", "STARTING PLAYER");
             player.start();
             handlerInterface.unPaused();
@@ -288,9 +290,9 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     synchronized void processPlayRequest() {
-        //SharedPrefUtils.putIsASongCurrentlyPlaying(handlerInterface.getSharedPreferences(),true);
-        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),true);
 
+
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),true);
         tryToGetAudioFocus();
         //pause reason don't matter
         playerState = State.Playing;
@@ -299,7 +301,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     }
 
     synchronized void processPauseRequest() {
-        //SharedPrefUtils.putIsASongCurrentlyPlaying(handlerInterface.getSharedPreferences(),false);
+
         SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         playerState = State.Paused;
         userPaused.set(true);
@@ -312,6 +314,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
      * @return true means we should push a new song !
      */
     boolean processPlayPause() {
+
         if (player == null || player.isNull())
             return true;
         if (player.isPlaying())
@@ -368,8 +371,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        handlerInterface.pushNextSong(
-                handlerInterface.nextSong(Optional.fromNullable(currentSong), true));
+        handlerInterface.pushNextSong(handlerInterface.nextSong(Optional.fromNullable(currentSong), true));
     }
 
     @Override

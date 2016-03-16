@@ -46,7 +46,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 25/11/15.
  */
-public class MyLibraryFragment extends Fragment implements HandOverMessage,ParentAdapter.HandOverVisibilityToggle,
+public class MyLibraryFragment extends Fragment implements HandOverMessage, ParentAdapter.HandOverVisibilityToggle,
         LoaderManager.LoaderCallbacks<Cursor> {
 
     private EmptyRecyclerView mRecyclerView;
@@ -162,8 +162,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
 
             Log.i("Ayush", "MyLibrary file manager " + count);
             //if(StaticData.librarySongsCount < data.getCount()){
-                //MyProfileActivity.countChanged = true;
-                StaticData.librarySongsCount = count;
+            //MyProfileActivity.countChanged = true;
+            StaticData.librarySongsCount = count;
             //}
 
             if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
@@ -186,17 +186,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
     @NonNull
     private List<Song> getRecentMyLibrary() {
 
-        /*final Cursor cursor = new CursorLoader(getActivity(),
-                SongProvider.CONTENT_URI,
-                SongCursorHelper.SONG_HELPER.getProjection(),
-                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{
-                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                        ReachDatabase.Status.FINISHED.getString(),
-                        ReachDatabase.OperationKind.OWN.getString()},
-                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");*/
-
         final Cursor cursor = getContext().getContentResolver().query(
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
@@ -209,12 +198,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
                 SongHelper.COLUMN_DATE_ADDED + " DESC, " +
                         SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
 
-        /*final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
-                SongCuHelper.DISK_LIST,
-                null, null, //all songs
-                MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
-*/
         if (cursor == null)
             return Collections.emptyList();
 
@@ -250,7 +233,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
             ).executeOnExecutor(visibilityHandler
             );
             //flip
-            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId,position,StaticData.zeroByte);
+            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId, position, StaticData.zeroByte);
 
         } else if (message instanceof Song) {
 
@@ -261,13 +244,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
             new ToggleVisibility(MyLibraryFragment.this,
                     (long) (song.visibility ? 1 : 0),
                     song.getFileHash(),
-                    myUserId,position, StaticData.oneByte
+                    myUserId, position, StaticData.oneByte
 
             ).executeOnExecutor(visibilityHandler
                     //flip
             );
             //flip
-            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId,position,StaticData.oneByte);
+            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId, position, StaticData.oneByte);
 
         } else
             throw new IllegalArgumentException("Unknown type handed over");
@@ -321,7 +304,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
 //            }
 
             if (failed) {
-                updateDatabase(myLibraryFragmentWeakReference, param1 != 1, param2, param3, param4, param5 );
+                updateDatabase(myLibraryFragmentWeakReference, param1 != 1, param2, param3, param4, param5);
             }
 
             return failed;
@@ -359,22 +342,16 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
                 SongHelper.COLUMN_META_HASH + " = ?",
                 new String[]{metaHash + ""});
 
-        if(type == StaticData.zeroByte) {
+        if (type == StaticData.zeroByte) {
             //flip in recent list
-        MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
-            if (fragment.parentAdapter != null) {
-                //fragment.parentAdapter.updateVisibility(metaHash, visibility);
-                fragment.parentAdapter.updateVisibility(metaHash,newVisibility);
-            }
-        });
+            MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
+                if (fragment.parentAdapter != null) {
+                    //fragment.parentAdapter.updateVisibility(metaHash, visibility);
+                    fragment.parentAdapter.updateVisibility(metaHash, newVisibility);
+                }
+            });
         }
 
         Log.i("Ayush", "Toggle Visibility " + updated + " " + metaHash + " " + newVisibility);
     }
-
-
-
-
-
-
 }

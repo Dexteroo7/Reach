@@ -168,8 +168,6 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
 
-//            Log.i("Ayush", "MyLibrary my profile " + count);
-
             parentAdapter.setNewMyLibraryCursor(data);
             final int count = data.getCount();
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
