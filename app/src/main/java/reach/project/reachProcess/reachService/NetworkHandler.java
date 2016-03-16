@@ -179,6 +179,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(5); //create thread pool
         //////////////////////////////////
         //////////////////////////////////
+        //////////////////////////////////
         long lastActive = System.currentTimeMillis(), currentTime;
         boolean kill = false, sleeping = false, taskAdded;
         Set<SelectionKey> keySet;
@@ -1195,8 +1196,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                             SongHelper.COLUMN_ACTUAL_NAME, //2
                             SongHelper.COLUMN_PATH, //3
                             SongHelper.COLUMN_VISIBILITY, //4
-                            SongHelper.COLUMN_ALBUM_ART_DATA, //5
-                            SongHelper.COLUMN_DURATION}, //6
+                            SongHelper.COLUMN_DURATION}, //5
 
                     SongHelper.COLUMN_SIZE + " = ?",
                     new String[]{builder.getLength() + ""}, null);
@@ -1216,8 +1216,8 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
             builder.setDisplayName(cursor.getString(1));
             builder.setActualName(cursor.getString(2));
-            builder.setAlbumArtData(cursor.getBlob(5));
-            builder.setDuration(cursor.getLong(6));
+            builder.setAlbumArtData(new byte[0]);
+            builder.setDuration(cursor.getLong(5));
 
             final String filePath = cursor.getString(3);
             cursor.close();

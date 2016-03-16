@@ -341,17 +341,17 @@ public class ProcessManager extends Service implements
                 new String[]{SongHelper.COLUMN_ID},
                 SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
                         SongHelper.COLUMN_STATUS + " = ?",
-                new String[]{ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), ReachDatabase.Status.RELAY.getString()}, null).getCount();
+                new String[]{ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.RELAY.getString()}, null).getCount();
     }
 
     //RETURNS TOTAL NUMBER OF PEOPLE WHO ARE UPLOADING
     private synchronized int getTotalUploads() {
         return getContentResolver().query(
                 SongProvider.CONTENT_URI,
-                new String[]{SongHelper.COLUMN_ID},
-                SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                        SongHelper.COLUMN_STATUS + " = ?",
-                new String[]{ReachDatabase.OperationKind.UPLOAD_OP.getString(), ReachDatabase.Status.RELAY.getString()}, null).getCount();
+                null,
+                SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{ReachDatabase.OperationKind.UPLOAD_OP.getString()}, null).getCount();
     }
 
     private String generateNotificationText(int totalDownloads, int totalUploads) {
