@@ -72,7 +72,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+        public void handOverAppVisibilityMessage(String packageName) {
 
         }
 

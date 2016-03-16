@@ -501,7 +501,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
         values.put(SongHelper.COLUMN_DISPLAY_NAME, reachDatabase.getDisplayName());
         values.put(SongHelper.COLUMN_ACTUAL_NAME, reachDatabase.getActualName());
         values.put(SongHelper.COLUMN_META_HASH, reachDatabase.getMetaHash());
-        values.put(SongHelper.COLUMN_ALBUM_ART_DATA, reachDatabase.getAlbumArtData());
+        values.put(SongHelper.COLUMN_ALBUM_ART_DATA, new byte[0]);
         values.put(SongHelper.COLUMN_USER_NAME, nameAndStatus.first);
         values.put(SongHelper.COLUMN_ONLINE_STATUS, nameAndStatus.second.getValue());
 
@@ -1195,8 +1195,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
                             SongHelper.COLUMN_ACTUAL_NAME, //2
                             SongHelper.COLUMN_PATH, //3
                             SongHelper.COLUMN_VISIBILITY, //4
-                            SongHelper.COLUMN_ALBUM_ART_DATA, //5
-                            SongHelper.COLUMN_DURATION}, //6
+                            SongHelper.COLUMN_DURATION}, //5
 
                     SongHelper.COLUMN_SIZE + " = ?",
                     new String[]{builder.getLength() + ""}, null);
@@ -1216,8 +1215,7 @@ class NetworkHandler extends ReachTask<NetworkHandler.NetworkHandlerInterface> {
 
             builder.setDisplayName(cursor.getString(1));
             builder.setActualName(cursor.getString(2));
-            builder.setAlbumArtData(cursor.getBlob(5));
-            builder.setDuration(cursor.getLong(6));
+            builder.setDuration(cursor.getLong(5));
 
             final String filePath = cursor.getString(3);
             cursor.close();

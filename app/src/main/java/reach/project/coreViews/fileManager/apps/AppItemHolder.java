@@ -4,16 +4,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.widget.PopupMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
+import java.util.Map;
 
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ancillaryClasses.UseReferenceWithResult;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
 
@@ -64,10 +67,7 @@ class AppItemHolder extends SingleItemViewHolder {
             switch (item.getItemId()) {
                 case R.id.hide:
                     //hide
-                    final App app = handOver.getExtra(position);
-                    handOver.handOverAppVisibilityMessage(position, !app.visible, packageName);
-                    item.setTitle(!app.visible?"Visible":"Locked");
-
+                    handOver.handOverAppVisibilityMessage(packageName);
                     return true;
                 case R.id.uninstall:
                     //uninstall
@@ -80,6 +80,11 @@ class AppItemHolder extends SingleItemViewHolder {
                     return false;
             }
         });
+
+        final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
+        packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(context.getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+        final MenuItem hideItem = popupMenu.getMenu().findItem(R.id.hide);
+        hideItem.setTitle(packageVisibility.containsKey(packageName) && packageVisibility.get(packageName) ? "Everyone" : "Only Me");
 
         popupMenu.show();
     };

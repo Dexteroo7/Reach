@@ -13,7 +13,7 @@ android {
         versionCode 91
         versionName "1.0.7"
         multiDexEnabled true
-        vectorDrawables.useSupportLibrary = true
+//        vectorDrawables.useSupportLibrary = true
     }
 
     compileOptions {

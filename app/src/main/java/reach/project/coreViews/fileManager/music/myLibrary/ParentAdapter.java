@@ -79,7 +79,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+        public void handOverAppVisibilityMessage(String packageName) {
 
         }
 
