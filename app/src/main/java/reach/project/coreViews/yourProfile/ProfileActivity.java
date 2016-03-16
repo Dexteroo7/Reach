@@ -138,7 +138,7 @@ public class ProfileActivity extends AppCompatActivity {
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case R.id.player_button:
-                    startActivity(new Intent(this, PlayerActivity.class));
+                    PlayerActivity.openActivity(this);
                     return true;
                 case R.id.notif_button:
                     NotificationActivity.openActivity(this, NotificationActivity.OPEN_NOTIFICATIONS);

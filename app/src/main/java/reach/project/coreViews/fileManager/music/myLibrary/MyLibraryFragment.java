@@ -33,7 +33,6 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
-import reach.project.music.MySongsHelper;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
@@ -352,7 +351,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
             return;
 
         ContentValues values = new ContentValues();
-        values.put(MySongsHelper.COLUMN_VISIBILITY, newVisibility);
+        values.put(SongHelper.COLUMN_VISIBILITY, newVisibility);
 
         int updated = resolver.update(
                 SongProvider.CONTENT_URI,

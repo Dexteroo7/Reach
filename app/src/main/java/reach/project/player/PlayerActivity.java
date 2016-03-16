@@ -46,7 +46,6 @@ import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
-import reach.project.music.MySongsHelper;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
@@ -85,13 +84,6 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         context.startActivity(intent);
     }
-
-//    public static Intent getIntent(Context context) {
-//
-//        final Intent intent = new Intent(context, PlayerActivity.class);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-//        return intent;
-//    }
 
     public static final String ACTION = "reach.project.player.PlayerActivity.ACTION";
     public static final String MUSIC_PARCEL = "reach.project.player.PlayerActivity.MUSIC_PARCEL";
@@ -143,13 +135,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         setContentView(R.layout.activity_player);
 
         reference = new WeakReference<>(this);
-
-        try {
-            currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
-        } catch (RuntimeException e) {
-            currentPlaying = null;
-        }
-
+        currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
         mMusicRecyclerView = (EmptyRecyclerView) findViewById(R.id.recyclerView);
 
         /*final long current_playing_song_id = getArguments().getLong(CURRENT_SONG_ID_KEY);*/
@@ -215,10 +201,9 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             }
         }
 
-        if(SharedPrefUtils.getPlaying(this)){
+        if (SharedPrefUtils.getPlaying(this)) {
             togglePlayPause(true);
-        }
-        else{
+        } else {
             togglePlayPause(false);
         }
         /*if (SharedPrefUtils.getIsASongCurrentlyPlaying(preferences)) {
@@ -265,6 +250,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     private void setEmptyPlayerSettings() {
+
         likeButton.setEnabled(false);
         pause_play.setEnabled(false);
         shuffle.setEnabled(false);
@@ -746,7 +732,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             return context.getContentResolver().update(
                         /*Uri.parse(SongProvider.CONTENT_URI + "/" + currentPlaying.fileHash)*/SongProvider.CONTENT_URI,
                     values,
-                    MySongsHelper.COLUMN_META_HASH + " = ?",
+                    SongHelper.COLUMN_META_HASH + " = ?",
                     new String[]{currentPlaying.getFileHash() + ""}) > 0 && !currentPlaying.isLiked;
             /*} else if (currentPlaying.getType() == MusicData.Type.MY_LIBRARY) {
 
