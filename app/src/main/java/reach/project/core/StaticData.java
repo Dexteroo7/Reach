@@ -15,8 +15,6 @@ import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
-import reach.project.music.MySongsHelper;
-import reach.project.music.SongHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**

@@ -45,17 +45,15 @@ class Player {
     }
 
     //Single threaded executor to avoid fuck ups
-    private final ExecutorService decoderService = Executors.unconfigurableExecutorService(
-            Executors.newFixedThreadPool(2, new ThreadFactoryBuilder()
-                    .setDaemon(false)
-                    .setNameFormat("reach_decoder")
-                    .setPriority(Thread.MAX_PRIORITY)
-                    .setUncaughtExceptionHandler((thread, ex) -> {
-
-                        //ex.getLocalizedMessage()
-                        //TODO track
-                    })
-                    .build()));
+    private final ExecutorService decoderService = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder()
+            .setDaemon(false)
+            .setNameFormat("reach_decoder")
+            .setPriority(Thread.MAX_PRIORITY)
+            .setUncaughtExceptionHandler((thread, ex) -> {
+                //ex.getLocalizedMessage()
+                //TODO track
+            })
+            .build());
 
     private final AtomicBoolean stopDecoding = new AtomicBoolean(true), pauseDecoding = new AtomicBoolean(false);
     private final DecoderHandler handlerInterface;
@@ -151,14 +149,16 @@ class Player {
                 audioTrack.play();
                 pauseDecoding.set(false);
             }
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
     }
 
     public void setVolume(float duck_volume) {
         try {
             if (mediaPlayer != null)
                 mediaPlayer.setVolume(duck_volume, duck_volume);
-        } catch (IllegalStateException ignored) {}
+        } catch (IllegalStateException ignored) {
+        }
         if (audioTrack == null)
             return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
@@ -269,7 +269,7 @@ class Player {
 
     protected long createAudioTrackIfNeeded(Optional<String> path, final long contentLength) throws IOException, InterruptedException {
 
-//        Log.i("Downloader", "Creating audio track");
+        Log.i("Downloader", "Creating audio track");
         reset(); //throws InterruptedException
         whichPlayer = WhichPlayer.AudioTrack;
 
@@ -282,6 +282,8 @@ class Player {
                 path.get(),
                 contentLength);
 
+        Log.i("Downloader", "Player Source created");
+
         //start thread
         pipeFuture = decoderService.submit(playerSource);
 
@@ -293,9 +295,9 @@ class Player {
 
         try {
             //caller should handle InterruptedException
-            frameHeader = getHeader.get(5, TimeUnit.SECONDS);
+            frameHeader = getHeader.get(5L, TimeUnit.SECONDS);
         } catch (ExecutionException | TimeoutException e) {
-            
+
             try {
                 bitStream.close();
             } catch (BitstreamException ignored) {

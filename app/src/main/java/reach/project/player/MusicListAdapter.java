@@ -22,9 +22,7 @@ import java.io.Closeable;
 import javax.annotation.Nonnull;
 
 import reach.project.R;
-import reach.project.music.MySongsHelper;
-import reach.project.music.SongHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
+import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -78,7 +76,7 @@ class MusicListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imp
 
 
     public MusicListAdapter(HandOverMessage<Cursor> handOverCursor,
-                            HandOverMessage<MusicData> handOverSong,
+                            HandOverMessage<Song> handOverSong,
                             Context context, String currentlyPlayingSongId) {
 
         this.handOverCursor = handOverCursor;

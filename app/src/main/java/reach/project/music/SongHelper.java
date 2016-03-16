@@ -2,7 +2,6 @@ package reach.project.music;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
@@ -11,7 +10,6 @@ import android.util.Log;
 import com.google.common.hash.Hashing;
 
 import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 
 /**
@@ -311,28 +309,6 @@ public class SongHelper extends SQLiteOpenHelper {
 //            COLUMN_GENRE, //10
 //            COLUMN_IS_LIKED, //11
 //    };
-
-    public static MusicData getMusicData(final Cursor cursor) {
-
-        final String temp = cursor.getString(7);
-
-        // Previously wrong id was being passed, so changing it to get the unique id
-        return new MusicData(
-                //cursor.getLong(0), //id
-                cursor.getLong(0),
-                cursor.getString(19), //meta-hash
-                cursor.getLong(1), //length
-                cursor.getLong(2), //senderId
-                cursor.getLong(3), //processed
-                cursor.getLong(17), //date added
-                cursor.getString(4), //path
-                cursor.getString(5), //displayName
-                cursor.getString(6), //artistName
-                cursor.getString(15), //album
-                !TextUtils.isEmpty(temp) && temp.equals("1"), //liked
-                cursor.getLong(8), //duration
-                MusicData.Type.DOWNLOADED); //type
-    }
 
 //    public static Song getSong(final Cursor cursor) {
 //

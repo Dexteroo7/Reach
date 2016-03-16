@@ -100,11 +100,11 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
+import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.player.PlayerActivity;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.AppMetadata;
 import reach.project.usageTracking.PostParams;
@@ -400,33 +400,6 @@ public enum MiscUtils {
         }
     }
 
-    //id = -1 : disk else downloader
-    public static boolean playSong(MusicData musicData, Context context) {
-
-        //stop any other play clicks till current is processed
-        //sanity check
-//            Log.i("Ayush", id + " " + length + " " + senderId + " " + processed + " " + path + " " + displayName + " " + artistName + " " + type + " " + isLiked + " " + duration);
-        if (musicData.getSize() == 0 || TextUtils.isEmpty(musicData.getPath())) {
-            Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        if (musicData.getProcessed() == 0) {
-            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        ProcessManager.submitMusicRequest(context,
-                Optional.of(musicData),
-                ProcessManager.ACTION_NEW_SONG);
-
-        final Intent intent = new Intent(context, PlayerActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        context.startActivity(intent);
-        ////////////////////////////////////////
-        return true;
-    }
-
     public static boolean playSong(Song song, Context context) {
 
         //sanity check
@@ -436,12 +409,8 @@ public enum MiscUtils {
 //            return false;
 //        }
 //
-//        if (musicData.getProcessed() == 0) {
-//            Toast.makeText(context, "Streaming will start in a few seconds", Toast.LENGTH_SHORT).show();
-//            return false;
-//        }
 
-        if (song.size == 0 || TextUtils.isEmpty(song.path)) {
+        if (song.size == 0 || song.duration == 0 || TextUtils.isEmpty(song.path)) {
             Toast.makeText(context, "Bad song", Toast.LENGTH_SHORT).show();
             return false;
         }
@@ -451,13 +420,16 @@ public enum MiscUtils {
             return false;
         }
 
+        //store the last played song
+        SharedPrefUtils.storeLastPlayed(context, song);
+
+        //submit the music request
         ProcessManager.submitMusicRequest(context,
                 Optional.of(song),
                 ProcessManager.ACTION_NEW_SONG);
 
-        final Intent intent = new Intent(context, PlayerActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        context.startActivity(intent);
+        //open player activity
+        PlayerActivity.openActivity(context);
         ////////////////////////////////////////
         return true;
     }
@@ -1347,56 +1319,26 @@ public enum MiscUtils {
          * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
          */
 
-        final Cursor cursor;
-
-        //this cursor can be used to play if entry exists
-        cursor = contentResolver.query(
+        final Cursor cursor = contentResolver.query(
                 SongProvider.CONTENT_URI,
-                new String[]{
-
-                        SongHelper.COLUMN_ID, //0
-                        SongHelper.COLUMN_PROCESSED, //1
-                        SongHelper.COLUMN_PATH, //2
-
-                        SongHelper.COLUMN_IS_LIKED, //3
-                        SongHelper.COLUMN_SENDER_ID, //4
-                        SongHelper.COLUMN_RECEIVER_ID, //5
-                        SongHelper.COLUMN_SIZE, //6
-                        SongHelper.COLUMN_META_HASH //7
-                },
-
+                SongCursorHelper.SONG_HELPER.getProjection(),
                 SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
                         SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
                         SongHelper.COLUMN_SIZE + " = ? and " +
                         SongHelper.COLUMN_DURATION + " = ?",
-                new String[]{reachDatabase.getDisplayName(), reachDatabase.getActualName(),
-                        reachDatabase.getLength() + "", reachDatabase.getDuration() + ""},
+                new String[]{
+                        reachDatabase.getDisplayName(),
+                        reachDatabase.getActualName(),
+                        reachDatabase.getLength() + "",
+                        reachDatabase.getDuration() + ""},
                 null);
 
         if (cursor != null) {
 
             if (cursor.moveToFirst()) {
 
-                //if not multiple addition, play the song
-                final boolean liked;
-                final String temp = cursor.getString(3);
-                liked = !TextUtils.isEmpty(temp) && temp.equals("1");
-
-                final MusicData musicData = new MusicData(
-                        cursor.getLong(0), //id
-                        cursor.getString(7), //metaHash
-                        reachDatabase.getLength(),
-                        reachDatabase.getSenderId(),
-                        cursor.getLong(1),
-                        0,
-                        cursor.getString(2),
-                        reachDatabase.getDisplayName(),
-                        reachDatabase.getArtistName(),
-                        "",
-                        liked,
-                        reachDatabase.getDuration(),
-                        MusicData.Type.DOWNLOADED);
-                playSong(musicData, activity);
+                final Song song = SongCursorHelper.SONG_HELPER.parse(cursor);
+                playSong(song, activity);
                 //in both cases close and continue
                 cursor.close();
                 return;

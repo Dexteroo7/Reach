@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.util.Log;
 
 import com.google.common.base.Optional;
@@ -15,10 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
 import reach.project.music.Song;
-import reach.project.music.SongProvider;
 import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.AudioFocusHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.MusicFocusable;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.MiscUtils;
@@ -74,7 +72,6 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         return Optional.fromNullable(currentSong);
     }
 
-
     /**
      * The volume we set the media player to when we lose audio focus, but are allowed to reduce
      * the volume instead of stopping playback.
@@ -93,7 +90,6 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     protected void sanitize() {
 
         Log.i("Downloader", "Sanitizing music handler");
-        currentSong = null;
         SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         userPaused.set(false);
         playerState = State.Playing;
@@ -101,6 +97,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         if (player != null)
             player.cleanUp();
         giveUpAudioFocus();
+
         audioFocusHelper = null;
         Log.i("Downloader", "music handler sanitized");
     }
@@ -184,6 +181,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
                     player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getSize()) :
                     player.createMediaPlayerIfNeeded(this, this, currentSong.getPath());
         } catch (IOException e) {
+
             e.printStackTrace();
             Log.i("Downloader", currentSong.getPath() + " could not be prepared");
             final File check = new File(currentSong.getPath());
@@ -412,11 +410,12 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     /////////////////////////////////////
     @Override
     public long getProcessed() {
+
         //if this gets called current song HAS to be reachDatabase
         final Cursor cursor = handlerInterface.getContext().getContentResolver().query(
-                Uri.parse(SongProvider.CONTENT_URI + "/" + currentSong.getFileHash()),
+                SongProvider.CONTENT_URI,
                 new String[]{SongHelper.COLUMN_PROCESSED},
-                SongHelper.COLUMN_ID + " = ?",
+                SongHelper.COLUMN_META_HASH + " = ?",
                 new String[]{currentSong.getFileHash() + ""}, null);
         if (cursor == null) {
             return 0;
