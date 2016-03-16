@@ -16,6 +16,6 @@ public interface HandOverMessageExtra<T> extends HandOverMessage<Integer> {
 
     void putExtra(int position, T item);
 
-    void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName);
+    void handOverAppVisibilityMessage(String packageName);
     void handOverSongVisibilityMessage(int position, Object message);
 }

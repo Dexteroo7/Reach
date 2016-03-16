@@ -1,6 +1,7 @@
 package reach.project.coreViews.fileManager.apps;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -18,6 +19,7 @@ import reach.project.R;
 import reach.project.apps.App;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -36,6 +38,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private final HandOverMessage<App> handOverApp;
     private final PackageManager packageManager;
     private final RecentAdapter recentAdapter;
+    private final SharedPreferences preferences;
 
     private final HandOverMessageExtra<App> handOverMessageExtra = new HandOverMessageExtra<App>() {
 
@@ -65,8 +68,19 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visibility, String packageName) {
-            ParentAdapter.this.handOverAppVisibilityToggle.handOverMessage(position,visibility,packageName);
+        public void handOverAppVisibilityMessage(String packageName) {
+            final boolean newVisibility = !isVisible(packageName);
+            //update in memory
+            synchronized (packageVisibility) {
+                packageVisibility.put(packageName, newVisibility);
+            }
+            //update in disk
+            SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
+            //update on server
+            //new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
+
+            //notify that visibility has changed
+            visibilityChanged(packageName);
         }
 
         @Override
@@ -75,20 +89,90 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     };
 
-    private final HandOverVisibilityToggle handOverAppVisibilityToggle;
+    /*private static class ToggleVisibility extends AsyncTask<Object, Void, Boolean> {
 
-    public static interface HandOverVisibilityToggle{
+        private WeakReference<ApplicationFragment> applicationFragmentWeakReference;
 
-        public void handOverMessage(int position, boolean visibility, String packageName);
+        public ToggleVisibility(ApplicationFragment applicationFragment) {
+            this.applicationFragmentWeakReference = new WeakReference<>(applicationFragment);
+        }
 
-    }
+        *//**
+         * params[0] = oldVisibility
+         * params[1] = songId
+         * params[2] = userId
+         *//*
 
-    public ParentAdapter(HandOverMessage<App> handOverApp, Context context,HandOverVisibilityToggle handOverAppVisibilityToggle) {
+        @Override
+        protected Boolean doInBackground(Object... params) {
+
+            if (params == null || params.length != 3)
+                throw new IllegalArgumentException("Necessary arguments not given");
+
+            final long serverId;
+            final String packageName;
+            final boolean visibility;
+
+            if (params[0] instanceof Long && params[1] instanceof String && params[2] instanceof Boolean) {
+                serverId = (long) params[0];
+                packageName = (String) params[1];
+                visibility = (boolean) params[2];
+            } else
+                throw new IllegalArgumentException("Arguments not of expected type");
+
+            boolean failed = false;
+            //TODO
+//            try {
+//                final MyString response = StaticData.APP_VISIBILITY_API.update(
+//                        serverId, //serverId
+//                        packageName, //packageName
+//                        visibility).execute(); //if 0 (false) make it true and vice-versa
+//                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+//                    failed = true; //mark failed
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                failed = true; //mark failed
+//            }
+
+            //reset if failed
+            if (failed)
+                MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
+
+                    //reset in memory
+                    if (fragment.parentAdapter != null) {
+                        synchronized (fragment.parentAdapter.packageVisibility) {
+                            fragment.parentAdapter.packageVisibility.put(packageName, !visibility);
+                        }
+                    }
+                    //reset in disk
+                    SharedPrefUtils.addPackageVisibility(fragment.preferences, packageName, !visibility);
+                });
+
+            return failed;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean failed) {
+
+            super.onPostExecute(failed);
+            if (failed)
+                MiscUtils.useContextAndFragment(applicationFragmentWeakReference, (context, fragment) -> {
+
+                    //notify that visibility has changed
+                    Log.i("Ayush", "Server update failed for app");
+                    if (fragment.parentAdapter != null) {
+                        fragment.parentAdapter.visibilityChanged(null);
+                        Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        }
+    }*/
+
+    public ParentAdapter(HandOverMessage<App> handOverApp, Context context) {
 
         this.packageManager = context.getPackageManager();
         this.handOverApp = handOverApp;
-        this.handOverAppVisibilityToggle = handOverAppVisibilityToggle;
-
+        this.preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item, this);
         setHasStableIds(true);
     }
@@ -109,7 +193,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             }
 
         position++;//adjust for recent
-        position++;//adjust for material header
+        //position++;//adjust for material header
 
         notifyItemChanged(position); //adjust for header
         recentAdapter.visibilityChanged(packageName);
@@ -252,5 +336,10 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Override
     public boolean isVisible(String packageName) {
         return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
+    }
+
+    @Override
+    public void handOverAppVisibility(String packageName) {
+        handOverMessageExtra.handOverAppVisibilityMessage(packageName);
     }
 }

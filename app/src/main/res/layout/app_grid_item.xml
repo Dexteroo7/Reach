@@ -47,6 +47,7 @@
             android:layout_marginRight="8dp"
             android:layout_marginTop="8dp"
             android:id="@+id/toggleImage"
+            android:visibility="gone"
             />
 
     </RelativeLayout>

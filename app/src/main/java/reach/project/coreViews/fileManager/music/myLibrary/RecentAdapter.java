@@ -23,7 +23,6 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
-import reach.project.coreViews.fileManager.apps.*;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -73,7 +72,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+        public void handOverAppVisibilityMessage(String packageName) {
 
         }
 
