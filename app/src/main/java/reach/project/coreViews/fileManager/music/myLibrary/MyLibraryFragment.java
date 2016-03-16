@@ -21,6 +21,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.appspot.able_door_616.contentStateApi.ContentStateApi;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +47,8 @@ import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
+import reach.project.utils.CloudEndPointsUtils;
+import reach.project.utils.ContentType;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -53,6 +63,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
     private EmptyRecyclerView mRecyclerView;
     private static long myUserId = 0;
     private static final String TAG = MyLibraryFragment.class.getSimpleName();
+    private SharedPreferences preferences;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -75,9 +86,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
         final View rootView = inflater.inflate(R.layout.fragment_filemanager_music_mylibrary, container, false);
         final Context context = rootView.getContext();
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
-        emptyViewText.setText("Dawg");
+        emptyViewText.setText("No songs");
 
-        final SharedPreferences preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
+        preferences = getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE);
         myUserId = SharedPrefUtils.getServerId(preferences);
 
         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
@@ -243,15 +254,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
             final String metaHash = cursor.getString(2);
 
             new ToggleVisibility(MyLibraryFragment.this,
-                    (long) (visible ? 0 : 1),
+                    visible,
                     metaHash,
                     myUserId,
-                    position,
-                    StaticData.zeroByte
-            ).executeOnExecutor(visibilityHandler
-            );
+                    StaticData.zeroByte)
+                    .executeOnExecutor(visibilityHandler);
             //flip
-            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId,position,StaticData.zeroByte);
+            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId,StaticData.zeroByte);
 
         } else if (message instanceof Song) {
 
@@ -260,15 +269,13 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
             final Song song = (Song) message;
 
             new ToggleVisibility(MyLibraryFragment.this,
-                    (long) (song.visibility ? 1 : 0),
+                    song.visibility,
                     song.getFileHash(),
-                    myUserId,position, StaticData.oneByte
-
-            ).executeOnExecutor(visibilityHandler
-                    //flip
-            );
+                    myUserId,
+                    StaticData.oneByte)
+                    .executeOnExecutor(visibilityHandler);
             //flip
-            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId,position,StaticData.oneByte);
+            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId,StaticData.oneByte);
 
         } else
             throw new IllegalArgumentException("Unknown type handed over");
@@ -279,63 +286,57 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
 
     private static class ToggleVisibility extends AsyncTask<Void, Void, Boolean> {
 
-        private final long param1;
-        private final String param2;
-        private final long param3;
-        private final int param4;
-        private final byte param5;
+        private final boolean visible;
+        private final String metaHash;
+        private final long userId;
+        private final byte type;
 
         private WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference;
 
-        //param5 is for the type of object, 0 for cursor and 1 for song
-        public ToggleVisibility(MyLibraryFragment myLibraryFragment, long param1, String param2, long param3, int param4, byte param5) {
+        public ToggleVisibility(MyLibraryFragment myLibraryFragment, boolean visible, String metaHash, long userId, byte type) {
             this.myLibraryFragmentWeakReference = new WeakReference<>(myLibraryFragment);
-            this.param1 = param1;
-            this.param2 = param2;
-            this.param3 = param3;
-            this.param4 = param4;
-            this.param5 = param5;
-
+            this.visible = visible;
+            this.metaHash = metaHash;
+            this.userId = userId;
+            this.type = type;
         }
-
-        /**
-         * params[0] = oldVisibility
-         * params[1] = songId
-         * params[2] = userId
-         */
 
         @Override
         protected Boolean doInBackground(Void... params) {
 
-            boolean failed = false;
-            //TODO
-//            try {
-//                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
-//                        params[2], //serverId
-//                        params[1], //songId
-//                        params[0] == 1).execute(); //translate to boolean
-//                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
-//                    failed = true; //mark failed
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                failed = true; //mark failed
-//            }
+            return MiscUtils.useFragment(myLibraryFragmentWeakReference, fragment -> {
+                boolean failed = false;
 
-            if (failed) {
-                updateDatabase(myLibraryFragmentWeakReference, param1 != 1, param2, param3, param4, param5 );
-            }
+                final HttpTransport transport = new NetHttpTransport();
+                final JsonFactory factory = new JacksonFactory();
+                final GoogleAccountCredential credential = GoogleAccountCredential
+                        .usingAudience(fragment.getContext(), StaticData.SCOPE)
+                        .setSelectedAccountName(SharedPrefUtils.getEmailId(fragment.preferences));
 
-            return failed;
+                final ContentStateApi contentStateApi = CloudEndPointsUtils.updateBuilder(new ContentStateApi.Builder(transport, factory, credential))
+                        .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+
+                try {
+                    contentStateApi.update(userId, ContentType.MUSIC.name(), metaHash, ContentType.State.VISIBLE.name(), visible).execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    failed = true; //mark failed
+                }
+                return failed;
+            }).or(Boolean.TRUE);
+
         }
 
         @Override
         protected void onPostExecute(Boolean failed) {
 
             super.onPostExecute(failed);
-            if (failed)
+            if (failed) {
+                updateDatabase(myLibraryFragmentWeakReference, visible, metaHash, userId, type);
                 MiscUtils.useContextFromFragment(myLibraryFragmentWeakReference, context -> {
                     Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
                 });
+            }
         }
     }
 
@@ -344,7 +345,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
     private static synchronized void updateDatabase(WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference,
                                                     final boolean newVisibility,
                                                     String metaHash,
-                                                    long userId, int position, byte type) {
+                                                    long userId, byte type) {
 
         final ContentResolver resolver = MiscUtils.useContextFromFragment(myLibraryFragmentWeakReference, ContextWrapper::getContentResolver).orNull();
         //sanity check
@@ -362,20 +363,14 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage,Paren
 
         if(type == StaticData.zeroByte) {
             //flip in recent list
-        MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
-            if (fragment.parentAdapter != null) {
-                //fragment.parentAdapter.updateVisibility(metaHash, visibility);
-                fragment.parentAdapter.updateVisibility(metaHash,newVisibility);
-            }
-        });
+            MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
+                if (fragment.parentAdapter != null) {
+                    fragment.parentAdapter.updateVisibility(metaHash,newVisibility);
+                }
+            });
         }
 
         Log.i("Ayush", "Toggle Visibility " + updated + " " + metaHash + " " + newVisibility);
     }
-
-
-
-
-
 
 }

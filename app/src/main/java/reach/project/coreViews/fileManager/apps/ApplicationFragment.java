@@ -48,9 +48,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         fragment.setArguments(args);
         return fragment;
     }
-    private static long userId = 0;
 
-    private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
 
     @Nullable
     ParentAdapter parentAdapter = null;
@@ -73,7 +71,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         loadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
 
         preferences =context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-        userId = SharedPrefUtils.getServerId(preferences);
         parentAdapter = new ParentAdapter(this, context);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
