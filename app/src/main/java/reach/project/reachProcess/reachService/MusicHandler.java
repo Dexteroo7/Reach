@@ -314,6 +314,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
      * @return true means we should push a new song !
      */
     boolean processPlayPause() {
+
         if (player == null || player.isNull())
             return true;
         if (player.isPlaying())

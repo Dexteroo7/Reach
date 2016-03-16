@@ -38,6 +38,7 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nonnull;
 
@@ -114,6 +115,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
     private View fwdBtn;
 
     private final ResizeOptions fullAlbumArt = new ResizeOptions(500, 500);
+    private final ExecutorService songFinder = MiscUtils.getRejectionExecutor();
 
     @Override
     public void onBackPressed() {
@@ -234,13 +236,10 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         currentPlaying = SharedPrefUtils.getLastPlayed(this).orNull();
 
         ProcessManager.installMessenger(new Messenger(handler));
-        /*if(SharedPrefUtils.getPlaying(this)){
-            togglePlayPause(true);
-        }
-        else{
-            togglePlayPause(false);
-        }*/
-
+        ProcessManager.submitMusicRequest(
+                this,
+                Optional.absent(),
+                ProcessManager.ACTION_STATUS);
     }
 
     @Override
@@ -359,7 +358,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         if (nowPlayingAdapter != null) {
 
             nowPlayingAdapter.setCurrentPlayingHash(currentPlaying.getFileHash());
-            new SetCurrentPlaying().execute(currentPlaying.getFileHash());
+            new SetCurrentPlaying().executeOnExecutor(songFinder,currentPlaying.getFileHash());
         }
     }
 

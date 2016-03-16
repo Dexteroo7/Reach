@@ -111,6 +111,7 @@ public class ProcessManager extends Service implements
     public static final String ACTION_PREVIOUS = "reach.project.reachProcess.reachService.MusicHandler.PREVIOUS";
     //the ones below are directly linked with the player
     public static final String ACTION_PLAY_PAUSE = "reach.project.reachProcess.reachService.MusicHandler.PLAY_PAUSE";
+    public static final String ACTION_STATUS = "reach.project.reachProcess.reachService.MusicHandler.STATUS";
     public static final String ACTION_SEEK = "reach.project.reachProcess.reachService.MusicHandler.SEEK";
     public static final String ACTION_KILL = "reach.project.reachProcess.reachService.MusicHandler.KILL";
 
@@ -790,6 +791,17 @@ public class ProcessManager extends Service implements
                     pushNextSong(previousSong(musicHandler.getCurrentSong()));
                 break;
             }
+
+            case ACTION_STATUS: {
+
+                final Bundle bundle = new Bundle();
+                if (musicHandler.isPaused())
+                    bundle.putString(PlayerActivity.ACTION, REPLY_PAUSED);
+                else
+                    bundle.putString(PlayerActivity.ACTION, REPLY_UN_PAUSED);
+                sendMessage(bundle);
+            }
+
             case ACTION_PLAY_PAUSE: {
 
                 Log.i("Downloader", "ACTION_PLAY_PAUSE");
@@ -847,17 +859,28 @@ public class ProcessManager extends Service implements
 
     private Optional<Song> shufflePrevious() {
 
-        if (musicStack.isEmpty())
+        if (musicStack.size() < 2)
             return previousSong(musicHandler.getCurrentSong());
 
-        final String currentSongHash = musicStack.pop(); //ignore current song !
+        musicStack.pop();//ignore current song !
+        final String currentSongHash = musicStack.pop();
+
         final Cursor cursor = getContentResolver().query(
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
                 SongHelper.COLUMN_META_HASH + " = ?",
                 new String[]{currentSongHash}, null);
 
-        return playFromCursor(Optional.fromNullable(cursor));
+        if (cursor == null)
+            return previousSong(musicHandler.getCurrentSong());
+
+        if (!cursor.moveToFirst()) {
+
+            cursor.close();
+            return previousSong(musicHandler.getCurrentSong());
+        }
+
+        return playFromCursor(Optional.of(cursor));
     }
 
     private Optional<Song> shuffleNext(String fileHash) {
