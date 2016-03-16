@@ -800,6 +800,7 @@ public class ProcessManager extends Service implements
                 else
                     bundle.putString(PlayerActivity.ACTION, REPLY_UN_PAUSED);
                 sendMessage(bundle);
+                break;
             }
 
             case ACTION_PLAY_PAUSE: {
