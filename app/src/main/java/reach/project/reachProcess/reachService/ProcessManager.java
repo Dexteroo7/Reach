@@ -809,7 +809,7 @@ public class ProcessManager extends Service implements
                 if (!musicHandler.processPlayPause())
                     break;
 
-                final Optional<Song> history = Optional.fromNullable((Song) intent.getSerializableExtra("message"));
+                final Optional<Song> history = SharedPrefUtils.getLastPlayed(this);
                 if (history.isPresent())
                     pushNextSong(history);
                 else {
