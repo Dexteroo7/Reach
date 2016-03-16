@@ -38,6 +38,8 @@ public final class StaticData {
     public static int friendsCount=0;
     public static final String zero = "0";
     public static final String one = "1";
+    public static final byte oneByte = 1;
+    public static final byte zeroByte = 0;
 
     static {
 

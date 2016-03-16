@@ -2,6 +2,7 @@
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     card_view:cardUseCompatPadding="true"
     android:layout_margin="5dp"
     android:layout_width="match_parent"
@@ -10,16 +11,32 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
+
+
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/albumArt"
             android:background="@color/reach_grey"
             fresco:placeholderImage="@drawable/default_music_icon"
             android:layout_width="match_parent"
             android:layout_height="150dp" />
-        <View
+
+
+        <!--<View
             android:background="@drawable/gradient_bg"
             android:layout_width="match_parent"
-            android:layout_height="150dp" />
+            android:layout_height="150dp" />-->
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:id="@+id/toggleImage"
+            android:layout_alignParentRight="true"
+            tools:src="@drawable/icon_everyone_white"
+            android:layout_marginTop="4dp"
+            android:layout_marginRight="8dp"
+            />
+
         <ImageView
             android:id="@+id/likeButton"
             android:padding="10dp"
@@ -27,7 +44,7 @@
             android:layout_alignBottom="@id/albumArt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/like_selector" />
+            android:src="@drawable/like_selector_1" />
         <ImageView
             android:id="@+id/extraButton"
             android:layout_alignParentRight="true"
@@ -78,6 +95,11 @@
                 android:lines="1"
                 android:text="Test"
                 android:textColor="#878691" />
+
+
+
         </LinearLayout>
+
+
     </RelativeLayout>
 </android.support.v7.widget.CardView>

@@ -6,7 +6,8 @@
     android:layout_height="wrap_content">
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
-        fresco:placeholderImage="@color/reach_grey"
+        fresco:placeholderImage="@drawable/default_music_icon"
+        android:background="@color/reach_grey"
         fresco:roundedCornerRadius="2dp"
         android:layout_margin="10dp"
         android:layout_width="50dp"

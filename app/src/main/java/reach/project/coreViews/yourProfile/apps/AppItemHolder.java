@@ -21,7 +21,6 @@ class AppItemHolder extends SingleItemViewHolder {
 
     public AppItemHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
         super(itemView, handOverMessage);
-
         this.appIcon = (SimpleDraweeView) itemView.findViewById(R.id.appIcon);
         this.appName = (TextView) itemView.findViewById(R.id.appName);
         this.extraButton = (ImageView) itemView.findViewById(R.id.extraButton);

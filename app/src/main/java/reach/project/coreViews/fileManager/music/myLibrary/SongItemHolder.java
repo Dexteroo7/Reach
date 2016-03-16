@@ -34,6 +34,7 @@ import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
+import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.SingleItemViewHolder;
@@ -48,6 +49,7 @@ class SongItemHolder extends SingleItemViewHolder {
     public final TextView songName, artistName;
     public final ImageView extraButton, likeButton;
     public final SimpleDraweeView albumArt, userImage;
+    final ImageView toggleImage;
 
     //must set this position
     int position = -1;
@@ -62,6 +64,7 @@ class SongItemHolder extends SingleItemViewHolder {
         this.likeButton = (ImageView) itemView.findViewById(R.id.likeButton);
         this.albumArt = (SimpleDraweeView) itemView.findViewById(R.id.albumArt);
         this.userImage = (SimpleDraweeView) itemView.findViewById(R.id.userImage);
+        this.toggleImage = (ImageView) itemView.findViewById(R.id.toggleImage);
 
         final Context context = itemView.getContext();
         final ContentResolver resolver = context.getContentResolver();
@@ -81,9 +84,16 @@ class SongItemHolder extends SingleItemViewHolder {
                 Song musicData = (Song) object;
                 isLiked = musicData.isLiked ? StaticData.one : StaticData.zero;
                 Log.d(TAG, "Song object isliked = " + isLiked);
-                musicData = new Song.Builder(musicData).isLiked(!musicData.isLiked).build();
-                handOverMessageExtra.putExtra(position, musicData);
-                fileHash = musicData.getFileHash();
+                Song musicData1 = new Song.Builder(musicData).isLiked(!musicData.isLiked).build();
+                musicData1.setSenderId(musicData.getSenderId());
+                musicData1.setSenderName(musicData.getSenderName());
+                musicData1.setProcessed(musicData.getProcessed());
+                musicData1.setType(musicData.getType());
+                musicData1.setCurrentPosition(musicData.getCurrentPosition());
+                musicData1.setPrimaryProgress(musicData.getPrimaryProgress());
+                musicData1.setSecondaryProgress(musicData.getSecondaryProgress());
+                handOverMessageExtra.putExtra(position, musicData1);
+                fileHash = musicData1.getFileHash();
 
                 /*musicData.setIsLiked(!musicData.isLiked());*/
             } else if (object instanceof Cursor) {
@@ -229,6 +239,25 @@ class SongItemHolder extends SingleItemViewHolder {
                     case R.id.hide: {
 
                         //hide
+                        if(object instanceof Song){
+                            //final boolean isVisible = musicData.visibility? false : true;
+                            //Log.d(TAG, "Song object isVisible = " + isVisible);
+                            Song musicData1 = new Song.Builder(musicData).visibility(!musicData.visibility).build();
+                            musicData1.setSenderId(musicData.getSenderId());
+                            musicData1.setSenderName(musicData.getSenderName());
+                            musicData1.setProcessed(musicData.getProcessed());
+                            musicData1.setType(musicData.getType());
+                            musicData1.setCurrentPosition(musicData.getCurrentPosition());
+                            musicData1.setPrimaryProgress(musicData.getPrimaryProgress());
+                            musicData1.setSecondaryProgress(musicData.getSecondaryProgress());
+
+                            handOverMessageExtra.putExtra(position, musicData1);
+                            handOverMessageExtra.handOverSongVisibilityMessage(position,musicData1);
+                        }
+
+
+                        handOverMessageExtra.handOverSongVisibilityMessage(position,object);
+
                         return true;
                     }
 
@@ -253,17 +282,13 @@ class SongItemHolder extends SingleItemViewHolder {
             boolean visible = false;
             if (object instanceof Song) {
                 final Song musicData = (Song) object;
+                visible = musicData.getVisibility();
             } else if (object instanceof Cursor) {
                 final Cursor cursor = (Cursor) object;
-                /*if (cursor.getColumnCount() == MySongsHelper.DISK_LIST.length)
-                    visible = cursor.getShort(11) == 1;
-                else if (cursor.getColumnCount() == SongHelper.MUSIC_DATA_LIST.length)*/
                 visible = cursor.getShort(12) == 1;
-                /*else
-                    throw new IllegalArgumentException("Unknown column count found");*/
             } else
                 throw new IllegalArgumentException("Invalid Object type detected");
-            hideItem.setTitle(visible ? "Everyone" : "Only Me");
+            hideItem.setTitle(!visible ? "Everyone" : "Only Me");
 
             popupMenu.show();
         });

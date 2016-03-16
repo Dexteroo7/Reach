@@ -3,6 +3,7 @@ package reach.project.coreViews.fileManager.apps;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -25,7 +26,7 @@ import reach.project.utils.viewHelpers.MoreListHolder;
 /**
  * Created by dexter on 25/11/15.
  */
-class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements RecentAdapter.VisibilityHook, Closeable {
+public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements RecentAdapter.VisibilityHook, Closeable {
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
@@ -62,15 +63,56 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         public void putExtra(int position, App item) {
 
         }
+
+        @Override
+        public void handOverAppVisibilityMessage(int position, boolean visibility, String packageName) {
+            ParentAdapter.this.handOverAppVisibilityToggle.handOverMessage(position,visibility,packageName);
+        }
+
+        @Override
+        public void handOverSongVisibilityMessage(int position, Object message) {
+
+        }
     };
 
-    public ParentAdapter(HandOverMessage<App> handOverApp, Context context) {
+    private final HandOverVisibilityToggle handOverAppVisibilityToggle;
+
+    public static interface HandOverVisibilityToggle{
+
+        public void handOverMessage(int position, boolean visibility, String packageName);
+
+    }
+
+    public ParentAdapter(HandOverMessage<App> handOverApp, Context context,HandOverVisibilityToggle handOverAppVisibilityToggle) {
 
         this.packageManager = context.getPackageManager();
         this.handOverApp = handOverApp;
+        this.handOverAppVisibilityToggle = handOverAppVisibilityToggle;
 
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item, this);
         setHasStableIds(true);
+    }
+
+    public synchronized void visibilityChanged(String packageName) {
+
+        if (TextUtils.isEmpty(packageName)) {
+            notifyDataSetChanged();
+            recentAdapter.notifyDataSetChanged();
+        }
+
+        int position = -1;
+        for (int index = 0; index < allAppsList.size(); index++)
+            if (allAppsList.get(index).packageName.equals(packageName)) {
+
+                position = index;
+                break;
+            }
+
+        position++;//adjust for recent
+        position++;//adjust for material header
+
+        notifyItemChanged(position); //adjust for header
+        recentAdapter.visibilityChanged(packageName);
     }
 
     ///////////Data set ops
@@ -135,7 +177,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             final App appExactType = (App) friend;
             final AppItemHolder appItemHolder = (AppItemHolder) holder;
             appItemHolder.menuData.setPosition(holder.getAdapterPosition());
-
             appItemHolder.appName.setText(appExactType.applicationName);
             try {
                 appItemHolder.appIcon.setImageDrawable(packageManager.getApplicationIcon(appExactType.packageName));
@@ -144,13 +185,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             }
 
             //if contains and is true
-//            if (isVisible(appExactType.packageName)) {
-//                appItemHolder.toggleButton.setImageResource(R.drawable.icon_everyone);
-//                appItemHolder.toggleText.setText("Everyone");
-//            } else {
-//                appItemHolder.toggleButton.setImageResource(R.drawable.icon_locked);
-//                appItemHolder.toggleText.setText("Only Me");
-//            }
+            if (isVisible(appExactType.packageName)) {
+                appItemHolder.toggleImage.setImageResource(R.drawable.icon_everyone);
+                //appItemHolder.toggleText.setText("Everyone");
+            } else {
+                appItemHolder.toggleImage.setImageResource(R.drawable.icon_locked);
+                //appItemHolder.toggleText.setText("Only Me");
+            }
 
         } else {
 
