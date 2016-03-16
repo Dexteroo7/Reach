@@ -2,6 +2,7 @@ package reach.project.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -19,6 +20,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import reach.project.music.Song;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.onBoarding.OnboardingData;
 
 /**
@@ -391,7 +394,7 @@ public enum SharedPrefUtils {
     public static Optional<Song> getLastPlayed(@Nonnull Context context) {
 
         RandomAccessFile randomAccessFile = null;
-        Song toReturn;
+        Song toReturn = null;
 
         try {
 
@@ -407,7 +410,33 @@ public enum SharedPrefUtils {
             MiscUtils.closeQuietly(randomAccessFile);
         }
 
-        return Optional.fromNullable(toReturn);
+        if (toReturn != null) {
+
+            final Cursor cursor = context.getContentResolver().query(
+                    SongProvider.CONTENT_URI,
+                    new String[]{
+                            SongHelper.COLUMN_PROCESSED,
+                            SongHelper.COLUMN_SENDER_ID,
+                            SongHelper.COLUMN_USER_NAME},
+                    SongHelper.COLUMN_META_HASH + " = ?",
+                    new String[]{toReturn.fileHash}, null);
+
+            if (cursor == null)
+                return Optional.of(toReturn);
+
+            if (!cursor.moveToFirst()) {
+
+                cursor.close();
+                return Optional.absent();
+            }
+
+            toReturn.setProcessed(cursor.getLong(0));
+            toReturn.setSenderId(cursor.getLong(1));
+            toReturn.setSenderName(cursor.getString(2));
+            return Optional.of(toReturn);
+        }
+
+        return Optional.absent();
     }
 
     public synchronized static void storeLastPlayed(@Nonnull Context context,
