@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 public class DownloadingFragment extends Fragment implements HandOverMessage<Cursor>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String NO_DOWNLOADS_TEXT = "No current\ndownloads!";
+    private static final String TAG = DownloadingFragment.class.getSimpleName();
     private EmptyRecyclerView mRecyclerView;
 
     public static DownloadingFragment getInstance(String header) {
@@ -79,6 +81,10 @@ public class DownloadingFragment extends Fragment implements HandOverMessage<Cur
     @Override
     public void handOverMessage(@Nonnull Cursor cursor) {
         final Song song = SongCursorHelper.DOWNLOADING_TO_SONG_HELPER.parse(cursor);
+        Log.d(TAG, "Downloaded Song to play's data: size =  " + song.size +
+                " name = " + song.displayName
+                + " processed =  " + song.getProcessed()
+        );
         MiscUtils.playSong(song, getContext());
     }
 

@@ -16,7 +16,7 @@
 
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/albumArt"
-            android:background="@color/reach_grey"
+            android:background="@drawable/gradient_bg"
             fresco:placeholderImage="@drawable/default_music_icon"
             android:layout_width="match_parent"
             android:layout_height="150dp" />
@@ -31,10 +31,10 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:id="@+id/toggleImage"
-            android:layout_alignParentRight="true"
-            tools:src="@drawable/icon_everyone_white"
+            android:layout_alignParentLeft="true"
+            tools:src="@drawable/icon_everyone"
             android:layout_marginTop="4dp"
-            android:layout_marginRight="8dp"
+            android:layout_marginLeft="8dp"
             />
 
         <ImageView

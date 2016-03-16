@@ -4,8 +4,9 @@
         android:id="@+id/send"
         android:title="Send" />
     <item
+        android:checkable="true"
         android:id="@+id/hide"
-        android:title="Hide" />
+        android:title="Locked" />
     <item
         android:id="@+id/delete"
         android:title="Delete" />

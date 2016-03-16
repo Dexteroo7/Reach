@@ -194,10 +194,10 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
 
             if (visible) {
-                songItemHolder.toggleImage.setImageResource(R.drawable.icon_everyone_white);
+                songItemHolder.toggleImage.setImageResource(0);
                 //songItemHolder.toggleText.setText("Everyone");
             } else {
-                songItemHolder.toggleImage.setImageResource(R.drawable.icon_locked_white);
+                songItemHolder.toggleImage.setImageResource(R.drawable.icon_locked);
                 //songItemHolder.toggleText.setText("Only Me");
             }
 

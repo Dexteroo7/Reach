@@ -12,7 +12,7 @@
         android:layout_margin="10dp"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:background="@color/reach_grey"
+        android:background="@drawable/gradient_bg"
 
         />
 
@@ -21,6 +21,9 @@
         android:layout_height="20dp"
         android:layout_alignTop="@id/albumArt"
         android:layout_alignLeft="@id/albumArt"
+        android:layout_alignRight="@id/albumArt"
+        android:layout_alignBottom="@id/albumArt"
+        android:padding="10dp"
         android:id="@+id/toggleImage"
         tools:src="@drawable/icon_everyone_white"
         />
