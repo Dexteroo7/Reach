@@ -21,9 +21,9 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
 import reach.project.R;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
 import reach.project.notificationCentre.NotificationActivity;
@@ -144,11 +144,11 @@ public class GcmIntentService extends IntentService {
                 if (mType.equals("PERMISSION_GRANTED")) {
                     notificationBuilder.setTicker(hostName + " accepted your request");
                     notificationBuilder.setContentText("accepted your request");
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
                 } else if (mType.equals("PERMISSION_REJECTED")) {
                     notificationBuilder.setTicker(hostName + " rejected your request");
                     notificationBuilder.setContentText("rejected your request");
-                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.REQUEST_NOT_SENT);
+                    values.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.REQUEST_NOT_SENT.getValue());
                 }
                 /**
                  * It is important to only update the required data
@@ -271,11 +271,11 @@ public class GcmIntentService extends IntentService {
 
 //                Log.i("Ayush", hostId + " Got PONG");
 
-                friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                friend.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
                 friend.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, splitter[2]);
                 friend.put(ReachFriendsHelper.COLUMN_LAST_SEEN, System.currentTimeMillis()); //online
 
-                database.put(ReachDatabaseHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.ONLINE_REQUEST_GRANTED);
+                database.put(SongHelper.COLUMN_ONLINE_STATUS, ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getValue());
                 /**
                  * It is important to only update the required data
                  */
@@ -284,15 +284,15 @@ public class GcmIntentService extends IntentService {
                         friend,
                         ReachFriendsHelper.COLUMN_ID + " = ? and " +
                                 ReachFriendsHelper.COLUMN_STATUS + " < ?",
-                        new String[]{hostId + "", ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED + ""});
+                        new String[]{hostId + "", ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getString()});
                 try {
                     getContentResolver().update(
-                            ReachDatabaseProvider.CONTENT_URI,
+                            SongProvider.CONTENT_URI,
                             database,
-                            "(" + ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? or " +
-                                    ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?) and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
-                            new String[]{hostId + "", hostId + "", ReachDatabase.FINISHED + ""});
+                            "(" + SongHelper.COLUMN_SENDER_ID + " = ? or " +
+                                    SongHelper.COLUMN_RECEIVER_ID + " = ?) and " +
+                                    SongHelper.COLUMN_STATUS + " != ?",
+                            new String[]{hostId + "", hostId + "", ReachDatabase.Status.FINISHED.getString()});
                 } catch (IllegalArgumentException e) {return;}
             }
 
@@ -340,16 +340,17 @@ public class GcmIntentService extends IntentService {
                 }
 
                 final Cursor isPaused = getContentResolver().query(
-                        ReachDatabaseProvider.CONTENT_URI,
-                        new String[]{ReachDatabaseHelper.COLUMN_STATUS},
-                        ReachDatabaseHelper.COLUMN_SENDER_ID + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_SONG_ID + " = ?",
+                        SongProvider.CONTENT_URI,
+                        new String[]{SongHelper.COLUMN_STATUS},
+                        SongHelper.COLUMN_SENDER_ID + " = ? and " +
+                                SongHelper.COLUMN_RECEIVER_ID + " = ? and " +
+                                SongHelper.COLUMN_SONG_ID + " = ?",
                         new String[]{connection.getSenderId() + "",
                                 connection.getReceiverId() + "",
                                 connection.getSongId() + ""}, null);
 
-                if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.PAUSED_BY_USER) {
+                if (isPaused != null && isPaused.moveToFirst() && isPaused.getShort(0) == ReachDatabase.Status.PAUSED_BY_USER.getValue()) {
+
                     isPaused.close();
                     GcmBroadcastReceiver.completeWakefulIntent(intent);
                     return;

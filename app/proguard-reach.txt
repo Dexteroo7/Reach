@@ -207,3 +207,8 @@
 -keep class reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment { *; }
 -keep class reach.project.coreViews.push.music.MyLibraryFragment { *; }
 -keepnames class * extends android.app.Activity { *; }
+
+-dontwarn org.joda.convert.**
+-dontwarn org.joda.time.**
+-keep class org.joda.time.** { *; }
+-keep interface org.joda.time.** { *; }

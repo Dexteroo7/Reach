@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import reach.backend.entities.userApi.model.Friend;
@@ -78,6 +79,46 @@ public class ReachFriendsHelper extends SQLiteOpenHelper {
                     COLUMN_STATUS, //13
                     COLUMN_HASH //14
             };
+
+    public enum Status {
+
+        ONLINE_REQUEST_GRANTED(0),
+        OFFLINE_REQUEST_GRANTED(1),
+        REQUEST_SENT_NOT_GRANTED(2),
+        REQUEST_NOT_SENT(3);
+
+        private final int value;
+
+        Status(int value) {
+            this.value = value;
+        }
+
+        public static Status getFromValue(short value) {
+
+            switch (value) {
+
+                case 0:
+                    return ONLINE_REQUEST_GRANTED;
+                case 1:
+                    return OFFLINE_REQUEST_GRANTED;
+                case 2:
+                    return REQUEST_SENT_NOT_GRANTED;
+                case 3:
+                    return REQUEST_NOT_SENT;
+                default:
+                    throw new IllegalArgumentException("Operation king can not have this value " + value);
+            }
+        }
+
+        @NonNull
+        public Integer getValue() {
+            return value;
+        }
+
+        public String getString() {
+            return value + "";
+        }
+    }
 
     public static final short ONLINE_REQUEST_GRANTED = 0;
     public static final short OFFLINE_REQUEST_GRANTED = 1;

@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import reach.project.core.ReachApplication;
 import reach.project.utils.MiscUtils;
 
@@ -66,10 +67,15 @@ public enum UsageTracker {
 
         Log.i("Ayush", "Trying to track ! " + toProcess.body().toString());
 
-        final Optional<Integer> statusCode = MiscUtils.autoRetry(() -> ReachApplication.OK_HTTP_CLIENT.newCall(toProcess).execute().code(), //perform the post
-                Optional.of(input -> input == null || !(input == 200 || input == 204))); //check for invalid response
 
-        if (!statusCode.isPresent()) {
+        final Integer statusCode = MiscUtils.autoRetry(() -> {
+
+            final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(toProcess).execute();
+            response.body().close();
+            return response.code();
+        }, Optional.of(input -> input == null || !(input == 200 || input == 204))).or(0);
+
+        if (statusCode == 0) {
 
             //TODO cache the request !
         } else
@@ -175,7 +181,6 @@ public enum UsageTracker {
         Log.i("Ayush", "Posting " + toPost);
 
         synchronized (requests) {
-
             requests.push(new Request.Builder()
                     .url("http://52.74.175.56:8080/analytics/events")
                     .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), toPost))

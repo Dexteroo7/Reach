@@ -26,6 +26,7 @@
     <item name="background_tab_pressed" type="color">#6633B5E5</item>
     <item name="selected_item_bg_color" type="color">#AAf33b5b</item>
     <item name="pressed_item_bg_color" type="color">#55f33b5b</item>
+    <item name="overlay_image_color" type="color">#77000000</item>
 
 
 </resources> 

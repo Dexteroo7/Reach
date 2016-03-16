@@ -16,15 +16,16 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -33,11 +34,12 @@ import reach.backend.entities.messaging.model.MyBoolean;
 import reach.backend.entities.userApi.model.MyString;
 import reach.project.ancillaryViews.UpdateFragment;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.SongCursorHelper;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.Connection;
 import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -45,14 +47,29 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 /**
  * Created by dexter on 31/12/15.
  */
-public enum FireOnce {
-    ;
+public enum FireOnce implements Closeable {
+
+    INSTANCE;
 
     private static final ExecutorService contactSyncService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService pingService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService refreshDownloadOpsService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService checkGCMService = MiscUtils.getRejectionExecutor();
     private static final ExecutorService checkUpdateService = MiscUtils.getRejectionExecutor();
+
+    @Override
+    public void close() {
+
+        if (syncingContacts != null)
+            syncingContacts.cancel(true);
+        syncingContacts = null;
+
+        contactSyncService.shutdownNow();
+        pingService.shutdownNow();
+        refreshDownloadOpsService.shutdownNow();
+        checkGCMService.shutdownNow();
+        checkUpdateService.shutdownNow();
+    }
 
     @Nullable
     private static Future syncingContacts = null;
@@ -86,7 +103,7 @@ public enum FireOnce {
              * Invalidate everyone
              */
             final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue());
             contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
 
             resolver.update(
@@ -94,7 +111,7 @@ public enum FireOnce {
                     contentValues,
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                    new String[]{ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString(),
                             (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + ""});
             contentValues.clear();
         }
@@ -123,7 +140,7 @@ public enum FireOnce {
         new RefreshOperations(reference).executeOnExecutor(refreshDownloadOpsService);
     }
 
-    public static void checkGCM(WeakReference<? extends Context> reference, long serverId) {
+    public static void checkGCM(WeakReference<Context> reference, long serverId) {
         checkGCMService.submit(new CheckGCM(serverId, reference));
     }
 
@@ -151,7 +168,7 @@ public enum FireOnce {
             //noinspection unchecked
             final WeakReference<AppCompatActivity> reference = params[0];
 
-            final Integer currentVersion = MiscUtils.useContextFromContext(reference, activity -> {
+            final Integer currentVersion = MiscUtils.useActivityWithResult(reference, activity -> {
                 try {
                     return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
                 } catch (PackageManager.NameNotFoundException e) {
@@ -173,7 +190,7 @@ public enum FireOnce {
             if (activityWeakReference == null) //no need to show dialog
                 return;
 
-            MiscUtils.useContextFromContext(activityWeakReference, activity -> {
+            MiscUtils.useActivity(activityWeakReference, activity -> {
 
                 final UpdateFragment updateFragment = new UpdateFragment();
                 updateFragment.setCancelable(false);
@@ -189,9 +206,9 @@ public enum FireOnce {
     private static final class CheckGCM implements Runnable {
 
         private final long serverId;
-        private final WeakReference<? extends Context> contextWeakReference;
+        private final WeakReference<Context> contextWeakReference;
 
-        private CheckGCM(long serverId, WeakReference<? extends Context> contextWeakReference) {
+        private CheckGCM(long serverId, WeakReference<Context> contextWeakReference) {
             this.serverId = serverId;
             this.contextWeakReference = contextWeakReference;
         }
@@ -202,33 +219,63 @@ public enum FireOnce {
             if (serverId == 0)
                 return;
 
-            MiscUtils.useContextFromContext(contextWeakReference, context -> {
+            final int version = MiscUtils.useContextFromContext(contextWeakReference, context -> {
                 try {
-                    final int version = context.getPackageManager()
+                    return context.getPackageManager()
                             .getPackageInfo(context.getPackageName(), 0).versionCode;
-
-                    final MyString dataToReturn = MiscUtils.autoRetry(() ->
-                            StaticData.USER_API.getGcmIdAndUpdateAppVersion(serverId,
-                                    String.valueOf(version)).execute(), Optional.absent()).orNull();
-
-                    //check returned gcm
-                    final String gcmId;
-                    if (dataToReturn == null || //fetch failed
-                            TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
-                            gcmId.equals("hello_world")) { //bad gcm
-
-                        //network operation
-                        if (MiscUtils.updateGCM(serverId, contextWeakReference))
-                            Log.i("Ayush", "GCM updated !");
-                        else
-                            Log.i("Ayush", "GCM check failed");
-                    }
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
-            });
+                return 0;
+            }).or(0);
 
+            final MyString dataToReturn = MiscUtils.autoRetry(() ->
+                    StaticData.USER_API.getGcmIdAndUpdateAppVersion(serverId, version + "").execute(), Optional.absent()).orNull();
+
+            //check returned gcm
+            final String gcmId;
+            if (dataToReturn == null || //fetch failed
+                    TextUtils.isEmpty(gcmId = dataToReturn.getString()) || //null gcm
+                    gcmId.equals("hello_world")) { //bad gcm
+
+                //network operation
+                if (updateGCM(serverId, contextWeakReference))
+                    Log.i("Ayush", "GCM updated !");
+                else
+                    Log.i("Ayush", "GCM check failed");
+            }
         }
+    }
+
+    /**
+     * @param id        id of the person to update gcm of
+     * @param reference the context reference
+     * @param <T>       something which extends context
+     * @return false : failed, true : OK
+     */
+    private static <T extends Context> boolean updateGCM(final long id, final WeakReference<T> reference) {
+
+        final String regId = MiscUtils.autoRetry(() -> {
+
+            final Context context;
+            if (reference == null || (context = reference.get()) == null)
+                return "QUIT";
+            return GoogleCloudMessaging.getInstance(context)
+                    .register("528178870551");
+        }, Optional.of(TextUtils::isEmpty)).orNull();
+
+        if (TextUtils.isEmpty(regId) || regId.equals("QUIT"))
+            return false;
+        //if everything is fine, send to server
+        Log.i("Ayush", "Uploading newGcmId to server");
+        final Boolean result = MiscUtils.autoRetry(() -> {
+
+            StaticData.USER_API.setGCMId(id, regId).execute();
+            Log.i("Ayush", regId.substring(0, 5) + "NEW GCM ID AFTER CHECK");
+            return true;
+        }, Optional.absent()).orNull();
+        //set locally
+        return !(result == null || !result);
     }
 
     private static final class SendPing implements Runnable {
@@ -269,7 +316,7 @@ public enum FireOnce {
              * and send PING
              */
             final ContentValues contentValues = new ContentValues();
-            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.OFFLINE_REQUEST_GRANTED);
+            contentValues.put(ReachFriendsHelper.COLUMN_STATUS, ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue());
             contentValues.put(ReachFriendsHelper.COLUMN_NETWORK_TYPE, (short) 0);
 
             final ContentResolver resolver = resolverWeakReference.get();
@@ -282,7 +329,7 @@ public enum FireOnce {
                     ReachFriendsHelper.COLUMN_STATUS + " = ? and " +
                             ReachFriendsHelper.COLUMN_LAST_SEEN + " < ? and " +
                             ReachFriendsHelper.COLUMN_ID + " != ?",
-                    new String[]{ReachFriendsHelper.ONLINE_REQUEST_GRANTED + "",
+                    new String[]{ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString(),
                             (System.currentTimeMillis() - StaticData.ONLINE_LIMIT) + "", StaticData.DEVIKA + ""});
             contentValues.clear();
 
@@ -312,61 +359,67 @@ public enum FireOnce {
          */
         private ContentProviderOperation getUpdateOperation(ContentValues contentValues, long id) {
             return ContentProviderOperation
-                    .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
+                    .newUpdate(Uri.parse(SongProvider.CONTENT_URI + "/" + id))
                     .withValues(contentValues)
-                    .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ? and " +
-                                    ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                    .withSelection(SongHelper.COLUMN_ID + " = ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ? and " +
+                                    SongHelper.COLUMN_STATUS + " != ?",
                             new String[]{
                                     id + "",
-                                    ReachDatabase.PAUSED_BY_USER + "",
-                                    ReachDatabase.WORKING + "",
-                                    ReachDatabase.RELAY + "",
-                                    ReachDatabase.FINISHED + ""})
+                                    ReachDatabase.Status.PAUSED_BY_USER.getString(),
+                                    ReachDatabase.Status.WORKING.getString(),
+                                    ReachDatabase.Status.RELAY.getString(),
+                                    ReachDatabase.Status.FINISHED.getString()})
                     .build();
         }
 
         private ContentProviderOperation getForceUpdateOperation(ContentValues contentValues, long id) {
             return ContentProviderOperation
-                    .newUpdate(Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + id))
+                    .newUpdate(Uri.parse(SongProvider.CONTENT_URI + "/" + id))
                     .withValues(contentValues)
-                    .withSelection(ReachDatabaseHelper.COLUMN_ID + " = ?",
+                    .withSelection(SongHelper.COLUMN_ID + " = ?",
                             new String[]{id + ""})
                     .build();
         }
 
         private String generateRequest(ReachDatabase reachDatabase) {
 
-            return "CONNECT" + new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "REQ",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
+            final Connection connection = new Connection.Builder()
+                    .setSongId(reachDatabase.getSongId())
+                    .setMetaHash(reachDatabase.getMetaHash())
+                    .setSenderId(reachDatabase.getSenderId())
+                    .setReceiverId(reachDatabase.getReceiverId())
+                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setLogicalClock(reachDatabase.getLogicalClock())
+                    .setOffset(reachDatabase.getProcessed())
+                    .setLength(reachDatabase.getLength())
+                    .setUrl("")
+                    .setSenderIp("")
+                    .setMessageType("REQ").build();
+
+            return "CONNECT" + new Gson().toJson(connection);
         }
 
         private String fakeResponse(ReachDatabase reachDatabase) {
 
-            return new Gson().toJson
-                    (new Connection(
-                            ////Constructing connection object
-                            "RELAY",
-                            reachDatabase.getSenderId(),
-                            reachDatabase.getReceiverId(),
-                            reachDatabase.getSongId(),
-                            reachDatabase.getProcessed(),
-                            reachDatabase.getLength(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            UUID.randomUUID().getMostSignificantBits(),
-                            reachDatabase.getLogicalClock(), ""));
+            final Connection connection = new Connection.Builder()
+                    .setSongId(reachDatabase.getSongId())
+                    .setMetaHash(reachDatabase.getMetaHash())
+                    .setSenderId(reachDatabase.getSenderId())
+                    .setReceiverId(reachDatabase.getReceiverId())
+                    .setUniqueIdReceiver(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setUniqueIdSender(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE))
+                    .setLogicalClock(reachDatabase.getLogicalClock())
+                    .setOffset(reachDatabase.getProcessed())
+                    .setLength(reachDatabase.getLength())
+                    .setUrl("")
+                    .setSenderIp("")
+                    .setMessageType("RELAY").build();
+
+            return new Gson().toJson(connection);
         }
 
         private ArrayList<ContentProviderOperation> bulkStartDownloads(List<ReachDatabase> reachDatabases) {
@@ -375,14 +428,15 @@ public enum FireOnce {
 
             for (ReachDatabase reachDatabase : reachDatabases) {
 
+//                Log.i("Downloader", "Scanning " + reachDatabase.getId() + " " + reachDatabase.getProcessed() + " " + reachDatabase.getLength());
                 final ContentValues values = new ContentValues();
                 if (reachDatabase.getProcessed() >= reachDatabase.getLength()) {
 
                     //mark finished
-                    if (reachDatabase.getStatus() != ReachDatabase.FINISHED) {
+                    if (reachDatabase.getStatus() != ReachDatabase.Status.FINISHED) {
 
-                        values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.FINISHED);
-                        values.put(ReachDatabaseHelper.COLUMN_PROCESSED, reachDatabase.getLength());
+                        values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.FINISHED.getValue());
+                        values.put(SongHelper.COLUMN_PROCESSED, reachDatabase.getLength());
                         operations.add(getForceUpdateOperation(values, reachDatabase.getId()));
                     }
                     continue;
@@ -410,16 +464,16 @@ public enum FireOnce {
 
                 if (myBoolean == null) {
                     Log.i("Ayush", "GCM sending resulted in shit");
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
                 } else if (myBoolean.getGcmexpired()) {
                     Log.i("Ayush", "GCM re-registry needed");
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
                 } else if (myBoolean.getOtherGCMExpired()) {
                     Log.i("Downloader", "SENDING GCM FAILED " + reachDatabase.getSenderId());
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.GCM_FAILED);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.GCM_FAILED.getValue());
                 } else {
                     Log.i("Downloader", "GCM SENT " + reachDatabase.getSenderId());
-                    values.put(ReachDatabaseHelper.COLUMN_STATUS, ReachDatabase.NOT_WORKING);
+                    values.put(SongHelper.COLUMN_STATUS, ReachDatabase.Status.NOT_WORKING.getValue());
                 }
                 operations.add(getUpdateOperation(values, reachDatabase.getId()));
             }
@@ -432,13 +486,13 @@ public enum FireOnce {
             final Cursor cursor = MiscUtils.useContextFromContext(reference, activity -> {
 
                 return activity.getContentResolver().query(
-                        ReachDatabaseProvider.CONTENT_URI,
-                        ReachDatabaseHelper.projection,
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ? and " +
-                                ReachDatabaseHelper.COLUMN_STATUS + " != ?",
+                        SongProvider.CONTENT_URI,
+                        SongCursorHelper.DOWNLOADING_HELPER.getProjection(),
+                        SongHelper.COLUMN_OPERATION_KIND + " = ? and " +
+                                SongHelper.COLUMN_STATUS + " != ?",
                         new String[]{
-                                "0", //only downloads
-                                ReachDatabase.PAUSED_BY_USER + ""}, null); //should not be paused
+                                ReachDatabase.OperationKind.DOWNLOAD_OP.getString(), //only downloads
+                                ReachDatabase.Status.PAUSED_BY_USER.getString()}, null); //should not be paused
             }).orNull();
 
             if (cursor == null)
@@ -446,7 +500,7 @@ public enum FireOnce {
 
             final List<ReachDatabase> reachDatabaseList = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext())
-                reachDatabaseList.add(ReachDatabaseHelper.cursorToProcess(cursor));
+                reachDatabaseList.add(SongCursorHelper.DOWNLOADING_HELPER.parse(cursor));
             cursor.close();
 
             if (reachDatabaseList.size() > 0) {
@@ -458,7 +512,7 @@ public enum FireOnce {
 
                         try {
                             Log.i("Downloader", "Starting Download op " + operations.size());
-                            context.getContentResolver().applyBatch(ReachDatabaseProvider.AUTHORITY, operations);
+                            context.getContentResolver().applyBatch(SongProvider.AUTHORITY, operations);
                         } catch (RemoteException | OperationApplicationException e) {
                             e.printStackTrace();
                         }

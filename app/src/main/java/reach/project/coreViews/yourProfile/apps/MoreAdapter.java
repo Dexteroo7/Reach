@@ -42,6 +42,7 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
     public void onBindViewHolder(AppItemHolder holder, App item) {
 
         holder.appName.setText(item.applicationName);
+        holder.extraButton.setVisibility(View.INVISIBLE);
         final PackageManager packageManager = holder.appName.getContext().getPackageManager();
 
         try {

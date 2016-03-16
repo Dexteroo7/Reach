@@ -1,16 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/border_shadow1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/albumArt"
-        fresco:placeholderImage="@color/reach_grey"
-        fresco:roundedCornerRadius="2dp"
+        fresco:placeholderImage="@drawable/default_music_icon"
         android:layout_margin="10dp"
         android:layout_width="50dp"
-        android:layout_height="50dp" />
+        android:layout_height="50dp"
+        />
+
+    <!--<ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_alignTop="@id/albumArt"
+        android:layout_marginLeft="8dp"
+        android:padding="10dp"
+        android:id="@+id/toggleImage"
+        tools:src="@drawable/icon_everyone_white"
+        />-->
+<!--
+    fresco:placeholderImageScaleType="centerInside"
+    fresco:roundedCornerRadius="2dp"-->
+
+
     <ImageView
         android:id="@+id/extraButton"
         android:layout_centerVertical="true"
@@ -26,15 +42,27 @@
         android:id="@+id/likeButton"
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@id/extraButton"
-        android:padding="5dp"
-        android:layout_marginRight="5dp"
+        android:padding="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/icon_heart_outline_grayer" />
+        android:src="@drawable/like_selector_1" />
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_toLeftOf="@id/likeButton"
+        android:layout_centerVertical="true"
+        android:id="@+id/toggleImage"
+        tools:src="@drawable/icon_everyone_white"
+        android:visibility="gone"
+        />
+
     <LinearLayout
         android:layout_toRightOf="@id/albumArt"
         android:orientation="vertical"
-        android:layout_toLeftOf="@id/likeButton"
+        android:layout_toLeftOf="@id/toggleImage"
         android:layout_centerVertical="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -47,6 +75,7 @@
             android:text="Test"
             android:textColor="#000"
             android:textSize="16sp" />
+
         <LinearLayout
             android:orientation="horizontal"
             android:gravity="center_vertical"
@@ -71,7 +100,11 @@
                 android:textSize="13sp"
                 android:lines="1"
                 android:text="Test"
-                android:textColor="#878691" />
+                android:textColor="#878691"
+                tools:text="fksdjbfsjdkbkjsdbvkjsdbvkjsdbvkjsdvbkjdsbvkjsdbvkjsdbvkj"
+                />
+
+
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

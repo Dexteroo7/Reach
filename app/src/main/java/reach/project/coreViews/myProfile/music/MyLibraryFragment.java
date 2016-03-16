@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -14,7 +15,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,15 +33,14 @@ import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
-import reach.backend.music.musicVisibilityApi.model.MyString;
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.fileManager.ReachDatabase;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
-import reach.project.music.MySongsHelper;
-import reach.project.music.MySongsProvider;
+import reach.project.music.ReachDatabase;
+import reach.project.music.Song;
+import reach.project.music.SongCursorHelper;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -78,15 +76,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_mylibrary_music, container, false);
-         mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
+        mRecyclerView = (EmptyRecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
 
         parentAdapter = new ParentAdapter(this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
         final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);
-        emptyViewText.setText(StaticData.NO_SONGS_TEXT);
-         emptyView = rootView.findViewById(R.id.empty_imageView);
+        emptyViewText.setText("Dawg");
+        emptyView = rootView.findViewById(R.id.empty_imageView);
 
         mRecyclerView.setEmptyView(emptyView);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
@@ -94,19 +92,16 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         myUserId = SharedPrefUtils.getServerId(preferences);
 
-        getLoaderManager().initLoader(StaticData.PRIVACY_DOWNLOADED_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER, null, this);
 
         return rootView;
     }
 
 
-
     @Override
     public void onDestroyView() {
 
         super.onDestroyView();
-        getLoaderManager().destroyLoader(StaticData.PRIVACY_DOWNLOADED_LOADER);
         getLoaderManager().destroyLoader(StaticData.PRIVACY_MY_LIBRARY_LOADER);
         if (parentAdapter != null)
             parentAdapter.close();
@@ -118,26 +113,31 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (message instanceof Cursor) {
 
             final Cursor cursor = (Cursor) message;
-            final boolean visible = cursor.getShort(8) == 1;
-            final long songId = cursor.getLong(1);
+            final boolean visible = cursor.getShort(12) == 1;
+            final String metaHash = cursor.getString(2);
 
-            new ToggleVisibility(MyLibraryFragment.this).executeOnExecutor(visibilityHandler,
-                    (long) (visible ? 0 : 1), //flip
-                    songId,
-                    myUserId);
+            new ToggleVisibility(MyLibraryFragment.this,
+                    (long) (visible ? 0 : 1),
+                    metaHash,
+                    myUserId
+                    ).executeOnExecutor(visibilityHandler
+                    );
             //flip
-            updateDatabase(MyLibraryFragment.this, !visible, songId, myUserId, getContext().getContentResolver());
+            updateDatabase(new WeakReference<>(this), !visible, metaHash, myUserId);
 
-        } else if (message instanceof PrivacySongItem) {
+        } else if (message instanceof Song) {
 
-            final PrivacySongItem song = (PrivacySongItem) message;
+            final Song song = (Song) message;
 
-            new ToggleVisibility(MyLibraryFragment.this).executeOnExecutor(visibilityHandler,
-                    (long) (song.visible ? 0 : 1), //flip
-                    song.songId,
-                    myUserId);
+            new ToggleVisibility(MyLibraryFragment.this,
+                    (long) (song.visibility ? 0 : 1),
+                    song.getFileHash(),
+                    myUserId
+                    ).executeOnExecutor(visibilityHandler
+                     //flip
+                   );
             //flip
-            updateDatabase(MyLibraryFragment.this, !song.visible, song.songId, myUserId, getContext().getContentResolver());
+            updateDatabase(new WeakReference<>(this), !song.visibility, song.getFileHash(), myUserId);
 
         } else
             throw new IllegalArgumentException("Unknown type handed over");
@@ -148,19 +148,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
 
         if (id == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
-                    MySongsProvider.CONTENT_URI,
-                    projectionMyLibrary,
-                    null, null, //show all songs !
-                    MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
-        else if (id == StaticData.PRIVACY_DOWNLOADED_LOADER)
-            return new CursorLoader(getActivity(),
-                    ReachDatabaseProvider.CONTENT_URI,
-                    projectionDownloaded,
-                    ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                            ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                    new String[]{ReachDatabase.FINISHED + "", "0"},
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
-
+                    SongProvider.CONTENT_URI,
+                    SongCursorHelper.SONG_HELPER.getProjection(),
+                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                    new String[]{
+                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                            ReachDatabase.Status.FINISHED.getString(),
+                            ReachDatabase.OperationKind.OWN.getString()},
+                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
         return null;
     }
 
@@ -170,27 +166,15 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         if (data == null || data.isClosed() || parentAdapter == null)
             return;
 
-        final int count = data.getCount();
-
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER) {
 
-//            Log.i("Ayush", "MyLibrary my profile " + count);
-
             parentAdapter.setNewMyLibraryCursor(data);
-
+            final int count = data.getCount();
             if (count != parentAdapter.myLibraryCount) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
 
-        } else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER) {
-
-//            Log.i("Ayush", "Downloaded my profile " + count);
-
-            parentAdapter.setNewDownLoadCursor(data);
-            if (count != parentAdapter.downloadedCount) //update only if count has changed
-                parentAdapter.updateRecentMusic(getRecentDownloaded());
-
         }
-        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount()-1);
+        mRecyclerView.checkIfEmpty(parentAdapter.getItemCount() - 1);
     }
 
     @Override
@@ -200,109 +184,48 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
             return;
         if (loader.getId() == StaticData.PRIVACY_MY_LIBRARY_LOADER)
             parentAdapter.setNewMyLibraryCursor(null);
-        else if (loader.getId() == StaticData.PRIVACY_DOWNLOADED_LOADER)
-            parentAdapter.setNewDownLoadCursor(null);
-    }
-
-    private final String[] projectionMyLibrary =
-            {
-                    MySongsHelper.COLUMN_ID, //0
-
-                    MySongsHelper.COLUMN_SONG_ID, //1
-
-                    MySongsHelper.COLUMN_DISPLAY_NAME, //2
-                    MySongsHelper.COLUMN_ACTUAL_NAME, //3
-
-                    MySongsHelper.COLUMN_ARTIST, //4
-                    MySongsHelper.COLUMN_ALBUM, //5
-
-                    MySongsHelper.COLUMN_DURATION, //6
-                    MySongsHelper.COLUMN_SIZE, //7
-
-                    MySongsHelper.COLUMN_VISIBILITY, //8
-                    MySongsHelper.COLUMN_GENRE //9
-            };
-
-    private final String[] projectionDownloaded =
-            {
-                    ReachDatabaseHelper.COLUMN_ID, //0
-
-                    ReachDatabaseHelper.COLUMN_UNIQUE_ID, //1
-
-                    ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //2
-                    ReachDatabaseHelper.COLUMN_ACTUAL_NAME, //3
-
-                    ReachDatabaseHelper.COLUMN_ARTIST, //4
-                    ReachDatabaseHelper.COLUMN_ALBUM, //5
-
-                    ReachDatabaseHelper.COLUMN_DURATION, //6
-                    ReachDatabaseHelper.COLUMN_SIZE, //7
-
-                    ReachDatabaseHelper.COLUMN_VISIBILITY, //8
-                    ReachDatabaseHelper.COLUMN_GENRE, //9
-            };
-
-    @NonNull
-    private List<PrivacySongItem> getRecentDownloaded() {
-
-        final Cursor cursor = getContext().getContentResolver().query(ReachDatabaseProvider.CONTENT_URI,
-                projectionDownloaded,
-                ReachDatabaseHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                        ReachDatabaseHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
-                new String[]{ReachDatabase.FINISHED + "", "0"},
-                ReachDatabaseHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        ReachDatabaseHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
-
-        if (cursor == null)
-            return Collections.emptyList();
-
-        final List<PrivacySongItem> latestDownloaded = new ArrayList<>(cursor.getCount());
-        while (cursor.moveToNext()) {
-
-            final PrivacySongItem songItem = new PrivacySongItem();
-            songItem.songId = cursor.getLong(1);
-            songItem.displayName = cursor.getString(2);
-            songItem.actualName = cursor.getString(3);
-            songItem.artistName = cursor.getString(4);
-            songItem.albumName = cursor.getString(5);
-            songItem.duration = cursor.getLong(6);
-            songItem.size = cursor.getLong(7);
-            songItem.visible = cursor.getShort(8) == 1;
-
-            latestDownloaded.add(songItem);
-        }
-
-        cursor.close();
-
-        return latestDownloaded;
     }
 
     @NonNull
-    private List<PrivacySongItem> getRecentMyLibrary() {
+    private List<Song> getRecentMyLibrary() {
 
-        final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
-                projectionMyLibrary,
-                null, null,
+        /*final Cursor cursor = new CursorLoader(getActivity(),
+                SongProvider.CONTENT_URI,
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{
+                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()},
+                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");*/
+
+        final Cursor cursor = getContext().getContentResolver().query(
+                SongProvider.CONTENT_URI,
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{
+                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()}, //all songs
+                SongHelper.COLUMN_DATE_ADDED + " DESC, " +
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
+
+        /*final Cursor cursor = getContext().getContentResolver().query(MySongsProvider.CONTENT_URI,
+                SongCuHelper.DISK_LIST,
+                null, null, //all songs
                 MySongsHelper.COLUMN_DATE_ADDED + " DESC, " +
-                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20"); //top 20
-
+                        MySongsHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE ASC LIMIT 20");
+*/
         if (cursor == null)
             return Collections.emptyList();
 
-        final List<PrivacySongItem> latestMyLibrary = new ArrayList<>(cursor.getCount());
+        /*final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());*/
+        final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
-
-            final PrivacySongItem songItem = new PrivacySongItem();
-            songItem.songId = cursor.getLong(1);
-            songItem.displayName = cursor.getString(2);
-            songItem.actualName = cursor.getString(3);
-            songItem.artistName = cursor.getString(4);
-            songItem.albumName = cursor.getString(5);
-            songItem.duration = cursor.getLong(6);
-            songItem.size = cursor.getLong(7);
-            songItem.visible = cursor.getShort(8) == 1;
-
-            latestMyLibrary.add(songItem);
+            /*latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));*/
+            latestMyLibrary.add(SongCursorHelper.SONG_HELPER.parse(cursor));
         }
 
         cursor.close();
@@ -310,12 +233,20 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return latestMyLibrary;
     }
 
-    private static class ToggleVisibility extends AsyncTask<Long, Void, Boolean> {
+    private static class ToggleVisibility extends AsyncTask<Void, Void, Boolean> {
+
+        private final long param1;
+        private final String param2;
+        private final long param3;
 
         private WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference;
 
-        public ToggleVisibility(MyLibraryFragment myLibraryFragment) {
+        public ToggleVisibility(MyLibraryFragment myLibraryFragment, long param1, String param2, long param3) {
             this.myLibraryFragmentWeakReference = new WeakReference<>(myLibraryFragment);
+            this.param1 = param1;
+            this.param2 = param2;
+            this.param3 = param3;
+
         }
 
         /**
@@ -325,26 +256,24 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
          */
 
         @Override
-        protected Boolean doInBackground(Long... params) {
+        protected Boolean doInBackground(Void... params) {
 
             boolean failed = false;
-            try {
-                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
-                        params[2], //serverId
-                        params[1], //songId
-                        params[0] == 1).execute(); //translate to boolean
-                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
-                    failed = true; //mark failed
-            } catch (IOException e) {
-                e.printStackTrace();
-                failed = true; //mark failed
-            }
+            //TODO
+//            try {
+//                final MyString response = StaticData.MUSIC_VISIBILITY_API.update(
+//                        params[2], //serverId
+//                        params[1], //songId
+//                        params[0] == 1).execute(); //translate to boolean
+//                if (response == null || TextUtils.isEmpty(response.getString()) || response.getString().equals("false"))
+//                    failed = true; //mark failed
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                failed = true; //mark failed
+//            }
 
             if (failed) {
-                MiscUtils.useFragment(myLibraryFragmentWeakReference, fragment -> {
-                    //reset if failed, flip visibility
-                    updateDatabase(fragment, params[0] != 1, params[1], params[2], fragment.getContext().getContentResolver());
-                });
+                updateDatabase(myLibraryFragmentWeakReference, param1 != 1, param2, param3);
             }
 
             return failed;
@@ -361,41 +290,42 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         }
     }
 
-    private static synchronized void updateDatabase(MyLibraryFragment myLibraryFragment, final boolean visibility, long songId, long userId, ContentResolver resolver) {
+    private static synchronized void updateDatabase(WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference,
+                                                    final boolean visibility,
+                                                    String metaHash,
+                                                    long userId) {
 
-        final WeakReference<MyLibraryFragment> myLibraryFragmentWeakReference = new WeakReference<>(myLibraryFragment);
+        final ContentResolver resolver = MiscUtils.useContextFromFragment(myLibraryFragmentWeakReference, ContextWrapper::getContentResolver).orNull();
         //sanity check
         if (resolver == null || userId == 0)
             return;
 
         ContentValues values = new ContentValues();
-        values.put(MySongsHelper.COLUMN_VISIBILITY, visibility);
+        values.put(SongHelper.COLUMN_VISIBILITY, visibility);
 
         int updated = resolver.update(
-                MySongsProvider.CONTENT_URI,
+                SongProvider.CONTENT_URI,
                 values,
-                MySongsHelper.COLUMN_SONG_ID + " = ?",
-                new String[]{songId + ""});
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{metaHash + ""});
 
-        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
-
-        if (updated == 0) {
+        /*if (updated == 0) {
 
             values = new ContentValues();
-            values.put(ReachDatabaseHelper.COLUMN_VISIBILITY, visibility);
+            values.put(SongHelper.COLUMN_VISIBILITY, visibility);
             updated = resolver.update(
-                    ReachDatabaseProvider.CONTENT_URI,
+                    SongProvider.CONTENT_URI,
                     values,
-                    ReachDatabaseHelper.COLUMN_UNIQUE_ID + " = ? and " + ReachDatabaseHelper.COLUMN_RECEIVER_ID + " = ?",
+                    SongHelper.COLUMN_UNIQUE_ID + " = ? and " + SongHelper.COLUMN_RECEIVER_ID + " = ?",
                     new String[]{songId + "", userId + ""});
-        }
+        }*/
 
         //flip in recent list
         MiscUtils.runOnUiThreadFragment(myLibraryFragmentWeakReference, (MyLibraryFragment fragment) -> {
             if (fragment.parentAdapter != null)
-                fragment.parentAdapter.updateVisibility(songId, visibility);
+                fragment.parentAdapter.updateVisibility(metaHash, visibility);
         });
 
-        Log.i("Ayush", "Toggle Visibility " + updated + " " + songId + " " + visibility);
+        Log.i("Ayush", "Toggle Visibility " + updated + " " + metaHash + " " + visibility);
     }
 }

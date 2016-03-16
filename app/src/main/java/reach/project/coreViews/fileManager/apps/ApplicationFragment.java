@@ -12,6 +12,7 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 import com.google.common.collect.Ordering;
 
@@ -36,6 +37,9 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
+    private static final String TAG = ApplicationFragment.class.getSimpleName();
+    ProgressBar loadingProgress;
+
     public static ApplicationFragment getInstance(String header) {
 
         final Bundle args = new Bundle();
@@ -45,8 +49,11 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         return fragment;
     }
 
+
     @Nullable
-    private ParentAdapter parentAdapter = null;
+    ParentAdapter parentAdapter = null;
+    @Nullable
+    SharedPreferences preferences = null;
 
     private final ExecutorService applicationsFetcher = Executors.newSingleThreadExecutor();
 
@@ -61,13 +68,15 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
+        loadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
 
+        preferences =context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         parentAdapter = new ParentAdapter(this, context);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
-        parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(context.getSharedPreferences("Reach", Context.MODE_PRIVATE)));
+        parentAdapter.packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(preferences));
 
-
+        loadingProgress.setVisibility(View.VISIBLE);
         new GetApplications(this).executeOnExecutor(applicationsFetcher, context);
 
         return rootView;
@@ -108,6 +117,16 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         protected void onPostExecute(Pair<List<App>, List<App>> pair) {
 
             super.onPostExecute(pair);
+            //if(StaticData.appsCount < pair.first.size()){
+              //  MyProfileActivity.countChanged = true;
+                StaticData.appsCount = pair.first.size();
+            //}
+
+            ApplicationFragment context = applicationFragmentWeakReference.get();
+            if(context!=null){
+                context.loadingProgress.setVisibility(View.GONE);
+            }
+
             MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllAppCount(pair.first);

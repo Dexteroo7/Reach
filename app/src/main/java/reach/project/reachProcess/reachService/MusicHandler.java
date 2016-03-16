@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.util.Log;
 
 import com.google.common.base.Optional;
@@ -14,13 +13,14 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 
-import reach.project.coreViews.fileManager.ReachDatabaseProvider;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
+import reach.project.music.Song;
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
 import reach.project.reachProcess.auxiliaryClasses.AudioFocusHelper;
-import reach.project.reachProcess.auxiliaryClasses.MusicData;
 import reach.project.reachProcess.auxiliaryClasses.MusicFocusable;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 
 /**
  * Created by Dexter on 16-05-2015.
@@ -58,7 +58,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         super(handlerInterface, Type.MUSIC);
     }
 
-    public void passNewSong(MusicData musicData) {
+    public void passNewSong(Song musicData) {
 
         musicPass.set(musicData, true);
         Log.i("Downloader", "New song set");
@@ -68,36 +68,36 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         return player == null || player.isNull() || !player.isPlaying();
     }
 
-    public Optional<MusicData> getCurrentSong() {
+    public Optional<Song> getCurrentSong() {
         return Optional.fromNullable(currentSong);
     }
-
 
     /**
      * The volume we set the media player to when we lose audio focus, but are allowed to reduce
      * the volume instead of stopping playback.
      */
     public final float DUCK_VOLUME = 0.1f;
-    private final AtomicMarkableReference<MusicData> musicPass = new AtomicMarkableReference<>(null, false);
+    private final AtomicMarkableReference<Song> musicPass = new AtomicMarkableReference<>(null, false);
     private final AtomicBoolean userPaused = new AtomicBoolean(false);
 
     private AudioFocus audioFocus = AudioFocus.NoFocusNoDuck;
     private State playerState = State.Playing;
     private AudioFocusHelper audioFocusHelper = null;
-    private MusicData currentSong = null;
+    private Song currentSong = null;
     private Player player = null;
 
     @Override
     protected void sanitize() {
 
         Log.i("Downloader", "Sanitizing music handler");
-        currentSong = null;
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         userPaused.set(false);
         playerState = State.Playing;
         Log.i("Downloader", "Sanitizing player");
         if (player != null)
             player.cleanUp();
         giveUpAudioFocus();
+
         audioFocusHelper = null;
         Log.i("Downloader", "music handler sanitized");
     }
@@ -112,7 +112,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
         audioFocusHelper = new AudioFocusHelper(handlerInterface.getContext(), this);
 
-        Optional<MusicData> latestMusic = Optional.absent();
+        Optional<Song> latestMusic = Optional.absent();
 
         while (!kill.get()) {
 
@@ -153,7 +153,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
      * @param latestMusic the Music data
      * @return 0 : disaster, 1 : OK update duration, 2 : OK don't update duration
      */
-    private short takeMusicAndPrepare(Optional<MusicData> latestMusic) throws InterruptedException {
+    private short takeMusicAndPrepare(Optional<Song> latestMusic) throws InterruptedException {
 
         if (!latestMusic.isPresent() || musicPass.isMarked())
             latestMusic = Optional.fromNullable(musicPass.getReference());
@@ -168,8 +168,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         }
 
         currentSong = latestMusic.get();
-        Log.i("Downloader", currentSong.getProcessed() + " " + currentSong.getLength());
-        Log.i("Downloader", "found new song, needs streaming ? " + (currentSong.getProcessed() < currentSong.getLength()) +
+        Log.i("Downloader", currentSong.getProcessed() + " " + currentSong.getSize());
+        Log.i("Downloader", "found new song, needs streaming ? " + (currentSong.getProcessed() < currentSong.getSize()) +
                 " name= " + currentSong.getDisplayName());
         handlerInterface.updateSongDetails(currentSong);
 
@@ -177,15 +177,16 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         final long duration;
 
         try {
-            duration = (currentSong.getProcessed() < currentSong.getLength()) ?
-                    player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getLength()) :
+            duration = (currentSong.getProcessed() < currentSong.getSize()) ?
+                    player.createAudioTrackIfNeeded(Optional.fromNullable(currentSong.getPath()), currentSong.getSize()) :
                     player.createMediaPlayerIfNeeded(this, this, currentSong.getPath());
         } catch (IOException e) {
+
             e.printStackTrace();
             Log.i("Downloader", currentSong.getPath() + " could not be prepared");
             final File check = new File(currentSong.getPath());
             final String missType;
-            if (!(check.isFile() && check.length() == currentSong.getLength()))
+            if (!(check.isFile() && check.length() == currentSong.getSize()))
                 missType = "Possible File Corruption " + e.getLocalizedMessage();
             else
                 missType = "AudioTrackError " + e.getLocalizedMessage();
@@ -198,7 +199,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
             if (duration == 0)
                 return 0; //now if duration is not known fuck off
-            currentSong.setDuration(duration); //only update duration for old songs
+            //currentSong.setDuration(duration); //only update duration for old songs
             toReturn = 1; //update the duration
         } else
             toReturn = 2; //don't update the duration
@@ -217,7 +218,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
      * a) kill : whole thread needs to die
      * b) musicPass.isMarked() : new song needs to play
      */
-    private MusicData observe(long duration) throws InterruptedException {
+    private Song observe(long duration) throws InterruptedException {
 
         Log.i("Downloader", "starting observer");
         int lastPositionUpdate = 0;
@@ -226,7 +227,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             synchronized (musicPass) {
 
                 if (musicPass.isMarked()) {
-                    final MusicData latestMusic = musicPass.getReference();
+                    final Song latestMusic = musicPass.getReference();
                     musicPass.set(null, false);
                     if (latestMusic != null)
                         return latestMusic;
@@ -263,6 +264,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             // is State.Playing. But we stay in the Playing state so that we know we have to resume
             // playback once we get the focus back.
             if (player.isPlaying()) {
+
                 player.pause();
                 handlerInterface.paused();
             }
@@ -274,6 +276,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
             player.setVolume(1.0f); // we can be loud
 
         if (!player.isPlaying()) {
+
             Log.i("Downloader", "STARTING PLAYER");
             player.start();
             handlerInterface.unPaused();
@@ -288,6 +291,8 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     synchronized void processPlayRequest() {
 
+
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),true);
         tryToGetAudioFocus();
         //pause reason don't matter
         playerState = State.Playing;
@@ -297,6 +302,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     synchronized void processPauseRequest() {
 
+        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         playerState = State.Paused;
         userPaused.set(true);
         Log.i("Downloader", "PAUSING !!!!");
@@ -308,6 +314,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
      * @return true means we should push a new song !
      */
     boolean processPlayPause() {
+
         if (player == null || player.isNull())
             return true;
         if (player.isPlaying())
@@ -364,8 +371,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        handlerInterface.pushNextSong(
-                handlerInterface.nextSong(Optional.fromNullable(currentSong), true));
+        handlerInterface.pushNextSong(handlerInterface.nextSong(Optional.fromNullable(currentSong), true));
     }
 
     @Override
@@ -406,12 +412,13 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     /////////////////////////////////////
     @Override
     public long getProcessed() {
+
         //if this gets called current song HAS to be reachDatabase
         final Cursor cursor = handlerInterface.getContext().getContentResolver().query(
-                Uri.parse(ReachDatabaseProvider.CONTENT_URI + "/" + currentSong.getId()),
-                new String[]{ReachDatabaseHelper.COLUMN_PROCESSED},
-                ReachDatabaseHelper.COLUMN_ID + " = ?",
-                new String[]{currentSong.getId() + ""}, null);
+                SongProvider.CONTENT_URI,
+                new String[]{SongHelper.COLUMN_PROCESSED},
+                SongHelper.COLUMN_META_HASH + " = ?",
+                new String[]{currentSong.getFileHash() + ""}, null);
         if (cursor == null) {
             return 0;
         }
@@ -434,12 +441,12 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     public interface MusicHandlerInterface {
 
-        void pushNextSong(Optional<MusicData> songToPush);
+        void pushNextSong(Optional<Song> songToPush);
 
         /**
          * @return the next song depending on whatever rule
          */
-        Optional<MusicData> nextSong(Optional<MusicData> currentSong, boolean automatic);
+        Optional<Song> nextSong(Optional<Song> currentSong, boolean automatic);
 
         Context getContext();
 
@@ -459,7 +466,7 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
         /**
          * @param musicData update the notification
          */
-        void updateSongDetails(MusicData musicData);
+        void updateSongDetails(Song musicData);
 
         void updateDuration(String formattedDuration);
 

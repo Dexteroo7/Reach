@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 public class InstallReferrerReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+
         final Bundle extras = intent.getExtras();
         if (extras == null)
             return;
@@ -78,5 +79,4 @@ public class InstallReferrerReceiver extends BroadcastReceiver {
     private final Pattern UTM_CONTENT_PATTERN = Pattern.compile("(^|&)utm_content=([^&#=]*)([#&]|$)");
     private final Pattern UTM_TERM_PATTERN = Pattern.compile("(^|&)utm_term=([^&#=]*)([#&]|$)");
     private final Pattern UTM_CODE_PATTERN = Pattern.compile("(^|&)code=([^&#=]*)([#&]|$)");
-
 }

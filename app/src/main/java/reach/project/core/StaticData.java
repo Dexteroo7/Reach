@@ -10,16 +10,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 
 import java.util.Comparator;
 
-import reach.backend.applications.appVisibilityApi.AppVisibilityApi;
-import reach.backend.applications.classifiedAppsApi.ClassifiedAppsApi;
 import reach.backend.entities.feedBackApi.FeedBackApi;
 import reach.backend.entities.messaging.Messaging;
 import reach.backend.entities.userApi.UserApi;
-import reach.backend.music.musicVisibilityApi.MusicVisibilityApi;
 import reach.backend.notifications.notificationApi.NotificationApi;
 import reach.project.apps.App;
-import reach.project.coreViews.fileManager.ReachDatabaseHelper;
-import reach.project.music.MySongsHelper;
 import reach.project.utils.CloudEndPointsUtils;
 
 /**
@@ -30,11 +25,19 @@ public final class StaticData {
     public static final UserApi USER_API;
     public static final FeedBackApi FEED_BACK_API;
     public static final Messaging.MessagingEndpoint MESSAGING_API;
-    public static final MusicVisibilityApi MUSIC_VISIBILITY_API;
     public static final NotificationApi NOTIFICATION_API;
-    public static final AppVisibilityApi APP_VISIBILITY_API;
-    public static final ClassifiedAppsApi CLASSIFIED_APPS_API;
+
     public static final String NO_SONGS_TEXT = "No songs!";
+    public static int deviceWidth=0;
+    public static int deviceHeight=0;
+    public static int downloadedSongsCount=0;
+    public static int librarySongsCount=0;
+    public static int appsCount=0;
+    public static int friendsCount=0;
+    public static final String zero = "0";
+    public static final String one = "1";
+    public static final byte oneByte = 1;
+    public static final byte zeroByte = 0;
 
     static {
 
@@ -50,25 +53,22 @@ public final class StaticData {
         MESSAGING_API = CloudEndPointsUtils.updateBuilder(new Messaging.Builder(transport, factory, initialize)).build().messagingEndpoint();
         FEED_BACK_API = CloudEndPointsUtils.updateBuilder(new FeedBackApi.Builder(transport, factory, initialize)).build();
         NOTIFICATION_API = CloudEndPointsUtils.updateBuilder(new NotificationApi.Builder(transport, factory, initialize)).build();
-        MUSIC_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new MusicVisibilityApi.Builder(transport, factory, initialize)).build();
-        APP_VISIBILITY_API = CloudEndPointsUtils.updateBuilder(new AppVisibilityApi.Builder(transport, factory, initialize)).build();
-        CLASSIFIED_APPS_API = CloudEndPointsUtils.updateBuilder(new ClassifiedAppsApi.Builder(transport, factory, initialize)).build();
     }
 
-    public static final String[] DOWNLOADED_PARTIAL = new String[]{
-            ReachDatabaseHelper.COLUMN_ID, //0
-            ReachDatabaseHelper.COLUMN_SIZE, //1
-            ReachDatabaseHelper.COLUMN_SENDER_ID, //2
-            ReachDatabaseHelper.COLUMN_PROCESSED, //3
-            ReachDatabaseHelper.COLUMN_PATH, //4
-            ReachDatabaseHelper.COLUMN_DISPLAY_NAME, //5
-            ReachDatabaseHelper.COLUMN_IS_LIKED, //6
-            ReachDatabaseHelper.COLUMN_SONG_ID, //7
-            ReachDatabaseHelper.COLUMN_ARTIST, //8
-            ReachDatabaseHelper.COLUMN_DURATION, //9
-            ReachDatabaseHelper.COLUMN_META_HASH}; //10
+    /*public static final String[] DOWNLOADED_PARTIAL = new String[]{
+            SongHelper.COLUMN_ID, //0
+            SongHelper.COLUMN_SIZE, //1
+            SongHelper.COLUMN_SENDER_ID, //2
+            SongHelper.COLUMN_PROCESSED, //3
+            SongHelper.COLUMN_PATH, //4
+            SongHelper.COLUMN_DISPLAY_NAME, //5
+            SongHelper.COLUMN_IS_LIKED, //6
+            SongHelper.COLUMN_SONG_ID, //7
+            SongHelper.COLUMN_ARTIST, //8
+            SongHelper.COLUMN_DURATION, //9
+            SongHelper.COLUMN_META_HASH}; //10*/
 
-    public static final String[] DISK_PARTIAL = new String[]{
+    /*public static final String[] DISK_PARTIAL = new String[]{
             MySongsHelper.COLUMN_ARTIST, //0
             MySongsHelper.COLUMN_SONG_ID, //1
             MySongsHelper.COLUMN_SIZE, //2
@@ -77,39 +77,32 @@ public final class StaticData {
             MySongsHelper.COLUMN_ID, //5
             MySongsHelper.COLUMN_DURATION, //6
             MySongsHelper.COLUMN_IS_LIKED, //7
-            ReachDatabaseHelper.COLUMN_META_HASH}; //8
-
+            SongHelper.COLUMN_META_HASH}; //8
+*/
 
     public static byte i = 0;
     public static final byte FRIENDS_VERTICAL_LOADER;
     public static final byte FRIENDS_HORIZONTAL_LOADER;
-    public static final byte PRIVACY_MY_LIBRARY_LOADER;
-    public static final byte PRIVACY_DOWNLOADED_LOADER;
-    public static final byte DOWNLOAD_LOADER;
-    public static final byte DOWNLOADING_LOADER;
-    public static final byte UPLOAD_LOADER;
-    public static final byte MY_LIBRARY_LOADER;
-    public static final byte PUSH_MY_LIBRARY_LOADER;
-    public static final byte PUSH_DOWNLOADED_LOADER;
     public static final byte CONTACTS_CHOOSER_LOADER;
     public static final byte ALL_CONTACTS_LOADER;
 
-    public static final byte FULL_LIST_LOADER;
-    public static final byte RECENT_LIST_LOADER;
+    public static final byte MY_LIBRARY_LOADER;
+    public static final byte DOWNLOADING_LOADER;
+    public static final byte UPLOADING_LOADER;
+    public static final byte PLAYER_LOADER;
+
+    public static final byte PRIVACY_MY_LIBRARY_LOADER;
+    public static final byte PUSH_MY_LIBRARY_LOADER;
 
     static {
         FRIENDS_VERTICAL_LOADER = i++;
         FRIENDS_HORIZONTAL_LOADER = i++;
         PRIVACY_MY_LIBRARY_LOADER = i++;
-        PRIVACY_DOWNLOADED_LOADER = i++;
-        DOWNLOAD_LOADER = i++;
         DOWNLOADING_LOADER = i++;
-        UPLOAD_LOADER = i++;
+        UPLOADING_LOADER = i++;
+        PLAYER_LOADER = i++;
         MY_LIBRARY_LOADER = i++;
         PUSH_MY_LIBRARY_LOADER = i++;
-        PUSH_DOWNLOADED_LOADER = i++;
-        FULL_LIST_LOADER = i++;
-        RECENT_LIST_LOADER = i++;
         CONTACTS_CHOOSER_LOADER = i++;
         ALL_CONTACTS_LOADER = i++;
     }

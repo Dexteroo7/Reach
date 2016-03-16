@@ -22,10 +22,14 @@
                 android:background="@drawable/shadow_top"
                 android:layout_width="match_parent"
                 android:layout_height="4dp" />
+
         </FrameLayout>
+
         <android.support.v4.app.FragmentTabHost
             android:id="@android:id/tabhost"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            />
     </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>

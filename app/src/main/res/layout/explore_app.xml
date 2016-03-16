@@ -19,7 +19,7 @@
         <FrameLayout
             android:id="@+id/imageContainer"
             android:layout_width="match_parent"
-            app:layout_heightPercent="55%">
+            app:layout_heightPercent="50%">
 
             <ImageView
                 android:layout_width="match_parent"
@@ -47,7 +47,7 @@
             android:layout_centerHorizontal="true"
             android:background="@android:color/transparent"
             android:src="@drawable/explore_download_btn"
-            app:layout_marginTopPercent="46%"
+            app:layout_marginTopPercent="42.5%"
             app:layout_widthPercent="21%" />
 
         <!--<LinearLayout

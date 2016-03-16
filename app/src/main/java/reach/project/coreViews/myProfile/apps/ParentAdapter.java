@@ -166,7 +166,7 @@ final class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewH
                         R.id.headerText, //id for header text
                         R.id.listOfItems, //id for list (recycler view)
                         R.id.moreButton); //id of more button
-                horizontalViewHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
+                //horizontalViewHolder.itemView.setBackgroundResource(R.drawable.border_shadow2);
                 horizontalViewHolder.headerText.setText("Recently Installed");
                 if (horizontalViewHolder.listOfItems.getLayoutManager() == null)
                     horizontalViewHolder.listOfItems.setLayoutManager(new CustomGridLayoutManager(horizontalViewHolder.listOfItems.getContext(), 2));

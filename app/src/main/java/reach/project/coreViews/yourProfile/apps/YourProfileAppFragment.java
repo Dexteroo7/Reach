@@ -2,6 +2,7 @@ package reach.project.coreViews.yourProfile.apps;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,12 +10,21 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
+import com.appspot.able_door_616.userApi.UserApi;
+import com.appspot.able_door_616.userApi.model.SimpleApp;
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
@@ -31,7 +41,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-import reach.backend.entities.userApi.model.SimpleApp;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
@@ -39,6 +48,7 @@ import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.coreViews.yourProfile.blobCache.CacheType;
+import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -52,6 +62,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     @Nullable
     private static WeakReference<YourProfileAppFragment> reference = null;
     private static long hostId = 0;
+    private ProgressBar mLoadingProgress;
     //private ProgressBar mLoadingView;
 
     public static YourProfileAppFragment newInstance(long hostId) {
@@ -73,7 +84,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     @Override
     public void onDestroyView() {
-        
+
         super.onDestroyView();
         hostId = 0;
 
@@ -129,10 +140,16 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         };
 
         final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
+        rootView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
-        //mLoadingView=(ProgressBar)rootView.findViewById(R.id.loading_view);
-
+        // TODO: Comment out when implementing loading view. currently there is no callback to detect that the app data has been loaded
+        /*mLoadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
+        FrameLayout.LayoutParams progressBarMarginParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,FrameLayout.LayoutParams.WRAP_CONTENT);
+        progressBarMarginParams.gravity = Gravity.CENTER;
+        progressBarMarginParams.setMargins(0,MiscUtils.dpToPx(240),0,0);
+        mLoadingProgress.setLayoutParams(progressBarMarginParams);
+        mLoadingProgress.setVisibility(View.VISIBLE);*/
         parentAdapter = new ParentAdapter<>(this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(activity));
         mRecyclerView.setAdapter(parentAdapter);
@@ -166,16 +183,17 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         final int currentSize = appData.size();
 
         //if reaching end of story and are not done yet
-        if (position > currentSize - 5 && fullListCache != null)
+        if (position > currentSize - 5 && fullListCache != null) {
             //request a partial load
             fullListCache.loadMoreElements(false);
+        }
 
         return appData.get(position);
     }
 
     @Override
     public void handOverMessage(@NonNull App item) {
-        MiscUtils.openAppinPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
+        MiscUtils.openAppInPlayStore(getActivity(), item.packageName, hostId, "YOUR_PROFILE");
     }
 
     @Override
@@ -193,6 +211,8 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
         if (elements == null || elements.isEmpty())
             return;
+
+
 
         final Message typeCheckerInstance = elements.get(0);
         final Class typeChecker;
@@ -296,12 +316,25 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
 
     private static final Callable<List<? extends Message>> getRecent = () -> {
 
-        final List<SimpleApp> simpleApps = MiscUtils.autoRetry(
-                () -> StaticData.USER_API.fetchRecentApps(hostId).execute().getItems(), Optional.absent()
-        ).or(Collections.emptyList());
+        final UserApi userApi = MiscUtils.useContextFromFragment(reference, activity -> {
 
-        if (simpleApps == null || simpleApps.isEmpty())
-            return Collections.emptyList();
+            final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+            final HttpTransport transport = new NetHttpTransport();
+            final JsonFactory factory = new JacksonFactory();
+            final GoogleAccountCredential credential = GoogleAccountCredential
+                    .usingAudience(activity, StaticData.SCOPE)
+                    .setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+            Log.d("CodeVerification", credential.getSelectedAccountName());
+
+            return CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
+                    .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+        }).orNull();
+
+        final List<SimpleApp> simpleApps;
+        if (userApi == null)
+            simpleApps = Collections.emptyList();
+        else
+            simpleApps = MiscUtils.autoRetry(() -> userApi.fetchRecentApps(hostId).execute().getItems(), Optional.absent()).or(Collections.emptyList());
 
         final List<App> toReturn = new ArrayList<>(simpleApps.size());
         for (SimpleApp simpleApp : simpleApps) {

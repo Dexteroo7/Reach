@@ -73,6 +73,8 @@ final class PlayerSource implements Runnable, Closeable {
 
         while (!kill.get() && (downloaded = handler.getProcessed()) > 0 && sinkChannel.isOpen()) {
 
+//            Log.i("Downloader", "Transferred " + transferred + " Downloaded " + downloaded);
+
             if (transferred >= contentLength)
                 break;
             if (transferred >= downloaded)
@@ -106,7 +108,6 @@ final class PlayerSource implements Runnable, Closeable {
 //                if (actualProgress > lastSecondaryProgress)
 //                    handler.updateSecondaryProgress(actualProgress);
 //                lastSecondaryProgress = actualProgress;
-//                Log.i("Downloader", "Transferred " + actualProgress);
             }
         }
 

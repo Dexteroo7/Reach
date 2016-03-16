@@ -17,12 +17,14 @@
             android:layout_width="match_parent"
             app:layout_heightPercent="40%"
             fresco:placeholderImage="@drawable/cover_small"
-            fresco:placeholderImageScaleType="centerCrop" />
+            fresco:placeholderImageScaleType="centerCrop"
+            app:overlayImage="@color/overlay_image_color"
+            />
 
-        <View
+        <!--<View
             android:layout_width="match_parent"
             android:background="#70000000"
-            app:layout_heightPercent="40%" />
+            app:layout_heightPercent="40%" />-->
 
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/profilePhotoList"

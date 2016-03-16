@@ -206,7 +206,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             viewHolder.telephoneNumberList.setText(numberOfSongs + "");
             viewHolder.appCount.setText(numberOfApps + "");
-            if (status <= ReachFriendsHelper.OFFLINE_REQUEST_GRANTED && newSongs > 0) {
+            if (status <= ReachFriendsHelper.Status.OFFLINE_REQUEST_GRANTED.getValue() && newSongs > 0) {
 
                 //display new songs
                 viewHolder.newSongs.setVisibility(View.VISIBLE);
@@ -247,7 +247,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             viewHolder.lockIcon.setVisibility(View.GONE);
             viewHolder.lockText.setVisibility(View.GONE);
 
-            if (status == ReachFriendsHelper.REQUEST_SENT_NOT_GRANTED) {
+            if (status == ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
 
                 viewHolder.lockIcon.setImageResource(R.drawable.icon_pending_invite);
                 viewHolder.lockIcon.setVisibility(View.VISIBLE);

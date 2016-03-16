@@ -68,6 +68,7 @@ class ParentAdapter<T extends Message> extends RecyclerViewMaterialAdapter<Recyc
             final AppItemHolder appAppItemHolder = (AppItemHolder) holder;
 
             appAppItemHolder.appName.setText(app.applicationName);
+            appAppItemHolder.extraButton.setVisibility(View.INVISIBLE);
 
             final PackageManager packageManager = appAppItemHolder.appName.getContext().getPackageManager();
 
