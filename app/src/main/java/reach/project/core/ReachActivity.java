@@ -616,7 +616,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 mTabHost.postDelayed(() -> {
                                     if (mTabHost == null || isFinishing())
                                         return;
-                                    mTabHost.setCurrentTab(3);
+                                    mTabHost.setCurrentTab(1);
                                     mTabHost.postDelayed(() -> {
                                         final PagerFragment fragment = (PagerFragment) getSupportFragmentManager()
                                                 .findFragmentByTag("manager_page");
