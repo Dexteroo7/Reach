@@ -54,7 +54,6 @@ import reach.project.coreViews.fileManager.music.downloading.DownloadingFragment
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
-//import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
 import reach.project.music.ReachDatabase;
