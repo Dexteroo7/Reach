@@ -210,13 +210,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             holder.likeButton.setSelected(true);
         }
 
-        if (item.visibility) {
+        /*if (item.visibility) {
 
             holder.toggleImage.setImageResource(0);
         } else {
 
-            holder.toggleImage.setImageResource(R.drawable.icon_locked);
-        }
+            holder.toggleImage.setImageResource(R.drawable.icon_locked_white);
+        }*/
 
         /*if (item.getType() == Song.Type.MY_LIBRARY) {
 

@@ -193,13 +193,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             senderName = cursorExactType.getString(16);
 
 
-            if (visible) {
+            /*if (visible) {
                 songItemHolder.toggleImage.setImageResource(0);
                 //songItemHolder.toggleText.setText("Everyone");
             } else {
                 songItemHolder.toggleImage.setImageResource(R.drawable.icon_locked);
                 //songItemHolder.toggleText.setText("Only Me");
-            }
+            }*/
 
 //                actualName = cursorExactType.getString(17);
             final long senderId = cursorExactType.getLong(15);

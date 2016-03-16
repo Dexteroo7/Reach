@@ -1420,8 +1420,6 @@ public enum MiscUtils {
             activity.startActivity(foreGround);
             SharedPrefUtils.putFirstTimeDownload(sharedPreferences, false);
         } else {
-
-
             if (snackView != null) {
                 final Snackbar snack_bar = Snackbar.make(snackView, "Song added to queue", Snackbar.LENGTH_INDEFINITE);
 

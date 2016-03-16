@@ -6,7 +6,7 @@
     <item
         android:checkable="true"
         android:id="@+id/hide"
-        android:title="Locked" />
+        android:title="Hide" />
     <item
         android:id="@+id/delete"
         android:title="Delete" />
