@@ -333,7 +333,8 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Override
     public boolean isVisible(String packageName) {
-        return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
+        return packageVisibility.containsKey(packageName) ? packageVisibility.get(packageName) : true;
+        //return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
     }
 
     @Override

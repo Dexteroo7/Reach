@@ -132,8 +132,6 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                     fragment.parentAdapter.updateAllAppCount(pair.first);
                     fragment.parentAdapter.updateRecentApps(pair.second);
                 }
-
-
             });
         }
     }

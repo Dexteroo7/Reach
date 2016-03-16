@@ -84,7 +84,8 @@ class AppItemHolder extends SingleItemViewHolder {
         final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
         packageVisibility.putAll(SharedPrefUtils.getPackageVisibilities(context.getSharedPreferences("Reach", Context.MODE_PRIVATE)));
         final MenuItem hideItem = popupMenu.getMenu().findItem(R.id.hide);
-        hideItem.setChecked(!(packageVisibility.containsKey(packageName) && packageVisibility.get(packageName)) );
+        hideItem.setChecked(packageVisibility.containsKey(packageName) && !packageVisibility.get(packageName));
+        //hideItem.setChecked(!(packageVisibility.containsKey(packageName) && packageVisibility.get(packageName)) );
 
         popupMenu.show();
     };
