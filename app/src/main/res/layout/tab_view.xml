@@ -11,7 +11,7 @@
         android:id="@+id/tab_image"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        tools:src="@drawable/icon_reach_magnet_gray"
+        tools:src="@drawable/icon_reach_magnet_blue"
         />
 
     <TextView

@@ -251,8 +251,8 @@
                         android:layout_width="26dp"
                         android:layout_height="28dp"
                         android:layout_marginTop="8dp"
-                        app:srcCompat="@drawable/icon_apps_indicator_gray1"
-                        tools:src="@drawable/icon_apps_indicator_gray1"
+                        app:srcCompat="@drawable/icon_apps_indicator_gray_big"
+                        tools:src="@drawable/icon_apps_indicator_gray_big"
                         android:layout_centerVertical="true"
                         />
 
@@ -266,6 +266,7 @@
                         android:layout_alignBottom="@id/appCountImage"
                         android:layout_alignTop="@id/appCountImage"
                         android:gravity="bottom"
+                        android:layout_marginBottom="2dp"
                         android:textSize="16sp"
                         tools:text="65" />
 
@@ -292,8 +293,8 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:layout_marginTop="16dp"
-                        app:srcCompat="@drawable/icon_song_indicator_gray_dark"
-                        tools:src="@drawable/icon_song_indicator_gray_dark"
+                        app:srcCompat="@drawable/icon_song_indicator_gray_big"
+                        tools:src="@drawable/icon_song_indicator_gray_big"
                         android:layout_centerVertical="true"
                         />
 
@@ -307,7 +308,7 @@
                         android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/songCountImage"
                         android:layout_alignTop="@id/songCountImage"
-                        android:gravity="bottom"
+                        android:gravity="center_vertical"
                         android:textSize="16sp"
                         tools:text="65" />
 
