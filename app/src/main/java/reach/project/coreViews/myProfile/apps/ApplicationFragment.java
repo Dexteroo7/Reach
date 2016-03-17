@@ -40,6 +40,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
+    private static final String TAG = ApplicationFragment.class.getSimpleName();
     private static long userId = 0;
 
     public static ApplicationFragment getInstance(String header) {
@@ -61,24 +62,30 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     public void handOverMessage(@Nonnull App message) {
 
-        if (preferences == null || parentAdapter == null)
-            return;
+        try {
+            if (preferences == null || parentAdapter == null)
+                return;
 
-        final String packageName = message.packageName;
-        final boolean newVisibility = !parentAdapter.isVisible(packageName);
+            final String packageName = message.packageName;
+            final boolean newVisibility = !parentAdapter.isVisible(packageName);
 
-        //update in memory
-        synchronized (parentAdapter.packageVisibility) {
-            parentAdapter.packageVisibility.put(packageName, newVisibility);
-        }
-        //update in disk
-        SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
-        //update on server
-        new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
+            //update in memory
+            synchronized (parentAdapter.packageVisibility) {
+                parentAdapter.packageVisibility.put(packageName, newVisibility);
+            }
+            //update in disk
+            SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
+            //update on server
+            new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
 
-        //notify that visibility has changed
-        parentAdapter.visibilityChanged(packageName);
+            //notify that visibility has changed
+            parentAdapter.visibilityChanged(packageName);
 //        Toast.makeText(getContext(), "Clicked on " + message.applicationName, Toast.LENGTH_SHORT).show();
+
+        }
+        catch (Exception e){
+            Log.e(TAG, "Unidentified error in myprofile -> apps, Exception = " + e.toString() );
+        }
     }
 
     @Nullable

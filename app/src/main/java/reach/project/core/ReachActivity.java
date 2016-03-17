@@ -33,6 +33,8 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
@@ -124,6 +126,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
     public static final LongSparseArray<Boolean> SELECTED_SONG_IDS = new LongSparseArray<>(5);
+
+    //TODO: Remove sharedPreferences global variable
     SharedPreferences preferences;
     ////////////////////////////////////////private static final
 
@@ -485,6 +489,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                     Toast.makeText(ReachActivity.this, "Please enter a feedback", Toast.LENGTH_LONG).show();
                     return;
                 }
+
                 final long serverId = SharedPrefUtils.getServerId(preferences);
                 final FeedBack feedback = new FeedBack();
                 feedback.setClientId(serverId);
@@ -513,6 +518,13 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         vv.findViewById(R.id.rateNow).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Rate Now Button Clicked")
+                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                        .setValue(1)
+                        .build());
 
                 Uri uri = Uri.parse("market://details?id=" + /*getActivity().getPackageName()*/"reach.project");
                 Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
@@ -551,6 +563,13 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
         alertDialogBuilder.setView(vv);
         alertDialog = alertDialogBuilder.show();
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Rating Dialog Box Shown ")
+                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                .setValue(1)
+                .build());
+
     }
 
     private synchronized void processIntent(Intent intent) {

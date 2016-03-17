@@ -47,16 +47,17 @@
 
                     />
 
-                <com.facebook.drawee.view.SimpleDraweeView
+                <reach.project.utils.viewHelpers.CustomDraweeView
                     android:id="@+id/profilePic"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_centerInParent="true"
                     android:adjustViewBounds="true"
                     android:scaleType="centerCrop"
                     app:layout_collapseMode="parallax"
                     app:placeholderImage="@drawable/default_profile_circle"
                     tools:src="@drawable/cover_large"
+                    app:roundAsCircle="true"
                     />
 
                 <TextView
@@ -224,6 +225,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp"
+                app:cardUseCompatPadding="true"
                 >
 
                 <RelativeLayout

@@ -66,6 +66,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
+        rootView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(2), MiscUtils.dpToPx(10),0 );
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Context context = mRecyclerView.getContext();
         loadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
