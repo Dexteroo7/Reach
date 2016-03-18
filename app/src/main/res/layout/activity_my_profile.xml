@@ -48,17 +48,17 @@
 
                     />
 
-                <com.facebook.drawee.view.SimpleDraweeView
+                <reach.project.utils.viewHelpers.CustomDraweeView
                     android:id="@+id/profilePic"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_centerInParent="true"
                     android:adjustViewBounds="true"
                     android:scaleType="centerCrop"
                     app:layout_collapseMode="parallax"
                     app:placeholderImage="@drawable/default_profile_circle"
-                    tools:src="@drawable/cover_large"
-                    />
+                    app:roundAsCircle="true"
+                    tools:src="@drawable/cover_large" />
 
                 <TextView
                     android:id="@+id/userName"
@@ -108,228 +108,213 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
+            android:orientation="vertical">
 
-        <!--<LinearLayout
+            <!--<LinearLayout
 
-            android:id="@+id/userContentData"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/reach_dark"
-            android:orientation="horizontal"
-            android:padding="4dp">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:gravity="center">
-
-
-
-            </RelativeLayout>
-
-            <RelativeLayout
+                android:id="@+id/userContentData"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_toRightOf="@+id/divider"
-                android:layout_weight="1"
-                android:gravity="center">
-
-                <ImageView
-                    android:id="@+id/songsCountImage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/icon_song_indicator_white"
-                    tools:src="@drawable/icon_song_indicator_white"
-                    />
-
-                <TextView
-                    android:id="@+id/songsCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:layout_toRightOf="@id/songsCountImage"
-                    android:layout_toEndOf="@id/songsCountImage"
-                    android:layout_alignTop="@id/songsCountImage"
-                    android:layout_alignBottom="@id/songsCountImage"
-                    android:gravity="center_vertical"
-                    android:textSize="20sp"
-                    android:layout_marginLeft="8dp"
-                    tools:text="54" />
-
-            </RelativeLayout>
-
-        </LinearLayout>-->
-
-
-        <android.support.v7.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            >
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
+                android:background="@color/reach_dark"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                >
+                android:padding="4dp">
 
-                <ImageView
-                    android:id="@+id/friendsCountImageView"
-                    android:layout_width="36dp"
-                    android:layout_height="24dp"
-                    app:srcCompat="@drawable/ic_friends_gray"
-                    tools:src="@drawable/ic_friends_gray"
-                    android:layout_centerVertical="true"
-                    />
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:gravity="center">
 
-                <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/friendsCount"
-                    tools:text="24 Friends"
-                    android:layout_toRightOf="@id/friendsCountImageView"
-                    android:layout_marginLeft="8dp"
-                    android:textColor="#888888"
-                    android:textSize="16sp"
-                    android:layout_centerVertical="true"
-                />
 
-                <Button
-                    android:id="@+id/invite_more_friends"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_gravity="right"
-                    android:background="@null"
-                    android:textColor="@color/reach_color"
-                    android:text="INVITE MORE"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginRight="8dp"
-                    />
 
-            </RelativeLayout>
-
-        </android.support.v7.widget.CardView>
-
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginBottom="16dp"
-                >
+                </RelativeLayout>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:orientation="horizontal"
+                    android:layout_gravity="center"
+                    android:layout_toRightOf="@+id/divider"
+                    android:layout_weight="1"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/songsCountImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:srcCompat="@drawable/icon_song_indicator_white"
+                        tools:src="@drawable/icon_song_indicator_white"
+                        />
+
+                    <TextView
+                        android:id="@+id/songsCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:layout_toRightOf="@id/songsCountImage"
+                        android:layout_toEndOf="@id/songsCountImage"
+                        android:layout_alignTop="@id/songsCountImage"
+                        android:layout_alignBottom="@id/songsCountImage"
+                        android:gravity="center_vertical"
+                        android:textSize="20sp"
+                        android:layout_marginLeft="8dp"
+                        tools:text="54" />
+
+                </RelativeLayout>
+
+            </LinearLayout>-->
+
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginTop="16dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    >
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:id="@+id/friendsCountImageView"
+                        android:layout_width="36dp"
+                        android:layout_height="24dp"
+                        android:layout_centerVertical="true"
+                        app:srcCompat="@drawable/ic_friends_gray"
+                        tools:src="@drawable/ic_friends_gray" />
+
+                    <TextView
+                        android:id="@+id/friendsCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginLeft="8dp"
+                        android:layout_toRightOf="@id/friendsCountImageView"
+                        android:textColor="#888888"
+                        android:textSize="16sp"
+                        tools:text="24 Friends" />
+
+                    <Button
+                        android:id="@+id/invite_more_friends"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_gravity="right"
+                        android:layout_marginRight="8dp"
+                        android:background="@null"
+                        android:text="INVITE MORE"
+                        android:textColor="@color/reach_color" />
+
+                </RelativeLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginTop="16dp"
+                app:cardUseCompatPadding="true">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
 
                     <TextView
                         android:id="@+id/privacySettingsText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="PRIVACY SETTINGS:"
-                        android:textSize="16sp"
                         android:textColor="#555555"
-                        />
-
+                        android:textSize="16sp" />
 
 
                     <ImageView
                         android:id="@+id/appCountImage"
-                        android:layout_below="@id/privacySettingsText"
                         android:layout_width="26dp"
                         android:layout_height="28dp"
+                        android:layout_below="@id/privacySettingsText"
+                        android:layout_centerVertical="true"
                         android:layout_marginTop="8dp"
                         app:srcCompat="@drawable/icon_apps_indicator_gray_big"
-                        tools:src="@drawable/icon_apps_indicator_gray_big"
-                        android:layout_centerVertical="true"
-                        />
+                        tools:src="@drawable/icon_apps_indicator_gray_big" />
 
                     <TextView
                         android:id="@+id/appCount"
-                        android:layout_toRightOf="@id/appCountImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#888888"
-                        android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/appCountImage"
                         android:layout_alignTop="@id/appCountImage"
-                        android:gravity="bottom"
                         android:layout_marginBottom="2dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_toRightOf="@id/appCountImage"
+                        android:gravity="bottom"
+                        android:textColor="#888888"
                         android:textSize="16sp"
                         tools:text="65" />
-
 
 
                     <Button
-                    android:id="@+id/apps_manage_privacy"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_gravity="right"
-                    android:background="@null"
-                    android:textColor="@color/reach_color"
-                    android:layout_alignBottom="@id/appCount"
-                    android:layout_alignTop="@id/appCount"
-                    android:layout_marginRight="8dp"
-                    android:text="MANAGE PRIVACY"
-                    android:layout_alignParentRight="true"
+                        android:id="@+id/apps_manage_privacy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_alignBottom="@id/appCount"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignTop="@id/appCount"
+                        android:layout_gravity="right"
+                        android:layout_marginRight="8dp"
+                        android:background="@null"
+                        android:text="MANAGE PRIVACY"
+                        android:textColor="@color/reach_color"
 
-                    />
+                        />
 
                     <ImageView
                         android:id="@+id/songCountImage"
-                        android:layout_below="@id/appCountImage"
                         android:layout_width="28dp"
                         android:layout_height="28dp"
+                        android:layout_below="@id/appCountImage"
+                        android:layout_centerVertical="true"
                         android:layout_marginTop="16dp"
                         app:srcCompat="@drawable/icon_song_indicator_gray_big"
-                        tools:src="@drawable/icon_song_indicator_gray_big"
-                        android:layout_centerVertical="true"
-                        />
+                        tools:src="@drawable/icon_song_indicator_gray_big" />
 
                     <TextView
                         android:id="@+id/songsCount"
-                        android:layout_below="@id/appCountImage"
-                        android:layout_toRightOf="@id/songCountImage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#888888"
-                        android:layout_marginLeft="8dp"
                         android:layout_alignBottom="@id/songCountImage"
                         android:layout_alignTop="@id/songCountImage"
+                        android:layout_below="@id/appCountImage"
+                        android:layout_marginLeft="8dp"
+                        android:layout_toRightOf="@id/songCountImage"
                         android:gravity="center_vertical"
+                        android:textColor="#888888"
                         android:textSize="16sp"
                         tools:text="65" />
-
 
 
                     <Button
                         android:id="@+id/songs_manage_privacy"
-                        android:layout_below="@id/apps_manage_privacy"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
-                        android:layout_gravity="right"
-                        android:background="@null"
-                        android:textColor="@color/reach_color"
                         android:layout_alignBottom="@id/songsCount"
-                        android:layout_alignTop="@id/songsCount"
-                        android:text="MANAGE PRIVACY"
                         android:layout_alignParentRight="true"
+                        android:layout_alignTop="@id/songsCount"
+                        android:layout_below="@id/apps_manage_privacy"
+                        android:layout_gravity="right"
                         android:layout_marginRight="8dp"
-                        />
+                        android:background="@null"
+                        android:text="MANAGE PRIVACY"
+                        android:textColor="@color/reach_color" />
 
                 </RelativeLayout>
 

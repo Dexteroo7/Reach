@@ -140,7 +140,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         };
 
         final View rootView = inflater.inflate(R.layout.fragment_myprofile_app, container, false);
-        rootView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
+        //rootView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
         final RecyclerView mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         final Activity activity = getActivity();
         // TODO: Comment out when implementing loading view. currently there is no callback to detect that the app data has been loaded

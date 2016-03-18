@@ -113,7 +113,6 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_simple_recycler, container, false);
-        rootView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
          mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
         //emptyView = rootView.findViewById(R.id.empty_imageView);
         //final TextView emptyViewText = (TextView) rootView.findViewById(R.id.empty_textView);

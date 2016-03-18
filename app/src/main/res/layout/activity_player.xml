@@ -47,7 +47,9 @@
             app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
     </android.support.design.widget.AppBarLayout>
 
-    <ImageView
+
+
+    <!--<ImageView
         android:id="@+id/push_button"
         android:layout_width="50dp"
         android:layout_height="50dp"
@@ -61,7 +63,7 @@
         tools:src="@drawable/icon_send_pink"
         app:srcCompat="@drawable/icon_send_pink"
 
-        android:visibility="visible" />
+        android:visibility="visible" />-->
 
     <RelativeLayout
         android:id="@+id/music_list_container"
@@ -104,11 +106,29 @@
         android:visibility="gone"
         ></RelativeLayout>-->
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/push_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignBottom="@+id/albumArtContainer"
+        android:layout_marginBottom="-36dp"
+        android:background="@drawable/circular_background"
+        app:srcCompat="@drawable/icon_send_pink"
+        tools:src="@drawable/icon_send_pink"
+        app:useCompatPadding="true"
+        app:backgroundTint="@android:color/white"
+        app:elevation="6dp"
+        android:padding="10dp"
+        app:fabSize="normal"
+        />
+
     <TextView
         android:id="@+id/songNamePlaying"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/artistName"
+        android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="32dp"
         android:layout_marginRight="72dp"

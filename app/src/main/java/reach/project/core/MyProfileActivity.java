@@ -43,6 +43,7 @@ import reach.project.music.SongProvider;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.viewHelpers.CustomDraweeView;
 
 /**
  * Created by gauravsobti on 05/03/16.
@@ -55,7 +56,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
     public static boolean profileEdited;
     public static boolean countChanged = true;
     private ActionBar actionBar;
-    private SimpleDraweeView profilePic;
+    private CustomDraweeView profilePic;
     private static final String TAG = MyProfileActivity.class.getSimpleName();
     private SimpleDraweeView coverPic;
     public static final String APP_COUNT_KEY = "app_count";
@@ -97,7 +98,7 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
         //TODO: get username
 
         //toolbar.setOnMenuItemClickListener(menuItemClickListener);
-        profilePic = (SimpleDraweeView) findViewById(R.id.profilePic);
+        profilePic = (CustomDraweeView) findViewById(R.id.profilePic);
         coverPic = (SimpleDraweeView) findViewById(R.id.coverPic);
 
         setSupportActionBar(toolbar);

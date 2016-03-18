@@ -29,8 +29,9 @@ public enum ContentType {
         PRESENT,
         LIKED;
 
-        @Nonnull
-        public static EnumMap<ContentType, Map<String, EnumSet<State>>> parseContentStateMap(@Nonnull GenericJson jsonMap) {
+        public static void parseContentStateMap(
+                @Nonnull GenericJson jsonMap,
+                @Nonnull EnumMap<ContentType, Map<String, EnumSet<State>>> toReturn) {
 
             final Map<String, EnumSet<State>> musicMapFinal;
             final Map<String, EnumSet<State>> appMapFinal;
@@ -49,20 +50,20 @@ public enum ContentType {
 
                     final String metaHash = entry.getKey();
                     final Collection<String> states = entry.getValue();
-                    final EnumSet<State> setToInsert = EnumSet.noneOf(State.class);
+                    final EnumSet<State> stateEnumSet = EnumSet.noneOf(State.class);
 
-                    for (Object object : states) {
+                    for (String state : states) {
 
-                        if (object.toString().equals(State.VISIBLE.name()))
-                            setToInsert.add(VISIBLE);
-                        if (object.toString().equals(State.PRESENT.name()))
-                            setToInsert.add(PRESENT);
-                        if (object.toString().equals(State.LIKED.name()))
-                            setToInsert.add(LIKED);
+                        if (state.equals(State.VISIBLE.name()))
+                            stateEnumSet.add(VISIBLE);
+                        if (state.equals(State.PRESENT.name()))
+                            stateEnumSet.add(PRESENT);
+                        if (state.equals(State.LIKED.name()))
+                            stateEnumSet.add(LIKED);
                     }
 
-                    Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
-                    musicMapFinal.put(metaHash, setToInsert);
+                    Log.i("Ayush", "Inserting " + metaHash + " " + stateEnumSet.toString());
+                    musicMapFinal.put(metaHash, stateEnumSet);
                 }
             } else
                 musicMapFinal = Collections.emptyMap();
@@ -78,29 +79,26 @@ public enum ContentType {
 
                     final String metaHash = entry.getKey();
                     final Collection<String> states = entry.getValue();
-                    final EnumSet<State> setToInsert = EnumSet.noneOf(State.class);
+                    final EnumSet<State> stateEnumSet = EnumSet.noneOf(State.class);
 
-                    for (Object object : states) {
+                    for (String state : states) {
 
-                        if (object.toString().equals(State.VISIBLE.name()))
-                            setToInsert.add(VISIBLE);
-                        if (object.toString().equals(State.PRESENT.name()))
-                            setToInsert.add(PRESENT);
-                        if (object.toString().equals(State.LIKED.name()))
-                            setToInsert.add(LIKED);
+                        if (state.equals(State.VISIBLE.name()))
+                            stateEnumSet.add(VISIBLE);
+                        if (state.equals(State.PRESENT.name()))
+                            stateEnumSet.add(PRESENT);
+                        if (state.equals(State.LIKED.name()))
+                            stateEnumSet.add(LIKED);
                     }
 
-                    Log.i("Ayush", "Inserting " + metaHash + " " + setToInsert.toString());
-                    appMapFinal.put(metaHash, setToInsert);
+                    Log.i("Ayush", "Inserting " + metaHash + " " + stateEnumSet.toString());
+                    musicMapFinal.put(metaHash, stateEnumSet);
                 }
             } else
                 appMapFinal = Collections.emptyMap();
 
-            final EnumMap<ContentType, Map<String, EnumSet<State>>> toReturn = new EnumMap<>(ContentType.class);
             toReturn.put(MUSIC, musicMapFinal);
             toReturn.put(APP, appMapFinal);
-
-            return toReturn;
         }
     }
 }
