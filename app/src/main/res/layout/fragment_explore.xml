@@ -11,9 +11,33 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?attr/actionBarSize" />
+    <RelativeLayout
+        android:id="@+id/footer"
+        android:background="@color/reach_grey_light"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="70dp" >
+        <FrameLayout
+            android:id="@+id/ytFooter"
+            android:background="@color/reach_grey_bg"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+        <TextView
+            android:id="@+id/playerText"
+            android:text="Video Title"
+            android:layout_toRightOf="@id/ytFooter"
+            android:layout_margin="10dp"
+            android:textColor="#fff"
+            android:lines="2"
+            android:ellipsize="marquee"
+            android:layout_centerVertical="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
 
     <android.support.v4.view.ViewPager
         android:id="@+id/explorer"
+        android:layout_above="@id/footer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/exploreToolbar"
@@ -25,5 +49,6 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/exploreToolbar"
         />
+
 
 </RelativeLayout>

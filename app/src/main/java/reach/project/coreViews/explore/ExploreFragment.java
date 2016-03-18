@@ -22,8 +22,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -37,7 +35,18 @@ import com.facebook.imagepipeline.core.ImagePipeline;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.youtube.player.YouTubeInitializationResult;
+import com.google.android.youtube.player.YouTubePlayer;
+import com.google.android.youtube.player.YouTubePlayerSupportFragment;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.SearchResult;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
@@ -47,8 +56,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import org.joda.time.DateTime;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -215,12 +226,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     new String[]{
                             ReachFriendsHelper.COLUMN_ID,
                             ReachFriendsHelper.COLUMN_USER_NAME,
-                            ReachFriendsHelper.COLUMN_IMAGE_ID
+                            ReachFriendsHelper.COLUMN_IMAGE_ID,
+                            ReachFriendsHelper.COLUMN_STATUS
                     },
-                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{
-                            ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString()
-                    }, null);
+                    null, null, null);
 
             if (cursor == null)
                 return null;
@@ -228,7 +237,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             final JsonArray jsonArray = new JsonArray();
 
             while (cursor.moveToNext()) {
-
+                if (cursor.getShort(3) > 1)
+                    continue;
                 final long onlineId = cursor.getLong(0);
                 final String userName = cursor.getString(1);
                 final String imageId = cursor.getString(2);
@@ -362,6 +372,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Nullable
     private SuperInterface mListener = null;
 
+    private YouTubePlayer player = null;
+
+    private TextView playerText = null;
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -440,7 +455,88 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             mListener.showSwipeCoach();
             SharedPrefUtils.setExploreCoach1Seen(preferences);
         }*/
+
+        //new YTTest().execute();
+
+        playerText = (TextView) rootView.findViewById(R.id.playerText);
+
+        final YouTubePlayerSupportFragment fragment = YouTubePlayerSupportFragment.newInstance();
+        fragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
+            @Override
+            public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
+                player = youTubePlayer;
+                player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
+                //player.cueVideo("CuH3tJPiP-U");
+            }
+
+            @Override
+            public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
+
+            }
+        });
+        getChildFragmentManager().beginTransaction().replace(R.id.ytFooter, fragment, "YouTubePlayerSupportFragment").commit();
+
         return rootView;
+    }
+
+    private static class YTTest extends AsyncTask<String, Void, SearchResult> {
+        @Override
+        protected SearchResult doInBackground(String... params) {
+            try {
+                final HttpTransport transport = new NetHttpTransport();
+                final JsonFactory factory = new JacksonFactory();
+                final HttpRequestInitializer initialize = request -> {
+                    request.setConnectTimeout(request.getConnectTimeout() * 2);
+                    request.setReadTimeout(request.getReadTimeout() * 2);
+                };
+                final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
+                // Define the API request for retrieving search results.
+                final YouTube.Search.List search = youTube.search().list("id,snippet");
+
+                // Set your developer key from the Google Developers Console for
+                // non-authenticated requests. See:
+                // https://console.developers.google.com/
+                final String apiKey = "AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY";
+                search.setKey(apiKey);
+
+                search.setQ(params[0]);
+
+                // Restrict the search results to only include videos. See:
+                // https://developers.google.com/youtube/v3/docs/search/list#type
+                search.setType("video");
+
+                // To increase efficiency, only retrieve the fields that the
+                // application uses.
+                search.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
+                search.setMaxResults(6L);
+
+                // Call the API and print results.
+                final SearchListResponse searchResponse = search.execute();
+                final List<SearchResult> searchResultList = searchResponse.getItems();
+                /*final StringBuilder stringBuilder = new StringBuilder();
+                for (SearchResult searchResult : searchResultList)
+                    stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
+                return stringBuilder.toString();*/
+                return searchResultList.get(0);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(SearchResult searchResult) {
+            super.onPostExecute(searchResult);
+            /*MiscUtils.useContextFromFragment(reference, activity -> {
+                new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
+            });*/
+            if (searchResult == null)
+                return;
+            MiscUtils.useFragment(reference, fragment -> {
+                fragment.player.loadVideo(searchResult.getId().getVideoId());
+                fragment.playerText.setText(searchResult.getSnippet().getTitle());
+            });
+        }
     }
 
     private void showDiscoverAdapter(){
@@ -552,6 +648,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     @Override
     public boolean isDoneForToday() {
         return buffer == null || ExploreBuffer.DONE_FOR_TODAY.get();
+    }
+
+    @Override
+    public void playYTVideo(String search) {
+        new YTTest().execute(search);
     }
 
     @Override

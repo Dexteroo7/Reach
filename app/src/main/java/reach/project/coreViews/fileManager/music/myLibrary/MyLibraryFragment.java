@@ -236,7 +236,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             final String metaHash = cursor.getString(2);
 
             new ToggleVisibility(MyLibraryFragment.this,
-                    visible,
+                    !visible,
                     metaHash,
                     myUserId,
                     StaticData.zeroByte)
@@ -251,7 +251,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             final Song song = (Song) message;
 
             new ToggleVisibility(MyLibraryFragment.this,
-                    song.visibility,
+                    !song.visibility,
                     song.getFileHash(),
                     myUserId,
                     StaticData.oneByte)
