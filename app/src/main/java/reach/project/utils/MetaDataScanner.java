@@ -197,12 +197,9 @@ public class MetaDataScanner extends IntentService {
         //get the deviceSongs
         final List<Song> deviceSongs = SongCursorHelper.getSongs(
                 musicCursor,
-                Collections.emptyMap(),
                 serverId,
                 contentResolver,
-                genres,
-                message -> {//ignored
-                });
+                genres);
 
         final Map<String, Song> currentSongs = getCurrentSongs(contentResolver, serverId);
         final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
@@ -240,8 +237,6 @@ public class MetaDataScanner extends IntentService {
         final List<App> deviceApps = AppCursorHelper.getApps(
                 installedApps,
                 packageManager,
-                message -> { //ignored
-                },
                 visiblePackages);
 
         final List<SimpleSong> simpleSongs = new ArrayList<>(currentSongs.size());

@@ -59,8 +59,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
-
+        public void handOverAppVisibilityMessage(String packageName) {
+            visibilityHook.handOverAppVisibility(packageName);
         }
 
         @Override
@@ -162,5 +162,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     public interface VisibilityHook {
 
         boolean isVisible(String packageName);
+
+        void handOverAppVisibility(String packageName);
     }
 }

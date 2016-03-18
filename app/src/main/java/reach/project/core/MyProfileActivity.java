@@ -28,8 +28,6 @@ import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.lang.ref.WeakReference;
 
@@ -68,7 +66,6 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    private GoogleApiClient client;
     private TextView appCount;
     private TextView songsCount;
     private TextView friendsCount;
@@ -122,11 +119,6 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
         friendsCount.setOnClickListener(this);
         userName.setText(SharedPrefUtils.getUserName(preferences));
         //friendsCount.setText(StaticData.friendsCount+"");
-
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void setUpProfile() {

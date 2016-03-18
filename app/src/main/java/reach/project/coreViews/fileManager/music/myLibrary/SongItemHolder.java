@@ -287,7 +287,8 @@ class SongItemHolder extends SingleItemViewHolder {
                 visible = cursor.getShort(12) == 1;
             } else
                 throw new IllegalArgumentException("Invalid Object type detected");
-            hideItem.setTitle(!visible ? "Everyone" : "Only Me");
+            //hideItem.setTitle(!visible ? "Everyone" : "Only Me");
+            hideItem.setChecked(!visible );
 
             popupMenu.show();
         });

@@ -551,6 +551,7 @@ public class ProcessManager extends Service implements
     @Override
     public void updateDuration(String formattedDuration) {
 
+        Log.d(TAG, "Updating duration, duration = " + formattedDuration);
         final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_DURATION);
         bundle.putString(PlayerActivity.DURATION, formattedDuration);
@@ -626,7 +627,7 @@ public class ProcessManager extends Service implements
         bundle.putString(PlayerActivity.ACTION, REPLY_MUSIC_DEAD);
         sendMessage(bundle);
 
-        Log.i("Downloader", "Sent Music player dead");
+        Log.i(TAG, "Sent Music player dead");
 
         switch (notificationState) {
 
@@ -1044,6 +1045,7 @@ public class ProcessManager extends Service implements
     public void errorReport(String songName, String missType) {
 
 //        pushNextSong(nextSong(Optional.absent(), false));
+        Log.d(TAG, "Replying error to the player activity");
         final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_ERROR);
         sendMessage(bundle);
@@ -1065,7 +1067,7 @@ public class ProcessManager extends Service implements
     @Override
     public void updateSecondaryProgress(short percent) {
 
-        Log.i("Ayush", "Sending secondary progress " + percent);
+        Log.i(TAG, "Updating secondary progress " + percent);
         final Bundle bundle = new Bundle();
         bundle.putString(PlayerActivity.ACTION, REPLY_SECONDARY_PROGRESS);
         bundle.putShort(PlayerActivity.SECONDARY_PROGRESS, percent);

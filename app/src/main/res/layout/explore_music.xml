@@ -27,7 +27,7 @@
                 android:background="@drawable/explore_bg"
                 fresco:placeholderImage="@drawable/explore_placeholder"
                 android:layout_width="match_parent"
-                app:layout_heightPercent="60%" />
+                app:layout_heightPercent="55%" />
             <View
                 android:background="@drawable/shadow_bottom"
                 android:layout_width="match_parent"
@@ -36,7 +36,7 @@
             <reach.project.utils.viewHelpers.CustomImageView
                 android:id="@+id/downButton"
                 app:layout_widthPercent="21%"
-                app:layout_marginTopPercent="51%"
+                app:layout_marginTopPercent="48%"
                 android:layout_centerHorizontal="true"
                 android:background="@android:color/transparent"
                 android:src="@drawable/explore_download_btn" />
@@ -78,7 +78,7 @@
                 android:layout_marginRight="10dp"
                 android:text="Title Title"
                 android:layout_below="@id/typeText"
-                app:layout_marginTopPercent="1%"
+                app:layout_marginTopPercent="0.5%"
                 android:layout_centerHorizontal="true"
                 android:textColor="#000"
                 android:textSize="20sp"

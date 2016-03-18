@@ -23,7 +23,6 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
-import reach.project.coreViews.fileManager.apps.*;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
@@ -73,7 +72,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+        public void handOverAppVisibilityMessage(String packageName) {
 
         }
 
@@ -210,13 +209,13 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
             holder.likeButton.setSelected(true);
         }
 
-        if (item.visibility) {
+        /*if (item.visibility) {
 
-            holder.toggleImage.setImageResource(R.drawable.icon_everyone_white);
+            holder.toggleImage.setImageResource(0);
         } else {
 
             holder.toggleImage.setImageResource(R.drawable.icon_locked_white);
-        }
+        }*/
 
         /*if (item.getType() == Song.Type.MY_LIBRARY) {
 

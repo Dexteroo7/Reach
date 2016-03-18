@@ -25,6 +25,10 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.common.base.Optional;
 
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.Map;
+
 import reach.project.R;
 import reach.project.core.StaticData;
 import reach.project.utils.ContentType;
@@ -37,9 +41,11 @@ public class AccountCreation extends Fragment {
 
     private static final String USER_NAME = "USER_NAME";
     private static final String OLD_USER_ID = "OLD_USER_ID";
-    private static final String OLD_USER_STATES = "OLD_USER_STATES";
     private static final String COVER_PHOTO_ID = "COVER_PHOTO_ID";
     private static final String PROFILE_PHOTO_ID = "PROFILE_PHOTO_ID";
+
+    //hack
+    public static final EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>> OLD_STATES = new EnumMap<>(ContentType.class);
 
     public static Fragment newInstance(Optional<UserDataPersistence> container) {
 
@@ -59,10 +65,9 @@ public class AccountCreation extends Fragment {
             final JsonMap jsonMap = userContainer.getOldContentStates();
             if (jsonMap != null && jsonMap.size() > 0) {
 
+                ContentType.State.parseContentStateMap(jsonMap, OLD_STATES);
                 Log.i("Ayush", "Found old data " + jsonMap.toString());
-                bundle.putSerializable(OLD_USER_STATES, ContentType.State.parseContentStateMap(jsonMap));
             }
-
         }
 
         return fragment;
@@ -114,8 +119,7 @@ public class AccountCreation extends Fragment {
         if (!TextUtils.isEmpty(profilePhotoId)) {
 
             newProfilePicUri = Uri.parse(StaticData.CLOUD_STORAGE_IMAGE_BASE_URL + profilePhotoId);
-            profilePhotoSelector.setController(MiscUtils.getControllerResize(profilePhotoSelector.getController(),
-                    newProfilePicUri, PROFILE_PHOTO_RESIZE));
+            MiscUtils.setUriToView(profilePhotoSelector, newProfilePicUri, PROFILE_PHOTO_RESIZE);
         }
 
         if (!TextUtils.isEmpty(coverPhotoID))
@@ -142,8 +146,7 @@ public class AccountCreation extends Fragment {
                         profilePhotoId,
                         coverPhotoID,
                         newProfilePicUri,
-                        newCoverPicUri,
-                        arguments.getSerializable(OLD_USER_STATES));
+                        newCoverPicUri);
 
             //TODO track
             /*final Map<PostParams, String> simpleParams = MiscUtils.getMap(2);

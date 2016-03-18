@@ -18,7 +18,6 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
-import com.google.common.primitives.Booleans;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -80,7 +79,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visiblity, String packageName) {
+        public void handOverAppVisibilityMessage(String packageName) {
 
         }
 
@@ -193,13 +192,13 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
             senderName = cursorExactType.getString(16);
 
 
-            if (visible) {
-                songItemHolder.toggleImage.setImageResource(R.drawable.icon_everyone_white);
+            /*if (visible) {
+                songItemHolder.toggleImage.setImageResource(0);
                 //songItemHolder.toggleText.setText("Everyone");
             } else {
-                songItemHolder.toggleImage.setImageResource(R.drawable.icon_locked_white);
+                songItemHolder.toggleImage.setImageResource(R.drawable.icon_locked);
                 //songItemHolder.toggleText.setText("Only Me");
-            }
+            }*/
 
 //                actualName = cursorExactType.getString(17);
             final long senderId = cursorExactType.getLong(15);

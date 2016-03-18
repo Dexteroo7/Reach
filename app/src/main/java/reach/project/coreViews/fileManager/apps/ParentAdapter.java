@@ -1,23 +1,42 @@
 package reach.project.coreViews.fileManager.apps;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.appspot.able_door_616.contentStateApi.ContentStateApi;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.common.hash.Hashing;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.core.StaticData;
 import reach.project.coreViews.fileManager.HandOverMessageExtra;
+import reach.project.utils.CloudEndPointsUtils;
+import reach.project.utils.ContentType;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -30,12 +49,16 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private static final byte VIEW_TYPE_RECENT = 0;
     private static final byte VIEW_TYPE_ALL = 1;
-    public final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
+    public static final Map<String, Boolean> packageVisibility = MiscUtils.getMap(100);
 
     private final long recentHolderId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
     private final HandOverMessage<App> handOverApp;
     private final PackageManager packageManager;
     private final RecentAdapter recentAdapter;
+    private final SharedPreferences preferences;
+    private final Context context;
+    private final ExecutorService visibilityHandler = Executors.unconfigurableExecutorService(Executors.newFixedThreadPool(2));
+
 
     private final HandOverMessageExtra<App> handOverMessageExtra = new HandOverMessageExtra<App>() {
 
@@ -65,8 +88,19 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
 
         @Override
-        public void handOverAppVisibilityMessage(int position, boolean visibility, String packageName) {
-            ParentAdapter.this.handOverAppVisibilityToggle.handOverMessage(position,visibility,packageName);
+        public void handOverAppVisibilityMessage(String packageName) {
+            final boolean newVisibility = !isVisible(packageName);
+            //update in memory
+            synchronized (packageVisibility) {
+                packageVisibility.put(packageName, newVisibility);
+            }
+            //update in disk
+            SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
+            //update on server
+            new ToggleVisibility(context, preferences, packageName, newVisibility).executeOnExecutor(visibilityHandler);
+
+            //notify that visibility has changed
+            visibilityChanged(packageName);
         }
 
         @Override
@@ -75,20 +109,68 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     };
 
-    private final HandOverVisibilityToggle handOverAppVisibilityToggle;
+    private static class ToggleVisibility extends AsyncTask<Object, Void, Boolean> {
 
-    public static interface HandOverVisibilityToggle{
+        private final Context context;
+        private final SharedPreferences preferences;
+        private final String packageName;
+        private final boolean visible;
 
-        public void handOverMessage(int position, boolean visibility, String packageName);
+        public ToggleVisibility(Context context, SharedPreferences preferences, String packageName, boolean visible) {
 
+            this.context = context;
+            this.preferences = preferences;
+            this.packageName = packageName;
+            this.visible = visible;
+        }
+
+        @Override
+        protected Boolean doInBackground(Object... params) {
+
+            boolean failed = false;
+
+            final HttpTransport transport = new NetHttpTransport();
+            final JsonFactory factory = new JacksonFactory();
+            final GoogleAccountCredential credential = GoogleAccountCredential
+                    .usingAudience(context, StaticData.SCOPE)
+                    .setSelectedAccountName(SharedPrefUtils.getEmailId(preferences));
+
+            final ContentStateApi contentStateApi = CloudEndPointsUtils.updateBuilder(new ContentStateApi.Builder(transport, factory, credential))
+                    .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();
+
+            try {
+                contentStateApi.update(SharedPrefUtils.getServerId(preferences), ContentType.APP.name(), MiscUtils.calculateAppHash(packageName, Hashing.sipHash24()), ContentType.State.VISIBLE.name(), visible).execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+                failed = true; //mark failed
+            }
+            return failed;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean failed) {
+            super.onPostExecute(failed);
+            if (failed) {
+                //reset in memory
+                synchronized (packageVisibility) {
+                    packageVisibility.put(packageName, !visible);
+                }
+                //reset in disk
+                SharedPrefUtils.addPackageVisibility(preferences, packageName, !visible);
+                //notify that visibility has changed
+                Log.i("Ayush", "Server update failed for app");
+                //visibilityChanged(null);
+                Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
-    public ParentAdapter(HandOverMessage<App> handOverApp, Context context,HandOverVisibilityToggle handOverAppVisibilityToggle) {
+    public ParentAdapter(HandOverMessage<App> handOverApp, Context context) {
 
+        this.context = context;
         this.packageManager = context.getPackageManager();
         this.handOverApp = handOverApp;
-        this.handOverAppVisibilityToggle = handOverAppVisibilityToggle;
-
+        this.preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
         this.recentAdapter = new RecentAdapter(new ArrayList<>(20), handOverApp, packageManager, R.layout.app_grid_item, this);
         setHasStableIds(true);
     }
@@ -109,7 +191,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             }
 
         position++;//adjust for recent
-        position++;//adjust for material header
+        //position++;//adjust for material header
 
         notifyItemChanged(position); //adjust for header
         recentAdapter.visibilityChanged(packageName);
@@ -251,6 +333,12 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Override
     public boolean isVisible(String packageName) {
-        return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
+        return packageVisibility.containsKey(packageName) ? packageVisibility.get(packageName) : true;
+        //return packageVisibility.containsKey(packageName) && packageVisibility.get(packageName);
+    }
+
+    @Override
+    public void handOverAppVisibility(String packageName) {
+        handOverMessageExtra.handOverAppVisibilityMessage(packageName);
     }
 }
