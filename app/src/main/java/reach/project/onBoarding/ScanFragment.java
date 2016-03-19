@@ -91,6 +91,7 @@ public class ScanFragment extends Fragment {
 
     @Nullable
     private static WeakReference<ScanFragment> reference = null;
+    private SplashInterface mListener;
 
     public static ScanFragment newInstance(String name,
                                            long oldUserId,
@@ -424,7 +425,7 @@ public class ScanFragment extends Fragment {
 
                     indeterminateProgress.setVisibility(View.INVISIBLE);
 
-                    finishOnBoarding.setText("CLICK TO PROCEED");
+                    finishOnBoarding.setText("MANAGE PRIVACY");
                     finishOnBoarding.setTextColor(ContextCompat.getColor(activity, R.color.reach_color));
                     finishOnBoarding.setOnClickListener(PROCEED);
                     finishOnBoarding.setVisibility(View.VISIBLE);
@@ -525,11 +526,13 @@ public class ScanFragment extends Fragment {
 
     private static final View.OnClickListener PROCEED = v -> MiscUtils.useFragment(reference, fragment -> {
 
-        final Activity activity = fragment.getActivity();
+        //mListener
+        fragment.mListener.onOpenPrivacySettings();
+        /*final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
         intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
         activity.startActivity(intent);
-        activity.finish();
+        activity.finish();*/
     });
 
     private static Pair<String, Bitmap> getImageHashBitmapPair(@Nullable Uri profilePhotoUri) {
@@ -577,4 +580,22 @@ public class ScanFragment extends Fragment {
         } else
             return null;
     }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            mListener = (SplashInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                 + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
 }

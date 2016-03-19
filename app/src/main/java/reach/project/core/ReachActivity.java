@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -27,12 +28,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.google.common.base.Optional;
@@ -57,6 +61,7 @@ import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.coreViews.friends.FriendsFragment;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 //import reach.project.coreViews.myProfile.MyProfileFragment;
+import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
 import reach.project.music.ReachDatabase;
@@ -79,8 +84,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     private static final String TAG = ReachActivity.class.getSimpleName();
     private static final String TAB_POSITION_KEY = "tab_position";
+    private static final String SHOW_INVITE_DIALOG_SHARED_PREF_KEY = "show_invite_dialog";
     private AlertDialog alertDialog;
     private int tabPosition = -1;
+    private AlertDialog inviteDialog;
 
     public static void openActivity(Context context) {
 
@@ -356,7 +363,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 MyProfileFragment.class, null);*/
         mTabHost.setCurrentTab(0);
 
-        if (showRatingDialogOrNot()) {
+        if (showRatingDialogOrNot() || showInviteDialogOrNot()) {
             Log.d(TAG, "Created Downloaded Loader");
             getSupportLoaderManager().initLoader(DOWNLOADED_COUNT_LOADER_ID,
                     null,
@@ -387,17 +394,13 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                                 return;
                             }
 
-                            if (!showRatingDialogOrNot()) {
-                                return;
-                            }
+                            if(showRatingDialogOrNot())
+                            handleShowRatingDialogCase(data);
 
-                            if (getDownloadedCountFromSharedPref() < data.getCount()) {
-                                Log.d(TAG, "Show Rating Dialog Called");
-                                putDownloadedCountInSharedPref(data.getCount());
-                                showRatingDialog();
+                            handleShowInviteDialogCase(data);
 
 
-                            }
+
                             Log.d(TAG, "Inside OnLoadFinished, cursor count = " + data.getCount());
 
 
@@ -415,6 +418,34 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         FireOnce.checkUpdate(reference);
     }
 
+
+    private void handleShowRatingDialogCase(Cursor data){
+
+        if (!showRatingDialogOrNot()) {
+            return;
+        }
+
+        if (getDownloadedCountFromSharedPref() < data.getCount()) {
+            Log.d(TAG, "Show Rating Dialog Called");
+            putDownloadedCountInSharedPref(data.getCount());
+            showRatingDialog();
+        }
+
+    }
+    private void handleShowInviteDialogCase(Cursor data){
+        Log.d(TAG, "Handle Invite Dialog Called");
+
+        if (!showInviteDialogOrNot()) {
+            return;
+        }
+
+        if (getDownloadedCountFromSharedPref() + 2 < data.getCount()) {
+            Log.d(TAG, "Show Invite Dialog Called");
+            putDownloadedCountInSharedPref(data.getCount());
+            showInviteDialog();
+        }
+
+    }
 
     private View setUpTabView(final LayoutInflater inflater, final String tab_text, final int tab_drawable_res) {
         View tabView = inflater.inflate(R.layout.tab_view, null);
@@ -435,6 +466,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
 
     private boolean showRatingDialogOrNot() {
         return preferences.getBoolean(SHOW_RATING_DIALOG_SHARED_PREF_KEY, true);
+    }
+
+
+    private void putInviteDialogValueInSharedPref(boolean value) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(SHOW_INVITE_DIALOG_SHARED_PREF_KEY, value);
+        editor.commit();
+    }
+
+    private boolean showInviteDialogOrNot() {
+        return preferences.getBoolean(SHOW_INVITE_DIALOG_SHARED_PREF_KEY, true);
     }
 
     private void putValueFirstTimeDownloadedCountCalled(boolean value) {
@@ -569,6 +611,78 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
                 .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
                 .setValue(1)
                 .build());
+
+    }
+
+    private void showInviteDialog(){
+
+        if (inviteDialog != null) {
+            Log.d(TAG, "Invite Dialog is already showing");
+            if (inviteDialog.isShowing()) {
+                return;
+            }
+        }
+
+
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View vv = inflater.inflate(R.layout.invite_dialog_custom_view, null, false);
+
+        final SimpleDraweeView inviteImage = (SimpleDraweeView) vv.findViewById(R.id.inviteImage);
+        inviteImage.setController(MiscUtils.getControllerResize(inviteImage.getController(),
+                Uri.parse("https://s3.amazonaws.com/reach-again/important-files/invite_explore.png"), new ResizeOptions(180, 120)));
+        //inviteImage.setImageURI(Uri.parse("https://s3.amazonaws.com/reach-again/important-files/invite_explore.png"));
+        
+        //alertDialogBuilder.setMessage("Reach is more fun with friends!\nInvite them and discover their collection.");
+        vv.findViewById(R.id.inviteButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                putInviteDialogValueInSharedPref(false);
+                startActivity(new Intent(ReachActivity.this, InviteActivity.class));
+                if(inviteDialog!=null)
+                    inviteDialog.dismiss();
+            }
+        });
+        /*alertDialogBuilder.setPositiveButton("Invite", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                putInviteDialogValueInSharedPref(false);
+                startActivity(new Intent(ReachActivity.this, InviteActivity.class));
+
+            }
+        });*/
+        /*alertDialogBuilder.setNegativeButton("Skip", null);
+
+        inviteDialog = alertDialogBuilder.create();
+        inviteDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                Button b = inviteDialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                b.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        putInviteDialogValueInSharedPref(false);
+                        inviteDialog.dismiss();
+                    }
+                });
+            }
+        });*/
+
+        vv.findViewById(R.id.skipButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                putInviteDialogValueInSharedPref(false);
+                if(inviteDialog!=null)
+                inviteDialog.dismiss();
+            }
+        });
+
+        Log.d(TAG, "Show Invite Dialog");
+        alertDialogBuilder.setView(vv);
+        inviteDialog = alertDialogBuilder.create();
+        inviteDialog.show();
 
     }
 

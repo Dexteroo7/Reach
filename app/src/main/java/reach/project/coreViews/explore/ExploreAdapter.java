@@ -31,6 +31,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicViewInfo;
  */
 class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
+    private static final String TAG = ExploreAdapter.class.getSimpleName() ;
     private final Explore explore;
     private final HandOverMessage<Integer> handOverMessage;
 
@@ -159,6 +160,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                     final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(miscImage))
+                        Log.d(TAG, "Misc Image URI = " + miscImage);
                         image.setController(MiscUtils.getControllerResize(image.getController(),
                                 Uri.parse(miscImage), ExploreFragment.SMALL_IMAGE_SIZE));
                     break;

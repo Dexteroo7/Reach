@@ -25,4 +25,6 @@ public interface SplashInterface {
                     Uri newProfilePicUri,
                     Uri newCoverPicUri,
                     Serializable contentState);
+
+    void onOpenPrivacySettings();
 }
