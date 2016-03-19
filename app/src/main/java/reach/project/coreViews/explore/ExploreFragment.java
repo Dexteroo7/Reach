@@ -491,7 +491,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 };
                 final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
                 // Define the API request for retrieving search results.
-                final YouTube.Search.List search = youTube.search().list("id,snippet");
+                final YouTube.Search.List search = youTube.search().list("snippet");
 
                 // Set your developer key from the Google Developers Console for
                 // non-authenticated requests. See:
@@ -505,10 +505,12 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 // https://developers.google.com/youtube/v3/docs/search/list#type
                 search.setType("video");
 
+                search.setVideoCategoryId("10");
+
                 // To increase efficiency, only retrieve the fields that the
                 // application uses.
-                search.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
-                search.setMaxResults(6L);
+                search.setFields("items(id/videoId,snippet/title)");
+                search.setMaxResults(1L);
 
                 // Call the API and print results.
                 final SearchListResponse searchResponse = search.execute();
@@ -517,6 +519,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 for (SearchResult searchResult : searchResultList)
                     stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
                 return stringBuilder.toString();*/
+                if (searchResultList == null || searchResultList.isEmpty())
+                    return null;
                 return searchResultList.get(0);
             } catch (IOException e) {
                 e.printStackTrace();

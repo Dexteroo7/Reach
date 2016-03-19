@@ -82,9 +82,10 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                     //take out view info from this object
                     final JsonObject musicViewInfo = MiscUtils.get(exploreJSON, ExploreJSON.VIEW_INFO).getAsJsonObject();
 
-                    title.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
+                    final String musicTitle = MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString();
+                    title.setText(musicTitle);
                     downButton.setOnClickListener(v -> {
-                        explore.playYTVideo(MiscUtils.get(musicViewInfo, MusicViewInfo.TITLE).getAsString());
+                        explore.playYTVideo(fastSanitize(musicTitle));
                         /*percentRelativeLayout.setVisibility(View.GONE);
                         webView.setWebViewClient(new WebViewClient());
                         webView.getSettings().setJavaScriptEnabled(true);
@@ -92,7 +93,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         webView.setVisibility(View.VISIBLE);*/
 
                     });
-                    subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE, "").getAsString());
+                    subTitle.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.SUB_TITLE).getAsString());
                     final String originalUserName = MiscUtils.get(musicViewInfo, MusicViewInfo.SENDER_NAME, "").getAsString();
                     if (TextUtils.isEmpty(originalUserName))
                         userHandle.setText(userNameAndImageId.first);
@@ -177,6 +178,112 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
         collection.addView(layout);
         return layout;
+    }
+
+    private static String fastSanitize(String str) {
+
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        str = replace(str, "MP3Khan", "", -1, stringBuilder);
+        str = replace(str, "_Full-HD", "", -1, stringBuilder);
+        str = replace(str, "songsweb", "", -1, stringBuilder);
+        str = replace(str, "www.", "", -1, stringBuilder);
+        str = replace(str, ".com", "", -1, stringBuilder);
+
+        str = replace(str, ".Mobi", "", -1, stringBuilder);
+        str = replace(str, ".mobi", "", -1, stringBuilder);
+        str = replace(str, "[]", "", -1, stringBuilder);
+        str = replace(str, "pagalworld", "", -1, stringBuilder);
+        str = replace(str, "DownloadMing", "", -1, stringBuilder);
+        str = replace(str, "  ", "", -1, stringBuilder);
+        str = replace(str, "skymaza", "", -1, stringBuilder);
+        str = replace(str, "DjGol", "", -1, stringBuilder);
+        str = replace(str, "<unknown>", "", -1, stringBuilder);
+        str = replace(str, "DJBoss", "", -1, stringBuilder);
+        str = replace(str, "iPendu", "", -1, stringBuilder);
+        str = replace(str, "SongPK", "", -1, stringBuilder);
+        str = replace(str, "Songspk", "", -1, stringBuilder);
+        str = replace(str, "DJJOhAL", "", -1, stringBuilder);
+        str = replace(str, "Mobway", "", -1, stringBuilder);
+        str = replace(str, "downloadming", "", -1, stringBuilder);
+        str = replace(str, "DjPunjab", "", -1, stringBuilder);
+        str = replace(str, "Bestwap", "", -1, stringBuilder);
+        str = replace(str, "MyMp3Song", "", -1, stringBuilder);
+        str = replace(str, "PagalWorld", "", -1, stringBuilder);
+        str = replace(str, "KrazyWAP", "", -1, stringBuilder);
+        str = replace(str, "lebewafa", "", -1, stringBuilder);
+        str = replace(str, "Mp3Singer", "", -1, stringBuilder);
+        str = replace(str, "Songspk", "", -1, stringBuilder);
+        str = replace(str, "Mr-Jatt", "", -1, stringBuilder);
+        str = replace(str, "MastiCity", "", -1, stringBuilder);
+        str = replace(str, "finewap", "", -1, stringBuilder);
+        str = replace(str, "hotmentos", "", -1, stringBuilder);
+        str = replace(str, "MirchiFun", "", -1, stringBuilder);
+        str = replace(str, "MyMp3Singer", "", -1, stringBuilder);
+        str = replace(str, "FreshMaZa", "", -1, stringBuilder);
+        str = replace(str, ".songs", "", -1, stringBuilder);
+        str = replace(str, "SongsLover", "", -1, stringBuilder);
+        str = replace(str, "Mixmp3", "", -1, stringBuilder);
+        str = replace(str, "wapking", "", -1, stringBuilder);
+        str = replace(str, "BDLovE24", "", -1, stringBuilder);
+        str = replace(str, "DJMaza", "", -1, stringBuilder);
+        str = replace(str, "RoyalJatt", "", -1, stringBuilder);
+        str = replace(str, "SongPK", "", -1, stringBuilder);
+        str = replace(str, "KrazyWap", "", -1, stringBuilder);
+        str = replace(str, ".link", "", -1, stringBuilder);
+        str = replace(str, "MobMaza", "", -1, stringBuilder);
+        str = replace(str, "Mobway", "", -1, stringBuilder);
+        str = replace(str, "youtube", "", -1, stringBuilder);
+        str = replace(str, "MP3Juices", "", -1, stringBuilder);
+
+        str = replace(str, "+", "", -1, stringBuilder);
+        str = replace(str, ".name", "", -1, stringBuilder);
+        str = replace(str, "^0[1-9] ", "", -1, stringBuilder);
+        str = replace(str, ".pk", "", -1, stringBuilder);
+        str = replace(str, ".in", "", -1, stringBuilder);
+        str = replace(str, "-", "", -1, stringBuilder);
+        str = replace(str, ".Com", "", -1, stringBuilder);
+        str = replace(str, ".net", "", -1, stringBuilder);
+        str = replace(str, ".", "", -1, stringBuilder);
+        str = replace(str, ":", "", -1, stringBuilder);
+        str = replace(str, ".fm", "", -1, stringBuilder);
+        str = replace(str, "_", "", -1, stringBuilder);
+        str = replace(str, ".In", "", -1, stringBuilder);
+        str = replace(str, ".Net", "", -1, stringBuilder);
+        str = replace(str, "()", "", -1, stringBuilder);
+
+
+        return str;
+    }
+
+    public static String replace(final String text, final String searchString, final String replacement, int max, StringBuilder stringBuilder) {
+
+        stringBuilder.setLength(0);
+        if (TextUtils.isEmpty(text) || TextUtils.isEmpty(searchString) || replacement == null || max == 0) {
+            return text;
+        }
+
+        int start = 0;
+        int end = text.indexOf(searchString, start);
+        if (end < 0) {
+            return text;
+        }
+        final int replLength = searchString.length();
+        int increase = replacement.length() - replLength;
+        increase = increase < 0 ? 0 : increase;
+        increase *= max < 0 ? 16 : max > 64 ? 64 : max;
+
+        stringBuilder.ensureCapacity(text.length() + increase);
+        while (end > 0) {
+            stringBuilder.append(text.substring(start, end)).append(replacement);
+            start = end + replLength;
+            if (--max == 0) {
+                break;
+            }
+            end = text.indexOf(searchString, start);
+        }
+        stringBuilder.append(text.substring(start));
+        return stringBuilder.toString();
     }
 
     @Override
