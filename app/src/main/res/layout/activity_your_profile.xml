@@ -24,4 +24,7 @@
         app:viewpager_imageHeaderDarkLayerAlpha="0.2"
         app:viewpager_pagerTitleStrip="@layout/tabstrip"
         app:viewpager_parallaxHeaderFactor="1.5" />
+
+
+
 </android.support.design.widget.CoordinatorLayout>

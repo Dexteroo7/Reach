@@ -27,6 +27,9 @@
     <item name="selected_item_bg_color" type="color">#AAf33b5b</item>
     <item name="pressed_item_bg_color" type="color">#55f33b5b</item>
     <item name="overlay_image_color" type="color">#77000000</item>
+    <item name="primary_text" type="color">#212121</item>
+    <item name="secondary_text" type="color">#727272</item>
+    <item name="tertiary_text" type="color">#B6B6B6</item>
 
 
 </resources> 

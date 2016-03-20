@@ -124,7 +124,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
 
 //        Log.i("Ayush", "Re-binding recent " + item.applicationName);
         if (shouldShowCoach1 && holder.getAdapterPosition() == 0) {
-            /*Log.d("Ashish", "tourGuide.playOn");
+            Log.d("Ashish", "tourGuide.playOn");
             final ToolTip toolTip = new ToolTip()
                     .setTextColor(Color.WHITE)
                     .setTitle("Manage privacy")
@@ -136,7 +136,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
             tourGuide = TourGuide.init((Activity) holder.itemView.getContext()).with(TourGuide.Technique.Click)
                     .setToolTip(toolTip)
                     .setOverlay(overlay)
-                    .playOn(holder.itemView);*/
+                    .playOn(holder.itemView);
             SharedPrefUtils.setMyProfileCoach1Seen(sharedPreferences);
             shouldShowCoach1 = false;
         }

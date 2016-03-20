@@ -45,24 +45,5 @@
         </menu>
 
         </item>
-    <!--<group
-        android:visible="false"
-        android:checkableBehavior="single">
-        <item
-            android:id="@+id/show_all"
-            android:checked="true"
-            android:title="Show all files"
-            app:showAsAction="never"
-            />
-        <item
-            android:id="@+id/show_visible"
-            android:title="Show visible files"
-            app:showAsAction="never"
-            />
-        <item
-            android:id="@+id/show_invisible"
-            android:title="Show invisible files"
-            app:showAsAction="never"
-            />
-    </group>-->
+
 </menu>

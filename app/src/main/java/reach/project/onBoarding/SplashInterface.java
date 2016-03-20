@@ -22,4 +22,6 @@ public interface SplashInterface {
                     String oldCoverPicId,
                     Uri newProfilePicUri,
                     Uri newCoverPicUri);
+
+    void onOpenPrivacySettings();
 }

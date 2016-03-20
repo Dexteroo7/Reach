@@ -14,6 +14,7 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
@@ -30,6 +31,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
+import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -42,6 +44,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     private static final String TAG = ApplicationFragment.class.getSimpleName();
     private static long userId = 0;
+    private ProgressBar mLoadingProgress;
 
     public static ApplicationFragment getInstance(String header) {
 
@@ -105,6 +108,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         userId = SharedPrefUtils.getServerId(preferences);
+        mLoadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
+        mLoadingProgress.setVisibility(View.VISIBLE);
 
         new GetApplications(this).executeOnExecutor(visibilityHandler, activity);
 
@@ -141,6 +146,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
 
+                fragment.mLoadingProgress.setVisibility(View.GONE);
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllApps(pair.first);
                     fragment.parentAdapter.updateRecentApps(pair.second);

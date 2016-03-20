@@ -510,8 +510,9 @@ public enum SongCursorHelper {
                     throw new IllegalStateException("Plz set all metaHashes");
 
                 final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
-                //default to true if no old state found
-                input.visibility(oldStates == null || oldStates.contains(ContentType.State.VISIBLE));
+                //do not change visibility if not found
+                if (oldStates != null)
+                    input.visibility(oldStates.contains(ContentType.State.VISIBLE));
                 //default to false if no old state found
                 input.isLiked(oldStates != null && oldStates.contains(ContentType.State.LIKED));
 
