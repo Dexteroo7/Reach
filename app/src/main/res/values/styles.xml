@@ -21,11 +21,12 @@
         <item name="colorPrimaryDark">@color/reach_dark</item>
         <item name="colorAccent">@color/reach_color</item>
         <!--<item name="actionOverflowMenuStyle">@style/OverflowMenu</item>-->
-
     </style>
 
-    <style name="SplashTheme" parent="AppTheme">
+    <style name= "SplashTheme" parent= "AppTheme">
         <item name="android:windowBackground">@drawable/splash_bg</item>
+        <item name="actionMenuTextColor">@color/white</item>
+        <item name="android:actionMenuTextColor">@color/white</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

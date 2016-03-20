@@ -53,6 +53,7 @@ import reach.project.utils.viewHelpers.HandOverMessage;
 // Fragment which displays songs of the user
 public class MyLibraryFragment extends Fragment implements HandOverMessage, LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String TAG = MyLibraryFragment.class.getSimpleName();
     private static long myUserId = 0;
     private EmptyRecyclerView mRecyclerView;
     private View emptyView;
@@ -86,6 +87,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         emptyViewText.setText("Dawg");
         emptyView = rootView.findViewById(R.id.empty_imageView);
 
+
         mRecyclerView.setEmptyView(emptyView);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
 
@@ -97,7 +99,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         return rootView;
     }
 
-
+    
     @Override
     public void onDestroyView() {
 

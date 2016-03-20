@@ -3,7 +3,6 @@ package reach.project.onBoarding;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -40,12 +39,9 @@ import com.google.common.hash.HashingInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +56,6 @@ import okio.BufferedSink;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.apps.AppCursorHelper;
-import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.music.Song;
@@ -72,8 +67,6 @@ import reach.project.utils.FireOnce;
 import reach.project.utils.KeyValuePair;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ancillaryClasses.UseActivityWithResult;
-import reach.project.utils.ancillaryClasses.UseContext;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class ScanFragment extends Fragment {
@@ -84,21 +77,20 @@ public class ScanFragment extends Fragment {
     private static final String PROFILE_PHOTO_ID = "PROFILE_PHOTO_ID";
     private static final String COVER_PHOTO_URI = "COVER_PHOTO_URI";
     private static final String PROFILE_PHOTO_URI = "PROFILE_PHOTO_URI";
-    private static final String OLD_USER_STATES = "OLD_USER_STATES";
 
     private static final ResizeOptions PROFILE_PHOTO_RESIZE = new ResizeOptions(150, 150);
     private static final ResizeOptions COVER_PHOTO_RESIZE = new ResizeOptions(500, 300);
 
     @Nullable
     private static WeakReference<ScanFragment> reference = null;
+    private SplashInterface mListener;
 
     public static ScanFragment newInstance(String name,
                                            long oldUserId,
                                            String oldProfilePicId,
                                            String oldCoverPicId,
                                            Uri newProfilePicUri,
-                                           Uri newCoverPicUri,
-                                           Serializable contentState) {
+                                           Uri newCoverPicUri) {
 
         final Bundle args;
         final ScanFragment fragment;
@@ -112,7 +104,6 @@ public class ScanFragment extends Fragment {
         args.putString(COVER_PHOTO_ID, oldCoverPicId);
         args.putParcelable(PROFILE_PHOTO_URI, newProfilePicUri);
         args.putParcelable(COVER_PHOTO_URI, newCoverPicUri);
-        args.putSerializable(OLD_USER_STATES, contentState);
         return fragment;
     }
 
@@ -200,11 +191,9 @@ public class ScanFragment extends Fragment {
                         rootView.findViewById(R.id.scan1), //5
                         rootView.findViewById(R.id.scan2), //6
                         onboardingData,//7
-                        arguments.getSerializable(OLD_USER_STATES), //8
-                        arguments.getLong(OLD_USER_ID, 0), //9
-                        profilePicUri,//10
-                        rootView.findViewById(R.id.indeterminateProgress)
-                        );
+                        arguments.getLong(OLD_USER_ID, 0), //8
+                        profilePicUri,//9
+                        rootView.findViewById(R.id.indeterminateProgress)); //10
 
         return rootView;
     }
@@ -235,7 +224,6 @@ public class ScanFragment extends Fragment {
             publishProgress();
         };
 
-        @SuppressWarnings("StaticPseudoFunctionalStyleMethod")
         @Override
         protected Long doInBackground(Object... objects) {
 
@@ -248,10 +236,9 @@ public class ScanFragment extends Fragment {
             this.switchLayout2 = (LinearLayout) objects[6];
 
             final OnboardingData onboardingData = (OnboardingData) objects[7];
-            final EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>> stateTable = (EnumMap<ContentType, Map<String, EnumSet<ContentType.State>>>) objects[8];
-            final long olderUserId = (long) objects[9];
-            final Uri profilePhotoUri = (Uri) objects[10];
-            this.indeterminateProgress = (ProgressBar) objects[11];
+            final long olderUserId = (long) objects[8];
+            final Uri profilePhotoUri = (Uri) objects[9];
+            this.indeterminateProgress = (ProgressBar) objects[10];
 
             //get song cursor
             final Cursor musicCursor = MiscUtils.useContextFromFragment(reference, activity -> {
@@ -278,10 +265,10 @@ public class ScanFragment extends Fragment {
             final List<Song> deviceSongs = MiscUtils.useContextFromFragment(reference, activity -> {
                 return SongCursorHelper.getSongs(
                         musicCursor,
-                        stateTable == null ? Collections.emptyMap() : stateTable.get(ContentType.MUSIC),
                         olderUserId,
                         activity.getContentResolver(),
                         genres,
+                        AccountCreation.OLD_STATES.get(ContentType.MUSIC),
                         songProcessCounter);
             }).or(Collections.emptyList());
 
@@ -291,11 +278,11 @@ public class ScanFragment extends Fragment {
                         installedApps,
                         activity.getPackageManager(),
                         appProcessCounter,
-                        stateTable == null ? Collections.emptyMap() : stateTable.get(ContentType.APP));
+                        AccountCreation.OLD_STATES.get(ContentType.APP));
             }).or(Collections.emptyList());
 
             /*totalMusic = totalApps = totalExpected;*/
-            totalExpected = totalApps +totalMusic;
+            totalExpected = totalApps + totalMusic;
             publishProgress();
 
             //we will post this
@@ -341,12 +328,6 @@ public class ScanFragment extends Fragment {
                     .post(requestBody)
                     .build();
 
-            /*MiscUtils.runOnUiThreadFragment(reference, new UseContext() {
-                @Override
-                public void work(Context context) {
-                    indeterminateProgress.setVisibility(View.VISIBLE);
-                }
-            });*/
             final long serverId;
             try {
                 final Response response = ReachApplication.OK_HTTP_CLIENT.newCall(request).execute();
@@ -368,38 +349,39 @@ public class ScanFragment extends Fragment {
             for (int index = 0; index < deviceSongs.size(); index++)
                 contentValues[index] = SongHelper.contentValuesCreator(deviceSongs.get(index), serverId);
 
-            final WeakReference<Context> contextWeakReference =
-                    MiscUtils.useContextFromFragment(reference, (UseActivityWithResult<Activity, WeakReference<Context>>) activity -> {
+            MiscUtils.useContextFromFragment(reference, activity -> {
 
-                        //save the songs
-                        final int count = activity.getContentResolver().bulkInsert(
-                                SongProvider.CONTENT_URI,
-                                contentValues);
-                        Log.i("Ayush", "Inserted " + count + " songs");
+                //save the songs
+                final int count = activity.getContentResolver().bulkInsert(
+                        SongProvider.CONTENT_URI,
+                        contentValues);
+                Log.i("Ayush", "Inserted " + count + " songs");
 
-                        //store the user details
-                        final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                        SharedPrefUtils.storeReachUser(
-                                preferences,
-                                accountCreationData.onboardingData,
-                                "",
-                                imageHashBitmapPair != null ? imageHashBitmapPair.first : "",
-                                serverId);
+                //store the user details
+                final SharedPreferences preferences = activity.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+                Map<String, Boolean> visibilityMap = MiscUtils.getMap(100);
+                for (App app : deviceApps)
+                    visibilityMap.put(app.packageName, app.visible);
+                SharedPrefUtils.overWritePackageVisibility(preferences, visibilityMap);
+                SharedPrefUtils.storeReachUser(
+                        preferences,
+                        accountCreationData.onboardingData,
+                        "",
+                        imageHashBitmapPair != null ? imageHashBitmapPair.first : "",
+                        serverId);
 
-                        return new WeakReference<>(activity);
+                //sync up contacts
+                FireOnce.contactSync(
+                        new WeakReference<>(activity),
+                        serverId,
+                        onboardingData.phoneNumber);
 
-                    }).orNull();
+                //sync up gcmId
+                FireOnce.checkGCM(
+                        new WeakReference<>(activity),
+                        serverId);
 
-            //sync up contacts
-            FireOnce.contactSync(
-                    contextWeakReference,
-                    serverId,
-                    onboardingData.phoneNumber);
-
-            //sync up gcmId
-            FireOnce.checkGCM(
-                    contextWeakReference,
-                    serverId);
+            });
 
             Log.i("Ayush", "Id received = " + serverId);
             return serverId;
@@ -417,14 +399,14 @@ public class ScanFragment extends Fragment {
 
                 final Tracker tracker = ((ReachApplication) activity.getApplication()).getTracker();
                 tracker.setScreenName(AccountCreation.class.getPackage().getName());
-                if (serverId != 0) {
+                if (serverId > 0) {
 
                     tracker.set("&uid", serverId + "");
                     tracker.send(new HitBuilders.ScreenViewBuilder().setCustomDimension(1, serverId + "").build());
 
                     indeterminateProgress.setVisibility(View.INVISIBLE);
 
-                    finishOnBoarding.setText("CLICK TO PROCEED");
+                    finishOnBoarding.setText("MANAGE PRIVACY");
                     finishOnBoarding.setTextColor(ContextCompat.getColor(activity, R.color.reach_color));
                     finishOnBoarding.setOnClickListener(PROCEED);
                     finishOnBoarding.setVisibility(View.VISIBLE);
@@ -445,6 +427,7 @@ public class ScanFragment extends Fragment {
 
         @Override
         protected void onProgressUpdate(Void... values) {
+
             super.onProgressUpdate(values);
 
             final int currentTotal = totalApps + totalMusic;
@@ -455,81 +438,24 @@ public class ScanFragment extends Fragment {
 
             if (totalExpected > currentTotal)
                 scanProgress.setProgress((currentTotal * 100) / totalExpected);
-           else {
+            else {
                 switchLayout1.setVisibility(View.INVISIBLE);
                 switchLayout2.setVisibility(View.VISIBLE);
                 scanProgress.setProgress(100);
                 indeterminateProgress.setVisibility(View.VISIBLE);
             }//error case
         }
-
-//        //TODO make static :(
-//        private final Messenger messenger = new Messenger(new Handler(new Handler.Callback() {
-//
-//            @Override
-//            public boolean handleMessage(Message message) {
-//
-//                if (message == null)
-//                    return false;
-//
-//                if (message.what == MetaDataScanner.FINISHED) {
-//
-//
-//                } else if (message.what == MetaDataScanner.SCANNING_MUSIC) {
-//
-//                    totalMusic = message.arg1;
-//                    Log.d("Ayush", totalMusic + "," + totalApps);
-//
-//                    totalFiles = totalMusic + totalApps;
-//                    scanCount.setText(totalFiles + "");
-//
-//                    if (totalExpected > totalFiles)
-//                        scanProgress.setProgress((totalFiles * 100) / totalExpected);
-//                    else
-//                        scanProgress.setProgress(100); //error case
-//
-//                } else if (message.what == MetaDataScanner.SCANNING_APPS) {
-//
-//                    totalApps = message.arg1;
-//                    Log.d("Ayush", totalMusic + "," + totalApps);
-//
-//                    totalFiles = totalMusic + totalApps;
-//                    scanCount.setText(totalFiles + "");
-//
-//                    if (totalExpected > totalFiles)
-//                        scanProgress.setProgress((totalFiles * 100) / totalExpected);
-//                    else
-//                        scanProgress.setProgress(100); //error case
-//
-//                } else if (message.what == MetaDataScanner.UPLOADING) {
-//
-//                    Log.d("Ayush", totalMusic + "," + totalApps);
-//                    totalFiles = totalMusic + totalApps;
-//                    scanCount.setText(totalFiles + "");
-//                    musicCount.setText(totalMusic + "");
-//                    appCount.setText(totalApps + "");
-//
-//                    switchLayout1.setVisibility(View.INVISIBLE);
-//                    switchLayout2.setVisibility(View.VISIBLE);
-//                    scanProgress.setProgress(100);
-//
-//                } else if (message.what == MetaDataScanner.TOTAL_EXPECTED) {
-//
-//                    totalExpected = message.arg1;
-//                }
-//
-//                return true;
-//            }
-//        }));
     }
 
     private static final View.OnClickListener PROCEED = v -> MiscUtils.useFragment(reference, fragment -> {
 
-        final Activity activity = fragment.getActivity();
+        //mListener
+        fragment.mListener.onOpenPrivacySettings();
+        /*final Activity activity = fragment.getActivity();
         final Intent intent = new Intent(activity, ReachActivity.class);
         intent.setAction(ReachActivity.OPEN_MY_PROFILE_APPS_FIRST);
         activity.startActivity(intent);
-        activity.finish();
+        activity.finish();*/
     });
 
     private static Pair<String, Bitmap> getImageHashBitmapPair(@Nullable Uri profilePhotoUri) {
@@ -577,4 +503,22 @@ public class ScanFragment extends Fragment {
         } else
             return null;
     }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            mListener = (SplashInterface) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                 + " must implement SplashInterface");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
 }

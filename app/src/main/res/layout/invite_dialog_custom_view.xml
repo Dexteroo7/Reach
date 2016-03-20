@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/inviteImage"
+        android:layout_width="200dp"
+        android:layout_height="120dp"
+        app:actualImageScaleType="fitCenter"
+        android:layout_centerHorizontal="true"
+        app:placeholderImage="@drawable/cover_large"
+        android:layout_marginTop="16dp"
+        />
+
+    <TextView
+        android:layout_below="@id/inviteImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/inviteText"
+        android:text="Reach is more fun with friends.\nInvite them and discover their collection."
+        android:gravity="center_horizontal"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:textColor="@color/secondary_text"
+        />
+
+    <Button
+        android:id="@+id/inviteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:background="@null"
+        android:textColor="@color/reach_color"
+        android:layout_below="@id/inviteText"
+        android:layout_centerHorizontal="true"
+        android:text="Invite"
+        android:layout_alignParentRight="true"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:layout_marginBottom="16dp"
+        />
+
+    <Button
+        android:id="@+id/skipButton"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:background="@null"
+        android:textColor="@color/secondary_text"
+        android:layout_below="@id/inviteText"
+        android:layout_centerHorizontal="true"
+        android:text="Skip"
+        android:layout_toLeftOf="@id/inviteButton"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:layout_marginBottom="16dp"
+        />
+
+</RelativeLayout>

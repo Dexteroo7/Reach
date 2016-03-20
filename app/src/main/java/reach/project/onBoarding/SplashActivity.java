@@ -37,6 +37,7 @@ import reach.project.R;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
+import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.pacemaker.Pacemaker;
 import reach.project.utils.FireOnce;
 import reach.project.utils.MetaDataScanner;
@@ -247,6 +248,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     @Override
     public void onOpenAccountCreation(Optional<UserDataPersistence> container) {
+
         if (isFinishing())
             return;
         try {
@@ -256,7 +258,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         } catch (IllegalStateException ignored) {
             finish();
         }
-
     }
 
     @Override
@@ -265,8 +266,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                            String oldProfilePicId,
                            String oldCoverPicId,
                            Uri newProfilePicUri,
-                           Uri newCoverPicUri,
-                           Serializable contentState) {
+                           Uri newCoverPicUri) {
 
         if (isFinishing())
             return;
@@ -278,11 +278,25 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                             oldProfilePicId,
                             oldCoverPicId,
                             newProfilePicUri,
-                            newCoverPicUri,
-                            contentState)).commit();
+                            newCoverPicUri)).commit();
         } catch (IllegalStateException ignored) {
             finish();
         }
+    }
+
+    @Override
+    public void onOpenPrivacySettings() {
+
+        if (isFinishing())
+            return;
+        try {
+            getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.slide_in_right,
+                    R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+                    .replace(R.id.splashLayout, new MyProfileFragment()).commit();
+        } catch (IllegalStateException ignored) {
+            finish();
+        }
+
     }
 
     /**

@@ -71,6 +71,7 @@ public class SongProvider extends ContentProvider {
         }
 
         //TODO: Check whether it should be readable database
+
         final SQLiteDatabase db = songHelper.getWritableDatabase();
         final Cursor cursor = queryBuilder.query(db, projection, selection,
                 selectionArgs, null, null, sortOrder);

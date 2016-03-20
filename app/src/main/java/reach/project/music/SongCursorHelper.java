@@ -357,7 +357,7 @@ public enum SongCursorHelper {
         return file.exists() && file.isFile() && file.length() > 0;
     }
 
-    private static boolean filter(String name) {
+    private static boolean isPersonal(String name) {
 
         return TextUtils.isEmpty(name) ||
                 (name.startsWith("AUD") ||
@@ -369,30 +369,22 @@ public enum SongCursorHelper {
     /////////////////////////////////////////
 
     public static List<Song> getSongs(@Nullable Cursor musicCursor,
-                                      @Nonnull Map<String, EnumSet<ContentType.State>> oldStates,
-                                      long serverId,
 
+                                      long serverId,
                                       @Nonnull ContentResolver contentResolver,
                                       @Nonnull Set<String> fillGenres,
+                                      @Nonnull Map<String, EnumSet<ContentType.State>> oldStates,
                                       @Nonnull HandOverMessage<Integer> handOverMessage) {
 
-        if (musicCursor == null) {
+        if (musicCursor == null || musicCursor.getCount() == 0 || serverId <= 0) {
 
             Log.i("Ayush", "Meta-data sync failed");
             return Collections.emptyList();
         } else {
 
-            //set up the function
-            final Function<Song.Builder, Song.Builder> songHashFixer;
-            final Function<Song.Builder, Song.Builder> oldStatePersister;
-            if (serverId > 0)
-                songHashFixer = getSongHashFixer(serverId);
-            else
-                songHashFixer = Functions.identity();
-            if (serverId > 0 && oldStates.size() > 0)
-                oldStatePersister = getOldStatePersister(oldStates);
-            else
-                oldStatePersister = Functions.identity();
+            final Function<Song.Builder, Song.Builder> fixer = Functions.compose(
+                    getOldStatePersister(oldStates), //second function to apply
+                    getSongHashFixer(serverId)); //first function to apply
 
             int counter = 0;
             final List<Song> toReturn = new ArrayList<>(musicCursor.getCount());
@@ -402,10 +394,8 @@ public enum SongCursorHelper {
                 Song.Builder songBuilder = SongCursorHelper.ANDROID_SONG_HELPER.parse(musicCursor);
                 //apply default visibility
                 songBuilder = DEFAULT_VISIBILITY.apply(songBuilder);
-                //fix song hash
-                songBuilder = songHashFixer.apply(songBuilder);
-                //apply oldState
-                songBuilder = oldStatePersister.apply(songBuilder);
+                //fix song hash and apply oldState
+                songBuilder = fixer.apply(songBuilder);
 
                 if (songBuilder != null) {
 
@@ -420,7 +410,44 @@ public enum SongCursorHelper {
         }
     }
 
-    public static final Function<Song.Builder, Song.Builder> DEFAULT_VISIBILITY = new Function<Song.Builder, Song.Builder>() {
+    public static List<Song> getSongs(@Nullable Cursor musicCursor,
+
+                                      long serverId,
+                                      @Nonnull ContentResolver contentResolver,
+                                      @Nonnull Set<String> fillGenres) {
+
+        if (musicCursor == null || musicCursor.getCount() == 0 || serverId <= 0) {
+
+            Log.i("Ayush", "Meta-data sync failed");
+            return Collections.emptyList();
+        } else {
+
+            //set up the function
+            final Function<Song.Builder, Song.Builder> songHashFixer = getSongHashFixer(serverId);
+
+            final List<Song> toReturn = new ArrayList<>(musicCursor.getCount());
+            while (musicCursor.moveToNext()) {
+
+                //get the songBuilder
+                Song.Builder songBuilder = SongCursorHelper.ANDROID_SONG_HELPER.parse(musicCursor);
+                //apply default visibility
+                songBuilder = DEFAULT_VISIBILITY.apply(songBuilder);
+                //fix song hash
+                songBuilder = songHashFixer.apply(songBuilder);
+
+                if (songBuilder != null) {
+
+                    setGenres(songBuilder, fillGenres, contentResolver);
+                    toReturn.add(songBuilder.build());
+                }
+            }
+
+            musicCursor.close();
+            return toReturn;
+        }
+    }
+
+    private static final Function<Song.Builder, Song.Builder> DEFAULT_VISIBILITY = new Function<Song.Builder, Song.Builder>() {
 
         @Nullable
         @Override
@@ -429,22 +456,19 @@ public enum SongCursorHelper {
             if (builder == null)
                 return null;
 
-            final boolean hide;
-            if (builder.size > 100 * 1024 * 1024 || //100mb big file
-                    builder.duration > 60 * 60 * 1000 || //1hour big file
-                    builder.size < 400 * 1024 || //400kb very small file
-                    builder.duration < 40 * 1000) //40 seconds very small file
-                hide = true;
-            else {
+            final boolean hideBySize =
+                    builder.size > 100 * 1024 * 1024 ||  //100mb big file
+                            builder.duration > 60 * 60 * 1000 || //1hour big file
+                            builder.size < 500 * 1024 ||         //500kb very small file
+                            builder.duration < 50 * 1000;        //50 seconds very small file
 
-                final String displayName = builder.displayName;
-                final String actualName = builder.actualName;
-                final String albumName = builder.album;
-                final String artistName = builder.artist;
-                hide = filter(displayName) && filter(actualName) && filter(albumName) && filter(artistName);
-            }
+            final boolean hideByName =
+                    isPersonal(builder.displayName) ||
+                            isPersonal(builder.actualName) ||
+                            isPersonal(builder.album) ||
+                            isPersonal(builder.artist);
 
-            if (hide)
+            if (hideByName || hideBySize)
                 builder.visibility(false);
             else
                 builder.visibility(true);
@@ -453,17 +477,17 @@ public enum SongCursorHelper {
         }
     };
 
-    public static Function<Song.Builder, Song.Builder> getSongHashFixer(final long serverId) {
+    private static Function<Song.Builder, Song.Builder> getSongHashFixer(final long serverId) {
 
         return new Function<Song.Builder, Song.Builder>() {
             @Nullable
             @Override
             public Song.Builder apply(@Nullable Song.Builder song) {
 
-                //set only if not present
                 if (song == null)
                     return null;
 
+                //set only if not present
                 if (TextUtils.isEmpty(song.fileHash) || song.fileHash.equals("hello_world"))
                     song.fileHash(MiscUtils.calculateSongHash(serverId, song.duration, song.size, song.displayName, Hashing.sipHash24()));
                 return song;
@@ -486,7 +510,10 @@ public enum SongCursorHelper {
                     throw new IllegalStateException("Plz set all metaHashes");
 
                 final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
-                input.visibility(oldStates == null || oldStates.contains(ContentType.State.VISIBLE));
+                //do not change visibility if not found
+                if (oldStates != null)
+                    input.visibility(oldStates.contains(ContentType.State.VISIBLE));
+                //default to false if no old state found
                 input.isLiked(oldStates != null && oldStates.contains(ContentType.State.LIKED));
 
                 return input;
@@ -494,26 +521,25 @@ public enum SongCursorHelper {
         };
     }
 
+    private static final String[] GENRES_PROJECTION = {
+            MediaStore.Audio.Genres.NAME,
+            MediaStore.Audio.Genres._ID};
+
     /**
      * This method will set the required genres in the builder
-     * and return the found genres in a list
+     * and return the found genres in a set
      *
      * @param resolver ContentResolver
      */
-    public static void setGenres(@Nonnull Song.Builder songBuilder,
-                                 @Nonnull Set<String> fillHere,
-                                 @Nonnull ContentResolver resolver) {
-
-        final String[] genresProjection = {
-                MediaStore.Audio.Genres.NAME,
-                MediaStore.Audio.Genres._ID};
-        final Set<String> totalGenres = MiscUtils.getSet(5);
+    private static void setGenres(@Nonnull Song.Builder songBuilder,
+                                  @Nonnull Set<String> fillHere,
+                                  @Nonnull ContentResolver resolver) {
 
         final Cursor genresCursor = resolver.query(
                 MediaStore.Audio.Genres.getContentUriForAudioId("external", songBuilder.songId.intValue()),
-                genresProjection, null, null, null);
+                GENRES_PROJECTION, null, null, null);
 
-        if (genresCursor != null && genresCursor.moveToFirst()) {
+        if (genresCursor != null && genresCursor.getCount() > 0) {
 
             String currentGenres = "";
             while (genresCursor.moveToNext()) {
@@ -523,24 +549,16 @@ public enum SongCursorHelper {
                     genre = genre.trim();
                 if (!TextUtils.isEmpty(genre)) {
 
-                    totalGenres.add(genre);
+                    fillHere.add(genre);
                     currentGenres += genre + "\t";
                 }
             }
-            songBuilder.genre(currentGenres);
+
+            if (!TextUtils.isEmpty(currentGenres))
+                songBuilder.genre(currentGenres);
         }
 
         if (genresCursor != null)
             genresCursor.close();
-
-        fillHere.addAll(totalGenres);
     }
-
-    public static final Function<Song.Builder, Song> SONG_BUILDER = new Function<Song.Builder, Song>() {
-        @Nullable
-        @Override
-        public Song apply(@Nullable Song.Builder input) {
-            return input != null ? input.build() : null;
-        }
-    };
 }

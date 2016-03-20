@@ -31,6 +31,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicViewInfo;
  */
 class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
+    private static final String TAG = ExploreAdapter.class.getSimpleName() ;
     private final Explore explore;
     private final HandOverMessage<Integer> handOverMessage;
 
@@ -169,6 +170,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                     final String miscImage = MiscUtils.get(miscViewInfo, AppViewInfo.LARGE_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(miscImage))
+                        Log.d(TAG, "Misc Image URI = " + miscImage);
                         image.setController(MiscUtils.getControllerResize(image.getController(),
                                 Uri.parse(miscImage), ExploreFragment.SMALL_IMAGE_SIZE));
                     break;
@@ -333,9 +335,12 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             ((ImageView) view).setImageResource(R.drawable.icon_downloading_active);
             final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
             animator.setDuration(300);
-            animator.addUpdateListener(animation -> {
-                final int val = (int) animation.getAnimatedValue();
-                view.setPadding(val, val, val, val);
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    final int val = (int) animation.getAnimatedValue();
+                    view.setPadding(val, val, val, val);
+                }
             });
             animator.setInterpolator(new AccelerateInterpolator());
             animator.start();

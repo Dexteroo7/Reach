@@ -14,6 +14,7 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.github.florent37.materialviewpager.MaterialViewPagerHelper;
@@ -30,6 +31,7 @@ import javax.annotation.Nonnull;
 import reach.project.R;
 import reach.project.apps.App;
 import reach.project.core.StaticData;
+import reach.project.coreViews.myProfile.MyProfileFragment;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
@@ -40,7 +42,9 @@ import reach.project.utils.viewHelpers.HandOverMessage;
  */
 public class ApplicationFragment extends Fragment implements HandOverMessage<App> {
 
+    private static final String TAG = ApplicationFragment.class.getSimpleName();
     private static long userId = 0;
+    private ProgressBar mLoadingProgress;
 
     public static ApplicationFragment getInstance(String header) {
 
@@ -61,24 +65,30 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
     public void handOverMessage(@Nonnull App message) {
 
-        if (preferences == null || parentAdapter == null)
-            return;
+        try {
+            if (preferences == null || parentAdapter == null)
+                return;
 
-        final String packageName = message.packageName;
-        final boolean newVisibility = !parentAdapter.isVisible(packageName);
+            final String packageName = message.packageName;
+            final boolean newVisibility = !parentAdapter.isVisible(packageName);
 
-        //update in memory
-        synchronized (parentAdapter.packageVisibility) {
-            parentAdapter.packageVisibility.put(packageName, newVisibility);
-        }
-        //update in disk
-        SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
-        //update on server
-        new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
+            //update in memory
+            synchronized (parentAdapter.packageVisibility) {
+                parentAdapter.packageVisibility.put(packageName, newVisibility);
+            }
+            //update in disk
+            SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
+            //update on server
+            new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
 
-        //notify that visibility has changed
-        parentAdapter.visibilityChanged(packageName);
+            //notify that visibility has changed
+            parentAdapter.visibilityChanged(packageName);
 //        Toast.makeText(getContext(), "Clicked on " + message.applicationName, Toast.LENGTH_SHORT).show();
+
+        }
+        catch (Exception e){
+            Log.e(TAG, "Unidentified error in myprofile -> apps, Exception = " + e.toString() );
+        }
     }
 
     @Nullable
@@ -98,6 +108,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
         mRecyclerView.setAdapter(parentAdapter);
         MaterialViewPagerHelper.registerRecyclerView(activity, mRecyclerView, null);
         userId = SharedPrefUtils.getServerId(preferences);
+        mLoadingProgress = (ProgressBar) rootView.findViewById(R.id.loadingProgress);
+        mLoadingProgress.setVisibility(View.VISIBLE);
 
         new GetApplications(this).executeOnExecutor(visibilityHandler, activity);
 
@@ -134,6 +146,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
 
             MiscUtils.useFragment(applicationFragmentWeakReference, fragment -> {
 
+                fragment.mLoadingProgress.setVisibility(View.GONE);
                 if (fragment.parentAdapter != null) {
                     fragment.parentAdapter.updateAllApps(pair.first);
                     fragment.parentAdapter.updateRecentApps(pair.second);
