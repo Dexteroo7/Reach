@@ -33,7 +33,6 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crittercism.app.Crittercism;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
@@ -301,8 +300,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         } catch (JSONException ignored) {
         }
 
-        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
-                SharedPrefUtils.getPhoneNumber(preferences));
+//        Crittercism.setUsername(SharedPrefUtils.getUserName(preferences) + " - " +
+//                SharedPrefUtils.getPhoneNumber(preferences));
 
         ////////////////////////////////////////
 
