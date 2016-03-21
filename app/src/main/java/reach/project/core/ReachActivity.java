@@ -2,6 +2,7 @@ package reach.project.core;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentCallbacks2;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
@@ -32,7 +34,6 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
@@ -78,7 +79,7 @@ import reach.project.utils.viewHelpers.PagerFragment;
 
 //import reach.project.coreViews.myProfile.MyProfileFragment;
 
-public class ReachActivity extends AppCompatActivity implements SuperInterface {
+public class ReachActivity extends AppCompatActivity implements SuperInterface, ComponentCallbacks2 {
 
     private static final String TAG = ReachActivity.class.getSimpleName();
     private static final String TAB_POSITION_KEY = "tab_position";
@@ -194,6 +195,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             }
 
             case R.id.player_button:
+                ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Player button on action bar clicked")
+                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                        .setValue(1)
+                        .build());
                 PlayerActivity.openActivity(this);
                 return true;
             case R.id.notif_button:
@@ -637,6 +644,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
             @Override
             public void onClick(View v) {
                 putInviteDialogValueInSharedPref(false);
+                ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Invite button in dialog clicked")
+                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                        .setValue(1)
+                        .build());
                 startActivity(new Intent(ReachActivity.this, InviteActivity.class));
                 if(inviteDialog!=null)
                     inviteDialog.dismiss();
@@ -681,6 +694,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
         alertDialogBuilder.setView(vv);
         inviteDialog = alertDialogBuilder.create();
         inviteDialog.show();
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Invite Dialog is shown")
+                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                .setValue(1)
+                .build());
 
     }
 
@@ -1019,4 +1038,50 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface {
     }
 
 
+    //TODO: Activate with crittercism
+    /*@Override
+    public void onTrimMemory(int level) {
+
+        Debug.MemoryInfo memoryInfo = new Debug.MemoryInfo();
+        Debug.getMemoryInfo(memoryInfo);
+
+        String memMessage = String.format(
+                "Memory: Pss=%.2f MB, Private=%.2f MB, Shared=%.2f MB",
+                memoryInfo.getTotalPss() / 1024.0,
+                memoryInfo.getTotalPrivateDirty() / 1024.0,
+                memoryInfo.getTotalSharedDirty() / 1024.0);
+
+        Crittercism.leaveBreadcrumb(memMessage);
+
+        super.onTrimMemory(level);
+    }*/
+
+    @Override
+    public void onTrimMemory(int level) {
+
+        switch (level){
+
+            case ComponentCallbacks2.TRIM_MEMORY_COMPLETE:
+                Log.d(TAG, "Trim memory status = " + "TRIM_MEMORY_COMPLETE" );
+                break;
+
+            case  ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN:
+                Log.d(TAG, "Trim memory status = " + "TRIM_MEMORY_UI_HIDDEN");
+                break;
+
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW:
+                Log.d(TAG, "Trim memory status = " + "TRIM_MEMORY_RUNNING_LOW" );
+
+                break;
+
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL:
+                Log.d(TAG, "Trim memory status = " + "TRIM_MEMORY_RUNNING_CRITICAL");
+                break;
+
+
+        }
+
+        super.onTrimMemory(level);
+
+    }
 }

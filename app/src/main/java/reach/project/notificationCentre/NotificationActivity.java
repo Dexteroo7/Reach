@@ -51,6 +51,7 @@ public class NotificationActivity extends AppCompatActivity {
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.inviteToolbar);
         mToolbar.setTitle("Notification Center");
         mToolbar.setNavigationOnClickListener(v -> onBackPressed());
+        //TODO: Check which menu items are not required and remove them
         mToolbar.inflateMenu(R.menu.notification_menu);
         mToolbar.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {

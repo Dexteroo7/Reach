@@ -162,6 +162,13 @@ public enum SharedPrefUtils {
         return sharedPreferences.getString("userName", "");
     }
 
+    public synchronized static SharedPreferences getPreferences(Context context) {
+        return context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
+    }
+
+
+
     public synchronized static String getImageId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("imageId", "");
     }

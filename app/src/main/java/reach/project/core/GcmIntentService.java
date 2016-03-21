@@ -38,6 +38,8 @@ import reach.project.utils.SharedPrefUtils;
 
 public class GcmIntentService extends IntentService {
 
+    private static final String TAG = GcmIntentService.class.getSimpleName() ;
+
     public GcmIntentService() {
         // Setting project ID
         super("able-door-616");
@@ -61,6 +63,7 @@ public class GcmIntentService extends IntentService {
         if (intent == null)
             return;
         final Bundle extras = intent.getExtras();
+        //TODO: Check where message type is called and the value of message is stored
         final String messageType = GoogleCloudMessaging.getInstance(this).getMessageType(intent);
 
         if (extras == null || extras.isEmpty() || TextUtils.isEmpty(messageType) ||
@@ -81,8 +84,9 @@ public class GcmIntentService extends IntentService {
             /**
              * Service a permission request
              */
-            if (message.startsWith("PERMISSION_REQUEST")) {
 
+            if (message.startsWith("PERMISSION_REQUEST")) {
+                Log.d(TAG, "Notification type = : " + "PERMISSION_REQUEST" + " , message = " + message);
                 final String[] splitter = message.split("`");
                 final String userName = splitter[2].trim();
 
@@ -112,6 +116,8 @@ public class GcmIntentService extends IntentService {
              */
             if (message.contains("PERMISSION_GRANTED") ||
                     message.contains("PERMISSION_REJECTED")) {
+
+                Log.d(TAG, "Notification type = : " + "PERMISSION_GRANTED or PERMISSION_REJECTED" + " , message = " + message);
 
                 final String[] splitter = message.split("`");
                 final String mType = splitter[0];
@@ -166,6 +172,7 @@ public class GcmIntentService extends IntentService {
              * Service new notification
              */
             else if (message.startsWith("SYNC")) {
+                Log.d(TAG, "Notification type = : " + "SYNC" + " , message = " + message);
 
                 final String count = message.substring(4);
                 final PendingIntent viewPendingIntent = PendingIntent.getActivity(
@@ -195,6 +202,7 @@ public class GcmIntentService extends IntentService {
              * Service manual notification
              */
             else if (message.startsWith("MANUAL")) {
+                Log.d(TAG, "Notification type = : " + "MANUAL" + " , message = " + message);
 
                 final String[] splitter = message.split("`");
 
@@ -250,6 +258,7 @@ public class GcmIntentService extends IntentService {
              * Service PONG
              */
             else if (message.startsWith("PONG")) {
+                Log.d(TAG, "Notification type = : " + "PONG" + " , message = " + message);
 
                 /**
                  * 0 - PONG
@@ -301,6 +310,8 @@ public class GcmIntentService extends IntentService {
              */
             else if (message.startsWith("PING")) {
 
+                Log.d(TAG, "Notification type = : " + "PING" + " , message = " + message);
+
                 //Handle announce
                 final long id = SharedPrefUtils.getServerId(getSharedPreferences("Reach", MODE_PRIVATE));
                 if (id == 0) {
@@ -330,6 +341,7 @@ public class GcmIntentService extends IntentService {
              */
             else if (message.startsWith("CONNECT")) {
 
+                Log.d(TAG, "Notification type = : " + "Connect" + " , message = " + message);
                 //Verify
                 final String actualMessage = message.substring(7);
                 final Connection connection = new Gson().fromJson(actualMessage, Connection.class);
@@ -367,9 +379,11 @@ public class GcmIntentService extends IntentService {
         } else {
             switch (type) {
                 case "CURATED":
+
                     final String heading = extras.getString("heading");
                     final String message = extras.getString("message");
 
+                    Log.d(TAG, "Notification type = : " + "CURATED" + " , message = " + message);
                     final NotificationCompat.Builder notificationBuilder =
                             new NotificationCompat.Builder(this)
                                     .setAutoCancel(true)
