@@ -24,8 +24,6 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.music.Song;
-import reach.project.music.SongCursorHelper;
-import reach.project.music.SongHelper;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ThreadLocalRandom;
@@ -50,7 +48,7 @@ class ParentAdapter extends RecyclerViewMaterialAdapter<RecyclerView.ViewHolder>
     private final HandOverMessage<Integer> handOverMessage = new HandOverMessage<Integer>() {
         @Override
         public void handOverMessage(@Nonnull Integer position) {
-            handOverCursor.handOverMessage((Cursor) getItem(position-1));
+            handOverCursor.handOverMessage((Cursor) getItem(position));
         }
     };
 

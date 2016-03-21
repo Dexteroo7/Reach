@@ -1,10 +1,8 @@
 package reach.project.coreViews.myProfile.apps;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
@@ -21,8 +19,6 @@ import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 import reach.project.utils.viewHelpers.MoreQualifier;
 import reach.project.utils.viewHelpers.SimpleRecyclerAdapter;
-import reach.project.utils.viewHelpers.tourguide.Overlay;
-import reach.project.utils.viewHelpers.tourguide.ToolTip;
 import reach.project.utils.viewHelpers.tourguide.TourGuide;
 
 /**
@@ -110,8 +106,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements
     }
 
     @Override
-    public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new AppItemHolder(itemView, handOverMessage);
+    public AppItemHolder getViewHolder(View itemView) {
+        return new AppItemHolder(itemView, this);
     }
 
     @Override

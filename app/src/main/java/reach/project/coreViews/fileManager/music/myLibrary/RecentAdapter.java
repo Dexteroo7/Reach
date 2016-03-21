@@ -184,7 +184,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
     }
 
     @Override
-    public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
+    public SongItemHolder getViewHolder(View itemView) {
 
         Log.i("Ayush", "Creating ViewHolder " + getClass().getName());
 

@@ -29,8 +29,8 @@ class MoreAdapter extends SimpleRecyclerAdapter<App, AppItemHolder> implements M
     }
 
     @Override
-    public AppItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new AppItemHolder(itemView, handOverMessage);
+    public AppItemHolder getViewHolder(View itemView) {
+        return new AppItemHolder(itemView, this);
     }
 
     @Override

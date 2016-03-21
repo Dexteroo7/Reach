@@ -200,12 +200,6 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
             likeButton.setSelected(currentPlaying.isLiked != null && currentPlaying.isLiked);
         }
 
-        if (SharedPrefUtils.getPlaying(this)) {
-            togglePlayPause(true);
-        } else {
-            togglePlayPause(false);
-        }
-
         /*if (SharedPrefUtils.getIsASongCurrentlyPlaying(preferences)) {
             pause_play.setImageResource(R.drawable.pause_white_selector);
         } else {

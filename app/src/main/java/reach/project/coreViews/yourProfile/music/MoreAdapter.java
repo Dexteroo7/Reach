@@ -14,7 +14,6 @@ import com.google.common.base.Optional;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import reach.project.R;
 import reach.project.music.Song;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -37,8 +36,8 @@ class MoreAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implements
     }
 
     @Override
-    public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new SongItemHolder(itemView, handOverMessage);
+    public SongItemHolder getViewHolder(View itemView) {
+        return new SongItemHolder(itemView, this);
     }
 
     @Override

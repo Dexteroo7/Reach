@@ -26,7 +26,7 @@ public abstract class SimpleRecyclerAdapter<T, F extends SingleItemViewHolder> e
 
     @Override
     public F onCreateViewHolder(ViewGroup parent, int viewType) {
-        return getViewHolder(LayoutInflater.from(parent.getContext()).inflate(resourceId, parent, false), this);
+        return getViewHolder(LayoutInflater.from(parent.getContext()).inflate(resourceId, parent, false));
     }
 
     @Override
@@ -39,7 +39,7 @@ public abstract class SimpleRecyclerAdapter<T, F extends SingleItemViewHolder> e
         return getItemId(messageList.get(position));
     }
 
-    public abstract F getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage);
+    public abstract F getViewHolder(View itemView);
     public abstract long getItemId(T item);
 
     public abstract void onBindViewHolder(F holder, T item);

@@ -83,8 +83,8 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
                     reference.getResourceId()) {
 
                 @Override
-                public SingleItemViewHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-                    return reference.getViewHolder(itemView, handOverMessage);
+                public SingleItemViewHolder getViewHolder(View itemView) {
+                    return reference.getViewHolder(itemView);
                 }
 
                 @Override

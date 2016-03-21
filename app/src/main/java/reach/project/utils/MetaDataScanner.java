@@ -45,42 +45,6 @@ import reach.project.music.SongProvider;
 
 public class MetaDataScanner extends IntentService {
 
-    @NonNull
-    private static Map<String, Song> getCurrentSongs(ContentResolver resolver,
-                                                     long serverId) {
-
-        final Cursor reachDatabaseCursor = resolver.query(
-
-                SongProvider.CONTENT_URI,
-                SongCursorHelper.SONG_HELPER.getProjection(),
-                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                new String[]{
-                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                        ReachDatabase.Status.FINISHED.getString(),
-                        ReachDatabase.OperationKind.OWN.getString()},
-                SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
-
-
-        if (reachDatabaseCursor != null) {
-
-            final Map<String, Song> toReturn = MiscUtils.getMap(reachDatabaseCursor.getCount());
-
-            while (reachDatabaseCursor.moveToNext()) {
-
-                //read the song object
-                final Song song = SongCursorHelper.SONG_HELPER.parse(reachDatabaseCursor);
-                //set the metaHash if not found
-                if (!TextUtils.isEmpty(song.fileHash))
-                    toReturn.put(song.fileHash, song);
-            }
-            reachDatabaseCursor.close();
-
-            return toReturn;
-        } else
-            return Collections.emptyMap();
-    }
-
     public MetaDataScanner() {
         super("MetaDataScanner");
     }
@@ -183,27 +147,23 @@ public class MetaDataScanner extends IntentService {
         final long serverId = SharedPrefUtils.getServerId(sharedPreferences);
 
         if (serverId == 0)
-            return;
+            return; //illegal case
 
-        //get installedApps
-        final List<ApplicationInfo> installedApps = MiscUtils.getInstalledApps(packageManager);
         //get song cursor
         final Cursor musicCursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 SongCursorHelper.ANDROID_SONG_HELPER.getProjection(), null, null, null);
-
         //genres get filled here
         final Set<String> genres = MiscUtils.getSet(100);
-
         //get the deviceSongs
         final List<Song> deviceSongs = SongCursorHelper.getSongs(
                 musicCursor,
                 serverId,
                 contentResolver,
                 genres);
+        //get the current known songs
+        final Map<String, Song> currentSongs = getCurrentSongs(contentResolver);
 
-        final Map<String, Song> currentSongs = getCurrentSongs(contentResolver, serverId);
         final ArrayList<ContentProviderOperation> operations = new ArrayList<>();
-
         for (Song song : deviceSongs)
             if (!currentSongs.containsKey(song.fileHash)) {
 
@@ -226,18 +186,13 @@ public class MetaDataScanner extends IntentService {
 
         //get current visible apps
         final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(sharedPreferences);
-        final Set<Map.Entry<String, Boolean>> packageEntries = packageVisibility.entrySet();
-        final Set<String> visiblePackages = MiscUtils.getSet(50);
-        for (Map.Entry<String, Boolean> entry : packageEntries)
-            if (entry.getValue())
-                visiblePackages.add(entry.getKey());
-
-
+        //get installedApps
+        final List<ApplicationInfo> installedApps = MiscUtils.getInstalledApps(packageManager);
         //get the deviceApps
         final List<App> deviceApps = AppCursorHelper.getApps(
                 installedApps,
                 packageManager,
-                visiblePackages);
+                packageVisibility);
 
         final List<SimpleSong> simpleSongs = new ArrayList<>(currentSongs.size());
         final List<SimpleApp> simpleApps = new ArrayList<>(deviceApps.size());
@@ -273,5 +228,40 @@ public class MetaDataScanner extends IntentService {
         }
 
         SharedPrefUtils.storeGenres(sharedPreferences, genres);
+    }
+
+
+    @NonNull
+    private static Map<String, Song> getCurrentSongs(ContentResolver resolver) {
+
+        final Cursor reachDatabaseCursor = resolver.query(
+
+                SongProvider.CONTENT_URI,
+                SongCursorHelper.SONG_HELPER.getProjection(),
+                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                new String[]{
+                        ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                        ReachDatabase.Status.FINISHED.getString(),
+                        ReachDatabase.OperationKind.OWN.getString()},
+                null);
+
+        if (reachDatabaseCursor != null) {
+
+            final Map<String, Song> toReturn = MiscUtils.getMap(reachDatabaseCursor.getCount());
+
+            while (reachDatabaseCursor.moveToNext()) {
+
+                //read the song object
+                final Song song = SongCursorHelper.SONG_HELPER.parse(reachDatabaseCursor);
+                //set the metaHash if not found
+                if (!TextUtils.isEmpty(song.fileHash))
+                    toReturn.put(song.fileHash, song);
+            }
+            reachDatabaseCursor.close();
+
+            return toReturn;
+        } else
+            return Collections.emptyMap();
     }
 }

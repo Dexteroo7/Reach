@@ -3,6 +3,7 @@ package reach.project.coreViews.myProfile.apps;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,6 +30,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.apps.App;
+import reach.project.apps.AppCursorHelper;
 import reach.project.core.StaticData;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -70,11 +72,11 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
             final boolean newVisibility = !parentAdapter.isVisible(packageName);
 
             //update in memory
-            synchronized (parentAdapter.packageVisibility) {
-                parentAdapter.packageVisibility.put(packageName, newVisibility);
+            synchronized (ParentAdapter.packageVisibility) {
+                ParentAdapter.packageVisibility.put(packageName, newVisibility);
             }
             //update in disk
-            SharedPrefUtils.addPackageVisibility(preferences, packageName, newVisibility);
+            SharedPrefUtils.overWritePackageVisibility(preferences, ParentAdapter.packageVisibility);
             //update on server
             new ToggleVisibility(this).executeOnExecutor(visibilityHandler, userId, packageName, newVisibility);
 
@@ -82,9 +84,8 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
             parentAdapter.visibilityChanged(packageName);
 //        Toast.makeText(getContext(), "Clicked on " + message.applicationName, Toast.LENGTH_SHORT).show();
 
-        }
-        catch (Exception e){
-            Log.e(TAG, "Unidentified error in myprofile -> apps, Exception = " + e.toString() );
+        } catch (Exception e) {
+            Log.e(TAG, "Unidentified error in myprofile -> apps, Exception = " + e.toString());
         }
     }
 
@@ -125,7 +126,12 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
             final SharedPreferences preferences = params[0].getSharedPreferences("Reach", Context.MODE_PRIVATE);
             final PackageManager packageManager = params[0].getPackageManager();
 
-            final List<App> apps = MiscUtils.getApplications(packageManager, preferences);
+            final List<ApplicationInfo> applicationInfoList = MiscUtils.getInstalledApps(packageManager);
+            final List<App> apps = AppCursorHelper.getApps(
+                    applicationInfoList,
+                    packageManager,
+                    ParentAdapter.packageVisibility);
+
             final List<App> recentApps = Ordering
                     .from(StaticData.byInstallDate)
                     .compound(StaticData.byName)
@@ -206,7 +212,7 @@ public class ApplicationFragment extends Fragment implements HandOverMessage<App
                         }
                     }
                     //reset in disk
-                    SharedPrefUtils.addPackageVisibility(fragment.preferences, packageName, !visibility);
+                    SharedPrefUtils.overWritePackageVisibility(fragment.preferences, ParentAdapter.packageVisibility);
                 });
 
             return failed;

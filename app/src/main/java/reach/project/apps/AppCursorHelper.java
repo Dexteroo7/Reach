@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,7 +28,7 @@ public enum AppCursorHelper {
     ;
 
     public static Function<ApplicationInfo, App.Builder> getParser(PackageManager packageManager,
-                                                                   Set<String> packageVisibility) {
+                                                                   Map<String, Boolean> packageVisibility) {
 
         return new Function<ApplicationInfo, App.Builder>() {
             @Nullable
@@ -45,7 +44,9 @@ public enum AppCursorHelper {
                 appBuilder.description(input.loadDescription(packageManager) + "");
                 appBuilder.packageName(input.packageName);
                 appBuilder.processName(input.processName);
-                appBuilder.visible(packageVisibility.contains(input.packageName));
+
+                final Boolean visible = packageVisibility.get(input.packageName);
+                appBuilder.visible(visible == null || visible); //default to true
 
                 try {
                     appBuilder.installDate(
@@ -140,7 +141,7 @@ public enum AppCursorHelper {
 
     public static List<App> getApps(@Nonnull List<ApplicationInfo> installedApps,
                                     @Nonnull PackageManager packageManager,
-                                    @Nonnull Set<String> visiblePackages) {
+                                    @Nonnull Map<String, Boolean> visiblePackages) {
 
         final Function<ApplicationInfo, App.Builder> parser = getParser(packageManager, visiblePackages);
 

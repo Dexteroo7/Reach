@@ -11,7 +11,6 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
-import com.google.common.collect.Ordering;
 
 import java.lang.ref.WeakReference;
 import java.util.Comparator;
@@ -105,8 +104,8 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
     }
 
     @Override
-    public SongItemHolder getViewHolder(View itemView, HandOverMessage<Integer> handOverMessage) {
-        return new SongItemHolder(itemView, handOverMessage);
+    public SongItemHolder getViewHolder(View itemView) {
+        return new SongItemHolder(itemView, this);
     }
 
     @Override

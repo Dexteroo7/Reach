@@ -206,7 +206,8 @@ public class InterceptAppInstall extends BroadcastReceiver {
                 notificationManager.notify(FOUND_NEW_NOTIFICATION, notificationBuilder.build());
 
                 final SharedPreferences preferences = context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
-                SharedPrefUtils.addPackageVisibility(preferences, app.packageName, app.visible);
+                //TODO
+//                SharedPrefUtils.overWritePackageVisibility(preferences, app.packageName, app.visible);
             });
         }
     }

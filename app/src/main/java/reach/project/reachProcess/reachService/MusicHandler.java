@@ -20,7 +20,6 @@ import reach.project.reachProcess.auxiliaryClasses.AudioFocusHelper;
 import reach.project.reachProcess.auxiliaryClasses.MusicFocusable;
 import reach.project.reachProcess.auxiliaryClasses.ReachTask;
 import reach.project.utils.MiscUtils;
-import reach.project.utils.SharedPrefUtils;
 
 /**
  * Created by Dexter on 16-05-2015.
@@ -90,7 +89,6 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
     protected void sanitize() {
 
         Log.i("Downloader", "Sanitizing music handler");
-        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         userPaused.set(false);
         playerState = State.Playing;
         Log.i("Downloader", "Sanitizing player");
@@ -291,8 +289,6 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     synchronized void processPlayRequest() {
 
-
-        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),true);
         tryToGetAudioFocus();
         //pause reason don't matter
         playerState = State.Playing;
@@ -302,7 +298,6 @@ class MusicHandler extends ReachTask<MusicHandler.MusicHandlerInterface>
 
     synchronized void processPauseRequest() {
 
-        SharedPrefUtils.togglePlaying(handlerInterface.getContext(),false);
         playerState = State.Paused;
         userPaused.set(true);
         Log.i("Downloader", "PAUSING !!!!");

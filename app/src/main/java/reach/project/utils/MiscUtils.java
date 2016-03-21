@@ -94,7 +94,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.annotation.Nonnull;
 
 import reach.backend.entities.messaging.model.MyBoolean;
-import reach.project.apps.App;
 import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
@@ -182,46 +181,6 @@ public enum MiscUtils {
                 closeable.close();
             } catch (IOException ignored) {
             }
-    }
-
-    public static List<App> getApplications(PackageManager packageManager, SharedPreferences preferences) {
-
-        final List<ApplicationInfo> applicationInfoList = getInstalledApps(packageManager);
-        if (applicationInfoList == null || applicationInfoList.isEmpty())
-            return Collections.emptyList();
-
-        final Map<String, Boolean> packageVisibility = SharedPrefUtils.getPackageVisibilities(preferences);
-        final List<App> applicationsFound = new ArrayList<>();
-
-        for (ApplicationInfo applicationInfo : applicationInfoList) {
-
-            if (applicationInfo.packageName.equals("reach.project"))
-                continue;
-
-            final App.Builder appBuilder = new App.Builder();
-
-            appBuilder.launchIntentFound(packageManager.getLaunchIntentForPackage(applicationInfo.packageName) != null);
-            appBuilder.applicationName(applicationInfo.loadLabel(packageManager) + "");
-            appBuilder.description(applicationInfo.loadDescription(packageManager) + "");
-            appBuilder.packageName(applicationInfo.packageName);
-            appBuilder.processName(applicationInfo.processName);
-
-            try {
-                appBuilder.installDate(
-                        packageManager.getPackageInfo(applicationInfo.packageName, 0).firstInstallTime);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            final Boolean visibility = packageVisibility.get(applicationInfo.packageName);
-            if (visibility == null)
-                appBuilder.visible(true);
-            else
-                appBuilder.visible(visibility);
-            applicationsFound.add(appBuilder.build());
-        }
-
-        return applicationsFound;
     }
 
     /**

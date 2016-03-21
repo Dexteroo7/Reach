@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import reach.project.music.Song;
 import reach.project.music.SongHelper;
@@ -170,64 +169,6 @@ public enum SharedPrefUtils {
         return sharedPreferences.getString("coverImageId", "");
     }
 
-    @Nonnull
-    public synchronized static Map<String, Boolean> getPackageVisibilities(SharedPreferences sharedPreferences) {
-
-        final String serializedString = sharedPreferences.getString("app_visibility", "");
-        if (TextUtils.isEmpty(serializedString))
-            return MiscUtils.getMap(0);
-
-        final Map<String, Boolean> toReturn;
-        try {
-            toReturn = new Gson().fromJson(
-                    serializedString,
-                    new TypeToken<Map<String, Boolean>>() {
-                    }.getType());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return MiscUtils.getMap(0);
-        }
-
-        return toReturn;
-    }
-
-    public synchronized static void addPackageVisibility(SharedPreferences sharedPreferences,
-                                                         String packageName,
-                                                         boolean visibility) {
-
-        @Nullable
-        Map<String, Boolean> toSave = null;
-
-        final String serializedString = sharedPreferences.getString("app_visibility", "");
-        if (!TextUtils.isEmpty(serializedString))
-            try {
-                toSave = new Gson().fromJson(
-                        serializedString,
-                        new TypeToken<Map<String, Boolean>>() {
-                        }.getType());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        if (toSave == null)
-            toSave = MiscUtils.getMap(0);
-
-        toSave.put(packageName, visibility);
-
-        sharedPreferences.edit().putString("app_visibility",
-                new Gson().toJson(toSave, new TypeToken<Map<String, Boolean>>() {
-                }.getType())).apply();
-        Log.i("Ayush", "Saving new application visibility " + packageName + " " + visibility + " " + toSave.size());
-    }
-
-    public synchronized static void overWritePackageVisibility(SharedPreferences sharedPreferences, Map<String, Boolean> visibilities) {
-
-        sharedPreferences.edit().putString("app_visibility",
-                new Gson().toJson(visibilities, new TypeToken<Map<String, Boolean>>() {
-                }.getType())).apply();
-        Log.i("Ayush", "Saving new application visibility " + visibilities.size());
-    }
-
     public static synchronized void storeLastRequestTime(SharedPreferences preferences) {
         preferences.edit().putLong("lastRequestTime", System.currentTimeMillis()).apply();
     }
@@ -356,41 +297,6 @@ public enum SharedPrefUtils {
 
     ////////////////////////////////////
 
-    public synchronized static boolean togglePlaying(@Nonnull Context context, boolean value) {
-
-        RandomAccessFile randomAccessFile = null;
-
-        try {
-            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "playing_boolean", "rwd");
-//            final boolean newShuffle = randomAccessFile.length() <= 0 || !randomAccessFile.readBoolean();
-            randomAccessFile.setLength(0);
-            randomAccessFile.writeBoolean(value); //write new shuffle
-            return value;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            MiscUtils.closeQuietly(randomAccessFile);
-        }
-    }
-
-    public static boolean getPlaying(@Nonnull Context context) {
-
-        RandomAccessFile randomAccessFile = null;
-
-        try {
-            randomAccessFile = new RandomAccessFile(context.getCacheDir() + "/" + "playing_boolean", "r");
-            return randomAccessFile.readBoolean();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            MiscUtils.closeQuietly(randomAccessFile);
-        }
-    }
-
-    ////////////////////////////////////
-
     public static Optional<Song> getLastPlayed(@Nonnull Context context) {
 
         RandomAccessFile randomAccessFile = null;
@@ -455,5 +361,66 @@ public enum SharedPrefUtils {
         } finally {
             MiscUtils.closeQuietly(randomAccessFile);
         }
+    }
+
+    ////////////////////////////////////
+
+    @Nonnull
+    public synchronized static Map<String, Boolean> getPackageVisibilities(SharedPreferences sharedPreferences) {
+
+        final String serializedString = sharedPreferences.getString("app_visibility", "");
+        if (TextUtils.isEmpty(serializedString))
+            return MiscUtils.getMap(0);
+
+        final Map<String, Boolean> toReturn;
+        try {
+            toReturn = new Gson().fromJson(
+                    serializedString,
+                    new TypeToken<Map<String, Boolean>>() {
+                    }.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return MiscUtils.getMap(0);
+        }
+
+        return toReturn;
+    }
+
+//    public synchronized static void addPackageVisibility(SharedPreferences sharedPreferences,
+//                                                         String packageName,
+//                                                         boolean visibility) {
+//
+//        @Nullable
+//        Map<String, Boolean> toSave = null;
+//
+//        final String serializedString = sharedPreferences.getString("app_visibility", "");
+//        if (!TextUtils.isEmpty(serializedString))
+//            try {
+//                toSave = new Gson().fromJson(
+//                        serializedString,
+//                        new TypeToken<Map<String, Boolean>>() {
+//                        }.getType());
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//
+//        if (toSave == null)
+//            toSave = MiscUtils.getMap(0);
+//
+//        toSave.put(packageName, visibility);
+//
+//        sharedPreferences.edit().putString("app_visibility",
+//                new Gson().toJson(toSave, new TypeToken<Map<String, Boolean>>() {
+//                }.getType())).apply();
+//        Log.i("Ayush", "Saving new application visibility " + packageName + " " + visibility + " " + toSave.size());
+//    }
+
+    public synchronized static void overWritePackageVisibility(SharedPreferences sharedPreferences,
+                                                               Map<String, Boolean> visibilities) {
+
+        sharedPreferences.edit().putString("app_visibility",
+                new Gson().toJson(visibilities, new TypeToken<Map<String, Boolean>>() {
+                }.getType())).apply();
+        Log.i("Ayush", "Saving new application visibility " + visibilities.size());
     }
 }
