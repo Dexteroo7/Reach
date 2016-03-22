@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/facebook_blue_color">
+
+    <ImageView
+        android:id="@+id/inviteImage"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/fb_button_circle"
+        android:layout_marginTop="8dp"
+        />
+
+    <TextView
+        android:layout_below="@id/inviteImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/inviteText"
+        tools:text="Enjoying Reach? Share your love!"
+        android:gravity="center_horizontal"
+        android:textSize="16sp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:textColor="@color/white"
+        />
+
+    <Button
+        android:id="@+id/cancelButton"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:background="@null"
+        android:textColor="@color/white"
+        android:layout_below="@id/inviteText"
+        android:layout_centerHorizontal="true"
+        android:text="Cancel"
+        android:layout_alignParentRight="true"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:layout_marginBottom="16dp"
+        />
+
+    <Button
+        android:id="@+id/shareButton"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:background="@null"
+        android:textColor="@color/white"
+        android:layout_below="@id/inviteText"
+        android:layout_centerHorizontal="true"
+        android:textStyle="bold"
+        android:text="Share"
+        android:layout_toLeftOf="@id/cancelButton"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:layout_marginBottom="16dp"
+        />
+
+</RelativeLayout>

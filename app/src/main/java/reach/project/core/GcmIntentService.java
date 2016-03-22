@@ -84,7 +84,7 @@ public class GcmIntentService extends IntentService {
             /**
              * Service a permission request
              */
-
+            // Friend request from your friend
             if (message.startsWith("PERMISSION_REQUEST")) {
                 Log.d(TAG, "Notification type = : " + "PERMISSION_REQUEST" + " , message = " + message);
                 final String[] splitter = message.split("`");
@@ -114,6 +114,8 @@ public class GcmIntentService extends IntentService {
             /**
              * Service permission granted and rejected Notifications
              */
+
+        //When the user has rejected and declined friend
             if (message.contains("PERMISSION_GRANTED") ||
                     message.contains("PERMISSION_REJECTED")) {
 
@@ -169,7 +171,7 @@ public class GcmIntentService extends IntentService {
             }
 
             /**
-             * Service new notification
+             * Service new notification (Ex You have 5 new notifications)
              */
             else if (message.startsWith("SYNC")) {
                 Log.d(TAG, "Notification type = : " + "SYNC" + " , message = " + message);
@@ -199,7 +201,7 @@ public class GcmIntentService extends IntentService {
             }
 
             /**
-             * Service manual notification
+             * Service manual notification, Eg: (You haven't checked out the app in a while), Promotional from devika
              */
             else if (message.startsWith("MANUAL")) {
                 Log.d(TAG, "Notification type = : " + "MANUAL" + " , message = " + message);
@@ -255,7 +257,7 @@ public class GcmIntentService extends IntentService {
             }*/
 
             /**
-             * Service PONG
+             * Service PONG, all the online friends return pong
              */
             else if (message.startsWith("PONG")) {
                 Log.d(TAG, "Notification type = : " + "PONG" + " , message = " + message);
@@ -306,7 +308,7 @@ public class GcmIntentService extends IntentService {
             }
 
             /**
-             * Service PING
+             * Service PING, send ping to all friends
              */
             else if (message.startsWith("PING")) {
 
@@ -337,7 +339,7 @@ public class GcmIntentService extends IntentService {
             }
 
             /**
-             * Service CONNECT
+             * Service CONNECT, to establish connection while downloading
              */
             else if (message.startsWith("CONNECT")) {
 
@@ -378,6 +380,7 @@ public class GcmIntentService extends IntentService {
 //                Log.i("Downloader", "Received unexpected GCM " + message);
         } else {
             switch (type) {
+                //Promotional messages from Devika
                 case "CURATED":
 
                     final String heading = extras.getString("heading");

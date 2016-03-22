@@ -287,7 +287,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
         preferences = getSharedPreferences("Reach", Context.MODE_PRIVATE);
         serverId = SharedPrefUtils.getServerId(preferences);
-
         //track app open event
         final Map<PostParams, String> simpleParams = MiscUtils.getMap(6);
         simpleParams.put(PostParams.USER_ID, serverId + "");

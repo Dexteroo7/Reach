@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -67,6 +68,7 @@ import reach.project.utils.FireOnce;
 import reach.project.utils.KeyValuePair;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
+import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 public class ScanFragment extends Fragment {
@@ -262,23 +264,29 @@ public class ScanFragment extends Fragment {
             final Set<String> genres = MiscUtils.getSet(100);
 
             //get the song builders
-            final List<Song> deviceSongs = MiscUtils.useContextFromFragment(reference, activity -> {
-                return SongCursorHelper.getSongs(
-                        musicCursor,
-                        olderUserId,
-                        activity.getContentResolver(),
-                        genres,
-                        AccountCreation.OLD_STATES.get(ContentType.MUSIC),
-                        songProcessCounter);
+            final List<Song> deviceSongs = MiscUtils.useContextFromFragment(reference, new UseActivityWithResult<Activity, List<Song>>() {
+                @Override
+                public List<Song> work(@NonNull Activity activity) {
+                    return SongCursorHelper.getSongs(
+                            musicCursor,
+                            olderUserId,
+                            activity.getContentResolver(),
+                            genres,
+                            AccountCreation.OLD_STATES.get(ContentType.MUSIC),
+                            songProcessCounter);
+                }
             }).or(Collections.emptyList());
 
             //get the app builders
-            final List<App> deviceApps = MiscUtils.useContextFromFragment(reference, activity -> {
-                return AppCursorHelper.getApps(
-                        installedApps,
-                        activity.getPackageManager(),
-                        appProcessCounter,
-                        AccountCreation.OLD_STATES.get(ContentType.APP));
+            final List<App> deviceApps = MiscUtils.useContextFromFragment(reference, new UseActivityWithResult<Activity, List<App>>() {
+                @Override
+                public List<App> work(@NonNull Activity activity) {
+                    return AppCursorHelper.getApps(
+                            installedApps,
+                            activity.getPackageManager(),
+                            appProcessCounter,
+                            AccountCreation.OLD_STATES.get(ContentType.APP));
+                }
             }).or(Collections.emptyList());
 
             /*totalMusic = totalApps = totalExpected;*/
