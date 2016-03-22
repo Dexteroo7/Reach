@@ -71,7 +71,7 @@ public class NowPlayingAdapter extends ReachCursorAdapter<SongItemHolder> {
 
     @Override
     public long getItemId(@Nonnull Cursor cursor) {
-        return cursor.getString(2).hashCode();
+        return cursor.getLong(0);
     }
 
     public void updatePosition(int position) {

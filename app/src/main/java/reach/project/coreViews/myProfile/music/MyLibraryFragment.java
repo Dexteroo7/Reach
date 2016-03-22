@@ -15,6 +15,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -226,6 +227,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Load
         /*final List<MusicData> latestMyLibrary = new ArrayList<>(cursor.getCount());*/
         final List<Song> latestMyLibrary = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
+            if (TextUtils.isEmpty(cursor.getString(2)))
+                continue;
             /*latestMyLibrary.add(MySongsHelper.getMusicData(cursor, userId));*/
             latestMyLibrary.add(SongCursorHelper.SONG_HELPER.parse(cursor));
         }

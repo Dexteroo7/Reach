@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -263,22 +264,28 @@ public class ScanFragment extends Fragment {
 
             //get the song builders
             final List<Song> deviceSongs = MiscUtils.useContextFromFragment(reference, activity -> {
+                Map<String, EnumSet<ContentType.State>> musicEnumSetMap = AccountCreation.OLD_STATES.get(ContentType.MUSIC);
+                if (musicEnumSetMap == null)
+                    musicEnumSetMap = Collections.emptyMap();
                 return SongCursorHelper.getSongs(
                         musicCursor,
                         olderUserId,
                         activity.getContentResolver(),
                         genres,
-                        AccountCreation.OLD_STATES.get(ContentType.MUSIC),
+                        musicEnumSetMap,
                         songProcessCounter);
             }).or(Collections.emptyList());
 
             //get the app builders
             final List<App> deviceApps = MiscUtils.useContextFromFragment(reference, activity -> {
+                Map<String, EnumSet<ContentType.State>> appEnumSetMap = AccountCreation.OLD_STATES.get(ContentType.APP);
+                if (appEnumSetMap == null)
+                    appEnumSetMap = Collections.emptyMap();
                 return AppCursorHelper.getApps(
                         installedApps,
                         activity.getPackageManager(),
                         appProcessCounter,
-                        AccountCreation.OLD_STATES.get(ContentType.APP));
+                        appEnumSetMap);
             }).or(Collections.emptyList());
 
             /*totalMusic = totalApps = totalExpected;*/
