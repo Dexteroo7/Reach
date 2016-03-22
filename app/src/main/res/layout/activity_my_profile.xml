@@ -347,8 +347,8 @@
                         android:layout_width="36dp"
                         android:layout_height="24dp"
                         android:layout_centerVertical="true"
-                        app:srcCompat="@android:drawable/ic_menu_share"
-                        tools:src="@android:drawable/ic_menu_share" />
+                        android:src="@drawable/fb_button_circle"
+                        tools:src="@drawable/fb_button_circle" />
 
                     <TextView
                         android:id="@+id/fb_share_text"
