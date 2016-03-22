@@ -966,16 +966,16 @@ public class ProcessManager extends Service implements
 
     private boolean positionCursor(Cursor cursor, String id) {
 
-        if (cursor.getString(2).equals(id))
-            return true;
-
-        while (cursor.moveToNext()) {
-            if (cursor.getString(2).equals(id)) {
+        do {
+            final String hashCode = cursor.getString(2);
+            if (TextUtils.isEmpty(hashCode))
+                continue;
+            if (hashCode.equals(id)) {
 //                Log.i("Downloader", "CORRECT position found ! " + position);
 //                position++;
                 return true;
             }
-        }
+        } while (cursor.moveToNext());
         return false;
     }
 

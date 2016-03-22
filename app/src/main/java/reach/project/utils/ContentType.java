@@ -92,7 +92,7 @@ public enum ContentType {
                     }
 
                     Log.i("Ayush", "Inserting " + metaHash + " " + stateEnumSet.toString());
-                    musicMapFinal.put(metaHash, stateEnumSet);
+                    appMapFinal.put(metaHash, stateEnumSet);
                 }
             } else
                 appMapFinal = Collections.emptyMap();

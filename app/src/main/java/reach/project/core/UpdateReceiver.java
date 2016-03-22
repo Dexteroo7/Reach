@@ -1,8 +1,23 @@
 package reach.project.core;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.RemoteException;
+
+import com.google.common.hash.Hashing;
+
+import java.util.ArrayList;
+
+import reach.project.music.SongHelper;
+import reach.project.music.SongProvider;
+import reach.project.utils.MiscUtils;
 
 // For updating db on app update
 public class UpdateReceiver extends BroadcastReceiver {
@@ -12,52 +27,53 @@ public class UpdateReceiver extends BroadcastReceiver {
 
         //adding metaHash entry for reachDataBase table
 
-//        final ContentResolver resolver = context.getContentResolver();
-//
-//        final Cursor cursor = resolver.query(
-//                SongProvider.CONTENT_URI,
-//                new String[]{
-//                        SongHelper.COLUMN_ID,
-//                        SongHelper.COLUMN_RECEIVER_ID,
-//                        SongHelper.COLUMN_DURATION,
-//                        SongHelper.COLUMN_SIZE,
-//                        SongHelper.COLUMN_DISPLAY_NAME,
-//                },
-//                SongHelper.COLUMN_META_HASH + " = ? OR " +
-//                        SongHelper.COLUMN_META_HASH + " = NULL", new String[]{""}, null);
-//
-//        if (cursor == null)
-//            return;
-//
-//        final ArrayList<ContentProviderOperation> operations = new ArrayList<>(cursor.getCount());
-//
-//        while (cursor.moveToNext()) {
-//
-//            final long entryId = cursor.getLong(0);
-//            final String metaHash = MiscUtils.calculateSongHash(
-//                    cursor.getLong(1), //userID
-//                    cursor.getLong(2), //duration
-//                    cursor.getLong(3), //size
-//                    cursor.getString(4), //title
-//                    Hashing.sipHash24());
-//
-//            final ContentValues contentValues = new ContentValues(1);
-//            contentValues.put(SongHelper.COLUMN_META_HASH, metaHash);
-//            operations.add(ContentProviderOperation
-//                    .newUpdate(Uri.parse(SongProvider.CONTENT_URI + "/" + entryId))
-//                    .withValues(contentValues)
-//                    .withSelection(SongHelper.COLUMN_ID + " = ?",
-//                            new String[]{entryId + ""})
-//                    .build());
-//        }
-//        cursor.close();
-//
-//        if (operations.size() > 0)
-//            try {
-//                resolver.applyBatch(SongProvider.AUTHORITY, operations);
-//            } catch (RemoteException | OperationApplicationException e) {
-//                e.printStackTrace();
-//            }
+        final ContentResolver resolver = context.getContentResolver();
+
+        final Cursor cursor = resolver.query(
+                SongProvider.CONTENT_URI,
+                new String[]{
+                        SongHelper.COLUMN_ID,
+                        SongHelper.COLUMN_RECEIVER_ID,
+                        SongHelper.COLUMN_DURATION,
+                        SongHelper.COLUMN_SIZE,
+                        SongHelper.COLUMN_DISPLAY_NAME,
+                },
+                SongHelper.COLUMN_META_HASH + " = ? OR " +
+                        SongHelper.COLUMN_META_HASH + " = NULL", new String[]{""}, null);
+
+        if (cursor == null)
+            return;
+
+        final ArrayList<ContentProviderOperation> operations = new ArrayList<>(cursor.getCount());
+
+        while (cursor.moveToNext()) {
+
+            final long entryId = cursor.getLong(0);
+            final String metaHash = MiscUtils.calculateSongHash(
+                    cursor.getLong(1), //userID
+                    cursor.getLong(2), //duration
+                    cursor.getLong(3), //size
+                    cursor.getString(4), //title
+                    Hashing.sipHash24());
+
+            final ContentValues contentValues = new ContentValues(1);
+            contentValues.put(SongHelper.COLUMN_META_HASH, metaHash);
+            operations.add(ContentProviderOperation
+                    .newUpdate(Uri.parse(SongProvider.CONTENT_URI + "/" + entryId))
+                    .withValues(contentValues)
+                    .withSelection(SongHelper.COLUMN_ID + " = ?",
+                            new String[]{entryId + ""})
+                    .build());
+        }
+        cursor.close();
+
+        if (operations.size() > 0) {
+            try {
+                resolver.applyBatch(SongProvider.AUTHORITY, operations);
+            } catch (RemoteException | OperationApplicationException e) {
+                e.printStackTrace();
+            }
+        }
 
         //cleanse the songs table to remove songs of friends
 //        context.getContentResolver().delete(MySongsProvider.CONTENT_URI, null, null);
