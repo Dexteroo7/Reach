@@ -111,10 +111,15 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             FriendsAdapter.this.handOverMessage((Cursor) object);
         }
 
+
+        //TODO: Error here, when object is not an instance of cursor
+        //Ask when is this method called
+        //And what about the scenarios when object is of type boolean and character
         @Override
         public Cursor getExtra(@Nonnull Integer position) {
 
             final Object object = getItem(position);
+
             if (!(object instanceof Cursor))
                 throw new IllegalStateException("Resource cursor has been corrupted");
             return (Cursor) object;
@@ -273,7 +278,8 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
         if(position == 10){
             return false;
         }
-        else if (position <10){
+        //TODO: Resolved error
+        else if (position <10 && !(position < 0)){
             if(verticalCursorCount == 0){
                 if(position == 0){
                     return 1;

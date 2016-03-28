@@ -33,6 +33,8 @@ class DownloadingAdapter extends ReachCursorAdapter<DownloadingItemHolder> {
     }
 
     private final HandOverMessageExtra<Cursor> handOverMessageExtra = new HandOverMessageExtra<Cursor>() {
+
+        //TODO: Error, IllegalStateException called
         @Override
         public void handOverMessage(@Nonnull Integer position) {
 

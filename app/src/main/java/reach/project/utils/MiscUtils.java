@@ -276,6 +276,9 @@ public enum MiscUtils {
     //TODO test
     public static CharSequence generateInitials(String name) {
 
+        if(name == null){
+            return "0";
+        }
         name = name.trim();
         if (TextUtils.isEmpty(name))
             return "A";
