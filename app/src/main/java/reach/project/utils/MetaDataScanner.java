@@ -262,7 +262,7 @@ public class MetaDataScanner extends IntentService {
                 .usingAudience(this, StaticData.SCOPE)
                 .setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
         //TODO: Null pointer error because credential.selectedAccountName was null
-        //Log.d("CodeVerification", credential.getSelectedAccountName());
+        Log.d("CodeVerification", credential.getSelectedAccountName());
 
         final UserApi userApi = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))
                 .setRootUrl("https://1-dot-client-module-dot-able-door-616.appspot.com/_ah/api/").build();

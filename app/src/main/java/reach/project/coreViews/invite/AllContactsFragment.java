@@ -17,6 +17,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,6 +74,7 @@ public class AllContactsFragment extends Fragment implements
                             final SendSMS smsObj = new SendSMS("alerts.sinfini.com", "sms",
                                     "Aed8065339b18aedfbad998aeec2ce9b3", "REACHM", "https://");
                             try {
+                                Log.d("Ashish", "num - " + params[0]);
                                 smsObj.send_sms(params[0], params[1], "dlr_url");
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -171,6 +173,22 @@ public class AllContactsFragment extends Fragment implements
 
     @Override
     public void handOverMessage(@Nonnull Cursor message) {
-        showAlert(message.getString(1), message.getString(0), getContext());
+
+        final StringBuilder builder = new StringBuilder();
+
+        //reset
+        builder.setLength(0);
+
+        //get the number
+        final String num = message.getString(0).trim();
+
+        //if character is a number append !
+        for (int i = 0; i < num.length(); i++) {
+            final char test = num.charAt(i);
+            if (Character.isDigit(test))
+                builder.append(test);
+        }
+
+        showAlert(message.getString(1), builder.substring(builder.length() - 10), getContext());
     }
 }

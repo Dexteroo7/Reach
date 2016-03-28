@@ -37,7 +37,7 @@ android {
 
 dependencies {
     compile fileTree(includes: ['*.jar'], dir: 'libs')
-    compile 'com.crittercism:crittercism-android-agent:5.5.5'
+//    compile 'com.crittercism:crittercism-android-agent:5.5.5'
     compile 'com.google.android.gms:play-services:6.1.11'
     compile 'com.google.apis:google-api-services-storage:v1-rev65-1.21.0'
     compile 'com.google.api-client:google-api-client-android:1.21.0'

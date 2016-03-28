@@ -37,7 +37,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crittercism.app.Crittercism;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.controller.AbstractDraweeController;
 import com.facebook.drawee.interfaces.DraweeController;
@@ -277,7 +276,7 @@ public enum MiscUtils {
     public static CharSequence generateInitials(String name) {
 
         if(name == null){
-            return "0";
+            return "A";
         }
         name = name.trim();
         if (TextUtils.isEmpty(name))
@@ -292,11 +291,13 @@ public enum MiscUtils {
                 return (splitter[0].charAt(0) + "").toUpperCase();
             default:
                 try {
+                    if (splitter[0].length() == 0 || splitter[1].length() == 0)
+                        return "A";
                     return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
                 }
                 catch (StringIndexOutOfBoundsException e){
                     //TODO: Activate when activating Crittercism
-                    Crittercism.leaveBreadcrumb("Invite Page StringIndexOutOfBoundException, String name = " + name);
+                    //Crittercism.leaveBreadcrumb("Invite Page StringIndexOutOfBoundException, String name = " + name);
                     return "A";
                 }
         }

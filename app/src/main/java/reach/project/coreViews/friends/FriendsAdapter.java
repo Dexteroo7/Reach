@@ -167,7 +167,11 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
 
             final Cursor cursorExactType = (Cursor) friend;
             final FriendsViewHolder viewHolder = (FriendsViewHolder) holder;
-            viewHolder.position = position;
+            final int cursorPos = cursorExactType.getPosition();
+            if (cursorPos < 10)
+                viewHolder.position = cursorPos;
+            else if (cursorPos > 10)
+                viewHolder.position = cursorPos + 1;
 
             if (shouldShowCoach1) {
                 final ToolTip toolTip = new ToolTip()
@@ -279,7 +283,7 @@ class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> imple
             return false;
         }
         //TODO: Resolved error
-        else if (position <10 && !(position < 0)){
+        else if (position <10){
             if(verticalCursorCount == 0){
                 if(position == 0){
                     return 1;
