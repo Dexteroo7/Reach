@@ -47,6 +47,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import org.joda.time.DateTime;
 
 import java.io.UnsupportedEncodingException;
@@ -92,9 +93,30 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private SharedPreferences preferences;
     private View noFriendsDiscoverLayoutContainer;
     private final ExecutorService requestSender = MiscUtils.getRejectionExecutor();
-
+    private static final String TAG = ExploreFragment.class.getSimpleName();
+    
     public ExploreFragment() {
         reference = new WeakReference<>(this);
+    }
+
+    @Override
+    public void onPause() {
+        Log.d(TAG, "onPause: static reference is null now");
+        reference = null;
+        super.onPause();
+
+    }
+
+
+    @Override
+    public void onResume() {
+        Log.d(TAG, "onResume: ");
+        if(reference == null){
+            Log.d(TAG, "onResume: Initializing static reference");
+            reference = new WeakReference<ExploreFragment>(this);
+        }
+        super.onResume();
+
     }
 
     /**
@@ -377,7 +399,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setClipToPadding(false);
         final int size = MiscUtils.dpToPx(16);
-        explorePager.setPadding(size, 0, size, (size*-1));
+        explorePager.setPadding(size, 0, size, (size * -1));
         //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -400,7 +422,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         noFriendsDiscoverLayoutContainer = rootView.findViewById(R.id.exploreNoFriendsContainer);
         final Button sendRequestToDevikaButton = (Button) rootView.findViewById(R.id.sendRequestButton);
         sendRequestToDevikaButton.setOnClickListener(v ->
-                new SendRequest().executeOnExecutor(requestSender,StaticData.DEVIKA,
+                new SendRequest().executeOnExecutor(requestSender, StaticData.DEVIKA,
                         SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE))));
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
 
@@ -443,7 +465,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         return rootView;
     }
 
-    private void showDiscoverAdapter(){
+    private void showDiscoverAdapter() {
 
         if (explorePager == null || exploreAdapter != null || explorePager.getAdapter() != null)
             return;
@@ -462,20 +484,20 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager.setVisibility(View.VISIBLE);
     }
 
-    private void showNoFriendsDiscoverPage(){
+    private void showNoFriendsDiscoverPage() {
 
         fetchDevikaDetails();
 
-        if(exploreAdapter != null)
+        if (exploreAdapter != null)
             exploreAdapter = null;
         noFriendsDiscoverLayoutContainer.setVisibility(View.VISIBLE);
-        if(explorePager!=null) {
+        if (explorePager != null) {
             explorePager.setAdapter(null);
             explorePager.setVisibility(View.GONE);
         }
     }
 
-    private void fetchDevikaDetails(){
+    private void fetchDevikaDetails() {
 
         final Cursor cursor = getActivity().getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + StaticData.DEVIKA),
@@ -706,24 +728,21 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
 
-
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data == null || data.isClosed() )
+        if (data == null || data.isClosed())
             return;
 
-        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER){
-            if(data.getCount()>0){
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
+            if (data.getCount() > 0) {
                 showDiscoverAdapter();
-                Log.d("ExploreFragment","The user has friends and friends = " + data.getCount());
-            }
-            else{
-                Log.d("ExploreFragment","The user has no friends");
+                Log.d("ExploreFragment", "The user has friends and friends = " + data.getCount());
+            } else {
+                Log.d("ExploreFragment", "The user has no friends");
                 showNoFriendsDiscoverPage();
             }
-        }
-        else
-            throw new IllegalArgumentException("Illegal cursor inside ExploreFragment cursor id = "+ loader.getId());
+        } else
+            throw new IllegalArgumentException("Illegal cursor inside ExploreFragment cursor id = " + loader.getId());
 
     }
 
