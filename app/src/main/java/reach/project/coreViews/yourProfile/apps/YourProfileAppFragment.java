@@ -63,6 +63,7 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
     private static WeakReference<YourProfileAppFragment> reference = null;
     private static long hostId = 0;
     private ProgressBar mLoadingProgress;
+    private String TAG;
     //private ProgressBar mLoadingView;
 
     public static YourProfileAppFragment newInstance(long hostId) {
@@ -189,6 +190,26 @@ public class YourProfileAppFragment extends Fragment implements CacheInjectorCal
         }
 
         return appData.get(position);
+    }
+
+    @Override
+    public void onPause() {
+        Log.d(TAG, "OnPause called static reference is null now");
+        reference = null;
+        super.onPause();
+
+    }
+
+
+    @Override
+    public void onResume() {
+        Log.d(TAG, "OnResume called");
+        if(reference == null){
+            Log.d(TAG, "OnResume called static reference is being initialized with this");
+            reference = new WeakReference<>(this);
+        }
+        super.onResume();
+
     }
 
     @Override

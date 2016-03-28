@@ -109,6 +109,23 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     }
 
     @Override
+    public void onPause() {
+        reference = null;
+        super.onPause();
+
+    }
+
+
+    @Override
+    public void onResume() {
+        if(reference == null){
+            reference = new WeakReference<YourProfileMusicFragment>(this);
+        }
+        super.onResume();
+
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
