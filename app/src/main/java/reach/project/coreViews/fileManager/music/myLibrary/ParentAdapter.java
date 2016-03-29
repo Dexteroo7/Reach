@@ -117,6 +117,7 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         //set
         this.myLibraryCursor = newMyLibraryCursor;
         notifyDataSetChanged();
+
     }
 
     public void updateRecentMusic(@NonNull List<Song> newRecent) {
