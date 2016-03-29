@@ -1497,9 +1497,13 @@ public enum MiscUtils {
                                            long size,
                                            @NonNull String title,
                                            @NonNull HashFunction hashFunction) {
+        //TODO: Error here, so added more information to know about the error
+        if (userId == 0 || duration == 0 || size == 0 || TextUtils.isEmpty(title)) {
+            throw new IllegalArgumentException("Invalid parameters found" + " user id = " + userId + ",duration = "+duration
+            +",size = " + size + ",title = "+ title == null?"title is null":title + ",hashfunction = " + hashFunction==null?"hashfunction is null":hashFunction.toString()
 
-        if (userId == 0 || duration == 0 || size == 0 || TextUtils.isEmpty(title))
-            throw new IllegalArgumentException("Invalid parameters found");
+            );
+        }
 
         return hashFunction.newHasher()
                 .putLong(userId)
