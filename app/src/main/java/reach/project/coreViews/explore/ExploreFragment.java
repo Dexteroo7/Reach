@@ -1,7 +1,6 @@
 package reach.project.coreViews.explore;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -45,9 +44,7 @@ import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
@@ -66,8 +63,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import org.joda.time.DateTime;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -88,14 +83,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.music.ReachDatabase;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
@@ -502,9 +496,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         //new YTTest().execute();
 
-        playerText = (TextView) rootView.findViewById(R.id.playerText);
+        //playerText = (TextView) rootView.findViewById(R.id.playerText);
 
-        final YouTubePlayerSupportFragment fragment = YouTubePlayerSupportFragment.newInstance();
+        /*final YouTubePlayerSupportFragment fragment = YouTubePlayerSupportFragment.newInstance();
         fragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
@@ -518,7 +512,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
             }
         });
-        getChildFragmentManager().beginTransaction().replace(R.id.ytFooter, fragment, "YouTubePlayerSupportFragment").commit();
+        getChildFragmentManager().beginTransaction().replace(R.id.ytFooter, fragment, "YouTubePlayerSupportFragment").commit();*/
 
         return rootView;
     }
@@ -795,7 +789,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public void playYTVideo(String search) {
-        new YTTest().execute(search);
+        //new YTTest().execute(search);
     }
 
     @Override
@@ -892,8 +886,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     public void addToDownload(JsonObject exploreJSON) {
 
-        final Activity activity = getActivity();
-        final ContentResolver contentResolver = activity.getContentResolver();
+        final ReachActivity activity = (ReachActivity) getActivity();
+
+        activity.showYTVideo(MiscUtils.get(exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject(), MusicMetaInfo.DISPLAY_NAME).getAsString());
+        /*final ContentResolver contentResolver = activity.getContentResolver();
 
         //extract meta info to process current click request
         final JsonObject metaInfo = exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
@@ -948,7 +944,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
 
-        MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");
+        MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");*/
     }
 
     @Override

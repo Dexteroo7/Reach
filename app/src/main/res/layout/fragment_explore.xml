@@ -10,50 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?attr/actionBarSize" />
-    <RelativeLayout
-        android:id="@+id/footer"
-        android:background="@color/reach_grey_light"
-        android:layout_alignParentBottom="true"
-        android:layout_width="match_parent"
-        android:layout_height="110dp" >
-        <FrameLayout
-            android:id="@+id/ytFooter"
-            android:layout_width="200dp"
-            android:layout_height="match_parent" />
-        <TextView
-            android:id="@+id/playerText"
-            android:text="Video Title"
-            android:layout_toRightOf="@id/ytFooter"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:textColor="#fff"
-            android:lines="2"
-            android:ellipsize="marquee"
-            android:layout_centerVertical="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
-
 
     <android.support.v4.view.ViewPager
         android:id="@+id/explorer"
-        android:layout_above="@id/footer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/exploreToolbar"
         android:background="#fff" />
-
-    <View
-        android:id="@+id/mainShadow"
-        android:layout_above="@id/footer"
-        android:background="@drawable/shadow_top"
-        android:layout_width="match_parent"
-        android:layout_height="4dp" />
-
     <include layout="@layout/no_friends_discover_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/exploreToolbar" />
-
 
 </RelativeLayout>
