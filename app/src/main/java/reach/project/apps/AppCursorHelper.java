@@ -3,7 +3,6 @@ package reach.project.apps;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
-
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.hash.Hashing;
@@ -18,6 +17,8 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import reach.project.core.ReachActivity;
+import reach.project.core.ReachApplication;
 import reach.project.utils.ContentType;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -100,6 +101,10 @@ public enum AppCursorHelper {
                     return null;
 
                 final String metaHash = MiscUtils.calculateAppHash(input.packageName, Hashing.sipHash24());
+                //TODO: Activate with crittercism
+                /*Crittercism.leaveBreadcrumb(metaHash == null ? "metaHash = MiscUtils.calculateAppHash(input.packageName, Hashing.sipHash24())" +
+                        " is null at AppCursorHelper.104" : "not null, metahash == " + metaHash);*/
+                //TODO: Resolve error, bug here because metahash is null
                 final EnumSet<ContentType.State> oldStates = persistStates.get(metaHash);
 
                 //default to true if no old state found

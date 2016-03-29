@@ -1,6 +1,7 @@
 package reach.project.utils.viewHelpers;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -11,13 +12,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.gms.analytics.HitBuilders;
+
 import java.lang.ref.WeakReference;
 
 import javax.annotation.Nonnull;
 
 import reach.project.R;
+import reach.project.core.ReachApplication;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ReachCursorAdapter;
+import reach.project.utils.SharedPrefUtils;
 
 /**
  * Created by dexter on 16/12/15.
@@ -26,6 +31,8 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
 
     public final TextView headerText;
     public final RecyclerView listOfItems;
+    private SharedPreferences preferences;
+
 
     public MoreListHolder(ViewGroup parent,
                           int itemViewResourceId,
@@ -60,6 +67,17 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
             dialog.show();
             return;
         }
+
+        if(preferences == null) {
+            preferences = SharedPrefUtils.getPreferences(view.getContext());
+        }
+
+        ((ReachApplication) view.getContext().getApplicationContext()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("More button clicked")
+                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                .setValue(1)
+                .build());
 
         final RecyclerView.Adapter adapter = listOfItems.getAdapter();
 
