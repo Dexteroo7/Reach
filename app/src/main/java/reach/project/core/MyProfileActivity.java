@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -13,7 +14,6 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
@@ -36,8 +36,6 @@ import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
@@ -207,6 +205,15 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
                 break;
             }
             case R.id.fb_share_container: {
+                try{
+                    ApplicationInfo info = getPackageManager().
+                            getApplicationInfo("com.facebook.katana", 0 );
+
+                } catch( PackageManager.NameNotFoundException e ){
+                    Toast.makeText(this, "Please install the facebook application first!", Toast.LENGTH_SHORT).show();
+                    SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
+                    return;
+                }
                 Log.d(TAG, "FB share clicked");
                 if(inflater == null){
                     inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
