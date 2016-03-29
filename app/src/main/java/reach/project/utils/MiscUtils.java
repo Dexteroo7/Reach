@@ -1500,10 +1500,8 @@ public enum MiscUtils {
                                            @NonNull HashFunction hashFunction) {
         //TODO: Error here, so added more information to know about the error
         if (userId == 0 || duration == 0 || size == 0 || TextUtils.isEmpty(title)) {
-            throw new IllegalArgumentException("Invalid parameters found" + " user id = " + userId + ",duration = "+duration
-            +",size = " + size + ",title = "+ title == null?"title is null":title + ",hashfunction = " + hashFunction==null?"hashfunction is null":hashFunction.toString()
-
-            );
+            throw new IllegalArgumentException("Invalid parameters found" + " userId = " + userId
+                    + ", duration = " + duration + ", size = " + size + ", title = "+ title);
         }
 
         return hashFunction.newHasher()
