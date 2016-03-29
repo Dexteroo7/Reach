@@ -6,6 +6,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -90,7 +92,6 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.coreViews.invite.InviteActivity;
 import reach.project.music.ReachDatabase;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -639,6 +640,16 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     private void sharePostOnFb() {
+
+        try{
+            ApplicationInfo info = getActivity().getPackageManager().
+                    getApplicationInfo("com.facebook.katana", 0 );
+
+        } catch( PackageManager.NameNotFoundException e ){
+            Toast.makeText(getActivity().getApplicationContext(), "Please install the facebook application first!", Toast.LENGTH_SHORT).show();
+            SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
+            return;
+        }
 
         final LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
