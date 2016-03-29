@@ -1,6 +1,10 @@
 package reach.project.coreViews.explore;
 
 import android.animation.ValueAnimator;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v4.util.Pair;
 import android.support.v4.view.PagerAdapter;
@@ -16,11 +20,17 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
 import com.google.gson.JsonObject;
+
+import org.w3c.dom.Text;
 
 import reach.project.R;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.HandOverMessage;
 
 import static reach.project.coreViews.explore.ExploreJSON.AppViewInfo;
@@ -34,12 +44,15 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
     private static final String TAG = ExploreAdapter.class.getSimpleName() ;
     private final Explore explore;
     private final HandOverMessage<Integer> handOverMessage;
+    /*//TODO: Delete when facebbok share is to be removed from explore
+    boolean showFacebookButton = false;*/
 
     public ExploreAdapter(Explore explore,
                           HandOverMessage<Integer> handOverId) {
 
         this.explore = explore;
         this.handOverMessage = handOverId;
+        //showFacebookButton = SharedPrefUtils.getShowFacebookShareOrNot(SharedPrefUtils.getPreferences(context));
     }
 
     @Override
@@ -72,6 +85,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
+            //final TextView facebookShare = (TextView) layout.findViewById(R.id.facebook_share_text);
 
             switch (exploreTypes) {
 
@@ -115,6 +129,14 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         image.setController(MiscUtils.getControllerResize(image.getController(),
                                 Uri.parse(albumArt), ExploreFragment.FULL_IMAGE_SIZE));
 
+                    /*if(showFacebookButton){
+                        facebookShare.setVisibility(View.VISIBLE);
+                        facebookShare.setOnClickListener(this);
+                    }
+                    else{
+                        facebookShare.setVisibility(View.GONE);
+                    }*/
+
                     layout.setTag(POSITION_UNCHANGED);
                     break;
                 }
@@ -155,7 +177,14 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                             true,
                             100,
                             100));
-
+                    /*if(showFacebookButton){
+                        facebookShare.setVisibility(View.VISIBLE);
+                        facebookShare.setOnClickListener(this);
+                    }
+                    else{
+                        facebookShare.setVisibility(View.GONE);
+                    }
+*/
                     layout.setTag(POSITION_UNCHANGED);
                     break;
 
@@ -327,6 +356,11 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
+        final int id = view.getId();
+        /*if(id == R.id.facebook_share_text){
+            handOverMessage.handOverMessage(-11);
+            return;
+        }*/
 
         handOverMessage.handOverMessage((int) view.getTag());
 

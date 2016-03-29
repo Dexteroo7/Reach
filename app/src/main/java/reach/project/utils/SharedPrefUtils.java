@@ -35,6 +35,7 @@ public enum SharedPrefUtils {
 
     private static final String TAG = SharedPrefUtils.class.getSimpleName();
     private static final String IS_A_SONG_CURRENTLY_PLAYING_KEY = "is_a_song_currently_playing";
+    private static final String FACEBOOK_SHARE_VISIBLE_KEY = "facebook_share_visibility" ;
 
 
     public synchronized static void storeReachUser(SharedPreferences sharedPreferences,
@@ -122,6 +123,12 @@ public enum SharedPrefUtils {
         sharedPreferences.edit().putString("imageId", imageId).apply();
     }
 
+    public synchronized static void storeFacebookShareButtonVisibleOrNot(SharedPreferences sharedPreferences, boolean value) {
+        sharedPreferences.edit().putBoolean(FACEBOOK_SHARE_VISIBLE_KEY, value).apply();
+    }
+
+
+
     public synchronized static void storeCoverImageId(SharedPreferences sharedPreferences, String coverImageId) {
         sharedPreferences.edit().putString("coverImageId", coverImageId).apply();
     }
@@ -150,6 +157,10 @@ public enum SharedPrefUtils {
         return sharedPreferences.getBoolean("firstIntroSeen", false);
     }
 
+    public synchronized static boolean getShowFacebookShareOrNot(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean(FACEBOOK_SHARE_VISIBLE_KEY, true);
+    }
+
     public synchronized static boolean getReachQueueSeen(SharedPreferences sharedPreferences) {
         return sharedPreferences.getBoolean("reachQueueSeen", false);
     }
@@ -161,6 +172,13 @@ public enum SharedPrefUtils {
     public synchronized static String getUserName(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("userName", "");
     }
+
+    public synchronized static SharedPreferences getPreferences(Context context) {
+        return context.getSharedPreferences("Reach", Context.MODE_PRIVATE);
+
+    }
+
+
 
     public synchronized static String getImageId(SharedPreferences sharedPreferences) {
         return sharedPreferences.getString("imageId", "");

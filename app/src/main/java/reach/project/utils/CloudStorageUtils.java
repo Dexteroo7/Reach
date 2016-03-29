@@ -91,6 +91,8 @@ public enum CloudStorageUtils {
         final HashingInputStream hashingInputStream = new HashingInputStream(
                 Hashing.md5(), decodeStream);
         final Bitmap resizedBitmap = BitmapFactory.decodeStream(hashingInputStream, null, options);
+        if (resizedBitmap == null)
+            return "";
         MiscUtils.closeQuietly(decodeStream, hashingInputStream);
         final String imageHash = hashingInputStream.hash().toString();
 

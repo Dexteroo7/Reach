@@ -275,6 +275,9 @@ public enum MiscUtils {
     //TODO test
     public static CharSequence generateInitials(String name) {
 
+        if(name == null){
+            return "A";
+        }
         name = name.trim();
         if (TextUtils.isEmpty(name))
             return "A";
@@ -287,7 +290,16 @@ public enum MiscUtils {
             case 1:
                 return (splitter[0].charAt(0) + "").toUpperCase();
             default:
-                return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
+                try {
+                    if (splitter[0].length() == 0 || splitter[1].length() == 0)
+                        return "A";
+                    return (splitter[0].charAt(0) + "" + splitter[1].charAt(0)).toUpperCase();
+                }
+                catch (StringIndexOutOfBoundsException e){
+                    //TODO: Activate when activating Crittercism
+                    //Crittercism.leaveBreadcrumb("Invite Page StringIndexOutOfBoundException, String name = " + name);
+                    return "A";
+                }
         }
     }
 
@@ -1486,9 +1498,11 @@ public enum MiscUtils {
                                            long size,
                                            @NonNull String title,
                                            @NonNull HashFunction hashFunction) {
-
-        if (userId == 0 || duration == 0 || size == 0 || TextUtils.isEmpty(title))
-            throw new IllegalArgumentException("Invalid parameters found");
+        //TODO: Error here, so added more information to know about the error
+        if (userId == 0 || duration == 0 || size == 0 || TextUtils.isEmpty(title)) {
+            throw new IllegalArgumentException("Invalid parameters found" + " userId = " + userId
+                    + ", duration = " + duration + ", size = " + size + ", title = "+ title);
+        }
 
         return hashFunction.newHasher()
                 .putLong(userId)

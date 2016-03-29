@@ -52,9 +52,9 @@ public class InviteActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
             switch (position) {
-                case 0:
-                    return AllContactsFragment.newInstance();
                 case 1:
+                    return AllContactsFragment.newInstance();
+                case 0:
                     return InviteFragment.newInstance();
                 default:
                     return null;
@@ -64,9 +64,9 @@ public class InviteActivity extends AppCompatActivity {
         @Override
         public CharSequence getPageTitle(int position) {
             switch (position) {
-                case 0:
-                    return "Contacts";
                 case 1:
+                    return "Contacts";
+                case 0:
                     return "Others";
                 default:
                     return "";

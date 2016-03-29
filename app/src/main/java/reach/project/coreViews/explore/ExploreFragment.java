@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,7 +21,9 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,6 +39,9 @@ import com.facebook.imagepipeline.common.ResizeOptions;
 import com.facebook.imagepipeline.core.ImagePipeline;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
@@ -82,6 +90,7 @@ import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.invite.InviteActivity;
 import reach.project.music.ReachDatabase;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -97,15 +106,37 @@ import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Integer>, LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String TAG = ExploreFragment.class.getSimpleName();
     @Nullable
     private static WeakReference<ExploreFragment> reference = null;
     private static long myServerId = 0;
     private SharedPreferences preferences;
     private View noFriendsDiscoverLayoutContainer;
     private final ExecutorService requestSender = MiscUtils.getRejectionExecutor();
+    private AlertDialog fbShareDialog;
 
     public ExploreFragment() {
         reference = new WeakReference<>(this);
+    }
+
+    @Override
+    public void onPause() {
+        Log.d(TAG, "onPause: static reference is null now");
+        reference = null;
+        super.onPause();
+
+    }
+
+
+    @Override
+    public void onResume() {
+        Log.d(TAG, "onResume: ");
+        if(reference == null){
+            Log.d(TAG, "onResume: Initializing static reference");
+            reference = new WeakReference<ExploreFragment>(this);
+        }
+        super.onResume();
+
     }
 
     /**
@@ -392,7 +423,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager = (ViewPager) rootView.findViewById(R.id.explorer);
         explorePager.setClipToPadding(false);
         final int size = MiscUtils.dpToPx(16);
-        explorePager.setPadding(size, 0, size, (size*-1));
+        explorePager.setPadding(size, 0, size, (size * -1));
         //explorePager.setPageMargin(-1 * (MiscUtils.dpToPx(25)));
         explorePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -406,6 +437,18 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                         .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
                         .setValue(1)
                         .build());
+
+                if(SharedPrefUtils.getShowFacebookShareOrNot(preferences)) {
+                    if (position == 10) {
+                        if(preferences == null){
+                            preferences = SharedPrefUtils.getPreferences(getContext());
+                        }
+
+                        showFbDialog();
+                        SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences, false);
+                    }
+                }
+
             }
 
             @Override
@@ -415,7 +458,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         noFriendsDiscoverLayoutContainer = rootView.findViewById(R.id.exploreNoFriendsContainer);
         final Button sendRequestToDevikaButton = (Button) rootView.findViewById(R.id.sendRequestButton);
         sendRequestToDevikaButton.setOnClickListener(v ->
-                new SendRequest().executeOnExecutor(requestSender,StaticData.DEVIKA,
+                new SendRequest().executeOnExecutor(requestSender, StaticData.DEVIKA,
                         SharedPrefUtils.getServerId(getActivity().getSharedPreferences("Reach", Context.MODE_PRIVATE))));
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
 
@@ -543,6 +586,91 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         }
     }
 
+    private void showFbDialog(){
+
+        if (fbShareDialog != null) {
+            Log.d(TAG, "Invite Dialog is already showing");
+            if (fbShareDialog.isShowing()) {
+                return;
+            }
+        }
+
+
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        View vv = inflater.inflate(R.layout.fb_share_dialog_layout, null, false);
+        ((TextView)vv.findViewById(R.id.inviteText)).setText(Html.fromHtml("Enjoying <b>Reach</b>? Share your love!"));
+        vv.findViewById(R.id.shareButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                        .setCategory("Fb Share button in dialog clicked")
+                        .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                        .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                        .setValue(1)
+                        .build());
+                sharePostOnFb();
+                if(fbShareDialog!=null)
+                    fbShareDialog.dismiss();
+            }
+        });
+
+        vv.findViewById(R.id.cancelButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(fbShareDialog!=null)
+                    fbShareDialog.dismiss();
+            }
+        });
+
+        Log.d(TAG, "Show Invite Dialog");
+        alertDialogBuilder.setView(vv);
+        fbShareDialog = alertDialogBuilder.create();
+        fbShareDialog.show();
+        ((ReachApplication) getActivity().getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Facebook Dialog is shown")
+                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                .setValue(1)
+                .build());
+
+    }
+
+    private void sharePostOnFb() {
+
+        final LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        final View vv = inflater.inflate(R.layout.fb_share_layout,null);
+        final TextView username = (TextView)vv.findViewById(R.id.username);
+        username.setTypeface(Typeface.createFromAsset(getActivity().getAssets(),
+                "permanentmarker.ttf")
+        );
+        username.setText("- "+SharedPrefUtils.getUserName(preferences==null?SharedPrefUtils.getPreferences(getActivity()):preferences));
+        vv.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        vv.layout(0, 0, vv.getMeasuredWidth(),vv.getMeasuredHeight());
+
+        final Bitmap vBitmap = Bitmap.createBitmap(vv.getMeasuredWidth(),
+                vv.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(vBitmap);
+        vv.draw(canvas);
+
+        SharePhoto photo = new SharePhoto.Builder()
+                .setBitmap(vBitmap)
+                .build();
+        SharePhotoContent content = new SharePhotoContent.Builder()
+                .addPhoto(photo)
+                .build();
+
+        Toast.makeText(getActivity().getApplicationContext(), "Sharing On Facebook", Toast.LENGTH_SHORT).show();
+        SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
+        ShareDialog.show(getActivity(),content);
+
+    }
+
     private void showDiscoverAdapter(){
 
         if (explorePager == null || exploreAdapter != null || explorePager.getAdapter() != null)
@@ -562,20 +690,20 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         explorePager.setVisibility(View.VISIBLE);
     }
 
-    private void showNoFriendsDiscoverPage(){
+    private void showNoFriendsDiscoverPage() {
 
         fetchDevikaDetails();
 
-        if(exploreAdapter != null)
+        if (exploreAdapter != null)
             exploreAdapter = null;
         noFriendsDiscoverLayoutContainer.setVisibility(View.VISIBLE);
-        if(explorePager!=null) {
+        if (explorePager != null) {
             explorePager.setAdapter(null);
             explorePager.setVisibility(View.GONE);
         }
     }
 
-    private void fetchDevikaDetails(){
+    private void fetchDevikaDetails() {
 
         final Cursor cursor = getActivity().getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + StaticData.DEVIKA),
@@ -678,6 +806,41 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
     @Override
     public void handOverMessage(@Nonnull Integer position) {
+
+        //This is used for facebook share button
+        /*if(position == -11){
+            Log.d(TAG, "FB share clicked");
+            final LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            final View vv = inflater.inflate(R.layout.fb_share_layout,null);
+            final TextView username = (TextView)vv.findViewById(R.id.username);
+            username.setTypeface(Typeface.createFromAsset(getActivity().getAssets(),
+                    "permanentmarker.ttf")
+            );
+            username.setText("- "+SharedPrefUtils.getUserName(SharedPrefUtils.getPreferences(getActivity())));
+            vv.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            vv.layout(0, 0, vv.getMeasuredWidth(),vv.getMeasuredHeight());
+
+            final Bitmap vBitmap = Bitmap.createBitmap(vv.getMeasuredWidth(),
+                    vv.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+
+            Canvas canvas = new Canvas(vBitmap);
+            vv.draw(canvas);
+
+            SharePhoto photo = new SharePhoto.Builder()
+                    .setBitmap(vBitmap)
+                    .build();
+            SharePhotoContent content = new SharePhotoContent.Builder()
+                    .addPhoto(photo)
+                    .build();
+
+            Toast.makeText(getActivity().getApplicationContext(), "Sharing On Facebook", Toast.LENGTH_SHORT).show();
+            SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
+            ShareDialog.show(getActivity(),content);
+            return;
+
+        }*/
 
         //retrieve full json
         final JsonObject exploreJson = buffer.getViewItem(position); //test can not be null
@@ -811,24 +974,21 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
 
-
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data == null || data.isClosed() )
+        if (data == null || data.isClosed())
             return;
 
-        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER){
-            if(data.getCount()>0){
+        if (loader.getId() == StaticData.FRIENDS_VERTICAL_LOADER) {
+            if (data.getCount() > 0) {
                 showDiscoverAdapter();
-                Log.d("ExploreFragment","The user has friends and friends = " + data.getCount());
-            }
-            else{
-                Log.d("ExploreFragment","The user has no friends");
+                Log.d("ExploreFragment", "The user has friends and friends = " + data.getCount());
+            } else {
+                Log.d("ExploreFragment", "The user has no friends");
                 showNoFriendsDiscoverPage();
             }
-        }
-        else
-            throw new IllegalArgumentException("Illegal cursor inside ExploreFragment cursor id = "+ loader.getId());
+        } else
+            throw new IllegalArgumentException("Illegal cursor inside ExploreFragment cursor id = " + loader.getId());
 
     }
 

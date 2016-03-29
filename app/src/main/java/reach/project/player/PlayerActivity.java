@@ -641,6 +641,8 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
             //will always be non-null
             final String hashToFind = params[0];
+            if (hashToFind == null)
+                return 0;
 
             final Cursor cursor = MiscUtils.useActivityWithResult(reference, activity -> activity.getContentResolver().query(
                     SongProvider.CONTENT_URI,

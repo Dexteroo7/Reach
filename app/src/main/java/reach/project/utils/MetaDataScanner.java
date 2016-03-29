@@ -261,6 +261,7 @@ public class MetaDataScanner extends IntentService {
         final GoogleAccountCredential credential = GoogleAccountCredential
                 .usingAudience(this, StaticData.SCOPE)
                 .setSelectedAccountName(SharedPrefUtils.getEmailId(sharedPreferences));
+        //TODO: Null pointer error because credential.selectedAccountName was null
         Log.d("CodeVerification", credential.getSelectedAccountName());
 
         final UserApi userApi = CloudEndPointsUtils.updateBuilder(new UserApi.Builder(transport, factory, credential))

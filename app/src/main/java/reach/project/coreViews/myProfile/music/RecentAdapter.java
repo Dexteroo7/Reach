@@ -111,6 +111,7 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
 
     @Override
     public long getItemId(Song item) {
+        //TODO: Resolve Null pointer error here
         return item.fileHash.hashCode();
     }
 

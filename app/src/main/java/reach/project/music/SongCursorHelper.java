@@ -253,6 +253,7 @@ public enum SongCursorHelper {
                     .setReceiverId(cursor.getLong(15))
                     .setSenderId(cursor.getLong(16))
                     .setUserName(cursor.getString(17))
+                    //TODO: cursor.getString(18) is returning hello_world in some cases
                     .setOnlineStatus(ReachFriendsHelper.Status.getFromValue(Short.parseShort(cursor.getString(18))))
                     .setOperationKind(ReachDatabase.OperationKind.getFromValue(cursor.getShort(19)))
                     .setLogicalClock(cursor.getShort(20))
