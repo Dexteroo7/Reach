@@ -31,6 +31,7 @@ import reach.project.music.Song;
 import reach.project.music.SongCursorHelper;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SearchCursorWrapper;
 import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomGridLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -106,7 +107,8 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     ///////////Data set ops
     @Nullable
-    private Cursor myLibraryCursor = null;
+    //SearchCursorWrapper myLibraryCursor = null;
+    Cursor myLibraryCursor = null;
 
     public void setNewMyLibraryCursor(@Nullable Cursor newMyLibraryCursor) {
 
@@ -270,8 +272,16 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     @Nonnull
     private Object getItem(int position) {
 
-        if (position == 0)
-            return false; //recent
+
+
+         //recent
+        if(recentAdapter.getItemCount() ==0){
+            if (myLibraryCursor == null || myLibraryCursor.isClosed() || !myLibraryCursor.moveToPosition(position))
+                throw new IllegalStateException("Resource cursor has been corrupted");
+            return myLibraryCursor;
+        }
+        else if ( recentAdapter.getItemCount() !=0 && position == 0 )
+            return false;
 
         else {
 
@@ -305,10 +315,50 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     @Override
     public int getItemCount() {
+    int returnValue = 0;
+        /*if (myLibraryCursor != null && !myLibraryCursor.isClosed() ) {
+            if(recentAdapter!=null && recentAdapter.getItemCount()==0){
+                returnValue =  myLibraryCursor.getCount();
+            }
+            else {
 
-        if (myLibraryCursor != null && !myLibraryCursor.isClosed())
-            return myLibraryCursor.getCount() + 1;//adjust for recent list
-        return 0;
+                returnValue = myLibraryCursor.getCount() + 1;
+            }//adjust for recent list
+        }*/
+        if(recentAdapter == null && myLibraryCursor == null){
+            Log.d(TAG, "recentAdapter == null && myLibraryCursor == null");
+            returnValue = 0;
+        }
+        else{
+            if(recentAdapter == null){
+                Log.d(TAG, "recentAdapter == null");
+                returnValue =  myLibraryCursor.getCount();
+            }
+            else if(recentAdapter.getItemCount() == 0 && myLibraryCursor!=null){
+                Log.d(TAG, "recentAdapter.getItemCount() == 0 && myLibraryCursor!=null");
+                Log.d(TAG, "myLibraryCursor count = " + myLibraryCursor.getCount());
+                returnValue = myLibraryCursor.getCount();
+            }
+            else if(recentAdapter.getItemCount() == 0 && myLibraryCursor==null){
+                Log.d(TAG, "recentAdapter.getItemCount() == 0 && myLibraryCursor==null");
+                returnValue = 0;
+            }
+            else{
+                Log.d(TAG, "else condition");
+                if(myLibraryCursor!=null)
+                returnValue = myLibraryCursor.getCount() + 1;
+            }
+
+        }
+
+
+//        Log.d(TAG, "getItemCount: " + returnValue + " myLibraryCursor Count = " + myLibraryCursor==null? "null":myLibraryCursor.getCount()
+  //      + "recentCursorCount = " + recentAdapter == null?"null":recentAdapter.getItemCount() +""
+
+  //      );
+        //Log.d(TAG, "recentCount: " + recentAdapter.getItemCount());
+        Log.d(TAG, "getItemCount: " + returnValue);
+        return returnValue;
     }
 
     public static interface HandOverVisibilityToggle {

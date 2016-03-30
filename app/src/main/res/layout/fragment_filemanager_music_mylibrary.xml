@@ -1,4 +1,4 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
@@ -6,7 +6,15 @@
     <!--android:paddingLeft="10dp"
     android:paddingRight="10dp"-->
 
+    <EditText
+        android:id="@+id/search_music"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Search"
+        />
+
     <reach.project.coreViews.myProfile.EmptyRecyclerView
+        android:layout_below="@id/search_music"
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -15,4 +23,4 @@
     <include layout="@layout/empty_view_layout" />
 
 
-</FrameLayout>
+</RelativeLayout>

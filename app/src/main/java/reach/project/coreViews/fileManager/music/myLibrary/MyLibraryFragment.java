@@ -14,11 +14,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +53,7 @@ import reach.project.music.SongProvider;
 import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.ContentType;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SearchCursorWrapper;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
@@ -64,6 +68,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
     private static long myUserId = 0;
     private static final String TAG = MyLibraryFragment.class.getSimpleName();
     private SharedPreferences preferences;
+    private boolean shouldUpdateRecent = true;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -96,6 +101,35 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
         parentAdapter = new ParentAdapter(this, this, this);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(context));
         mRecyclerView.setAdapter(parentAdapter);
+        EditText searchMusic = (EditText) rootView.findViewById(R.id.search_music);
+        searchMusic.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                //3 is display name
+                //parentAdapter.setNewMyLibraryCursor(new SearchCursorWrapper(parentAdapter.myLibraryCursor,s.toString(),3));
+                if(s.length()>0){
+                parentAdapter.updateRecentMusic(new ArrayList<Song>());
+                    shouldUpdateRecent = false;
+                }
+                else if(s.length() == 0){
+                    shouldUpdateRecent = true;
+                    parentAdapter.updateRecentMusic(getRecentMyLibrary());
+                }
+                Bundle filterBundle = new Bundle();
+                filterBundle.putString("filter",s.toString().toLowerCase());
+                getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER,filterBundle,MyLibraryFragment.this);
+            }
+        });
 
         getLoaderManager().initLoader(StaticData.MY_LIBRARY_LOADER, null, this);
         return rootView;
@@ -150,16 +184,37 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         if (id == StaticData.MY_LIBRARY_LOADER)
-            return new CursorLoader(getActivity(),
-                    SongProvider.CONTENT_URI,
-                    SongCursorHelper.SONG_HELPER.getProjection(),
-                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                            SongHelper.COLUMN_OPERATION_KIND + " = ?",
-                    new String[]{
-                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                            ReachDatabase.Status.FINISHED.getString(),
-                            ReachDatabase.OperationKind.OWN.getString()},
-                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+            if(args == null) {
+                return new CursorLoader(getActivity(),
+                        SongProvider.CONTENT_URI,
+                        SongCursorHelper.SONG_HELPER.getProjection(),
+                        "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                                SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                        new String[]{
+                                ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                                ReachDatabase.Status.FINISHED.getString(),
+                                ReachDatabase.OperationKind.OWN.getString()},
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+            }
+        else{
+                final String filter = args.getString("filter");
+                return new CursorLoader(getActivity(),
+                        SongProvider.CONTENT_URI,
+                        SongCursorHelper.SONG_HELPER.getProjection(),
+                        "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ? and " +
+                                SongHelper.COLUMN_DISPLAY_NAME +
+                        " like ?) or (" +
+                                SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_DISPLAY_NAME +
+                                " like ?)" ,
+                        new String[]{
+                                ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                                ReachDatabase.Status.FINISHED.getString(),
+                                "%"+filter+"%",
+                                ReachDatabase.OperationKind.OWN.getString(),
+                                "%"+filter+"%"},
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+
+            }
         return null;
     }
 
@@ -178,8 +233,9 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             StaticData.librarySongsCount = count;
             //}
 
-            if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
+            if (count != parentAdapter.getItemCount() - 1 && shouldUpdateRecent) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
+            //SearchCursorWrapper searchableData = new SearchCursorWrapper(data,"",3);
             parentAdapter.setNewMyLibraryCursor(data);
         }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());

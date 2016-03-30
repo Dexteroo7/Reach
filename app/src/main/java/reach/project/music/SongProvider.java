@@ -61,6 +61,7 @@ public class SongProvider extends ContentProvider {
                 // adding the ID to the original query
                 queryBuilder.appendWhere(SongHelper.COLUMN_ID + "="
                         + uri.getLastPathSegment());
+
                 break;
             case DATABASE_META_HASH:
                 queryBuilder.appendWhere(SongHelper.COLUMN_META_HASH + "=" + uri.getLastPathSegment());
@@ -75,6 +76,11 @@ public class SongProvider extends ContentProvider {
         final SQLiteDatabase db = songHelper.getWritableDatabase();
         final Cursor cursor = queryBuilder.query(db, projection, selection,
                 selectionArgs, null, null, sortOrder);
+        Log.d(TAG, "query: " + queryBuilder.buildQuery(projection,selection,
+                null,null,
+                sortOrder,
+                null
+                ));
         // make sure that potential listeners are getting notified
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;
