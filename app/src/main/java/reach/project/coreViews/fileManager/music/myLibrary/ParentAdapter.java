@@ -362,7 +362,6 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
     }
 
     public static interface HandOverVisibilityToggle {
-
         public void HandoverMessage(int position, @NonNull Object message);
     }
 
