@@ -235,7 +235,8 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     }
 
     private YouTubePlayer player = null;
-    private TextView playerText = null;
+    private YouTubePlayerSupportFragment ytFragment;
+    private ImageView ytCloseBtn;
 
     private static class YTTest extends AsyncTask<String, Void, SearchResult> {
         @Override
@@ -267,7 +268,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
                 // To increase efficiency, only retrieve the fields that the
                 // application uses.
-                search.setFields("items(id/videoId,snippet/title)");
+                search.setFields("items(id/videoId)");
                 search.setMaxResults(1L);
 
                 // Call the API and print results.
@@ -295,8 +296,11 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
             if (searchResult == null)
                 return;
             MiscUtils.useActivity(reference, activity -> {
+                if (activity.ytCloseBtn.getVisibility() != View.VISIBLE)
+                    activity.ytCloseBtn.setVisibility(View.VISIBLE);
+                if (activity.ytFragment.isHidden())
+                    activity.getSupportFragmentManager().beginTransaction().show(activity.ytFragment).commit();
                 activity.player.loadVideo(searchResult.getId().getVideoId());
-                //activity.playerText.setText(searchResult.getSnippet().getTitle());
             });
         }
     }
@@ -505,10 +509,9 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);
 
-        //playerText = (TextView) rootView.findViewById(R.id.playerText);
+        ytFragment = (YouTubePlayerSupportFragment) getSupportFragmentManager().findFragmentById(R.id.video_fragment_container);
 
-        final YouTubePlayerSupportFragment fragment = YouTubePlayerSupportFragment.newInstance();
-        fragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
+        ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
                 player = youTubePlayer;
@@ -522,7 +525,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
             }
         });
-        getSupportFragmentManager().beginTransaction().replace(R.id.ytFloating, fragment, "YouTubePlayerSupportFragment").commit();
+        ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
+        if (ytCloseBtn != null)
+            ytCloseBtn.setVisibility(View.GONE);
+        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+
+        if (ytCloseBtn != null)
+            ytCloseBtn.setOnClickListener(v -> {
+                ytCloseBtn.setVisibility(View.GONE);
+                getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                player.pause();
+            });
     }
 
     private String fastSanitize(String str) {

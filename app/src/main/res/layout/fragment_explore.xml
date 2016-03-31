@@ -2,7 +2,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@null">
+    android:background="@color/reach_grey_bg">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/exploreToolbar"
@@ -15,8 +15,7 @@
         android:id="@+id/explorer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/exploreToolbar"
-        android:background="#fff" />
+        android:layout_below="@+id/exploreToolbar" />
     <include layout="@layout/no_friends_discover_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

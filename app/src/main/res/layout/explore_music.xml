@@ -1,153 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingRight="12dp"
-    android:paddingLeft="12dp">-->
 <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:descendantFocusability="blocksDescendants"
     android:id="@+id/card_view"
     android:layout_marginBottom="-10dp"
     card_view:cardUseCompatPadding="true"
     card_view:cardElevation="4dp"
     card_view:cardCornerRadius="2dp"
-    card_view:cardPreventCornerOverlap="true"
-    >
-        <android.support.percent.PercentRelativeLayout
+    card_view:cardPreventCornerOverlap="true" >
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/typeText"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/icon_download_white"
+            android:background="@drawable/circular_background_grey"
+            android:padding="3dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp" />
+        <LinearLayout
+            android:id="@+id/handle"
+            android:layout_marginLeft="16dp"
+            android:layout_toLeftOf="@id/typeText"
+            android:layout_alignTop="@id/typeText"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
             <com.facebook.drawee.view.SimpleDraweeView
-                android:id="@+id/image"
-                android:background="@drawable/explore_bg"
-                fresco:placeholderImage="@drawable/explore_placeholder"
-                android:layout_width="match_parent"
-                app:layout_heightPercent="55%" />
-            <View
-                android:background="@drawable/shadow_bottom"
-                android:layout_width="match_parent"
-                android:layout_below="@id/image"
-                app:layout_heightPercent="1%" />
-            <reach.project.utils.viewHelpers.CustomImageView
-                android:id="@+id/downButton"
-                app:layout_widthPercent="18%"
-                app:layout_marginTopPercent="48%"
-                android:layout_centerHorizontal="true"
-                android:padding="10dp"
-                android:elevation="8dp"
-                android:background="@drawable/circular_background_pink"
-                android:src="@drawable/play_white_selector" />
-            <!--<LinearLayout
-                android:id="@+id/type"
-                app:layout_marginTopPercent="1%"
-                android:gravity="center_vertical"
-                android:layout_below="@id/downButton"
-                android:layout_centerHorizontal="true"
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <ImageView
-                    android:id="@+id/typeIcon"
-                    android:layout_marginRight="2dp"
-                    android:src="@drawable/icon_song_indicator_gray"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp" />-->
-                <TextView
-                    android:layout_centerHorizontal="true"
-                    android:id="@+id/typeText"
-                    android:text="Type"
-                    android:textSize="17sp"
-                    android:textStyle="bold"
-                    android:drawableLeft="@drawable/icon_song_indicator_gray"
-                    android:background="@null"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/downButton"
-                    android:gravity="center"
-                    />
-            <!--</LinearLayout>-->
+                android:id="@+id/userImage"
+                fresco:roundAsCircle="true"
+                fresco:placeholderImage="@drawable/default_profile_circle"
+                android:layout_marginRight="8dp"
+                android:layout_width="35dp"
+                android:layout_height="35dp" />
             <TextView
-                android:id="@+id/title"
-                android:gravity="center"
-                android:lines="1"
-                android:ellipsize="marquee"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:text="Title Title"
-                android:layout_below="@id/typeText"
-                app:layout_marginTopPercent="0.5%"
-                android:layout_centerHorizontal="true"
-                android:textColor="#000"
-                android:textSize="20sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <TextView
-                android:id="@+id/subtitle"
-                android:gravity="center"
-                android:lines="1"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:ellipsize="marquee"
-                android:layout_below="@id/title"
-                android:text="Subtitle"
-                android:layout_centerHorizontal="true"
+                android:id="@+id/userHandle"
+                android:text="handle"
                 android:textSize="16sp"
+                android:maxLines="2"
+                android:ellipsize="marquee"
+                android:textColor="@color/reach_grey"
+                android:textStyle="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-            <LinearLayout
-                android:id="@+id/handle"
-                app:layout_marginTopPercent="1%"
-                android:layout_centerHorizontal="true"
-                android:layout_below="@id/subtitle"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <com.facebook.drawee.view.SimpleDraweeView
-                    android:id="@+id/userImage"
-                    fresco:roundAsCircle="true"
-                    fresco:placeholderImage="@drawable/default_profile_circle"
-                    android:layout_marginRight="5dp"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp" />
-                <TextView
-                    android:id="@+id/userHandle"
-                    android:text="handle"
-                    android:gravity="center"
-                    android:layout_marginTop="2dp"
-                    android:textSize="16sp"
-                    android:textColor="@color/reach_color"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <!--<TextView
-                android:id="@+id/facebook_share_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Show us some love on facebook"
-                android:layout_below="@id/handle"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_centerHorizontal="true"
-                android:background="@color/facebook_blue_color"
-                android:textColor="@color/white"
-                android:paddingLeft="8dp"
-                android:drawablePadding="8dp"
-                android:paddingRight="8dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:drawableLeft="@drawable/com_facebook_button_icon"
-                android:visibility="gone"
-                />-->
-        </android.support.percent.PercentRelativeLayout>
-    </android.support.v7.widget.CardView>
-<!--
-</FrameLayout>-->
+        </LinearLayout>
+        <TextView
+            android:id="@+id/title"
+            android:lines="1"
+            android:ellipsize="marquee"
+            android:text="Title Title"
+            android:textColor="#000"
+            android:textSize="20sp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginRight="16dp"
+            android:layout_below="@id/handle"
+            android:layout_alignLeft="@id/handle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/subtitle"
+            android:lines="1"
+            android:layout_marginBottom="16dp"
+            android:layout_alignLeft="@id/title"
+            android:ellipsize="marquee"
+            android:layout_below="@id/title"
+            android:text="Subtitle"
+            android:layout_toLeftOf="@+id/downButton"
+            android:textSize="16sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/image"
+            android:layout_below="@id/subtitle"
+            android:background="@drawable/explore_bg"
+            fresco:placeholderImage="@drawable/explore_placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <View
+            android:background="@drawable/shadow_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_alignTop="@id/image" />
+        <reach.project.utils.viewHelpers.CustomImageView
+            android:id="@id/downButton"
+            android:layout_height="60dp"
+            android:layout_width="60dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="-32dp"
+            android:layout_alignTop="@id/image"
+            android:padding="8dp"
+            android:elevation="4dp"
+            android:background="@drawable/circular_background_pink"
+            android:src="@drawable/play_white_selector" />
+    </RelativeLayout>
+</android.support.v7.widget.CardView>

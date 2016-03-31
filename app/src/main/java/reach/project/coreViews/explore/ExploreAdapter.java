@@ -1,6 +1,5 @@
 package reach.project.coreViews.explore;
 
-import android.animation.ValueAnimator;
 import android.net.Uri;
 import android.support.v4.util.Pair;
 import android.support.v4.view.PagerAdapter;
@@ -9,7 +8,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -72,7 +70,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             final TextView title = (TextView) layout.findViewById(R.id.title);
             final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
             final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
-            final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+            //final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
             //final TextView facebookShare = (TextView) layout.findViewById(R.id.facebook_share_text);
@@ -105,7 +103,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         userHandle.setText(userNameAndImageId.first);
                     else
                         userHandle.setText(originalUserName);
-                    typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
+                    //typeText.setText(MiscUtils.get(musicViewInfo, MusicViewInfo.TYPE_TEXT).getAsString());
 
                     userImage.setImageURI(AlbumArtUri.getUserImageUri(
                             userId,
@@ -150,7 +148,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                         userHandle.setText(userNameAndImageId.first);
                     else
                         userHandle.setText(originalUserName);
-                    typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
+                    //typeText.setText(MiscUtils.get(appViewInfo, AppViewInfo.TYPE_TEXT).getAsString());
 
                     final String appIcon = MiscUtils.get(appViewInfo, AppViewInfo.SMALL_IMAGE_URL, "").getAsString();
                     if (!TextUtils.isEmpty(appIcon))
@@ -249,7 +247,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
         handOverMessage.handOverMessage((int) view.getTag());
 
-        if (view instanceof ImageView) {
+        /*if (view instanceof ImageView) {
 
             ((ImageView) view).setImageResource(R.drawable.icon_downloading_active);
             final ValueAnimator animator = ValueAnimator.ofInt(0, MiscUtils.dpToPx(5));
@@ -263,7 +261,7 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             });
             animator.setInterpolator(new AccelerateInterpolator());
             animator.start();
-        }
+        }*/
     }
 
     interface Explore {

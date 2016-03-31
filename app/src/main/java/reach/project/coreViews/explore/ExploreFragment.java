@@ -283,6 +283,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 final long lastRequestTime = SharedPrefUtils.getLastRequestTime(fragment.preferences);
                     toReturn.addProperty("lastRequestTime", lastRequestTime);
             });*/
+            Log.d("Ashish", "jsonArray size = " + jsonArray.size());
             toReturn.add("friends", jsonArray);
 
             return toReturn;
@@ -317,6 +318,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             Log.d("Ayush", object.toString());
 
             final ExploreTypes exploreTypes = ExploreTypes.valueOf(MiscUtils.get(object, ExploreJSON.TYPE).getAsString());
+            if (exploreTypes != ExploreTypes.MUSIC)
+                continue;
             final JsonObject viewInfo = MiscUtils.get(object, ExploreJSON.VIEW_INFO).getAsJsonObject();
             final ImageRequest imageRequest;
             final String image;
