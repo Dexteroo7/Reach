@@ -1,5 +1,7 @@
 package reach.project.utils.viewHelpers;
 
+import android.app.SearchManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -9,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +23,7 @@ import com.astuetz.PagerSlidingTabStrip;
 import java.lang.reflect.Method;
 
 import reach.project.R;
+import reach.project.core.SearchResultsActivity;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 
@@ -29,6 +33,7 @@ import reach.project.utils.ancillaryClasses.SuperInterface;
 public class PagerFragment extends Fragment {
 
     public static final String PARCEL_PAGER = "PARCEL_PAGER";
+    public SearchView searchView;
 
     public static class Pages implements Parcelable {
 
@@ -140,8 +145,19 @@ public class PagerFragment extends Fragment {
 
             if (title.equals("Share"))
                 toolbar.inflateMenu(R.menu.menu_push);
-            else
+            else {
                 toolbar.inflateMenu(R.menu.pager_menu);
+                SearchManager searchManager =
+                        (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+                searchView =
+                        (SearchView) toolbar.getMenu().findItem(R.id.search).getActionView();
+
+                ComponentName componentName = new ComponentName(getContext(), SearchResultsActivity.class);
+                searchView.setQueryHint("Search your files");
+                searchView.setSearchableInfo(
+                        searchManager.getSearchableInfo(componentName));
+
+            }
         }
 
         final Parcelable[] parcelables = arguments.getParcelableArray(PARCEL_PAGER);

@@ -47,6 +47,7 @@
             <intent-filter>
                 <action android:name="process_multiple" />
             </intent-filter>
+
         </activity>
         <activity
             android:name=".onBoarding.SplashActivity"
@@ -198,7 +199,6 @@
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".pacemaker.HeartbeatReceiver"
             android:exported="false" />
@@ -227,11 +227,9 @@
         <service
             android:name=".core.GcmIntentService"
             android:exported="false" />
-
         <service
             android:name=".utils.MetaDataScanner"
             android:exported="false" />
-
         <service
             android:name=".onBoarding.smsRelated.SmsListener"
             android:exported="false" />
@@ -241,7 +239,6 @@
             android:authorities="reach.project.coreViews.friends.ReachFriendsProvider"
             android:exported="false"
             android:multiprocess="true" />
-
         <provider
             android:name=".music.SongProvider"
             android:authorities="reach.project.music.SongProvider"
@@ -268,18 +265,30 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />
         </activity>
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <activity android:name="com.facebook.FacebookActivity"
-            android:configChanges=
-                "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:label="@string/app_name" />
-
-        <provider android:authorities="com.facebook.app.FacebookContentProvider1506078176373024"
+        <provider
             android:name="com.facebook.FacebookContentProvider"
-            android:exported="true"/>
+            android:authorities="com.facebook.app.FacebookContentProvider1506078176373024"
+            android:exported="true" />
 
+        <activity android:name=".core.SearchResultsActivity"
+            android:launchMode="singleTop"
+            >
 
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+
+        </activity>
     </application>
 
 </manifest>

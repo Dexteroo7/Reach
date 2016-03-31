@@ -1,30 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
+    <!--<item
         android:id="@+id/search_button"
         android:title="Search"
         android:visible="false"
         android:icon="@drawable/icon_search_pink"
         app:showAsAction="always|collapseActionView"
         app:actionViewClass="android.support.v7.widget.SearchView"
-        />
+        />-->
+
+    <item android:id="@+id/search"
+        android:title="Search"
+        android:icon="@android:drawable/ic_menu_search"
+        app:showAsAction="collapseActionView|ifRoom"
+        app:actionViewClass="android.support.v7.widget.SearchView" />
+
     <item
         android:id="@+id/player_button"
         android:title="Player"
-        app:showAsAction="always"
+        app:showAsAction="never"
         android:icon="@drawable/ic_player"
         />
     <item
         android:id="@+id/notif_button"
         android:title="Notifications"
-        app:showAsAction="always"
+        app:showAsAction="never"
         android:icon="@drawable/icon_notification_pink"
         />
     <item
         android:id="@+id/my_profile_button"
         android:title="My Profile"
-        app:showAsAction="always"
+        app:showAsAction="never"
         android:icon="@drawable/ic_account_circle_pink_24dp"
         >
 

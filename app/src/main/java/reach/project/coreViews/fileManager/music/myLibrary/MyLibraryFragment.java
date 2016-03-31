@@ -14,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.appspot.able_door_616.contentStateApi.ContentStateApi;
+import com.facebook.common.logging.LoggingDelegate;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -53,6 +55,8 @@ import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 import reach.project.utils.viewHelpers.HandOverMessage;
+import reach.project.utils.viewHelpers.PagerFragment;
+import reach.project.utils.viewHelpers.PagerInnerFragment;
 
 /**
  * Created by dexter on 25/11/15.
@@ -177,6 +181,28 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             //MyProfileActivity.countChanged = true;
             StaticData.librarySongsCount = count;
             //}
+
+            ((PagerFragment)(((PagerInnerFragment)getParentFragment()).getParentFragment())).searchView.setSuggestionsAdapter(new CursorAdapter(getActivity(),data,0) {
+                @Override
+                public View newView(Context context, Cursor cursor, ViewGroup parent) {
+                    LayoutInflater inflater=(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    View v = inflater.inflate(android.R.layout.simple_list_item_1,null);
+
+                    return v;
+                }
+
+                @Override
+                public void bindView(View view, Context context, Cursor cursor) {
+                    ((TextView)view.findViewById(android.R.id.text1)).setText(cursor.getString(3));
+                    Log.d(TAG, "bindView: ");
+                    
+                }
+
+                @Override
+                public int getCount() {
+                    return super.getCount();
+                }
+            });
 
             if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
