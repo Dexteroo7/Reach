@@ -26,6 +26,7 @@ public final class StaticData {
     public static final FeedBackApi FEED_BACK_API;
     public static final Messaging.MessagingEndpoint MESSAGING_API;
     public static final NotificationApi NOTIFICATION_API;
+    public static final String NULL_STRING = "NULL";
 
     public static final String NO_SONGS_TEXT = "No songs!";
     public static int deviceWidth=0;
