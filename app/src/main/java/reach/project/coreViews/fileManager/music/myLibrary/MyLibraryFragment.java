@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,14 +15,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.CursorAdapter;
-import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FilterQueryProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +68,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
     private static long myUserId = 0;
     private static final String TAG = MyLibraryFragment.class.getSimpleName();
     private SharedPreferences preferences;
+    public static boolean SONGS_DATA_CHANNGED = false;
 
     public static MyLibraryFragment getInstance(String header) {
 
@@ -109,6 +106,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
         return rootView;
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
 
     @Override
     public void onDestroyView() {
@@ -248,9 +251,12 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
 
             ((PagerFragment)(((PagerInnerFragment)getParentFragment()).getParentFragment())).searchView.setSuggestionsAdapter(searchViewAdapter);
 */
-            if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
+
+
+            if (count != parentAdapter.getItemCount() - 1 || SONGS_DATA_CHANNGED) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
             parentAdapter.setNewMyLibraryCursor(data);
+            SONGS_DATA_CHANNGED = false;
         }
         mRecyclerView.checkIfEmpty(parentAdapter.getItemCount());
     }

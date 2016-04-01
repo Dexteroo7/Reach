@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTabHost;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
@@ -29,8 +30,10 @@ import com.astuetz.PagerSlidingTabStrip;
 import java.lang.reflect.Method;
 
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.SearchResultsActivity;
 import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
+import reach.project.coreViews.fileManager.myfiles_search.MyFilesSearchFragment;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 
@@ -43,7 +46,7 @@ public class PagerFragment extends Fragment {
     public SearchView searchView;
     private boolean isSearchViewFragVisible = false;
     private static final String TAG = PagerFragment.class.getSimpleName();
-    private MyLibraryFragment frag;
+    private MyFilesSearchFragment frag;
 
     public static class Pages implements Parcelable {
 
@@ -137,6 +140,7 @@ public class PagerFragment extends Fragment {
 
     private Fragment[] fragments = null;
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -165,11 +169,30 @@ public class PagerFragment extends Fragment {
                 searchView =
                         (SearchView) searchViewMenuItem.getActionView();
 
-                ComponentName componentName = new ComponentName(getContext(), SearchResultsActivity.class);
+                //ComponentName componentName = new ComponentName(getContext(), SearchResultsActivity.class);
                 searchView.setQueryHint("Search your files");
-                searchView.setSearchableInfo(
-                        searchManager.getSearchableInfo(componentName));
-                frag = new MyLibraryFragment();
+                //searchView.setSearchableInfo(
+                 //       searchManager.getSearchableInfo(componentName));
+                frag = new MyFilesSearchFragment();
+
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+
+                        if(frag!=null){
+                            if(!frag.isAdded())
+                                return true;
+                            frag.filter(newText.toLowerCase());
+                        }
+
+                        return true;
+                    }
+                });
 
                 MenuItemCompat.setOnActionExpandListener(searchViewMenuItem, new MenuItemCompat.OnActionExpandListener() {
                     @Override
@@ -178,12 +201,17 @@ public class PagerFragment extends Fragment {
                             tabLayout.setVisibility(View.GONE);
                             searchFragmentContainer.setVisibility(View.VISIBLE);
                             if(frag == null){
-                                frag = new MyLibraryFragment();
+                                frag = new MyFilesSearchFragment();
                             }
                             getFragmentManager().beginTransaction().replace(R.id.search_results_fragment_container,frag ).commit();
                             isSearchViewFragVisible = true;
                             viewPagerContainer.setVisibility(View.GONE);
                             Log.d(TAG, "onClick: searchview frag is now visible");
+                            FragmentTabHost mTabHost = ((ReachActivity) getActivity()).mTabHost;
+                            if(mTabHost!=null){
+                                mTabHost.setVisibility(View.GONE);
+                            }
+
 
                         }
                         return true;
@@ -196,6 +224,11 @@ public class PagerFragment extends Fragment {
                         isSearchViewFragVisible = false;
                         tabLayout.setVisibility(View.VISIBLE);
                         searchFragmentContainer.setVisibility(View.GONE);
+                        FragmentTabHost mTabHost = ((ReachActivity) getActivity()).mTabHost;
+                        if(mTabHost!=null){
+                            mTabHost.setVisibility(View.VISIBLE);
+                        }
+
                         viewPagerContainer.setVisibility(View.VISIBLE);
                         Log.d(TAG, "onClick: searchview frag is now invisible");
                         return true;
@@ -340,5 +373,7 @@ public class PagerFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
+
+
 
 }

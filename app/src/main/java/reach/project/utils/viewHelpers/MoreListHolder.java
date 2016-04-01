@@ -14,6 +14,8 @@ import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
 
+import org.w3c.dom.Text;
+
 import java.lang.ref.WeakReference;
 
 import javax.annotation.Nonnull;
@@ -32,6 +34,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
     public final TextView headerText;
     public final RecyclerView listOfItems;
     private SharedPreferences preferences;
+    public final TextView moreButton;
 
 
     public MoreListHolder(ViewGroup parent,
@@ -43,6 +46,7 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         super(LayoutInflater.from(parent.getContext()).inflate(itemViewResourceId, parent, false));
         this.headerText = (TextView) itemView.findViewById(headerTextResourceId);
         this.listOfItems = (RecyclerView) itemView.findViewById(listOfItemsResourceId);
+        this.moreButton = (TextView) itemView.findViewById(R.id.moreButton);
         itemView.findViewById(moreButtonId).setOnClickListener(this);
         itemView.setPadding(MiscUtils.dpToPx(10),MiscUtils.dpToPx(32), MiscUtils.dpToPx(10),0 );
         itemView.setBackgroundResource(R.drawable.border_shadow1);
@@ -54,7 +58,8 @@ public class MoreListHolder extends RecyclerView.ViewHolder implements View.OnCl
         this.headerText = (TextView) itemView.findViewById(R.id.headerText);
         this.listOfItems = (RecyclerView) itemView.findViewById(R.id.listOfItems);
         this.listOfItems.setNestedScrollingEnabled(false);
-        itemView.findViewById(R.id.moreButton).setOnClickListener(this);
+        this.moreButton = (TextView) itemView.findViewById(R.id.moreButton);
+        this.moreButton.setOnClickListener(this);
     }
 
     @Nullable

@@ -223,7 +223,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
 
-    private FragmentTabHost mTabHost;
+    public FragmentTabHost mTabHost;
 
     private static long serverId = 0;
 
