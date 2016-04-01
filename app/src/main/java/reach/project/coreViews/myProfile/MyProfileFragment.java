@@ -39,6 +39,7 @@ import java.lang.ref.WeakReference;
 import reach.project.R;
 import reach.project.ancillaryViews.TermsActivity;
 import reach.project.core.ReachActivity;
+import reach.project.core.StaticData;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
 import reach.project.music.ReachDatabase;
@@ -381,8 +382,9 @@ public class MyProfileFragment extends Fragment implements ViewPager.OnPageChang
             final ContentResolver contentResolver = params[0].getContentResolver();
             final PackageManager packageManager = params[0].getPackageManager();
 
+            //TODO done meta 1
             final Cursor cursor = contentResolver.query(SongProvider.CONTENT_URI,
-                    new String[]{SongHelper.COLUMN_ID}, null, null, null);
+                    new String[]{SongHelper.COLUMN_ID}, SongHelper.COLUMN_META_HASH + " != ?", new String[]{StaticData.NULL_STRING}, null);
             final int songCount;
             if (cursor != null) {
                 songCount = cursor.getCount();

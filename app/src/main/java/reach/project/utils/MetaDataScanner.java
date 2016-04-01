@@ -51,14 +51,17 @@ public class MetaDataScanner extends IntentService {
 
         final Cursor reachDatabaseCursor = resolver.query(
 
+                //TODO done meta 1
                 SongProvider.CONTENT_URI,
                 SongCursorHelper.SONG_HELPER.getProjection(),
-                "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
-                        SongHelper.COLUMN_OPERATION_KIND + " = ?",
+                "((" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ?) or " +
+                        SongHelper.COLUMN_OPERATION_KIND + " = ?) and " + SongHelper.COLUMN_META_HASH + " != ?",
                 new String[]{
                         ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
                         ReachDatabase.Status.FINISHED.getString(),
-                        ReachDatabase.OperationKind.OWN.getString()},
+                        ReachDatabase.OperationKind.OWN.getString(),
+                        StaticData.NULL_STRING
+                },
                 SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
 
 

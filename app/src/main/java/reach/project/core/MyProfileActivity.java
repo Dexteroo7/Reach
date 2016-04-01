@@ -270,8 +270,9 @@ public class MyProfileActivity extends AppCompatActivity implements View.OnClick
             final ContentResolver contentResolver = params[0].getContentResolver();
             final PackageManager packageManager = params[0].getPackageManager();
 
+            //TODO done meta 1
             final Cursor cursor = contentResolver.query(SongProvider.CONTENT_URI,
-                    new String[]{SongHelper.COLUMN_ID}, null, null, null);
+                    new String[]{SongHelper.COLUMN_ID}, SongHelper.COLUMN_META_HASH + " != ?", new String []{StaticData.NULL_STRING}, null);
             final int songCount, friendsCount;
             if (cursor != null) {
                 songCount = cursor.getCount();

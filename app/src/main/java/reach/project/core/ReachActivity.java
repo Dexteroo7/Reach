@@ -377,13 +377,18 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                     new android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>() {
                         @Override
                         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+                            //TODO done meta 1
                             return new CursorLoader(ReachActivity.this,
                                     SongProvider.CONTENT_URI,
                                     SongHelper.MUSIC_DATA_LIST,
-                                    SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
-                                            SongHelper.COLUMN_OPERATION_KIND + " = ?", //show only downloads
+                                    "( " + SongHelper.COLUMN_STATUS + " = ? and " + //show only finished
+                                            SongHelper.COLUMN_OPERATION_KIND + " = ? ) and " + SongHelper.COLUMN_META_HASH
+                                    + " != ?"
+                                    , //show only downloads
                                     new String[]{ReachDatabase.Status.FINISHED.getString(),
-                                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString()},
+                                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                                    StaticData.NULL_STRING},
                                     SongHelper.COLUMN_DATE_ADDED + " DESC");
                         }
 
@@ -907,19 +912,23 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
          * DISPLAY_NAME, ACTUAL_NAME, SIZE & DURATION all can not be same, effectively its a hash
          */
 
+        //TODO done meta 1
         final Cursor cursor;
         if (multiple)
             cursor = contentResolver.query(
                     SongProvider.CONTENT_URI,
                     new String[]{SongHelper.COLUMN_ID},
-                    SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                    "( "+SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
                             SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
                             SongHelper.COLUMN_SIZE + " = ? and " +
-                            SongHelper.COLUMN_DURATION + " = ?",
-                    new String[]{displayName, actualName, size + "", duration + ""},
+                            SongHelper.COLUMN_DURATION + " = ? ) and " + SongHelper.COLUMN_META_HASH
+                    + " != ?"
+                    ,
+                    new String[]{displayName, actualName, size + "", duration + "", StaticData.NULL_STRING},
                     null);
         else
             //this cursor can be used to play if entry exists
+            //TODO done meta 1
             cursor = contentResolver.query(
                     SongProvider.CONTENT_URI,
                     new String[]{
@@ -936,11 +945,17 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
                     },
 
-                    SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                    /*SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
                             SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
                             SongHelper.COLUMN_SIZE + " = ? and " +
-                            SongHelper.COLUMN_DURATION + " = ?",
-                    new String[]{displayName, actualName, size + "", duration + ""},
+                            SongHelper.COLUMN_DURATION + " = ?"*/
+                    "( "+SongHelper.COLUMN_DISPLAY_NAME + " = ? and " +
+                            SongHelper.COLUMN_ACTUAL_NAME + " = ? and " +
+                            SongHelper.COLUMN_SIZE + " = ? and " +
+                            SongHelper.COLUMN_DURATION + " = ? ) and " + SongHelper.COLUMN_META_HASH
+                            + " != ?"
+                    ,
+                    new String[]{displayName, actualName, size + "", duration + "", StaticData.NULL_STRING},
                     null);
 
         if (cursor != null) {
