@@ -118,7 +118,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
                 //3 is display name
                 //parentAdapter.setNewMyLibraryCursor(new SearchCursorWrapper(parentAdapter.myLibraryCursor,s.toString(),3));
                 if(s.length()>0){
-                parentAdapter.updateRecentMusic(new ArrayList<Song>());
+                //parentAdapter.updateRecentMusic(new ArrayList<Song>());
                     shouldUpdateRecent = false;
                 }
                 else if(s.length() == 0){
@@ -128,6 +128,7 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
                 Bundle filterBundle = new Bundle();
                 filterBundle.putString("filter",s.toString().toLowerCase());
                 getLoaderManager().restartLoader(StaticData.MY_LIBRARY_LOADER,filterBundle,MyLibraryFragment.this);
+                parentAdapter.filterRecent(s.toString().toLowerCase());
             }
         });
 

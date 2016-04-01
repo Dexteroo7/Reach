@@ -16,6 +16,7 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.common.base.Optional;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -313,11 +314,32 @@ class RecentAdapter extends SimpleRecyclerAdapter<Song, SongItemHolder> implemen
     public int getItemCount() {
 
         final int length = super.getItemCount();
-        return length > 4 ? 4 : length;
+        return length;
+        //return length > 4 ? 4 : length;
     }
 
     @Override
     public void passNewAdapter(WeakReference<RecyclerView.Adapter> adapterWeakReference) {
         this.adapterWeakReference = adapterWeakReference;
     }
+
+    public void filterObjects(String constraint){
+        final List<Song> songItems = getMessageList();
+        List<Song> filteredSongItems = new ArrayList<Song>();
+
+        for (Song song : songItems){
+
+            if(song.getDisplayName().toLowerCase().contains(constraint)){
+                filteredSongItems.add(song);
+            }
+
+        }
+
+        getMessageList().clear();
+        getMessageList().addAll(filteredSongItems);
+        notifyDataSetChanged();
+
+
+    }
+
 }

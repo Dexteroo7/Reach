@@ -365,6 +365,10 @@ class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
         public void HandoverMessage(int position, @NonNull Object message);
     }
 
+    public void filterRecent(String constraint){
+        recentAdapter.filterObjects(constraint);
+    }
+
 }
 
 
