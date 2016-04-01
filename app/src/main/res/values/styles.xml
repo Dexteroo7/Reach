@@ -11,9 +11,31 @@
         <item name="colorPrimaryDark">@color/reach_dark</item>
         <item name="colorAccent">@color/reach_color</item>
         <item name="android:fitsSystemWindows">true</item>
+
         <!--<item name="actionOverflowMenuStyle">@style/OverflowMenu</item>-->
 
     </style>
+    <!--<item name="android:searchViewStyle">@style/MySearchViewStyle</item>-->
+    <style name="MySearchViewStyle" parent="Widget.AppCompat.SearchView">
+
+        <item name="searchIcon">@drawable/ic_search_black_24dp</item>
+
+    <!--<item name="queryBackground">@layout/</item>
+
+    <item name="submitBackground">...</item>
+
+    <item name="closeIcon">...</item>
+
+
+
+    <item name="goIcon">...</item>
+
+    <item name="voiceIcon">...</item>
+
+    <item name="commitIcon">...</item>
+
+    <item name="suggestionRowLayout">...</item>-->
+</style>
 
     <style name="BaseAppThemeTry" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->

@@ -6,20 +6,24 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FilterQueryProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -153,6 +157,8 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
+
+
         if (id == StaticData.MY_LIBRARY_LOADER)
             return new CursorLoader(getActivity(),
                     SongProvider.CONTENT_URI,
@@ -182,28 +188,64 @@ public class MyLibraryFragment extends Fragment implements HandOverMessage, Pare
             StaticData.librarySongsCount = count;
             //}
 
-            ((PagerFragment)(((PagerInnerFragment)getParentFragment()).getParentFragment())).searchView.setSuggestionsAdapter(new CursorAdapter(getActivity(),data,0) {
+            /*((PagerFragment)(((PagerInnerFragment)getParentFragment()).getParentFragment())).searchView*/
+
+
+            /*final CursorAdapter searchViewAdapter = new CursorAdapter(getActivity(), data, 0) {
                 @Override
                 public View newView(Context context, Cursor cursor, ViewGroup parent) {
-                    LayoutInflater inflater=(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    View v = inflater.inflate(android.R.layout.simple_list_item_1,null);
+                    LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    View v = inflater.inflate(android.R.layout.simple_list_item_1, null);
 
                     return v;
                 }
 
                 @Override
                 public void bindView(View view, Context context, Cursor cursor) {
-                    ((TextView)view.findViewById(android.R.id.text1)).setText(cursor.getString(3));
+                    TextView text = (TextView) view.findViewById(android.R.id.text1);
+                    text.setText(cursor.getString(3));
+                    text.setBackgroundColor(Color.WHITE);
+                    text.setTextColor(Color.DKGRAY);
                     Log.d(TAG, "bindView: ");
-                    
+
                 }
 
                 @Override
                 public int getCount() {
                     return super.getCount();
                 }
+            };
+            searchViewAdapter.setFilterQueryProvider(new FilterQueryProvider() {
+                @Override
+                public Cursor runQuery(CharSequence constraint) {
+                    final String s = '%' + constraint.toString() + '%';
+
+                   return getActivity().getContentResolver().query(
+                            SongProvider.CONTENT_URI,
+                            SongCursorHelper.SONG_HELPER.getProjection(),
+                           "((" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ? and " +
+                                   SongHelper.COLUMN_DISPLAY_NAME +
+                                   " like ?) or (" +
+                                   SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_DISPLAY_NAME +
+                                   " like ?)) and " + SongHelper.COLUMN_META_HASH + " != ? " ,
+                           new String[]{
+                                   ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                                   ReachDatabase.Status.FINISHED.getString(),
+                                   s,
+                                   ReachDatabase.OperationKind.OWN.getString(),
+                                   s,
+                                    "NULL"},
+                            SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE"
+
+
+                    );
+
+
+                }
             });
 
+            ((PagerFragment)(((PagerInnerFragment)getParentFragment()).getParentFragment())).searchView.setSuggestionsAdapter(searchViewAdapter);
+*/
             if (count != parentAdapter.getItemCount() - 1) //update only if count has changed
                 parentAdapter.updateRecentMusic(getRecentMyLibrary());
             parentAdapter.setNewMyLibraryCursor(data);

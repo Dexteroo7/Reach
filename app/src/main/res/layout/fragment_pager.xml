@@ -1,45 +1,64 @@
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent">
+
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#fff" >
+        android:background="#fff">
+
         <android.support.v7.widget.Toolbar
             android:id="@+id/pagerToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:titleTextColor="@color/reach_color"
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+            app:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:titleTextColor="@color/reach_color" />
+
+
         <com.astuetz.PagerSlidingTabStrip
             android:id="@+id/tabLayoutPager"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             app:layout_scrollFlags="scroll|enterAlways"
-            app:pstsPaddingMiddle="true"
             app:pstsIndicatorColor="@color/reach_grey"
+            app:pstsPaddingMiddle="true"
             app:pstsShouldExpand="true"
             app:pstsTabTextAllCaps="true"
-            app:pstsTabTextColor="@color/reach_grey" />
+            app:pstsTabTextColor="@color/reach_grey"
+            />
+
+
     </android.support.design.widget.AppBarLayout>
 
     <FrameLayout
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:id="@+id/viewPagerContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <android.support.v4.view.ViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
         <View
-            android:layout_gravity="top"
-            android:background="@drawable/shadow_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="3dp" />
+            android:layout_height="3dp"
+            android:layout_gravity="top"
+            android:background="@drawable/shadow_toolbar" />
     </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/search_results_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="56dp"
+        android:background="#ffffff"
+        android:visibility="gone"
+        />
+
 </android.support.design.widget.CoordinatorLayout>

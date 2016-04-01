@@ -3,6 +3,8 @@ package reach.project.utils.viewHelpers;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -10,13 +12,17 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
+import android.widget.FrameLayout;
 
 import com.astuetz.PagerSlidingTabStrip;
 
@@ -24,6 +30,7 @@ import java.lang.reflect.Method;
 
 import reach.project.R;
 import reach.project.core.SearchResultsActivity;
+import reach.project.coreViews.fileManager.music.myLibrary.MyLibraryFragment;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 
@@ -34,6 +41,9 @@ public class PagerFragment extends Fragment {
 
     public static final String PARCEL_PAGER = "PARCEL_PAGER";
     public SearchView searchView;
+    private boolean isSearchViewFragVisible = false;
+    private static final String TAG = PagerFragment.class.getSimpleName();
+    private MyLibraryFragment frag;
 
     public static class Pages implements Parcelable {
 
@@ -136,11 +146,13 @@ public class PagerFragment extends Fragment {
 
         final PagerSlidingTabStrip tabLayout = (PagerSlidingTabStrip) rootView.findViewById(R.id.tabLayoutPager);
         final Bundle arguments = getArguments();
+        FrameLayout searchFragmentContainer = (FrameLayout) rootView.findViewById(R.id.search_results_fragment_container);
+        FrameLayout viewPagerContainer = (FrameLayout) rootView.findViewById(R.id.viewPagerContainer);
         final Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.pagerToolbar);
         String title = arguments.getString("pageTitle");
         toolbar.setTitle(title);
         toolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
-
+        viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
         if (title != null) {
 
             if (title.equals("Share"))
@@ -149,14 +161,98 @@ public class PagerFragment extends Fragment {
                 toolbar.inflateMenu(R.menu.pager_menu);
                 SearchManager searchManager =
                         (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+                MenuItem searchViewMenuItem = toolbar.getMenu().findItem(R.id.search);
                 searchView =
-                        (SearchView) toolbar.getMenu().findItem(R.id.search).getActionView();
+                        (SearchView) searchViewMenuItem.getActionView();
 
                 ComponentName componentName = new ComponentName(getContext(), SearchResultsActivity.class);
                 searchView.setQueryHint("Search your files");
                 searchView.setSearchableInfo(
                         searchManager.getSearchableInfo(componentName));
+                frag = new MyLibraryFragment();
 
+                MenuItemCompat.setOnActionExpandListener(searchViewMenuItem, new MenuItemCompat.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        if(!isSearchViewFragVisible) {
+                            tabLayout.setVisibility(View.GONE);
+                            searchFragmentContainer.setVisibility(View.VISIBLE);
+                            if(frag == null){
+                                frag = new MyLibraryFragment();
+                            }
+                            getFragmentManager().beginTransaction().replace(R.id.search_results_fragment_container,frag ).commit();
+                            isSearchViewFragVisible = true;
+                            viewPagerContainer.setVisibility(View.GONE);
+                            Log.d(TAG, "onClick: searchview frag is now visible");
+
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+
+                        getFragmentManager().beginTransaction().remove(frag).commit();
+                        isSearchViewFragVisible = false;
+                        tabLayout.setVisibility(View.VISIBLE);
+                        searchFragmentContainer.setVisibility(View.GONE);
+                        viewPagerContainer.setVisibility(View.VISIBLE);
+                        Log.d(TAG, "onClick: searchview frag is now invisible");
+                        return true;
+                    }
+                });
+
+                /*searchView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Log.d(TAG, "Searchview onClick: ");
+                    }
+                });
+
+
+
+                searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+                    @Override
+                    public boolean onClose() {
+
+                        return false;
+                    }
+                });
+                searchView.setOnSearchClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });*/
+
+                /*final AutoCompleteTextView searchEditText = (AutoCompleteTextView) searchView.findViewById(R.id.search_src_text);
+                //searchEditText.setTextColor(Color.BLACK);
+                final View dropDownAnchor = searchView.findViewById(searchEditText.getDropDownAnchor());
+                if (dropDownAnchor != null) {
+                    dropDownAnchor.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                        @Override
+                        public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                                   int oldLeft, int oldTop, int oldRight, int oldBottom) {
+
+                            // calculate width of DropdownView
+
+
+                            int point[] = new int[2];
+                            dropDownAnchor.getLocationOnScreen(point);
+                            // x coordinate of DropDownView
+                            int dropDownPadding = point[0] + searchEditText.getDropDownHorizontalOffset();
+
+                            Rect screenSize = new Rect();
+                            getActivity().getWindowManager().getDefaultDisplay().getRectSize(screenSize);
+                            // screen width
+                            int screenWidth = screenSize.width();
+
+                            // set DropDownView width
+                            searchEditText.setDropDownWidth(screenWidth *//*- dropDownPadding * 2*//*);
+                            searchEditText.setDropDownVerticalOffset(MiscUtils.dpToPx(16));
+                        }
+                    });
+                }*/
             }
         }
 
@@ -185,7 +281,7 @@ public class PagerFragment extends Fragment {
             }
         }
 
-        viewPager = (ViewPager) rootView.findViewById(R.id.viewPager);
+
         //noinspection ConstantConditions
         viewPager.setAdapter(new FragmentPagerAdapter(getChildFragmentManager()) {
             @Override
