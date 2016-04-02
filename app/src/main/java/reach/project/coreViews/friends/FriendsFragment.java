@@ -1,6 +1,7 @@
 package reach.project.coreViews.friends;
 
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,11 +10,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTabHost;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,7 +32,9 @@ import java.lang.ref.WeakReference;
 
 import reach.project.R;
 import reach.project.core.MyProfileActivity;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
+import reach.project.coreViews.fileManager.myfiles_search.MyFilesSearchFragment;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
 import reach.project.coreViews.yourProfile.YourProfileActivity;
@@ -43,6 +49,7 @@ public class FriendsFragment extends Fragment implements
 
     public static final View.OnClickListener INVITE_LISTENER =
             view -> view.getContext().startActivity(new Intent(view.getContext(), InviteActivity.class));
+    private static final String TAG = FriendsFragment.class.getSimpleName();
 
     @Nullable
     private FriendsAdapter friendsAdapter = null;
@@ -50,6 +57,7 @@ public class FriendsFragment extends Fragment implements
     private View rootView = null;
     @Nullable
     private SuperInterface mListener = null;
+    private SearchView searchView;
 
     @Override
     public void onDestroyView() {
@@ -84,6 +92,16 @@ public class FriendsFragment extends Fragment implements
         mToolbar.setTitle("Friends");
         mToolbar.inflateMenu(R.menu.pager_menu);
         mToolbar.setOnMenuItemClickListener(mListener != null ? mListener.getMenuClickListener() : null);
+        SearchManager searchManager =
+                (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+        MenuItem searchViewMenuItem = mToolbar.getMenu().findItem(R.id.search);
+        searchView =
+                (SearchView) searchViewMenuItem.getActionView();
+
+        //ComponentName componentName = new ComponentName(getContext(), SearchResultsActivity.class);
+        searchView.setQueryHint("Search Friends");
+        //searchView.setSearchableInfo(
+        //       searchManager.getSearchableInfo(componentName));
 
         //gridView = MiscUtils.addLoadingToGridView((GridView) rootView.findViewById(R.id.contactsList));
         //gridView.setOnItemClickListener(LocalUtils.clickListener);
@@ -118,26 +136,84 @@ public class FriendsFragment extends Fragment implements
 
         getLoaderManager().initLoader(StaticData.FRIENDS_VERTICAL_LOADER, null, this);
         getLoaderManager().initLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, null, this);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                if(newText == null){
+                    return true;
+                }
+                Bundle bundle = new Bundle();
+                final String constraint = "%" + newText.toLowerCase() + "%";
+                bundle.putString("filter",constraint );
+                getLoaderManager().restartLoader(StaticData.FRIENDS_VERTICAL_LOADER, bundle, FriendsFragment.this);
+                getLoaderManager().restartLoader(StaticData.FRIENDS_HORIZONTAL_LOADER, bundle, FriendsFragment.this);
+                return true;
+            }
+        });
+
+        MenuItemCompat.setOnActionExpandListener(searchViewMenuItem, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                Log.d(TAG, "onMenuItemActionExpand: searchview frag is now visible");
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                Log.d(TAG, "onMenuItemActionCollapse: searchview frag is now invisible");
+                return true;
+            }
+        });
+
+
         return rootView;
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        if (id == StaticData.FRIENDS_VERTICAL_LOADER)
-            return new CursorLoader(getActivity(),
-                    ReachFriendsProvider.CONTENT_URI,
-                    FriendsAdapter.REQUIRED_PROJECTION,
-                    ReachFriendsHelper.COLUMN_STATUS + " != ?",
-                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()},
-                    ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
-        else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER)
-            return new CursorLoader(getActivity(),
-                    ReachFriendsProvider.CONTENT_URI,
-                    FriendsAdapter.REQUIRED_PROJECTION,
-                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()}, null);
-
+        if (id == StaticData.FRIENDS_VERTICAL_LOADER) {
+            if (args == null) {
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " != ?",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()},
+                        ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
+            } else {
+                Log.d(TAG, "filter : " + args.getString("filter"));
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " != ? and " + ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ? ",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString(),
+                                args.getString("filter")},
+                        ReachFriendsHelper.COLUMN_USER_NAME + " COLLATE NOCASE ASC");
+            }
+        }
+        else if (id == StaticData.FRIENDS_HORIZONTAL_LOADER) {
+            if(args == null) {
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " = ?",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString()}, null);
+            }
+            else{
+                return new CursorLoader(getActivity(),
+                        ReachFriendsProvider.CONTENT_URI,
+                        FriendsAdapter.REQUIRED_PROJECTION,
+                        ReachFriendsHelper.COLUMN_STATUS + " = ? and " + ReachFriendsHelper.COLUMN_USER_NAME + " LIKE ? ",
+                        new String[]{ReachFriendsHelper.Status.REQUEST_NOT_SENT.getString(),args.getString("filter")}, null);
+            }
+        }
         else
             return null;
     }

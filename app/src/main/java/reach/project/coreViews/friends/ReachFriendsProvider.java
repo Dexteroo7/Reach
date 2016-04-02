@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,6 +27,8 @@ public class ReachFriendsProvider extends ContentProvider {
     public static final String AUTHORITY = "reach.project.coreViews.friends.ReachFriendsProvider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH);
     private static final UriMatcher sURIMatcher;
+    private static final String TAG = ReachFriendsProvider.class.getSimpleName();
+
     static {
         sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sURIMatcher.addURI(AUTHORITY, BASE_PATH, FRIENDS);
