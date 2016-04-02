@@ -17,9 +17,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -27,7 +24,7 @@ import android.widget.RelativeLayout;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.core.MyProfileActivity;
+import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
 import reach.project.coreViews.invite.InviteActivity;
 import reach.project.coreViews.yourProfile.ProfileActivity;
@@ -179,12 +176,13 @@ public class FriendsFragment extends Fragment implements
         if (rootView == null)
             return;
 
-        if (clickData.status < ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
+        final ReachActivity activity = (ReachActivity) getActivity();
 
+        if (clickData.status < ReachFriendsHelper.Status.REQUEST_SENT_NOT_GRANTED.getValue()) {
             Log.i("Ayush", "Detected status" + clickData.status);
-            YourProfileActivity.openProfile(clickData.friendId, getActivity());
+            YourProfileActivity.openProfileWithPlayer(clickData.friendId, activity, activity.player.getCurrentTimeMillis(), activity.currentYTId);
         } else
-            ProfileActivity.openProfile(clickData.friendId, getActivity());
+            ProfileActivity.openProfile(clickData.friendId, activity);
     }
 
     @Override

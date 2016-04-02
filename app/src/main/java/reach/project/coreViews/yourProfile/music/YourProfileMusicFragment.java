@@ -39,8 +39,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import reach.project.R;
-import reach.project.core.ReachActivity;
 import reach.project.core.StaticData;
+import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
@@ -228,7 +228,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void handOverMessage(@NonNull Song song) {
 
-        final ReachActivity activity = (ReachActivity) getActivity();
+        final YourProfileActivity activity = (YourProfileActivity) getActivity();
 
         activity.showYTVideo(song.getDisplayName());
         /*final Cursor senderCursor = activity.getContentResolver().query(

@@ -66,11 +66,12 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             layout = layoutInflater.inflate(exploreTypes.getLayoutResId(), collection, false);
             //final PercentRelativeLayout percentRelativeLayout = (PercentRelativeLayout) layout.findViewById(R.id.percentRelativeLayout);
             //final WebView webView = (WebView) layout.findViewById(R.id.webView);
-            final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+            //final ImageView downButton = (ImageView) layout.findViewById(R.id.downButton);
+            final ImageView downBtn = (ImageView) layout.findViewById(R.id.downBtn);
             final TextView title = (TextView) layout.findViewById(R.id.title);
             final TextView subTitle = (TextView) layout.findViewById(R.id.subtitle);
             final TextView userHandle = (TextView) layout.findViewById(R.id.userHandle);
-            //final TextView typeText = (TextView) layout.findViewById(R.id.typeText);
+            //final ImageView saveBtn = (ImageView) layout.findViewById(R.id.saveBtn);
             final SimpleDraweeView image = (SimpleDraweeView) layout.findViewById(R.id.image);
             final SimpleDraweeView userImage = (SimpleDraweeView) layout.findViewById(R.id.userImage);
             //final TextView facebookShare = (TextView) layout.findViewById(R.id.facebook_share_text);
@@ -78,9 +79,18 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
             switch (exploreTypes) {
 
                 case MUSIC: {
-                    downButton.setOnClickListener(this);
-                    downButton.setTag(position);
+                    downBtn.setOnClickListener(this);
+                    downBtn.setTag(position);
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
+                    /*final Cursor cursor = collection.getContext().getContentResolver().query(
+                            Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
+                            new String[]{ReachFriendsHelper.COLUMN_STATUS},
+                            ReachFriendsHelper.COLUMN_ID + " = ?",
+                            new String[]{userId + ""}, null);
+                    if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst()) {
+                        saveBtn.setVisibility(cursor.getShort(0) == ReachFriendsHelper.ONLINE_REQUEST_GRANTED ? View.VISIBLE : View.INVISIBLE);
+                        cursor.close();
+                    }*/
                     final Pair<String, String> userNameAndImageId = ExploreFragment.USER_INFO_CACHE.getUnchecked(userId);
 
                     //take out view info from this object
@@ -133,8 +143,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                     final RatingBar rating = (RatingBar) layout.findViewById(R.id.rating);
 
-                    downButton.setOnClickListener(this);
-                    downButton.setTag(position);
+                    //downButton.setOnClickListener(this);
+                    //downButton.setTag(position);
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                     final Pair<String, String> userNameAndImageId = ExploreFragment.USER_INFO_CACHE.getUnchecked(userId);
 

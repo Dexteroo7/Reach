@@ -31,6 +31,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -80,6 +81,7 @@ import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
+import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.FireOnce;
@@ -141,6 +143,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     private static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
     private static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
     private static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
+    public static final String RESUME_PLAYER = "RESUME_PLAYER";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
@@ -234,9 +237,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         new YTTest().execute(fastSanitize(text));
     }
 
-    private YouTubePlayer player = null;
+    public YouTubePlayer player = null;
     private YouTubePlayerSupportFragment ytFragment;
-    private ImageView ytCloseBtn;
+    private LinearLayout ytLayout;
+    public String currentYTId;
 
     private static class YTTest extends AsyncTask<String, Void, SearchResult> {
         @Override
@@ -250,7 +254,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 };
                 final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
                 // Define the API request for retrieving search results.
-                final YouTube.Search.List search = youTube.search().list("snippet");
+                final YouTube.Search.List search = youTube.search().list("id");
 
                 // Set your developer key from the Google Developers Console for
                 // non-authenticated requests. See:
@@ -268,7 +272,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
                 // To increase efficiency, only retrieve the fields that the
                 // application uses.
-                search.setFields("items(id/videoId)");
+                search.setFields("items/id/videoId");
                 search.setMaxResults(1L);
 
                 // Call the API and print results.
@@ -296,11 +300,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
             if (searchResult == null)
                 return;
             MiscUtils.useActivity(reference, activity -> {
-                if (activity.ytCloseBtn.getVisibility() != View.VISIBLE)
-                    activity.ytCloseBtn.setVisibility(View.VISIBLE);
+                if (activity.ytLayout.getVisibility() != View.VISIBLE)
+                    activity.ytLayout.setVisibility(View.VISIBLE);
                 if (activity.ytFragment.isHidden())
                     activity.getSupportFragmentManager().beginTransaction().show(activity.ytFragment).commit();
-                activity.player.loadVideo(searchResult.getId().getVideoId());
+                activity.currentYTId = searchResult.getId().getVideoId();
+                activity.player.loadVideo(activity.currentYTId);
             });
         }
     }
@@ -510,14 +515,54 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         FireOnce.checkUpdate(reference);
 
         ytFragment = (YouTubePlayerSupportFragment) getSupportFragmentManager().findFragmentById(R.id.video_fragment_container);
+        ytLayout = (LinearLayout) findViewById(R.id.ytLayout);
+        final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
 
         ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
             @Override
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
+                Log.d("Ashish", "player created");
                 player = youTubePlayer;
                 player.setShowFullscreenButton(false);
+                player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
+                    @Override
+                    public void onPlaying() {
+                        final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
+                        intent.setAction(ProcessManager.ACTION_KILL);
+                        startService(intent);
+                    }
+
+                    @Override
+                    public void onPaused() {
+
+                    }
+
+                    @Override
+                    public void onStopped() {
+
+                    }
+
+                    @Override
+                    public void onBuffering(boolean b) {
+
+                    }
+
+                    @Override
+                    public void onSeekTo(int i) {
+
+                    }
+                });
                 //player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
                 //player.cueVideo("CuH3tJPiP-U");
+
+                getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+
+                if (ytCloseBtn != null)
+                    ytCloseBtn.setOnClickListener(v -> {
+                        ytLayout.setVisibility(View.GONE);
+                        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                        player.pause();
+                    });
             }
 
             @Override
@@ -525,17 +570,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
             }
         });
-        ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
-        if (ytCloseBtn != null)
-            ytCloseBtn.setVisibility(View.GONE);
-        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
-
-        if (ytCloseBtn != null)
-            ytCloseBtn.setOnClickListener(v -> {
-                ytCloseBtn.setVisibility(View.GONE);
-                getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
-                player.pause();
-            });
     }
 
     private String fastSanitize(String str) {
@@ -929,9 +963,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         if (intent == null)
             return;
 
-        Log.i("Ayush", "Processing Intent + " + intent.getAction());
-
         final String action = intent.getAction();
+
+        Log.i("Ayush", "Processing Intent + " + action);
+
         if (TextUtils.isEmpty(action))
             return;
         try {
@@ -1049,32 +1084,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         }, 1000L);
                     }
                     break;
-//                case OPEN_MY_PROFILE_APPS:
-//                    if (mTabHost != null) {
-//                        mTabHost.postDelayed(() -> {
-//                            if (mTabHost == null || isFinishing())
-//                                return;
-//                            mTabHost.setCurrentTab(4);
-//                            MyProfileFragment.setItem(0);
-//                        }, 1000L);
-//                    }
-//                    break;
-//                case OPEN_MY_PROFILE_APPS_FIRST:
-//                    if (mTabHost != null && !isFinishing()) {
-//                        mTabHost.setCurrentTab(4);
-//                        MyProfileFragment.setItem(0);
-//                    }
-//                    break;
-//                case OPEN_MY_PROFILE_SONGS:
-//                    if (mTabHost != null) {
-//                        mTabHost.postDelayed(() -> {
-//                            if (mTabHost == null || isFinishing())
-//                                return;
-//                            mTabHost.setCurrentTab(4);
-//                            MyProfileFragment.setItem(1);
-//                        }, 1000L);
-//                    }
-//                    break;
                 case OPEN_EXPLORE:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
@@ -1093,15 +1102,19 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         }, 1000L);
                     }
                     break;
-                /*case OPEN_PUSH:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(1);
-                        }, 1000L);
+                case RESUME_PLAYER:
+                    final int time = intent.getIntExtra("time", 0);
+                    final String ytId = intent.getStringExtra("ytId");
+                    if (!TextUtils.isEmpty(ytId) && time > 0) {
+                        new Handler().post(() -> {
+                            if (ytLayout.getVisibility() != View.VISIBLE)
+                                ytLayout.setVisibility(View.VISIBLE);
+                            if (ytFragment.isHidden())
+                                getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+                            currentYTId = ytId;
+                            player.loadVideo(currentYTId, time);
+                        });
                     }
-                    break;*/
             }
         } catch (IllegalStateException ignored) {
         }

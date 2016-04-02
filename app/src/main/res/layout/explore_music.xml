@@ -15,7 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <ImageView
-            android:id="@+id/typeText"
+            android:id="@+id/saveBtn"
+            android:visibility="gone"
             android:layout_alignParentRight="true"
             android:layout_marginTop="16dp"
             android:layout_marginRight="16dp"
@@ -28,8 +29,8 @@
         <LinearLayout
             android:id="@+id/handle"
             android:layout_marginLeft="16dp"
-            android:layout_toLeftOf="@id/typeText"
-            android:layout_alignTop="@id/typeText"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
@@ -74,7 +75,7 @@
             android:ellipsize="marquee"
             android:layout_below="@id/title"
             android:text="Subtitle"
-            android:layout_toLeftOf="@+id/downButton"
+            android:layout_toLeftOf="@+id/downBtn"
             android:textSize="16sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -90,18 +91,15 @@
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:layout_alignTop="@id/image" />
-        <reach.project.utils.viewHelpers.CustomImageView
-            android:id="@id/downButton"
-            android:layout_height="60dp"
-            android:layout_width="60dp"
+        <android.support.design.widget.FloatingActionButton
+            android:id="@id/downBtn"
+            android:layout_alignTop="@id/image"
             android:layout_alignParentRight="true"
             android:layout_marginRight="16dp"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="-32dp"
-            android:layout_alignTop="@id/image"
-            android:padding="8dp"
-            android:elevation="4dp"
-            android:background="@drawable/circular_background_pink"
-            android:src="@drawable/play_white_selector" />
+            android:src="@drawable/play_white_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </RelativeLayout>
 </android.support.v7.widget.CardView>
