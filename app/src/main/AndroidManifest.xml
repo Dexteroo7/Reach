@@ -260,7 +260,9 @@
             android:launchMode="singleInstance"
             android:parentActivityName=".core.ReachActivity"
             android:process=":remote"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustNothing"
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="reach.project.core.ReachActivity" />

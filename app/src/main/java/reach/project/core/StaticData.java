@@ -39,6 +39,8 @@ public final class StaticData {
     public static final String one = "1";
     public static final byte oneByte = 1;
     public static final byte zeroByte = 0;
+    public static final String PERCENTAGE_STRING = "%";
+    public static final String FILTER_STRING_KEY = "filter";
 
     static {
 

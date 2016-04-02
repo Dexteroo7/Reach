@@ -16,6 +16,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -1641,6 +1642,24 @@ public enum MiscUtils {
         }
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+    public static String getFilterLikeString(String filter){
+
+        return StaticData.PERCENTAGE_STRING + filter + StaticData.PERCENTAGE_STRING;
+
+    }
+
+    public static Bundle getBundleForString(String data){
+        if(data == null){
+            return null;
+        }
+        else{
+            Bundle bundle = new Bundle();
+            bundle.putString(StaticData.FILTER_STRING_KEY,data);
+            return bundle;
+        }
+
     }
 
 //    final HttpTransport transport = new NetHttpTransport();

@@ -145,6 +145,9 @@ class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implem
 
     void filterApps(String constraint) {
         //List<App> appsData = appsSearchAdapter.getMessageList();
+        if(appsData == null){
+            throw new NullPointerException("filtering apps but app data is null");
+        }
         List<App> filteredAppData = new ArrayList<>();
         for (App app : appsData) {
             if (app.applicationName.toLowerCase().contains(constraint)) {

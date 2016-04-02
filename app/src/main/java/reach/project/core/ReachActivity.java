@@ -32,6 +32,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -369,7 +370,62 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 =======
                 MyProfileFragment.class, null);*/
         mTabHost.setCurrentTab(0);
+        /*mTabHost.getTabWidget().getChildTabViewAt(0).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i(TAG, "onClick: mTabHost Clicked, current tab = " + mTabHost.getCurrentTab()
+                + " currentTabTag = "+ mTabHost.getCurrentTabTag());
+            }
+        });*/
 
+        mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+
+                if(tabId == null){
+                    return;
+                }
+
+                switch (tabId){
+                    case "explore_page":
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Discover Page Opened")
+                                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                                .setAction("Email id = " + SharedPrefUtils.getEmailId(preferences))
+                                .setAction("Phone Number = "+SharedPrefUtils.getPhoneNumber(preferences))
+                                .setValue(1)
+                                .build());
+                        break;
+
+                    case "manager_page":
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("MyFiles Page Opened")
+                                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                                .setAction("Email id = " + SharedPrefUtils.getEmailId(preferences))
+                                .setAction("Phone Number = "+SharedPrefUtils.getPhoneNumber(preferences))
+                                .setValue(1)
+                                .build());
+                        break;
+
+                    case "friends_page":
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Friends Page Opened")
+                                .setAction("Username = " + SharedPrefUtils.getUserName(preferences))
+                                .setAction("User id = " + SharedPrefUtils.getServerId(preferences))
+                                .setAction("Email id = " + SharedPrefUtils.getEmailId(preferences))
+                                .setAction("Phone Number = "+SharedPrefUtils.getPhoneNumber(preferences))
+                                .setValue(1)
+                                .build());
+                        break;
+
+                }
+
+            }
+        });
+        
+        
         if (showRatingDialogOrNot() || showInviteDialogOrNot()) {
             Log.d(TAG, "Created Downloaded Loader");
             getSupportLoaderManager().initLoader(DOWNLOADED_COUNT_LOADER_ID,

@@ -1,5 +1,6 @@
 package reach.project.player;
 
+import android.app.SearchManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -17,8 +18,10 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -44,6 +47,7 @@ import javax.annotation.Nonnull;
 
 import reach.project.R;
 import reach.project.core.StaticData;
+import reach.project.coreViews.fileManager.myfiles_search.MyFilesSearchFragment;
 import reach.project.coreViews.myProfile.EmptyRecyclerView;
 import reach.project.coreViews.push.PushActivity;
 import reach.project.coreViews.push.PushContainer;
@@ -66,6 +70,7 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
     private static final String player = "Player";
     public static final String TAG = PlayerActivity.class.getSimpleName();
+    private SearchView searchView;
 
     public static void openActivity(Context context) {
 
@@ -167,6 +172,40 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
         fwdBtn = findViewById(R.id.fwdBtn);
 
         toolbar.inflateMenu(R.menu.player_activity_menu);
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        MenuItem searchViewMenuItem = toolbar.getMenu().findItem(R.id.search);
+        searchView =
+                (SearchView) searchViewMenuItem.getActionView();
+
+        //ComponentName componentName = new ComponentName(getContext(), SearchResultsActivity.class);
+        searchView.setQueryHint("Search song");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                if(newText == null){
+                    return true;
+                }
+
+                final String filterString = MiscUtils.getFilterLikeString(newText);
+
+                getSupportLoaderManager().restartLoader(StaticData.PLAYER_LOADER,MiscUtils.getBundleForString(filterString),
+                        PlayerActivity.this);
+                if(listView.getVisibility() == View.GONE){
+                    listView.setVisibility(View.VISIBLE);
+                }
+
+                return true;
+            }
+        });
+
         toolbar.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
 
@@ -481,21 +520,43 @@ public class PlayerActivity extends AppCompatActivity implements LoaderManager.L
 
         // TODO: Done meta 1
         if (id == StaticData.PLAYER_LOADER)
-            return new CursorLoader(this,
-                    SongProvider.CONTENT_URI,
-                    SongCursorHelper.SONG_HELPER.getProjection(),
-                    "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ? and " +
-                            SongHelper.COLUMN_META_HASH + " != ? ) or ("
-                            +
-                            SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_META_HASH + " != ?)",
-                    new String[]{
-                            ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
-                            ReachDatabase.Status.FINISHED.getString(),
-                            StaticData.NULL_STRING,
-                            ReachDatabase.OperationKind.OWN.getString(),
-                            StaticData.NULL_STRING
-                    },
-                    SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+            if(args == null) {
+                return new CursorLoader(this,
+                        SongProvider.CONTENT_URI,
+                        SongCursorHelper.SONG_HELPER.getProjection(),
+                        "(" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ? and " +
+                                SongHelper.COLUMN_META_HASH + " != ? ) or ("
+                                +
+                                SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_META_HASH + " != ?)",
+                        new String[]{
+                                ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                                ReachDatabase.Status.FINISHED.getString(),
+                                StaticData.NULL_STRING,
+                                ReachDatabase.OperationKind.OWN.getString(),
+                                StaticData.NULL_STRING
+                        },
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+            }else{
+
+                final String constraint = args.getString(StaticData.FILTER_STRING_KEY);
+                return new CursorLoader(PlayerActivity.this,
+                        SongProvider.CONTENT_URI,
+                        SongCursorHelper.SONG_HELPER.getProjection(),
+                        "((" + SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_STATUS + " = ? and " +
+                                SongHelper.COLUMN_DISPLAY_NAME +
+                                " like ? ) or ( " +
+                                SongHelper.COLUMN_OPERATION_KIND + " = ? and " + SongHelper.COLUMN_DISPLAY_NAME +
+                                " like ? )) and " + SongHelper.COLUMN_META_HASH + " != ? ",
+                        new String[]{
+                                ReachDatabase.OperationKind.DOWNLOAD_OP.getString(),
+                                ReachDatabase.Status.FINISHED.getString(),
+                                constraint,
+                                ReachDatabase.OperationKind.OWN.getString(),
+                                constraint,
+                                "NULL"
+                        },
+                        SongHelper.COLUMN_DISPLAY_NAME + " COLLATE NOCASE");
+            }
         return null;
     }
 
