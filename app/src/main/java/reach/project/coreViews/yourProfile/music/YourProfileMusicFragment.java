@@ -3,8 +3,6 @@ package reach.project.coreViews.yourProfile.music;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,8 +26,6 @@ import com.google.common.base.Optional;
 import com.squareup.wire.Message;
 import com.squareup.wire.Wire;
 
-import org.joda.time.DateTime;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,19 +40,16 @@ import java.util.concurrent.ExecutorService;
 
 import reach.project.R;
 import reach.project.core.StaticData;
-import reach.project.coreViews.friends.ReachFriendsHelper;
-import reach.project.coreViews.friends.ReachFriendsProvider;
+import reach.project.coreViews.yourProfile.YourProfileActivity;
 import reach.project.coreViews.yourProfile.blobCache.Cache;
 import reach.project.coreViews.yourProfile.blobCache.CacheAdapterInterface;
 import reach.project.coreViews.yourProfile.blobCache.CacheInjectorCallbacks;
 import reach.project.coreViews.yourProfile.blobCache.CacheType;
-import reach.project.music.ReachDatabase;
 import reach.project.music.Song;
 import reach.project.utils.CloudEndPointsUtils;
 import reach.project.utils.CloudStorageUtils;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.viewHelpers.CustomLinearLayoutManager;
 
 /**
@@ -235,8 +228,10 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
     @Override
     public void handOverMessage(@NonNull Song song) {
 
-        final Activity activity = getActivity();
-        final Cursor senderCursor = activity.getContentResolver().query(
+        final YourProfileActivity activity = (YourProfileActivity) getActivity();
+
+        activity.showYTVideo(song.getDisplayName());
+        /*final Cursor senderCursor = activity.getContentResolver().query(
                 Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + hostId),
                 new String[]{ReachFriendsHelper.COLUMN_USER_NAME,
                         ReachFriendsHelper.COLUMN_STATUS},
@@ -280,7 +275,7 @@ public class YourProfileMusicFragment extends Fragment implements CacheInjectorC
         reachDatabase.setReference(0);
 
         MiscUtils.startDownload(reachDatabase, activity, rootView, "YOUR_PROFILE");
-        senderCursor.close();
+        senderCursor.close();*/
     }
 
     @Override

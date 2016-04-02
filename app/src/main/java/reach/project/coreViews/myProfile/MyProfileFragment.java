@@ -1,7 +1,6 @@
 package reach.project.coreViews.myProfile;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -21,13 +19,11 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
@@ -37,14 +33,11 @@ import com.github.florent37.materialviewpager.header.HeaderDesign;
 import java.lang.ref.WeakReference;
 
 import reach.project.R;
-import reach.project.ancillaryViews.TermsActivity;
 import reach.project.core.ReachActivity;
 import reach.project.coreViews.myProfile.apps.ApplicationFragment;
 import reach.project.coreViews.myProfile.music.MyLibraryFragment;
-import reach.project.music.ReachDatabase;
 import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
-import reach.project.player.PlayerActivity;
 import reach.project.utils.AlbumArtUri;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
@@ -193,7 +186,7 @@ public class MyProfileFragment extends Fragment implements ViewPager.OnPageChang
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.activity_your_profile, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_my_profile, container, false);
         Log.d("Ashish", "MyProfileFragment - onCreateView");
 
         final MaterialViewPager materialViewPager = (MaterialViewPager) rootView.findViewById(R.id.materialViewPager);

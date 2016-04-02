@@ -1,7 +1,6 @@
 package reach.project.coreViews.explore;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -45,7 +44,16 @@ import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.youtube.player.YouTubePlayer;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.SearchResult;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
@@ -56,8 +64,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.joda.time.DateTime;
-
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -76,14 +83,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import reach.backend.entities.messaging.model.MyString;
 import reach.project.R;
+import reach.project.core.ReachActivity;
 import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
-import reach.project.music.ReachDatabase;
 import reach.project.utils.MiscUtils;
 import reach.project.utils.SharedPrefUtils;
-import reach.project.utils.ThreadLocalRandom;
 import reach.project.utils.ancillaryClasses.SuperInterface;
 import reach.project.utils.ancillaryClasses.UseActivityWithResult;
 import reach.project.utils.ancillaryClasses.UseContext;
@@ -93,7 +99,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
-        ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Integer>, LoaderManager.LoaderCallbacks<Cursor> {
+        ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ExploreFragment.class.getSimpleName();
     @Nullable
@@ -246,12 +252,10 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                     new String[]{
                             ReachFriendsHelper.COLUMN_ID,
                             ReachFriendsHelper.COLUMN_USER_NAME,
-                            ReachFriendsHelper.COLUMN_IMAGE_ID
+                            ReachFriendsHelper.COLUMN_IMAGE_ID,
+                            ReachFriendsHelper.COLUMN_STATUS
                     },
-                    ReachFriendsHelper.COLUMN_STATUS + " = ?",
-                    new String[]{
-                            ReachFriendsHelper.Status.ONLINE_REQUEST_GRANTED.getString()
-                    }, null);
+                    null, null, null);
 
             if (cursor == null)
                 return null;
@@ -259,7 +263,8 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             final JsonArray jsonArray = new JsonArray();
 
             while (cursor.moveToNext()) {
-
+                if (cursor.getShort(3) > 1)
+                    continue;
                 final long onlineId = cursor.getLong(0);
                 final String userName = cursor.getString(1);
                 final String imageId = cursor.getString(2);
@@ -278,6 +283,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
                 final long lastRequestTime = SharedPrefUtils.getLastRequestTime(fragment.preferences);
                     toReturn.addProperty("lastRequestTime", lastRequestTime);
             });*/
+            Log.d("Ashish", "jsonArray size = " + jsonArray.size());
             toReturn.add("friends", jsonArray);
 
             return toReturn;
@@ -320,9 +326,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
                 case MUSIC:
 
-                    image = MiscUtils.get(viewInfo, ExploreJSON.MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                    image = "https://i.ytimg.com/vi/" + MiscUtils.get(object, ExploreJSON.YOUTUBE_ID).getAsString() + "/hqdefault.jpg";
                     imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
-                            .setResizeOptions(FULL_IMAGE_SIZE)
+                            //.setResizeOptions(FULL_IMAGE_SIZE)
                             .build();
                     break;
                 case APP:
@@ -392,6 +398,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     private ExploreBuffer<JsonObject> buffer = null;
     @Nullable
     private SuperInterface mListener = null;
+
+    private YouTubePlayer player = null;
+
+    private TextView playerText = null;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -483,7 +494,92 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
             mListener.showSwipeCoach();
             SharedPrefUtils.setExploreCoach1Seen(preferences);
         }*/
+
+        //new YTTest().execute();
+
+        //playerText = (TextView) rootView.findViewById(R.id.playerText);
+
+        /*final YouTubePlayerSupportFragment fragment = YouTubePlayerSupportFragment.newInstance();
+        fragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
+            @Override
+            public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
+                player = youTubePlayer;
+                player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
+                //player.cueVideo("CuH3tJPiP-U");
+            }
+
+            @Override
+            public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
+
+            }
+        });
+        getChildFragmentManager().beginTransaction().replace(R.id.ytFooter, fragment, "YouTubePlayerSupportFragment").commit();*/
+
         return rootView;
+    }
+
+    private static class YTTest extends AsyncTask<String, Void, SearchResult> {
+        @Override
+        protected SearchResult doInBackground(String... params) {
+            try {
+                final HttpTransport transport = new NetHttpTransport();
+                final JsonFactory factory = new JacksonFactory();
+                final HttpRequestInitializer initialize = request -> {
+                    request.setConnectTimeout(request.getConnectTimeout() * 2);
+                    request.setReadTimeout(request.getReadTimeout() * 2);
+                };
+                final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
+                // Define the API request for retrieving search results.
+                final YouTube.Search.List search = youTube.search().list("snippet");
+
+                // Set your developer key from the Google Developers Console for
+                // non-authenticated requests. See:
+                // https://console.developers.google.com/
+                final String apiKey = "AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY";
+                search.setKey(apiKey);
+
+                search.setQ(params[0]);
+
+                // Restrict the search results to only include videos. See:
+                // https://developers.google.com/youtube/v3/docs/search/list#type
+                search.setType("video");
+
+                search.setVideoCategoryId("10");
+
+                // To increase efficiency, only retrieve the fields that the
+                // application uses.
+                search.setFields("items(id/videoId,snippet/title)");
+                search.setMaxResults(1L);
+
+                // Call the API and print results.
+                final SearchListResponse searchResponse = search.execute();
+                final List<SearchResult> searchResultList = searchResponse.getItems();
+                /*final StringBuilder stringBuilder = new StringBuilder();
+                for (SearchResult searchResult : searchResultList)
+                    stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
+                return stringBuilder.toString();*/
+                if (searchResultList == null || searchResultList.isEmpty())
+                    return null;
+                return searchResultList.get(0);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(SearchResult searchResult) {
+            super.onPostExecute(searchResult);
+            /*MiscUtils.useContextFromFragment(reference, activity -> {
+                new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
+            });*/
+            if (searchResult == null)
+                return;
+            MiscUtils.useFragment(reference, fragment -> {
+                fragment.player.loadVideo(searchResult.getId().getVideoId());
+                fragment.playerText.setText(searchResult.getSnippet().getTitle());
+            });
+        }
     }
 
     private void showFbDialog(){
@@ -578,7 +674,6 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         Toast.makeText(getActivity().getApplicationContext(), "Sharing On Facebook", Toast.LENGTH_SHORT).show();
         SharedPrefUtils.storeFacebookShareButtonVisibleOrNot(preferences,false);
         ShareDialog.show(getActivity(),content);
-
 
     }
 
@@ -694,6 +789,11 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
+    public void playYTVideo(String search) {
+        //new YTTest().execute(search);
+    }
+
+    @Override
     public synchronized void notifyDataAvailable() {
 
         //This is UI thread !
@@ -711,7 +811,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
-    public void handOverMessage(@Nonnull Integer position) {
+    public void handOverMessage(@Nonnull Object object) {
 
         //This is used for facebook share button
         /*if(position == -11){
@@ -748,47 +848,55 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         }*/
 
-        //retrieve full json
-        final JsonObject exploreJson = buffer.getViewItem(position); //test can not be null
+        if (object instanceof Integer) {
+            //retrieve full json
+            final JsonObject exploreJson = buffer.getViewItem((Integer) object); //test can not be null
 
-        if (exploreJson == null)
-            return;
+            if (exploreJson == null)
+                return;
 
-        final ExploreTypes type = ExploreTypes.valueOf(MiscUtils.get(exploreJson, ExploreJSON.TYPE).getAsString());
+            final ExploreTypes type = ExploreTypes.valueOf(MiscUtils.get(exploreJson, ExploreJSON.TYPE).getAsString());
 
-        switch (type) {
+            switch (type) {
 
-            case MUSIC:
-                addToDownload(exploreJson);
-                break;
+                case MUSIC:
+                    addToDownload(exploreJson);
+                    break;
 
-            case APP:
-                MiscUtils.openAppInPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
-                        .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
-                break;
+                case APP:
+                    MiscUtils.openAppInPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                            .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
+                    break;
 
-            case MISC:
-                final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
-                final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
-                Class<?> mClass = null;
-                if (activityClass != null) {
-                    try {
-                        mClass = Class.forName(activityClass);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                case MISC:
+                    final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
+                    final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
+                    Class<?> mClass = null;
+                    if (activityClass != null) {
+                        try {
+                            mClass = Class.forName(activityClass);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-                final Intent intent = new Intent(getActivity(), mClass);
-                startActivity(intent);
-                break;
+                    final Intent intent = new Intent(getActivity(), mClass);
+                    startActivity(intent);
+                    break;
+            }
+        }
+        else if (object instanceof String) {
+            final ReachActivity activity = (ReachActivity) getActivity();
+            activity.showYTVideo((String) object);
         }
 
     }
 
     public void addToDownload(JsonObject exploreJSON) {
 
-        final Activity activity = getActivity();
-        final ContentResolver contentResolver = activity.getContentResolver();
+        final ReachActivity activity = (ReachActivity) getActivity();
+
+        activity.showYTVideo(MiscUtils.get(exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject(), MusicMetaInfo.DISPLAY_NAME).getAsString());
+        /*final ContentResolver contentResolver = activity.getContentResolver();
 
         //extract meta info to process current click request
         final JsonObject metaInfo = exploreJSON.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
@@ -843,7 +951,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
         reachDatabase.setLastActive(0);
         reachDatabase.setReference(0);
 
-        MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");
+        MiscUtils.startDownload(reachDatabase, getActivity(), rootView, "EXPLORE");*/
     }
 
     @Override

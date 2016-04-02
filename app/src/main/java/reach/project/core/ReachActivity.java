@@ -14,7 +14,6 @@ import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTabHost;
@@ -31,12 +30,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.facebook.imagepipeline.common.ResizeOptions;
 import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.youtube.player.YouTubeInitializationResult;
+import com.google.android.youtube.player.YouTubePlayer;
+import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
@@ -67,6 +71,7 @@ import reach.project.music.SongHelper;
 import reach.project.music.SongProvider;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
+import reach.project.reachProcess.reachService.ProcessManager;
 import reach.project.usageTracking.PostParams;
 import reach.project.usageTracking.UsageTracker;
 import reach.project.utils.FireOnce;
@@ -128,6 +133,7 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     private static final String DOWNLOADED_COUNT_SHARED_PREF_KEY = "downloaded_count";
     private static final String SHOW_RATING_DIALOG_SHARED_PREF_KEY = "show_rating_dialog";
     private static final String FIRST_TIME_DOWNLOADED_COUNT_SHARED_PREF_KEY = "first_time_downloaded_count";
+    public static final String RESUME_PLAYER = "RESUME_PLAYER";
 
     public static final Set<Song> SELECTED_SONGS = MiscUtils.getSet(5);
     public static final Set<App> SELECTED_APPS = MiscUtils.getSet(5);
@@ -216,6 +222,27 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
         return false;
     };
+
+    public void showYTVideo(String text) {
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                .setLabel("YOUTUBE - EXPLORE")
+                .setValue(1)
+                .build());
+
+        if (ytLayout.getVisibility() != View.VISIBLE)
+            ytLayout.setVisibility(View.VISIBLE);
+        if (ytFragment.isHidden())
+            getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+        currentYTId = text;
+        player.loadVideo(currentYTId);
+    }
+
+    public YouTubePlayer player = null;
+    private YouTubePlayerSupportFragment ytFragment;
+    private LinearLayout ytLayout;
+    public String currentYTId;
 
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
@@ -420,6 +447,175 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
 
         //check for update, need activity to check
         FireOnce.checkUpdate(reference);
+
+        ytFragment = (YouTubePlayerSupportFragment) getSupportFragmentManager().findFragmentById(R.id.video_fragment_container);
+        ytLayout = (LinearLayout) findViewById(R.id.ytLayout);
+        final ImageView ytCloseBtn = (ImageView) findViewById(R.id.ytCloseBtn);
+
+        ytFragment.initialize("AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY", new YouTubePlayer.OnInitializedListener() {
+            @Override
+            public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
+                Log.d("Ashish", "player created");
+                player = youTubePlayer;
+                player.setShowFullscreenButton(false);
+                player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
+                    @Override
+                    public void onPlaying() {
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Play song")
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                                .setLabel("YOUTUBE - EXPLORE")
+                                .setValue(1)
+                                .build());
+                        final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
+                        intent.setAction(ProcessManager.ACTION_KILL);
+                        startService(intent);
+                    }
+
+                    @Override
+                    public void onPaused() {
+
+                    }
+
+                    @Override
+                    public void onStopped() {
+
+                    }
+
+                    @Override
+                    public void onBuffering(boolean b) {
+
+                    }
+
+                    @Override
+                    public void onSeekTo(int i) {
+
+                    }
+                });
+                //player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
+                //player.cueVideo("CuH3tJPiP-U");
+
+                getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+
+                if (ytCloseBtn != null)
+                    ytCloseBtn.setOnClickListener(v -> {
+                        ytLayout.setVisibility(View.GONE);
+                        getSupportFragmentManager().beginTransaction().hide(ytFragment).commit();
+                        player.pause();
+                    });
+            }
+
+            @Override
+            public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
+
+            }
+        });
+    }
+
+    private String fastSanitize(String str) {
+
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        str = replace(str, "MP3Khan", "", -1, stringBuilder);
+        str = replace(str, "_Full-HD", "", -1, stringBuilder);
+        str = replace(str, "songsweb", "", -1, stringBuilder);
+        str = replace(str, "www.", "", -1, stringBuilder);
+        str = replace(str, ".com", "", -1, stringBuilder);
+
+        str = replace(str, ".Mobi", "", -1, stringBuilder);
+        str = replace(str, ".mobi", "", -1, stringBuilder);
+        str = replace(str, "[]", "", -1, stringBuilder);
+        str = replace(str, "pagalworld", "", -1, stringBuilder);
+        str = replace(str, "DownloadMing", "", -1, stringBuilder);
+        str = replace(str, "  ", "", -1, stringBuilder);
+        str = replace(str, "skymaza", "", -1, stringBuilder);
+        str = replace(str, "DjGol", "", -1, stringBuilder);
+        str = replace(str, "<unknown>", "", -1, stringBuilder);
+        str = replace(str, "DJBoss", "", -1, stringBuilder);
+        str = replace(str, "iPendu", "", -1, stringBuilder);
+        str = replace(str, "SongPK", "", -1, stringBuilder);
+        str = replace(str, "Songspk", "", -1, stringBuilder);
+        str = replace(str, "DJJOhAL", "", -1, stringBuilder);
+        str = replace(str, "Mobway", "", -1, stringBuilder);
+        str = replace(str, "downloadming", "", -1, stringBuilder);
+        str = replace(str, "DjPunjab", "", -1, stringBuilder);
+        str = replace(str, "Bestwap", "", -1, stringBuilder);
+        str = replace(str, "MyMp3Song", "", -1, stringBuilder);
+        str = replace(str, "PagalWorld", "", -1, stringBuilder);
+        str = replace(str, "KrazyWAP", "", -1, stringBuilder);
+        str = replace(str, "lebewafa", "", -1, stringBuilder);
+        str = replace(str, "Mp3Singer", "", -1, stringBuilder);
+        str = replace(str, "Songspk", "", -1, stringBuilder);
+        str = replace(str, "Mr-Jatt", "", -1, stringBuilder);
+        str = replace(str, "MastiCity", "", -1, stringBuilder);
+        str = replace(str, "finewap", "", -1, stringBuilder);
+        str = replace(str, "hotmentos", "", -1, stringBuilder);
+        str = replace(str, "MirchiFun", "", -1, stringBuilder);
+        str = replace(str, "MyMp3Singer", "", -1, stringBuilder);
+        str = replace(str, "FreshMaZa", "", -1, stringBuilder);
+        str = replace(str, ".songs", "", -1, stringBuilder);
+        str = replace(str, "SongsLover", "", -1, stringBuilder);
+        str = replace(str, "Mixmp3", "", -1, stringBuilder);
+        str = replace(str, "wapking", "", -1, stringBuilder);
+        str = replace(str, "BDLovE24", "", -1, stringBuilder);
+        str = replace(str, "DJMaza", "", -1, stringBuilder);
+        str = replace(str, "RoyalJatt", "", -1, stringBuilder);
+        str = replace(str, "SongPK", "", -1, stringBuilder);
+        str = replace(str, "KrazyWap", "", -1, stringBuilder);
+        str = replace(str, ".link", "", -1, stringBuilder);
+        str = replace(str, "MobMaza", "", -1, stringBuilder);
+        str = replace(str, "Mobway", "", -1, stringBuilder);
+        str = replace(str, "youtube", "", -1, stringBuilder);
+        str = replace(str, "MP3Juices", "", -1, stringBuilder);
+
+        str = replace(str, "+", "", -1, stringBuilder);
+        str = replace(str, ".name", "", -1, stringBuilder);
+        str = replace(str, "^0[1-9] ", "", -1, stringBuilder);
+        str = replace(str, ".pk", "", -1, stringBuilder);
+        str = replace(str, ".in", "", -1, stringBuilder);
+        str = replace(str, "-", "", -1, stringBuilder);
+        str = replace(str, ".Com", "", -1, stringBuilder);
+        str = replace(str, ".net", "", -1, stringBuilder);
+        str = replace(str, ".", "", -1, stringBuilder);
+        str = replace(str, ":", "", -1, stringBuilder);
+        str = replace(str, ".fm", "", -1, stringBuilder);
+        str = replace(str, "_", "", -1, stringBuilder);
+        str = replace(str, ".In", "", -1, stringBuilder);
+        str = replace(str, ".Net", "", -1, stringBuilder);
+        str = replace(str, "()", "", -1, stringBuilder);
+
+
+        return str;
+    }
+
+    private String replace(final String text, final String searchString, final String replacement, int max, StringBuilder stringBuilder) {
+
+        stringBuilder.setLength(0);
+        if (TextUtils.isEmpty(text) || TextUtils.isEmpty(searchString) || replacement == null || max == 0) {
+            return text;
+        }
+
+        int start = 0;
+        int end = text.indexOf(searchString, start);
+        if (end < 0) {
+            return text;
+        }
+        final int replLength = searchString.length();
+        int increase = replacement.length() - replLength;
+        increase = increase < 0 ? 0 : increase;
+        increase *= max < 0 ? 16 : max > 64 ? 64 : max;
+
+        stringBuilder.ensureCapacity(text.length() + increase);
+        while (end > 0) {
+            stringBuilder.append(text.substring(start, end)).append(replacement);
+            start = end + replLength;
+            if (--max == 0) {
+                break;
+            }
+            end = text.indexOf(searchString, start);
+        }
+        stringBuilder.append(text.substring(start));
+        return stringBuilder.toString();
     }
 
 
@@ -707,9 +903,10 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
         if (intent == null)
             return;
 
-        Log.i("Ayush", "Processing Intent + " + intent.getAction());
-
         final String action = intent.getAction();
+
+        Log.i("Ayush", "Processing Intent + " + action);
+
         if (TextUtils.isEmpty(action))
             return;
         try {
@@ -827,32 +1024,6 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         }, 1000L);
                     }
                     break;
-//                case OPEN_MY_PROFILE_APPS:
-//                    if (mTabHost != null) {
-//                        mTabHost.postDelayed(() -> {
-//                            if (mTabHost == null || isFinishing())
-//                                return;
-//                            mTabHost.setCurrentTab(4);
-//                            MyProfileFragment.setItem(0);
-//                        }, 1000L);
-//                    }
-//                    break;
-//                case OPEN_MY_PROFILE_APPS_FIRST:
-//                    if (mTabHost != null && !isFinishing()) {
-//                        mTabHost.setCurrentTab(4);
-//                        MyProfileFragment.setItem(0);
-//                    }
-//                    break;
-//                case OPEN_MY_PROFILE_SONGS:
-//                    if (mTabHost != null) {
-//                        mTabHost.postDelayed(() -> {
-//                            if (mTabHost == null || isFinishing())
-//                                return;
-//                            mTabHost.setCurrentTab(4);
-//                            MyProfileFragment.setItem(1);
-//                        }, 1000L);
-//                    }
-//                    break;
                 case OPEN_EXPLORE:
                     if (mTabHost != null) {
                         mTabHost.postDelayed(() -> {
@@ -871,15 +1042,19 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                         }, 1000L);
                     }
                     break;
-                /*case OPEN_PUSH:
-                    if (mTabHost != null) {
-                        mTabHost.postDelayed(() -> {
-                            if (mTabHost == null || isFinishing())
-                                return;
-                            mTabHost.setCurrentTab(1);
-                        }, 1000L);
+                case RESUME_PLAYER:
+                    final int time = intent.getIntExtra("time", 0);
+                    final String ytId = intent.getStringExtra("ytId");
+                    if (!TextUtils.isEmpty(ytId) && time > 0) {
+                        new Handler().post(() -> {
+                            if (ytLayout.getVisibility() != View.VISIBLE)
+                                ytLayout.setVisibility(View.VISIBLE);
+                            if (ytFragment.isHidden())
+                                getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+                            currentYTId = ytId;
+                            player.loadVideo(currentYTId, time);
+                        });
                     }
-                    break;*/
             }
         } catch (IllegalStateException ignored) {
         }

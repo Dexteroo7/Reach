@@ -1493,6 +1493,20 @@ public enum MiscUtils {
 //        activity.finish();
     }
 
+    public static void navigateUpWithPlayer(final AppCompatActivity activity, int time, String ytId) {
+
+        final Intent upIntent = activity.getSupportParentActivityIntent();
+        if (upIntent == null)
+            return;
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        upIntent.setAction(ReachActivity.RESUME_PLAYER);
+        upIntent.putExtra("time", time);
+        upIntent.putExtra("ytId", ytId);
+        activity.startActivity(upIntent);
+        //TODO
+//        activity.finish();
+    }
+
     public static String calculateSongHash(long userId,
                                            long duration,
                                            long size,
