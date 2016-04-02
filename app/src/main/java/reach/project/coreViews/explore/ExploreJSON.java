@@ -18,7 +18,9 @@ enum ExploreJSON implements EnumHelper<String> {
     //meta info (used when acted upon)
     META_INFO("metaInfo"),
     //view details (used when displaying the item)
-    VIEW_INFO("viewInfo");
+    VIEW_INFO("viewInfo"),
+
+    YOUTUBE_ID("youtubeId");
 
     private final MetaInfo metaInfo;
     private final ViewInfo viewInfo;

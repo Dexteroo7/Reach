@@ -99,7 +99,7 @@ import static reach.project.coreViews.explore.ExploreJSON.MiscMetaInfo;
 import static reach.project.coreViews.explore.ExploreJSON.MusicMetaInfo;
 
 public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
-        ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Integer>, LoaderManager.LoaderCallbacks<Cursor> {
+        ExploreBuffer.ExplorationCallbacks<JsonObject>, HandOverMessage<Object>, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = ExploreFragment.class.getSimpleName();
     @Nullable
@@ -326,9 +326,9 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
                 case MUSIC:
 
-                    image = MiscUtils.get(viewInfo, ExploreJSON.MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
+                    image = "https://i.ytimg.com/vi/" + MiscUtils.get(object, ExploreJSON.YOUTUBE_ID).getAsString() + "/hqdefault.jpg";
                     imageRequest = ImageRequestBuilder.newBuilderWithSource(Uri.parse(image))
-                            .setResizeOptions(FULL_IMAGE_SIZE)
+                            //.setResizeOptions(FULL_IMAGE_SIZE)
                             .build();
                     break;
                 case APP:
@@ -811,7 +811,7 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
     }
 
     @Override
-    public void handOverMessage(@Nonnull Integer position) {
+    public void handOverMessage(@Nonnull Object object) {
 
         //This is used for facebook share button
         /*if(position == -11){
@@ -848,39 +848,45 @@ public class ExploreFragment extends Fragment implements ExploreAdapter.Explore,
 
         }*/
 
-        //retrieve full json
-        final JsonObject exploreJson = buffer.getViewItem(position); //test can not be null
+        if (object instanceof Integer) {
+            //retrieve full json
+            final JsonObject exploreJson = buffer.getViewItem((Integer) object); //test can not be null
 
-        if (exploreJson == null)
-            return;
+            if (exploreJson == null)
+                return;
 
-        final ExploreTypes type = ExploreTypes.valueOf(MiscUtils.get(exploreJson, ExploreJSON.TYPE).getAsString());
+            final ExploreTypes type = ExploreTypes.valueOf(MiscUtils.get(exploreJson, ExploreJSON.TYPE).getAsString());
 
-        switch (type) {
+            switch (type) {
 
-            case MUSIC:
-                addToDownload(exploreJson);
-                break;
+                case MUSIC:
+                    addToDownload(exploreJson);
+                    break;
 
-            case APP:
-                MiscUtils.openAppInPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
-                        .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
-                break;
+                case APP:
+                    MiscUtils.openAppInPlayStore(getActivity(), MiscUtils.get(exploreJson, ExploreJSON.PACKAGE_NAME)
+                            .getAsString(), MiscUtils.get(exploreJson, ExploreJSON.ID).getAsLong(), "EXPLORE");
+                    break;
 
-            case MISC:
-                final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
-                final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
-                Class<?> mClass = null;
-                if (activityClass != null) {
-                    try {
-                        mClass = Class.forName(activityClass);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                case MISC:
+                    final JsonObject metaInfo = exploreJson.get(ExploreJSON.META_INFO.getName()).getAsJsonObject();
+                    final String activityClass = MiscUtils.get(metaInfo, MiscMetaInfo.CLASS_NAME).getAsString();
+                    Class<?> mClass = null;
+                    if (activityClass != null) {
+                        try {
+                            mClass = Class.forName(activityClass);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-                final Intent intent = new Intent(getActivity(), mClass);
-                startActivity(intent);
-                break;
+                    final Intent intent = new Intent(getActivity(), mClass);
+                    startActivity(intent);
+                    break;
+            }
+        }
+        else if (object instanceof String) {
+            final ReachActivity activity = (ReachActivity) getActivity();
+            activity.showYTVideo((String) object);
         }
 
     }

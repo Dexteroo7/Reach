@@ -12,7 +12,6 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -42,14 +41,6 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.SearchListResponse;
-import com.google.api.services.youtube.model.SearchResult;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.squareup.wire.Wire;
@@ -59,7 +50,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -234,81 +224,25 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
     };
 
     public void showYTVideo(String text) {
-        new YTTest().execute(fastSanitize(text));
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                .setLabel("YOUTUBE - EXPLORE")
+                .setValue(1)
+                .build());
+
+        if (ytLayout.getVisibility() != View.VISIBLE)
+            ytLayout.setVisibility(View.VISIBLE);
+        if (ytFragment.isHidden())
+            getSupportFragmentManager().beginTransaction().show(ytFragment).commit();
+        currentYTId = text;
+        player.loadVideo(currentYTId);
     }
 
     public YouTubePlayer player = null;
     private YouTubePlayerSupportFragment ytFragment;
     private LinearLayout ytLayout;
     public String currentYTId;
-
-    private static class YTTest extends AsyncTask<String, Void, SearchResult> {
-        @Override
-        protected SearchResult doInBackground(String... params) {
-            try {
-                final HttpTransport transport = new NetHttpTransport();
-                final JsonFactory factory = new JacksonFactory();
-                final HttpRequestInitializer initialize = request -> {
-                    request.setConnectTimeout(request.getConnectTimeout() * 2);
-                    request.setReadTimeout(request.getReadTimeout() * 2);
-                };
-                final YouTube youTube = new YouTube.Builder(transport, factory, initialize).build();
-                // Define the API request for retrieving search results.
-                final YouTube.Search.List search = youTube.search().list("id");
-
-                // Set your developer key from the Google Developers Console for
-                // non-authenticated requests. See:
-                // https://console.developers.google.com/
-                final String apiKey = "AIzaSyAYH8mcrHrqG7HJwjyGUuwxMeV7tZP6nmY";
-                search.setKey(apiKey);
-
-                search.setQ(params[0]);
-
-                // Restrict the search results to only include videos. See:
-                // https://developers.google.com/youtube/v3/docs/search/list#type
-                search.setType("video");
-
-                search.setVideoCategoryId("10");
-
-                // To increase efficiency, only retrieve the fields that the
-                // application uses.
-                search.setFields("items/id/videoId");
-                search.setMaxResults(1L);
-
-                // Call the API and print results.
-                final SearchListResponse searchResponse = search.execute();
-                final List<SearchResult> searchResultList = searchResponse.getItems();
-                /*final StringBuilder stringBuilder = new StringBuilder();
-                for (SearchResult searchResult : searchResultList)
-                    stringBuilder.append(searchResult.getSnippet().getTitle()).append("\n\n");
-                return stringBuilder.toString();*/
-                if (searchResultList == null || searchResultList.isEmpty())
-                    return null;
-                return searchResultList.get(0);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(SearchResult searchResult) {
-            super.onPostExecute(searchResult);
-            /*MiscUtils.useContextFromFragment(reference, activity -> {
-                new AlertDialog.Builder(activity).setMessage(s).setTitle("Youtube").create().show();
-            });*/
-            if (searchResult == null)
-                return;
-            MiscUtils.useActivity(reference, activity -> {
-                if (activity.ytLayout.getVisibility() != View.VISIBLE)
-                    activity.ytLayout.setVisibility(View.VISIBLE);
-                if (activity.ytFragment.isHidden())
-                    activity.getSupportFragmentManager().beginTransaction().show(activity.ytFragment).commit();
-                activity.currentYTId = searchResult.getId().getVideoId();
-                activity.player.loadVideo(activity.currentYTId);
-            });
-        }
-    }
 
     @Nullable
     private static WeakReference<ReachActivity> reference = null;
@@ -527,6 +461,12 @@ public class ReachActivity extends AppCompatActivity implements SuperInterface, 
                 player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
                     @Override
                     public void onPlaying() {
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Play song")
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(preferences))
+                                .setLabel("YOUTUBE - EXPLORE")
+                                .setValue(1)
+                                .build());
                         final Intent intent = new Intent(ReachActivity.this, ProcessManager.class);
                         intent.setAction(ProcessManager.ACTION_KILL);
                         startService(intent);

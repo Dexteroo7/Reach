@@ -13,7 +13,9 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.google.gson.JsonObject;
 
 import reach.project.R;
@@ -31,12 +33,12 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     private static final String TAG = ExploreAdapter.class.getSimpleName() ;
     private final Explore explore;
-    private final HandOverMessage<Integer> handOverMessage;
+    private final HandOverMessage<Object> handOverMessage;
     /*//TODO: Delete when facebbok share is to be removed from explore
     boolean showFacebookButton = false;*/
 
     public ExploreAdapter(Explore explore,
-                          HandOverMessage<Integer> handOverId) {
+                          HandOverMessage<Object> handOverId) {
 
         this.explore = explore;
         this.handOverMessage = handOverId;
@@ -80,7 +82,17 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
                 case MUSIC: {
                     downBtn.setOnClickListener(this);
-                    downBtn.setTag(position);
+
+                    final String ytID = MiscUtils.get(exploreJSON, ExploreJSON.YOUTUBE_ID).getAsString();
+                    downBtn.setTag(ytID);
+                    final String albumArt = "https://i.ytimg.com/vi/" + ytID + "/hqdefault.jpg";
+                    if (!TextUtils.isEmpty(albumArt))
+                        image.setController(Fresco.newDraweeControllerBuilder()
+                                .setOldController(image.getController())
+                                .setImageRequest(ImageRequestBuilder.newBuilderWithSource(Uri.parse(albumArt))
+                                        .build())
+                                .build());
+
                     final long userId = MiscUtils.get(exploreJSON, ExploreJSON.ID).getAsLong();
                     /*final Cursor cursor = collection.getContext().getContentResolver().query(
                             Uri.parse(ReachFriendsProvider.CONTENT_URI + "/" + userId),
@@ -123,10 +135,8 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
                             100,
                             100));
 
-                    final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
-                    if (!TextUtils.isEmpty(albumArt))
-                        image.setController(MiscUtils.getControllerResize(image.getController(),
-                                Uri.parse(albumArt), ExploreFragment.FULL_IMAGE_SIZE));
+                    //final String albumArt = MiscUtils.get(musicViewInfo, MusicViewInfo.LARGE_IMAGE_URL, "").getAsString();
+
 
                     /*if(showFacebookButton){
                         facebookShare.setVisibility(View.VISIBLE);
@@ -249,13 +259,13 @@ class ExploreAdapter extends PagerAdapter implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        final int id = view.getId();
+        //final int id = view.getId();
         /*if(id == R.id.facebook_share_text){
             handOverMessage.handOverMessage(-11);
             return;
         }*/
 
-        handOverMessage.handOverMessage((int) view.getTag());
+        handOverMessage.handOverMessage(view.getTag());
 
         /*if (view instanceof ImageView) {
 

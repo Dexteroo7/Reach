@@ -2,6 +2,7 @@ package reach.project.coreViews.yourProfile;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.github.florent37.materialviewpager.MaterialViewPager;
 import com.github.florent37.materialviewpager.header.HeaderDesign;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
@@ -40,6 +42,7 @@ import java.util.List;
 
 import reach.project.R;
 import reach.project.ancillaryViews.SettingsActivity;
+import reach.project.core.ReachApplication;
 import reach.project.core.StaticData;
 import reach.project.coreViews.friends.ReachFriendsHelper;
 import reach.project.coreViews.friends.ReachFriendsProvider;
@@ -48,6 +51,7 @@ import reach.project.coreViews.yourProfile.music.YourProfileMusicFragment;
 import reach.project.notificationCentre.NotificationActivity;
 import reach.project.player.PlayerActivity;
 import reach.project.utils.MiscUtils;
+import reach.project.utils.SharedPrefUtils;
 
 
 // If a friend is added, then this activity is displayed
@@ -55,6 +59,8 @@ public class YourProfileActivity extends AppCompatActivity {
 
     private static final String OPEN_MY_PROFILE_APPS = "OPEN_MY_PROFILE_APPS";
     private static final String OPEN_MY_PROFILE_SONGS = "OPEN_MY_PROFILE_SONGS";
+
+    private SharedPreferences sharedPreferences;
 
     public static void openProfile(long userId, Context context) {
 
@@ -79,6 +85,13 @@ public class YourProfileActivity extends AppCompatActivity {
     private static WeakReference<YourProfileActivity> reference = null;
 
     public void showYTVideo(String text) {
+        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                .setCategory("Transaction - Add SongBrainz")
+                .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
+                .setLabel("YOUTUBE - FRIEND PROFILE")
+                .setValue(1)
+                .build());
+
         new YTTest().execute(fastSanitize(text));
     }
 
@@ -99,6 +112,8 @@ public class YourProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_your_profile);
 
         reference = new WeakReference<>(this);
+
+        sharedPreferences = getSharedPreferences("Reach", MODE_PRIVATE);
 
 
         final MaterialViewPager materialViewPager = (MaterialViewPager) findViewById(R.id.materialViewPager);
@@ -269,6 +284,37 @@ public class YourProfileActivity extends AppCompatActivity {
             public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
                 player = youTubePlayer;
                 player.setShowFullscreenButton(false);
+                player.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
+                    @Override
+                    public void onPlaying() {
+                        ((ReachApplication) getApplication()).getTracker().send(new HitBuilders.EventBuilder()
+                                .setCategory("Play song")
+                                .setAction("User Name - " + SharedPrefUtils.getUserName(sharedPreferences))
+                                .setLabel("YOUTUBE - FRIEND PROFILE")
+                                .setValue(1)
+                                .build());
+                    }
+
+                    @Override
+                    public void onPaused() {
+
+                    }
+
+                    @Override
+                    public void onStopped() {
+
+                    }
+
+                    @Override
+                    public void onBuffering(boolean b) {
+
+                    }
+
+                    @Override
+                    public void onSeekTo(int i) {
+
+                    }
+                });
                 //player.setPlayerStyle(YouTubePlayer.PlayerStyle.MINIMAL);
                 //player.cueVideo("CuH3tJPiP-U");
 
